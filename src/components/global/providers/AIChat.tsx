@@ -9,7 +9,9 @@ import {
   useRef,
   useState,
 } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useLocation, useParams } from '@tanstack/react-router'
+import { Query, type RealtimeResponseEvent } from '@appwrite.io/console'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { toast } from 'sonner'
 import {
@@ -1227,6 +1229,82 @@ export function AIChatPanel() {
   const contextProjectId = params.projectId ?? activeConversation?.projectId
   const { project } = useProject(contextProjectId)
   const { account } = useAuth()
+  const queryClient = useQueryClient()
+  const accountId = (account as { $id?: string } | undefined)?.$id ?? null
+  const organizationId =
+    params.orgId ?? params.teamId ?? project?.teamId ?? null
+  const assistantRealtimeChannels = useMemo(
+    () =>
+      buildAssistantRealtimeChannels({
+        projectId: contextProjectId,
+        organizationId,
+        accountId,
+      }),
+    [accountId, contextProjectId, organizationId],
+  )
+
+  useEffect(() => {
+    let cancelled = false
+    let closeSubscription: (() => Promise<void>) | null = null
+
+    const handleRealtimeEvent = (response: RealtimeResponseEvent<unknown>) => {
+      const hasAssistantEvent =
+        response.events.some((eventName) => eventName.includes('assistant')) ||
+        response.channels.some((channel) => channel.includes('assistant'))
+
+      if (!hasAssistantEvent) return
+
+      const payload =
+        response.payload && typeof response.payload === 'object'
+          ? (response.payload as Record<string, unknown>)
+          : null
+      const conversationId =
+        typeof payload?.conversationId === 'string'
+          ? payload.conversationId
+          : null
+
+      queryClient.invalidateQueries({ queryKey: ['assistant', 'conversations'] })
+
+      if (conversationId) {
+        queryClient.invalidateQueries({
+          queryKey: ['assistant', 'messages', conversationId],
+        })
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['assistant', 'messages'] })
+      }
+    }
+
+    async function subscribe() {
+      const realtime = sdk.getConsoleRealtime()
+      const subscription = await realtime.subscribe(
+        assistantRealtimeChannels,
+        handleRealtimeEvent as (event: {
+          events: string[]
+          channels: string[]
+          payload: unknown
+        }) => void,
+      )
+
+      if (cancelled) {
+        await subscription.close()
+        return
+      }
+
+      closeSubscription = () => subscription.close()
+    }
+
+    subscribe().catch(() => {
+      // Keep chat usable even if realtime fails.
+    })
+
+    return () => {
+      cancelled = true
+      if (closeSubscription) {
+        void closeSubscription()
+      }
+    }
+  }, [assistantRealtimeChannels, queryClient])
+
   const placeholderCandidates = useMemo(() => {
     const region =
       project?.region && project.region.toLowerCase() !== 'unknown'
@@ -1453,15 +1531,36 @@ export function AIChatPanel() {
 
   if (!showPanel || isAssistantBlocked) return null
 
+  const resolveConversationProjectId = async (): Promise<string | null> => {
+    const directContextProjectId =
+      params.projectId ?? activeConversation?.projectId ?? conversations[0]?.projectId
+    if (directContextProjectId) return directContextProjectId
+
+    try {
+      const projects = await sdk.forConsole.projects.list({
+        queries: [
+          Query.or([Query.isNull('status'), Query.notEqual('status', 'archived')]),
+          Query.orderDesc('$createdAt'),
+          Query.limit(1),
+        ],
+        total: false,
+      })
+      return projects.projects?.[0]?.$id ?? null
+    } catch {
+      return null
+    }
+  }
+
   const handleCreateConversation = async () => {
-    if (!params.projectId) {
-      toast.error('Open a project to create a new conversation.')
+    const conversationProjectId = await resolveConversationProjectId()
+    if (!conversationProjectId) {
+      toast.error('No accessible project found to create a conversation.')
       return
     }
 
     try {
       const conversation = await createConversationMutation.mutateAsync({
-        projectId: params.projectId,
+        projectId: conversationProjectId,
         title: 'New conversation',
       })
       setActiveConversationId(conversation.$id)
@@ -1595,8 +1694,9 @@ export function AIChatPanel() {
   const handleSend = async (content: string = input) => {
     const trimmed = content.trim()
     if (!trimmed || createMessageMutation.isPending || isWaitingForAttachments) return
-    if (!activeConversationId && !params.projectId) {
-      toast.error('Open a project to start a new conversation.')
+    const conversationProjectId = await resolveConversationProjectId()
+    if (!activeConversationId && !conversationProjectId) {
+      toast.error('No accessible project found to start a new conversation.')
       return
     }
 
@@ -1606,11 +1706,9 @@ export function AIChatPanel() {
 
     try {
       if (!conversationId) {
-        const projectId = params.projectId
-        if (!projectId) return
-
+        if (!conversationProjectId) return
         const createdConversation = await createConversationMutation.mutateAsync({
-          projectId,
+          projectId: conversationProjectId,
           title: makeConversationTitle(trimmed),
         })
         conversationId = createdConversation.$id
@@ -2232,5 +2330,17 @@ function getMessageAttachments(message: AssistantMessage): string[] {
     (attachment): attachment is string =>
       typeof attachment === 'string' && attachment.length > 0,
   )
+}
+
+function buildAssistantRealtimeChannels(scopes: {
+  projectId?: string | null
+  organizationId?: string | null
+  accountId?: string | null
+}): string[] {
+  const channels = new Set<string>(['console'])
+  if (scopes.projectId) channels.add(`projects.${scopes.projectId}`)
+  if (scopes.organizationId) channels.add(`teams.${scopes.organizationId}`)
+  if (scopes.accountId) channels.add(`account.${scopes.accountId}`)
+  return [...channels]
 }
 

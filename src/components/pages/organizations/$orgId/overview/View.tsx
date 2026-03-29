@@ -990,6 +990,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     return organizationPlan?.addons?.seats?.supported !== false
   }, [organizationPlan])
 
+  const canInviteMembers = canInviteOrgMember(access, features)
+  const inviteDisabled =
+    !supportsAdditionalMembers || !canInviteMembers || !orgId
+
   // Calculate member limit
   // Check both addons.seats and plan.members field
   const memberLimit = useMemo(() => {
@@ -1340,7 +1344,16 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
             {/* Right: same fixed h-8 band as left */}
             <div className="flex h-8 min-h-8 max-h-8 shrink-0 items-center gap-3">
               {orgId && (
-                <div className="flex h-8 min-h-8 w-[5.5rem] shrink-0 items-center justify-start">
+                <div
+                  className={cn(
+                    'flex h-8 min-h-8 w-[5.5rem] shrink-0 items-center',
+                    !selectedOrg || membershipsLoading
+                      ? 'justify-start'
+                      : memberships.length === 1
+                        ? 'justify-center'
+                        : 'justify-start',
+                  )}
+                >
                   {!selectedOrg || membershipsLoading ? (
                     <div className="flex -space-x-2" aria-hidden>
                       <div
@@ -1365,7 +1378,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                         <Link
                           to="/organizations/$orgId/settings/members"
                           params={{ orgId: orgId! }}
-                          className="flex h-8 min-h-8 -space-x-2 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer hover:opacity-90 transition-opacity"
+                          className={cn(
+                            'flex h-8 min-h-8 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer hover:opacity-90 transition-opacity',
+                            displayMembers.length > 1 && '-space-x-2',
+                          )}
                           title="View members"
                         >
                           {displayMembers.map(
@@ -1405,19 +1421,16 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                 </div>
               )}
 
-              {/* Invite: only owners when roles enabled; hidden for non-owners */}
-              {supportsAdditionalMembers &&
-                canInviteOrgMember(access, features) && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-8 gap-2 border-border text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground"
-                    onClick={() => setInviteDialogOpen(true)}
-                  >
-                    <UserPlus className="h-3.5 w-3.5" />
-                    Invite
-                  </Button>
-                )}
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8 gap-2 border-border text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground"
+                onClick={() => setInviteDialogOpen(true)}
+                disabled={inviteDisabled}
+              >
+                <UserPlus className="h-3.5 w-3.5" />
+                Invite
+              </Button>
             </div>
           </div>
 
@@ -2385,7 +2398,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                           {/* Members Content */}
                           {!membershipsError && (
                             <>
-                              {/* Toolbar: Search + Invite (Invite only for owners when roles enabled) */}
+                              {/* Toolbar: Search + Invite */}
                               <div className="mb-4 flex items-center gap-3">
                                 <div className="relative w-64">
                                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -2399,38 +2412,15 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                   />
                                 </div>
 
-                                {supportsAdditionalMembers &&
-                                canInviteOrgMember(access, features) ? (
-                                  <Button
-                                    className="ml-auto h-9 gap-2 text-[13px] font-medium text-white hover:opacity-90"
-                                    style={{ backgroundColor: '#f02e65' }}
-                                    onClick={() => setInviteDialogOpen(true)}
-                                  >
-                                    <Plus className="h-4 w-4" />
-                                    Invite
-                                  </Button>
-                                ) : supportsAdditionalMembers ? null : (
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <span>
-                                        <Button
-                                          className="ml-auto h-9 gap-2 text-[13px] font-medium text-white cursor-not-allowed opacity-50"
-                                          style={{ backgroundColor: '#f02e65' }}
-                                          disabled
-                                        >
-                                          <UserPlus className="h-4 w-4" />
-                                          Invite member
-                                        </Button>
-                                      </span>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p className="text-xs">
-                                        Upgrade your plan to invite team
-                                        members.
-                                      </p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                )}
+                                <Button
+                                  className="ml-auto h-9 gap-2 text-[13px] font-medium text-white hover:opacity-90"
+                                  style={{ backgroundColor: '#f02e65' }}
+                                  onClick={() => setInviteDialogOpen(true)}
+                                  disabled={inviteDisabled}
+                                >
+                                  <Plus className="h-4 w-4" />
+                                  Invite
+                                </Button>
                               </div>
 
                               {/* Members List or Empty State */}

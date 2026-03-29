@@ -204,13 +204,10 @@ export function ImpersonateConsoleUserPopover() {
     clearConsoleImpersonateUser()
     clearConsoleImpersonationSession()
     setOpen(false)
-    queryClient.clear()
     if (opId) {
-      try {
-        await flushRecentImpersonationUsersToAccountPrefs(opId)
-      } catch (e) {
+      void flushRecentImpersonationUsersToAccountPrefs(opId).catch((e) => {
         console.error(e)
-      }
+      })
     }
     hardNavigateToAccountAfterImpersonation()
   }

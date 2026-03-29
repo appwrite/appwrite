@@ -95,8 +95,14 @@ export function ProjectContextMenu({
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
-      const regionSdk = sdk.forConsoleIn(project.region || 'us')
-      await regionSdk.projects.delete({ projectId: project.$id })
+      const region =
+        typeof project.region === 'string' &&
+        project.region.trim() &&
+        project.region.toLowerCase() !== 'unknown'
+          ? project.region
+          : null
+      const consoleSdk = region ? sdk.forConsoleIn(region) : sdk.forConsole
+      await consoleSdk.projects.delete({ projectId: project.$id })
     },
     onSuccess: async () => {
       // Keep cards in sync across pinned and regular project queries.

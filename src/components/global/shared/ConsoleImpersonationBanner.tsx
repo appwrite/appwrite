@@ -1,6 +1,5 @@
 import { UserRound } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
-import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import {
   HeaderAlertBar,
@@ -18,7 +17,6 @@ import { flushRecentImpersonationUsersToAccountPrefs } from '@/lib/react-query/h
 export function ConsoleImpersonationBanner({ className }: { className?: string }) {
   const { account: accountRaw } = useAuth()
   const account = accountRaw as Models.User | undefined
-  const queryClient = useQueryClient()
   const operatorSnapshot = readConsoleImpersonationOperatorSnapshot()
   const sessionTarget = readConsoleImpersonationTargetUserId()
   const impersonatorUserId = (
@@ -45,13 +43,10 @@ export function ConsoleImpersonationBanner({ className }: { className?: string }
     const opId = readConsoleImpersonationOperatorSnapshot()?.$id
     clearConsoleImpersonateUser()
     clearConsoleImpersonationSession()
-    queryClient.clear()
     if (opId) {
-      try {
-        await flushRecentImpersonationUsersToAccountPrefs(opId)
-      } catch (e) {
+      void flushRecentImpersonationUsersToAccountPrefs(opId).catch((e) => {
         console.error(e)
-      }
+      })
     }
     hardNavigateToAccountAfterImpersonation()
   }

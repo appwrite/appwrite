@@ -186,6 +186,17 @@ export function ProjectSettingsOverview({
   const [deleteConfirmation, setDeleteConfirmation] = useState('')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
+  const refetchProjectLists = async () => {
+    await queryClient.refetchQueries({
+      predicate: (query) => query.queryKey[0] === 'projects',
+      type: 'all',
+    })
+    await queryClient.refetchQueries({
+      queryKey: ['organizations', 'console'],
+      type: 'all',
+    })
+  }
+
   // Initialize project name when project loads
   useEffect(() => {
     if (project) {
@@ -300,12 +311,14 @@ export function ProjectSettingsOverview({
       }
       await sdk.forConsole.projects.update({ projectId, name: trimmedName })
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success('Project name has been updated')
-      queryClient.invalidateQueries({
+      await queryClient.refetchQueries({
         queryKey: [Dependencies.PROJECT, projectId],
+        exact: true,
+        type: 'all',
       })
-      queryClient.invalidateQueries({ queryKey: [Dependencies.ORGANIZATION] })
+      await refetchProjectLists()
       // Track analytics: Submit.ProjectUpdateName
     },
     onError: (error: Error) => {
@@ -467,7 +480,7 @@ export function ProjectSettingsOverview({
     mutationFn: async (teamId: string) => {
       await sdk.forConsole.projects.updateTeam({ projectId, teamId })
     },
-    onSuccess: (_, teamId) => {
+    onSuccess: async (_, teamId) => {
       const oldTeamId = project?.teamId
 
       // Get organization name from query cache
@@ -482,24 +495,34 @@ export function ProjectSettingsOverview({
         `${project?.name || 'Project'} has been transferred to ${orgName}`,
       )
 
-      // Invalidate project query to refresh project data (teamId changed)
-      queryClient.invalidateQueries({ queryKey: ['project', projectId] })
-      queryClient.invalidateQueries({
+      // Refetch project query to refresh project data (teamId changed)
+      await queryClient.refetchQueries({
+        queryKey: ['project', projectId],
+        exact: true,
+        type: 'all',
+      })
+      await queryClient.refetchQueries({
         queryKey: [Dependencies.PROJECT, projectId],
+        exact: true,
+        type: 'all',
       })
 
       // Invalidate projects list for old organization (if it exists)
       if (oldTeamId) {
-        queryClient.invalidateQueries({
+        await queryClient.refetchQueries({
           queryKey: ['projects', 'team', oldTeamId],
+          type: 'all',
         })
       }
 
-      // Invalidate projects list for new organization
-      queryClient.invalidateQueries({ queryKey: ['projects', 'team', teamId] })
+      // Refetch projects list for new organization
+      await queryClient.refetchQueries({
+        queryKey: ['projects', 'team', teamId],
+        type: 'all',
+      })
 
-      // Invalidate organizations list (in case project count affects display)
-      queryClient.invalidateQueries({ queryKey: ['organizations', 'console'] })
+      // Refetch all project lists (active/pinned/team) so cards update immediately.
+      await refetchProjectLists()
 
       // Track analytics: Submit.ProjectUpdateTeam
       navigate({
@@ -515,22 +538,32 @@ export function ProjectSettingsOverview({
   // Mutation to delete project
   const deleteProjectMutation = useMutation({
     mutationFn: async () => {
-      // Must use SDK for project's region
-      const regionSdk = sdk.forConsoleIn(project?.region || 'us')
-      await regionSdk.projects.delete({ projectId })
+      // Match Console behavior: delete through console client in the project's region.
+      const region =
+        typeof project?.region === 'string' &&
+        project.region.trim() &&
+        project.region.toLowerCase() !== 'unknown'
+          ? project.region
+          : null
+      const consoleSdk = region ? sdk.forConsoleIn(region) : sdk.forConsole
+      await consoleSdk.projects.delete({ projectId })
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success(`${project?.name || 'Project'} has been deleted`)
       // Track analytics: Submit.ProjectDelete
       const orgId = project?.teamId
       if (orgId) {
-        queryClient.invalidateQueries({
+        await queryClient.refetchQueries({
           queryKey: [Dependencies.ORGANIZATION, orgId],
+          type: 'all',
         })
+        await refetchProjectLists()
         navigate({
           to: '/organizations/$orgId',
           params: { orgId },
         })
+      } else {
+        await refetchProjectLists()
       }
     },
     onError: (error: Error) => {
