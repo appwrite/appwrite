@@ -251,8 +251,9 @@ class Webhooks extends Action
         $body = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl');
 
         $body
-            ->setParam('{{subject}}', $subject)
-            ->setParam('{{message}}', $template->render())
+            ->setParam('{{heading}}', $subject)
+            ->setParam('{{body}}', $template->render(), escapeHtml: false)
+            ->setParam('{{preview}}', $preview)
             ->setParam('{{year}}', date("Y"));
 
         $queueForMails
