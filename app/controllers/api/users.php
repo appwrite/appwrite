@@ -700,8 +700,9 @@ Http::get('/v1/users')
 
         $dbForProject->skipFilters(function () use ($dbForProject, $queries, $includeTotal, &$users, &$total) {
             try {
+                $filterQueries = Query::groupByType($queries)['filters'];
                 $users = $dbForProject->find('users', $queries);
-                $total = $includeTotal ? $dbForProject->count('users', $queries, APP_LIMIT_COUNT) : 0;
+                $total = $includeTotal ? $dbForProject->count('users', $filterQueries, APP_LIMIT_COUNT) : 0;
             } catch (OrderException $e) {
                 throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
             } catch (QueryException $e) {
@@ -910,9 +911,12 @@ Http::get('/v1/users/:userId/memberships')
             return $membership;
         }, $dbForProject->find('memberships', $queries));
 
+        $filterQueries = Query::groupByType($queries)['filters'];
+        $total = $includeTotal ? $dbForProject->count('memberships', $filterQueries, APP_LIMIT_COUNT) : 0;
+
         $response->dynamic(new Document([
             'memberships' => $memberships,
-            'total' => $includeTotal ? count($memberships) : 0,
+            'total' => $total,
         ]), Response::MODEL_MEMBERSHIP_LIST);
     });
 
@@ -1054,8 +1058,9 @@ Http::get('/v1/users/:userId/targets')
             $cursor->setValue($cursorDocument);
         }
         try {
+            $filterQueries = Query::groupByType($queries)['filters'];
             $targets = $dbForProject->find('targets', $queries);
-            $total = $includeTotal ? $dbForProject->count('targets', $queries, APP_LIMIT_COUNT) : 0;
+            $total = $includeTotal ? $dbForProject->count('targets', $filterQueries, APP_LIMIT_COUNT) : 0;
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
@@ -1116,8 +1121,9 @@ Http::get('/v1/users/identities')
         }
 
         try {
+            $filterQueries = Query::groupByType($queries)['filters'];
             $identities = $dbForProject->find('identities', $queries);
-            $total = $includeTotal ? $dbForProject->count('identities', $queries, APP_LIMIT_COUNT) : 0;
+            $total = $includeTotal ? $dbForProject->count('identities', $filterQueries, APP_LIMIT_COUNT) : 0;
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
