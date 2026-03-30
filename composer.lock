@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f9225f2b580de0ccb796b2fb8c881384",
+    "content-hash": "5b63a662f3db655695011b124edf1b91",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3850,16 +3850,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "5.3.17",
+            "version": "dev-fix/mongo-order-case",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "cff2b6ed63d3291b74110d086e16ff089fe05993"
+                "reference": "9a395a1ffd4842cee83d10d05f554e5db51978cd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/cff2b6ed63d3291b74110d086e16ff089fe05993",
-                "reference": "cff2b6ed63d3291b74110d086e16ff089fe05993",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/9a395a1ffd4842cee83d10d05f554e5db51978cd",
+                "reference": "9a395a1ffd4842cee83d10d05f554e5db51978cd",
                 "shasum": ""
             },
             "require": {
@@ -3903,9 +3903,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/5.3.17"
+                "source": "https://github.com/utopia-php/database/tree/fix/mongo-order-case"
             },
-            "time": "2026-03-20T01:18:52+00:00"
+            "time": "2026-03-30T09:26:53+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -8433,9 +8433,18 @@
             "time": "2024-11-07T12:36:22+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-fix/mongo-order-case",
+            "alias": "5.3.17",
+            "alias_normalized": "5.3.17.0"
+        }
+    ],
     "minimum-stability": "dev",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/database": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
