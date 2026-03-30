@@ -245,6 +245,14 @@ class Comment
         return $imageUrl;
     }
 
+    /**
+     * @deprecated Use generateImage instead.
+     */
+    public function generatImage(string $pathLight, string $pathDark, string $alt, int $width): string
+    {
+        return $this->generateImage($pathLight, $pathDark, $alt, $width);
+    }
+
     public function parseComment(string $comment): self
     {
         $state = \explode("\n", $comment)[0] ?? '';
