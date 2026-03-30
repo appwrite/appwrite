@@ -6,6 +6,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ApiDocumentsDB;
 use Tests\E2E\Scopes\ProjectCustom;
+use Tests\E2E\Scopes\RequiresDocumentsDB;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\Helpers\ID;
@@ -16,6 +17,7 @@ class DocumentsDBPermissionsMemberTest extends Scope
 {
     use DatabasesPermissionsBase;
     use ProjectCustom;
+    use RequiresDocumentsDB;
     use SideClient;
     use ApiDocumentsDB;
 

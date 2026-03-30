@@ -6,6 +6,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
+use Tests\E2E\Scopes\RequiresVectorsDB;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Tests\E2E\Services\Databases\VectorsDB\Permissions\DatabasesPermissionsScope;
@@ -16,6 +17,7 @@ use Utopia\Database\Helpers\Role;
 class VectorsDBPermissionsMemberTest extends Scope
 {
     use ProjectCustom;
+    use RequiresVectorsDB;
     use SideClient;
     use DatabasesPermissionsScope;
 
