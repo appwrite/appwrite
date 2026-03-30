@@ -466,7 +466,7 @@ Http::patch('/v1/projects/:projectId/auth/duration')
         ]
     ))
     ->param('projectId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForPlatform'])
-    ->param('duration', 31536000, new Range(0, 31536000), 'Project session length in seconds. Max length: 31536000 seconds.')
+    ->param('duration', 31536000, new Integer(), 'Project session length in seconds. Max length: 31536000 seconds.')
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, int $duration, Response $response, Database $dbForPlatform) {
@@ -475,6 +475,10 @@ Http::patch('/v1/projects/:projectId/auth/duration')
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        if ($duration < 0 || $duration > 31536000) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid duration param: Value must be between 0 and 365 days (0 and 31,536,000 seconds).');
         }
 
         $auths = $project->getAttribute('auths', []);
