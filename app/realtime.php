@@ -518,7 +518,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         $project = $consoleDatabase->getAuthorization()->skip(fn () => $consoleDatabase->getDocument('projects', $projectId));
                         $database = getProjectDB($project);
 
-                        /** @var Appwrite\Utopia\Database\Documents\User $user */
+                        /** @var User $user */
                         $user = $database->getDocument('users', $userId);
 
                         $roles = $user->getRoles($database->getAuthorization());
@@ -642,10 +642,14 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Missing or unknown project ID');
         }
 
+        $timelimit = $app->getResource('timelimit');
+        $user = $app->getResource('user'); /** @var User $user */
+        $logUser = $user;
+
         if (
             array_key_exists('realtime', $project->getAttribute('apis', []))
             && !$project->getAttribute('apis', [])['realtime']
-            && !(User::isPrivileged($authorization->getRoles()) || User::isApp($authorization->getRoles()))
+            && !($user->isPrivileged($authorization->getRoles()) || $user->isApp($authorization->getRoles()))
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }
@@ -655,10 +659,6 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         if (!empty($projectRegion) && $projectRegion !== $currentRegion) {
             throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'Project is not accessible in this region. Please make sure you are using the correct endpoint');
         }
-
-        $timelimit = $app->getResource('timelimit');
-        $user = $app->getResource('user'); /** @var User $user */
-        $logUser = $user;
 
         /*
          * Abuse Check

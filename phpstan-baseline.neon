@@ -115,12 +115,6 @@ parameters:
 			path: app/controllers/mock.php
 
 		-
-			message: '#^Call to an undefined method Utopia\\Database\\Document\:\:getRoles\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/controllers/shared/api.php
-
-		-
 			message: '#^Variable \$register might not be defined\.$#'
 			identifier: variable.undefined
 			count: 3
@@ -591,12 +585,6 @@ parameters:
 		-
 			message: '#^PHPDoc tag @throws with type Appwrite\\Platform\\Modules\\Databases\\Http\\Databases\\Transactions\\Structure\|Throwable\|Utopia\\Database\\Validator\\Authorization is not subtype of Throwable$#'
 			identifier: throws.notThrowable
-			count: 1
-			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Transactions/Update.php
-
-		-
-			message: '#^Variable \$currentDocumentId on left side of \?\? always exists and is always null\.$#'
-			identifier: nullCoalesce.variable
 			count: 1
 			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Transactions/Update.php
 
