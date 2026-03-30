@@ -4,6 +4,7 @@ namespace Tests\E2E\Services\Databases;
 
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
+use Tests\E2E\Scopes\RequiresVectorsDB;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Tests\E2E\Services\Databases\VectorsDB\DatabasesBase;
@@ -15,6 +16,7 @@ class VectorsDBCustomClientTest extends Scope
 {
     use DatabasesBase;
     use ProjectCustom;
+    use RequiresVectorsDB;
     use SideClient;
 
     public function testAllowedPermissions(): void

@@ -4,6 +4,7 @@ namespace Tests\E2E\Services\Databases\Transactions;
 
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
+use Tests\E2E\Scopes\RequiresVectorsDB;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\Helpers\ID;
@@ -13,6 +14,7 @@ use Utopia\Database\Helpers\Role;
 class VectorsDBACIDTest extends Scope
 {
     use ProjectCustom;
+    use RequiresVectorsDB;
     use SideClient;
 
     private function generateEmbeddings(int $dimensions = 3, float $value = 0.1): array
