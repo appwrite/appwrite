@@ -32,7 +32,6 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Executor\Executor;
-use MaxMind\Db\Reader;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\Agents\Adapters\Ollama;
 use Utopia\Agents\Agent;
@@ -1295,12 +1294,7 @@ Http::setResource('mode', function (Request $request, Document $project) {
     return $mode;
 }, ['request', 'project']);
 
-Http::setResource('geodb', function ($register) {
-    /** @var Utopia\Registry\Registry $register */
-    return $register->get('geodb');
-}, ['register']);
-
-Http::setResource('geoRecord', function (Reader $geodb, Request $request, Locale $locale) {
+Http::setResource('geoRecord', function (Request $request, Locale $locale) {
     $ip = $request->getIp();
 
     if (!filter_var($ip, FILTER_VALIDATE_IP)) {
@@ -1324,20 +1318,6 @@ Http::setResource('geoRecord', function (Reader $geodb, Request $request, Locale
             }
         } catch (Throwable $th) {
             Console::warning('Geo service unavailable: ' . $th->getMessage());
-        }
-    }
-
-    if (empty($record)) {
-        try {
-            $dbRecord = $geodb->get($ip);
-            if ($dbRecord) {
-                $record = [
-                    'countryCode' => $dbRecord['country']['iso_code'] ?? '--',
-                    'continentCode' => $dbRecord['continent']['code'] ?? '--',
-                ];
-            }
-        } catch (Throwable $th) {
-            Console::warning('Geodb fallback failed: ' . $th->getMessage());
         }
     }
 
@@ -1365,7 +1345,7 @@ Http::setResource('geoRecord', function (Reader $geodb, Request $request, Locale
         'eu' => \in_array($countryCode, $eu),
         'currency' => $currency,
     ]);
-}, ['geodb', 'request', 'locale']);
+}, ['request', 'locale']);
 
 Http::setResource('passwordsDictionary', function ($register) {
     /** @var Utopia\Registry\Registry $register */

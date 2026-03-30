@@ -5,7 +5,6 @@ use Appwrite\GraphQL\Promises\Adapter\Swoole;
 use Appwrite\Hooks\Hooks;
 use Appwrite\PubSub\Adapter\Redis as PubSub;
 use Appwrite\URL\URL as AppwriteURL;
-use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
 use Utopia\Cache\Adapter\Redis as RedisCache;
@@ -462,9 +461,6 @@ $register->set('smtp', function () {
     $mail->isHTML(true);
 
     return $mail;
-});
-$register->set('geodb', function () {
-    return new Reader(__DIR__ . '/../assets/dbip/dbip-country-lite-2025-12.mmdb');
 });
 $register->set('passwordsDictionary', function () {
     $content = \file_get_contents(__DIR__ . '/../assets/security/10k-common-passwords');
