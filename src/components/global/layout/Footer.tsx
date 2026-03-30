@@ -1,6 +1,5 @@
 import { ShieldCheck } from 'lucide-react'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 
 /**
  * ConsoleFooter Component
@@ -51,6 +50,17 @@ export function ConsoleFooter() {
       icon: '/icons/discord-simple.svg',
     },
   ]
+
+  const getSocialIconMaskStyle = (iconPath: string) => ({
+    maskImage: `url(${iconPath})`,
+    maskRepeat: 'no-repeat',
+    maskPosition: 'center',
+    maskSize: 'contain',
+    WebkitMaskImage: `url(${iconPath})`,
+    WebkitMaskRepeat: 'no-repeat',
+    WebkitMaskPosition: 'center',
+    WebkitMaskSize: 'contain',
+  })
 
   return (
     <footer className="@container flex h-[54px] shrink-0 items-center border-t border-border px-3">
@@ -115,10 +125,9 @@ export function ConsoleFooter() {
                 className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                 aria-label={social.label}
               >
-                <img
-                  src={social.icon}
-                  alt={social.label}
-                  className={`h-4 w-4 transition-opacity hover:opacity-100 dark:opacity-60 ${PUBLIC_ICON_MUTED_CLASSES}`}
+                <span
+                  className="h-4 w-4 bg-current"
+                  style={getSocialIconMaskStyle(social.icon)}
                 />
               </a>
             ))}
@@ -139,7 +148,7 @@ export function ConsoleFooter() {
               aria-hidden
             />
             <span className="whitespace-nowrap font-medium">
-              SOC 2 Certified
+              SOC 2 Type II Certified
             </span>
           </a>
 
