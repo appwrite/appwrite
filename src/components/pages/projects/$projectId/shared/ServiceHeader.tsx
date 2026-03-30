@@ -91,6 +91,8 @@ interface ServiceHeaderProps {
   hideTitle?: boolean
   /** Content to render after the border separator, before the toolbar */
   contentAfterBorder?: React.ReactNode
+  /** Show a bottom border under the toolbar row (search/filters/actions) */
+  showToolbarBottomBorder?: boolean
 }
 
 export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
@@ -131,6 +133,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
       breadcrumbs,
       hideTitle = false,
       contentAfterBorder,
+      showToolbarBottomBorder = false,
     },
     ref,
   ) {
@@ -362,7 +365,8 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
             className={cn(
               'flex min-w-0 flex-nowrap items-center gap-3 px-4 py-4 sm:px-6',
               fullWidthBorder && !fullWidth && 'mx-auto w-full max-w-7xl',
-              isCollapsed && 'border-b border-border',
+              (isCollapsed || showToolbarBottomBorder) &&
+                'border-b border-border',
             )}
           >
             {/* Search */}

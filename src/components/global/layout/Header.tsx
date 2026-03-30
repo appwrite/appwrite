@@ -25,11 +25,12 @@ import {
   FolderPlus,
   Plug2,
   ArrowUpCircle,
+  ArrowLeft,
 } from 'lucide-react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { ProjectSelector } from '@/components/pages/projects/$projectId/shared/ProjectSelector'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
-import { useNavigate, useParams } from '@tanstack/react-router'
+import { useLocation, useNavigate, useParams } from '@tanstack/react-router'
 import { useProject, useOrganizationScopes } from '@/lib/react-query/hooks'
 import {
   canShowConnectSection,
@@ -88,6 +89,7 @@ export function ConsoleHeader({
     useKeyboardShortcutsContext()
   const { toggleChat } = useAIChat()
   const { account, signOut } = useAuth()
+  const location = useLocation()
   const navigate = useNavigate()
   const params = useParams({ strict: false })
   const [copiedField, setCopiedField] = useState<string | null>(null)
@@ -157,6 +159,7 @@ export function ConsoleHeader({
     account?.mfa === true || account?.twoFactorAuthenticatorEnabled === true
 
   const hasSidebar = !isOrgOverview
+  const isAccountScope = location.pathname.startsWith('/account')
   const logoColumnWidth = 60
 
   return (
@@ -231,6 +234,21 @@ export function ConsoleHeader({
               </>
             )
           })()}
+
+          {/* Account scope quick return */}
+          {isAccountScope && orgId && (
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="hidden h-9 shrink-0 gap-1.5 px-2.5 text-[13px] @[850px]:inline-flex"
+            >
+              <Link to="/organizations/$orgId" params={{ orgId }}>
+                <ArrowLeft className="h-4 w-4" />
+                Back to organization
+              </Link>
+            </Button>
+          )}
 
           {/* Project Selector - only show when in project context */}
           {!isOrgOverview && (

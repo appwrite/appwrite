@@ -7542,10 +7542,7 @@ function RowsSpreadsheet({
                       onClick={(e) => e.stopPropagation()}
                     />
                   </td>
-                  <td
-                    className={cn('px-3 py-1.5', bodyCellBorderClass)}
-                    data-column="$sequence"
-                  >
+                  <td className={cn('px-3 py-1.5', bodyCellBorderClass)} data-column="$sequence">
                     <span className="text-[12px] text-muted-foreground">
                       {row.$sequence ?? row.rowNumber}
                     </span>
@@ -7603,11 +7600,7 @@ function RowsSpreadsheet({
                       })()}
                     </td>
                   ))}
-                  <td
-                    className={cn('w-[180px] px-3 py-1.5', bodyCellBorderClass)}
-                    data-column="$createdAt"
-                    onClick={(e) => e.stopPropagation()}
-                  >
+                  <td className={cn('w-[180px] px-3 py-1.5', bodyCellBorderClass)} data-column="$createdAt" onClick={(e) => e.stopPropagation()}>
                     {row.$createdAt ? (
                       <DateTooltip
                         date={new Date(row.$createdAt)}
@@ -7619,11 +7612,7 @@ function RowsSpreadsheet({
                       </span>
                     )}
                   </td>
-                  <td
-                    className={cn('w-[180px] px-3 py-1.5', bodyCellBorderClass)}
-                    data-column="$updatedAt"
-                    onClick={(e) => e.stopPropagation()}
-                  >
+                  <td className={cn('w-[180px] px-3 py-1.5', bodyCellBorderClass)} data-column="$updatedAt" onClick={(e) => e.stopPropagation()}>
                     {row.$updatedAt ? (
                       <DateTooltip
                         date={new Date(row.$updatedAt)}
@@ -7727,8 +7716,8 @@ function RowsSpreadsheet({
       )}
 
       {/* Sticky Pagination Footer */}
-      <div className="shrink-0 bg-background border-t border-border">
-        <div className="@container flex items-center justify-between gap-4 px-4">
+      <div className="h-[54px] shrink-0 border-t border-border bg-background">
+        <div className="@container flex h-full items-center justify-between gap-4 px-4">
           <div className="flex-1 min-w-0">
             <Pagination
               currentPage={displayedPage}
@@ -7738,6 +7727,7 @@ function RowsSpreadsheet({
               onPageChange={handlePageChange}
               onPageSizeChange={handlePageSizeChange}
               itemLabel="rows"
+              className="h-full min-h-0 border-0 mt-0 py-0"
             />
           </div>
           <div className="flex-shrink-0">

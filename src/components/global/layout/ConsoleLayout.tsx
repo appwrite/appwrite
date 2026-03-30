@@ -2,7 +2,6 @@ import { ReactNode, useState, useEffect } from 'react'
 import { ConsoleHeader } from './Header'
 import { ConsoleSidebar } from './Sidebar'
 import { ConsoleFooter } from './Footer'
-import { ConsoleBanner } from './ConsoleBanner'
 import { CloudStatusBanner } from './CloudStatusBanner'
 import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
 import { SkipToContent } from './SkipToContent'
@@ -157,7 +156,6 @@ export function ConsoleLayout({
               {children}
             </div>
           </div>
-          <ConsoleBanner />
           {showFooter && <ConsoleFooter />}
         </main>
       </div>

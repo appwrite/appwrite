@@ -395,151 +395,154 @@ export function View({ plan = 'pro' }: ViewProps) {
 
   return (
     <div className="flex flex-col">
-      <ServiceHeader
-        title="Activity"
-        searchPlaceholder="Search activities..."
-        searchValue={searchValue}
-        onSearchChange={handleSearchChange}
-        showFilters
-        onFilterClick={() => setShowFilters(!showFilters)}
-        showRefresh
-        onRefresh={() => {}}
-        showExport
-        onExport={() => {}}
-        fullWidthBorder
-        fullWidth
-        rightContent={
-          <div className="flex items-center gap-2">
-            {/* Plan indicator */}
-            <div className="flex items-center gap-1.5 rounded-md border border-border bg-muted/30 px-2.5 py-1.5">
-              <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="text-[12px] text-muted-foreground">
-                Last {planLimit.label}
+      <div className="sticky top-0 z-20 bg-background">
+        <ServiceHeader
+          title="Activity"
+          searchPlaceholder="Search activities..."
+          searchValue={searchValue}
+          onSearchChange={handleSearchChange}
+          showFilters
+          onFilterClick={() => setShowFilters(!showFilters)}
+          showRefresh
+          onRefresh={() => {}}
+          showExport
+          onExport={() => {}}
+          fullWidthBorder
+          fullWidth
+          showToolbarBottomBorder
+          rightContent={
+            <div className="flex items-center gap-2">
+              {/* Plan indicator */}
+              <div className="flex items-center gap-1.5 rounded-md border border-border bg-muted/30 px-2.5 py-1.5">
+                <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="text-[12px] text-muted-foreground">
+                  Last {planLimit.label}
+                </span>
+              </div>
+            </div>
+          }
+          contentAfterBorder={
+            <div className="border-b border-border bg-blue-500/5">
+              <div className="px-4 py-3 sm:px-6">
+                <Alert
+                  variant="default"
+                  className="border-blue-500/30 bg-transparent"
+                >
+                  <Clock className="h-4 w-4 text-blue-500 shrink-0" />
+                  <div>
+                    <AlertTitle className="text-[13px] font-medium text-blue-600 dark:text-blue-400">
+                      Activity retention period
+                    </AlertTitle>
+                    <AlertDescription className="text-[12px] text-blue-600/80 dark:text-blue-400/80 !block mt-1">
+                      Your <span className="font-medium capitalize">{plan}</span>{' '}
+                      plan supports{' '}
+                      <span className="font-medium">{planLimit.label}</span> of
+                      activity retention.
+                      {(plan === 'free' || plan === 'pro') && (
+                        <>
+                          {' '}
+                          <a
+                            href="#"
+                            className="font-medium underline hover:no-underline"
+                            onClick={(e) => {
+                              e.preventDefault()
+                            }}
+                          >
+                            Upgrade
+                          </a>{' '}
+                          or{' '}
+                          <a
+                            href="#"
+                            className="font-medium underline hover:no-underline"
+                            onClick={(e) => {
+                              e.preventDefault()
+                            }}
+                          >
+                            contact sales
+                          </a>{' '}
+                          for higher retention.
+                        </>
+                      )}
+                    </AlertDescription>
+                  </div>
+                </Alert>
+              </div>
+            </div>
+          }
+        />
+
+        {/* Filters Panel */}
+        {showFilters && (
+          <div className="border-b border-border">
+            <div className="flex flex-wrap items-center gap-3 px-4 py-3 sm:px-6">
+              <span className="text-[12px] font-medium text-muted-foreground">
+                Filter by:
               </span>
+
+              {/* Action Filter */}
+              <Select
+                value={actionFilter}
+                onValueChange={(value) => {
+                  setActionFilter(value)
+                  setCurrentPage(1)
+                }}
+              >
+                <SelectTrigger className="h-8 w-[140px] text-[12px]">
+                  <SelectValue placeholder="Action" />
+                </SelectTrigger>
+                <SelectContent>
+                  {actionOptions.map((option) => (
+                    <SelectItem
+                      key={option.value}
+                      value={option.value}
+                      className="text-[12px]"
+                    >
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Resource Type Filter */}
+              <Select
+                value={resourceTypeFilter}
+                onValueChange={(value) => {
+                  setResourceTypeFilter(value)
+                  setCurrentPage(1)
+                }}
+              >
+                <SelectTrigger className="h-8 w-[140px] text-[12px]">
+                  <SelectValue placeholder="Resource type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {resourceTypeOptions.map((option) => (
+                    <SelectItem
+                      key={option.value}
+                      value={option.value}
+                      className="text-[12px]"
+                    >
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Clear Filters */}
+              {hasActiveFilters && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearFilters}
+                  className="h-8 gap-1.5 text-[12px] text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-3.5 w-3.5" />
+                  Clear filters
+                </Button>
+              )}
             </div>
           </div>
-        }
-        contentAfterBorder={
-          <div className="border-b border-border bg-blue-500/5">
-            <div className="px-4 py-3 sm:px-6">
-              <Alert
-                variant="default"
-                className="border-blue-500/30 bg-transparent"
-              >
-                <Clock className="h-4 w-4 text-blue-500 shrink-0" />
-                <div>
-                  <AlertTitle className="text-[13px] font-medium text-blue-600 dark:text-blue-400">
-                    Activity retention period
-                  </AlertTitle>
-                  <AlertDescription className="text-[12px] text-blue-600/80 dark:text-blue-400/80 !block mt-1">
-                    Your <span className="font-medium capitalize">{plan}</span>{' '}
-                    plan supports{' '}
-                    <span className="font-medium">{planLimit.label}</span> of
-                    activity retention.
-                    {(plan === 'free' || plan === 'pro') && (
-                      <>
-                        {' '}
-                        <a
-                          href="#"
-                          className="font-medium underline hover:no-underline"
-                          onClick={(e) => {
-                            e.preventDefault()
-                          }}
-                        >
-                          Upgrade
-                        </a>{' '}
-                        or{' '}
-                        <a
-                          href="#"
-                          className="font-medium underline hover:no-underline"
-                          onClick={(e) => {
-                            e.preventDefault()
-                          }}
-                        >
-                          contact sales
-                        </a>{' '}
-                        for higher retention.
-                      </>
-                    )}
-                  </AlertDescription>
-                </div>
-              </Alert>
-            </div>
-          </div>
-        }
-      />
-
-      {/* Filters Panel */}
-      {showFilters && (
-        <div className="border-b border-border">
-          <div className="flex flex-wrap items-center gap-3 px-4 py-3 sm:px-6">
-            <span className="text-[12px] font-medium text-muted-foreground">
-              Filter by:
-            </span>
-
-            {/* Action Filter */}
-            <Select
-              value={actionFilter}
-              onValueChange={(value) => {
-                setActionFilter(value)
-                setCurrentPage(1)
-              }}
-            >
-              <SelectTrigger className="h-8 w-[140px] text-[12px]">
-                <SelectValue placeholder="Action" />
-              </SelectTrigger>
-              <SelectContent>
-                {actionOptions.map((option) => (
-                  <SelectItem
-                    key={option.value}
-                    value={option.value}
-                    className="text-[12px]"
-                  >
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {/* Resource Type Filter */}
-            <Select
-              value={resourceTypeFilter}
-              onValueChange={(value) => {
-                setResourceTypeFilter(value)
-                setCurrentPage(1)
-              }}
-            >
-              <SelectTrigger className="h-8 w-[140px] text-[12px]">
-                <SelectValue placeholder="Resource type" />
-              </SelectTrigger>
-              <SelectContent>
-                {resourceTypeOptions.map((option) => (
-                  <SelectItem
-                    key={option.value}
-                    value={option.value}
-                    className="text-[12px]"
-                  >
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {/* Clear Filters */}
-            {hasActiveFilters && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearFilters}
-                className="h-8 gap-1.5 text-[12px] text-muted-foreground hover:text-foreground"
-              >
-                <X className="h-3.5 w-3.5" />
-                Clear filters
-              </Button>
-            )}
-          </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Activity Table */}
       <div className="flex-1">
@@ -568,7 +571,7 @@ export function View({ plan = 'pro' }: ViewProps) {
 
         {paginatedActivities.length > 0 ? (
           <>
-            <Table className="border-b border-border">
+            <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent border-b border-border">
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[200px] pl-6 sm:pl-8">
@@ -590,14 +593,10 @@ export function View({ plan = 'pro' }: ViewProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginatedActivities.map((activity, index) => (
+                {paginatedActivities.map((activity) => (
                   <TableRow
                     key={activity.$id}
-                    className={cn(
-                      'cursor-pointer',
-                      index === paginatedActivities.length - 1 &&
-                        'border-b border-border',
-                    )}
+                    className="cursor-pointer"
                     onClick={() => {}}
                   >
                     <TableCell className="pl-6 sm:pl-8 py-3">
@@ -716,7 +715,7 @@ export function View({ plan = 'pro' }: ViewProps) {
                 ))}
               </TableBody>
             </Table>
-            <div className="px-4 py-2 sm:px-6">
+            <div className="sticky bottom-0 z-20 h-[54px] shrink-0 border-t border-border bg-background px-4 sm:px-6">
               <Pagination
                 currentPage={currentPage}
                 totalItems={filteredActivities.length}
@@ -728,7 +727,7 @@ export function View({ plan = 'pro' }: ViewProps) {
                   setCurrentPage(1)
                 }}
                 itemLabel="activities"
-                className="border-0 mt-0 py-2"
+                className="h-full min-h-0 border-0 mt-0 py-0"
               />
             </div>
           </>
