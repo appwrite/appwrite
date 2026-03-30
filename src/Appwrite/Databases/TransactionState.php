@@ -183,7 +183,8 @@ class TransactionState
         if (!isset($state[$collectionId])) {
             return $baseCount;
         }
-        $committedDocs = $dbForDatabases->find($collectionId, $queries);
+
+        $committedDocs = $dbForDatabases->find($collectionId, \array_merge($queries, [Query::select(['$id'])]));
         $committedDocIds = [];
         foreach ($committedDocs as $doc) {
             $committedDocIds[$doc->getId()] = true;

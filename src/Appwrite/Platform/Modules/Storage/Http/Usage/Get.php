@@ -7,6 +7,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Async\Promise;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -77,27 +78,33 @@ class Get extends Action
         ];
 
         $authorization->skip(function () use ($dbForProject, $dbForLogs, $bucket, $days, $metrics, &$stats) {
+            $limit = $days['limit'];
+            $period = $days['period'];
+
+            $tasks = [];
             foreach ($metrics as $metric) {
                 $db = ($metric === str_replace('{bucketInternalId}', $bucket->getSequence(), METRIC_BUCKET_ID_FILES_IMAGES_TRANSFORMED))
                     ? $dbForLogs
                     : $dbForProject;
 
-                $result = $db->findOne('stats', [
+                $tasks[$metric . '_total'] = fn () => $db->findOne('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', ['inf'])
                 ]);
-
-                $stats[$metric]['total'] = $result['value'] ?? 0;
-                $limit = $days['limit'];
-                $period = $days['period'];
-                $results = $db->find('stats', [
+                $tasks[$metric . '_data'] = fn () => $db->find('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', [$period]),
                     Query::limit($limit),
                     Query::orderDesc('time'),
                 ]);
+            }
+
+            $results = Promise::map($tasks)->await();
+
+            foreach ($metrics as $metric) {
+                $stats[$metric]['total'] = $results[$metric . '_total']['value'] ?? 0;
                 $stats[$metric]['data'] = [];
-                foreach ($results as $result) {
+                foreach ($results[$metric . '_data'] as $result) {
                     $stats[$metric]['data'][$result->getAttribute('time')] = [
                         'value' => $result->getAttribute('value'),
                     ];

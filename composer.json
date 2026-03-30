@@ -60,6 +60,7 @@
         "utopia-php/compression": "0.1.*",
         "utopia-php/config": "1.*",
         "utopia-php/console": "0.1.*",
+        "utopia-php/async": "@dev",
         "utopia-php/database": "5.*",
         "utopia-php/agents": "1.*",
         "utopia-php/detector": "0.2.*",
@@ -111,6 +112,12 @@
     "provide": {
         "ext-phpiredis": "*"
     },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/utopia-php/async.git"
+        }
+    ],
     "config": {
         "platform": {
         },
