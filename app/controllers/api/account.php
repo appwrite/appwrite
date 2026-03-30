@@ -3179,8 +3179,7 @@ Http::patch('/v1/account/name')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (?string $name, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
-        $name = $name ?? '';
+    ->action(function (string $name, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
 
         $user->setAttribute('name', $name);
 
