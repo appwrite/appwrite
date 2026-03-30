@@ -46,6 +46,8 @@ class Comment
         'Messaging handles push notifications, emails, and SMS through one unified API',
         'Teams feature lets you group users with membership management and role permissions',
         'MCP server integration brings LLM superpowers to Claude Desktop and Cursor IDE',
+        'Appwrite Databases support major adapters like MariaDB, PostgreSQL, and MongoDB',
+        'The Appwrite CLI lets you easily deploy and manage multiple projects from your terminal',
     ];
 
     protected string $statePrefix = '[appwrite]: #';
@@ -143,11 +145,11 @@ class Comment
                     $pathDark = '/images/vcs/status-' . $imageStatus . '-dark.' . $extension;
 
                     $status = match ($site['status']) {
-                        'waiting' => $this->generatImage($pathLight, $pathDark, 'Queued', 85) . ' _Queued_',
-                        'processing' => $this->generatImage($pathLight, $pathDark, 'Processing', 85) . ' _Processing_',
-                        'building' => $this->generatImage($pathLight, $pathDark, 'Building', 85) . ' _Building_',
-                        'ready' => $this->generatImage($pathLight, $pathDark, 'Ready', 85) . ' _Ready_',
-                        'failed' => $this->generatImage($pathLight, $pathDark, 'Failed', 85) . ' _Failed_',
+                        'waiting' => $this->generateImage($pathLight, $pathDark, 'Queued', 85) . ' _Queued_',
+                        'processing' => $this->generateImage($pathLight, $pathDark, 'Processing', 85) . ' _Processing_',
+                        'building' => $this->generateImage($pathLight, $pathDark, 'Building', 85) . ' _Building_',
+                        'ready' => $this->generateImage($pathLight, $pathDark, 'Ready', 85) . ' _Ready_',
+                        'failed' => $this->generateImage($pathLight, $pathDark, 'Failed', 85) . ' _Failed_',
                     };
 
                     if ($site['action']['type'] === 'logs') {
@@ -160,7 +162,7 @@ class Comment
                     $qrImagePathDark = '/images/vcs/qr-dark.svg';
 
                     $consoleUrl = $protocol . '://' . $hostname . '/v1/avatars/qr?text=' . \urlencode($site['previewUrl']);
-                    $qr = '[' . $this->generatImage($qrImagePathLight, $qrImagePathDark, 'QR Code', 28) . '](' . $consoleUrl . ')';
+                    $qr = '[' . $this->generateImage($qrImagePathLight, $qrImagePathDark, 'QR Code', 28) . '](' . $consoleUrl . ')';
 
                     $preview = '[Preview URL](' . $site['previewUrl'] . ')';
 
@@ -190,11 +192,11 @@ class Comment
                     $pathDark = '/images/vcs/status-' . $imageStatus . '-dark.' . $extension;
 
                     $status = match ($function['status']) {
-                        'waiting' => $this->generatImage($pathLight, $pathDark, 'Queued', 85) . ' _Queued_',
-                        'processing' => $this->generatImage($pathLight, $pathDark, 'Processing', 85) . ' _Processing_',
-                        'building' => $this->generatImage($pathLight, $pathDark, 'Building', 85) . ' _Building_',
-                        'ready' => $this->generatImage($pathLight, $pathDark, 'Ready', 85) . ' _Ready_',
-                        'failed' => $this->generatImage($pathLight, $pathDark, 'Failed', 85) . ' _Failed_',
+                        'waiting' => $this->generateImage($pathLight, $pathDark, 'Queued', 85) . ' _Queued_',
+                        'processing' => $this->generateImage($pathLight, $pathDark, 'Processing', 85) . ' _Processing_',
+                        'building' => $this->generateImage($pathLight, $pathDark, 'Building', 85) . ' _Building_',
+                        'ready' => $this->generateImage($pathLight, $pathDark, 'Ready', 85) . ' _Ready_',
+                        'failed' => $this->generateImage($pathLight, $pathDark, 'Failed', 85) . ' _Failed_',
                     };
 
                     if ($function['action']['type'] === 'logs') {
@@ -230,7 +232,7 @@ class Comment
         return $text;
     }
 
-    public function generatImage(string $pathLight, string $pathDark, string $alt, int $width): string
+    public function generateImage(string $pathLight, string $pathDark, string $alt, int $width): string
     {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $hostname = $this->platform['consoleHostname'] ?? '';
