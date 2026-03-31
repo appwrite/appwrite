@@ -103,7 +103,7 @@ function dispatch(Server $server, int $fd, int $type, $data = null): int
         $lines = explode("\n", $data, 3);
         $request = $lines[0];
         if (count($lines) > 1) {
-            $domain = trim(explode('Host: ', $lines[1])[1]);
+            $domain = trim(explode('Host: ', $lines[1])[1] ?? '');
         }
 
         // Sync executions are considered risky

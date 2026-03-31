@@ -14,16 +14,17 @@ use Appwrite\SDK\Language\Flutter;
 use Appwrite\SDK\Language\Go;
 use Appwrite\SDK\Language\GraphQL;
 use Appwrite\SDK\Language\Kotlin;
-use Appwrite\SDK\Language\Markdown;
 use Appwrite\SDK\Language\Node;
 use Appwrite\SDK\Language\PHP;
 use Appwrite\SDK\Language\Python;
 use Appwrite\SDK\Language\ReactNative;
 use Appwrite\SDK\Language\REST;
 use Appwrite\SDK\Language\Ruby;
+use Appwrite\SDK\Language\Rust;
 use Appwrite\SDK\Language\Swift;
 use Appwrite\SDK\Language\Web;
 use Appwrite\SDK\SDK;
+use Appwrite\Spec\StaticSpec;
 use Appwrite\Spec\Swagger2;
 use CzProject\GitPhp\Git;
 use Utopia\Agents\Adapters\OpenAI;
@@ -49,7 +50,10 @@ class SDKs extends Action
 
     public static function getPlatforms(): array
     {
-        return Specs::getPlatforms();
+        return [
+            ...Specs::getPlatforms(),
+            APP_SDK_PLATFORM_STATIC,
+        ];
     }
 
     protected function getSdkConfigPath(): string
@@ -98,10 +102,13 @@ class SDKs extends Action
         } else {
             $sdks = explode(',', $sdks);
         }
-        $version ??= Console::confirm('Choose an Appwrite version');
 
         $createRelease = ($release === 'yes');
         $commitRelease = ($commit === 'yes');
+
+        if ($createRelease && $examplesOnly) {
+            throw new \Exception('Cannot use --release=yes with --mode=examples');
+        }
 
         if (! $createRelease && ! $examplesOnly) {
             $git ??= Console::confirm('Should we use git push? (yes/no)');
@@ -114,30 +121,34 @@ class SDKs extends Action
             $prUrls = [];
         }
 
-        if (! \in_array($version, [
-            '0.6.x',
-            '0.7.x',
-            '0.8.x',
-            '0.9.x',
-            '0.10.x',
-            '0.11.x',
-            '0.12.x',
-            '0.13.x',
-            '0.14.x',
-            '0.15.x',
-            '1.0.x',
-            '1.1.x',
-            '1.2.x',
-            '1.3.x',
-            '1.4.x',
-            '1.5.x',
-            '1.6.x',
-            '1.7.x',
-            '1.8.x',
-            '1.9.x',
-            'latest',
-        ])) {
-            throw new \Exception('Unknown version given');
+        if (! $createRelease) {
+            $version ??= Console::confirm('Choose an Appwrite version');
+
+            if (! \in_array($version, [
+                '0.6.x',
+                '0.7.x',
+                '0.8.x',
+                '0.9.x',
+                '0.10.x',
+                '0.11.x',
+                '0.12.x',
+                '0.13.x',
+                '0.14.x',
+                '0.15.x',
+                '1.0.x',
+                '1.1.x',
+                '1.2.x',
+                '1.3.x',
+                '1.4.x',
+                '1.5.x',
+                '1.6.x',
+                '1.7.x',
+                '1.8.x',
+                '1.9.x',
+                'latest',
+            ])) {
+                throw new \Exception('Unknown version given');
+            }
         }
 
         $selectedPlatforms = ($selectedPlatform === '*' || $selectedPlatform === null) ? null : \array_map('trim', \explode(',', $selectedPlatform));
@@ -169,16 +180,140 @@ class SDKs extends Action
                 }
 
                 Console::log('');
-                Console::info("━━━ {$language['name']} SDK ({$platform['name']}, {$version}) ━━━");
-                Console::log('  Fetching API spec...');
 
-                $specPath = __DIR__ . '/../../../../app/config/specs/swagger2-' . $version . '-' . $language['family'] . '.json';
+                if ($createRelease && ! $examplesOnly) {
+                    Console::info("━━━ {$language['name']} SDK ({$platform['name']}, {$language['version']}) ━━━");
+                    $changelog = $language['changelog'] ?? '';
+                    $changelog = ($changelog) ? \file_get_contents($changelog) : '# Change Log';
 
-                if (!file_exists($specPath)) {
-                    throw new \Exception('Spec file not found: ' . $specPath . '. Please run "docker compose exec appwrite specs --version=' . $version . '" first to generate the specs.');
+                    $repoName = $language['gitUserName'] . '/' . $language['gitRepoName'];
+                    $releaseVersion = $language['version'];
+                    $releaseNotes = $this->extractReleaseNotes($changelog, $releaseVersion);
+
+                    if (empty($releaseNotes)) {
+                        $releaseNotes = "Release version {$releaseVersion}";
+                    }
+
+                    $releaseTitle = $releaseVersion;
+                    $releaseTarget = $language['repoBranch'] ?? 'main';
+
+                    if ($repoName === '/') {
+                        Console::warning('  Not a releasable SDK, skipping');
+
+                        continue;
+                    }
+
+                    // Check if release already exists
+                    $checkReleaseCommand = 'gh release view ' . \escapeshellarg($releaseVersion) . ' --repo ' . \escapeshellarg($repoName) . ' --json url --jq ".url" 2>/dev/null';
+                    $existingReleaseUrl = trim(\shell_exec($checkReleaseCommand) ?? '');
+
+                    if (! empty($existingReleaseUrl)) {
+                        Console::warning("  Release {$releaseVersion} already exists, skipping");
+                        Console::log("  {$existingReleaseUrl}");
+
+                        continue;
+                    }
+
+                    // Check if the latest commit on the target branch already has a release
+                    $latestCommitCommand = 'gh api repos/' . $repoName . '/commits/' . $releaseTarget . ' --jq ".sha" 2>/dev/null';
+                    $latestCommitSha = trim(\shell_exec($latestCommitCommand) ?? '');
+
+                    if (! empty($latestCommitSha)) {
+                        $latestReleaseTagCommand = 'gh api repos/' . $repoName . '/releases --jq ".[0] | .tag_name" 2>/dev/null';
+                        $latestReleaseTag = trim(\shell_exec($latestReleaseTagCommand) ?? '');
+
+                        if (! empty($latestReleaseTag)) {
+                            $tagCommitCommand = 'gh api repos/' . $repoName . '/git/ref/tags/' . $latestReleaseTag . ' --jq ".object.sha" 2>/dev/null';
+                            $tagCommitSha = trim(\shell_exec($tagCommitCommand) ?? '');
+
+                            if (! empty($tagCommitSha) && $latestCommitSha === $tagCommitSha) {
+                                Console::warning("  Latest commit already released ({$latestReleaseTag}), skipping");
+
+                                continue;
+                            }
+                        }
+                    }
+
+                    $previousVersion = '';
+                    $tagListCommand = 'gh release list --repo ' . \escapeshellarg($repoName) . ' --limit 1 --json tagName --jq ".[0].tagName" 2>&1';
+                    $previousVersion = trim(\shell_exec($tagListCommand) ?? '');
+
+                    $formattedNotes = "## What's Changed\n\n";
+                    $formattedNotes .= $releaseNotes . "\n\n";
+
+                    if (! empty($previousVersion)) {
+                        $formattedNotes .= '**Full Changelog**: https://github.com/' . $repoName . '/compare/' . $previousVersion . '...' . $releaseVersion;
+                    } else {
+                        $formattedNotes .= '**Full Changelog**: https://github.com/' . $repoName . '/releases/tag/' . $releaseVersion;
+                    }
+
+                    if (! $commitRelease) {
+                        Console::info('  [DRY RUN] Would create release:');
+                        Console::log("    Repository:       {$repoName}");
+                        Console::log("    Version:          {$releaseVersion}");
+                        Console::log("    Title:            {$releaseTitle}");
+                        Console::log("    Target Branch:    {$releaseTarget}");
+                        Console::log('    Previous Version: ' . ($previousVersion ?: 'N/A'));
+                        Console::log('    Release Notes:');
+                        Console::log('    ' . str_replace("\n", "\n    ", $formattedNotes));
+                    } else {
+                        Console::log("  Creating release {$releaseVersion}...");
+
+                        $tempNotesFile = \tempnam(\sys_get_temp_dir(), 'release_notes_');
+                        \file_put_contents($tempNotesFile, $formattedNotes);
+
+                        $releaseCommand = 'gh release create ' . \escapeshellarg($releaseVersion) . ' \
+                            --repo ' . \escapeshellarg($repoName) . ' \
+                            --title ' . \escapeshellarg($releaseTitle) . ' \
+                            --notes-file ' . \escapeshellarg($tempNotesFile) . ' \
+                            --target ' . \escapeshellarg($releaseTarget) . ' \
+                            2>&1';
+
+                        $releaseOutput = [];
+                        $releaseReturnCode = 0;
+                        \exec($releaseCommand, $releaseOutput, $releaseReturnCode);
+
+                        \unlink($tempNotesFile);
+
+                        if ($releaseReturnCode === 0) {
+                            // Extract release URL from output
+                            $releaseUrl = '';
+                            foreach ($releaseOutput as $line) {
+                                if (strpos($line, 'https://github.com/') !== false) {
+                                    $releaseUrl = trim($line);
+                                    break;
+                                }
+                            }
+
+                            Console::success("  Release {$releaseVersion} created");
+                            if (! empty($releaseUrl)) {
+                                Console::log("  {$releaseUrl}");
+                            }
+                        } else {
+                            $errorMessage = implode("\n", $releaseOutput);
+                            Console::error("  Failed to create release: " . $errorMessage);
+                        }
+                    }
+
+                    continue;
                 }
 
-                $spec = file_get_contents($specPath);
+                Console::info("━━━ {$language['name']} SDK ({$platform['name']}, {$version}) ━━━");
+                $specFormat = $language['spec'] ?? 'swagger2';
+                $spec = null;
+                if ($specFormat === 'static') {
+                    Console::log('  Using static SDK spec...');
+                } else {
+                    Console::log('  Fetching API spec...');
+
+                    $specPath = __DIR__ . '/../../../../app/config/specs/swagger2-' . $version . '-' . $language['family'] . '.json';
+
+                    if (!file_exists($specPath)) {
+                        throw new \Exception('Spec file not found: ' . $specPath . '. Please run "docker compose exec appwrite specs --version=' . $version . '" first to generate the specs.');
+                    }
+
+                    $spec = file_get_contents($specPath);
+                }
 
                 $cover = 'https://github.com/appwrite/appwrite/raw/main/public/images/github.png';
                 $result = \realpath(__DIR__ . '/../../../../app') . '/sdks/' . $key . '-' . $language['key'];
@@ -301,15 +436,14 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         $config = new Kotlin();
                         $warning = $warning . "\n\n > This is the Kotlin SDK for integrating with Appwrite from your Kotlin server-side code. If you're looking for the Android SDK you should check [appwrite/sdk-for-android](https://github.com/appwrite/sdk-for-android)";
                         break;
+                    case 'rust':
+                        $config = new Rust();
+                        break;
                     case 'graphql':
                         $config = new GraphQL();
                         break;
                     case 'rest':
                         $config = new REST();
-                        break;
-                    case 'markdown':
-                        $config = new Markdown();
-                        $config->setNPMPackage('@appwrite.io/docs');
                         break;
                     case 'agent-skills':
                         $config = new AgentSkills();
@@ -321,124 +455,22 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         throw new \Exception('Language "' . $language['key'] . '" not supported');
                 }
 
-                if ($createRelease && ! $examplesOnly) {
-                    $repoName = $language['gitUserName'] . '/' . $language['gitRepoName'];
-                    $releaseVersion = $language['version'];
-                    $releaseNotes = $this->extractReleaseNotes($changelog, $releaseVersion);
-
-                    if (empty($releaseNotes)) {
-                        $releaseNotes = "Release version {$releaseVersion}";
-                    }
-
-                    $releaseTitle = $releaseVersion;
-                    $releaseTarget = $language['repoBranch'] ?? 'main';
-
-                    if ($repoName === '/') {
-                        Console::warning('  Not a releasable SDK, skipping');
-
-                        continue;
-                    }
-
-                    // Check if release already exists
-                    $checkReleaseCommand = 'gh release view ' . \escapeshellarg($releaseVersion) . ' --repo ' . \escapeshellarg($repoName) . ' --json url --jq ".url" 2>/dev/null';
-                    $existingReleaseUrl = trim(\shell_exec($checkReleaseCommand) ?? '');
-
-                    if (! empty($existingReleaseUrl)) {
-                        Console::warning("  Release {$releaseVersion} already exists, skipping");
-                        Console::log("  {$existingReleaseUrl}");
-
-                        continue;
-                    }
-
-                    // Check if the latest commit on the target branch already has a release
-                    $latestCommitCommand = 'gh api repos/' . $repoName . '/commits/' . $releaseTarget . ' --jq ".sha" 2>/dev/null';
-                    $latestCommitSha = trim(\shell_exec($latestCommitCommand) ?? '');
-
-                    if (! empty($latestCommitSha)) {
-                        $latestReleaseTagCommand = 'gh api repos/' . $repoName . '/releases --jq ".[0] | .tag_name" 2>/dev/null';
-                        $latestReleaseTag = trim(\shell_exec($latestReleaseTagCommand) ?? '');
-
-                        if (! empty($latestReleaseTag)) {
-                            $tagCommitCommand = 'gh api repos/' . $repoName . '/git/ref/tags/' . $latestReleaseTag . ' --jq ".object.sha" 2>/dev/null';
-                            $tagCommitSha = trim(\shell_exec($tagCommitCommand) ?? '');
-
-                            if (! empty($tagCommitSha) && $latestCommitSha === $tagCommitSha) {
-                                Console::warning("  Latest commit already released ({$latestReleaseTag}), skipping");
-
-                                continue;
-                            }
-                        }
-                    }
-
-                    $previousVersion = '';
-                    $tagListCommand = 'gh release list --repo ' . \escapeshellarg($repoName) . ' --limit 1 --json tagName --jq ".[0].tagName" 2>&1';
-                    $previousVersion = trim(\shell_exec($tagListCommand) ?? '');
-
-                    $formattedNotes = "## What's Changed\n\n";
-                    $formattedNotes .= $releaseNotes . "\n\n";
-
-                    if (! empty($previousVersion)) {
-                        $formattedNotes .= '**Full Changelog**: https://github.com/' . $repoName . '/compare/' . $previousVersion . '...' . $releaseVersion;
-                    } else {
-                        $formattedNotes .= '**Full Changelog**: https://github.com/' . $repoName . '/releases/tag/' . $releaseVersion;
-                    }
-
-                    if (! $commitRelease) {
-                        Console::info('  [DRY RUN] Would create release:');
-                        Console::log("    Repository:       {$repoName}");
-                        Console::log("    Version:          {$releaseVersion}");
-                        Console::log("    Title:            {$releaseTitle}");
-                        Console::log("    Target Branch:    {$releaseTarget}");
-                        Console::log('    Previous Version: ' . ($previousVersion ?: 'N/A'));
-                        Console::log('    Release Notes:');
-                        Console::log('    ' . str_replace("\n", "\n    ", $formattedNotes));
-                    } else {
-                        Console::log("  Creating release {$releaseVersion}...");
-
-                        $tempNotesFile = \tempnam(\sys_get_temp_dir(), 'release_notes_');
-                        \file_put_contents($tempNotesFile, $formattedNotes);
-
-                        $releaseCommand = 'gh release create ' . \escapeshellarg($releaseVersion) . ' \
-                            --repo ' . \escapeshellarg($repoName) . ' \
-                            --title ' . \escapeshellarg($releaseTitle) . ' \
-                            --notes-file ' . \escapeshellarg($tempNotesFile) . ' \
-                            --target ' . \escapeshellarg($releaseTarget) . ' \
-                            2>&1';
-
-                        $releaseOutput = [];
-                        $releaseReturnCode = 0;
-                        \exec($releaseCommand, $releaseOutput, $releaseReturnCode);
-
-                        \unlink($tempNotesFile);
-
-                        if ($releaseReturnCode === 0) {
-                            // Extract release URL from output
-                            $releaseUrl = '';
-                            foreach ($releaseOutput as $line) {
-                                if (strpos($line, 'https://github.com/') !== false) {
-                                    $releaseUrl = trim($line);
-                                    break;
-                                }
-                            }
-
-                            Console::success("  Release {$releaseVersion} created");
-                            if (! empty($releaseUrl)) {
-                                Console::log("  {$releaseUrl}");
-                            }
-                        } else {
-                            $errorMessage = implode("\n", $releaseOutput);
-                            Console::error("  Failed to create release: " . $errorMessage);
-                        }
-                    }
-
-                    continue;
-                }
-
                 Console::log($examplesOnly
                     ? '  Generating examples...'
                     : '  Generating SDK...');
 
-                $sdk = new SDK($config, new Swagger2($spec));
+                $sdk = new SDK(
+                    $config,
+                    $specFormat === 'static'
+                        ? new StaticSpec(
+                            title: 'Appwrite',
+                            description: 'Appwrite backend as a service',
+                            version: $version,
+                            licenseName: 'BSD-3-Clause',
+                            licenseURL: 'https://raw.githubusercontent.com/appwrite/appwrite/master/LICENSE',
+                        )
+                        : new Swagger2($spec)
+                );
 
                 $sdk
                     ->setName($language['name'])
@@ -479,6 +511,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
                 try {
                     $sdk->generate($result);
+                    Console::success($examplesOnly
+                        ? "  Examples generated at {$result}"
+                        : "  SDK generated at {$result}");
                 } catch (\Throwable $exception) {
                     Console::error($exception->getMessage());
                 }

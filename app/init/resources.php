@@ -432,8 +432,10 @@ Http::setResource('user', function (string $mode, Document $project, Document $c
         $jwtUserId = $payload['userId'] ?? '';
         if (! empty($jwtUserId)) {
             if ($mode === APP_MODE_ADMIN) {
+                /** @var User $user */
                 $user = $dbForPlatform->getDocument('users', $jwtUserId);
             } else {
+                /** @var User $user */
                 $user = $dbForProject->getDocument('users', $jwtUserId);
             }
         }
@@ -453,6 +455,7 @@ Http::setResource('user', function (string $mode, Document $project, Document $c
             throw new Exception(Exception::USER_API_KEY_AND_SESSION_SET);
         }
 
+        /** @var User $accountKeyUser */
         $accountKeyUser = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('users', $accountKeyUserId));
         if (! $accountKeyUser->isEmpty()) {
             $key = $accountKeyUser->find(
