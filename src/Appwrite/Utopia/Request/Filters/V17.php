@@ -101,8 +101,8 @@ class V17 extends Filter
         $paramsEnd = \strlen($filter) - 1; // -1 to ignore )
         $parametersStart = $paramsStart + 1; // +1 to ignore (
 
-        // Check for deprecated query syntax
-        if (\str_contains($method, '.')) {
+        // Check for deprecated query syntax (only relevant for raw strings, not resolved enum cases)
+        if (\is_string($method) && \str_contains($method, '.')) {
             throw new \Exception('Invalid query method');
         }
 
