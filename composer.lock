@@ -4038,12 +4038,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "93b7f4d01a2b7794374d53b7d5cf8e4b9d2509fe"
+                "reference": "84c0c749113178947a07bd047569dbe7f67f2906"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/93b7f4d01a2b7794374d53b7d5cf8e4b9d2509fe",
-                "reference": "93b7f4d01a2b7794374d53b7d5cf8e4b9d2509fe",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/84c0c749113178947a07bd047569dbe7f67f2906",
+                "reference": "84c0c749113178947a07bd047569dbe7f67f2906",
                 "shasum": ""
             },
             "require": {

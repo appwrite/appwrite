@@ -11402,7 +11402,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::count('total')->toString(),
+                Query::count('*', 'total')->toString(),
             ],
         ]);
 
@@ -11479,7 +11479,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::count('total')->toString(),
+                Query::count('*', 'total')->toString(),
                 Query::groupBy(['title'])->toString(),
             ],
         ]);
@@ -11505,7 +11505,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::count('total')->toString(),
+                Query::count('*', 'total')->toString(),
                 Query::groupBy(['releaseYear'])->toString(),
                 Query::having([Query::greaterThanEqual('total', 1)])->toString(),
             ],
@@ -11601,7 +11601,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'queries' => [
-                Query::count('total')->toString(),
+                Query::count('*', 'total')->toString(),
                 Query::join($libraryId, 'libraries', '$id')->toString(),
                 Query::groupBy(['fullName'])->toString(),
             ],
@@ -11648,7 +11648,7 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             'queries' => [
                 Query::greaterThan('releaseYear', 2000)->toString(),
-                Query::count('total')->toString(),
+                Query::count('*', 'total')->toString(),
             ],
         ]);
 
@@ -11874,7 +11874,7 @@ trait DatabasesBase
         ], [
             'queries' => [
                 Query::join($libraryId, 'library', '$id')->toString(),
-                Query::count('total')->toString(),
+                Query::count('*', 'total')->toString(),
             ],
         ]);
 

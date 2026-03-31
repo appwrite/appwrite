@@ -84,7 +84,9 @@ class Metadata implements Decorator
             }
 
             $relations = \is_array($related) ? $related : [$related];
-            $relatedCollectionId = $relationship->getAttribute('relatedCollection');
+            $options = $relationship->getAttribute('options', []);
+            $relatedCollectionId = (\is_array($options) ? ($options['relatedCollection'] ?? null) : null)
+                ?? $relationship->getAttribute('relatedCollection');
 
             foreach ($relations as $relation) {
                 if ($relation instanceof Document) {
