@@ -349,6 +349,63 @@ jobs:
           echo "=== Appwrite Logs ==="
           docker compose logs
 
+  e2e_quick:
+    name: Tests / E2E / ${{ matrix.database.name }} (${{ matrix.mode }}) / Quick
+    runs-on: ubuntu-latest
+    needs: [build, matrix]
+    env:
+      COMPOSE_FILE: ${{ matrix.database.compose }}
+      COMPOSE_ENV_FILES: ${{ matrix.database.env }}
+    permissions:
+      contents: read
+      pull-requests: write
+    strategy:
+      fail-fast: false
+      matrix:
+        database: ${{ fromJSON(needs.matrix.outputs.databases) }}
+        mode: ${{ fromJSON(needs.matrix.outputs.modes) }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Download Docker Image
+        uses: actions/download-artifact@v7
+        with:
+          name: ${{ env.IMAGE }}
+          path: /tmp
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Load and Start Appwrite
+        timeout-minutes: 5
+        env:
+          _APP_BROWSER_HOST: http://invalid-browser/v1
+          _APP_DATABASE_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'database_db_main' || '' }}
+          _APP_DATABASE_SHARED_TABLES_V1: ${{ matrix.mode == 'shared_v1' && 'database_db_main' || '' }}
+        run: |
+          docker load --input /tmp/${{ env.IMAGE }}.tar
+          docker compose pull --quiet --ignore-buildable
+          docker compose up -d --quiet-pull --wait
+
+      - name: Run tests
+        timeout-minutes: 20
+        run: |
+          for service in Console Health Locale Tokens VCS Webhooks; do
+            docker compose exec -T \
+              -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
+              appwrite vendor/bin/paratest --processes $(nproc) --functional "/usr/src/code/tests/e2e/Services/$service" --exclude-group abuseEnabled --exclude-group screenshots
+          done
+
+      - name: Failure Logs
+        if: failure()
+        run: |
+          echo "=== Appwrite Logs ==="
+          docker compose logs
+
   e2e_service:
     name: Tests / E2E / ${{ matrix.database.name }} (${{ matrix.mode }}) / ${{ matrix.service }}
     runs-on: ${{ matrix.runner || 'ubuntu-latest' }}
@@ -367,25 +424,19 @@ jobs:
         service: [
           Account,
           Avatars,
-          Console,
           Databases,
           TablesDB,
           Functions,
           FunctionsSchedule,
           GraphQL,
-          Health,
-          Locale,
           Projects,
           Realtime,
           Sites,
           Proxy,
           Storage,
-          Tokens,
           Teams,
           Users,
           ProjectWebhooks,
-          Webhooks,
-          VCS,
           Messaging,
           Migrations,
           Project
@@ -393,20 +444,20 @@ jobs:
         include:
           - service: Databases
             runner: blacksmith-4vcpu-ubuntu-2404
-            functional: false
+            parallel: false
           - service: Sites
             runner: blacksmith-4vcpu-ubuntu-2404
           - service: Functions
             runner: blacksmith-4vcpu-ubuntu-2404
-            functional: false
+            parallel: false
           - service: Avatars
             runner: blacksmith-4vcpu-ubuntu-2404
           - service: Realtime
             runner: blacksmith-4vcpu-ubuntu-2404
-            functional: false
+            parallel: false
           - service: TablesDB
             runner: blacksmith-4vcpu-ubuntu-2404
-            functional: false
+            parallel: false
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -447,7 +498,7 @@ jobs:
         run: |
           docker compose exec -T \
             -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
-            appwrite vendor/bin/paratest --processes $(nproc) ${{ matrix.functional != false && '--functional' || '' }} "/usr/src/code/tests/e2e/Services/${{ matrix.service }}" --exclude-group abuseEnabled --exclude-group screenshots
+            appwrite vendor/bin/paratest --processes $(nproc) ${{ matrix.parallel != false && '--functional' || '' }} "/usr/src/code/tests/e2e/Services/${{ matrix.service }}" --exclude-group abuseEnabled --exclude-group screenshots
 
       - name: Failure Logs
         if: failure()
