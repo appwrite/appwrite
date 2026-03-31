@@ -1162,6 +1162,7 @@ Http::post('/v1/projects/:projectId/platforms')
 
         $validatePlatformField('name', $name);
         $validatePlatformField('key', $key, true);
+        $validatePlatformField('store', $store, true);
         $validatePlatformField('hostname', $hostname, true);
 
         $platform = new Document([
