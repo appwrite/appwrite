@@ -115,12 +115,6 @@ parameters:
 			path: app/controllers/mock.php
 
 		-
-			message: '#^Call to an undefined method Utopia\\Database\\Document\:\:getRoles\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/controllers/shared/api.php
-
-		-
 			message: '#^Variable \$register might not be defined\.$#'
 			identifier: variable.undefined
 			count: 3
