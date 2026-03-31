@@ -282,7 +282,7 @@ class Attributes extends Validator
                         if (isset($attribute['min']) || isset($attribute['max'])) {
                             $min = $attribute['min'] ?? -\PHP_FLOAT_MAX;
                             $max = $attribute['max'] ?? \PHP_FLOAT_MAX;
-                            $rangeValidator = new Range($min, $max, ColumnType::Float->value);
+                            $rangeValidator = new Range($min, $max, ColumnType::Double->value);
                             if (!$rangeValidator->isValid((float)$attribute['default'])) {
                                 $this->message = "Default value for float attribute '" . $attribute['key'] . "' must be between $min and $max";
                                 return false;

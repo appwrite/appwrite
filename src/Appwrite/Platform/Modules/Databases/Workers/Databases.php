@@ -159,7 +159,7 @@ class Databases extends Action
         // Float/int/bool values may be converted to strings during serialization
         if ($default !== null) {
             $default = match ($type) {
-                ColumnType::Float->value => \floatval($default),
+                ColumnType::Double->value => \floatval($default),
                 ColumnType::Integer->value => \intval($default),
                 ColumnType::Boolean->value => \boolval($default),
                 default => $default,

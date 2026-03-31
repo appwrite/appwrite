@@ -245,7 +245,7 @@ abstract class Action extends UtopiaAction
                 ? UtopiaResponse::MODEL_ATTRIBUTE_INTEGER
                 : UtopiaResponse::MODEL_COLUMN_INTEGER,
 
-            ColumnType::Float->value => $isCollections
+            ColumnType::Double->value => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_FLOAT
                 : UtopiaResponse::MODEL_COLUMN_FLOAT,
 
@@ -553,9 +553,9 @@ abstract class Action extends UtopiaAction
                 }
 
                 if ($attribute->getAttribute('format') === APP_DATABASE_ATTRIBUTE_INT_RANGE) {
-                    $validator = new Range($min, $max, ColumnType::Integer);
+                    $validator = new Range($min, $max, ColumnType::Integer->value);
                 } else {
-                    $validator = new Range($min, $max, ColumnType::Float);
+                    $validator = new Range($min, $max, ColumnType::Double->value);
 
                     if (!is_null($default)) {
                         $default = \floatval($default);

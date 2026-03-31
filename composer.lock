@@ -4038,12 +4038,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "87a32dd262220cbc7d7d532d315331de19f376a2"
+                "reference": "93b7f4d01a2b7794374d53b7d5cf8e4b9d2509fe"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/87a32dd262220cbc7d7d532d315331de19f376a2",
-                "reference": "87a32dd262220cbc7d7d532d315331de19f376a2",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/93b7f4d01a2b7794374d53b7d5cf8e4b9d2509fe",
+                "reference": "93b7f4d01a2b7794374d53b7d5cf8e4b9d2509fe",
                 "shasum": ""
             },
             "require": {
@@ -4981,12 +4981,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/query.git",
-                "reference": "efd571cd04963b91128fcdb1adb0b27c67417c32"
+                "reference": "d40bf14fed0a5a92146d89cc6549518a2a559c8c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/query/zipball/efd571cd04963b91128fcdb1adb0b27c67417c32",
-                "reference": "efd571cd04963b91128fcdb1adb0b27c67417c32",
+                "url": "https://api.github.com/repos/utopia-php/query/zipball/d40bf14fed0a5a92146d89cc6549518a2a559c8c",
+                "reference": "d40bf14fed0a5a92146d89cc6549518a2a559c8c",
                 "shasum": ""
             },
             "require": {
@@ -4994,7 +4994,7 @@
             },
             "require-dev": {
                 "laravel/pint": "*",
-                "mongodb/mongodb": "^1.20",
+                "mongodb/mongodb": "^2.0",
                 "phpstan/phpstan": "*",
                 "phpunit/phpunit": "^12.0"
             },
@@ -5020,7 +5020,7 @@
                 "issues": "https://github.com/utopia-php/query/issues",
                 "source": "https://github.com/utopia-php/query/tree/feat-builder"
             },
-            "time": "2026-03-26T14:39:58+00:00"
+            "time": "2026-03-31T02:21:12+00:00"
         },
         {
             "name": "utopia-php/queue",

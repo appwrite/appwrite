@@ -86,7 +86,7 @@ class Update extends Action
             dbForProject: $dbForProject,
             queueForEvents: $queueForEvents,
             authorization: $authorization,
-            type: ColumnType::Float->value,
+            type: ColumnType::Double->value,
             default: $default,
             required: $required,
             min: $min,

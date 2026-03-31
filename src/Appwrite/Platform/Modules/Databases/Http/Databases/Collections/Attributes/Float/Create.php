@@ -89,14 +89,14 @@ class Create extends Action
             throw new Exception($this->getInvalidValueException(), 'Minimum value must be lesser than maximum value');
         }
 
-        $validator = new Range($min, $max, ColumnType::Float->value);
+        $validator = new Range($min, $max, ColumnType::Double->value);
         if (!\is_null($default) && !$validator->isValid($default)) {
             throw new Exception($this->getInvalidValueException(), $validator->getDescription());
         }
 
         $attribute = $this->createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
-            'type' => ColumnType::Float->value,
+            'type' => ColumnType::Double->value,
             'size' => 0,
             'required' => $required,
             'default' => $default,

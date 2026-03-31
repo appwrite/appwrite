@@ -279,7 +279,9 @@ class Create extends Action
         array $attribute,
     ): array {
         $key = $attribute['key'];
-        $type = $attribute['type'];
+        $type = $attribute['type'] === ColumnType::Float->value
+            ? ColumnType::Double->value
+            : $attribute['type'];
         $size = $attribute['size'] ?? 0;
         $required = $attribute['required'] ?? false;
         $signed = $attribute['signed'] ?? true;
