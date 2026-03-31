@@ -1095,6 +1095,16 @@ Http::post('/v1/projects/:projectId/jwts')
 
 // Platforms
 
+$validatePlatformField = function (string $field, string $value, bool $allowEmpty = false): void {
+    if ($allowEmpty && $value === '') {
+        return;
+    }
+
+    if (\trim($value) === '') {
+        throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, \ucfirst($field) . ' cannot be empty or whitespace only.');
+    }
+};
+
 Http::post('/v1/projects/:projectId/platforms')
     ->desc('Create platform')
     ->groups(['api', 'projects'])
@@ -1143,12 +1153,16 @@ Http::post('/v1/projects/:projectId/platforms')
     ->param('hostname', '', new Hostname(), 'Platform client hostname. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $projectId, string $type, string $name, string $key, string $store, string $hostname, Response $response, Database $dbForPlatform) {
+    ->action(function (string $projectId, string $type, string $name, string $key, string $store, string $hostname, Response $response, Database $dbForPlatform) use ($validatePlatformField) {
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
+
+        $validatePlatformField('name', $name);
+        $validatePlatformField('key', $key, true);
+        $validatePlatformField('hostname', $hostname, true);
 
         $platform = new Document([
             '$id' => ID::unique(),
@@ -1281,7 +1295,7 @@ Http::put('/v1/projects/:projectId/platforms/:platformId')
     ->param('hostname', '', new Hostname(), 'Platform client URL. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $projectId, string $platformId, string $name, string $key, string $store, string $hostname, Response $response, Database $dbForPlatform) {
+    ->action(function (string $projectId, string $platformId, string $name, string $key, string $store, string $hostname, Response $response, Database $dbForPlatform) use ($validatePlatformField) {
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1296,6 +1310,10 @@ Http::put('/v1/projects/:projectId/platforms/:platformId')
         if ($platform->isEmpty()) {
             throw new Exception(Exception::PLATFORM_NOT_FOUND);
         }
+
+        $validatePlatformField('name', $name);
+        $validatePlatformField('key', $key, true);
+        $validatePlatformField('hostname', $hostname, true);
 
         $platform
             ->setAttribute('name', $name)

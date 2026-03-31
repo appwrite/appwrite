@@ -3808,6 +3808,34 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(400, $response['headers']['status-code']);
     }
 
+    public function testCreateProjectPlatformRejectsWhitespaceOnlyValues(): void
+    {
+        $data = $this->setupProjectData();
+        $id = $data['projectId'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'type' => 'web',
+            'name' => ' ',
+            'hostname' => 'localhost',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'type' => 'flutter-ios',
+            'name' => 'iOS App',
+            'key' => ' ',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
     public function testListProjectPlatform(): void
     {
         $data = $this->setupProjectWithPlatform();
@@ -4143,6 +4171,32 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(404, $response['headers']['status-code']);
+    }
+
+    public function testUpdateProjectPlatformRejectsWhitespaceOnlyValues(): void
+    {
+        $data = $this->setupProjectWithPlatform();
+        $id = $data['projectId'];
+
+        $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/platforms/' . $data['platformWebId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => ' ',
+            'hostname' => 'localhost-new',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/platforms/' . $data['platformFultteriOSId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'iOS App 2',
+            'key' => ' ',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
     }
 
     public function testDeleteProjectPlatform(): void
