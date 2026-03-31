@@ -40,4 +40,4 @@ Structure::addFormat(APP_DATABASE_ATTRIBUTE_FLOAT_RANGE, function ($attribute) {
     $min = $attribute['formatOptions']['min'] ?? -INF;
     $max = $attribute['formatOptions']['max'] ?? INF;
     return new Range($min, $max, Range::TYPE_FLOAT);
-}, ColumnType::Float);
+}, ColumnType::Double);
