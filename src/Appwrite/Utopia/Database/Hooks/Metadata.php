@@ -21,7 +21,9 @@ class Metadata implements Decorator
     private array $relationshipCache = [];
 
     /** @var array<string, string> internal collection name → user-facing collection ID */
-    private array $collectionIdCache = [];
+    private array $collectionIdMap = [];
+
+    private bool $mapLoaded = false;
 
     private int $operations = 0;
 
@@ -68,39 +70,54 @@ class Metadata implements Decorator
 
     /**
      * Resolve an internal collection name (e.g. 'collection_5') to the user-facing collection ID.
+     * Loads all mappings from the database in a single query on first access.
      */
     private function resolveCollectionId(string $internalName): string
     {
-        if (isset($this->collectionIdCache[$internalName])) {
-            return $this->collectionIdCache[$internalName];
+        if (isset($this->collectionIdMap[$internalName])) {
+            return $this->collectionIdMap[$internalName];
         }
 
+        if (!$this->mapLoaded) {
+            $this->loadCollectionMap();
+            $this->mapLoaded = true;
+
+            if (isset($this->collectionIdMap[$internalName])) {
+                return $this->collectionIdMap[$internalName];
+            }
+        }
+
+        return $internalName;
+    }
+
+    /**
+     * Load all collection ID mappings from the Appwrite database metadata collection in one query.
+     */
+    private function loadCollectionMap(): void
+    {
         if ($this->dbForProject === null || $this->authorization === null) {
-            return $internalName;
+            return;
         }
 
-        // Extract the sequence number from 'collection_{seq}'
-        $parts = \explode('_', $internalName);
-        $sequence = \end($parts);
-
-        if (!\is_numeric($sequence)) {
-            $this->collectionIdCache[$internalName] = $internalName;
-            return $internalName;
-        }
-
-        // Look up the Appwrite collection document by sequence in database_{seq}
         $databaseKey = 'database_' . $this->database->getSequence();
-        $collectionDoc = $this->authorization->skip(
-            fn () => $this->dbForProject->findOne($databaseKey, [
-                \Utopia\Database\Query::equal('$sequence', [(int) $sequence]),
-                \Utopia\Database\Query::select(['$id']),
-            ])
-        );
 
-        $externalId = ($collectionDoc && !$collectionDoc->isEmpty()) ? $collectionDoc->getId() : $internalName;
-        $this->collectionIdCache[$internalName] = $externalId;
+        try {
+            $collections = $this->authorization->skip(
+                fn () => $this->dbForProject->find($databaseKey, [
+                    \Utopia\Database\Query::select(['$id', '$sequence']),
+                    \Utopia\Database\Query::limit(5000),
+                ])
+            );
 
-        return $externalId;
+            foreach ($collections as $collection) {
+                $sequence = $collection->getSequence();
+                if ($sequence !== null) {
+                    $this->collectionIdMap['collection_' . $sequence] = $collection->getId();
+                }
+            }
+        } catch (\Throwable) {
+            // Silently fail — fall back to internal names
+        }
     }
 
     private function decorateRelationships(Document $collection, Document $document, int $depth = 0): void
@@ -161,17 +178,21 @@ class Metadata implements Decorator
     {
         if (!isset($this->relationshipCache[$internalName]) && $this->dbForProject !== null && $this->authorization !== null) {
             $relatedExternalId = $this->resolveCollectionId($internalName);
-            $relatedCollection = $this->authorization->skip(
-                fn () => $this->dbForProject->getDocument(
-                    'database_' . $this->database->getSequence(),
-                    $relatedExternalId
-                )
-            );
+            try {
+                $relatedCollection = $this->authorization->skip(
+                    fn () => $this->dbForProject->getDocument(
+                        'database_' . $this->database->getSequence(),
+                        $relatedExternalId
+                    )
+                );
 
-            $this->relationshipCache[$internalName] = \array_filter(
-                $relatedCollection->getAttribute('attributes', []),
-                fn ($attr) => $attr->getAttribute('type') === ColumnType::Relationship->value
-            );
+                $this->relationshipCache[$internalName] = \array_filter(
+                    $relatedCollection->getAttribute('attributes', []),
+                    fn ($attr) => $attr->getAttribute('type') === ColumnType::Relationship->value
+                );
+            } catch (\Throwable) {
+                $this->relationshipCache[$internalName] = [];
+            }
         }
 
         return new Document([
