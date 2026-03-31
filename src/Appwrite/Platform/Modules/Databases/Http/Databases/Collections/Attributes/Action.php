@@ -18,6 +18,7 @@ use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Exception\Truncate as TruncateException;
+use Utopia\Database\ForeignKeyAction;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\RelationSide;
 use Utopia\Database\Validator\Authorization;
@@ -605,7 +606,7 @@ abstract class Action extends UtopiaAction
                     collection: $collectionId,
                     id: $key,
                     newKey: $newKey,
-                    onDelete: $primaryDocumentOptions['onDelete'],
+                    onDelete: ForeignKeyAction::from($primaryDocumentOptions['onDelete']),
                 );
             } catch (IndexException) {
                 throw new Exception(Exception::INDEX_INVALID);
