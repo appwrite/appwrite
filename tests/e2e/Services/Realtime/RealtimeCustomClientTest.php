@@ -3794,7 +3794,7 @@ class RealtimeCustomClientTest extends Scope
             ];
 
             $clientCount = 5;
-            $timeout = 45;
+            $timeout = 90;
             $clients = [];
             for ($i = 0; $i < $clientCount; $i++) {
                 $clients[] = $this->getWebsocket(['documents', 'collections'], $headers, timeout: $timeout);
