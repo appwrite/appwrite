@@ -394,7 +394,8 @@ jobs:
           Webhooks,
           VCS,
           Messaging,
-          Migrations
+          Migrations,
+          Project
         ]
         include:
           - service: Databases

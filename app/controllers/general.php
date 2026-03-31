@@ -1190,6 +1190,15 @@ Http::error()
     ->inject('devKey')
     ->inject('authorization')
     ->action(function (Throwable $error, Http $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, Bus $bus, Document $devKey, Authorization $authorization) {
+        $trace = $error->getTrace();
+
+        foreach (array_slice($trace, 0, 100) as $index => $traceEntry) {
+            $file = isset($traceEntry['file']) ? $traceEntry['file'] : '[internal function]';
+            $line = isset($traceEntry['line']) ? $traceEntry['line'] : '';
+            $function = isset($traceEntry['function']) ? $traceEntry['function'] : '';
+            Console::error("[$index] $file : $line -> $function()");
+        }
+
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->getRoute();
         $class = \get_class($error);
@@ -1261,7 +1270,16 @@ Http::error()
          * If not a publishable error, track usage stats. Publishable errors are >= 500 or those explicitly marked as publish=true in errors.php
          */
         if (!$publish && $project->getId() !== 'console') {
-            if (!DBUser::isPrivileged($authorization->getRoles())) {
+            $errorUser = new DBUser();
+            try {
+                $resolvedUser = $utopia->getResource('user');
+                if ($resolvedUser instanceof DBUser) {
+                    $errorUser = $resolvedUser;
+                }
+            } catch (\Throwable) {
+                // User resource may not be available in error context
+            }
+            if (!$errorUser->isPrivileged($authorization->getRoles())) {
                 $bus->dispatch(new RequestCompleted(
                     project: $project->getArrayCopy(),
                     request: $request,

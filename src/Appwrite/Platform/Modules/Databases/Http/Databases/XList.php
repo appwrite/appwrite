@@ -17,7 +17,6 @@ use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
-use Utopia\Platform\Action;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
@@ -26,6 +25,11 @@ class XList extends Action
     public static function getName(): string
     {
         return 'listDatabases';
+    }
+
+    protected function getDatabaseTypeQueryFilters(): array
+    {
+        return [Query::equal('type', [$this->getDatabaseType()])];
     }
 
     public function __construct()
@@ -93,6 +97,7 @@ class XList extends Action
         }
 
         try {
+            $queries = array_merge($queries, $this->getDatabaseTypeQueryFilters());
             $databases = $dbForProject->find('databases', $queries);
             $total = $includeTotal ? $dbForProject->count('databases', $queries, APP_LIMIT_COUNT) : 0;
         } catch (OrderException $e) {
