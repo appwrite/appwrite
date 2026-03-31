@@ -79,6 +79,10 @@ function createUser(Hash $hash, string $userId, ?string $email, ?string $passwor
     $plaintextPassword = $password;
     $passwordHistory = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
 
+    if (!empty($name) && mb_strlen($name) > 128) {
+        throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Name is too long');
+    }
+
     if (!empty($email)) {
         $email = \strtolower($email);
 
