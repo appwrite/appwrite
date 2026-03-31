@@ -274,6 +274,7 @@ trait ProjectsBase
             'x-appwrite-project' => $projectData['projectId'],
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
+            'variableId' => 'unique()',
             'key' => 'APP_TEST',
             'value' => 'TESTINGVALUE',
             'secret' => false
@@ -288,6 +289,7 @@ trait ProjectsBase
             'x-appwrite-project' => $projectData['projectId'],
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
+            'variableId' => 'unique()',
             'key' => 'APP_TEST_1',
             'value' => 'TESTINGVALUE_1',
             'secret' => true

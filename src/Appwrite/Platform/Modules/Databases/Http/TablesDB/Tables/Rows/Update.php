@@ -65,11 +65,13 @@ class Update extends DocumentUpdate
             ->inject('requestTimestamp')
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('getDatabasesDB')
             ->inject('queueForEvents')
             ->inject('usage')
             ->inject('transactionState')
             ->inject('plan')
             ->inject('authorization')
+            ->inject('user')
             ->callback($this->action(...));
     }
 }

@@ -22,6 +22,9 @@ trait SchemaPolling
      */
     protected function waitForAttribute(string $databaseId, string $containerId, string $attributeKey, int $timeoutMs = 240000, int $waitMs = 500): void
     {
+        if (!$this->getSupportForAttributes()) {
+            return;
+        }
         $this->assertEventually(function () use ($databaseId, $containerId, $attributeKey) {
             $attribute = $this->client->call(
                 Client::METHOD_GET,

@@ -65,7 +65,7 @@ class Create extends Action
         $signature = $request->getHeader('x-hub-signature-256', '');
         $secretKey = System::getEnv('_APP_VCS_GITHUB_WEBHOOK_SECRET', '');
 
-        $valid = empty($signature) ? true : $github->validateWebhookEvent($payload, $signature, $secretKey);
+        $valid = empty($secretKey) ? true : $github->validateWebhookEvent($payload, $signature, $secretKey);
         Span::add('vcs.github.event.signature.valid', $valid);
 
         if (!$valid) {
@@ -162,8 +162,8 @@ class Create extends Action
             Query::limit(100),
         ]));
 
-        // Create new deployment only on push (not committed by us) and not when branch is created or deleted
-        if ($providerCommitAuthorEmail !== APP_VCS_GITHUB_EMAIL && !$providerBranchCreated && !$providerBranchDeleted) {
+        // Create new deployment only on push (not committed by us) and not when branch is deleted
+        if ($providerCommitAuthorEmail !== APP_VCS_GITHUB_EMAIL && !$providerBranchDeleted) {
             $this->createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', false, $dbForPlatform, $authorization, $queueForBuilds, $getProjectDB, $platform);
         }
     }
