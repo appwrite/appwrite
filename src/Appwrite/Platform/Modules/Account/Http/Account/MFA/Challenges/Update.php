@@ -107,38 +107,52 @@ class Update extends Action
 
         $type = $challenge->getAttribute('type');
 
-        $recoveryCodeChallenge = function (Document $challenge, Document $user, string $otp) use ($dbForProject) {
+        $challengeConsumed = false;
+
+        $recoveryCodeChallenge = function (Document $challenge, Document $user, string $otp) use ($dbForProject, &$challengeConsumed) {
             if (
-                $challenge->isSet('type') &&
-                $challenge->getAttribute('type') === Type::RECOVERY_CODE
+                !$challenge->isSet('type') ||
+                $challenge->getAttribute('type') !== Type::RECOVERY_CODE
             ) {
-                // Purge cached user and re-read to get fresh recovery codes,
-                // preventing race condition where concurrent requests both
-                // read stale data and reuse the same single-use recovery code.
+                return false;
+            }
+
+            // Delete challenge first as an atomic lock to prevent concurrent
+            // reuse of the same challenge. Only one request can succeed.
+            try {
+                $dbForProject->deleteDocument('challenges', $challenge->getId());
+            } catch (\Throwable) {
+                return false;
+            }
+            $challengeConsumed = true;
+
+            // Wrap the recovery code read-modify-write in a transaction
+            // to ensure atomicity and prevent concurrent requests from
+            // both consuming the same single-use recovery code.
+            $success = false;
+            $dbForProject->withTransaction(function () use ($dbForProject, $user, $otp, &$success) {
                 $dbForProject->purgeCachedDocument('users', $user->getId());
                 $freshUser = $dbForProject->getDocument('users', $user->getId());
                 $mfaRecoveryCodes = $freshUser->getAttribute('mfaRecoveryCodes', []);
 
-                if (\in_array($otp, $mfaRecoveryCodes)) {
-                    $mfaRecoveryCodes = \array_diff($mfaRecoveryCodes, [$otp]);
-                    $mfaRecoveryCodes = \array_values($mfaRecoveryCodes);
-                    $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
-                    $dbForProject->updateDocument('users', $user->getId(), new Document(['mfaRecoveryCodes' => $mfaRecoveryCodes]));
-
-                    // Verify removal was not overwritten by a concurrent request
-                    $dbForProject->purgeCachedDocument('users', $user->getId());
-                    $verifiedUser = $dbForProject->getDocument('users', $user->getId());
-                    if (\in_array($otp, $verifiedUser->getAttribute('mfaRecoveryCodes', []))) {
-                        return false;
-                    }
-
-                    return true;
+                if (!\in_array($otp, $mfaRecoveryCodes)) {
+                    return;
                 }
 
-                return false;
+                $mfaRecoveryCodes = \array_diff($mfaRecoveryCodes, [$otp]);
+                $mfaRecoveryCodes = \array_values($mfaRecoveryCodes);
+                $freshUser->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
+                $dbForProject->updateDocument('users', $user->getId(), new Document(['mfaRecoveryCodes' => $mfaRecoveryCodes]));
+                $success = true;
+            });
+
+            if ($success) {
+                $dbForProject->purgeCachedDocument('users', $user->getId());
+                $user->setAttribute('mfaRecoveryCodes',
+                    $dbForProject->getDocument('users', $user->getId())->getAttribute('mfaRecoveryCodes', []));
             }
 
-            return false;
+            return $success;
         };
 
         $success = (match ($type) {
@@ -153,7 +167,9 @@ class Update extends Action
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        $dbForProject->deleteDocument('challenges', $challengeId);
+        if (!$challengeConsumed) {
+            $dbForProject->deleteDocument('challenges', $challengeId);
+        }
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $factors = $session->getAttribute('factors', []);
