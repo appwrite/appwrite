@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils'
 export function CloudStatusBanner() {
   const { features } = useConsoleProfile()
   const { mockCloudStatusAlert } = useDebugOverrides()
-  const { data } = useAppwriteCloudStatus(features.systemStatus)
+  const { data, isSuccess } = useAppwriteCloudStatus(features.systemStatus)
 
   if (!features.systemStatus) {
     return null
@@ -23,7 +23,9 @@ export function CloudStatusBanner() {
   const aggregateState =
     mockCloudStatusAlert !== 'live'
       ? mockCloudStatusAlert
-      : data?.aggregateState ?? 'operational'
+      : isSuccess
+        ? data?.aggregateState ?? 'operational'
+        : 'operational'
 
   if (aggregateState === 'operational') {
     return null

@@ -184,7 +184,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   const [clientMounted, setClientMounted] = useState(false)
   const location = useLocation()
   const { features } = useConsoleProfile()
-  const { data: statusData } = useAppwriteCloudStatus(features.systemStatus)
+  const { data: statusData, isSuccess: isStatusSuccess } =
+    useAppwriteCloudStatus(features.systemStatus)
   const { showFullscreenLoader } = useDebugOverrides()
 
   useEffect(() => {
@@ -195,6 +196,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 
   const statusBanner =
     isLoaderVisible &&
+    isStatusSuccess &&
     statusData?.aggregateState &&
     statusData.aggregateState !== 'operational'
       ? {
