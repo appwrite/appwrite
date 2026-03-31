@@ -95,7 +95,7 @@ class V17 extends Filter
             throw new \Exception('Invalid query');
         }
 
-        $method = \mb_substr($filter, 0, $paramsStart);
+        $method = Method::tryFrom(\mb_substr($filter, 0, $paramsStart)) ?? \mb_substr($filter, 0, $paramsStart);
 
         // Separate params from filter
         $paramsEnd = \strlen($filter) - 1; // -1 to ignore )
