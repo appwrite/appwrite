@@ -1,0 +1,16 @@
+# Before: auth.service.ts (520 lines)
+# - Login logic
+# - JWT validation  
+# - Session management
+# - Password reset
+# - MFA logic
+# PROBLEM: Hard to test in isolation, review takes 2+ hours
+
+# After: Split into 4 files
+auth/
+  ├── login.service.ts (45 lines) - Single concern
+  ├── jwt.service.ts (60 lines)
+  ├── session.service.ts (75 lines)
+  └── mfa.service.ts (80 lines)
+  
+# Result: Each file <100 LOC, unit tests 50% faster, code review 1.5h instead of 2h
