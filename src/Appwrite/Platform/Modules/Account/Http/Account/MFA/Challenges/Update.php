@@ -112,12 +112,25 @@ class Update extends Action
                 $challenge->isSet('type') &&
                 $challenge->getAttribute('type') === Type::RECOVERY_CODE
             ) {
-                $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
+                // Purge cached user and re-read to get fresh recovery codes,
+                // preventing race condition where concurrent requests both
+                // read stale data and reuse the same single-use recovery code.
+                $dbForProject->purgeCachedDocument('users', $user->getId());
+                $freshUser = $dbForProject->getDocument('users', $user->getId());
+                $mfaRecoveryCodes = $freshUser->getAttribute('mfaRecoveryCodes', []);
+
                 if (\in_array($otp, $mfaRecoveryCodes)) {
                     $mfaRecoveryCodes = \array_diff($mfaRecoveryCodes, [$otp]);
                     $mfaRecoveryCodes = \array_values($mfaRecoveryCodes);
                     $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
                     $dbForProject->updateDocument('users', $user->getId(), new Document(['mfaRecoveryCodes' => $mfaRecoveryCodes]));
+
+                    // Verify removal was not overwritten by a concurrent request
+                    $dbForProject->purgeCachedDocument('users', $user->getId());
+                    $verifiedUser = $dbForProject->getDocument('users', $user->getId());
+                    if (\in_array($otp, $verifiedUser->getAttribute('mfaRecoveryCodes', []))) {
+                        return false;
+                    }
 
                     return true;
                 }
