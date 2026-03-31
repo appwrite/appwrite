@@ -42,7 +42,7 @@ return [
             new Attribute(
                 key: 'database',
                 type: ColumnType::String,
-                size: 128,
+                size: 2000,
             ),
         ],
         'indexes' => [

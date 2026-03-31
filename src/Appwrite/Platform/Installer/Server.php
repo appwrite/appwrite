@@ -6,6 +6,7 @@ use Appwrite\Platform\Installer\Http\Installer\Error;
 use Appwrite\Platform\Installer\Runtime\Config;
 use Appwrite\Platform\Installer\Runtime\State;
 use Swoole\Http\Server as SwooleServer;
+use Swoole\Runtime;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Http\Adapter\Swoole\Response;
 use Utopia\Http\Adapter\Swoole\Server as SwooleAdapter;
@@ -129,6 +130,8 @@ class Server
 
     private function startSwooleServer(string $host, int $port, ?string $readyFile = null): void
     {
+        Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
+
         $this->state->clearStaleLock();
 
         // Preload static files into memory
