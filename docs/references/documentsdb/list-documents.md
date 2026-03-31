@@ -1,0 +1,1 @@
+Get a list of all the user's documents in a given collection. You can use the query params to filter your results.
