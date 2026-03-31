@@ -18,7 +18,10 @@ use Utopia\Query\Schema\ColumnType;
 class Metadata implements Decorator
 {
     /** @var array<string, array<Document>> */
-    private array $cache = [];
+    private array $relationshipCache = [];
+
+    /** @var array<string, string> internal collection name → user-facing collection ID */
+    private array $collectionIdCache = [];
 
     private int $operations = 0;
 
@@ -38,7 +41,7 @@ class Metadata implements Decorator
 
         $this->operations++;
 
-        $collectionId = $collection->getId();
+        $collectionId = $this->resolveCollectionId($collection->getId());
         $document->setAttribute('$databaseId', $this->database->getId());
         $document->setAttribute('$' . $this->context . 'Id', $collectionId);
 
@@ -63,6 +66,43 @@ class Metadata implements Decorator
         $this->operations = 0;
     }
 
+    /**
+     * Resolve an internal collection name (e.g. 'collection_5') to the user-facing collection ID.
+     */
+    private function resolveCollectionId(string $internalName): string
+    {
+        if (isset($this->collectionIdCache[$internalName])) {
+            return $this->collectionIdCache[$internalName];
+        }
+
+        if ($this->dbForProject === null || $this->authorization === null) {
+            return $internalName;
+        }
+
+        // Extract the sequence number from 'collection_{seq}'
+        $parts = \explode('_', $internalName);
+        $sequence = \end($parts);
+
+        if (!\is_numeric($sequence)) {
+            $this->collectionIdCache[$internalName] = $internalName;
+            return $internalName;
+        }
+
+        // Look up the Appwrite collection document by sequence in database_{seq}
+        $databaseKey = 'database_' . $this->database->getSequence();
+        $collectionDoc = $this->authorization->skip(
+            fn () => $this->dbForProject->findOne($databaseKey, [
+                \Utopia\Database\Query::equal('$sequence', [(int) $sequence]),
+                \Utopia\Database\Query::select(['$id']),
+            ])
+        );
+
+        $externalId = ($collectionDoc && !$collectionDoc->isEmpty()) ? $collectionDoc->getId() : $internalName;
+        $this->collectionIdCache[$internalName] = $externalId;
+
+        return $externalId;
+    }
+
     private function decorateRelationships(Document $collection, Document $document, int $depth = 0): void
     {
         if ($depth >= Database::RELATION_MAX_DEPTH) {
@@ -85,16 +125,17 @@ class Metadata implements Decorator
 
             $relations = \is_array($related) ? $related : [$related];
             $options = $relationship->getAttribute('options', []);
-            $relatedCollectionId = (\is_array($options) ? ($options['relatedCollection'] ?? null) : null)
+            $relatedInternalName = (\is_array($options) ? ($options['relatedCollection'] ?? null) : null)
                 ?? $relationship->getAttribute('relatedCollection');
+            $relatedExternalId = $this->resolveCollectionId($relatedInternalName);
 
             foreach ($relations as $relation) {
                 if ($relation instanceof Document) {
                     $this->operations++;
                     $relation->setAttribute('$databaseId', $this->database->getId());
-                    $relation->setAttribute('$' . $this->context . 'Id', $relatedCollectionId);
+                    $relation->setAttribute('$' . $this->context . 'Id', $relatedExternalId);
 
-                    $relatedCollection = $this->getRelatedCollection($relatedCollectionId);
+                    $relatedCollection = $this->getRelatedCollection($relatedInternalName);
                     $this->decorateRelationships($relatedCollection, $relation, $depth + 1);
                 }
             }
@@ -106,35 +147,36 @@ class Metadata implements Decorator
      */
     private function getRelationships(string $collectionId, Document $collection): array
     {
-        if (!isset($this->cache[$collectionId])) {
-            $this->cache[$collectionId] = \array_filter(
+        if (!isset($this->relationshipCache[$collectionId])) {
+            $this->relationshipCache[$collectionId] = \array_filter(
                 $collection->getAttribute('attributes', []),
                 fn ($attr) => $attr->getAttribute('type') === ColumnType::Relationship->value
             );
         }
 
-        return $this->cache[$collectionId];
+        return $this->relationshipCache[$collectionId];
     }
 
-    private function getRelatedCollection(string $collectionId): Document
+    private function getRelatedCollection(string $internalName): Document
     {
-        if (!isset($this->cache[$collectionId]) && $this->dbForProject !== null && $this->authorization !== null) {
+        if (!isset($this->relationshipCache[$internalName]) && $this->dbForProject !== null && $this->authorization !== null) {
+            $relatedExternalId = $this->resolveCollectionId($internalName);
             $relatedCollection = $this->authorization->skip(
                 fn () => $this->dbForProject->getDocument(
                     'database_' . $this->database->getSequence(),
-                    $collectionId
+                    $relatedExternalId
                 )
             );
 
-            $this->cache[$collectionId] = \array_filter(
+            $this->relationshipCache[$internalName] = \array_filter(
                 $relatedCollection->getAttribute('attributes', []),
                 fn ($attr) => $attr->getAttribute('type') === ColumnType::Relationship->value
             );
         }
 
         return new Document([
-            '$id' => $collectionId,
-            'attributes' => $this->cache[$collectionId] ?? [],
+            '$id' => $internalName,
+            'attributes' => $this->relationshipCache[$internalName] ?? [],
         ]);
     }
 }
