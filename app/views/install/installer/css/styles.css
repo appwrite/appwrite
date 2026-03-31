@@ -478,6 +478,10 @@ body {
     overflow: hidden;
 }
 
+.installer-page[data-upgrade='true'] .installer-step {
+    min-height: 0;
+}
+
 .action-shell {
     display: flex;
     flex-direction: column;

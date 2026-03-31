@@ -7,6 +7,7 @@ use Appwrite\Docker\Env;
 use Appwrite\Platform\Installer\Runtime\State;
 use Appwrite\Platform\Installer\Server as InstallerServer;
 use Appwrite\Utopia\View;
+use Swoole\Coroutine;
 use Utopia\Auth\Proofs\Password;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Config\Config;
@@ -211,13 +212,14 @@ class Install extends Action
         }
 
         // If interactive and web mode enabled, start web server
-        if ($interactive === 'Y' && Console::isInteractive()) {
+        // Skip the web installer when explicit CLI params are provided
+        if ($interactive === 'Y' && Console::isInteractive() && !$this->hasExplicitCliParams()) {
             Console::success('Starting web installer...');
             Console::info('Open your browser at: http://localhost:' . InstallerServer::INSTALLER_WEB_PORT);
             Console::info('Press Ctrl+C to cancel installation');
 
             $detectedDb = ($existingInstallation && isset($existingDatabase)) ? $existingDatabase : null;
-            $this->startWebServer($defaultHttpPort, $defaultHttpsPort, $organization, $image, $noStart, $vars, $isUpgrade, $detectedDb);
+            $this->startWebServer($defaultHttpPort, $defaultHttpsPort, $organization, $image, $noStart, $vars, $isUpgrade || $existingInstallation, $detectedDb);
             return;
         }
 
@@ -510,7 +512,8 @@ class Install extends Action
         ?callable $progress = null,
         ?string $resumeFromStep = null,
         bool $isUpgrade = false,
-        array $account = []
+        array $account = [],
+        ?callable $onComplete = null,
     ): void {
         $isLocalInstall = $this->isLocalInstall();
         $this->applyLocalPaths($isLocalInstall, false);
@@ -633,8 +636,24 @@ class Install extends Action
                     $this->createInitialAdminAccount($account, $progress, $apiUrl, $domain);
                 }
 
-                // Track installs
-                $this->trackSelfHostedInstall($input, $isUpgrade, $version, $account);
+                // Signal completion before tracking so the SSE stream
+                // finishes and the frontend can redirect immediately.
+                if ($onComplete) {
+                    try {
+                        $onComplete();
+                    } catch (\Throwable) {
+                    }
+                }
+
+                // Run tracking in a coroutine when inside a Swoole
+                // request so it doesn't block the worker.
+                if (Coroutine::getCid() !== -1) {
+                    go(function () use ($input, $isUpgrade, $version, $account) {
+                        $this->trackSelfHostedInstall($input, $isUpgrade, $version, $account);
+                    });
+                } else {
+                    $this->trackSelfHostedInstall($input, $isUpgrade, $version, $account);
+                }
 
                 if ($isCLI) {
                     Console::success('Appwrite installed successfully');
@@ -753,7 +772,7 @@ class Install extends Action
         $name = $account['name'] ?? 'Admin';
         $email = $account['email'] ?? 'admin@selfhosted.local';
 
-        $hostIp = gethostbyname($domain);
+        $hostIp = @gethostbyname($domain);
 
         $payload = [
             'action' => $type,
@@ -767,7 +786,7 @@ class Install extends Action
                 'email' => $email,
                 'domain' => $domain,
                 'database' => $database,
-                'hostIp' => $hostIp !== $domain ? $hostIp : null,
+                'ip' => ($hostIp !== false && $hostIp !== $domain) ? $hostIp : null,
                 'os' => php_uname('s') . ' ' . php_uname('r'),
                 'arch' => php_uname('m'),
                 'cpus' => ((int) trim((string) \shell_exec('nproc'))) ?: null,
@@ -778,6 +797,8 @@ class Install extends Action
         try {
             $client = new Client();
             $client
+                ->setConnectTimeout(5000)
+                ->setTimeout(5000)
                 ->addHeader('Content-Type', 'application/json')
                 ->fetch(self::GROWTH_API_URL . '/analytics', Client::METHOD_POST, $payload);
         } catch (\Throwable) {
@@ -1259,6 +1280,22 @@ class Install extends Action
         }
         $this->path = '/usr/src/code';
         $this->hostPath = $this->getInstallerHostPath();
+    }
+
+    /**
+     * Check if any installer-specific CLI params were explicitly passed.
+     * When params like --database or --http-port are provided, the user
+     * intends to run in CLI mode rather than launching the web installer.
+     */
+    private function hasExplicitCliParams(): bool
+    {
+        $argv = $_SERVER['argv'] ?? [];
+        foreach ($argv as $arg) {
+            if (\str_starts_with($arg, '--') && !\str_starts_with($arg, '--interactive')) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

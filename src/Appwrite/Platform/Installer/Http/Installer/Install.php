@@ -321,6 +321,28 @@ class Install extends Action
                 }
             };
 
+            $responseSent = false;
+            $onComplete = function () use ($wantsStream, $swooleResponse, $response, $installId, $state, &$responseSent) {
+                if ($responseSent) {
+                    return;
+                }
+                $responseSent = true;
+                $state->updateGlobalLock($installId, Server::STATUS_COMPLETED);
+                if ($wantsStream) {
+                    $this->writeSseEvent($swooleResponse, 'done', ['installId' => $installId, 'success' => true]);
+                    usleep(self::SSE_KEEPALIVE_DELAY_MICROSECONDS);
+                    $swooleResponse->write(": keepalive\n\n");
+                    usleep(self::SSE_KEEPALIVE_DELAY_MICROSECONDS);
+                    $swooleResponse->end();
+                } else {
+                    $response->json([
+                        'success' => true,
+                        'installId' => $installId,
+                        'message' => 'Installation completed successfully',
+                    ]);
+                }
+            };
+
             $installer->performInstallation(
                 $httpPort ?: $config->getDefaultHttpPort(),
                 $httpsPort ?: $config->getDefaultHttpsPort(),
@@ -331,23 +353,11 @@ class Install extends Action
                 $progress,
                 $retryStep,
                 $config->isUpgrade(),
-                $account
+                $account,
+                $onComplete,
             );
 
-            if ($wantsStream) {
-                $this->writeSseEvent($swooleResponse, 'done', ['installId' => $installId, 'success' => true]);
-                usleep(self::SSE_KEEPALIVE_DELAY_MICROSECONDS);
-                $swooleResponse->write(": keepalive\n\n");
-                usleep(self::SSE_KEEPALIVE_DELAY_MICROSECONDS);
-                $swooleResponse->end();
-            } else {
-                $response->json([
-                    'success' => true,
-                    'installId' => $installId,
-                    'message' => 'Installation completed successfully',
-                ]);
-            }
-            $state->updateGlobalLock($installId, Server::STATUS_COMPLETED);
+            $onComplete();
         } catch (\Throwable $e) {
             $this->handleInstallationError($e, $installId, $wantsStream, $response, $swooleResponse, $state);
         }
