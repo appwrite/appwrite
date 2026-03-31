@@ -94,8 +94,8 @@ class Update extends Action
      * challenge type (TOTP, Phone, Email, or Recovery Code). On success,
      * the challenge is consumed and the session factors are updated.
      *
-     * For recovery codes, the validation and code removal are wrapped in
-     * a database transaction with early challenge deletion to prevent
+     * For recovery codes, validation, recovery-code removal, and challenge
+     * consumption are wrapped in a database transaction to prevent
      * concurrent requests from reusing the same single-use code.
      */
     public function action(
@@ -138,13 +138,17 @@ class Update extends Action
                     return;
                 }
 
-                $mfaRecoveryCodes = \array_values(\array_diff($mfaRecoveryCodes, [$otp]));
-                $freshUser->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
-                $dbForProject->updateDocument('users', $user->getId(), new Document(['mfaRecoveryCodes' => $mfaRecoveryCodes]));
+                // Delete challenge as the atomic uniqueness guard.
+                // deleteDocument returns false when the document is already
+                // absent, so checking the return value ensures exactly-once
+                // consumption — only the first concurrent request proceeds.
+                $deleted = $dbForProject->deleteDocument('challenges', $challenge->getId());
+                if ($deleted === false) {
+                    return;
+                }
 
-                // Delete challenge inside the transaction so it is consumed
-                // atomically with the recovery code removal.
-                $dbForProject->deleteDocument('challenges', $challenge->getId());
+                $mfaRecoveryCodes = \array_values(\array_diff($mfaRecoveryCodes, [$otp]));
+                $dbForProject->updateDocument('users', $user->getId(), new Document(['mfaRecoveryCodes' => $mfaRecoveryCodes]));
 
                 $success = true;
             });
