@@ -180,10 +180,14 @@ jobs:
         uses: actions/github-script@v8
         with:
           script: |
-            const allDatabases = ['MariaDB', 'PostgreSQL', 'MongoDB'];
+            const allDatabases = [
+              { name: 'MariaDB',    env: 'compose/mariadb.env' },
+              { name: 'PostgreSQL', env: 'compose/postgresql.env' },
+              { name: 'MongoDB',    env: 'compose/mongodb.env' },
+            ];
             const allModes = ['dedicated', 'shared_v1', 'shared_v2'];
 
-            const defaultDatabases = ['MongoDB'];
+            const defaultDatabases = [allDatabases.find(d => d.name === 'MongoDB')];
             const defaultModes = ['dedicated'];
 
             const pr = context.payload.pull_request;
@@ -360,9 +364,11 @@ jobs:
           docker compose logs
 
   e2e_service:
-    name: Tests / E2E / ${{ matrix.database }} (${{ matrix.mode }}) / ${{ matrix.service }}
+    name: Tests / E2E / ${{ matrix.database.name }} (${{ matrix.mode }}) / ${{ matrix.service }}
     runs-on: ${{ matrix.runner || 'ubuntu-latest' }}
     needs: [build, matrix]
+    env:
+      COMPOSE_ENV_FILES: .env,${{ matrix.database.env }}
     permissions:
       contents: read
       pull-requests: write
@@ -419,25 +425,6 @@ jobs:
         with:
           name: ${{ env.IMAGE }}
           path: /tmp
-
-      - name: Set database environment
-        run: |
-          if [ "${{ matrix.database }}" = "MariaDB" ]; then
-            echo "COMPOSE_PROFILES=mariadb" >> $GITHUB_ENV
-            echo "_APP_DB_ADAPTER=mariadb" >> $GITHUB_ENV
-            echo "_APP_DB_HOST=mariadb" >> $GITHUB_ENV
-            echo "_APP_DB_PORT=3306" >> $GITHUB_ENV
-          elif [ "${{ matrix.database }}" = "MongoDB" ]; then
-            echo "COMPOSE_PROFILES=mongodb" >> $GITHUB_ENV
-            echo "_APP_DB_ADAPTER=mongodb" >> $GITHUB_ENV
-            echo "_APP_DB_HOST=mongodb" >> $GITHUB_ENV
-            echo "_APP_DB_PORT=27017" >> $GITHUB_ENV
-          elif [ "${{ matrix.database }}" = "PostgreSQL" ]; then
-            echo "COMPOSE_PROFILES=postgresql" >> $GITHUB_ENV
-            echo "_APP_DB_ADAPTER=postgresql" >> $GITHUB_ENV
-            echo "_APP_DB_HOST=postgresql" >> $GITHUB_ENV
-            echo "_APP_DB_PORT=5432" >> $GITHUB_ENV
-          fi
 
       - name: Login to Docker Hub
         uses: docker/login-action@v4

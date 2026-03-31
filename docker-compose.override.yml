@@ -4,7 +4,6 @@
 
 services:
   appwrite-mongo-express:
-    profiles: ["mongodb"]
     image: mongo-express
     container_name: appwrite-mongo-express
     networks:

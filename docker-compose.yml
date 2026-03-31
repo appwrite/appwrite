@@ -1261,29 +1261,6 @@ services:
       retries: 20
       start_period: 5s
 
-  mariadb:
-    image: mariadb:10.11 # fix issues when upgrading using: mysql_upgrade -u root -p
-    container_name: appwrite-mariadb
-    <<: *x-logging
-    networks:
-      - appwrite
-    volumes:
-      - appwrite-mariadb:/var/lib/mysql:rw
-    ports:
-      - "3306:3306"
-    environment:
-      - MYSQL_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
-      - MYSQL_DATABASE=${_APP_DB_SCHEMA}
-      - MYSQL_USER=${_APP_DB_USER}
-      - MYSQL_PASSWORD=${_APP_DB_PASS}
-      - MARIADB_AUTO_UPGRADE=1
-    command: "mysqld --innodb-flush-method=fsync"
-    healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
-      interval: 5s
-      timeout: 5s
-      retries: 12
-
   mongodb:
     image: mongo:8.2.5
     container_name: appwrite-mongodb
@@ -1319,28 +1296,6 @@ services:
       timeout: 10s
       retries: 10
       start_period: 30s
-
-  postgresql:
-    image: appwrite/postgres:0.1.0
-    container_name: appwrite-postgresql
-    <<: *x-logging
-    networks:
-      - appwrite
-    volumes:
-      - appwrite-postgresql:/var/lib/postgresql/18/data:rw
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_DB=${_APP_DB_SCHEMA}
-      - POSTGRES_USER=${_APP_DB_USER}
-      - POSTGRES_PASSWORD=${_APP_DB_PASS}
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${_APP_DB_USER} -d ${_APP_DB_SCHEMA}"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-      start_period: 10s
-    command: "postgres"
 
   ollama:
     image: appwrite/ollama:0.1.1
@@ -1464,10 +1419,8 @@ networks:
 
 
 volumes:
-  appwrite-mariadb:
   appwrite-mongodb:
   appwrite-mongodb-keyfile:
-  appwrite-postgresql:
   appwrite-redis:
   appwrite-cache:
   appwrite-uploads:
