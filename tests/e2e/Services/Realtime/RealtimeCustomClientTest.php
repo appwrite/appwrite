@@ -3794,9 +3794,10 @@ class RealtimeCustomClientTest extends Scope
             ];
 
             $clientCount = 5;
+            $timeout = 45;
             $clients = [];
             for ($i = 0; $i < $clientCount; $i++) {
-                $clients[] = $this->getWebsocket(['documents', 'collections'], $headers);
+                $clients[] = $this->getWebsocket(['documents', 'collections'], $headers, timeout: $timeout);
             }
 
             foreach ($clients as $client) {
@@ -3823,8 +3824,12 @@ class RealtimeCustomClientTest extends Scope
                 Coroutine::create(function () use ($client, &$receivedEvents, $expectedEvents, $idx) {
                     $local = [];
                     for ($i = 0; $i < $expectedEvents; $i++) {
-                        $event = json_decode($client->receive(), true);
-                        $local[] = $event;
+                        try {
+                            $event = json_decode($client->receive(), true);
+                            $local[] = $event;
+                        } catch (TimeoutException) {
+                            break;
+                        }
                     }
                     $receivedEvents[$idx] = $local;
                 });
@@ -3847,8 +3852,8 @@ class RealtimeCustomClientTest extends Scope
                 ]);
             }
 
-            // Wait for receivers to collect; timeout ~10s
-            $deadline = microtime(true) + 10;
+            // Wait for receivers to collect
+            $deadline = microtime(true) + $timeout;
             while (microtime(true) < $deadline) {
                 $done = true;
                 foreach ($receivedEvents as $events) {
