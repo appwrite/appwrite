@@ -174,6 +174,7 @@ jobs:
     outputs:
       databases: ${{ steps.generate.outputs.databases }}
       modes: ${{ steps.generate.outputs.modes }}
+      services: ${{ steps.generate.outputs.services }}
     steps:
       - name: Generate matrix
         id: generate
@@ -186,6 +187,28 @@ jobs:
               { name: 'MongoDB',    env: '.env',                        compose: 'docker-compose.yml' },
             ];
             const modes = ['dedicated', 'shared_v1', 'shared_v2'];
+
+            const services = [
+              { name: 'Account',           parallel: true },
+              { name: 'Avatars',           parallel: true,  runner: 'blacksmith-4vcpu-ubuntu-2404' },
+              { name: 'Databases',                          runner: 'blacksmith-4vcpu-ubuntu-2404' },
+              { name: 'TablesDB',                           runner: 'blacksmith-4vcpu-ubuntu-2404' },
+              { name: 'Functions',                          runner: 'blacksmith-4vcpu-ubuntu-2404' },
+              { name: 'FunctionsSchedule', parallel: true },
+              { name: 'GraphQL',           parallel: true },
+              { name: 'Projects',          parallel: true },
+              { name: 'Realtime',                           runner: 'blacksmith-4vcpu-ubuntu-2404' },
+              { name: 'Sites',             parallel: true,  runner: 'blacksmith-4vcpu-ubuntu-2404' },
+              { name: 'Proxy',             parallel: true },
+              { name: 'Storage',           parallel: true },
+              { name: 'Teams',             parallel: true },
+              { name: 'Users',             parallel: true },
+              { name: 'ProjectWebhooks',   parallel: true },
+              { name: 'Messaging',         parallel: true },
+              { name: 'Migrations',        parallel: true },
+              { name: 'Project',           parallel: true },
+            ];
+            core.setOutput('services', JSON.stringify(services));
 
             const defaultDatabases = [databases.find(d => d.name === 'MongoDB')];
             const defaultModes = ['dedicated'];
@@ -407,8 +430,8 @@ jobs:
           docker compose logs
 
   e2e_service:
-    name: Tests / E2E / ${{ matrix.database.name }} (${{ matrix.mode }}) / ${{ matrix.service }}
-    runs-on: ${{ matrix.runner || 'ubuntu-latest' }}
+    name: Tests / E2E / ${{ matrix.database.name }} (${{ matrix.mode }}) / ${{ matrix.service.name }}
+    runs-on: ${{ matrix.service.runner || 'ubuntu-latest' }}
     needs: [build, matrix]
     env:
       COMPOSE_FILE: ${{ matrix.database.compose }}
@@ -421,43 +444,7 @@ jobs:
       matrix:
         database: ${{ fromJSON(needs.matrix.outputs.databases) }}
         mode: ${{ fromJSON(needs.matrix.outputs.modes) }}
-        service: [
-          Account,
-          Avatars,
-          Databases,
-          TablesDB,
-          Functions,
-          FunctionsSchedule,
-          GraphQL,
-          Projects,
-          Realtime,
-          Sites,
-          Proxy,
-          Storage,
-          Teams,
-          Users,
-          ProjectWebhooks,
-          Messaging,
-          Migrations,
-          Project
-        ]
-        include:
-          - service: Databases
-            runner: blacksmith-4vcpu-ubuntu-2404
-            parallel: false
-          - service: Sites
-            runner: blacksmith-4vcpu-ubuntu-2404
-          - service: Functions
-            runner: blacksmith-4vcpu-ubuntu-2404
-            parallel: false
-          - service: Avatars
-            runner: blacksmith-4vcpu-ubuntu-2404
-          - service: Realtime
-            runner: blacksmith-4vcpu-ubuntu-2404
-            parallel: false
-          - service: TablesDB
-            runner: blacksmith-4vcpu-ubuntu-2404
-            parallel: false
+        service: ${{ fromJSON(needs.matrix.outputs.services) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -498,7 +485,7 @@ jobs:
         run: |
           docker compose exec -T \
             -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
-            appwrite vendor/bin/paratest --processes $(nproc) ${{ matrix.parallel != false && '--functional' || '' }} "/usr/src/code/tests/e2e/Services/${{ matrix.service }}" --exclude-group abuseEnabled --exclude-group screenshots
+            appwrite vendor/bin/paratest --processes $(nproc) ${{ matrix.service.parallel && '--functional' || '' }} "/usr/src/code/tests/e2e/Services/${{ matrix.service.name }}" --exclude-group abuseEnabled --exclude-group screenshots
 
       - name: Failure Logs
         if: failure()
