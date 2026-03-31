@@ -38,7 +38,7 @@ class FunctionCache implements Lifecycle
         $cacheKey = \sprintf(
             '%s-cache-%s:%s:%s:project:%s:functions:events',
             $this->database->getCacheName(),
-            $hostname ?? '',
+            $hostname,
             $this->database->getNamespace(),
             $this->database->getTenant(),
             $this->project->getId()
