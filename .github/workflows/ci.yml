@@ -180,20 +180,20 @@ jobs:
         uses: actions/github-script@v8
         with:
           script: |
-            const allDatabases = [
+            const databases = [
               { name: 'MariaDB',    env: 'compose/mariadb.env' },
               { name: 'PostgreSQL', env: 'compose/postgresql.env' },
               { name: 'MongoDB',    env: 'compose/mongodb.env' },
             ];
-            const allModes = ['dedicated', 'shared_v1', 'shared_v2'];
+            const modes = ['dedicated', 'shared_v1', 'shared_v2'];
 
-            const defaultDatabases = [allDatabases.find(d => d.name === 'MongoDB')];
+            const defaultDatabases = [databases.find(d => d.name === 'MongoDB')];
             const defaultModes = ['dedicated'];
 
             const pr = context.payload.pull_request;
             if (!pr) {
-              core.setOutput('databases', JSON.stringify(allDatabases));
-              core.setOutput('modes', JSON.stringify(allModes));
+              core.setOutput('databases', JSON.stringify(databases));
+              core.setOutput('modes', JSON.stringify(modes));
               return;
             }
 
@@ -214,8 +214,8 @@ jobs:
             const decode = (content) => JSON.parse(Buffer.from(content, 'base64').toString());
             const databaseChanged = getDbVersion(decode(base.content)) !== getDbVersion(decode(head.content));
 
-            core.setOutput('databases', JSON.stringify(databaseChanged ? allDatabases : defaultDatabases));
-            core.setOutput('modes', JSON.stringify(databaseChanged ? allModes : defaultModes));
+            core.setOutput('databases', JSON.stringify(databaseChanged ? databases : defaultDatabases));
+            core.setOutput('modes', JSON.stringify(databaseChanged ? modes : defaultModes));
 
   build:
     name: Build
