@@ -181,9 +181,9 @@ jobs:
         with:
           script: |
             const databases = [
-              { name: 'MariaDB',    env: 'compose/mariadb.env',    compose: 'docker-compose.yml:compose/mariadb.yml' },
-              { name: 'PostgreSQL', env: 'compose/postgresql.env', compose: 'docker-compose.yml:compose/postgresql.yml' },
-              { name: 'MongoDB',    env: 'compose/mongodb.env',    compose: 'docker-compose.yml' },
+              { name: 'MariaDB',    env: '.env,compose/mariadb.env',    compose: 'docker-compose.yml:compose/mariadb.yml' },
+              { name: 'PostgreSQL', env: '.env,compose/postgresql.env', compose: 'docker-compose.yml:compose/postgresql.yml' },
+              { name: 'MongoDB',    env: '.env',                        compose: 'docker-compose.yml' },
             ];
             const modes = ['dedicated', 'shared_v1', 'shared_v2'];
 
@@ -369,7 +369,7 @@ jobs:
     needs: [build, matrix]
     env:
       COMPOSE_FILE: ${{ matrix.database.compose }}
-      COMPOSE_ENV_FILES: .env,${{ matrix.database.env }}
+      COMPOSE_ENV_FILES: ${{ matrix.database.env }}
     permissions:
       contents: read
       pull-requests: write
