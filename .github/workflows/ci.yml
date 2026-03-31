@@ -447,7 +447,7 @@ jobs:
         run: |
           docker compose exec -T \
             -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
-            appwrite vendor/bin/paratest --processes $(nproc) ${{ matrix.functional == false && '' || '--functional' }} "/usr/src/code/tests/e2e/Services/${{ matrix.service }}" --exclude-group abuseEnabled --exclude-group screenshots
+            appwrite vendor/bin/paratest --processes $(nproc) ${{ matrix.functional != false && '--functional' || '' }} "/usr/src/code/tests/e2e/Services/${{ matrix.service }}" --exclude-group abuseEnabled --exclude-group screenshots
 
       - name: Failure Logs
         if: failure()
