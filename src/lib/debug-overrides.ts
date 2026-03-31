@@ -74,8 +74,7 @@ export function loadDebugOverrides(): DebugOverrides {
       ['live', 'operational', 'degraded', 'downtime', 'maintenance'] as const,
       'live',
     ),
-    showFullscreenLoader:
-      ephemeralOverrides.showFullscreenLoader ?? false,
+    showFullscreenLoader: ephemeralOverrides.showFullscreenLoader ?? false,
   }
 }
 

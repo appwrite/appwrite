@@ -1,5 +1,9 @@
 import { useState, useEffect, useMemo } from 'react'
-import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  keepPreviousData,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
 import { Eye, Users, Loader2 } from 'lucide-react'
 import { AppwriteException, type Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
@@ -37,7 +41,10 @@ import {
   persistConsoleImpersonationSession,
   readConsoleImpersonationOperatorSnapshot,
 } from '@/lib/console-impersonation'
-import { flushRecentImpersonationUsersToAccountPrefs, updateAccountPrefs } from '@/lib/react-query/hooks/auth'
+import {
+  flushRecentImpersonationUsersToAccountPrefs,
+  updateAccountPrefs,
+} from '@/lib/react-query/hooks/auth'
 import { consoleUsersImpersonationSearchQueryOptions } from '@/lib/react-query/hooks/console-user-search'
 import {
   appendRecentImpersonationUser,
@@ -96,9 +103,7 @@ export function ImpersonateConsoleUserPopover() {
   const users = data?.users ?? []
 
   const operatorSnapshot = readConsoleImpersonationOperatorSnapshot()
-  const operatorId = isImpersonating
-    ? operatorSnapshot?.$id
-    : account?.$id
+  const operatorId = isImpersonating ? operatorSnapshot?.$id : account?.$id
 
   const recentImpersonationUsers = useMemo((): RecentImpersonationUser[] => {
     if (!operatorId?.trim()) return []
@@ -128,8 +133,9 @@ export function ImpersonateConsoleUserPopover() {
     const next = appendRecentImpersonationUser(currentList, user)
     try {
       if (!isImpersonating) {
-        const prefs = (account as { prefs?: Record<string, unknown> } | undefined)
-          ?.prefs
+        const prefs = (
+          account as { prefs?: Record<string, unknown> } | undefined
+        )?.prefs
         await updateAccountPrefs(
           mergeRecentImpersonationIntoAccountPrefs(prefs, next),
         )
@@ -157,9 +163,7 @@ export function ImpersonateConsoleUserPopover() {
       return
     }
 
-    let operator:
-      | { $id: string; name: string; email: string }
-      | undefined
+    let operator: { $id: string; name: string; email: string } | undefined
 
     if (isImpersonating) {
       operator = readConsoleImpersonationOperatorSnapshot()
@@ -241,8 +245,9 @@ export function ImpersonateConsoleUserPopover() {
             Impersonate user
           </h3>
           <p className="mt-1.5 text-[12px] leading-relaxed text-muted-foreground">
-            Matches the start of name, email, phone, or user ID. The Console runs
-            with the selected account&apos;s access until you end impersonation.
+            Matches the start of name, email, phone, or user ID. The Console
+            runs with the selected account&apos;s access until you end
+            impersonation.
           </p>
         </div>
 
@@ -291,8 +296,7 @@ export function ImpersonateConsoleUserPopover() {
                   const disabled =
                     recent.$id === account?.$id ||
                     (!!operatorId && recent.$id === operatorId)
-                  const label =
-                    recent.name || recent.email || recent.$id
+                  const label = recent.name || recent.email || recent.$id
                   const cmdkValue = [
                     recent.$id,
                     recent.name,
@@ -380,11 +384,7 @@ export function ImpersonateConsoleUserPopover() {
                   user.$id === account?.$id ||
                   (!!operatorId && user.$id === operatorId)
                 const label = user.name || user.email || user.$id
-                const cmdkValue = [
-                  user.$id,
-                  user.name,
-                  user.email,
-                ]
+                const cmdkValue = [user.$id, user.name, user.email]
                   .filter(Boolean)
                   .join(' ')
                 return (

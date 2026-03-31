@@ -89,11 +89,7 @@ export function wrapServiceObject<T extends Record<string, unknown>>(
       const value = Reflect.get(target, prop, receiver)
       if (SKIP_KEYS.has(prop)) return value
       if (typeof value === 'function') {
-        return wrapWithTiming(
-          value.bind(target),
-          scope,
-          prop,
-        )
+        return wrapWithTiming(value.bind(target), scope, prop)
       }
       if (
         value !== null &&

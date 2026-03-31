@@ -188,115 +188,115 @@ export function Domains({
                     onDelete={handleDelete}
                   >
                     <TableRow>
-                    <TableCell className="px-4 py-3">
-                      <a
-                        href={`https://${rule.domain}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 font-mono text-[13px] font-medium text-foreground hover:underline"
-                      >
-                        {rule.domain}
-                        <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
-                      </a>
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        {getStatusBadge(rule.status)}
-                        {rule.status !== 'verified' && (
-                          <Button
-                            variant="link"
-                            size="sm"
-                            className="h-auto p-0 text-[13px]"
-                            onClick={() => handleViewLogs(rule)}
-                          >
-                            View logs
-                          </Button>
-                        )}
-                        {canRetry(rule.status) && (
-                          <Button
-                            variant="link"
-                            size="sm"
-                            className="h-auto p-0 text-[13px]"
-                            onClick={() => handleRetry(rule)}
-                          >
-                            Retry
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      <DateTooltip
-                        date={rule.$createdAt}
-                        className="text-[12px] text-muted-foreground"
-                      />
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-right">
-                      <div className="flex justify-end">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
+                      <TableCell className="px-4 py-3">
+                        <a
+                          href={`https://${rule.domain}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 font-mono text-[13px] font-medium text-foreground hover:underline"
+                        >
+                          {rule.domain}
+                          <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
+                        </a>
+                      </TableCell>
+                      <TableCell className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          {getStatusBadge(rule.status)}
+                          {rule.status !== 'verified' && (
                             <Button
-                              variant="ghost"
+                              variant="link"
                               size="sm"
-                              className="h-8 w-8 p-0"
+                              className="h-auto p-0 text-[13px]"
+                              onClick={() => handleViewLogs(rule)}
                             >
-                              <MoreHorizontal className="h-4 w-4" />
+                              View logs
                             </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            {rule.status !== 'verified' && (
+                          )}
+                          {canRetry(rule.status) && (
+                            <Button
+                              variant="link"
+                              size="sm"
+                              className="h-auto p-0 text-[13px]"
+                              onClick={() => handleRetry(rule)}
+                            >
+                              Retry
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-4 py-3">
+                        <DateTooltip
+                          date={rule.$createdAt}
+                          className="text-[12px] text-muted-foreground"
+                        />
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-right">
+                        <div className="flex justify-end">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              {rule.status !== 'verified' && (
+                                <DropdownMenuItem
+                                  onClick={() => handleViewLogs(rule)}
+                                >
+                                  <FileText className="mr-2 h-4 w-4" />
+                                  View logs
+                                </DropdownMenuItem>
+                              )}
+                              {canRetry(rule.status) && (
+                                <DropdownMenuItem
+                                  onClick={() => handleRetry(rule)}
+                                >
+                                  <RefreshCw className="mr-2 h-4 w-4" />
+                                  Retry
+                                </DropdownMenuItem>
+                              )}
                               <DropdownMenuItem
-                                onClick={() => handleViewLogs(rule)}
+                                onClick={() => {
+                                  const apex = getApexDomain(rule.domain)
+                                  const orgDomainId = apex
+                                    ? apexToOrgDomainId.get(apex.toLowerCase())
+                                    : undefined
+                                  if (project?.teamId && orgDomainId) {
+                                    navigate({
+                                      to: '/organizations/$orgId/domains/$domainId',
+                                      params: {
+                                        orgId: project.teamId,
+                                        domainId: orgDomainId,
+                                      },
+                                    })
+                                  }
+                                }}
+                                disabled={
+                                  !project?.teamId ||
+                                  !getApexDomain(rule.domain) ||
+                                  !apexToOrgDomainId.has(
+                                    getApexDomain(rule.domain)?.toLowerCase() ??
+                                      '',
+                                  )
+                                }
                               >
                                 <FileText className="mr-2 h-4 w-4" />
-                                View logs
+                                DNS Records
                               </DropdownMenuItem>
-                            )}
-                            {canRetry(rule.status) && (
                               <DropdownMenuItem
-                                onClick={() => handleRetry(rule)}
+                                onClick={() => handleDelete(rule)}
                               >
-                                <RefreshCw className="mr-2 h-4 w-4" />
-                                Retry
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete
                               </DropdownMenuItem>
-                            )}
-                            <DropdownMenuItem
-                              onClick={() => {
-                                const apex = getApexDomain(rule.domain)
-                                const orgDomainId = apex
-                                  ? apexToOrgDomainId.get(apex.toLowerCase())
-                                  : undefined
-                                if (project?.teamId && orgDomainId) {
-                                  navigate({
-                                    to: '/organizations/$orgId/domains/$domainId',
-                                    params: {
-                                      orgId: project.teamId,
-                                      domainId: orgDomainId,
-                                    },
-                                  })
-                                }
-                              }}
-                              disabled={
-                                !project?.teamId ||
-                                !getApexDomain(rule.domain) ||
-                                !apexToOrgDomainId.has(
-                                  getApexDomain(rule.domain)?.toLowerCase() ??
-                                    '',
-                                )
-                              }
-                            >
-                              <FileText className="mr-2 h-4 w-4" />
-                              DNS Records
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleDelete(rule)}
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </TableCell>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </TableCell>
                     </TableRow>
                   </ProxyRuleContextMenu>
                 ))}

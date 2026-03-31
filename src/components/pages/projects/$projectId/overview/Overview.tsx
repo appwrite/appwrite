@@ -473,7 +473,9 @@ export function View({ projectId, initialData }: ViewProps) {
                       return (
                         <div key={tab.id} className="flex">
                           {/* Separator */}
-                          {index > 0 && <div className="my-2.5 w-px bg-border" />}
+                          {index > 0 && (
+                            <div className="my-2.5 w-px bg-border" />
+                          )}
 
                           {/* Tab Button */}
                           <button

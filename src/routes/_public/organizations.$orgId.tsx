@@ -138,9 +138,7 @@ function OrganizationLayout() {
 
   return (
     <RequireAuth>
-      {isDomainDetailRoute ||
-      isSupportRoute ||
-      isOrgDomainsWizardRoute ? (
+      {isDomainDetailRoute || isSupportRoute || isOrgDomainsWizardRoute ? (
         // Domain detail, support, and domain wizards: outlet only (fullscreen / own chrome)
         <Outlet />
       ) : isChangePlanRoute ? (

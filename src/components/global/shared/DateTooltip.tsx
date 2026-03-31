@@ -35,9 +35,12 @@ export function DateTooltip({
 
   useEffect(() => {
     if (!live || showFormattedDate) return
-    const intervalId = window.setInterval(() => {
-      setNowMs(Date.now())
-    }, Math.max(5_000, liveUpdateMs))
+    const intervalId = window.setInterval(
+      () => {
+        setNowMs(Date.now())
+      },
+      Math.max(5_000, liveUpdateMs),
+    )
     return () => window.clearInterval(intervalId)
   }, [live, liveUpdateMs, showFormattedDate])
 

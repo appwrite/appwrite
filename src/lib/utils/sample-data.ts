@@ -10,7 +10,10 @@ function toSafeNumber(value: number | bigint | null | undefined): number {
   if (typeof value === 'bigint') {
     const n = Number(value)
     if (!Number.isFinite(n)) return 0
-    return Math.max(-Number.MAX_SAFE_INTEGER, Math.min(Number.MAX_SAFE_INTEGER, n))
+    return Math.max(
+      -Number.MAX_SAFE_INTEGER,
+      Math.min(Number.MAX_SAFE_INTEGER, n),
+    )
   }
   return Number(value)
 }
@@ -82,7 +85,8 @@ function generateStringValue(column: Column): string {
 
   // Default: random words
   const words = faker.lorem.words({ min: 1, max: 5 })
-  const maxSize = column.size != null ? Math.min(toSafeNumber(column.size), 1000) : 1000
+  const maxSize =
+    column.size != null ? Math.min(toSafeNumber(column.size), 1000) : 1000
   return words.length > maxSize ? words.slice(0, maxSize) : words
 }
 

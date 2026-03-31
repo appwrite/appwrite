@@ -76,9 +76,7 @@ export function SiteContextMenu({
     })
   }
 
-  const siteHref = buildConsoleUrl(
-    `/projects/${projectId}/sites/${site.$id}/`,
-  )
+  const siteHref = buildConsoleUrl(`/projects/${projectId}/sites/${site.$id}/`)
 
   const handleDeleteClick = () => {
     setDeleteDialogOpen(true)
@@ -130,9 +128,7 @@ export function SiteContextMenu({
               Copy
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
-              <ContextMenuItem
-                onSelect={() => copyToClipboard('ID', site.$id)}
-              >
+              <ContextMenuItem onSelect={() => copyToClipboard('ID', site.$id)}>
                 <ContextMenuIcon icon={Copy} />
                 Copy ID
               </ContextMenuItem>

@@ -92,9 +92,13 @@ function filterChartDataByRange(
   }
 
   const from = startOfDay(dateRange.from)
-  const toBound = dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from)
+  const toBound = dateRange.to
+    ? endOfDay(dateRange.to)
+    : endOfDay(dateRange.from)
 
-  return data.filter((d) => isWithinInterval(d.day, { start: from, end: toBound }))
+  return data.filter((d) =>
+    isWithinInterval(d.day, { start: from, end: toBound }),
+  )
 }
 
 interface CustomTooltipProps {

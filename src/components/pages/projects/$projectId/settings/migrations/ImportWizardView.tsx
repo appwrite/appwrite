@@ -188,13 +188,21 @@ export function ImportWizardView() {
     return typeof value === 'number' ? value : null
   }
 
-  function resourceFormToResources(): (AppwriteMigrationResource | SupabaseMigrationResource | FirebaseMigrationResource)[] {
+  function resourceFormToResources(): (
+    | AppwriteMigrationResource
+    | SupabaseMigrationResource
+    | FirebaseMigrationResource
+  )[] {
     const allowed = supportsFunctions
       ? APPWRITE_RESOURCES
       : provider === 'Firebase'
         ? FIREBASE_RESOURCES
         : SUPABASE_NHOST_RESOURCES
-    const out: (AppwriteMigrationResource | SupabaseMigrationResource | FirebaseMigrationResource)[] = []
+    const out: (
+      | AppwriteMigrationResource
+      | SupabaseMigrationResource
+      | FirebaseMigrationResource
+    )[] = []
     if (resourceForm.users.root) {
       out.push(
         supportsFunctions
@@ -228,12 +236,11 @@ export function ImportWizardView() {
       }
     }
     if (resourceForm.storage.root) {
-      const storageEnum =
-        supportsFunctions
-          ? AppwriteMigrationResource
-          : provider === 'Firebase'
-            ? FirebaseMigrationResource
-            : SupabaseMigrationResource
+      const storageEnum = supportsFunctions
+        ? AppwriteMigrationResource
+        : provider === 'Firebase'
+          ? FirebaseMigrationResource
+          : SupabaseMigrationResource
       out.push(storageEnum.Bucket, storageEnum.File)
     }
     return out.filter((r) => allowed.includes(r as (typeof allowed)[number]))

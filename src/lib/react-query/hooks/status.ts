@@ -193,7 +193,8 @@ export async function fetchAppwriteCloudStatus(): Promise<AppwriteCloudStatusSum
         (item): item is StatusReportItem => item.type === 'status_report',
       )
       .map((report) => ({
-        title: report.attributes?.title?.trim() || 'Ongoing Appwrite Cloud issue',
+        title:
+          report.attributes?.title?.trim() || 'Ongoing Appwrite Cloud issue',
         reportType: normalizeReportType(report.attributes?.report_type),
         aggregateState: normalizeReportAggregateState(
           report.attributes?.aggregate_state,
@@ -209,7 +210,8 @@ export async function fetchAppwriteCloudStatus(): Promise<AppwriteCloudStatusSum
   const servicesMap = new Map<string, AppwriteCloudServiceState>()
   payload.included
     ?.filter(
-      (item): item is StatusResourceItem => item.type === 'status_page_resource',
+      (item): item is StatusResourceItem =>
+        item.type === 'status_page_resource',
     )
     .forEach((resource) => {
       const serviceName = resource.attributes?.public_name?.trim()
@@ -246,9 +248,13 @@ export async function fetchAppwriteCloudStatus(): Promise<AppwriteCloudStatusSum
   const activeReport =
     aggregateState === 'operational'
       ? undefined
-      : activeReports.find((report) => report.aggregateState === aggregateState) ??
-        activeReports.find((report) => report.aggregateState !== 'maintenance') ??
-        activeReports[0]
+      : (activeReports.find(
+          (report) => report.aggregateState === aggregateState,
+        ) ??
+        activeReports.find(
+          (report) => report.aggregateState !== 'maintenance',
+        ) ??
+        activeReports[0])
 
   return {
     aggregateState,

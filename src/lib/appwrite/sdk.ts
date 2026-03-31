@@ -38,9 +38,7 @@ import {
   subscribeToDebugEndpointChange,
 } from '@/lib/debug-endpoint'
 import { wrapServiceObject } from '@/lib/appwrite/slow-call-reporting'
-import {
-  CONSOLE_IMPERSONATION_TARGET_KEY,
-} from '@/lib/console-impersonation'
+import { CONSOLE_IMPERSONATION_TARGET_KEY } from '@/lib/console-impersonation'
 
 /**
  * True when the endpoint host is a known multi-region Appwrite cloud host

@@ -60,14 +60,18 @@ export function AvailableCreditsSection({
     data: requestedCreditsData,
     isFetching: requestedCreditsFetching,
     error: requestedCreditsError,
-  } = useQuery(organizationCreditsQueryOptions(orgId, requestedPage, ITEMS_PER_PAGE))
+  } = useQuery(
+    organizationCreditsQueryOptions(orgId, requestedPage, ITEMS_PER_PAGE),
+  )
 
   // Fetch displayed page (what user currently sees)
   const {
     data: displayedCreditsData,
     isLoading: displayedCreditsLoading,
     error: displayedCreditsError,
-  } = useQuery(organizationCreditsQueryOptions(orgId, displayedPage, ITEMS_PER_PAGE))
+  } = useQuery(
+    organizationCreditsQueryOptions(orgId, displayedPage, ITEMS_PER_PAGE),
+  )
 
   // Keep current page visible until requested page data is ready
   useEffect(() => {
@@ -369,8 +373,8 @@ export function AvailableCreditsSection({
             <div className="flex items-center justify-between border-t border-border px-6 py-3">
               <span className="text-[12px] text-muted-foreground">
                 Showing {displayedPage * ITEMS_PER_PAGE + 1}–
-                {Math.min((displayedPage + 1) * ITEMS_PER_PAGE, creditsTotal)} of{' '}
-                {creditsTotal}
+                {Math.min((displayedPage + 1) * ITEMS_PER_PAGE, creditsTotal)}{' '}
+                of {creditsTotal}
               </span>
               <div className="flex items-center gap-1">
                 <Button

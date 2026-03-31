@@ -42,7 +42,10 @@ export type BuyDomainSelection = {
   renewalPeriodYears?: number
 }
 
-function splitAccountName(name: string): { firstName: string; lastName: string } {
+function splitAccountName(name: string): {
+  firstName: string
+  lastName: string
+} {
   const t = name.trim()
   if (!t) return { firstName: '', lastName: '' }
   const i = t.indexOf(' ')
@@ -71,12 +74,9 @@ export function BuyDomainPurchaseSummary({
 }: {
   selection: BuyDomainSelection
 }) {
-  const hasRegistrationPrice =
-    selection.price != null && selection.price > 0
+  const hasRegistrationPrice = selection.price != null && selection.price > 0
   const periodLabel =
-    selection.periodYears === 1
-      ? '1 year'
-      : `${selection.periodYears} years`
+    selection.periodYears === 1 ? '1 year' : `${selection.periodYears} years`
   const renewalYears =
     selection.renewalPeriodYears ?? selection.periodYears ?? 1
   const hasRenewal =
@@ -144,8 +144,8 @@ export function BuyDomainPurchaseSummary({
             </>
           ) : (
             <p className="text-[13px] leading-relaxed text-muted-foreground">
-              Pricing is confirmed when you submit payment. Premium and specialty
-              names may require manual review from the registry.
+              Pricing is confirmed when you submit payment. Premium and
+              specialty names may require manual review from the registry.
             </p>
           )}
         </div>
@@ -349,7 +349,8 @@ export function BuyDomainCheckout({
             type="button"
             disabled={!canSubmit}
             className={cn(
-              (completedPaymentMethods.length === 0 || addresses.length === 0) &&
+              (completedPaymentMethods.length === 0 ||
+                addresses.length === 0) &&
                 'opacity-80',
             )}
             onClick={() => purchaseMutation.mutate()}
@@ -369,132 +370,134 @@ export function BuyDomainCheckout({
           </p>
         </div>
 
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">
-            Registrant contact
-          </h3>
-        </div>
-        <div className="border-t border-border" />
-        <div className="px-6 py-4 space-y-4">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+          <div className="px-6 py-4">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              Registrant contact
+            </h3>
+          </div>
+          <div className="border-t border-border" />
+          <div className="px-6 py-4 space-y-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="bd-first" className="text-[13px]">
+                  First name
+                </Label>
+                <Input
+                  id="bd-first"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="h-9 text-[13px]"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="bd-last" className="text-[13px]">
+                  Last name
+                </Label>
+                <Input
+                  id="bd-last"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="h-9 text-[13px]"
+                />
+              </div>
+            </div>
             <div className="space-y-1.5">
-              <Label htmlFor="bd-first" className="text-[13px]">
-                First name
+              <Label htmlFor="bd-email" className="text-[13px]">
+                Email
               </Label>
               <Input
-                id="bd-first"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
+                id="bd-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="h-9 text-[13px]"
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="bd-last" className="text-[13px]">
-                Last name
+              <Label htmlFor="bd-phone" className="text-[13px]">
+                Phone (E.164)
               </Label>
               <Input
-                id="bd-last"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
+                id="bd-phone"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+15551234567"
+                className="h-9 text-[13px] font-mono"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="bd-company" className="text-[13px]">
+                Company (optional)
+              </Label>
+              <Input
+                id="bd-company"
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
                 className="h-9 text-[13px]"
               />
             </div>
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="bd-email" className="text-[13px]">
-              Email
-            </Label>
-            <Input
-              id="bd-email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="h-9 text-[13px]"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="bd-phone" className="text-[13px]">
-              Phone (E.164)
-            </Label>
-            <Input
-              id="bd-phone"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="+15551234567"
-              className="h-9 text-[13px] font-mono"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="bd-company" className="text-[13px]">
-              Company (optional)
-            </Label>
-            <Input
-              id="bd-company"
-              value={companyName}
-              onChange={(e) => setCompanyName(e.target.value)}
-              className="h-9 text-[13px]"
-            />
-          </div>
         </div>
-      </div>
 
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">
-            Billing address
-          </h3>
-          <p className="text-[13px] text-muted-foreground mt-2">
-            Used for registry contact and invoicing.
-          </p>
-        </div>
-        <div className="border-t border-border" />
-        <div className="px-6 py-4 space-y-3">
-          {addresses.length > 0 ? (
-            <Select
-              value={billingAddressId || undefined}
-              onValueChange={setBillingAddressId}
-            >
-              <SelectTrigger className="h-9 w-full min-w-0 text-[13px]">
-                <SelectValue placeholder="Select billing address" />
-              </SelectTrigger>
-              <SelectContent>
-                {addresses.map((a) => (
-                  <SelectItem key={a.$id} value={a.$id}>
-                    {addressLabel(a)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          ) : (
-            <p className="text-[13px] text-muted-foreground">
-              No billing addresses on file.
+        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+          <div className="px-6 py-4">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              Billing address
+            </h3>
+            <p className="text-[13px] text-muted-foreground mt-2">
+              Used for registry contact and invoicing.
             </p>
-          )}
-          <Link
-            to="/account/$tab"
-            params={{ tab: 'payments' }}
-            className="inline-block text-[13px] text-primary underline-offset-4 hover:underline"
-          >
-            Manage addresses in account settings
-          </Link>
+          </div>
+          <div className="border-t border-border" />
+          <div className="px-6 py-4 space-y-3">
+            {addresses.length > 0 ? (
+              <Select
+                value={billingAddressId || undefined}
+                onValueChange={setBillingAddressId}
+              >
+                <SelectTrigger className="h-9 w-full min-w-0 text-[13px]">
+                  <SelectValue placeholder="Select billing address" />
+                </SelectTrigger>
+                <SelectContent>
+                  {addresses.map((a) => (
+                    <SelectItem key={a.$id} value={a.$id}>
+                      {addressLabel(a)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <p className="text-[13px] text-muted-foreground">
+                No billing addresses on file.
+              </p>
+            )}
+            <Link
+              to="/account/$tab"
+              params={{ tab: 'payments' }}
+              className="inline-block text-[13px] text-primary underline-offset-4 hover:underline"
+            >
+              Manage addresses in account settings
+            </Link>
+          </div>
         </div>
-      </div>
 
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">Payment</h3>
+        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+          <div className="px-6 py-4">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              Payment
+            </h3>
+          </div>
+          <div className="border-t border-border" />
+          <div className="px-6 py-4">
+            <PaymentMethodDropdown
+              paymentMethods={paymentMethods}
+              selectedPaymentMethodId={paymentMethodId}
+              onPaymentMethodSelect={setPaymentMethodId}
+              onAddPaymentMethod={() => setPaymentModalOpen(true)}
+            />
+          </div>
         </div>
-        <div className="border-t border-border" />
-        <div className="px-6 py-4">
-          <PaymentMethodDropdown
-            paymentMethods={paymentMethods}
-            selectedPaymentMethodId={paymentMethodId}
-            onPaymentMethodSelect={setPaymentMethodId}
-            onAddPaymentMethod={() => setPaymentModalOpen(true)}
-          />
-        </div>
-      </div>
       </div>
 
       <PaymentModal

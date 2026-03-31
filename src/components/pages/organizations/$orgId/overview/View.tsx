@@ -464,15 +464,15 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   // Projects list: prefer URL search so page size change and page are shareable
   const projectsPageFromSearch =
     typeof search === 'object' && search != null && 'projectsPage' in search
-      ? (typeof (search as { projectsPage?: number }).projectsPage === 'number'
-          ? (search as { projectsPage: number }).projectsPage
-          : Number((search as { projectsPage?: unknown }).projectsPage))
+      ? typeof (search as { projectsPage?: number }).projectsPage === 'number'
+        ? (search as { projectsPage: number }).projectsPage
+        : Number((search as { projectsPage?: unknown }).projectsPage)
       : undefined
   const projectsLimitFromSearch =
     typeof search === 'object' && search != null && 'projectsLimit' in search
-      ? (typeof (search as { projectsLimit?: number }).projectsLimit === 'number'
-          ? (search as { projectsLimit: number }).projectsLimit
-          : Number((search as { projectsLimit?: unknown }).projectsLimit))
+      ? typeof (search as { projectsLimit?: number }).projectsLimit === 'number'
+        ? (search as { projectsLimit: number }).projectsLimit
+        : Number((search as { projectsLimit?: unknown }).projectsLimit)
       : undefined
   const urlProjectsPage =
     Number.isInteger(projectsPageFromSearch) &&
@@ -492,8 +492,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const activeProjectsPage = displayedPage
   const [requestedMembershipsPage, setRequestedMembershipsPage] = useState(1)
   const [displayedMembershipsPage, setDisplayedMembershipsPage] = useState(1)
-  const [membershipsPageSize, setMembershipsPageSize] =
-    useState(GRID_DEFAULT_PAGE_SIZE)
+  const [membershipsPageSize, setMembershipsPageSize] = useState(
+    GRID_DEFAULT_PAGE_SIZE,
+  )
   const [membershipsSearchQuery, setMembershipsSearchQuery] = useState('')
   const [settingsNavSearch, setSettingsNavSearch] = useState('')
 
@@ -921,7 +922,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       ...buildPinnedProjectIdsPrefs(pinnedIds.filter((id) => id !== projectId)),
     }
     try {
-      await updateTeamPrefsMutation.mutateAsync(prefs as Record<string, unknown>)
+      await updateTeamPrefsMutation.mutateAsync(
+        prefs as Record<string, unknown>,
+      )
     } catch {
       // Keep project deletion successful even if pin cleanup fails.
     }
@@ -1063,10 +1066,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
   const memberships = useMemo(
     () =>
-      mapOrganizationMembershipsToTeamMembers(
-        displayedMembershipsRaw,
-        orgId,
-      ),
+      mapOrganizationMembershipsToTeamMembers(displayedMembershipsRaw, orgId),
     [displayedMembershipsRaw, orgId],
   )
   const membershipsTotal = displayedMembershipsRaw?.total ?? 0
@@ -1816,13 +1816,13 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                             </h3>
                                             {supportsMultiRegion &&
                                               project.region && (
-                                              <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-muted-foreground">
-                                                <RegionFlag
-                                                  region={project.region}
-                                                />
-                                                {project.region}
-                                              </div>
-                                            )}
+                                                <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-muted-foreground">
+                                                  <RegionFlag
+                                                    region={project.region}
+                                                  />
+                                                  {project.region}
+                                                </div>
+                                              )}
                                           </div>
                                           <ProjectCardFooter
                                             platformsCount={
@@ -1844,7 +1844,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                   className="absolute right-2 top-2 h-8 w-8 rounded-md opacity-0 transition-opacity group-hover:opacity-100"
                                                   onClick={(e) => {
                                                     e.preventDefault()
-                                                    handlePinProject(project.$id)
+                                                    handlePinProject(
+                                                      project.$id,
+                                                    )
                                                   }}
                                                   disabled={
                                                     updateTeamPrefsMutation.isPending
@@ -1887,9 +1889,13 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                           <ProjectContextMenu
                                             key={project.$id}
                                             project={project}
-                                            showSettingsTab={showProjectSettingsTab}
+                                            showSettingsTab={
+                                              showProjectSettingsTab
+                                            }
                                             canDeleteProject={canManageProjects}
-                                            onProjectDeleted={handleProjectDeleted}
+                                            onProjectDeleted={
+                                              handleProjectDeleted
+                                            }
                                           >
                                             <div
                                               className="group relative rounded-xl border border-border bg-card/50 p-4 transition-all hover:border-border hover:bg-card"
@@ -1908,13 +1914,15 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                   </h3>
                                                   {supportsMultiRegion &&
                                                     project.region && (
-                                                    <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-muted-foreground">
-                                                      <RegionFlag
-                                                        region={project.region}
-                                                      />
-                                                      {project.region}
-                                                    </div>
-                                                  )}
+                                                      <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-muted-foreground">
+                                                        <RegionFlag
+                                                          region={
+                                                            project.region
+                                                          }
+                                                        />
+                                                        {project.region}
+                                                      </div>
+                                                    )}
                                                 </div>
                                                 <ProjectCardFooter
                                                   platformsCount={
@@ -1995,7 +2003,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                   setRequestedPage(page)
                                   navigate({
                                     to: location.pathname,
-                                    search: (prev: Record<string, unknown>) => ({
+                                    search: (
+                                      prev: Record<string, unknown>,
+                                    ) => ({
                                       ...(typeof prev === 'object' && prev
                                         ? prev
                                         : {}),
@@ -2010,7 +2020,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                   setDisplayedPage(1)
                                   navigate({
                                     to: location.pathname,
-                                    search: (prev: Record<string, unknown>) => ({
+                                    search: (
+                                      prev: Record<string, unknown>,
+                                    ) => ({
                                       ...(typeof prev === 'object' && prev
                                         ? prev
                                         : {}),

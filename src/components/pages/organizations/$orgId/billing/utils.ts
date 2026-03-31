@@ -187,11 +187,7 @@ export function formatPaymentMethodSummary(
   }
   const typeLabel = formatPaymentCardBrand(method.brand)
   let out = `${typeLabel} ending in ${method.last4}`
-  if (
-    options?.includeExpiry &&
-    method.expiryMonth &&
-    method.expiryYear
-  ) {
+  if (options?.includeExpiry && method.expiryMonth && method.expiryYear) {
     out += ` · Expires ${formatCardExpiry(method.expiryMonth, method.expiryYear)}`
   }
   return out

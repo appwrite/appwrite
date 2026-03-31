@@ -1,10 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import {
-  useParams,
-  useNavigate,
-  useSearch,
-  Link,
-} from '@tanstack/react-router'
+import { useParams, useNavigate, useSearch, Link } from '@tanstack/react-router'
 import {
   BillingPlanTier,
   type BillingPlanTier as BillingPlanTierType,
@@ -124,8 +119,9 @@ export function ChangePlanWizardFullscreen() {
   const [feedbackMessage, setFeedbackMessage] = useState<string>('')
   const [couponModalOpen, setCouponModalOpen] = useState(false)
   const [paymentModalOpen, setPaymentModalOpen] = useState(false)
-  const [usageLimitsComponentRef, setUsageLimitsComponentRef] =
-    useState<{ getSelectedProjects?: () => string[] } | null>(null)
+  const [usageLimitsComponentRef, setUsageLimitsComponentRef] = useState<{
+    getSelectedProjects?: () => string[]
+  } | null>(null)
   const handleUsageLimitsRef = (ref: unknown) =>
     setUsageLimitsComponentRef(
       ref as { getSelectedProjects?: () => string[] } | null,
@@ -644,7 +640,9 @@ export function ChangePlanWizardFullscreen() {
           {selectedPlan === BillingPlanTier.Tier0 && hasFreeOrgs && (
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>You can only have one free organization per account</AlertTitle>
+              <AlertTitle>
+                You can only have one free organization per account
+              </AlertTitle>
               <AlertDescription className="mt-2">
                 To downgrade this organization, first migrate or delete your
                 existing free organization.{' '}

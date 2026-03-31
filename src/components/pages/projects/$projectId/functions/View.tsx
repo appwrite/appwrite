@@ -124,15 +124,15 @@ export function View() {
     // Prefer router search state (updated by navigate()) over URL so page size change takes effect even if URL lags
     const pageFromSearch =
       search.page != null
-        ? (typeof search.page === 'number'
-            ? search.page
-            : Number(search.page))
+        ? typeof search.page === 'number'
+          ? search.page
+          : Number(search.page)
         : undefined
     const limitFromSearch =
       search.limit != null
-        ? (typeof search.limit === 'number'
-            ? search.limit
-            : Number(search.limit))
+        ? typeof search.limit === 'number'
+          ? search.limit
+          : Number(search.limit)
         : undefined
     const page =
       Number.isInteger(pageFromSearch) && (pageFromSearch ?? 0) >= 1
@@ -805,61 +805,65 @@ export function View() {
                           }}
                         >
                           <ResourceCard
-                          title={func.name || 'Unnamed Function'}
-                          resourceId={func.$id}
-                          customIcon={
-                            <RuntimeIcon
-                              runtime={func.runtime || ''}
-                              size="md"
-                              className="h-5 w-5"
-                            />
-                          }
-                          iconColor="bg-muted text-muted-foreground"
-                          status={func.enabled === false ? 'error' : undefined}
-                          statusLabel={
-                            func.enabled === false ? 'Disabled' : undefined
-                          }
-                          metadata={[
-                            {
-                              label: 'Runtime',
-                              value: func.runtime || 'unknown',
-                            },
-                            ...(func.schedule
-                              ? [
-                                  {
-                                    label: 'Schedule',
-                                    value: formatCronExpression(func.schedule),
-                                  },
-                                ]
-                              : []),
-                            ...(nextExecution
-                              ? [
-                                  {
-                                    label: 'Next execution',
-                                    value: (
-                                      <TooltipProvider>
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <span className="flex items-center gap-1">
-                                              <Clock className="h-3 w-3" />
-                                              {nextExecution}
-                                            </span>
-                                          </TooltipTrigger>
-                                          <TooltipContent>
-                                            <p>
-                                              Next execution: {nextExecution}
-                                            </p>
-                                          </TooltipContent>
-                                        </Tooltip>
-                                      </TooltipProvider>
-                                    ),
-                                  },
-                                ]
-                              : []),
-                          ]}
-                        />
-                      </Link>
-                    </FunctionContextMenu>
+                            title={func.name || 'Unnamed Function'}
+                            resourceId={func.$id}
+                            customIcon={
+                              <RuntimeIcon
+                                runtime={func.runtime || ''}
+                                size="md"
+                                className="h-5 w-5"
+                              />
+                            }
+                            iconColor="bg-muted text-muted-foreground"
+                            status={
+                              func.enabled === false ? 'error' : undefined
+                            }
+                            statusLabel={
+                              func.enabled === false ? 'Disabled' : undefined
+                            }
+                            metadata={[
+                              {
+                                label: 'Runtime',
+                                value: func.runtime || 'unknown',
+                              },
+                              ...(func.schedule
+                                ? [
+                                    {
+                                      label: 'Schedule',
+                                      value: formatCronExpression(
+                                        func.schedule,
+                                      ),
+                                    },
+                                  ]
+                                : []),
+                              ...(nextExecution
+                                ? [
+                                    {
+                                      label: 'Next execution',
+                                      value: (
+                                        <TooltipProvider>
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <span className="flex items-center gap-1">
+                                                <Clock className="h-3 w-3" />
+                                                {nextExecution}
+                                              </span>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                              <p>
+                                                Next execution: {nextExecution}
+                                              </p>
+                                            </TooltipContent>
+                                          </Tooltip>
+                                        </TooltipProvider>
+                                      ),
+                                    },
+                                  ]
+                                : []),
+                            ]}
+                          />
+                        </Link>
+                      </FunctionContextMenu>
                     )
                   })}
                 </div>

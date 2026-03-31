@@ -373,7 +373,7 @@ export function ProjectSelector({
               hasNextPage={hasNextPage}
               fetchNextPage={fetchNextPage}
               organizations={organizations}
-            isCloud={isCloud}
+              isCloud={isCloud}
               currentProjectId={projectId}
               onCreateProject={() => setCreateProjectDialogOpen(true)}
             />
@@ -401,19 +401,13 @@ export function ProjectSelector({
             className,
           )}
         >
-          <InitialsAvatar
-            name={resolvedProject.name}
-            size="sm"
-          />
+          <InitialsAvatar name={resolvedProject.name} size="sm" />
           <div className="min-w-0 flex-1">
             <p
               className="truncate text-[13px] font-medium text-foreground"
               title={resolvedProject.name}
             >
-              {truncateMiddle(
-                resolvedProject.name,
-                30,
-              )}
+              {truncateMiddle(resolvedProject.name, 30)}
             </p>
             <p
               className="truncate text-[11px] text-muted-foreground"
@@ -500,10 +494,7 @@ export function ProjectSelector({
               className,
             )}
           >
-            <InitialsAvatar
-              name={resolvedProject.name}
-              size="sm"
-            />
+            <InitialsAvatar name={resolvedProject.name} size="sm" />
             <div className="min-w-0 flex flex-1 items-center gap-2 overflow-hidden">
               <p
                 className="truncate text-[13px] font-medium text-foreground"
@@ -513,11 +504,7 @@ export function ProjectSelector({
                   currentProjectTeam?.name || resolvedTeam.name,
                   20,
                 )}{' '}
-                /{' '}
-                {truncateMiddle(
-                  resolvedProject.name,
-                  22,
-                )}
+                / {truncateMiddle(resolvedProject.name, 22)}
               </p>
               {isCloud && currentProjectOrg && (
                 <span

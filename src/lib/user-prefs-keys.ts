@@ -231,7 +231,10 @@ export function appendRecentImpersonationUser(
   const email = user.email?.trim()
   if (name) entry.name = name
   if (email) entry.email = email
-  return mergeRecentImpersonationLists([entry], current.filter((u) => u.$id !== id))
+  return mergeRecentImpersonationLists(
+    [entry],
+    current.filter((u) => u.$id !== id),
+  )
 }
 
 export function mergeRecentImpersonationIntoAccountPrefs(

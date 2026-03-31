@@ -126,10 +126,7 @@ export function MessageContextMenu({
               </ContextMenuItem>
               <ContextMenuItem
                 onSelect={() =>
-                  copyToClipboard(
-                    'JSON',
-                    toPrettyJson({ id: message.$id }),
-                  )
+                  copyToClipboard('JSON', toPrettyJson({ id: message.$id }))
                 }
               >
                 <ContextMenuIcon icon={FileJson} />

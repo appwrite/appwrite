@@ -51,7 +51,10 @@ export function SimplePagination({
 
   const scrollToTop = () => {
     setTimeout(() => {
-      if (typeof document !== 'undefined' && document.documentElement.scrollTop > 0) {
+      if (
+        typeof document !== 'undefined' &&
+        document.documentElement.scrollTop > 0
+      ) {
         document.documentElement.scrollTo({ top: 0, behavior: 'smooth' })
       }
       if (typeof window !== 'undefined' && window.scrollY > 0) {
@@ -170,7 +173,10 @@ export function Pagination({
     // Use a delay to ensure React has updated the DOM and data has loaded
     // Try both window and documentElement to handle different scroll containers
     setTimeout(() => {
-      if (typeof document !== 'undefined' && document.documentElement.scrollTop > 0) {
+      if (
+        typeof document !== 'undefined' &&
+        document.documentElement.scrollTop > 0
+      ) {
         document.documentElement.scrollTo({ top: 0, behavior: 'smooth' })
       }
       if (typeof window !== 'undefined' && window.scrollY > 0) {

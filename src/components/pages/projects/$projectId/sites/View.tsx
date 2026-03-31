@@ -107,15 +107,15 @@ export function View() {
     // Prefer router search state (updated by navigate()) over URL so page size change takes effect even if URL lags
     const pageFromSearch =
       search.page != null
-        ? (typeof search.page === 'number'
-            ? search.page
-            : Number(search.page))
+        ? typeof search.page === 'number'
+          ? search.page
+          : Number(search.page)
         : undefined
     const limitFromSearch =
       search.limit != null
-        ? (typeof search.limit === 'number'
-            ? search.limit
-            : Number(search.limit))
+        ? typeof search.limit === 'number'
+          ? search.limit
+          : Number(search.limit)
         : undefined
     const page =
       Number.isInteger(pageFromSearch) && (pageFromSearch ?? 0) >= 1
@@ -757,144 +757,145 @@ export function View() {
                               })
                             }}
                           >
-                          <TableCell
-                            onClick={(e) => e.stopPropagation()}
-                            className="px-4 py-3"
-                          >
-                            <Checkbox
-                              checked={selectedSites.has(siteData.$id)}
-                              onCheckedChange={() => toggleSite(siteData.$id)}
-                            />
-                          </TableCell>
-                          <TableCell className="px-4 py-3">
-                            {(() => {
-                              const screenshotUrl = getScreenshotUrl(siteData)
-                              const screenshotKey = `${siteData.$id}-${isDark ? 'dark' : 'light'}`
-                              const isLoaded =
-                                loadedScreenshots.has(screenshotKey)
-                              if (screenshotUrl) {
+                            <TableCell
+                              onClick={(e) => e.stopPropagation()}
+                              className="px-4 py-3"
+                            >
+                              <Checkbox
+                                checked={selectedSites.has(siteData.$id)}
+                                onCheckedChange={() => toggleSite(siteData.$id)}
+                              />
+                            </TableCell>
+                            <TableCell className="px-4 py-3">
+                              {(() => {
+                                const screenshotUrl = getScreenshotUrl(siteData)
+                                const screenshotKey = `${siteData.$id}-${isDark ? 'dark' : 'light'}`
+                                const isLoaded =
+                                  loadedScreenshots.has(screenshotKey)
+                                if (screenshotUrl) {
+                                  return (
+                                    <img
+                                      src={screenshotUrl}
+                                      alt={`${siteData.name || 'Site'} preview`}
+                                      onLoad={() => {
+                                        setLoadedScreenshots((prev) =>
+                                          new Set(prev).add(screenshotKey),
+                                        )
+                                      }}
+                                      className={cn(
+                                        'h-12 w-20 rounded border border-border object-cover transition-opacity duration-500',
+                                        isLoaded ? 'opacity-100' : 'opacity-0',
+                                      )}
+                                    />
+                                  )
+                                }
                                 return (
-                                  <img
-                                    src={screenshotUrl}
-                                    alt={`${siteData.name || 'Site'} preview`}
-                                    onLoad={() => {
-                                      setLoadedScreenshots((prev) =>
-                                        new Set(prev).add(screenshotKey),
-                                      )
-                                    }}
-                                    className={cn(
-                                      'h-12 w-20 rounded border border-border object-cover transition-opacity duration-500',
-                                      isLoaded ? 'opacity-100' : 'opacity-0',
-                                    )}
-                                  />
+                                  <div className="flex h-12 w-20 items-center justify-center rounded border border-border/50 bg-gradient-to-br from-muted/40 to-muted/20 backdrop-blur-sm">
+                                    <p className="text-[10px] font-medium text-muted-foreground/60 text-center leading-tight px-1">
+                                      Preview not available
+                                    </p>
+                                  </div>
                                 )
-                              }
-                              return (
-                                <div className="flex h-12 w-20 items-center justify-center rounded border border-border/50 bg-gradient-to-br from-muted/40 to-muted/20 backdrop-blur-sm">
-                                  <p className="text-[10px] font-medium text-muted-foreground/60 text-center leading-tight px-1">
-                                    Preview not available
-                                  </p>
+                              })()}
+                            </TableCell>
+                            <TableCell className="px-4 py-3">
+                              <Link
+                                to="/projects/$projectId/sites/$siteId/"
+                                params={{
+                                  projectId: projectId!,
+                                  siteId: siteData.$id,
+                                }}
+                                className="block group"
+                              >
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                                    <FrameworkIcon
+                                      framework={
+                                        (siteData as unknown).buildFramework ||
+                                        (siteData as unknown)
+                                          .buildFrameworkId ||
+                                        (siteData as unknown).framework
+                                      }
+                                      size="sm"
+                                    />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="truncate text-[13px] font-medium text-foreground group-hover:text-primary transition-colors">
+                                      {siteData.name || 'Unnamed Site'}
+                                    </p>
+                                  </div>
                                 </div>
-                              )
-                            })()}
-                          </TableCell>
-                          <TableCell className="px-4 py-3">
-                            <Link
-                              to="/projects/$projectId/sites/$siteId/"
-                              params={{
-                                projectId: projectId!,
-                                siteId: siteData.$id,
-                              }}
-                              className="block group"
-                            >
-                              <div className="flex items-center gap-3 min-w-0">
-                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                                  <FrameworkIcon
-                                    framework={
-                                      (siteData as unknown).buildFramework ||
-                                      (siteData as unknown).buildFrameworkId ||
-                                      (siteData as unknown).framework
-                                    }
-                                    size="sm"
+                              </Link>
+                            </TableCell>
+                            <TableCell className="px-4 py-3">
+                              <Link
+                                to="/projects/$projectId/sites/$siteId/"
+                                params={{
+                                  projectId: projectId!,
+                                  siteId: siteData.$id,
+                                }}
+                                className="block"
+                              >
+                                {siteData.latestDeploymentCreatedAt ? (
+                                  <span className="text-[12px] text-muted-foreground">
+                                    Deployed{' '}
+                                    {formatDistanceToNow(
+                                      new Date(
+                                        siteData.latestDeploymentCreatedAt,
+                                      ),
+                                      { addSuffix: false },
+                                    )}{' '}
+                                    ago
+                                  </span>
+                                ) : (
+                                  <span className="text-[12px] text-muted-foreground/50 italic">
+                                    —
+                                  </span>
+                                )}
+                              </Link>
+                            </TableCell>
+                            <TableCell className="px-4 py-3">
+                              <Link
+                                to="/projects/$projectId/sites/$siteId/"
+                                params={{
+                                  projectId: projectId!,
+                                  siteId: siteData.$id,
+                                }}
+                                className="block text-right"
+                              >
+                                {siteData.$createdAt ? (
+                                  <DateTooltip
+                                    date={siteData.$createdAt}
+                                    className="text-[12px] text-muted-foreground font-mono"
                                   />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="truncate text-[13px] font-medium text-foreground group-hover:text-primary transition-colors">
-                                    {siteData.name || 'Unnamed Site'}
-                                  </p>
-                                </div>
-                              </div>
-                            </Link>
-                          </TableCell>
-                          <TableCell className="px-4 py-3">
-                            <Link
-                              to="/projects/$projectId/sites/$siteId/"
-                              params={{
-                                projectId: projectId!,
-                                siteId: siteData.$id,
-                              }}
-                              className="block"
-                            >
-                              {siteData.latestDeploymentCreatedAt ? (
-                                <span className="text-[12px] text-muted-foreground">
-                                  Deployed{' '}
-                                  {formatDistanceToNow(
-                                    new Date(
-                                      siteData.latestDeploymentCreatedAt,
-                                    ),
-                                    { addSuffix: false },
-                                  )}{' '}
-                                  ago
-                                </span>
-                              ) : (
-                                <span className="text-[12px] text-muted-foreground/50 italic">
-                                  —
-                                </span>
-                              )}
-                            </Link>
-                          </TableCell>
-                          <TableCell className="px-4 py-3">
-                            <Link
-                              to="/projects/$projectId/sites/$siteId/"
-                              params={{
-                                projectId: projectId!,
-                                siteId: siteData.$id,
-                              }}
-                              className="block text-right"
-                            >
-                              {siteData.$createdAt ? (
-                                <DateTooltip
-                                  date={siteData.$createdAt}
-                                  className="text-[12px] text-muted-foreground font-mono"
-                                />
-                              ) : (
-                                <span className="text-[12px] text-muted-foreground/50 italic">
-                                  N/A
-                                </span>
-                              )}
-                            </Link>
-                          </TableCell>
-                          <TableCell className="px-4 py-3">
-                            <Link
-                              to="/projects/$projectId/sites/$siteId/"
-                              params={{
-                                projectId: projectId!,
-                                siteId: siteData.$id,
-                              }}
-                              className="block text-right"
-                            >
-                              {siteData.$updatedAt ? (
-                                <DateTooltip
-                                  date={siteData.$updatedAt}
-                                  className="text-[12px] text-muted-foreground font-mono"
-                                />
-                              ) : (
-                                <span className="text-[12px] text-muted-foreground/50 italic">
-                                  N/A
-                                </span>
-                              )}
-                            </Link>
-                          </TableCell>
+                                ) : (
+                                  <span className="text-[12px] text-muted-foreground/50 italic">
+                                    N/A
+                                  </span>
+                                )}
+                              </Link>
+                            </TableCell>
+                            <TableCell className="px-4 py-3">
+                              <Link
+                                to="/projects/$projectId/sites/$siteId/"
+                                params={{
+                                  projectId: projectId!,
+                                  siteId: siteData.$id,
+                                }}
+                                className="block text-right"
+                              >
+                                {siteData.$updatedAt ? (
+                                  <DateTooltip
+                                    date={siteData.$updatedAt}
+                                    className="text-[12px] text-muted-foreground font-mono"
+                                  />
+                                ) : (
+                                  <span className="text-[12px] text-muted-foreground/50 italic">
+                                    N/A
+                                  </span>
+                                )}
+                              </Link>
+                            </TableCell>
                           </TableRow>
                         </SiteContextMenu>
                       )
@@ -942,84 +943,84 @@ export function View() {
                   const screenshotUrl = getScreenshotUrl(siteData)
                   return (
                     <SiteContextMenu
-                       key={siteData.$id}
+                      key={siteData.$id}
                       projectId={projectId!}
                       site={{ $id: siteData.$id, name: siteData.name }}
                     >
-                    <Link
-                      to="/projects/$projectId/sites/$siteId/"
-                      params={{ projectId, siteId: siteData.$id }}
-                      className="block group"
-                    >
-                      <div className="rounded-lg border border-border bg-card overflow-hidden transition-all hover:border-border hover:bg-accent/50">
-                        {/* Preview Image */}
-                        {screenshotUrl ? (
-                          <div className="aspect-video w-full overflow-hidden bg-muted">
-                            {(() => {
-                              const screenshotKey = `${siteData.$id}-${isDark ? 'dark' : 'light'}`
-                              const isLoaded =
-                                loadedScreenshots.has(screenshotKey)
-                              return (
-                                <img
-                                  src={screenshotUrl}
-                                  alt={`${siteData.name || 'Site'} preview`}
-                                  onLoad={() => {
-                                    setLoadedScreenshots((prev) =>
-                                      new Set(prev).add(screenshotKey),
-                                    )
-                                  }}
-                                  className={cn(
-                                    'h-full w-full object-cover transition-opacity duration-500',
-                                    isLoaded ? 'opacity-100' : 'opacity-0',
+                      <Link
+                        to="/projects/$projectId/sites/$siteId/"
+                        params={{ projectId, siteId: siteData.$id }}
+                        className="block group"
+                      >
+                        <div className="rounded-lg border border-border bg-card overflow-hidden transition-all hover:border-border hover:bg-accent/50">
+                          {/* Preview Image */}
+                          {screenshotUrl ? (
+                            <div className="aspect-video w-full overflow-hidden bg-muted">
+                              {(() => {
+                                const screenshotKey = `${siteData.$id}-${isDark ? 'dark' : 'light'}`
+                                const isLoaded =
+                                  loadedScreenshots.has(screenshotKey)
+                                return (
+                                  <img
+                                    src={screenshotUrl}
+                                    alt={`${siteData.name || 'Site'} preview`}
+                                    onLoad={() => {
+                                      setLoadedScreenshots((prev) =>
+                                        new Set(prev).add(screenshotKey),
+                                      )
+                                    }}
+                                    className={cn(
+                                      'h-full w-full object-cover transition-opacity duration-500',
+                                      isLoaded ? 'opacity-100' : 'opacity-0',
+                                    )}
+                                  />
+                                )
+                              })()}
+                            </div>
+                          ) : (
+                            <div className="aspect-video w-full flex items-center justify-center bg-gradient-to-br from-muted/50 via-muted/30 to-muted/20 border-b border-border/50 relative overflow-hidden">
+                              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,0,0,0.02),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.02),transparent_70%)]" />
+                              <p className="relative text-[12px] font-medium text-muted-foreground/60">
+                                Preview not available
+                              </p>
+                            </div>
+                          )}
+                          {/* Card Content */}
+                          <div className="p-4">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex items-start gap-3 min-w-0 flex-1">
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                                  <FrameworkIcon
+                                    framework={
+                                      (siteData as unknown).buildFramework ||
+                                      (siteData as unknown).buildFrameworkId ||
+                                      (siteData as unknown).framework
+                                    }
+                                    size="md"
+                                  />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <h3 className="truncate text-[14px] font-medium text-foreground">
+                                    {siteData.name || 'Unnamed Site'}
+                                  </h3>
+                                  {siteData.latestDeploymentCreatedAt && (
+                                    <p className="mt-2 text-[11px] text-muted-foreground">
+                                      Deployed{' '}
+                                      {formatDistanceToNow(
+                                        new Date(
+                                          siteData.latestDeploymentCreatedAt,
+                                        ),
+                                        { addSuffix: false },
+                                      )}{' '}
+                                      ago
+                                    </p>
                                   )}
-                                />
-                              )
-                            })()}
-                          </div>
-                        ) : (
-                          <div className="aspect-video w-full flex items-center justify-center bg-gradient-to-br from-muted/50 via-muted/30 to-muted/20 border-b border-border/50 relative overflow-hidden">
-                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,0,0,0.02),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.02),transparent_70%)]" />
-                            <p className="relative text-[12px] font-medium text-muted-foreground/60">
-                              Preview not available
-                            </p>
-                          </div>
-                        )}
-                        {/* Card Content */}
-                        <div className="p-4">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex items-start gap-3 min-w-0 flex-1">
-                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                                <FrameworkIcon
-                                  framework={
-                                    (siteData as unknown).buildFramework ||
-                                    (siteData as unknown).buildFrameworkId ||
-                                    (siteData as unknown).framework
-                                  }
-                                  size="md"
-                                />
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <h3 className="truncate text-[14px] font-medium text-foreground">
-                                  {siteData.name || 'Unnamed Site'}
-                                </h3>
-                                {siteData.latestDeploymentCreatedAt && (
-                                  <p className="mt-2 text-[11px] text-muted-foreground">
-                                    Deployed{' '}
-                                    {formatDistanceToNow(
-                                      new Date(
-                                        siteData.latestDeploymentCreatedAt,
-                                      ),
-                                      { addSuffix: false },
-                                    )}{' '}
-                                    ago
-                                  </p>
-                                )}
+                                </div>
                               </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    </Link>
+                      </Link>
                     </SiteContextMenu>
                   )
                 })}

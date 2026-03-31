@@ -444,8 +444,11 @@ export function useResumeProject(projectId: string | undefined) {
     mutationFn: async () => {
       if (!projectId) throw new Error('Project ID is required')
       const fingerprint = await generateFingerprintToken()
-      const client = sdk.forConsole.client as { headers?: Record<string, string> }
-      if (client.headers) client.headers[CONSOLE_FINGERPRINT_HEADER] = fingerprint
+      const client = sdk.forConsole.client as {
+        headers?: Record<string, string>
+      }
+      if (client.headers)
+        client.headers[CONSOLE_FINGERPRINT_HEADER] = fingerprint
       try {
         await sdk.forConsole.projects.updateStatus({
           projectId,

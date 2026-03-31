@@ -3,10 +3,13 @@
  * Persists target user id in sessionStorage so impersonation headers can be restored after refresh.
  */
 
-export const CONSOLE_IMPERSONATION_TARGET_KEY = 'console.impersonation.targetUserId'
-export const CONSOLE_IMPERSONATION_OPERATOR_KEY = 'console.impersonation.operator'
+export const CONSOLE_IMPERSONATION_TARGET_KEY =
+  'console.impersonation.targetUserId'
+export const CONSOLE_IMPERSONATION_OPERATOR_KEY =
+  'console.impersonation.operator'
 
-export const CONSOLE_IMPERSONATION_CHANGED_EVENT = 'console-impersonation-changed'
+export const CONSOLE_IMPERSONATION_CHANGED_EVENT =
+  'console-impersonation-changed'
 
 /** Safe landing after impersonation starts or ends (avoids staying on org/project routes the new session may not access). */
 export const ACCOUNT_PATH_AFTER_IMPERSONATION = '/account'

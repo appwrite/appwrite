@@ -564,9 +564,7 @@ function DomainCard({
   const hasReportedVisible = useRef(false)
 
   const canSelect =
-    !taken &&
-    priceLoaded &&
-    !(premium && (price == null || price <= 0))
+    !taken && priceLoaded && !(premium && (price == null || price <= 0))
 
   useEffect(() => {
     if (!onVisible || hasReportedVisible.current) return

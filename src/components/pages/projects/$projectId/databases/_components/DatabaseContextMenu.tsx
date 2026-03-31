@@ -82,14 +82,18 @@ export function DatabaseContextMenu({
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
       <ContextMenuContent className="w-56">
         <ContextMenuItem
-          onSelect={() => navigateToTab('/projects/$projectId/databases/$databaseId/')}
+          onSelect={() =>
+            navigateToTab('/projects/$projectId/databases/$databaseId/')
+          }
         >
           <ContextMenuIcon icon={Table2} />
           Tables
         </ContextMenuItem>
         <ContextMenuItem
           onSelect={() =>
-            navigateToTab('/projects/$projectId/databases/$databaseId/visualizer')
+            navigateToTab(
+              '/projects/$projectId/databases/$databaseId/visualizer',
+            )
           }
         >
           <ContextMenuIcon icon={Workflow} />
@@ -98,7 +102,9 @@ export function DatabaseContextMenu({
         {showSecuritySettings && (
           <ContextMenuItem
             onSelect={() =>
-              navigateToTab('/projects/$projectId/databases/$databaseId/security')
+              navigateToTab(
+                '/projects/$projectId/databases/$databaseId/security',
+              )
             }
           >
             <ContextMenuIcon icon={Shield} />
@@ -108,7 +114,9 @@ export function DatabaseContextMenu({
         {showInsights && (
           <ContextMenuItem
             onSelect={() =>
-              navigateToTab('/projects/$projectId/databases/$databaseId/insights')
+              navigateToTab(
+                '/projects/$projectId/databases/$databaseId/insights',
+              )
             }
           >
             <ContextMenuIcon icon={BarChart3} />
@@ -118,7 +126,9 @@ export function DatabaseContextMenu({
         {showBackups && (
           <ContextMenuItem
             onSelect={() =>
-              navigateToTab('/projects/$projectId/databases/$databaseId/backups')
+              navigateToTab(
+                '/projects/$projectId/databases/$databaseId/backups',
+              )
             }
           >
             <ContextMenuIcon icon={Archive} />
@@ -127,7 +137,9 @@ export function DatabaseContextMenu({
         )}
         <ContextMenuItem
           onSelect={() =>
-            navigateToTab('/projects/$projectId/databases/$databaseId/export-import')
+            navigateToTab(
+              '/projects/$projectId/databases/$databaseId/export-import',
+            )
           }
         >
           <ContextMenuIcon icon={ArrowRightLeft} />
@@ -136,7 +148,9 @@ export function DatabaseContextMenu({
         {showSecuritySettings && (
           <ContextMenuItem
             onSelect={() =>
-              navigateToTab('/projects/$projectId/databases/$databaseId/settings')
+              navigateToTab(
+                '/projects/$projectId/databases/$databaseId/settings',
+              )
             }
           >
             <ContextMenuIcon icon={Settings} />

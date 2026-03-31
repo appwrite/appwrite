@@ -22,8 +22,7 @@ const VARIANT_OUTLINE_ACTION: Record<HeaderAlertVariant, string> = {
     'border border-amber-500 bg-transparent text-amber-600 hover:bg-amber-500/10 hover:text-amber-700 dark:border-amber-400 dark:text-amber-400 dark:hover:bg-amber-500/20 dark:hover:text-amber-300',
   danger:
     'border border-red-500 bg-transparent text-red-600 hover:bg-red-500/10 hover:text-red-700 dark:border-red-400 dark:text-red-400 dark:hover:bg-red-500/20 dark:hover:text-red-300',
-  info:
-    'border border-blue-500 bg-transparent text-blue-600 hover:bg-blue-500/10 hover:text-blue-700 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-500/20 dark:hover:text-blue-300',
+  info: 'border border-blue-500 bg-transparent text-blue-600 hover:bg-blue-500/10 hover:text-blue-700 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-500/20 dark:hover:text-blue-300',
 }
 
 export function headerAlertOutlineButtonClass(variant: HeaderAlertVariant) {
@@ -69,7 +68,9 @@ export function HeaderAlertBar({
         </div>
       </div>
       {action ? (
-        <div className="flex w-full shrink-0 sm:ml-auto sm:w-auto">{action}</div>
+        <div className="flex w-full shrink-0 sm:ml-auto sm:w-auto">
+          {action}
+        </div>
       ) : null}
     </div>
   )

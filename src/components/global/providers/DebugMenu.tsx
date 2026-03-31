@@ -434,7 +434,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               },
               {
                 label: 'AI assistant',
-                description: 'In-app AI assistant chat panel and header button.',
+                description:
+                  'In-app AI assistant chat panel and header button.',
                 variant: 'switch' as const,
                 switchValue: overrides.showAIAssistant,
                 switchOnChange: (checked: boolean) => {

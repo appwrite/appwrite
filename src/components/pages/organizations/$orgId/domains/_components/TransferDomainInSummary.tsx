@@ -34,14 +34,10 @@ export function TransferDomainInSummary({
   const hasDomain = quotedDomain.length > 0
   const hasTransferPrice = quote != null && quote.price > 0
   const periodYears = quote?.periodYears ?? 1
-  const periodLabel =
-    periodYears === 1 ? '1 year' : `${periodYears} years`
-  const renewalYears =
-    quote?.renewalPeriodYears ?? quote?.periodYears ?? 1
+  const periodLabel = periodYears === 1 ? '1 year' : `${periodYears} years`
+  const renewalYears = quote?.renewalPeriodYears ?? quote?.periodYears ?? 1
   const hasRenewal =
-    quote != null &&
-    quote.renewalPrice != null &&
-    quote.renewalPrice > 0
+    quote != null && quote.renewalPrice != null && quote.renewalPrice > 0
 
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden">

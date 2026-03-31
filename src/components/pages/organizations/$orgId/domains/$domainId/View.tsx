@@ -1032,7 +1032,9 @@ export function View({ initialData }: ViewProps = {}) {
                       </p>
                       <div className="min-h-[1.25rem] flex items-center">
                         <code className="text-[12px] font-mono text-foreground">
-                          {domain.registrar === 'appwrite' ? 'Appwrite' : '3rd party'}
+                          {domain.registrar === 'appwrite'
+                            ? 'Appwrite'
+                            : '3rd party'}
                         </code>
                       </div>
                     </div>
@@ -1057,7 +1059,14 @@ export function View({ initialData }: ViewProps = {}) {
                       <div className="min-h-[1.25rem] flex items-center">
                         <code className="text-[12px] font-mono text-foreground">
                           {domain.expire
-                            ? new Date(domain.expire).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+                            ? new Date(domain.expire).toLocaleDateString(
+                                'en-US',
+                                {
+                                  year: 'numeric',
+                                  month: 'short',
+                                  day: 'numeric',
+                                },
+                              )
                             : '—'}
                         </code>
                       </div>
@@ -1695,7 +1704,12 @@ export function View({ initialData }: ViewProps = {}) {
                           Enable auto renewal
                         </Label>
                         <p className="text-[12px] text-muted-foreground">
-                          <span className={cn('font-medium', autoRenewalStatusClassName)}>
+                          <span
+                            className={cn(
+                              'font-medium',
+                              autoRenewalStatusClassName,
+                            )}
+                          >
                             {autoRenewalEnabled ? 'Enabled' : 'Disabled'}
                           </span>
                         </p>

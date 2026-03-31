@@ -24,7 +24,7 @@ export function CloudStatusBanner() {
     mockCloudStatusAlert !== 'live'
       ? mockCloudStatusAlert
       : isSuccess
-        ? data?.aggregateState ?? 'operational'
+        ? (data?.aggregateState ?? 'operational')
         : 'operational'
 
   if (aggregateState === 'operational') {

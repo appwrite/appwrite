@@ -53,7 +53,12 @@ export const Route = createFileRoute(
 
       // Organization memberships - CRITICAL for members count
       queryClient.ensureQueryData(
-        organizationMembershipsQueryOptions(orgId, 0, GRID_DEFAULT_PAGE_SIZE, ''),
+        organizationMembershipsQueryOptions(
+          orgId,
+          0,
+          GRID_DEFAULT_PAGE_SIZE,
+          '',
+        ),
       ),
 
       // Billing plans - CRITICAL for plan selection UI

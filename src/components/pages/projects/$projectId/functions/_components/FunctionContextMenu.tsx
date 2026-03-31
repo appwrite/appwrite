@@ -33,7 +33,11 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { useNavigate } from '@tanstack/react-router'
-import { useDeleteFunction, useProject, useOrganizationScopes } from '@/lib/react-query/hooks'
+import {
+  useDeleteFunction,
+  useProject,
+  useOrganizationScopes,
+} from '@/lib/react-query/hooks'
 import { canShowFunctionSecuritySettings } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -146,9 +150,7 @@ export function FunctionContextMenu({
               Copy
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
-              <ContextMenuItem
-                onSelect={() => copyToClipboard('ID', func.$id)}
-              >
+              <ContextMenuItem onSelect={() => copyToClipboard('ID', func.$id)}>
                 <ContextMenuIcon icon={Copy} />
                 Copy ID
               </ContextMenuItem>

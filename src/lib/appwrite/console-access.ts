@@ -25,8 +25,11 @@ export function reportConsoleAccess(projectId: string): void {
 
   generateFingerprintToken()
     .then((fingerprint) => {
-      const client = sdk.forConsole.client as { headers?: Record<string, string> }
-      if (client.headers) client.headers[CONSOLE_FINGERPRINT_HEADER] = fingerprint
+      const client = sdk.forConsole.client as {
+        headers?: Record<string, string>
+      }
+      if (client.headers)
+        client.headers[CONSOLE_FINGERPRINT_HEADER] = fingerprint
       const projects = sdk.forConsole.projects as ProjectsWithConsoleAccess
       if (typeof projects.updateConsoleAccess === 'function') {
         return projects.updateConsoleAccess({ projectId })
@@ -34,7 +37,9 @@ export function reportConsoleAccess(projectId: string): void {
     })
     .catch((e) => console.error('Failed to update console access:', e))
     .finally(() => {
-      const client = sdk.forConsole.client as { headers?: Record<string, string> }
+      const client = sdk.forConsole.client as {
+        headers?: Record<string, string>
+      }
       if (client.headers) delete client.headers[CONSOLE_FINGERPRINT_HEADER]
     })
 }

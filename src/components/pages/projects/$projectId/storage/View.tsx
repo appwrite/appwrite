@@ -105,15 +105,15 @@ export function View() {
     // Prefer router search state (updated by navigate()) over URL so page size change takes effect even if URL lags
     const pageFromSearch =
       search.page != null
-        ? (typeof search.page === 'number'
-            ? search.page
-            : Number(search.page))
+        ? typeof search.page === 'number'
+          ? search.page
+          : Number(search.page)
         : undefined
     const limitFromSearch =
       search.limit != null
-        ? (typeof search.limit === 'number'
-            ? search.limit
-            : Number(search.limit))
+        ? typeof search.limit === 'number'
+          ? search.limit
+          : Number(search.limit)
         : undefined
     const page =
       Number.isInteger(pageFromSearch) && (pageFromSearch ?? 0) >= 1
@@ -334,7 +334,8 @@ export function View() {
   // Get total count from the first page query (no search/filters) - for limit checking
   const { data: totalBucketsData } = useQuery({
     queryKey: ['buckets', 'project', projectId, 0, GRID_DEFAULT_PAGE_SIZE, ''],
-    queryFn: () => fetchProjectBuckets(projectId!, 0, GRID_DEFAULT_PAGE_SIZE, ''),
+    queryFn: () =>
+      fetchProjectBuckets(projectId!, 0, GRID_DEFAULT_PAGE_SIZE, ''),
     enabled: !!projectId,
     staleTime: 30 * 1000, // 30 seconds
     refetchOnMount: false, // Data is fresh from route loader, no need to refetch

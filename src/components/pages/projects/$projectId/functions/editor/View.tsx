@@ -1,10 +1,7 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import { useParams, Link } from '@tanstack/react-router'
 import { useTheme } from 'next-themes'
-import {
-  isHtmlDarkChrome,
-  isResolvedThemeDarkChrome,
-} from '@/lib/html-theme'
+import { isHtmlDarkChrome, isResolvedThemeDarkChrome } from '@/lib/html-theme'
 import Editor from '@monaco-editor/react'
 import {
   ArrowLeft,

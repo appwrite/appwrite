@@ -8,10 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { PaymentMethodDropdown } from '@/components/pages/organizations/$orgId/billing/change-plan/PaymentMethodDropdown'
 import { PaymentModal } from '@/components/pages/organizations/$orgId/billing/Payment'
-import {
-  useOrganizationById,
-  usePaymentMethods,
-} from '@/lib/react-query/hooks'
+import { useOrganizationById, usePaymentMethods } from '@/lib/react-query/hooks'
 import {
   createDomainTransferIn,
   domainTransferPriceQueryOptions,
@@ -55,7 +52,9 @@ export function TransferDomainInWizard({
     return () => clearTimeout(t)
   }, [domainInput])
 
-  const priceQuery = useQuery(domainTransferPriceQueryOptions(debouncedPriceDomain))
+  const priceQuery = useQuery(
+    domainTransferPriceQueryOptions(debouncedPriceDomain),
+  )
 
   useEffect(() => {
     if (!organization) return

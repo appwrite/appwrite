@@ -24,9 +24,11 @@ import { reportConsoleAccess } from '@/lib/appwrite/console-access'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 
 /** Loader return: project data for first paint (avoids layout shift for paused curtain). */
-export type ProjectLayoutLoaderData = {
-  project: { $id: string; teamId: string; status?: string }
-} | undefined
+export type ProjectLayoutLoaderData =
+  | {
+      project: { $id: string; teamId: string; status?: string }
+    }
+  | undefined
 
 export const Route = createFileRoute('/_public/projects/$projectId')({
   loader: async ({ params, context }): Promise<ProjectLayoutLoaderData> => {
@@ -50,7 +52,9 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
           staleTime: 5 * 60 * 1000, // 5 minutes
         }),
         // Header ProjectSelector uses useOrganizations; prefetch so navigation does not flash skeleton
-        queryClient.ensureQueryData(organizationsQueryOptions()).catch(() => {}),
+        queryClient
+          .ensureQueryData(organizationsQueryOptions())
+          .catch(() => {}),
       ])
 
       // Fetch organization plan if we have a teamId (critical for header/limit checking)
@@ -60,9 +64,7 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
           .catch(() => {})
         if (getActiveProfileFeatures().orgRoles) {
           await queryClient
-            .ensureQueryData(
-              organizationScopesQueryOptions(projectData.teamId),
-            )
+            .ensureQueryData(organizationScopesQueryOptions(projectData.teamId))
             .catch(() => {})
         }
       }
@@ -96,17 +98,24 @@ function ProjectLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [hidePausedCurtain, setHidePausedCurtain] = useState(false)
   const loaderData = Route.useLoaderData() as ProjectLayoutLoaderData
-  const { project, isLoading: isProjectLoading, error: projectError } =
-    useProject(projectId)
+  const {
+    project,
+    isLoading: isProjectLoading,
+    error: projectError,
+  } = useProject(projectId)
   const { features } = useConsoleProfile()
 
   // Use loader data for first paint so paused curtain shows immediately (no layout shift)
   const projectForPaused =
-    loaderData?.project ?? (project ? { $id: project.$id, teamId: project.teamId, status: project.status } : null)
+    loaderData?.project ??
+    (project
+      ? { $id: project.$id, teamId: project.teamId, status: project.status }
+      : null)
   const isPausedFromProject = project?.status === 'paused'
   const isPausedFromLoader =
     !project && loaderData?.project?.status === 'paused'
-  const isPaused = (isPausedFromProject || isPausedFromLoader) && !hidePausedCurtain
+  const isPaused =
+    (isPausedFromProject || isPausedFromLoader) && !hidePausedCurtain
 
   // Extract active section from pathname
   const pathParts = location.pathname.split('/')
@@ -187,7 +196,13 @@ function ProjectLayout() {
   // Dedupe: only one call per projectId per mount (avoids double call from Strict Mode or dependency updates).
   const reportedConsoleAccessForRef = useRef<string | null>(null)
   useEffect(() => {
-    if (typeof window === 'undefined' || !projectId || isPaused || !features.billing) return
+    if (
+      typeof window === 'undefined' ||
+      !projectId ||
+      isPaused ||
+      !features.billing
+    )
+      return
     if (reportedConsoleAccessForRef.current === projectId) return
     reportedConsoleAccessForRef.current = projectId
     reportConsoleAccess(projectId)

@@ -30,8 +30,9 @@ When the **project layout** loads in the **browser** and the app is on **cloud p
 
 ## 2. Resuming a paused project
 
-**Files:**  
-- `src/components/global/layout/PausedProjectCurtain.tsx`  
+**Files:**
+
+- `src/components/global/layout/PausedProjectCurtain.tsx`
 - `src/lib/react-query/hooks/projects.ts` (`useResumeProject`)
 
 - The **paused curtain** blocks project-scoped pages and offers “Upgrade plan” and “Restore project”.
@@ -52,10 +53,10 @@ Used for both **`updateConsoleAccess`** and **resume**. Sent as `X-Appwrite-Cons
 
 ## Summary
 
-| Concern | Behavior |
-|--------|----------|
-| **Keeping a project active** | Console calls `projects.updateConsoleAccess(projectId)` when the project layout loads in the browser (cloud, non-paused). Implemented in `reportConsoleAccess()`; triggered from `projects.$projectId.tsx`. Backend uses a 6-day cooldown to avoid auto-pausing. |
-| **When the signal is sent** | On project layout load (open or navigate inside project), only when cloud + browser + non-paused. |
-| **When it is not sent** | Non-cloud profile, server-side, or project status is **paused**. |
-| **Resuming a paused project** | User clicks “Restore project” in `PausedProjectCurtain` → `updateStatus(projectId, Status.Active)` with fingerprint; then project query is invalidated. |
-| **Fingerprint** | Same helper for `updateConsoleAccess` and resume; header set before request, removed in `finally`. |
+| Concern                       | Behavior                                                                                                                                                                                                                                                         |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Keeping a project active**  | Console calls `projects.updateConsoleAccess(projectId)` when the project layout loads in the browser (cloud, non-paused). Implemented in `reportConsoleAccess()`; triggered from `projects.$projectId.tsx`. Backend uses a 6-day cooldown to avoid auto-pausing. |
+| **When the signal is sent**   | On project layout load (open or navigate inside project), only when cloud + browser + non-paused.                                                                                                                                                                |
+| **When it is not sent**       | Non-cloud profile, server-side, or project status is **paused**.                                                                                                                                                                                                 |
+| **Resuming a paused project** | User clicks “Restore project” in `PausedProjectCurtain` → `updateStatus(projectId, Status.Active)` with fingerprint; then project query is invalidated.                                                                                                          |
+| **Fingerprint**               | Same helper for `updateConsoleAccess` and resume; header set before request, removed in `finally`.                                                                                                                                                               |

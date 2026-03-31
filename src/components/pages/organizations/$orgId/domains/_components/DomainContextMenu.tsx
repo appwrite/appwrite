@@ -62,7 +62,9 @@ export function DomainContextMenu({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
   const isVerified = domain.nameservers?.toLowerCase() === 'appwrite'
-  const domainHref = buildConsoleUrl(`/organizations/${orgId}/domains/${domain.$id}`)
+  const domainHref = buildConsoleUrl(
+    `/organizations/${orgId}/domains/${domain.$id}`,
+  )
 
   const deleteDomain = useDeleteOrganizationDomain(orgId)
   const retryVerification = useRetryDomainVerification(orgId)
@@ -116,7 +118,9 @@ export function DomainContextMenu({
         <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
         <ContextMenuContent className="w-56">
           <ContextMenuItem
-            onSelect={() => navigateToTab('/organizations/$orgId/domains/$domainId')}
+            onSelect={() =>
+              navigateToTab('/organizations/$orgId/domains/$domainId')
+            }
           >
             <ContextMenuIcon icon={Globe} />
             DNS Records
@@ -142,7 +146,9 @@ export function DomainContextMenu({
               Copy
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
-              <ContextMenuItem onSelect={() => copyToClipboard('ID', domain.$id)}>
+              <ContextMenuItem
+                onSelect={() => copyToClipboard('ID', domain.$id)}
+              >
                 <ContextMenuIcon icon={Copy} />
                 Copy ID
               </ContextMenuItem>

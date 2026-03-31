@@ -2,7 +2,10 @@ import { useMemo } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { cn } from '@/lib/utils'
-import { CodeBlock, type CodeBlockLanguage } from '@/components/global/shared/CodeBlock'
+import {
+  CodeBlock,
+  type CodeBlockLanguage,
+} from '@/components/global/shared/CodeBlock'
 
 interface StreamingMarkdownProps {
   content: string

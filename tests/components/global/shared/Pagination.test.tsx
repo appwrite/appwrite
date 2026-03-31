@@ -7,24 +7,12 @@ import {
 
 describe('SimplePagination', () => {
   it('shows current page number', () => {
-    render(
-      <SimplePagination
-        currentPage={3}
-        hasMore
-        onPageChange={vi.fn()}
-      />,
-    )
+    render(<SimplePagination currentPage={3} hasMore onPageChange={vi.fn()} />)
     expect(screen.getByText('3')).toBeDefined()
   })
 
   it('disables previous button on page 1', () => {
-    render(
-      <SimplePagination
-        currentPage={1}
-        hasMore
-        onPageChange={vi.fn()}
-      />,
-    )
+    render(<SimplePagination currentPage={1} hasMore onPageChange={vi.fn()} />)
     expect(
       screen.getByLabelText('Go to previous page').hasAttribute('disabled'),
     ).toBe(true)
@@ -46,11 +34,7 @@ describe('SimplePagination', () => {
   it('calls onPageChange with previous page', () => {
     const onPageChange = vi.fn()
     render(
-      <SimplePagination
-        currentPage={3}
-        hasMore
-        onPageChange={onPageChange}
-      />,
+      <SimplePagination currentPage={3} hasMore onPageChange={onPageChange} />,
     )
     fireEvent.click(screen.getByLabelText('Go to previous page'))
     expect(onPageChange).toHaveBeenCalledWith(2)
@@ -59,11 +43,7 @@ describe('SimplePagination', () => {
   it('calls onPageChange with next page', () => {
     const onPageChange = vi.fn()
     render(
-      <SimplePagination
-        currentPage={3}
-        hasMore
-        onPageChange={onPageChange}
-      />,
+      <SimplePagination currentPage={3} hasMore onPageChange={onPageChange} />,
     )
     fireEvent.click(screen.getByLabelText('Go to next page'))
     expect(onPageChange).toHaveBeenCalledWith(4)
@@ -126,9 +106,7 @@ describe('Pagination', () => {
 
   it('navigates to next page', () => {
     const onPageChange = vi.fn()
-    render(
-      <Pagination {...defaultProps} onPageChange={onPageChange} />,
-    )
+    render(<Pagination {...defaultProps} onPageChange={onPageChange} />)
     fireEvent.click(screen.getByLabelText('Go to next page'))
     expect(onPageChange).toHaveBeenCalledWith(2)
   })
@@ -161,9 +139,7 @@ describe('Pagination', () => {
 
   it('navigates to last page', () => {
     const onPageChange = vi.fn()
-    render(
-      <Pagination {...defaultProps} onPageChange={onPageChange} />,
-    )
+    render(<Pagination {...defaultProps} onPageChange={onPageChange} />)
     fireEvent.click(screen.getByLabelText('Go to last page'))
     expect(onPageChange).toHaveBeenCalledWith(10)
   })

@@ -17,9 +17,7 @@ export function MCPSection({ compact = false }: MCPSectionProps) {
   const mcpIntegrations = useMemo(() => getMCPIDEs(), [])
 
   const description = (
-    <p
-      className={`text-[13px] text-muted-foreground${compact ? ' mb-4' : ''}`}
-    >
+    <p className={`text-[13px] text-muted-foreground${compact ? ' mb-4' : ''}`}>
       Appwrite offers two MCP servers that allow LLMs to interact with
       Appwrite's API and documentation. Deploy with a single click or view the{' '}
       <a

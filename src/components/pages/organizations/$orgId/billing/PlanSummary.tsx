@@ -476,21 +476,20 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
         if (!mappedResource) return
 
         const { name, format, planKey, showLimit = true } = mappedResource
-          const resource = getResourceByResourceId(resourceId)
+        const resource = getResourceByResourceId(resourceId)
 
-          // Get usage from resource.value (aggregation format)
-          const usage =
-            resource?.value !== undefined ? Number(resource.value) : 0
+        // Get usage from resource.value (aggregation format)
+        const usage = resource?.value !== undefined ? Number(resource.value) : 0
 
-          // Get limit from plan
-          const limit = getPlanLimit(planKey)
+        // Get limit from plan
+        const limit = getPlanLimit(planKey)
 
-          // Get cost from resource.amount if available
-          const cost =
-            resource?.amount !== undefined ? Number(resource.amount) : 0
+        // Get cost from resource.amount if available
+        const cost =
+          resource?.amount !== undefined ? Number(resource.amount) : 0
 
-          // Always show the resource if it exists in aggregation or if plan has a limit
-          // This matches the old UI which shows all resources
+        // Always show the resource if it exists in aggregation or if plan has a limit
+        // This matches the old UI which shows all resources
         if (resource || limit !== null) {
           resources.push({
             name,
@@ -498,7 +497,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
             limit,
             cost,
             formatType: format,
-              showLimit,
+            showLimit,
           })
           projectTotal += cost
         }
@@ -620,7 +619,9 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
         <div
           className={cn(
             'transition-all duration-200',
-            expanded ? 'max-h-none overflow-visible' : 'max-h-0 overflow-hidden',
+            expanded
+              ? 'max-h-none overflow-visible'
+              : 'max-h-0 overflow-hidden',
           )}
         >
           <div className="border-t border-border px-6 py-4 space-y-4">
@@ -780,8 +781,8 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                                       {!resource.showLimit
                                         ? usageFormatted
                                         : resource.limit === 0
-                                        ? usageFormatted
-                                        : `${usageFormatted} / ${limitFormatted}`}
+                                          ? usageFormatted
+                                          : `${usageFormatted} / ${limitFormatted}`}
                                     </span>
 
                                     {/* Cost - right aligned to match parent prices */}
@@ -818,13 +819,14 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                       pageSize={pageLimit}
                       onPageChange={(page) => {
                         navigate({
-                          search: (prev: unknown) => ({
-                            ...(typeof prev === 'object' && prev !== null
-                              ? (prev as Record<string, unknown>)
-                              : {}),
-                            page,
-                            limit: pageLimit,
-                          }) as never,
+                          search: (prev: unknown) =>
+                            ({
+                              ...(typeof prev === 'object' && prev !== null
+                                ? (prev as Record<string, unknown>)
+                                : {}),
+                              page,
+                              limit: pageLimit,
+                            }) as never,
                         })
                       }}
                       onPageSizeChange={() => {}}

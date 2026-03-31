@@ -14,7 +14,11 @@ import {
 } from '@/lib/console-impersonation'
 import { flushRecentImpersonationUsersToAccountPrefs } from '@/lib/react-query/hooks/auth'
 
-export function ConsoleImpersonationBanner({ className }: { className?: string }) {
+export function ConsoleImpersonationBanner({
+  className,
+}: {
+  className?: string
+}) {
   const { account: accountRaw } = useAuth()
   const account = accountRaw as Models.User | undefined
   const operatorSnapshot = readConsoleImpersonationOperatorSnapshot()

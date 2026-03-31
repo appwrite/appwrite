@@ -52,7 +52,9 @@ export function ProxyRuleContextMenu({
   const navigate = useNavigate()
   const domainUrl = `https://${rule.domain}`
   const apex = getApexDomain(rule.domain)
-  const orgDomainId = apex ? apexToOrgDomainId.get(apex.toLowerCase()) : undefined
+  const orgDomainId = apex
+    ? apexToOrgDomainId.get(apex.toLowerCase())
+    : undefined
   const canOpenDnsRecords = !!projectTeamId && !!orgDomainId
   const canRetry = rule.status === 'created' || rule.status === 'unverified'
 
@@ -80,7 +82,10 @@ export function ProxyRuleContextMenu({
             Retry
           </ContextMenuItem>
         )}
-        <ContextMenuItem onSelect={handleOpenDnsRecords} disabled={!canOpenDnsRecords}>
+        <ContextMenuItem
+          onSelect={handleOpenDnsRecords}
+          disabled={!canOpenDnsRecords}
+        >
           <ContextMenuIcon icon={Globe} />
           DNS Records
         </ContextMenuItem>
@@ -95,11 +100,15 @@ export function ProxyRuleContextMenu({
               <ContextMenuIcon icon={Copy} />
               Copy ID
             </ContextMenuItem>
-            <ContextMenuItem onSelect={() => copyToClipboard('Domain', rule.domain)}>
+            <ContextMenuItem
+              onSelect={() => copyToClipboard('Domain', rule.domain)}
+            >
               <ContextMenuIcon icon={Copy} />
               Copy domain
             </ContextMenuItem>
-            <ContextMenuItem onSelect={() => copyToClipboard('Link', domainUrl)}>
+            <ContextMenuItem
+              onSelect={() => copyToClipboard('Link', domainUrl)}
+            >
               <ContextMenuIcon icon={Link2} />
               Copy link
             </ContextMenuItem>

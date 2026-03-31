@@ -8,8 +8,11 @@
  */
 
 const SECRET =
-  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_CONSOLE_FINGERPRINT_KEY) ||
-  (typeof import.meta !== 'undefined' && (import.meta.env as Record<string, string>)?.PUBLIC_CONSOLE_FINGERPRINT_KEY) ||
+  (typeof import.meta !== 'undefined' &&
+    import.meta.env?.VITE_CONSOLE_FINGERPRINT_KEY) ||
+  (typeof import.meta !== 'undefined' &&
+    (import.meta.env as Record<string, string>)
+      ?.PUBLIC_CONSOLE_FINGERPRINT_KEY) ||
   ''
 const CACHE_TTL_MS = 60 * 60 * 1000 // 1 hour
 
@@ -91,8 +94,11 @@ async function getAudioFingerprint(): Promise<string> {
   try {
     const OfflineCtx =
       window.OfflineAudioContext ||
-      (window as unknown as { webkitOfflineAudioContext: typeof OfflineAudioContext })
-        .webkitOfflineAudioContext
+      (
+        window as unknown as {
+          webkitOfflineAudioContext: typeof OfflineAudioContext
+        }
+      ).webkitOfflineAudioContext
     if (!OfflineCtx) return ''
 
     const sampleRate = 44100
@@ -176,7 +182,8 @@ async function collectStaticSignals(): Promise<StaticSignals> {
     languages: [...(navigator.languages || [])],
     platform: navigator.platform,
     hardwareConcurrency: navigator.hardwareConcurrency || 0,
-    deviceMemory: (navigator as Navigator & { deviceMemory?: number }).deviceMemory,
+    deviceMemory: (navigator as Navigator & { deviceMemory?: number })
+      .deviceMemory,
     maxTouchPoints: navigator.maxTouchPoints || 0,
     screenWidth: screen.width,
     screenHeight: screen.height,

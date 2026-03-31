@@ -148,7 +148,9 @@ export function useDeleteAssistantConversation() {
 
   return useMutation({
     mutationFn: async (conversationId: string) => {
-      return await sdk.forConsole.assistant.deleteConversation({ conversationId })
+      return await sdk.forConsole.assistant.deleteConversation({
+        conversationId,
+      })
     },
     onSuccess: async (_, conversationId) => {
       await Promise.all([
@@ -221,7 +223,7 @@ export function useUploadAssistantAttachments() {
   return useMutation({
     mutationFn: async (params: { files: File[]; projectId?: string }) => {
       const region = params.projectId
-        ? getProjectRegion(params.projectId) ?? 'unknown'
+        ? (getProjectRegion(params.projectId) ?? 'unknown')
         : 'unknown'
       const consoleSdk = sdk.forConsoleIn(region)
 

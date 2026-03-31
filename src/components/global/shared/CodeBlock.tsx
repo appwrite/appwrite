@@ -361,7 +361,11 @@ export function CodeBlock({
           headerActions={renderCopyButton()}
         >
           <div>
-            <Highlight theme={prismTheme} code={code} language={effectiveLanguage}>
+            <Highlight
+              theme={prismTheme}
+              code={code}
+              language={effectiveLanguage}
+            >
               {({
                 className: preClassName,
                 style,

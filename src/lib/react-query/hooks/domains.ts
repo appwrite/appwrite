@@ -99,7 +99,9 @@ export type DomainPriceQuote = Models.DomainPrice & {
  * Query function to fetch new-registration and renewal prices (getPrice API).
  * For .ai TLD always requests 2-year price; otherwise uses API default (typically 1 year).
  */
-export async function fetchDomainPrice(domain: string): Promise<DomainPriceQuote> {
+export async function fetchDomainPrice(
+  domain: string,
+): Promise<DomainPriceQuote> {
   const normalized = domain.toLowerCase()
   const periodYears = normalized.endsWith('.ai') ? 2 : undefined
   const params = {

@@ -315,15 +315,15 @@ export function View() {
     // Prefer router search state (updated by navigate()) over URL so page size change takes effect even if URL lags
     const pageFromSearch =
       search.page != null
-        ? (typeof search.page === 'number'
-            ? search.page
-            : Number(search.page))
+        ? typeof search.page === 'number'
+          ? search.page
+          : Number(search.page)
         : undefined
     const limitFromSearch =
       search.limit != null
-        ? (typeof search.limit === 'number'
-            ? search.limit
-            : Number(search.limit))
+        ? typeof search.limit === 'number'
+          ? search.limit
+          : Number(search.limit)
         : undefined
     const page =
       Number.isInteger(pageFromSearch) && (pageFromSearch ?? 0) >= 1
@@ -1962,15 +1962,15 @@ export function TableView({
     // Prefer router search state (updated by navigate()) over URL so page size change takes effect even if URL lags
     const pageFromSearch =
       search?.page != null
-        ? (typeof search.page === 'number'
-            ? search.page
-            : Number(search.page))
+        ? typeof search.page === 'number'
+          ? search.page
+          : Number(search.page)
         : undefined
     const limitFromSearch =
       search?.limit != null
-        ? (typeof search.limit === 'number'
-            ? search.limit
-            : Number(search.limit))
+        ? typeof search.limit === 'number'
+          ? search.limit
+          : Number(search.limit)
         : undefined
     const page =
       Number.isInteger(pageFromSearch) && (pageFromSearch ?? 0) >= 1
@@ -6883,7 +6883,10 @@ function RowsSpreadsheet({
     mutationFn: async (rowCount: number) => {
       const columns: Column[] = apiColumns
         .filter((col: unknown) => {
-          const colKey = (col as Record<string, unknown>).key || (col as Record<string, unknown>).name || (col as Record<string, unknown>).$id
+          const colKey =
+            (col as Record<string, unknown>).key ||
+            (col as Record<string, unknown>).name ||
+            (col as Record<string, unknown>).$id
           return colKey && !String(colKey).startsWith('$')
         })
         .map((col: unknown) => {
@@ -6904,7 +6907,8 @@ function RowsSpreadsheet({
         }) as Column[]
 
       const dataProducingColumns = columns.filter(
-        (c) => c.type !== 'relationship' && (!c.status || c.status === 'available'),
+        (c) =>
+          c.type !== 'relationship' && (!c.status || c.status === 'available'),
       )
       if (dataProducingColumns.length === 0) {
         throw new Error('Add at least one column to generate sample data.')
@@ -6939,7 +6943,8 @@ function RowsSpreadsheet({
     onError: (error: Error) => {
       const isCanceled =
         error?.name === 'CanceledError' ||
-        (typeof error?.message === 'string' && error.message.toLowerCase().includes('cancel'))
+        (typeof error?.message === 'string' &&
+          error.message.toLowerCase().includes('cancel'))
       if (!isCanceled) {
         toast.error(error.message || 'Failed to generate sample data')
       }
@@ -6998,7 +7003,10 @@ function RowsSpreadsheet({
 
   // Check if table has custom columns (non-system columns)
   const hasCustomColumns = apiColumns.some((col: unknown) => {
-    const colKey = (col as Record<string, unknown>).key || (col as Record<string, unknown>).name || (col as Record<string, unknown>).$id
+    const colKey =
+      (col as Record<string, unknown>).key ||
+      (col as Record<string, unknown>).name ||
+      (col as Record<string, unknown>).$id
     return colKey && !String(colKey).startsWith('$')
   })
 
@@ -7542,7 +7550,10 @@ function RowsSpreadsheet({
                       onClick={(e) => e.stopPropagation()}
                     />
                   </td>
-                  <td className={cn('px-3 py-1.5', bodyCellBorderClass)} data-column="$sequence">
+                  <td
+                    className={cn('px-3 py-1.5', bodyCellBorderClass)}
+                    data-column="$sequence"
+                  >
                     <span className="text-[12px] text-muted-foreground">
                       {row.$sequence ?? row.rowNumber}
                     </span>
@@ -7600,7 +7611,11 @@ function RowsSpreadsheet({
                       })()}
                     </td>
                   ))}
-                  <td className={cn('w-[180px] px-3 py-1.5', bodyCellBorderClass)} data-column="$createdAt" onClick={(e) => e.stopPropagation()}>
+                  <td
+                    className={cn('w-[180px] px-3 py-1.5', bodyCellBorderClass)}
+                    data-column="$createdAt"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     {row.$createdAt ? (
                       <DateTooltip
                         date={new Date(row.$createdAt)}
@@ -7612,7 +7627,11 @@ function RowsSpreadsheet({
                       </span>
                     )}
                   </td>
-                  <td className={cn('w-[180px] px-3 py-1.5', bodyCellBorderClass)} data-column="$updatedAt" onClick={(e) => e.stopPropagation()}>
+                  <td
+                    className={cn('w-[180px] px-3 py-1.5', bodyCellBorderClass)}
+                    data-column="$updatedAt"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     {row.$updatedAt ? (
                       <DateTooltip
                         date={new Date(row.$updatedAt)}
@@ -7742,7 +7761,9 @@ function RowsSpreadsheet({
                       className="h-8 gap-2 text-[12px] font-medium"
                     >
                       <Plus className="h-3.5 w-3.5" />
-                      <span className="hidden @[500px]:inline">Sample data</span>
+                      <span className="hidden @[500px]:inline">
+                        Sample data
+                      </span>
                       <span className="@[500px]:hidden">Sample</span>
                     </Button>
                   </span>
@@ -7888,15 +7909,15 @@ function ColumnsSpreadsheet({
     // Prefer router search state over URL so page size change takes effect even if URL lags
     const pageFromSearch =
       search?.page != null
-        ? (typeof search.page === 'number'
-            ? search.page
-            : Number(search.page))
+        ? typeof search.page === 'number'
+          ? search.page
+          : Number(search.page)
         : undefined
     const limitFromSearch =
       search?.limit != null
-        ? (typeof search.limit === 'number'
-            ? search.limit
-            : Number(search.limit))
+        ? typeof search.limit === 'number'
+          ? search.limit
+          : Number(search.limit)
         : undefined
     const page =
       Number.isInteger(pageFromSearch) && (pageFromSearch ?? 0) >= 1
@@ -9300,15 +9321,15 @@ function IndexesSpreadsheet({
     // Prefer router search state over URL so page size change takes effect even if URL lags
     const pageFromSearch =
       search?.page != null
-        ? (typeof search.page === 'number'
-            ? search.page
-            : Number(search.page))
+        ? typeof search.page === 'number'
+          ? search.page
+          : Number(search.page)
         : undefined
     const limitFromSearch =
       search?.limit != null
-        ? (typeof search.limit === 'number'
-            ? search.limit
-            : Number(search.limit))
+        ? typeof search.limit === 'number'
+          ? search.limit
+          : Number(search.limit)
         : undefined
     const page =
       Number.isInteger(pageFromSearch) && (pageFromSearch ?? 0) >= 1

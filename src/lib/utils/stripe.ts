@@ -110,8 +110,8 @@ export async function confirmPayment(config: {
   const stripe = await getStripeInstance(
     config.publishableKey ??
       (typeof window !== 'undefined'
-        ? (window as Window & { __STRIPE_PUBLISHABLE_KEY__?: string })
-            .__STRIPE_PUBLISHABLE_KEY__ ?? envKey
+        ? ((window as Window & { __STRIPE_PUBLISHABLE_KEY__?: string })
+            .__STRIPE_PUBLISHABLE_KEY__ ?? envKey)
         : envKey),
   )
   if (!stripe) throw new Error('Stripe not available')
@@ -120,7 +120,9 @@ export async function confirmPayment(config: {
   const { paymentIntent, error: retrieveError } =
     await stripe.retrievePaymentIntent(config.clientSecret)
   if (retrieveError) {
-    throw new Error(retrieveError.message ?? 'Failed to retrieve payment status')
+    throw new Error(
+      retrieveError.message ?? 'Failed to retrieve payment status',
+    )
   }
 
   if (paymentIntent?.status === 'requires_action') {

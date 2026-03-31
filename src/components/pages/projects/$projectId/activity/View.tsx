@@ -434,7 +434,8 @@ export function View({ plan = 'pro' }: ViewProps) {
                       Activity retention period
                     </AlertTitle>
                     <AlertDescription className="text-[12px] text-blue-600/80 dark:text-blue-400/80 !block mt-1">
-                      Your <span className="font-medium capitalize">{plan}</span>{' '}
+                      Your{' '}
+                      <span className="font-medium capitalize">{plan}</span>{' '}
                       plan supports{' '}
                       <span className="font-medium">{planLimit.label}</span> of
                       activity retention.

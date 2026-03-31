@@ -314,7 +314,9 @@ export function ConsoleHeader({
                             </span>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>You don&apos;t have permission to create projects.</p>
+                            <p>
+                              You don&apos;t have permission to create projects.
+                            </p>
                           </TooltipContent>
                         </Tooltip>
                       ) : (
@@ -322,7 +324,9 @@ export function ConsoleHeader({
                           onClick={() => {
                             const orgId =
                               project?.teamId ||
-                              (account?.prefs?.organization as string | undefined)
+                              (account?.prefs?.organization as
+                                | string
+                                | undefined)
                             if (orgId) {
                               navigate({
                                 to: '/organizations/$orgId',
@@ -394,7 +398,10 @@ export function ConsoleHeader({
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>You don&apos;t have permission to create databases.</p>
+                                <p>
+                                  You don&apos;t have permission to create
+                                  databases.
+                                </p>
                               </TooltipContent>
                             </Tooltip>
                           ) : (
@@ -429,7 +436,10 @@ export function ConsoleHeader({
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>You don&apos;t have permission to create users.</p>
+                                <p>
+                                  You don&apos;t have permission to create
+                                  users.
+                                </p>
                               </TooltipContent>
                             </Tooltip>
                           ) : (
@@ -464,7 +474,10 @@ export function ConsoleHeader({
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>You don&apos;t have permission to create buckets.</p>
+                                <p>
+                                  You don&apos;t have permission to create
+                                  buckets.
+                                </p>
                               </TooltipContent>
                             </Tooltip>
                           ) : (
@@ -499,7 +512,10 @@ export function ConsoleHeader({
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>You don&apos;t have permission to create functions.</p>
+                                <p>
+                                  You don&apos;t have permission to create
+                                  functions.
+                                </p>
                               </TooltipContent>
                             </Tooltip>
                           ) : (
@@ -530,7 +546,10 @@ export function ConsoleHeader({
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>You don&apos;t have permission to create messaging topics.</p>
+                                <p>
+                                  You don&apos;t have permission to create
+                                  messaging topics.
+                                </p>
                               </TooltipContent>
                             </Tooltip>
                           ) : (
@@ -571,7 +590,10 @@ export function ConsoleHeader({
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>You don&apos;t have permission to create sites.</p>
+                                <p>
+                                  You don&apos;t have permission to create
+                                  sites.
+                                </p>
                               </TooltipContent>
                             </Tooltip>
                           ) : (

@@ -122,11 +122,7 @@ export function PaymentMethods({
 
     // Can't remove if it's the only method and not on free plan
     const isFreePlan = getPlanNameFromTier(organization?.billingPlan) === 'free'
-    if (
-      isPrimary &&
-      !organization?.backupPaymentMethodId &&
-      !isFreePlan
-    ) {
+    if (isPrimary && !organization?.backupPaymentMethodId && !isFreePlan) {
       toast.error('Cannot remove the only payment method on a paid plan')
       return
     }

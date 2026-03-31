@@ -6,14 +6,9 @@
 import type { LucideIcon } from 'lucide-react'
 import { AlertTriangle, Wrench } from 'lucide-react'
 
-export type CloudStatusState =
-  | 'degraded'
-  | 'downtime'
-  | 'maintenance'
+export type CloudStatusState = 'degraded' | 'downtime' | 'maintenance'
 
-export type CloudStatusStateWithOperational =
-  | 'operational'
-  | CloudStatusState
+export type CloudStatusStateWithOperational = 'operational' | CloudStatusState
 
 export function getStatusPresentation(state: CloudStatusState) {
   switch (state) {
@@ -44,9 +39,7 @@ export function getStatusPresentation(state: CloudStatusState) {
   }
 }
 
-export function getStatusIcon(
-  state: CloudStatusState,
-): LucideIcon {
+export function getStatusIcon(state: CloudStatusState): LucideIcon {
   return state === 'maintenance' ? Wrench : AlertTriangle
 }
 
