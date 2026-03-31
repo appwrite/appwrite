@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a51e9764f643f4283d593e63f61cb4e5",
+    "content-hash": "9d66f869fc3ff5abc5873a31e6976911",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4704,16 +4704,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.8.3",
+            "version": "dev-feat-query-lib",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "8633523b3343d492427331b6eec53f020f6ab7a7"
+                "reference": "7c0e2d4f065c72f8b8424bbc06cb4aecbf28915a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/8633523b3343d492427331b6eec53f020f6ab7a7",
-                "reference": "8633523b3343d492427331b6eec53f020f6ab7a7",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/7c0e2d4f065c72f8b8424bbc06cb4aecbf28915a",
+                "reference": "7c0e2d4f065c72f8b8424bbc06cb4aecbf28915a",
                 "shasum": ""
             },
             "require": {
@@ -4722,7 +4722,7 @@
                 "ext-openssl": "*",
                 "halaxa/json-machine": "^1.2",
                 "php": ">=8.1",
-                "utopia-php/database": "5.*",
+                "utopia-php/database": "dev-feat-query-lib as 5.3.17",
                 "utopia-php/dsn": "0.2.*",
                 "utopia-php/storage": "1.0.*"
             },
@@ -4739,7 +4739,25 @@
                     "Utopia\\Migration\\": "src/Migration"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\Tests\\": "tests/Migration"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "./vendor/bin/phpunit"
+                ],
+                "lint": [
+                    "./vendor/bin/pint --test"
+                ],
+                "format": [
+                    "./vendor/bin/pint"
+                ],
+                "check": [
+                    "./vendor/bin/phpstan analyse --level 3 src tests --memory-limit 2G"
+                ]
+            },
             "license": [
                 "MIT"
             ],
@@ -4752,10 +4770,10 @@
                 "utopia"
             ],
             "support": {
-                "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/1.8.3"
+                "source": "https://github.com/utopia-php/migration/tree/feat-query-lib",
+                "issues": "https://github.com/utopia-php/migration/issues"
             },
-            "time": "2026-03-19T09:18:47+00:00"
+            "time": "2026-03-31T11:14:26+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -8678,12 +8696,19 @@
             "version": "dev-feat-query-lib",
             "alias": "5.3.17",
             "alias_normalized": "5.3.17.0"
+        },
+        {
+            "package": "utopia-php/migration",
+            "version": "dev-feat-query-lib",
+            "alias": "1.8.0",
+            "alias_normalized": "1.8.0.0"
         }
     ],
     "minimum-stability": "dev",
     "stability-flags": {
         "utopia-php/audit": 20,
-        "utopia-php/database": 20
+        "utopia-php/database": 20,
+        "utopia-php/migration": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,

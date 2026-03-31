@@ -39,6 +39,7 @@ class UserEvents implements Lifecycle
         }
 
         $this->events
+            ->setProject($this->project)
             ->setEvent('users.[userId].create')
             ->setParam('userId', $data->getId())
             ->setPayload($this->response->output($data, Response::MODEL_USER));
@@ -53,7 +54,7 @@ class UserEvents implements Lifecycle
                 ->trigger();
         }
 
-        if ($this->events->getProject()->getId() !== 'console') {
+        if ($this->project->getId() !== 'console') {
             $this->realtime
                 ->from($this->events)
                 ->trigger();

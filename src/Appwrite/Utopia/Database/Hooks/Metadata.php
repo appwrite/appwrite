@@ -39,7 +39,6 @@ class Metadata implements Decorator
         $this->operations++;
 
         $collectionId = $collection->getId();
-        $document->removeAttribute('$collection');
         $document->setAttribute('$databaseId', $this->database->getId());
         $document->setAttribute('$' . $this->context . 'Id', $collectionId);
 
@@ -90,7 +89,6 @@ class Metadata implements Decorator
             foreach ($relations as $relation) {
                 if ($relation instanceof Document) {
                     $this->operations++;
-                    $relation->removeAttribute('$collection');
                     $relation->setAttribute('$databaseId', $this->database->getId());
                     $relation->setAttribute('$' . $this->context . 'Id', $relatedCollectionId);
 
