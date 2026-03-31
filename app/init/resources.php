@@ -769,6 +769,34 @@ Http::setResource('getDatabasesDB', function (Group $pools, Cache $cache, Docume
             $databaseIdCollectionIdDocumentsMetric = $databaseType . '.' . $databaseIdCollectionIdDocumentsMetric;
         }
 
+        // Build collection ID mapping (internal name → user-facing ID)
+        $databaseKey = 'database_' . $originalDatabase->getSequence();
+        $collectionIdMap = [];
+        try {
+            $collections = $authorization->skip(
+                fn () => $dbForProject->find($databaseKey, [
+                    \Utopia\Database\Query::select(['$id', '$sequence']),
+                    \Utopia\Database\Query::limit(5000),
+                ])
+            );
+            foreach ($collections as $col) {
+                $seq = $col->getSequence();
+                if ($seq !== null) {
+                    $collectionIdMap['collection_' . $seq] = $col->getId();
+                }
+            }
+        } catch (\Throwable) {
+            // Database may not have collections yet
+        }
+
+        $metadata = new Metadata(
+            database: $originalDatabase,
+            context: $context,
+        );
+        foreach ($collectionIdMap as $internal => $external) {
+            $metadata->setCollectionId($internal, $external);
+        }
+
         $database
             ->addHook(new DocumentUsage(
                 $usage,
@@ -778,11 +806,7 @@ Http::setResource('getDatabasesDB', function (Group $pools, Cache $cache, Docume
             ))
             ->addHook(new Permissions())
             ->addHook(new Relationships($database))
-            ->addHook(new Metadata(
-                database: $originalDatabase,
-                context: $context,
-                authorization: $authorization,
-            ));
+            ->addHook($metadata);
 
         if ($database->getSharedTables() && ($database->getTenant() !== null)) {
             $database->addHook(new Tenancy($database->getTenant()));
