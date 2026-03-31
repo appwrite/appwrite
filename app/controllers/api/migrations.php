@@ -676,7 +676,7 @@ Http::get('/v1/migrations')
             $cursor->setValue($cursorDocument);
         }
 
-        $filterQueries = Query::groupByType($queries)['filters'];
+        $filterQueries = Query::groupByType($queries)->filters;
         try {
             $migrations = $dbForProject->find('migrations', $queries);
             $total = $includeTotal ? $dbForProject->count('migrations', $filterQueries, APP_LIMIT_COUNT) : 0;

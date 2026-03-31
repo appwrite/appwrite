@@ -91,7 +91,7 @@ class XList extends Action
             $cursor->setValue($cursorDocument);
         }
 
-        $filterQueries = Query::groupByType($queries)['filters'];
+        $filterQueries = Query::groupByType($queries)->filters;
 
         $response->dynamic(new Document([
             'tokens' => $dbForProject->find('resourceTokens', $queries),

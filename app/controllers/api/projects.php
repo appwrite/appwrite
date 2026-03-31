@@ -899,7 +899,7 @@ Http::get('/v1/projects/:projectId/keys')
             $cursor->setValue($cursorDocument);
         }
 
-        $filterQueries = Query::groupByType($queries)['filters'];
+        $filterQueries = Query::groupByType($queries)->filters;
 
         $keys = $dbForPlatform->find('keys', $queries);
 

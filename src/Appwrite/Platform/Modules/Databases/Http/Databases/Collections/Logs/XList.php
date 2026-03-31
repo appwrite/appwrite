@@ -98,8 +98,8 @@ class XList extends Action
         }
 
         $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? 25;
-        $offset = $grouped['offset'] ?? 0;
+        $limit = $grouped->limit ?? 25;
+        $offset = $grouped->offset ?? 0;
 
         $context = $this->getContext();
         $resource = "database/$databaseId/$context/$collectionId";

@@ -127,7 +127,7 @@ class XList extends Action
         }
 
         try {
-            $selectQueries = Query::groupByType($queries)['selections'] ?? [];
+            $selectQueries = Query::groupByType($queries)->selections ?? [];
             $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
             // Use transaction-aware document retrieval if transactionId is provided
             if ($transactionId !== null) {

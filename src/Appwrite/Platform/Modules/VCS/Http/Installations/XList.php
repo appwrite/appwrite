@@ -105,7 +105,7 @@ class XList extends Action
             $cursor->setValue($cursorDocument);
         }
 
-        $filterQueries = Query::groupByType($queries)['filters'];
+        $filterQueries = Query::groupByType($queries)->filters;
         try {
             $results = $dbForPlatform->find('installations', $queries);
             $total = $includeTotal ? $dbForPlatform->count('installations', $filterQueries, APP_LIMIT_COUNT) : 0;

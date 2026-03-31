@@ -143,7 +143,7 @@ class XList extends Base
             }
         }
 
-        $filterQueries = Query::groupByType($queries)['filters'];
+        $filterQueries = Query::groupByType($queries)->filters;
 
         try {
             $results = $dbForProject->find('executions', $queries);

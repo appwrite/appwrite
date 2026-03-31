@@ -956,8 +956,8 @@ Http::get('/v1/users/:userId/logs')
         }
 
         $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? 25;
-        $offset = $grouped['offset'] ?? 0;
+        $limit = $grouped->limit ?? 25;
+        $offset = $grouped->offset ?? 0;
 
         $logs = $audit->getLogsByUser($user->getSequence(), limit: $limit, offset: $offset);
         $output = [];
