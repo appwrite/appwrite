@@ -1,35 +1,3 @@
-x-logging: &x-logging
-  logging:
-    driver: "json-file"
-    options:
-      max-file: "5"
-      max-size: "10m"
-
 services:
   mongodb:
     scale: 0
-
-  postgresql:
-    image: appwrite/postgres:0.1.0
-    container_name: appwrite-postgresql
-    <<: *x-logging
-    networks:
-      - appwrite
-    volumes:
-      - appwrite-postgresql:/var/lib/postgresql/18/data:rw
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_DB=${_APP_DB_SCHEMA}
-      - POSTGRES_USER=${_APP_DB_USER}
-      - POSTGRES_PASSWORD=${_APP_DB_PASS}
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${_APP_DB_USER} -d ${_APP_DB_SCHEMA}"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-      start_period: 10s
-    command: "postgres"
-
-volumes:
-  appwrite-postgresql:
