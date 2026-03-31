@@ -3279,7 +3279,7 @@ Http::patch('/v1/account/email')
         contentType: ContentType::JSON
     ))
     ->param('email', '', new EmailValidator(), 'User email.')
-    ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
+    ->param('password', '', new Password(true), 'User password. Must be at least 8 chars.', true)
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('user')
@@ -3292,6 +3292,12 @@ Http::patch('/v1/account/email')
     ->action(function (string $email, string $password, ?\DateTime $requestTimestamp, Response $response, User $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks, ProofsPassword $proofForPassword, Authorization $authorization) {
         // passwordUpdate will be empty if the user has never set a password
         $passwordUpdate = $user->getAttribute('passwordUpdate');
+        $hasPassword = !empty($password);
+        $hasEmail = !empty($user->getAttribute('email'));
+
+        if (empty($passwordUpdate) && !$hasPassword && !$hasEmail) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Password is required when adding an email to an account without a password.');
+        }
 
         $userProofForPassword = ProofsPassword::createHash($user->getAttribute('hash'), $user->getAttribute('hashOptions'));
 
@@ -3302,7 +3308,9 @@ Http::patch('/v1/account/email')
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
 
-        $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, false]);
+        if ($hasPassword) {
+            $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, false]);
+        }
 
         $oldEmail = $user->getAttribute('email');
 
@@ -3333,7 +3341,7 @@ Http::patch('/v1/account/email')
             ->setAttribute('emailIsFree', $emailCanonical?->isFree())
         ;
 
-        if (empty($passwordUpdate)) {
+        if (empty($passwordUpdate) && $hasPassword) {
             $user
                 ->setAttribute('password', $proofForPassword->hash($password))
                 ->setAttribute('hash', $proofForPassword->getHash()->getName())

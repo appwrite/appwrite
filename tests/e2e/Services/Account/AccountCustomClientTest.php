@@ -1518,6 +1518,72 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals($response['body']['name'], $data['name']);
     }
 
+    public function testUpdateOAuth2AccountEmailWithoutPassword(): void
+    {
+        $provider = 'mock';
+        $appId = '1';
+        $secret = '123456';
+        $oauthEmail = 'useroauth@localhost.test';
+        $newEmail = uniqid() . 'oauth-update@localhost.test';
+
+        $this->deleteUserByEmail($oauthEmail);
+        $this->deleteUserByEmail($newEmail);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/oauth2', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]), [
+            'provider' => $provider,
+            'appId' => $appId,
+            'secret' => $secret,
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $sessionCookieKey = 'a_session_' . $this->getProject()['$id'];
+        $session = $response['cookies'][$sessionCookieKey];
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]), [
+            'email' => $newEmail,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code'], json_encode($response['body']));
+        $this->assertEquals($newEmail, $response['body']['email']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $newEmail,
+            'password' => 'oauth-only-password',
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        $this->deleteUserByEmail($oauthEmail);
+        $this->deleteUserByEmail($newEmail);
+    }
+
     public function testUpdateAccountPrefs(): void
     {
         $data = $this->setupAccountWithUpdatedEmail();
