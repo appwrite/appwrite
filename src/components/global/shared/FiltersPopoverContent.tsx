@@ -988,7 +988,14 @@ export function FiltersPopoverContent({
         }
       >
         {canEdit ? (
-          <GripVertical className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+          <GripVertical
+            className={cn(
+              'h-3.5 w-3.5 shrink-0 text-muted-foreground transition-opacity',
+              isEditing
+                ? 'opacity-0'
+                : 'opacity-0 group-hover:opacity-100',
+            )}
+          />
         ) : (
           <span className="h-3.5 w-3.5 shrink-0" aria-hidden />
         )}
@@ -1036,7 +1043,7 @@ export function FiltersPopoverContent({
         )}
         <Button
           type="button"
-          variant="ghost"
+          variant="secondary"
           size="sm"
           className="h-7 text-[12px] shrink-0"
           onClick={(e) => {

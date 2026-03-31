@@ -213,7 +213,7 @@ export function DateRangePicker({
                           type="button"
                           onClick={() => handlePresetSelect(preset)}
                           className={cn(
-                            'rounded-md px-2 py-2 text-left text-[12px] font-medium transition-colors',
+                            'cursor-pointer rounded-md px-2 py-2 text-left text-[12px] font-medium transition-colors',
                             'outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                             'min-[820px]:px-2.5 min-[820px]:py-1.5',
                             isSelected
