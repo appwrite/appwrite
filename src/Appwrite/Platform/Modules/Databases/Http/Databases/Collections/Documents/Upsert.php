@@ -152,7 +152,7 @@ class Upsert extends Action
                 if (!empty($user->getId())) {
                     $defaultPermissions = [];
                     foreach ($allowedPermissions as $permission) {
-                        $defaultPermissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
+                        $defaultPermissions[] = (new Permission($permission->value, 'user', $user->getId()))->toString();
                     }
                     $permissions = $defaultPermissions;
                 }

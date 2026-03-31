@@ -71,7 +71,7 @@ class Create extends Action
             ];
 
             foreach ($allowedPermissions as $permission) {
-                $permissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
+                $permissions[] = (new Permission($permission->value, 'user', $user->getId()))->toString();
             }
         }
 

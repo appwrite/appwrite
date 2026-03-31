@@ -21,6 +21,7 @@ use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Index;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
@@ -141,45 +142,42 @@ class Create extends CollectionAction
             );
             // Create attribute and indexes metadata documents in the attributes and indexes collections
             // needed for the get and list calls
-            $attributeDocs = array_map(function ($attributeConfig) use ($database, $collection, $databaseId, $collectionId, $dimension) {
-                $key = \is_string($attributeConfig['$id']) ? $attributeConfig['$id'] : (string) $attributeConfig['$id'];
+            $attributeDocs = array_map(function (Attribute $attributeConfig) use ($database, $collection, $databaseId, $collectionId, $dimension) {
                 return new Document([
-                    '$id' => ID::custom($database->getSequence() . '_' . $collection->getSequence() . '_' . $key),
-                    'key' => $key,
+                    '$id' => ID::custom($database->getSequence() . '_' . $collection->getSequence() . '_' . $attributeConfig->key),
+                    'key' => $attributeConfig->key,
                     'databaseInternalId' => $database->getSequence(),
                     'databaseId' => $databaseId,
                     'collectionInternalId' => $collection->getSequence(),
                     'collectionId' => $collectionId,
-                    'type' => $attributeConfig['type'],
+                    'type' => $attributeConfig->type->value,
                     'status' => 'available',
                     'size' => $dimension,
-                    'required' => $attributeConfig['required'] ?? false,
-                    'signed' => $attributeConfig['signed'] ?? false,
-                    'default' => $attributeConfig['default'] ?? null,
-                    'array' => $attributeConfig['array'] ?? false,
-                    'format' => $attributeConfig['format'] ?? '',
-                    'formatOptions' => $attributeConfig['formatOptions'] ?? [],
-                    'filters' => $attributeConfig['filters'] ?? [],
-                    'options' => $attributeConfig['options'] ?? [],
+                    'required' => $attributeConfig->required,
+                    'signed' => $attributeConfig->signed,
+                    'default' => $attributeConfig->default,
+                    'array' => $attributeConfig->array,
+                    'format' => $attributeConfig->format ?? '',
+                    'formatOptions' => $attributeConfig->formatOptions,
+                    'filters' => $attributeConfig->filters,
+                    'options' => $attributeConfig->options ?? [],
                 ]);
             }, $collections['defaultAttributes']);
             $dbForProject->createDocuments('attributes', $attributeDocs);
 
-            $indexDocs = array_map(function ($indexConfig) use ($database, $collection, $databaseId, $collectionId) {
-                $key = \is_string($indexConfig['$id']) ? $indexConfig['$id'] : (string) $indexConfig['$id'];
-
+            $indexDocs = array_map(function (Index $indexConfig) use ($database, $collection, $databaseId, $collectionId) {
                 return new Document([
-                    '$id' => ID::custom($database->getSequence() . '_' . $collection->getSequence() . '_' . $key),
-                    'key' => $key,
+                    '$id' => ID::custom($database->getSequence() . '_' . $collection->getSequence() . '_' . $indexConfig->key),
+                    'key' => $indexConfig->key,
                     'status' => 'available',
                     'databaseInternalId' => $database->getSequence(),
                     'databaseId' => $databaseId,
                     'collectionInternalId' => $collection->getSequence(),
                     'collectionId' => $collectionId,
-                    'type' => $indexConfig['type'],
-                    'attributes' => $indexConfig['attributes'] ?? [],
-                    'lengths' => $indexConfig['lengths'] ?? [],
-                    'orders' => $indexConfig['orders'] ?? [],
+                    'type' => $indexConfig->type->value,
+                    'attributes' => $indexConfig->attributes,
+                    'lengths' => $indexConfig->lengths,
+                    'orders' => $indexConfig->orders,
                 ]);
             }, $collections['defaultIndexes']);
 

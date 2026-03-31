@@ -235,7 +235,7 @@ class Create extends Action
                 $permissions = [];
                 if (!empty($user->getId()) && !$isPrivilegedUser) {
                     foreach ($allowedPermissions as $permission) {
-                        $permissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
+                        $permissions[] = (new Permission($permission->value, 'user', $user->getId()))->toString();
                     }
                 }
             }
