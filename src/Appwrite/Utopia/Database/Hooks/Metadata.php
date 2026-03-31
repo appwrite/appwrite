@@ -32,7 +32,7 @@ class Metadata implements Decorator
 
     public function decorate(Event $event, Document $collection, Document $document): Document
     {
-        if ($document->isEmpty()) {
+        if ($document->isEmpty() || $collection->getId() === '_metadata') {
             return $document;
         }
 

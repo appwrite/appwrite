@@ -35,7 +35,7 @@ class Collection extends Model
                 'example' => ['read("any")'],
                 'array' => true
             ])
-            ->addRule('databaseId', [
+            ->addRule('$databaseId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Database ID.',
                 'default' => '',

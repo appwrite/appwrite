@@ -680,6 +680,10 @@ Http::setResource('dbForProject', function (Group $pools, Database $dbForPlatfor
         ->addHook(new FunctionCache($project, $database))
         ->addHook(new Permissions());
 
+    if ($database->getSharedTables() && ($database->getTenant() !== null)) {
+        $database->addHook(new Tenancy($database->getTenant()));
+    }
+
     return $database;
 }, ['pools', 'dbForPlatform', 'cache', 'project', 'response', 'publisher', 'publisherFunctions', 'publisherWebhooks', 'queueForEvents', 'queueForFunctions', 'queueForWebhooks', 'queueForRealtime', 'usage', 'authorization', 'request']);
 
