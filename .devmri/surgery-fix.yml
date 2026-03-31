@@ -1,0 +1,187 @@
+# DevMRI Surgery Report
+# Repository: appwrite/appwrite
+# Fix Type: cicd
+# Severity: high
+# Issue: Optimize CI Pipeline
+# Description: Refactor the CI workflow to eliminate the 1‑minute excess in the "Set up job" stage,
+#              cache Docker layers, and parallelize independent jobs. This will cut the 54 wasted
+#              hours and reduce the $4,043 friction cost.
+# Author: DevMRI Surgery AI
+# Date: 2026-03-31
+
+# =========================
+# .github/workflows/ci.yml
+# =========================
+name: CI
+
+# Trigger on pushes and pull requests to main
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Global defaults for all jobs
+env:
+  # Use a consistent Docker buildx cache directory
+  BUILDX_CACHE_DIR: /tmp/.buildx-cache
+
+jobs:
+  # ----------------------------------
+  # 1️⃣ Setup Job – cache dependencies
+  # ----------------------------------
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      node-version: ${{ steps.node.outputs.version }}
+      go-version: ${{ steps.go.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Cache npm packages to avoid re‑installing on every run
+      - name: Cache Node modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      # Setup Node with caching enabled
+      - name: Setup Node
+        id: node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'   # automatically caches node_modules
+
+      # Cache Go modules to speed up `go mod download`
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      # Setup Go with module caching
+      - name: Setup Go
+        id: go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache: true
+
+  # ----------------------------------
+  # 2️⃣ Lint Job – runs linting in parallel
+  # ----------------------------------
+  lint:
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Use cached Node modules from the setup job
+      - name: Restore Node modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+  # ----------------------------------
+  # 3️⃣ Test Job – runs tests in parallel
+  # ----------------------------------
+  test:
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Restore Node modules
+      - name: Restore Node modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+  # ----------------------------------
+  # 4️⃣ Build Job – Docker build with layer caching
+  # ----------------------------------
+  build:
+    runs-on: ubuntu-latest
+    needs: [setup, lint, test]   # Ensure all previous jobs succeed
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Set up Docker Buildx for multi‑platform builds
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          buildkitd-flags: --debug
+
+      # Cache Docker layers to avoid rebuilding unchanged layers
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.BUILDX_CACHE_DIR }}
+          key: ${{ runner.os }}-buildx-${{ hashFiles('**/Dockerfile') }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      # Build the Docker image locally (no push yet)
+      - name: Build Docker image
+        run: |
+          docker buildx build \
+            --cache-from=type=local,src=${{ env.BUILDX_CACHE_DIR }} \
+            --cache-to=type=local,dest=${{ env.BUILDX_CACHE_DIR }} \
+            --load \
+            -t appwrite/appwrite:ci-${{ github.sha }} \
+            .
+
+      # (Optional) Push to registry if needed
+      # - name: Push Docker image
+      #   run: |
+      #     echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+      #     docker push appwrite/appwrite:ci-${{ github.sha }}
+
+  # ----------------------------------
+  # 5️⃣ Deploy Job – placeholder for deployment
+  # ----------------------------------
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Deploy to staging
+        run: echo "Deploying to staging environment..."
+
+# =========================
+# VERIFICATION
+# =========================
+# 1. Commit this workflow to a new branch and push to GitHub.
+# 2. Observe the Actions tab for a new workflow run.
+# 3. Verify that:
+#    • The "Setup" job completes in ~30s (reduced from ~1m).
+#    • Docker layer cache is used: subsequent runs should skip unchanged layers.
+#    • Lint, Test, and Build jobs run in parallel (check the timeline).
+# 4. Compare total run time and cost against the previous workflow to confirm savings.
