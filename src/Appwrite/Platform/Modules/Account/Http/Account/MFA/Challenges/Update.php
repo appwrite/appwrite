@@ -89,6 +89,15 @@ class Update extends Action
             ->callback($this->action(...));
     }
 
+    /**
+     * Verify an MFA challenge by validating the provided OTP against the
+     * challenge type (TOTP, Phone, Email, or Recovery Code). On success,
+     * the challenge is consumed and the session factors are updated.
+     *
+     * For recovery codes, the validation and code removal are wrapped in
+     * a database transaction with early challenge deletion to prevent
+     * concurrent requests from reusing the same single-use code.
+     */
     public function action(
         string $challengeId,
         string $otp,
@@ -107,9 +116,7 @@ class Update extends Action
 
         $type = $challenge->getAttribute('type');
 
-        $challengeConsumed = false;
-
-        $recoveryCodeChallenge = function (Document $challenge, Document $user, string $otp) use ($dbForProject, &$challengeConsumed) {
+        $recoveryCodeChallenge = function (Document $challenge, Document $user, string $otp) use ($dbForProject): bool {
             if (
                 !$challenge->isSet('type') ||
                 $challenge->getAttribute('type') !== Type::RECOVERY_CODE
@@ -117,20 +124,12 @@ class Update extends Action
                 return false;
             }
 
-            // Delete challenge first as an atomic lock to prevent concurrent
-            // reuse of the same challenge. Only one request can succeed.
-            try {
-                $dbForProject->deleteDocument('challenges', $challenge->getId());
-            } catch (\Throwable) {
-                return false;
-            }
-            $challengeConsumed = true;
-
-            // Wrap the recovery code read-modify-write in a transaction
-            // to ensure atomicity and prevent concurrent requests from
-            // both consuming the same single-use recovery code.
+            // Use a transaction to atomically validate the recovery code,
+            // remove it from the user's list, and delete the challenge.
+            // This prevents concurrent requests from both consuming the
+            // same single-use recovery code.
             $success = false;
-            $dbForProject->withTransaction(function () use ($dbForProject, $user, $otp, &$success) {
+            $dbForProject->withTransaction(function () use ($dbForProject, $challenge, $user, $otp, &$success) {
                 $dbForProject->purgeCachedDocument('users', $user->getId());
                 $freshUser = $dbForProject->getDocument('users', $user->getId());
                 $mfaRecoveryCodes = $freshUser->getAttribute('mfaRecoveryCodes', []);
@@ -139,14 +138,19 @@ class Update extends Action
                     return;
                 }
 
-                $mfaRecoveryCodes = \array_diff($mfaRecoveryCodes, [$otp]);
-                $mfaRecoveryCodes = \array_values($mfaRecoveryCodes);
+                $mfaRecoveryCodes = \array_values(\array_diff($mfaRecoveryCodes, [$otp]));
                 $freshUser->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
                 $dbForProject->updateDocument('users', $user->getId(), new Document(['mfaRecoveryCodes' => $mfaRecoveryCodes]));
+
+                // Delete challenge inside the transaction so it is consumed
+                // atomically with the recovery code removal.
+                $dbForProject->deleteDocument('challenges', $challenge->getId());
+
                 $success = true;
             });
 
             if ($success) {
+                // Sync in-memory user with persisted state
                 $dbForProject->purgeCachedDocument('users', $user->getId());
                 $user->setAttribute('mfaRecoveryCodes',
                     $dbForProject->getDocument('users', $user->getId())->getAttribute('mfaRecoveryCodes', []));
@@ -167,7 +171,8 @@ class Update extends Action
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        if (!$challengeConsumed) {
+        // For recovery codes the challenge is already deleted inside the transaction
+        if ($type !== Type::RECOVERY_CODE) {
             $dbForProject->deleteDocument('challenges', $challengeId);
         }
         $dbForProject->purgeCachedDocument('users', $user->getId());
