@@ -18,7 +18,6 @@ use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Exception\Truncate as TruncateException;
-use Utopia\Database\ForeignKeyAction;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\RelationSide;
 use Utopia\Database\Validator\Authorization;
@@ -26,6 +25,7 @@ use Utopia\Database\Validator\Structure;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Query\Schema\ColumnType;
+use Utopia\Query\Schema\ForeignKeyAction;
 use Utopia\Validator\Range;
 
 abstract class Action extends UtopiaAction
