@@ -39,8 +39,8 @@ class DatabaseServerTest extends Scope
     protected function setupDatabase(): array
     {
         $cacheKey = $this->getProject()['$id'] ?? 'default';
-        if (!empty(static::$cachedDatabase[$cacheKey])) {
-            return static::$cachedDatabase[$cacheKey];
+        if (!empty(self::$cachedDatabase[$cacheKey])) {
+            return self::$cachedDatabase[$cacheKey];
         }
 
         $projectId = $this->getProject()['$id'];
@@ -62,15 +62,15 @@ class DatabaseServerTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $database['body']);
 
-        static::$cachedDatabase[$cacheKey] = $database['body']['data']['tablesDBCreate'];
-        return static::$cachedDatabase[$cacheKey];
+        self::$cachedDatabase[$cacheKey] = $database['body']['data']['tablesDBCreate'];
+        return self::$cachedDatabase[$cacheKey];
     }
 
     protected function setupTable(): array
     {
         $cacheKey = $this->getProject()['$id'] ?? 'default';
-        if (!empty(static::$cachedTableData[$cacheKey])) {
-            return static::$cachedTableData[$cacheKey];
+        if (!empty(self::$cachedTableData[$cacheKey])) {
+            return self::$cachedTableData[$cacheKey];
         }
 
         $database = $this->setupDatabase();
@@ -124,20 +124,20 @@ class DatabaseServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $table2['body']);
         $table2 = $table2['body']['data']['tablesDBCreateTable'];
 
-        static::$cachedTableData[$cacheKey] = [
+        self::$cachedTableData[$cacheKey] = [
             'database' => $database,
             'table' => $table,
             'table2' => $table2,
         ];
 
-        return static::$cachedTableData[$cacheKey];
+        return self::$cachedTableData[$cacheKey];
     }
 
     protected function setupStringColumn(): array
     {
         $cacheKey = $this->getProject()['$id'] ?? 'default';
-        if (!empty(static::$cachedStringColumnData[$cacheKey])) {
-            return static::$cachedStringColumnData[$cacheKey];
+        if (!empty(self::$cachedStringColumnData[$cacheKey])) {
+            return self::$cachedStringColumnData[$cacheKey];
         }
 
         $data = $this->setupTable();
@@ -159,8 +159,8 @@ class DatabaseServerTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
-        static::$cachedStringColumnData[$cacheKey] = $data;
-        return static::$cachedStringColumnData[$cacheKey];
+        self::$cachedStringColumnData[$cacheKey] = $data;
+        return self::$cachedStringColumnData[$cacheKey];
     }
 
     protected function setupUpdatedStringColumn(): array
@@ -205,8 +205,8 @@ class DatabaseServerTest extends Scope
     protected function setupIntegerColumn(): array
     {
         $cacheKey = $this->getProject()['$id'] ?? 'default';
-        if (!empty(static::$cachedIntegerColumnData[$cacheKey])) {
-            return static::$cachedIntegerColumnData[$cacheKey];
+        if (!empty(self::$cachedIntegerColumnData[$cacheKey])) {
+            return self::$cachedIntegerColumnData[$cacheKey];
         }
 
         $data = $this->setupTable();
@@ -229,8 +229,8 @@ class DatabaseServerTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
-        static::$cachedIntegerColumnData[$cacheKey] = $data;
-        return static::$cachedIntegerColumnData[$cacheKey];
+        self::$cachedIntegerColumnData[$cacheKey] = $data;
+        return self::$cachedIntegerColumnData[$cacheKey];
     }
 
     protected function setupUpdatedIntegerColumn(): array
@@ -275,8 +275,8 @@ class DatabaseServerTest extends Scope
     protected function setupBooleanColumn(): array
     {
         $cacheKey = $this->getProject()['$id'] ?? 'default';
-        if (!empty(static::$cachedBooleanColumnData[$cacheKey])) {
-            return static::$cachedBooleanColumnData[$cacheKey];
+        if (!empty(self::$cachedBooleanColumnData[$cacheKey])) {
+            return self::$cachedBooleanColumnData[$cacheKey];
         }
 
         $data = $this->setupTable();
@@ -297,8 +297,8 @@ class DatabaseServerTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
-        static::$cachedBooleanColumnData[$cacheKey] = $data;
-        return static::$cachedBooleanColumnData[$cacheKey];
+        self::$cachedBooleanColumnData[$cacheKey] = $data;
+        return self::$cachedBooleanColumnData[$cacheKey];
     }
 
     protected function setupUpdatedBooleanColumn(): array
@@ -341,8 +341,8 @@ class DatabaseServerTest extends Scope
     protected function setupFloatColumn(): array
     {
         $cacheKey = $this->getProject()['$id'] ?? 'default';
-        if (!empty(static::$cachedFloatColumnData[$cacheKey])) {
-            return static::$cachedFloatColumnData[$cacheKey];
+        if (!empty(self::$cachedFloatColumnData[$cacheKey])) {
+            return self::$cachedFloatColumnData[$cacheKey];
         }
 
         $data = $this->setupTable();
@@ -366,8 +366,8 @@ class DatabaseServerTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
-        static::$cachedFloatColumnData[$cacheKey] = $data;
-        return static::$cachedFloatColumnData[$cacheKey];
+        self::$cachedFloatColumnData[$cacheKey] = $data;
+        return self::$cachedFloatColumnData[$cacheKey];
     }
 
     protected function setupUpdatedFloatColumn(): array
@@ -412,8 +412,8 @@ class DatabaseServerTest extends Scope
     protected function setupEmailColumn(): array
     {
         $cacheKey = $this->getProject()['$id'] ?? 'default';
-        if (!empty(static::$cachedEmailColumnData[$cacheKey])) {
-            return static::$cachedEmailColumnData[$cacheKey];
+        if (!empty(self::$cachedEmailColumnData[$cacheKey])) {
+            return self::$cachedEmailColumnData[$cacheKey];
         }
 
         $data = $this->setupTable();
@@ -434,8 +434,8 @@ class DatabaseServerTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
-        static::$cachedEmailColumnData[$cacheKey] = $data;
-        return static::$cachedEmailColumnData[$cacheKey];
+        self::$cachedEmailColumnData[$cacheKey] = $data;
+        return self::$cachedEmailColumnData[$cacheKey];
     }
 
     protected function setupUpdatedEmailColumn(): array
@@ -478,8 +478,8 @@ class DatabaseServerTest extends Scope
     protected function setupEnumColumn(): array
     {
         $cacheKey = $this->getProject()['$id'] ?? 'default';
-        if (!empty(static::$cachedEnumColumnData[$cacheKey])) {
-            return static::$cachedEnumColumnData[$cacheKey];
+        if (!empty(self::$cachedEnumColumnData[$cacheKey])) {
+            return self::$cachedEnumColumnData[$cacheKey];
         }
 
         $data = $this->setupTable();
@@ -505,8 +505,8 @@ class DatabaseServerTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
-        static::$cachedEnumColumnData[$cacheKey] = $data;
-        return static::$cachedEnumColumnData[$cacheKey];
+        self::$cachedEnumColumnData[$cacheKey] = $data;
+        return self::$cachedEnumColumnData[$cacheKey];
     }
 
     protected function setupUpdatedEnumColumn(): array
@@ -554,8 +554,8 @@ class DatabaseServerTest extends Scope
     protected function setupDatetimeColumn(): array
     {
         $cacheKey = $this->getProject()['$id'] ?? 'default';
-        if (!empty(static::$cachedDatetimeColumnData[$cacheKey])) {
-            return static::$cachedDatetimeColumnData[$cacheKey];
+        if (!empty(self::$cachedDatetimeColumnData[$cacheKey])) {
+            return self::$cachedDatetimeColumnData[$cacheKey];
         }
 
         $data = $this->setupTable();
@@ -576,8 +576,8 @@ class DatabaseServerTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
-        static::$cachedDatetimeColumnData[$cacheKey] = $data;
-        return static::$cachedDatetimeColumnData[$cacheKey];
+        self::$cachedDatetimeColumnData[$cacheKey] = $data;
+        return self::$cachedDatetimeColumnData[$cacheKey];
     }
 
     protected function setupUpdatedDatetimeColumn(): array
@@ -620,8 +620,8 @@ class DatabaseServerTest extends Scope
     protected function setupRelationshipColumn(): array
     {
         $cacheKey = $this->getProject()['$id'] ?? 'default';
-        if (!empty(static::$cachedRelationshipColumnData[$cacheKey])) {
-            return static::$cachedRelationshipColumnData[$cacheKey];
+        if (!empty(self::$cachedRelationshipColumnData[$cacheKey])) {
+            return self::$cachedRelationshipColumnData[$cacheKey];
         }
 
         $data = $this->setupTable();
@@ -645,8 +645,8 @@ class DatabaseServerTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
-        static::$cachedRelationshipColumnData[$cacheKey] = $data;
-        return static::$cachedRelationshipColumnData[$cacheKey];
+        self::$cachedRelationshipColumnData[$cacheKey] = $data;
+        return self::$cachedRelationshipColumnData[$cacheKey];
     }
 
     protected function setupUpdatedRelationshipColumn(): array
@@ -688,8 +688,8 @@ class DatabaseServerTest extends Scope
     protected function setupIPColumn(): array
     {
         $cacheKey = $this->getProject()['$id'] ?? 'default';
-        if (!empty(static::$cachedIPColumnData[$cacheKey])) {
-            return static::$cachedIPColumnData[$cacheKey];
+        if (!empty(self::$cachedIPColumnData[$cacheKey])) {
+            return self::$cachedIPColumnData[$cacheKey];
         }
 
         $data = $this->setupTable();
@@ -711,8 +711,8 @@ class DatabaseServerTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
-        static::$cachedIPColumnData[$cacheKey] = $data;
-        return static::$cachedIPColumnData[$cacheKey];
+        self::$cachedIPColumnData[$cacheKey] = $data;
+        return self::$cachedIPColumnData[$cacheKey];
     }
 
     protected function setupUpdatedIPColumn(): array
@@ -755,8 +755,8 @@ class DatabaseServerTest extends Scope
     protected function setupURLColumn(): array
     {
         $cacheKey = $this->getProject()['$id'] ?? 'default';
-        if (!empty(static::$cachedURLColumnData[$cacheKey])) {
-            return static::$cachedURLColumnData[$cacheKey];
+        if (!empty(self::$cachedURLColumnData[$cacheKey])) {
+            return self::$cachedURLColumnData[$cacheKey];
         }
 
         $data = $this->setupTable();
@@ -778,8 +778,8 @@ class DatabaseServerTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
-        static::$cachedURLColumnData[$cacheKey] = $data;
-        return static::$cachedURLColumnData[$cacheKey];
+        self::$cachedURLColumnData[$cacheKey] = $data;
+        return self::$cachedURLColumnData[$cacheKey];
     }
 
     protected function setupUpdatedURLColumn(): array
@@ -822,8 +822,8 @@ class DatabaseServerTest extends Scope
     protected function setupIndex(): array
     {
         $cacheKey = $this->getProject()['$id'] ?? 'default';
-        if (!empty(static::$cachedIndexData[$cacheKey])) {
-            return static::$cachedIndexData[$cacheKey];
+        if (!empty(self::$cachedIndexData[$cacheKey])) {
+            return self::$cachedIndexData[$cacheKey];
         }
 
         // Need updated string and integer columns first
@@ -855,31 +855,31 @@ class DatabaseServerTest extends Scope
         if (isset($index['body']['errors'])) {
             $errorMessage = $index['body']['errors'][0]['message'] ?? '';
             if (strpos($errorMessage, 'already exists') !== false || strpos($errorMessage, 'Document with the requested ID already exists') !== false) {
-                static::$cachedIndexData[$cacheKey] = [
+                self::$cachedIndexData[$cacheKey] = [
                     'database' => $data['database'],
                     'table' => $data['table'],
                     'index' => ['key' => 'index'],
                 ];
-                return static::$cachedIndexData[$cacheKey];
+                return self::$cachedIndexData[$cacheKey];
             }
         }
 
         $this->assertArrayNotHasKey('errors', $index['body']);
 
-        static::$cachedIndexData[$cacheKey] = [
+        self::$cachedIndexData[$cacheKey] = [
             'database' => $data['database'],
             'table' => $data['table'],
             'index' => $index['body']['data']['tablesDBCreateIndex'],
         ];
 
-        return static::$cachedIndexData[$cacheKey];
+        return self::$cachedIndexData[$cacheKey];
     }
 
     protected function setupRow(): array
     {
         $cacheKey = $this->getProject()['$id'] ?? 'default';
-        if (!empty(static::$cachedRowData[$cacheKey])) {
-            return static::$cachedRowData[$cacheKey];
+        if (!empty(self::$cachedRowData[$cacheKey])) {
+            return self::$cachedRowData[$cacheKey];
         }
 
         // Need all columns that the row data references
@@ -940,20 +940,20 @@ class DatabaseServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $row['body']);
         $row = $row['body']['data']['tablesDBCreateRow'];
 
-        static::$cachedRowData[$cacheKey] = [
+        self::$cachedRowData[$cacheKey] = [
             'database' => $data['database'],
             'table' => $data['table'],
             'row' => $row,
         ];
 
-        return static::$cachedRowData[$cacheKey];
+        return self::$cachedRowData[$cacheKey];
     }
 
     protected function setupBulkData(): array
     {
         $cacheKey = $this->getProject()['$id'] ?? 'default';
-        if (!empty(static::$cachedBulkData[$cacheKey])) {
-            return static::$cachedBulkData[$cacheKey];
+        if (!empty(self::$cachedBulkData[$cacheKey])) {
+            return self::$cachedBulkData[$cacheKey];
         }
 
         $project = $this->getProject();
@@ -1034,9 +1034,9 @@ class DatabaseServerTest extends Scope
 
         $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
 
-        static::$cachedBulkData[$cacheKey] = compact('databaseId', 'tableId', 'projectId');
+        self::$cachedBulkData[$cacheKey] = compact('databaseId', 'tableId', 'projectId');
 
-        return static::$cachedBulkData[$cacheKey];
+        return self::$cachedBulkData[$cacheKey];
     }
 
     public function testCreateDatabase(): void
@@ -1088,7 +1088,7 @@ class DatabaseServerTest extends Scope
 
         // Store for caching
         $cacheKey = $this->getProject()['$id'] ?? 'default';
-        static::$cachedStringColumnData[$cacheKey] = $data;
+        self::$cachedStringColumnData[$cacheKey] = $data;
     }
 
     /**
@@ -1166,7 +1166,7 @@ class DatabaseServerTest extends Scope
 
         // Store for caching
         $cacheKey = $this->getProject()['$id'] ?? 'default';
-        static::$cachedIntegerColumnData[$cacheKey] = $data;
+        self::$cachedIntegerColumnData[$cacheKey] = $data;
     }
 
     /**
@@ -1246,7 +1246,7 @@ class DatabaseServerTest extends Scope
 
         // Store for caching
         $cacheKey = $this->getProject()['$id'] ?? 'default';
-        static::$cachedBooleanColumnData[$cacheKey] = $data;
+        self::$cachedBooleanColumnData[$cacheKey] = $data;
     }
 
     /**
@@ -1325,7 +1325,7 @@ class DatabaseServerTest extends Scope
 
         // Store for caching
         $cacheKey = $this->getProject()['$id'] ?? 'default';
-        static::$cachedFloatColumnData[$cacheKey] = $data;
+        self::$cachedFloatColumnData[$cacheKey] = $data;
     }
 
     /**
@@ -1405,7 +1405,7 @@ class DatabaseServerTest extends Scope
 
         // Store for caching
         $cacheKey = $this->getProject()['$id'] ?? 'default';
-        static::$cachedEmailColumnData[$cacheKey] = $data;
+        self::$cachedEmailColumnData[$cacheKey] = $data;
     }
 
     /**
@@ -1486,7 +1486,7 @@ class DatabaseServerTest extends Scope
 
         // Store for caching
         $cacheKey = $this->getProject()['$id'] ?? 'default';
-        static::$cachedEnumColumnData[$cacheKey] = $data;
+        self::$cachedEnumColumnData[$cacheKey] = $data;
     }
 
 
@@ -1570,7 +1570,7 @@ class DatabaseServerTest extends Scope
 
         // Store for caching
         $cacheKey = $this->getProject()['$id'] ?? 'default';
-        static::$cachedDatetimeColumnData[$cacheKey] = $data;
+        self::$cachedDatetimeColumnData[$cacheKey] = $data;
     }
 
     /**
@@ -1646,7 +1646,7 @@ class DatabaseServerTest extends Scope
 
         // Store for caching
         $cacheKey = $this->getProject()['$id'] ?? 'default';
-        static::$cachedRelationshipColumnData[$cacheKey] = $data;
+        self::$cachedRelationshipColumnData[$cacheKey] = $data;
     }
 
     public function testUpdateRelationshipColumn(): void
@@ -1717,7 +1717,7 @@ class DatabaseServerTest extends Scope
 
         // Store for caching
         $cacheKey = $this->getProject()['$id'] ?? 'default';
-        static::$cachedIPColumnData[$cacheKey] = $data;
+        self::$cachedIPColumnData[$cacheKey] = $data;
     }
 
     /**
@@ -1794,7 +1794,7 @@ class DatabaseServerTest extends Scope
 
         // Store for caching
         $cacheKey = $this->getProject()['$id'] ?? 'default';
-        static::$cachedURLColumnData[$cacheKey] = $data;
+        self::$cachedURLColumnData[$cacheKey] = $data;
     }
 
     /**
@@ -1877,7 +1877,7 @@ class DatabaseServerTest extends Scope
 
         // Store for caching
         $cacheKey = $this->getProject()['$id'] ?? 'default';
-        static::$cachedIndexData[$cacheKey] = [
+        self::$cachedIndexData[$cacheKey] = [
             'database' => $data['database'],
             'table' => $data['table'],
             'index' => $index['body']['data']['tablesDBCreateIndex'],
@@ -1952,7 +1952,7 @@ class DatabaseServerTest extends Scope
 
         // Store for caching
         $cacheKey = $this->getProject()['$id'] ?? 'default';
-        static::$cachedRowData[$cacheKey] = [
+        self::$cachedRowData[$cacheKey] = [
             'database' => $data['database'],
             'table' => $data['table'],
             'row' => $row,

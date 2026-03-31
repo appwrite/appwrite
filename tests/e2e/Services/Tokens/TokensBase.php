@@ -14,8 +14,8 @@ trait TokensBase
 
     protected function setupBucketAndFile(): array
     {
-        if (!empty(static::$bucketAndFileData)) {
-            return static::$bucketAndFileData;
+        if (!empty(self::$bucketAndFileData)) {
+            return self::$bucketAndFileData;
         }
 
         $bucket = $this->client->call(
@@ -61,7 +61,7 @@ trait TokensBase
             ]
         );
 
-        static::$bucketAndFileData = [
+        self::$bucketAndFileData = [
             'fileId' => $fileId,
             'bucketId' => $bucketId,
             'token' => $token['body'],
@@ -72,7 +72,7 @@ trait TokensBase
             ],
         ];
 
-        return static::$bucketAndFileData;
+        return self::$bucketAndFileData;
     }
 
     public function testCreateBucketAndFile(): void
