@@ -43,6 +43,9 @@ module.exports = async(context) => {
         'APPWRITE_FUNCTION_CPUS' : process.env.APPWRITE_FUNCTION_CPUS,
         'APPWRITE_FUNCTION_EXECUTION_ID': context.req.headers['x-appwrite-execution-id'] ?? '',
         'APPWRITE_FUNCTION_CLIENT_IP': context.req.headers['x-appwrite-client-ip'] ?? '',
+        'APPWRITE_FUNCTION_COUNTRY_CODE': context.req.headers['x-appwrite-country-code'] ?? '',
+        'APPWRITE_FUNCTION_CONTINENT_CODE': context.req.headers['x-appwrite-continent-code'] ?? '',
+        'APPWRITE_FUNCTION_CONTINENT_EU': context.req.headers['x-appwrite-continent-eu'] ?? '',
         'CUSTOM_VARIABLE' : process.env.CUSTOM_VARIABLE
     }, +statusCode);
 }

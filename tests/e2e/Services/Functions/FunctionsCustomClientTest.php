@@ -34,7 +34,6 @@ class FunctionsCustomClientTest extends Scope
         ]);
         $this->assertEquals(401, $function['headers']['status-code']);
 
-
         /**
          * Test for DUPLICATE functionId
          */
@@ -231,6 +230,53 @@ class FunctionsCustomClientTest extends Scope
         ];
     }
 
+    public function testCreateCustomExecutionIncludesGeoHeaders(): void
+    {
+        $this->client->setEndpoint('http://localhost/v1');
+
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Geo Test',
+            'execute' => [Role::any()->toString()],
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 10,
+        ]);
+        $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('basic'),
+            'activate' => true,
+        ]);
+
+        $forwardedIp = '8.8.8.8';
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-forwarded-for' => $forwardedIp,
+        ], $this->getHeaders());
+
+        $locale = $this->client->call(Client::METHOD_GET, '/locale', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-forwarded-for' => $forwardedIp,
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $locale['headers']['status-code']);
+        $this->assertSame($forwardedIp, $locale['body']['ip']);
+
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', $headers, [
+            'body' => 'geo-check',
+            'async' => false,
+        ]);
+        $output = json_decode($execution['body']['responseBody'], true);
+
+        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertSame($locale['body']['countryCode'], $output['APPWRITE_FUNCTION_COUNTRY_CODE'] ?? null);
+        $this->assertSame($locale['body']['continentCode'], $output['APPWRITE_FUNCTION_CONTINENT_CODE'] ?? null);
+        $this->assertSame($locale['body']['eu'] ? 'true' : 'false', $output['APPWRITE_FUNCTION_CONTINENT_EU'] ?? null);
+
+        $this->cleanupFunction($functionId);
+    }
+
     public function testCreateCustomExecutionGuest()
     {
         /**
@@ -351,15 +397,14 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-user-id' => "OVERRIDDEN",
             'x-appwrite-user-jwt' => "OVERRIDDEN",
         ]);
-
         $output = json_decode($execution['body']['responseBody'], true);
         $this->assertNotEquals('OVERRIDDEN', $output['APPWRITE_FUNCTION_JWT']);
         $this->assertNotEquals('OVERRIDDEN', $output['APPWRITE_FUNCTION_EVENT']);
         $this->assertNotEquals('OVERRIDDEN', $output['APPWRITE_FUNCTION_TRIGGER']);
         $this->assertNotEquals('OVERRIDDEN', $output['APPWRITE_FUNCTION_USER_ID']);
 
-
         $this->cleanupFunction($functionId);
+
     }
 
     public function testListTemplates()
