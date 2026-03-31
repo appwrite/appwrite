@@ -24,7 +24,7 @@ class View extends Action
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/')
             ->desc('Serve installer UI')
-            ->param('step', 1, new Integer(true), 'Step number (1-5)', true)
+            ->param('step', 1, new Integer(true), 'Step number (1-6)', true)
             ->param('partial', null, new Nullable(new Text(1, 0)), 'Render partial step only', true)
             ->inject('request')
             ->inject('response')
@@ -52,8 +52,11 @@ class View extends Action
             $defaultEmailCertificates = 'walterobrien@example.com';
         }
 
-        $step = max(1, min(5, $step));
+        $step = max(1, min(6, $step));
         if ($isUpgrade && ($step === 2 || $step === 3)) {
+            $step = 4;
+        }
+        if (!$isUpgrade && $step === 6) {
             $step = 4;
         }
 
