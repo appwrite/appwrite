@@ -44,7 +44,7 @@ class Create extends Action
 
     protected function getQueriesValidator(): Validator
     {
-        return new Projects();
+        return new Projects;
     }
 
     public function __construct()
@@ -67,16 +67,16 @@ class Create extends Action
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,
                         model: Response::MODEL_PROJECT,
-                    )
+                    ),
                 ]
             ))
-            ->param('projectId', '', new ProjectId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, and hyphen. Can\'t start with a special char. Max length is 36 chars.')
+            ->param('projectId', '', new ProjectId, 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, and hyphen. Can\'t start with a special char. Max length is 36 chars.')
             ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
-            ->param('teamId', '', new UID(), 'Team unique ID.')
-            ->param('region', System::getEnv('_APP_REGION', 'default'), new WhiteList(array_keys(array_filter(Config::getParam('regions'), fn ($config) => !$config['disabled']))), 'Project Region.', true)
+            ->param('teamId', '', new UID, 'Team unique ID.')
+            ->param('region', System::getEnv('_APP_REGION', 'default'), new WhiteList(array_keys(array_filter(Config::getParam('regions'), fn ($config) => ! $config['disabled']))), 'Project Region.', true)
             ->param('description', '', new Text(256), 'Project description. Max length: 256 chars.', true)
             ->param('logo', '', new Text(1024), 'Project logo.', true)
-            ->param('url', '', new URL(), 'Project URL.', true)
+            ->param('url', '', new URL, 'Project URL.', true)
             ->param('legalName', '', new Text(256), 'Project legal Name. Max length: 256 chars.', true)
             ->param('legalCountry', '', new Text(256), 'Project legal Country. Max length: 256 chars.', true)
             ->param('legalState', '', new Text(256), 'Project legal State. Max length: 256 chars.', true)
@@ -100,10 +100,12 @@ class Create extends Action
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
+        $this->requireNonWhitespaceValue('name', $name);
+
         $allowList = \array_filter(\explode(',', System::getEnv('_APP_PROJECT_REGIONS', '')));
 
-        if (!empty($allowList) && !\in_array($region, $allowList)) {
-            throw new Exception(Exception::PROJECT_REGION_UNSUPPORTED, 'Region "' . $region . '" is not supported');
+        if (! empty($allowList) && ! \in_array($region, $allowList)) {
+            throw new Exception(Exception::PROJECT_REGION_UNSUPPORTED, 'Region "'.$region.'" is not supported');
         }
 
         $auth = Config::getParam('auth', []);
@@ -119,7 +121,7 @@ class Create extends Action
             'membershipsUserName' => false,
             'membershipsUserEmail' => false,
             'membershipsMfa' => false,
-            'invalidateSessions' => true
+            'invalidateSessions' => true,
         ];
 
         foreach ($auth as $method) {
@@ -157,10 +159,10 @@ class Create extends Action
             $schema = 'appwrite';
             $database = 'appwrite';
             $namespace = System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', '');
-            $dsn = $schema . '://' . $dsn . '?database=' . $database;
+            $dsn = $schema.'://'.$dsn.'?database='.$database;
 
-            if (!empty($namespace)) {
-                $dsn .= '&namespace=' . $namespace;
+            if (! empty($namespace)) {
+                $dsn .= '&namespace='.$namespace;
             }
         }
 
@@ -182,7 +184,7 @@ class Create extends Action
                 'legalCity' => $legalCity,
                 'legalAddress' => $legalAddress,
                 'legalTaxId' => ID::custom($legalTaxId),
-                'services' => new \stdClass(),
+                'services' => new \stdClass,
                 'platforms' => null,
                 'oAuthProviders' => [],
                 'webhooks' => null,
@@ -202,17 +204,17 @@ class Create extends Action
             $dsn = new DSN($dsn);
         } catch (\InvalidArgumentException) {
             // TODO: Temporary until all projects are using shared tables
-            $dsn = new DSN('mysql://' . $dsn);
+            $dsn = new DSN('mysql://'.$dsn);
         }
 
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
         $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
-        $projectTables = !\in_array($dsn->getHost(), $sharedTables);
+        $projectTables = ! \in_array($dsn->getHost(), $sharedTables);
         $sharedTablesV1 = \in_array($dsn->getHost(), $sharedTablesV1);
-        $sharedTablesV2 = !$projectTables && !$sharedTablesV1;
+        $sharedTablesV2 = ! $projectTables && ! $sharedTablesV1;
         $sharedTables = $sharedTablesV1 || $sharedTablesV2;
 
-        if (!$sharedTablesV2) {
+        if (! $sharedTablesV2) {
             $adapter = new DatabasePool($pools->get($dsn->getHost()));
             $dbForProject = new Database($adapter, $cache);
             $dbForProject->setDatabase(APP_DATABASE);
@@ -230,7 +232,7 @@ class Create extends Action
                 $dbForProject
                     ->setSharedTables(false)
                     ->setTenant(null)
-                    ->setNamespace('_' . $project->getSequence());
+                    ->setNamespace('_'.$project->getSequence());
             }
 
             $create = true;
@@ -247,7 +249,7 @@ class Create extends Action
                 $audit->setup();
             }
 
-            if (!$create && $sharedTablesV1) {
+            if (! $create && $sharedTablesV1) {
                 $adapter = new AdapterDatabase($dbForProject);
                 $attributes = $adapter->getAttributeDocuments();
                 $indexes = $adapter->getIndexDocuments();
@@ -257,7 +259,7 @@ class Create extends Action
                     'name' => 'audit',
                     'attributes' => $attributes,
                     'indexes' => $indexes,
-                    'documentSecurity' => true
+                    'documentSecurity' => true,
                 ]));
             }
 
@@ -283,7 +285,7 @@ class Create extends Action
                                 'name' => $key,
                                 'attributes' => $attributes,
                                 'indexes' => $indexes,
-                                'documentSecurity' => true
+                                'documentSecurity' => true,
                             ]));
                         } catch (Duplicate) {
                             // Metadata already exists from concurrent creation
@@ -300,7 +302,7 @@ class Create extends Action
                                 'name' => $key,
                                 'attributes' => $attributes,
                                 'indexes' => $indexes,
-                                'documentSecurity' => true
+                                'documentSecurity' => true,
                             ]));
                         } catch (Duplicate) {
                             // Metadata already exists from concurrent creation
