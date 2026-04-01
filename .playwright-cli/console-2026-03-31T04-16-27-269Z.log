@@ -1,3 +1,0 @@
-[     160ms] [ERROR] ne: Not found: /console/project-default-69cb4a33001b366949e0/settings/api-keys
-    at Q (https://190.appwrite.org/console/_app/immutable/chunks/BLu9Z_t2.js:1:21418)
-    at async Module.Ct (https://190.appwrite.org/console/_app/immutable/chunks/BLu9Z_t2.js:1:12902) @ https://190.appwrite.org/console/_app/immutable/entry/app.HMugi8cJ.js:1

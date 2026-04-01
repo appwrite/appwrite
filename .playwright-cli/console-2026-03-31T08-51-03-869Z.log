@@ -1,4 +1,0 @@
-[   23756ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://134.199.147.34:20080/install/complete:0
-[   26429ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost/v1/account/prefs:0
-[   26431ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost/v1/account:0
-[   26436ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost/v1/account:0

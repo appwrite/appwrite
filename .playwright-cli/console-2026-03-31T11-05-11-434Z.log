@@ -1,4 +1,0 @@
-[   32215ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://134.199.147.34:20080/install/complete:0
-[   35837ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://190.appwrite.org/v1/account/prefs:0
-[   35865ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://190.appwrite.org/v1/account:0
-[   35975ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://190.appwrite.org/v1/account:0

@@ -1,7 +1,0 @@
-[   23990ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://134.199.147.34:20080/install/complete:0
-[   27416ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://134.199.147.34/v1/account/prefs:0
-[   27424ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://134.199.147.34/v1/account:0
-[   27472ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://134.199.147.34/v1/account:0
-[   31719ms] [WARNING] Appwrite is using localStorage for session management. Increase your security by adding a custom domain as your API endpoint. @ http://134.199.147.34/console/_app/immutable/chunks/CgilaVns.js:7
-[   32800ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://plausible.io/api/event:0
-[   32800ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://plausible.io/api/event:0
