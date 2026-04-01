@@ -776,11 +776,39 @@ Http::setResource('getDatabasesDB', function (Group $pools, Cache $cache, Docume
 
         // Register collection ID mapping if collection document is provided
         if ($collection !== null && !$collection->isEmpty()) {
+            $dbSeq = $originalDatabase->getSequence();
+            $dbPrefix = 'database_' . $dbSeq;
             $seq = $collection->getSequence();
             if ($seq !== null) {
-                $dbPrefix = 'database_' . $originalDatabase->getSequence();
                 $metadata->setCollectionId('collection_' . $seq, $collection->getId());
                 $metadata->setCollectionId($dbPrefix . '_collection_' . $seq, $collection->getId());
+            }
+
+            // Also register related collections from relationship attributes
+            $attributes = $collection->getAttribute('attributes', []);
+            foreach ($attributes as $attr) {
+                if ($attr->getAttribute('type') !== \Utopia\Query\Schema\ColumnType::Relationship->value) {
+                    continue;
+                }
+                $options = $attr->getAttribute('options', []);
+                $relatedId = \is_array($options) ? ($options['relatedCollection'] ?? null) : null;
+                $relatedId ??= $attr->getAttribute('relatedCollection');
+                if ($relatedId === null) {
+                    continue;
+                }
+                // Look up the related collection from dbForProject
+                $relatedCol = $authorization->skip(
+                    fn () => $dbForProject->silent(
+                        fn () => $dbForProject->getDocument($dbPrefix, $relatedId)
+                    )
+                );
+                if (!$relatedCol->isEmpty()) {
+                    $relSeq = $relatedCol->getSequence();
+                    if ($relSeq !== null) {
+                        $metadata->setCollectionId('collection_' . $relSeq, $relatedCol->getId());
+                        $metadata->setCollectionId($dbPrefix . '_collection_' . $relSeq, $relatedCol->getId());
+                    }
+                }
             }
         }
 
