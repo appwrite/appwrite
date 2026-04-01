@@ -4,7 +4,7 @@ namespace Appwrite\Event\Message;
 
 use Utopia\Database\Document;
 
-class Usage extends Base
+final class Usage extends Base
 {
     /**
      * @param Document $project
@@ -40,7 +40,7 @@ class Usage extends Base
      */
     public static function fromArray(array $data): static
     {
-        return new self(
+        return new static(
             project: new Document($data['project'] ?? []),
             metrics: $data['metrics'] ?? [],
             reduce: array_map(fn (array $doc) => new Document($doc), $data['reduce'] ?? []),

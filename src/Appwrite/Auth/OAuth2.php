@@ -155,7 +155,7 @@ abstract class OAuth2
     /**
      * @param string $code
      *
-     * @return string
+     * @return int
      */
     public function getAccessTokenExpiry(string $code): int
     {

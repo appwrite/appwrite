@@ -48,9 +48,10 @@ class Complete extends Action
 
         @touch(Server::INSTALLER_COMPLETE_FILE);
 
-        if (!$sessionSecret && $installId !== '') {
-            $data = $state->readProgressFile($installId);
-            $details = $data['details'][Server::STEP_ACCOUNT_SETUP] ?? [];
+        $progressData = ($installId !== '') ? $state->readProgressFile($installId) : [];
+
+        if (!$sessionSecret) {
+            $details = $progressData['details'][Server::STEP_ACCOUNT_SETUP] ?? [];
             if (!empty($details['sessionSecret'])) {
                 $sessionSecret = $details['sessionSecret'];
                 $sessionId = $sessionId ?: ($details['sessionId'] ?? '');
@@ -68,8 +69,11 @@ class Complete extends Action
                     $expires = $timestamp;
                 }
             }
-            $response->addCookie('a_session_console', $sessionSecret, $expires, '/', '', $isHttps, true, $sameSite);
-            $response->addCookie('a_session_console_legacy', $sessionSecret, $expires, '/', '', $isHttps, true, $sameSite);
+            $appDomain = $progressData['payload']['appDomain'] ?? '';
+            $cookieDomain = $this->buildCookieDomain($appDomain ?: $request->getHostname());
+
+            $response->addCookie('a_session_console', $sessionSecret, $expires, '/', $cookieDomain, $isHttps, true, $sameSite);
+            $response->addCookie('a_session_console_legacy', $sessionSecret, $expires, '/', $cookieDomain, $isHttps, true, $sameSite);
             if ($sessionId) {
                 $response->addHeader('X-Appwrite-Session', $sessionId);
             }
@@ -78,5 +82,43 @@ class Complete extends Action
         @unlink(Server::INSTALLER_CONFIG_FILE);
 
         $response->json(['success' => true]);
+    }
+
+    /**
+     * Compute the cookie domain to match Appwrite's convention in general.php.
+     *
+     * For localhost and IP addresses the domain is left empty (host-only cookie).
+     * For real hostnames, the domain is prefixed with a dot so the cookie matches
+     * Appwrite's default `'.' . $request->getHostname()` behaviour and lives in
+     * the same cookie-jar slot — preventing stale ghost cookies after logout.
+     */
+    private function buildCookieDomain(string $raw): string
+    {
+        $hostname = $this->extractHostname($raw);
+        if ($hostname === '' || $hostname === 'localhost' || $hostname === '0.0.0.0' || $hostname === 'traefik') {
+            return '';
+        }
+        if (filter_var($hostname, FILTER_VALIDATE_IP) !== false) {
+            return '';
+        }
+        return '.' . $hostname;
+    }
+
+    /**
+     * Extract the bare hostname from an appDomain value, stripping any port
+     * suffix or IPv6 bracket notation.
+     */
+    private function extractHostname(string $domain): string
+    {
+        $domain = trim($domain);
+        if ($domain === '') {
+            return '';
+        }
+        if (str_starts_with($domain, '[')) {
+            $end = strpos($domain, ']');
+            return $end !== false ? substr($domain, 1, $end - 1) : '';
+        }
+        $parts = explode(':', $domain);
+        return count($parts) <= 2 ? strtolower($parts[0]) : strtolower($domain);
     }
 }

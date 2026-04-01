@@ -37,7 +37,7 @@ class Action extends UtopiaAction
      * Foreach Document
      * Call provided callback for each document in the collection
      *
-     * @param string $projectId
+     * @param Database $database
      * @param string $collection
      * @param array $queries
      * @param callable $callback
