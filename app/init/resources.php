@@ -769,6 +769,39 @@ Http::setResource('getDatabasesDB', function (Group $pools, Database $dbForProje
             $databaseIdCollectionIdDocumentsMetric = $databaseType . '.' . $databaseIdCollectionIdDocumentsMetric;
         }
 
+        // Pre-compute collection ID mapping (internal name → user-facing ID)
+        $collectionIdMap = [];
+        try {
+            $databaseKey = 'database_' . $originalDatabase->getSequence();
+            $dbPrefix = $databaseKey . '_';
+            $collections = $authorization->skip(
+                fn () => $dbForProject->silent(
+                    fn () => $dbForProject->find($databaseKey, [
+                        \Utopia\Database\Query::select(['$id', '$sequence']),
+                        \Utopia\Database\Query::limit(5000),
+                    ])
+                )
+            );
+            foreach ($collections as $col) {
+                $seq = $col->getSequence();
+                if ($seq !== null) {
+                    $key = 'collection_' . $seq;
+                    $collectionIdMap[$key] = $col->getId();
+                    $collectionIdMap[$dbPrefix . $key] = $col->getId();
+                }
+            }
+        } catch (\Throwable) {
+            // Database may not have collections yet
+        }
+
+        $metadata = new Metadata(
+            database: $originalDatabase,
+            context: $context,
+        );
+        foreach ($collectionIdMap as $internal => $external) {
+            $metadata->setCollectionId($internal, $external);
+        }
+
         $database
             ->addHook(new DocumentUsage(
                 $usage,
@@ -778,12 +811,7 @@ Http::setResource('getDatabasesDB', function (Group $pools, Database $dbForProje
             ))
             ->addHook(new Permissions())
             ->addHook(new Relationships($database))
-            ->addHook(new Metadata(
-                database: $originalDatabase,
-                context: $context,
-                dbForProject: $dbForProject,
-                authorization: $authorization,
-            ));
+            ->addHook($metadata);
 
         if ($database->getSharedTables() && ($database->getTenant() !== null)) {
             $database->addHook(new Tenancy($database->getTenant()));
