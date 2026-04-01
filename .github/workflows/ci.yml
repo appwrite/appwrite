@@ -199,12 +199,9 @@ jobs:
               { name: 'Projects',          parallel: true },
               { name: 'Realtime',                           runner: 'blacksmith-4vcpu-ubuntu-2404' },
               { name: 'Sites',             parallel: true,  runner: 'blacksmith-4vcpu-ubuntu-2404' },
-              { name: 'Proxy',             parallel: true },
-              { name: 'Storage',           parallel: true },
               { name: 'Teams',             parallel: true },
               { name: 'Users',             parallel: true },
               { name: 'ProjectWebhooks',   parallel: true },
-              { name: 'Messaging',         parallel: true },
               { name: 'Migrations',        parallel: true },
               { name: 'Project',           parallel: true },
             ];
@@ -322,58 +319,7 @@ jobs:
           appwrite test /usr/src/code/tests/unit
 
   e2e_general:
-    name: Tests / E2E / General
-    runs-on: ubuntu-latest
-    needs: build
-    permissions:
-      contents: read
-      pull-requests: write
-    steps:
-      - name: checkout
-        uses: actions/checkout@v6
-
-      - name: Download Docker Image
-        uses: actions/download-artifact@v7
-        with:
-          name: ${{ env.IMAGE }}
-          path: /tmp
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v4
-        with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Load and Start Appwrite
-        timeout-minutes: 5
-        run: |
-          docker load --input /tmp/${{ env.IMAGE }}.tar
-          docker compose pull --quiet --ignore-buildable
-          docker compose up -d --quiet-pull --wait
-
-      - name: Wait for Open Runtimes
-        timeout-minutes: 3
-        run: |
-          while ! docker compose logs openruntimes-executor | grep -q "Executor is ready."; do
-            echo "Waiting for Executor to come online"
-            sleep 1
-          done
-
-      - name: Run General Tests
-        timeout-minutes: 15
-        run: >-
-          docker compose exec -T
-          -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
-          appwrite test /usr/src/code/tests/e2e/General
-
-      - name: Failure Logs
-        if: failure()
-        run: |
-          echo "=== Appwrite Logs ==="
-          docker compose logs
-
-  e2e_quick:
-    name: Tests / E2E / ${{ matrix.database.name }} (${{ matrix.mode }}) / Quick
+    name: Tests / E2E / ${{ matrix.database.name }} (${{ matrix.mode }}) / General
     runs-on: ubuntu-latest
     needs: [build, matrix]
     env:
@@ -414,14 +360,20 @@ jobs:
           docker compose pull --quiet --ignore-buildable
           docker compose up -d --quiet-pull --wait
 
+      - name: Wait for Open Runtimes
+        timeout-minutes: 3
+        run: |
+          while ! docker compose logs openruntimes-executor | grep -q "Executor is ready."; do
+            echo "Waiting for Executor to come online"
+            sleep 1
+          done
+
       - name: Run tests
         timeout-minutes: 20
-        run: |
-          for service in Console Health Locale Tokens VCS Webhooks; do
-            docker compose exec -T \
-              -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
-              appwrite vendor/bin/paratest --processes $(nproc) --functional "/usr/src/code/tests/e2e/Services/$service" --exclude-group abuseEnabled --exclude-group screenshots
-          done
+        run: >-
+          docker compose exec -T
+          -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
+          appwrite vendor/bin/paratest --processes $(nproc) --functional --testsuite GeneralGroup --exclude-group abuseEnabled --exclude-group screenshots
 
       - name: Failure Logs
         if: failure()
@@ -485,7 +437,7 @@ jobs:
         run: |
           docker compose exec -T \
             -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
-            appwrite vendor/bin/paratest --processes $(nproc) ${{ matrix.service.parallel && '--functional' || '' }} "/usr/src/code/tests/e2e/Services/${{ matrix.service.name }}" --exclude-group abuseEnabled --exclude-group screenshots
+            appwrite vendor/bin/paratest --processes $(nproc) ${{ matrix.service.parallel && '--functional' || '' }} --testsuite ${{ matrix.service.name }} --exclude-group abuseEnabled --exclude-group screenshots
 
       - name: Failure Logs
         if: failure()
