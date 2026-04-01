@@ -293,5 +293,6 @@
     "continents.na": "Kuzey Amerika",
     "continents.oc": "Okyanusya",
     "continents.sa": "Güney Amerika",
-    "mock": "Bu test amaçlı bir örnek çeviridir."
+    "continents.sa": "Güney Amerika"
+}
 }
