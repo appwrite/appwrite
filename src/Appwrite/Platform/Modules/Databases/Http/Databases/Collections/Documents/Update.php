@@ -262,17 +262,6 @@ class Update extends Action
             throw new Exception($this->getStructureException(), $e->getMessage());
         }
 
-        /** @var array<string, array<mixed>> $collectionsCache */
-        $collectionsCache = [];
-        $this->processDocument(
-            database: $database,
-            collection: $collection,
-            document: $document,
-            dbForProject: $dbForProject,
-            collectionsCache: $collectionsCache,
-            authorization: $authorization,
-        );
-
         $usage
             ->addMetric($this->getDatabasesOperationWriteMetric(), 1)
             ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), $this->getDatabasesIdOperationWriteMetric()), 1);

@@ -30,6 +30,7 @@ use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Hooks\DocumentUsage;
 use Appwrite\Utopia\Database\Hooks\FunctionCache;
+use Appwrite\Utopia\Database\Hooks\Metadata;
 use Appwrite\Utopia\Database\Hooks\Usage;
 use Appwrite\Utopia\Database\Hooks\UserEvents;
 use Appwrite\Utopia\Request;
@@ -776,7 +777,13 @@ Http::setResource('getDatabasesDB', function (Group $pools, Database $dbForProje
                 $databaseIdCollectionIdDocumentsMetric,
             ))
             ->addHook(new Permissions())
-            ->addHook(new Relationships($database));
+            ->addHook(new Relationships($database))
+            ->addHook(new Metadata(
+                database: $originalDatabase,
+                dbForProject: $dbForProject,
+                authorization: $authorization,
+                context: $context,
+            ));
 
         if ($database->getSharedTables() && ($database->getTenant() !== null)) {
             $database->addHook(new Tenancy($database->getTenant()));

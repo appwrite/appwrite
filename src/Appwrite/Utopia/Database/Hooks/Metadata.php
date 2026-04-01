@@ -6,24 +6,33 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Event;
 use Utopia\Database\Hook\Decorator;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Query\Schema\ColumnType;
 
 /**
  * Stamps database/collection metadata onto every document returned from the database,
  * and recursively decorates nested relationship documents.
+ *
+ * Lazily loads the collection mapping from dbForProject on first use to resolve
+ * internal collection names (database_N_collection_M) to user-facing collection IDs.
  */
 class Metadata implements Decorator
 {
     /** @var array<string, array<Document>> */
     private array $relationshipCache = [];
 
-    /** @var array<string, string> internal collection name → user-facing collection ID */
+    /** @var array<string, string> internal collection name -> user-facing collection ID */
     private array $collectionIdMap = [];
+
+    /** @var bool whether the collection map has been loaded */
+    private bool $mapLoaded = false;
 
     private int $operations = 0;
 
     public function __construct(
         private Document $database,
+        private Database $dbForProject,
+        private Authorization $authorization,
         private string $context = 'collection',
     ) {
     }
@@ -44,6 +53,8 @@ class Metadata implements Decorator
 
         $this->operations++;
 
+        $this->ensureMapLoaded();
+
         $collectionId = $this->collectionIdMap[$collection->getId()] ?? $collection->getId();
         $document->setAttribute('$databaseId', $this->database->getId());
         $document->setAttribute('$' . $this->context . 'Id', $collectionId);
@@ -61,6 +72,39 @@ class Metadata implements Decorator
     public function resetOperations(): void
     {
         $this->operations = 0;
+    }
+
+    /**
+     * Lazily load collection mapping from dbForProject.
+     * Queries are wrapped in authorization->skip() and dbForProject->silent()
+     * to prevent lifecycle hooks from firing and avoid permission checks.
+     */
+    private function ensureMapLoaded(): void
+    {
+        if ($this->mapLoaded) {
+            return;
+        }
+
+        $this->mapLoaded = true;
+        $databaseSequence = $this->database->getSequence();
+        $metadataCollection = 'database_' . $databaseSequence;
+
+        $collections = $this->authorization->skip(
+            fn () => $this->dbForProject->silent(
+                fn () => $this->dbForProject->find($metadataCollection)
+            )
+        );
+
+        foreach ($collections as $collection) {
+            $externalId = $collection->getId();
+            $sequence = $collection->getSequence();
+
+            $relativeKey = 'collection_' . $sequence;
+            $fullKey = 'database_' . $databaseSequence . '_collection_' . $sequence;
+
+            $this->collectionIdMap[$relativeKey] = $externalId;
+            $this->collectionIdMap[$fullKey] = $externalId;
+        }
     }
 
     private function decorateRelationships(Document $collection, Document $document, int $depth = 0): void
