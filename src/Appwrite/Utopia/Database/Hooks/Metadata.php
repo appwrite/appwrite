@@ -80,11 +80,23 @@ class Metadata implements Decorator
             return $this->collectionIdMap[$internalName];
         }
 
+        // Strip database prefix if present (e.g., 'database_2_collection_15' → 'collection_15')
+        $databasePrefix = 'database_' . $this->database->getSequence() . '_';
+        $relativeName = \str_starts_with($internalName, $databasePrefix)
+            ? \substr($internalName, \strlen($databasePrefix))
+            : $internalName;
+
+        if (isset($this->collectionIdMap[$relativeName])) {
+            $this->collectionIdMap[$internalName] = $this->collectionIdMap[$relativeName];
+            return $this->collectionIdMap[$relativeName];
+        }
+
         if (!$this->mapLoaded && $this->dbForProject !== null && $this->authorization !== null) {
             $this->mapLoaded = true;
             $this->loadCollectionMap();
-            if (isset($this->collectionIdMap[$internalName])) {
-                return $this->collectionIdMap[$internalName];
+            if (isset($this->collectionIdMap[$relativeName])) {
+                $this->collectionIdMap[$internalName] = $this->collectionIdMap[$relativeName];
+                return $this->collectionIdMap[$relativeName];
             }
         }
 
