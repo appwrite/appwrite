@@ -3105,10 +3105,10 @@ Http::get('/v1/account/logs')
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('user')
-    ->inject('geoRecord')
+    ->inject('getGeoForIp')
     ->inject('dbForProject')
     ->inject('audit')
-    ->action(function (array $queries, bool $includeTotal, Response $response, Document $user, GeoRecord $geoRecord, Database $dbForProject, Audit $audit) {
+    ->action(function (array $queries, bool $includeTotal, Response $response, Document $user, callable $getGeoForIp, Database $dbForProject, Audit $audit) {
 
         try {
             $queries = Query::parseQueries($queries);
@@ -3136,8 +3136,9 @@ Http::get('/v1/account/logs')
                 $detector->getDevice()
             ));
 
-            $output[$i]['countryCode'] = $geoRecord->getCountryCode();
-            $output[$i]['countryName'] = $geoRecord->getCountryName();
+            $logGeo = $getGeoForIp($log['ip'] ?? '');
+            $output[$i]['countryCode'] = $logGeo->getCountryCode();
+            $output[$i]['countryName'] = $logGeo->getCountryName();
         }
 
         $response->dynamic(new Document([

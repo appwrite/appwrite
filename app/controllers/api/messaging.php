@@ -7,7 +7,6 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Messaging;
 use Appwrite\Extend\Exception;
-use Appwrite\Locale\GeoRecord;
 use Appwrite\Messaging\Status as MessageStatus;
 use Appwrite\Permission;
 use Appwrite\Role;
@@ -1139,9 +1138,9 @@ Http::get('/v1/messaging/providers/:providerId/logs')
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('geoRecord')
+    ->inject('getGeoForIp')
     ->inject('audit')
-    ->action(function (string $providerId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, GeoRecord $geoRecord, Audit $audit) {
+    ->action(function (string $providerId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, callable $getGeoForIp, Audit $audit) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1194,8 +1193,9 @@ Http::get('/v1/messaging/providers/:providerId/logs')
                 'deviceModel' => $device['deviceModel']
             ]);
 
-            $output[$i]['countryCode'] = $geoRecord->getCountryCode();
-            $output[$i]['countryName'] = $geoRecord->getCountryName();
+            $logGeo = $getGeoForIp($log['ip'] ?? '');
+            $output[$i]['countryCode'] = $logGeo->getCountryCode();
+            $output[$i]['countryName'] = $logGeo->getCountryName();
         }
 
         $response->dynamic(new Document([
@@ -2535,9 +2535,9 @@ Http::get('/v1/messaging/topics/:topicId/logs')
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('geoRecord')
+    ->inject('getGeoForIp')
     ->inject('audit')
-    ->action(function (string $topicId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, GeoRecord $geoRecord, Audit $audit) {
+    ->action(function (string $topicId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, callable $getGeoForIp, Audit $audit) {
         $topic = $dbForProject->getDocument('topics', $topicId);
 
         if ($topic->isEmpty()) {
@@ -2591,8 +2591,9 @@ Http::get('/v1/messaging/topics/:topicId/logs')
                 'deviceModel' => $device['deviceModel']
             ]);
 
-            $output[$i]['countryCode'] = $geoRecord->getCountryCode();
-            $output[$i]['countryName'] = $geoRecord->getCountryName();
+            $logGeo = $getGeoForIp($log['ip'] ?? '');
+            $output[$i]['countryCode'] = $logGeo->getCountryCode();
+            $output[$i]['countryName'] = $logGeo->getCountryName();
         }
 
         $response->dynamic(new Document([
@@ -2942,9 +2943,9 @@ Http::get('/v1/messaging/subscribers/:subscriberId/logs')
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('geoRecord')
+    ->inject('getGeoForIp')
     ->inject('audit')
-    ->action(function (string $subscriberId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, GeoRecord $geoRecord, Audit $audit) {
+    ->action(function (string $subscriberId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, callable $getGeoForIp, Audit $audit) {
         $subscriber = $dbForProject->getDocument('subscribers', $subscriberId);
 
         if ($subscriber->isEmpty()) {
@@ -2998,8 +2999,9 @@ Http::get('/v1/messaging/subscribers/:subscriberId/logs')
                 'deviceModel' => $device['deviceModel']
             ]);
 
-            $output[$i]['countryCode'] = $geoRecord->getCountryCode();
-            $output[$i]['countryName'] = $geoRecord->getCountryName();
+            $logGeo = $getGeoForIp($log['ip'] ?? '');
+            $output[$i]['countryCode'] = $logGeo->getCountryCode();
+            $output[$i]['countryName'] = $logGeo->getCountryName();
         }
 
         $response->dynamic(new Document([
@@ -3747,9 +3749,9 @@ Http::get('/v1/messaging/messages/:messageId/logs')
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('geoRecord')
+    ->inject('getGeoForIp')
     ->inject('audit')
-    ->action(function (string $messageId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, GeoRecord $geoRecord, Audit $audit) {
+    ->action(function (string $messageId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, callable $getGeoForIp, Audit $audit) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -3803,8 +3805,9 @@ Http::get('/v1/messaging/messages/:messageId/logs')
                 'deviceModel' => $device['deviceModel']
             ]);
 
-            $output[$i]['countryCode'] = $geoRecord->getCountryCode();
-            $output[$i]['countryName'] = $geoRecord->getCountryName();
+            $logGeo = $getGeoForIp($log['ip'] ?? '');
+            $output[$i]['countryCode'] = $logGeo->getCountryCode();
+            $output[$i]['countryName'] = $logGeo->getCountryName();
         }
 
         $response->dynamic(new Document([

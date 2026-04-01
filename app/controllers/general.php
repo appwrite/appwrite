@@ -397,14 +397,10 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         $headers['x-appwrite-trigger'] = 'http';
         $headers['x-appwrite-user-jwt'] = '';
 
-        if (!empty($ip)) {
-            if (!$geoRecord->isEmpty()) {
-                $eu = Config::getParam('locale-eu');
-
-                $headers['x-appwrite-country-code'] = $geoRecord->getCountryCode();
-                $headers['x-appwrite-continent-code'] = $geoRecord->getContinentCode();
-                $headers['x-appwrite-continent-eu'] = (\in_array($geoRecord->getCountryCode(), $eu)) ? 'true' : 'false';
-            }
+        if (!empty($ip) && !$geoRecord->isEmpty()) {
+            $headers['x-appwrite-country-code'] = $geoRecord->getCountryCode();
+            $headers['x-appwrite-continent-code'] = $geoRecord->getContinentCode();
+            $headers['x-appwrite-continent-eu'] = $geoRecord->isEu() ? 'true' : 'false';
         }
 
         $headersFiltered = [];

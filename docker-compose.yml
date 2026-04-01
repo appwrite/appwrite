@@ -1208,7 +1208,9 @@ services:
   
   appwrite-geo:
     container_name: appwrite-geo
+    <<: *x-logging
     image: appwrite/geo:0.2.0
+    restart: unless-stopped
     networks:
       - appwrite
     environment:

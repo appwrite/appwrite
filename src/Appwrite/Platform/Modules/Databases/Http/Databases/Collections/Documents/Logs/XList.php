@@ -4,7 +4,6 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documen
 
 use Appwrite\Detector\Detector;
 use Appwrite\Extend\Exception;
-use Appwrite\Locale\GeoRecord;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -70,13 +69,13 @@ class XList extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
-            ->inject('geoRecord')
+            ->inject('getGeoForIp')
             ->inject('authorization')
             ->inject('audit')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $documentId, array $queries, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, GeoRecord $geoRecord, Authorization $authorization, Audit $audit): void
+    public function action(string $databaseId, string $collectionId, string $documentId, array $queries, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, callable $getGeoForIp, Authorization $authorization, Audit $audit): void
     {
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty()) {
@@ -145,8 +144,9 @@ class XList extends Action
                 'deviceModel' => $device['deviceModel']
             ]);
 
-            $output[$i]['countryCode'] = $geoRecord->getCountryCode();
-            $output[$i]['countryName'] = $geoRecord->getCountryName();
+            $logGeo = $getGeoForIp($log['ip'] ?? '');
+            $output[$i]['countryCode'] = $logGeo->getCountryCode();
+            $output[$i]['countryName'] = $logGeo->getCountryName();
         }
 
         $response->dynamic(new Document([

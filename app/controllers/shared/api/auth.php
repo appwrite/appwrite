@@ -40,9 +40,9 @@ Http::init()
     ->inject('authorization')
     ->action(function (Http $utopia, Request $request, Document $project, GeoRecord $geoRecord, User $user, Authorization $authorization) {
         $denylist = System::getEnv('_APP_CONSOLE_COUNTRIES_DENYLIST', '');
-        if (!empty($denylist && $project->getId() === 'console')) {
-            $countries = explode(',', $denylist);
-            $country = $geoRecord->getCountryCode();
+        if (!empty($denylist) && $project->getId() === 'console') {
+            $countries = \array_map('strtolower', \array_map('trim', explode(',', $denylist)));
+            $country = strtolower($geoRecord->getCountryCode());
             if (in_array($country, $countries)) {
                 throw new Exception(Exception::GENERAL_REGION_ACCESS_DENIED);
             }
