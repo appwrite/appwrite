@@ -14,6 +14,7 @@
         ENV_VARS: 'env-vars',
         DOCKER_CONTAINERS: 'docker-containers',
         ACCOUNT_SETUP: 'account-setup',
+        MIGRATION: 'migration',
         SSL_CERTIFICATE: 'ssl-certificate',
         REDIRECT: 'redirect'
     });
@@ -52,6 +53,11 @@
             id: STEP_IDS.DOCKER_CONTAINERS,
             inProgress: 'Restarting Docker containers...',
             done: 'Docker containers restarted'
+        },
+        {
+            id: STEP_IDS.MIGRATION,
+            inProgress: 'Running database migration...',
+            done: 'Database migration completed'
         }
     ] : [
         {
@@ -95,7 +101,7 @@
     const clampStep = (step) => {
         const numeric = Number(step);
         if (Number.isNaN(numeric)) return 1;
-        return Math.max(1, Math.min(5, numeric));
+        return Math.max(1, Math.min(6, numeric));
     };
 
     window.InstallerStepsContext = Object.freeze({

@@ -29,6 +29,7 @@ class Server
     public const string STEP_DOCKER_COMPOSE = 'docker-compose';
     public const string STEP_DOCKER_CONTAINERS = 'docker-containers';
     public const string STEP_ACCOUNT_SETUP = 'account-setup';
+    public const string STEP_MIGRATION = 'migration';
     public const string STEP_SSL_CERTIFICATE = 'ssl-certificate';
 
     public const string STATUS_IN_PROGRESS = 'in-progress';

@@ -43,6 +43,7 @@ class Install extends Action
             ->param('database', '', new WhiteList(['mongodb', 'mariadb', 'postgresql']), 'Database adapter', true)
             ->param('installId', '', new Text(64, 0), 'Installation ID', true)
             ->param('retryStep', null, new Nullable(new WhiteList([Server::STEP_DOCKER_COMPOSE, Server::STEP_ENV_VARS, Server::STEP_DOCKER_CONTAINERS], true)), 'Retry from step', true)
+            ->param('migrate', false, new \Utopia\Validator\Boolean(true), 'Run database migration after upgrade', true)
             ->inject('request')
             ->inject('response')
             ->inject('swooleResponse')
@@ -64,6 +65,7 @@ class Install extends Action
         string $database,
         string $installId,
         ?string $retryStep,
+        bool $migrate,
         Request $request,
         Response $response,
         SwooleResponse $swooleResponse,
@@ -355,6 +357,7 @@ class Install extends Action
                 $config->isUpgrade(),
                 $account,
                 $onComplete,
+                $migrate,
             );
 
             $onComplete();

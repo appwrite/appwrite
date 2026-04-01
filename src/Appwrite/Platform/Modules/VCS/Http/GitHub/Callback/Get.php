@@ -65,6 +65,7 @@ class Get extends Action
         }
 
         $state = \json_decode($state, true);
+        $redirectFailure = $state['failure'] ?? '';
         $projectId = $state['projectId'] ?? '';
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
@@ -74,10 +75,11 @@ class Get extends Action
 
             if (!empty($redirectFailure)) {
                 $separator = \str_contains($redirectFailure, '?') ? '&' : ':';
-                return $response
+                $response
                     ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
                     ->addHeader('Pragma', 'no-cache')
                     ->redirect($redirectFailure . $separator . \http_build_query(['error' => $error]));
+                return;
             }
 
             throw new Exception(Exception::PROJECT_NOT_FOUND, $error);
@@ -165,10 +167,11 @@ class Get extends Action
 
             if (!empty($redirectFailure)) {
                 $separator = \str_contains($redirectFailure, '?') ? '&' : ':';
-                return $response
+                $response
                     ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
                     ->addHeader('Pragma', 'no-cache')
                     ->redirect($redirectFailure . $separator . \http_build_query(['error' => $error]));
+                return;
             }
 
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $error);

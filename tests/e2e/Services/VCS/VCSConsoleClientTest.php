@@ -37,8 +37,8 @@ class VCSConsoleClientTest extends Scope
     {
         $projectId = $this->getProject()['$id'];
 
-        if (!empty(static::$cachedInstallationId[$projectId])) {
-            return static::$cachedInstallationId[$projectId];
+        if (!empty(self::$cachedInstallationId[$projectId])) {
+            return self::$cachedInstallationId[$projectId];
         }
 
         $response = $this->client->call(Client::METHOD_GET, '/mock/github/callback', array_merge([
@@ -48,8 +48,8 @@ class VCSConsoleClientTest extends Scope
             'projectId' => $projectId,
         ]);
 
-        static::$cachedInstallationId[$projectId] = $response['body']['installationId'];
-        return static::$cachedInstallationId[$projectId];
+        self::$cachedInstallationId[$projectId] = $response['body']['installationId'];
+        return self::$cachedInstallationId[$projectId];
     }
 
     /**
@@ -60,8 +60,8 @@ class VCSConsoleClientTest extends Scope
     {
         $projectId = $this->getProject()['$id'];
 
-        if (!empty(static::$cachedFunctionData[$projectId])) {
-            return static::$cachedFunctionData[$projectId];
+        if (!empty(self::$cachedFunctionData[$projectId])) {
+            return self::$cachedFunctionData[$projectId];
         }
 
         $installationId = $this->setupInstallation();
@@ -86,12 +86,12 @@ class VCSConsoleClientTest extends Scope
             'providerBranch' => 'main',
         ]);
 
-        static::$cachedFunctionData[$projectId] = [
+        self::$cachedFunctionData[$projectId] = [
             'installationId' => $installationId,
             'functionId' => $function['body']['$id']
         ];
 
-        return static::$cachedFunctionData[$projectId];
+        return self::$cachedFunctionData[$projectId];
     }
 
     public function testGitHubAuthorize(): void

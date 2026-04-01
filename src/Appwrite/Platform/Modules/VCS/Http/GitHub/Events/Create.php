@@ -83,7 +83,7 @@ class Create extends Action
             default => null,
         };
 
-        return $response->json($parsedPayload);
+        $response->json($parsedPayload);
     }
 
     protected function preprocessEvent(Request $request)

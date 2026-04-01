@@ -21,6 +21,7 @@ appwrite.config.json
 /app/config/specs/
 /docs/examples/
 .phpunit.cache
+.phpstan-cache
 playwright-report
 test-results
 docker-compose.web-installer.yml
