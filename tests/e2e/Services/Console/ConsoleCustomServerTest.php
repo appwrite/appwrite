@@ -24,4 +24,19 @@ class ConsoleCustomServerTest extends Scope
 
         $this->assertEquals(401, $response['headers']['status-code']);
     }
+
+    public function testCreateAssistantQuery(): void
+    {
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/console/assistant', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'prompt' => 'Test prompt',
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+    }
 }
