@@ -1,0 +1,47 @@
+- generic [ref=e1]:
+  - generic:
+    - generic:
+      - generic:
+        - img
+      - generic:
+        - img
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e160]:
+        - generic [ref=e161]:
+          - heading "Review your setup" [level=1] [ref=e162]
+          - paragraph [ref=e163]: Check your settings below before completing the installation.
+        - generic [ref=e166]:
+          - generic [ref=e167]:
+            - generic [ref=e168]: localhost
+            - generic [ref=e169]: Hostname
+          - generic [ref=e170]:
+            - generic [ref=e171]: MongoDB
+            - generic [ref=e172]: Database
+          - generic [ref=e173]:
+            - generic [ref=e174]: "80"
+            - generic [ref=e175]: HTTP port
+          - generic [ref=e176]:
+            - generic [ref=e177]: "443"
+            - generic [ref=e178]: HTTPS port
+          - generic [ref=e179]:
+            - generic [ref=e180]: test@appwrite.io
+            - generic [ref=e181]: SSL certificate email
+          - generic [ref=e182]:
+            - generic [ref=e183]: Disabled
+            - generic [ref=e184]: Appwrite Assistant
+          - generic [ref=e185]:
+            - generic [ref=e186]: Generated
+            - generic [ref=e187]: Secret API key
+      - generic [ref=e59]:
+        - button "Back" [ref=e122] [cursor=pointer]:
+          - generic [ref=e123]: Back
+        - generic [ref=e60]:
+          - img [ref=e125]
+          - img [ref=e67]
+          - img [ref=e71]
+          - img [ref=e189]
+        - button "Install" [active] [ref=e191] [cursor=pointer]:
+          - generic [ref=e78]: Install
+  - contentinfo [ref=e79]:
+    - img [ref=e81]

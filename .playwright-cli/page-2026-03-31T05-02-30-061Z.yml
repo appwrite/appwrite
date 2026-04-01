@@ -1,0 +1,93 @@
+- generic [active] [ref=e1]:
+  - generic:
+    - generic:
+      - generic:
+        - img
+      - generic:
+        - img
+  - main [ref=e2]:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - heading "Review your setup" [level=1]
+                - paragraph: Check your settings below before completing the installation.
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: localhost
+                      - generic: Hostname
+                    - generic:
+                      - generic: MongoDB
+                      - generic: Database
+                    - generic:
+                      - generic: "80"
+                      - generic: HTTP port
+                    - generic:
+                      - generic: "443"
+                      - generic: HTTPS port
+                    - generic:
+                      - generic: test@appwrite.io
+                      - generic: SSL certificate email
+                    - generic:
+                      - generic: Disabled
+                      - generic: Appwrite Assistant
+                    - generic:
+                      - generic: Generated
+                      - generic: Secret API key
+      - generic:
+        - generic:
+          - button "Back" [disabled]:
+            - generic: Back
+          - generic:
+            - generic:
+              - generic:
+                - img
+            - generic:
+              - generic:
+                - img
+            - generic:
+              - generic:
+                - img
+            - generic:
+              - generic:
+                - img
+          - button "Next" [disabled]:
+            - generic: Next
+    - generic [ref=e194]:
+      - generic [ref=e196]:
+        - generic [ref=e198]: Installing Appwrite…
+        - generic [ref=e199]:
+          - generic [ref=e200]:
+            - generic [ref=e202]:
+              - generic [ref=e203]:
+                - img [ref=e205]
+                - img [ref=e209]
+                - img [ref=e213]
+              - generic [ref=e215]: Configuration files created
+            - button "Retry" [ref=e220] [cursor=pointer]:
+              - generic [ref=e221]: Retry
+          - generic [ref=e222] [cursor=pointer]:
+            - generic [ref=e223]:
+              - generic [ref=e224]:
+                - generic [ref=e225]:
+                  - img [ref=e227]
+                  - img [ref=e231]
+                  - img [ref=e235]
+                - generic [ref=e237]: Failed to save Docker Compose file
+              - button [ref=e238]:
+                - img [ref=e239]
+            - generic [ref=e242]:
+              - generic [ref=e243]: "file_put_contents(/usr/src/code/appwrite/docker-compose.yml): Failed to open stream: No such file or directory (path: /usr/src/code/appwrite/docker-compose.yml)"
+              - button "Retry" [ref=e245]:
+                - generic [ref=e246]: Retry
+      - generic [ref=e247]:
+        - button "Start Over" [ref=e248] [cursor=pointer]:
+          - generic [ref=e249]: Start Over
+        - button "Reset Everything" [ref=e250] [cursor=pointer]:
+          - generic [ref=e251]: Reset Everything
+  - contentinfo [ref=e79]:
+    - img [ref=e81]

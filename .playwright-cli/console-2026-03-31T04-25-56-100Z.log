@@ -1,0 +1,3 @@
+Total messages: 1 (Errors: 1, Warnings: 0)
+
+[ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://plausible.io/api/event:0

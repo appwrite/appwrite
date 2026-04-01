@@ -283,6 +283,7 @@ class Upsert extends Action
 
         $document = $upserted[0];
 
+        /** @var array<string, array<mixed>> $collectionsCache */
         $collectionsCache = [];
         $this->processDocument(
             database: $database,

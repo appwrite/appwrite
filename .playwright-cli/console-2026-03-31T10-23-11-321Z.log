@@ -1,0 +1,4 @@
+[     246ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://190.appwrite.org/v1/account/prefs:0
+[     284ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://190.appwrite.org/v1/account:0
+[    2018ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://plausible.io/api/event:0
+[    2018ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://plausible.io/api/event:0

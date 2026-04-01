@@ -1,0 +1,37 @@
+[  186511ms] [ERROR] Failed to load resource: net::ERR_INCOMPLETE_CHUNKED_ENCODING @ http://localhost:20080/install:0
+[  187312ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:20080/install/status?installId=bedde231-350f-4181-8f3c-17053d262589:0
+[  187312ms] TypeError: Failed to fetch
+    at fetchInstallStatus (http://localhost:20080/installer/js/modules/progress.js?v=1774931804:382:32)
+    at http://localhost:20080/installer/js/modules/progress.js?v=1774931804:666:40
+[  191311ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:20080/install/status?installId=bedde231-350f-4181-8f3c-17053d262589:0
+[  191311ms] TypeError: Failed to fetch
+    at fetchInstallStatus (http://localhost:20080/installer/js/modules/progress.js?v=1774931804:382:32)
+    at http://localhost:20080/installer/js/modules/progress.js?v=1774931804:666:40
+[  195312ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:20080/install/status?installId=bedde231-350f-4181-8f3c-17053d262589:0
+[  195312ms] TypeError: Failed to fetch
+    at fetchInstallStatus (http://localhost:20080/installer/js/modules/progress.js?v=1774931804:382:32)
+    at http://localhost:20080/installer/js/modules/progress.js?v=1774931804:666:40
+[  199312ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:20080/install/status?installId=bedde231-350f-4181-8f3c-17053d262589:0
+[  199312ms] TypeError: Failed to fetch
+    at fetchInstallStatus (http://localhost:20080/installer/js/modules/progress.js?v=1774931804:382:32)
+    at http://localhost:20080/installer/js/modules/progress.js?v=1774931804:666:40
+[  203311ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:20080/install/status?installId=bedde231-350f-4181-8f3c-17053d262589:0
+[  203311ms] TypeError: Failed to fetch
+    at fetchInstallStatus (http://localhost:20080/installer/js/modules/progress.js?v=1774931804:382:32)
+    at http://localhost:20080/installer/js/modules/progress.js?v=1774931804:666:40
+[  207312ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:20080/install/status?installId=bedde231-350f-4181-8f3c-17053d262589:0
+[  207312ms] TypeError: Failed to fetch
+    at fetchInstallStatus (http://localhost:20080/installer/js/modules/progress.js?v=1774931804:382:32)
+    at http://localhost:20080/installer/js/modules/progress.js?v=1774931804:666:40
+[  211312ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:20080/install/status?installId=bedde231-350f-4181-8f3c-17053d262589:0
+[  211312ms] TypeError: Failed to fetch
+    at fetchInstallStatus (http://localhost:20080/installer/js/modules/progress.js?v=1774931804:382:32)
+    at http://localhost:20080/installer/js/modules/progress.js?v=1774931804:666:40
+[  215312ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:20080/install/status?installId=bedde231-350f-4181-8f3c-17053d262589:0
+[  215312ms] TypeError: Failed to fetch
+    at fetchInstallStatus (http://localhost:20080/installer/js/modules/progress.js?v=1774931804:382:32)
+    at http://localhost:20080/installer/js/modules/progress.js?v=1774931804:666:40
+[  219311ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:20080/install/status?installId=bedde231-350f-4181-8f3c-17053d262589:0
+[  219311ms] TypeError: Failed to fetch
+    at fetchInstallStatus (http://localhost:20080/installer/js/modules/progress.js?v=1774931804:382:32)
+    at http://localhost:20080/installer/js/modules/progress.js?v=1774931804:666:40

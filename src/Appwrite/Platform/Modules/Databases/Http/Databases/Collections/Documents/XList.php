@@ -219,6 +219,7 @@ class XList extends Action
         }
 
         $operations = 0;
+        /** @var array<string, array<mixed>> $collectionsCache */
         $collectionsCache = [];
         foreach ($documents as $document) {
             $this->processDocument(

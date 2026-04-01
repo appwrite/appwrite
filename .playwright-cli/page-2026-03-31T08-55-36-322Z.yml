@@ -1,0 +1,95 @@
+- generic [active] [ref=e1]:
+  - generic:
+    - generic:
+      - generic:
+        - img
+      - generic:
+        - img
+  - main [ref=e2]:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - heading "Review your update" [level=1]
+                - paragraph: Confirm your settings before updating Appwrite.
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: localhost
+                      - generic: Hostname
+                    - generic:
+                      - generic: MariaDB
+                      - generic: Database
+                    - generic:
+                      - generic: "80"
+                      - generic: HTTP port
+                    - generic:
+                      - generic: "443"
+                      - generic: HTTPS port
+                    - generic:
+                      - generic: SSL certificate email
+                    - generic:
+                      - generic: Disabled
+                      - generic: Appwrite Assistant
+      - generic:
+        - generic:
+          - button "Back" [disabled]:
+            - generic: Back
+          - generic:
+            - generic:
+              - generic:
+                - img
+            - generic:
+              - generic:
+                - img
+            - generic:
+              - generic:
+                - img
+          - button "Next" [disabled]:
+            - generic: Next
+    - generic [ref=e93]:
+      - generic [ref=e95]: Updating Appwrite…
+      - generic [ref=e96]:
+        - generic [ref=e97]:
+          - generic [ref=e99]:
+            - generic [ref=e100]:
+              - img [ref=e102]
+              - img [ref=e106]
+              - img [ref=e110]
+            - generic [ref=e112]: Configuration files updated
+          - button "Retry" [ref=e117] [cursor=pointer]:
+            - generic [ref=e118]: Retry
+        - generic [ref=e119]:
+          - generic [ref=e121]:
+            - generic [ref=e122]:
+              - img [ref=e124]
+              - img [ref=e128]
+              - img [ref=e132]
+            - generic [ref=e134]: Docker Compose file updated
+          - button "Retry" [ref=e139] [cursor=pointer]:
+            - generic [ref=e140]: Retry
+        - generic [ref=e141]:
+          - generic [ref=e143]:
+            - generic [ref=e144]:
+              - img [ref=e146]
+              - img [ref=e150]
+              - img [ref=e154]
+            - generic [ref=e156]: Environment variables updated
+          - button "Retry" [ref=e161] [cursor=pointer]:
+            - generic [ref=e162]: Retry
+        - generic [ref=e163]:
+          - generic [ref=e164]:
+            - generic [ref=e165]:
+              - generic [ref=e166]:
+                - img [ref=e168]
+                - img [ref=e172]
+                - img [ref=e176]
+              - generic [ref=e178]: Restarting Docker containers...
+            - generic [ref=e185]: 0/25
+          - button "Retry" [ref=e183] [cursor=pointer]:
+            - generic [ref=e184]: Retry
+  - contentinfo [ref=e75]:
+    - img [ref=e77]

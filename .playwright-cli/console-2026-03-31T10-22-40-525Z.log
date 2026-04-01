@@ -1,0 +1,5 @@
+[   21773ms] [ERROR] Failed to load resource: net::ERR_INCOMPLETE_CHUNKED_ENCODING @ http://134.199.147.34:20080/install:0
+[   24135ms] [ERROR] Failed to load resource: net::ERR_SOCKET_NOT_CONNECTED @ http://134.199.147.34:20080/install/shutdown:0
+[   24791ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://190.appwrite.org/v1/account/prefs:0
+[   24835ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://190.appwrite.org/v1/account:0
+[   24913ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://190.appwrite.org/v1/account:0

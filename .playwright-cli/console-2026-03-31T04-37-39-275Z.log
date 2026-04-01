@@ -1,0 +1,13 @@
+[   58992ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://134.199.147.34:20080/install/complete:0
+[   62216ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://134.199.147.34/v1/account/prefs:0
+[   62217ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://134.199.147.34/v1/account:0
+[   62266ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://134.199.147.34/v1/account:0
+[   74733ms] [WARNING] Appwrite is using localStorage for session management. Increase your security by adding a custom domain as your API endpoint. @ http://134.199.147.34/console/_app/immutable/chunks/CgilaVns.js:7
+[   75520ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://plausible.io/api/event:0
+[   75520ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://plausible.io/api/event:0
+[  105245ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://plausible.io/api/event:0
+[  109113ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://plausible.io/api/event:0
+[  109113ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://plausible.io/api/event:0
+[  109599ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://plausible.io/api/event:0
+[  109599ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://plausible.io/api/event:0
+[  109600ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://plausible.io/api/event:0

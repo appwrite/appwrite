@@ -1,0 +1,76 @@
+- generic [active] [ref=e1]:
+  - generic:
+    - generic:
+      - generic:
+        - img
+      - generic:
+        - img
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e7]:
+        - generic [ref=e8]:
+          - heading "Update your app" [level=1] [ref=e9]
+          - paragraph [ref=e10]: Review your current settings before updating.
+        - generic [ref=e11]:
+          - generic [ref=e12]:
+            - generic [ref=e13]: Hostname
+            - textbox "Hostname" [ref=e14]:
+              - /placeholder: localhost
+              - text: localhost
+          - generic [ref=e15]:
+            - generic [ref=e16]: Database
+            - generic [ref=e17]:
+              - generic [ref=e18]:
+                - radio "MongoDB Document based database MongoDB" [disabled] [ref=e19]
+                - generic [ref=e20]:
+                  - generic [ref=e21]: MongoDB
+                  - generic [ref=e22]: Document based database
+                - img "MongoDB" [ref=e23]
+              - generic [ref=e24]:
+                - radio "MariaDB Relational SQL database MariaDB" [checked] [ref=e25]
+                - generic [ref=e26]:
+                  - generic [ref=e27]: MariaDB
+                  - generic [ref=e28]: Relational SQL database
+                - img "MariaDB" [ref=e29]
+          - generic [ref=e30]:
+            - button "Advanced settings" [ref=e31] [cursor=pointer]:
+              - generic [ref=e32]: Advanced settings
+              - img [ref=e34]
+            - generic:
+              - generic [ref=e36]:
+                - generic [ref=e37]:
+                  - generic [ref=e38]: HTTP port
+                  - spinbutton "HTTP port" [ref=e39]: "80"
+                - button "Reset" [disabled]:
+                  - generic: Reset
+              - generic [ref=e40]:
+                - generic [ref=e41]:
+                  - generic [ref=e42]: HTTPS port
+                  - spinbutton "HTTPS port" [ref=e43]: "443"
+                - button "Reset" [disabled]:
+                  - generic: Reset
+              - generic [ref=e44]:
+                - generic [ref=e45]:
+                  - generic [ref=e46]: SSL certificate email
+                  - textbox "SSL certificate email" [ref=e47]:
+                    - /placeholder: you@example.com
+                - button "Reset" [disabled]:
+                  - generic: Reset
+              - generic [ref=e49]:
+                - generic [ref=e50]:
+                  - text: OpenAI key
+                  - generic [ref=e51]: optional
+                  - button "OpenAI key info" [ref=e53]:
+                    - img [ref=e54]
+                - textbox "OpenAI key optional OpenAI key info" [ref=e56]:
+                  - /placeholder: Enter OpenAI key for Appwrite Assistant
+      - generic [ref=e59]:
+        - button "Back" [disabled]:
+          - generic: Back
+        - generic [ref=e60]:
+          - img [ref=e63]
+          - img [ref=e67]
+        - button "Next" [ref=e69] [cursor=pointer]:
+          - generic [ref=e70]: Next
+  - contentinfo [ref=e71]:
+    - img [ref=e73]

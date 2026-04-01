@@ -1,0 +1,85 @@
+[     884ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://plausible.io/api/event:0
+[  404559ms] [ERROR] WebSocket connection to 'wss://190.appwrite.org/v1/realtime?project=console&channels[]=console&console[1][]=%7B%22method%22%3A%22select%22%2C%22values%22%3A%5B%22*%22%5D%7D' failed: Error in connection establishment: net::ERR_CONNECTION_RESET @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  404559ms] [ERROR] WebSocket error: WebSocket error @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  404559ms] [ERROR] Failed to reconnect: Error: WebSocket error
+    at WebSocket.<anonymous> (https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:8:346342) @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  404877ms] [ERROR] WebSocket connection to 'wss://190.appwrite.org/v1/realtime?project=console&channels[]=console&console[1][]=%7B%22method%22%3A%22select%22%2C%22values%22%3A%5B%22*%22%5D%7D' failed: Error in connection establishment: net::ERR_CONNECTION_RESET @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  404878ms] [ERROR] WebSocket error: WebSocket error @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  404878ms] [ERROR] Failed to reconnect: Error: WebSocket error
+    at WebSocket.<anonymous> (https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:8:346342) @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  406208ms] [ERROR] WebSocket connection to 'wss://190.appwrite.org/v1/realtime?project=console&channels[]=console&console[1][]=%7B%22method%22%3A%22select%22%2C%22values%22%3A%5B%22*%22%5D%7D' failed: Error in connection establishment: net::ERR_CONNECTION_RESET @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  406208ms] [ERROR] WebSocket error: WebSocket error @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  406208ms] [ERROR] Failed to reconnect: Error: WebSocket error
+    at WebSocket.<anonymous> (https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:8:346342) @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  407509ms] [ERROR] WebSocket connection to 'wss://190.appwrite.org/v1/realtime?project=console&channels[]=console&console[1][]=%7B%22method%22%3A%22select%22%2C%22values%22%3A%5B%22*%22%5D%7D' failed: Error in connection establishment: net::ERR_CONNECTION_RESET @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  407509ms] [ERROR] WebSocket error: WebSocket error @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  407509ms] [ERROR] Failed to reconnect: Error: WebSocket error
+    at WebSocket.<anonymous> (https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:8:346342) @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  407833ms] [ERROR] WebSocket connection to 'wss://190.appwrite.org/v1/realtime?project=console&channels[]=project&channels[]=console&project[1][]=%7B%22method%22%3A%22select%22%2C%22values%22%3A%5B%22*%22%5D%7D&console[1][]=%7B%22method%22%3A%22select%22%2C%22values%22%3A%5B%22*%22%5D%7D' failed: Error in connection establishment: net::ERR_CONNECTION_RESET @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  407833ms] [ERROR] WebSocket error: WebSocket error @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  407833ms] [ERROR] Failed to reconnect: Error: WebSocket error
+    at WebSocket.<anonymous> (https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:8:346342) @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  408157ms] [ERROR] WebSocket connection to 'wss://190.appwrite.org/v1/realtime?project=console&channels[]=console&console[1][]=%7B%22method%22%3A%22select%22%2C%22values%22%3A%5B%22*%22%5D%7D' failed: Error in connection establishment: net::ERR_CONNECTION_RESET @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  408157ms] [ERROR] WebSocket error: WebSocket error @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  408157ms] [ERROR] Failed to reconnect: Error: WebSocket error
+    at WebSocket.<anonymous> (https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:8:346342) @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  408807ms] [ERROR] WebSocket connection to 'wss://190.appwrite.org/v1/realtime?project=console&channels[]=console&console[1][]=%7B%22method%22%3A%22select%22%2C%22values%22%3A%5B%22*%22%5D%7D' failed: Error in connection establishment: net::ERR_CONNECTION_RESET @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  408807ms] [ERROR] WebSocket error: WebSocket error @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  408807ms] [ERROR] Failed to reconnect: Error: WebSocket error
+    at WebSocket.<anonymous> (https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:8:346342) @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  409803ms] [ERROR] WebSocket connection to 'wss://190.appwrite.org/v1/realtime?project=console&channels[]=console&console[1][]=%7B%22method%22%3A%22select%22%2C%22values%22%3A%5B%22*%22%5D%7D' failed: Error in connection establishment: net::ERR_CONNECTION_RESET @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  409803ms] [ERROR] WebSocket error: WebSocket error @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  409803ms] [ERROR] Failed to reconnect: Error: WebSocket error
+    at WebSocket.<anonymous> (https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:8:346342) @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  410129ms] [ERROR] WebSocket connection to 'wss://190.appwrite.org/v1/realtime?project=console&channels[]=project&channels[]=console&project[1][]=%7B%22method%22%3A%22select%22%2C%22values%22%3A%5B%22*%22%5D%7D&console[1][]=%7B%22method%22%3A%22select%22%2C%22values%22%3A%5B%22*%22%5D%7D' failed: Error in connection establishment: net::ERR_CONNECTION_RESET @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  410129ms] [ERROR] WebSocket error: WebSocket error @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  410129ms] [ERROR] Failed to reconnect: Error: WebSocket error
+    at WebSocket.<anonymous> (https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:8:346342) @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  411105ms] [ERROR] WebSocket connection to 'wss://190.appwrite.org/v1/realtime?project=console&channels[]=console&console[1][]=%7B%22method%22%3A%22select%22%2C%22values%22%3A%5B%22*%22%5D%7D' failed: Error in connection establishment: net::ERR_CONNECTION_RESET @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  411105ms] [ERROR] WebSocket error: WebSocket error @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  411105ms] [ERROR] Failed to reconnect: Error: WebSocket error
+    at WebSocket.<anonymous> (https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:8:346342) @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  411427ms] [ERROR] WebSocket connection to 'wss://190.appwrite.org/v1/realtime?project=console&channels[]=console&console[1][]=%7B%22method%22%3A%22select%22%2C%22values%22%3A%5B%22*%22%5D%7D' failed: Error in connection establishment: net::ERR_CONNECTION_RESET @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  411427ms] [ERROR] WebSocket error: WebSocket error @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  411427ms] [ERROR] Failed to reconnect: Error: WebSocket error
+    at WebSocket.<anonymous> (https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:8:346342) @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  412076ms] [ERROR] WebSocket connection to 'wss://190.appwrite.org/v1/realtime?project=console&channels[]=console&console[1][]=%7B%22method%22%3A%22select%22%2C%22values%22%3A%5B%22*%22%5D%7D' failed: Error in connection establishment: net::ERR_CONNECTION_RESET @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  412076ms] [ERROR] WebSocket error: WebSocket error @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  412076ms] [ERROR] Failed to reconnect: Error: WebSocket error
+    at WebSocket.<anonymous> (https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:8:346342) @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  413052ms] [ERROR] WebSocket connection to 'wss://190.appwrite.org/v1/realtime?project=console&channels[]=project&channels[]=console&project[1][]=%7B%22method%22%3A%22select%22%2C%22values%22%3A%5B%22*%22%5D%7D&console[1][]=%7B%22method%22%3A%22select%22%2C%22values%22%3A%5B%22*%22%5D%7D' failed: Error in connection establishment: net::ERR_CONNECTION_RESET @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  413052ms] [ERROR] WebSocket error: WebSocket error @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  413052ms] [ERROR] Failed to reconnect: Error: WebSocket error
+    at WebSocket.<anonymous> (https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:8:346342) @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  413377ms] [ERROR] WebSocket connection to 'wss://190.appwrite.org/v1/realtime?project=console&channels[]=console&console[1][]=%7B%22method%22%3A%22select%22%2C%22values%22%3A%5B%22*%22%5D%7D' failed: Error in connection establishment: net::ERR_CONNECTION_RESET @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  413377ms] [ERROR] WebSocket error: WebSocket error @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  413377ms] [ERROR] Failed to reconnect: Error: WebSocket error
+    at WebSocket.<anonymous> (https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:8:346342) @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  414028ms] [ERROR] WebSocket connection to 'wss://190.appwrite.org/v1/realtime?project=console&channels[]=console&console[1][]=%7B%22method%22%3A%22select%22%2C%22values%22%3A%5B%22*%22%5D%7D' failed: Error in connection establishment: net::ERR_CONNECTION_RESET @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  414028ms] [ERROR] WebSocket error: WebSocket error @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  414028ms] [ERROR] Failed to reconnect: Error: WebSocket error
+    at WebSocket.<anonymous> (https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:8:346342) @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  417153ms] [ERROR] WebSocket connection to 'wss://190.appwrite.org/v1/realtime?project=console&channels[]=console&console[1][]=%7B%22method%22%3A%22select%22%2C%22values%22%3A%5B%22*%22%5D%7D' failed: Error in connection establishment: net::ERR_CONNECTION_RESET @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  417153ms] [ERROR] WebSocket error: WebSocket error @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  417153ms] [ERROR] Failed to reconnect: Error: WebSocket error
+    at WebSocket.<anonymous> (https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:8:346342) @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  417803ms] [ERROR] WebSocket connection to 'wss://190.appwrite.org/v1/realtime?project=console&channels[]=console&console[1][]=%7B%22method%22%3A%22select%22%2C%22values%22%3A%5B%22*%22%5D%7D' failed: Error in connection establishment: net::ERR_CONNECTION_RESET @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  417803ms] [ERROR] WebSocket error: WebSocket error @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  417803ms] [ERROR] Failed to reconnect: Error: WebSocket error
+    at WebSocket.<anonymous> (https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:8:346342) @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  418845ms] [ERROR] WebSocket connection to 'wss://190.appwrite.org/v1/realtime?project=console&channels[]=project&channels[]=console&project[1][]=%7B%22method%22%3A%22select%22%2C%22values%22%3A%5B%22*%22%5D%7D&console[1][]=%7B%22method%22%3A%22select%22%2C%22values%22%3A%5B%22*%22%5D%7D' failed: Error in connection establishment: net::ERR_CONNECTION_RESET @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  418845ms] [ERROR] WebSocket error: WebSocket error @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  418845ms] [ERROR] Failed to reconnect: Error: WebSocket error
+    at WebSocket.<anonymous> (https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:8:346342) @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  421281ms] [ERROR] WebSocket connection to 'wss://190.appwrite.org/v1/realtime?project=console&channels[]=console&console[1][]=%7B%22method%22%3A%22select%22%2C%22values%22%3A%5B%22*%22%5D%7D' failed: Error in connection establishment: net::ERR_CONNECTION_RESET @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  421281ms] [ERROR] WebSocket error: WebSocket error @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  421281ms] [ERROR] Failed to reconnect: Error: WebSocket error
+    at WebSocket.<anonymous> (https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:8:346342) @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  422769ms] [ERROR] WebSocket connection to 'wss://190.appwrite.org/v1/realtime?project=console&channels[]=console&console[1][]=%7B%22method%22%3A%22select%22%2C%22values%22%3A%5B%22*%22%5D%7D' failed: Error in connection establishment: net::ERR_CONNECTION_RESET @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  422769ms] [ERROR] WebSocket error: WebSocket error @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  422769ms] [ERROR] Failed to reconnect: Error: WebSocket error
+    at WebSocket.<anonymous> (https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:8:346342) @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  423422ms] [ERROR] WebSocket connection to 'wss://190.appwrite.org/v1/realtime?project=console&channels[]=project&channels[]=console&project[1][]=%7B%22method%22%3A%22select%22%2C%22values%22%3A%5B%22*%22%5D%7D&console[1][]=%7B%22method%22%3A%22select%22%2C%22values%22%3A%5B%22*%22%5D%7D' failed: Error in connection establishment: net::ERR_CONNECTION_RESET @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  423422ms] [ERROR] WebSocket error: WebSocket error @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7
+[  423422ms] [ERROR] Failed to reconnect: Error: WebSocket error
+    at WebSocket.<anonymous> (https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:8:346342) @ https://190.appwrite.org/console/_app/immutable/chunks/CgilaVns.js:7

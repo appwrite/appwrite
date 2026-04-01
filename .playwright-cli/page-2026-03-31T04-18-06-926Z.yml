@@ -1,0 +1,223 @@
+- generic [ref=e8]:
+  - generic [ref=e9]:
+    - main [ref=e10]:
+      - generic [ref=e128]:
+        - generic [ref=e133]:
+          - heading "Test Project" [level=1] [ref=e134]:
+            - generic [ref=e135]: Test Project
+          - note [ref=e137]:
+            - button "69cb4a33001b366949e0" [ref=e138] [cursor=pointer]:
+              - button "69cb4a33001b366949e0" [ref=e139]:
+                - img [ref=e142]
+                - generic [ref=e145]: 69cb4a33001b366949e0
+        - generic [ref=e149]:
+          - generic [ref=e150]:
+            - generic [ref=e151]:
+              - generic [ref=e153]:
+                - generic [ref=e154]:
+                  - generic [ref=e155]:
+                    - heading "0 B" [level=3] [ref=e156]
+                    - paragraph [ref=e157]: Bandwidth
+                  - button "30d" [ref=e159] [cursor=pointer]:
+                    - text: 30d
+                    - img [ref=e162]
+                - generic [ref=e166]:
+                  - img [ref=e168]
+                  - paragraph [ref=e170]: No data to show
+              - generic [ref=e172]:
+                - generic [ref=e173]:
+                  - generic [ref=e174]:
+                    - heading "0" [level=3] [ref=e175]
+                    - paragraph [ref=e176]: Requests
+                  - button "30d" [ref=e178] [cursor=pointer]:
+                    - text: 30d
+                    - img [ref=e181]
+                - generic [ref=e185]:
+                  - img [ref=e187]
+                  - paragraph [ref=e189]: No data to show
+            - generic [ref=e190]:
+              - link "Database 0 Rows" [ref=e191] [cursor=pointer]:
+                - /url: /console/project-default-69cb4a33001b366949e0/databases
+                - generic [ref=e192]:
+                  - generic [ref=e194]:
+                    - generic [ref=e195]: 
+                    - text: Database
+                  - generic [ref=e196]:
+                    - heading "0" [level=3] [ref=e197]
+                    - paragraph [ref=e198]: Rows
+              - link "Storage 0 B Storage" [ref=e199] [cursor=pointer]:
+                - /url: /console/project-default-69cb4a33001b366949e0/storage
+                - generic [ref=e200]:
+                  - generic [ref=e202]:
+                    - generic [ref=e203]: 
+                    - text: Storage
+                  - generic [ref=e204]:
+                    - heading "0 B" [level=3] [ref=e205]
+                    - paragraph [ref=e206]: Storage
+              - link "Auth 0 Users" [ref=e207] [cursor=pointer]:
+                - /url: /console/project-default-69cb4a33001b366949e0/auth
+                - generic [ref=e208]:
+                  - generic [ref=e210]:
+                    - generic [ref=e211]: 
+                    - text: Auth
+                  - generic [ref=e212]:
+                    - heading "0" [level=3] [ref=e213]
+                    - paragraph [ref=e214]: Users
+              - link "Functions 0 Executions" [ref=e215] [cursor=pointer]:
+                - /url: /console/project-default-69cb4a33001b366949e0/functions
+                - generic [ref=e216]:
+                  - generic [ref=e218]:
+                    - generic [ref=e219]: 
+                    - text: Functions
+                  - generic [ref=e220]:
+                    - heading "0" [level=3] [ref=e221]
+                    - paragraph [ref=e222]: Executions
+          - generic [ref=e223]:
+            - heading "Integrations" [level=3] [ref=e224]
+            - generic [ref=e225]:
+              - tablist [ref=e226]:
+                - tab "Platforms" [ref=e227] [cursor=pointer]
+                - tab "API keys" [ref=e228] [cursor=pointer]
+                - tab "Dev keys" [ref=e229] [cursor=pointer]
+              - link "Create API key" [ref=e292] [cursor=pointer]:
+                - /url: /console/project-default-69cb4a33001b366949e0/overview/api-keys/create
+                - img [ref=e295]
+                - text: Create API key
+            - generic [ref=e307]:
+              - generic [ref=e308]:
+                - generic [ref=e310]:
+                  - heading "Create API key" [level=1] [ref=e311]
+                  - button [ref=e312] [cursor=pointer]:
+                    - img [ref=e314]
+                - main [ref=e316]:
+                  - generic [ref=e318]:
+                    - group "Configuration" [ref=e319]:
+                      - generic [ref=e323]: Configuration
+                      - generic [ref=e325]:
+                        - generic [ref=e326]:
+                          - generic [ref=e327]: Name
+                          - textbox "Name" [active] [ref=e329]:
+                            - /placeholder: Enter key name
+                            - text: Test Key
+                        - generic [ref=e330]:
+                          - generic [ref=e331]: Expiration date
+                          - textbox
+                          - combobox "Never" [ref=e332]:
+                            - generic [ref=e333]:
+                              - generic [ref=e334]: Never
+                              - img [ref=e336]
+                    - group "Scopes" [ref=e338]:
+                      - generic [ref=e342]: Scopes
+                      - generic [ref=e344]:
+                        - paragraph [ref=e345]: Choose which permission scopes to grant your application. It is best practice to allow only the permissions you need to meet your project goals.
+                        - generic [ref=e346]:
+                          - generic [ref=e347]:
+                            - button "Select all" [ref=e348] [cursor=pointer]
+                            - separator [ref=e350]
+                            - button "Deselect all" [ref=e351] [cursor=pointer]
+                          - generic [ref=e352]:
+                            - separator [ref=e353]
+                            - button "Auth 0 Scopes" [ref=e355]:
+                              - generic [ref=e357]:
+                                - button [ref=e358] [cursor=pointer]
+                                - checkbox
+                              - button "Auth 0 Scopes" [ref=e359] [cursor=pointer]:
+                                - generic "Auth 0 Scopes" [ref=e360]:
+                                  - generic [ref=e361]:
+                                    - paragraph [ref=e362]: Auth
+                                    - generic [ref=e363]: 0 Scopes
+                                - img [ref=e366]
+                            - button "Database 0 Scopes" [ref=e370]:
+                              - generic [ref=e372]:
+                                - button [ref=e373] [cursor=pointer]
+                                - checkbox
+                              - button "Database 0 Scopes" [ref=e374] [cursor=pointer]:
+                                - generic "Database 0 Scopes" [ref=e375]:
+                                  - generic [ref=e376]:
+                                    - paragraph [ref=e377]: Database
+                                    - generic [ref=e378]: 0 Scopes
+                                - img [ref=e381]
+                            - button "Functions 0 Scopes" [ref=e385]:
+                              - generic [ref=e387]:
+                                - button [ref=e388] [cursor=pointer]
+                                - checkbox
+                              - button "Functions 0 Scopes" [ref=e389] [cursor=pointer]:
+                                - generic "Functions 0 Scopes" [ref=e390]:
+                                  - generic [ref=e391]:
+                                    - paragraph [ref=e392]: Functions
+                                    - generic [ref=e393]: 0 Scopes
+                                - img [ref=e396]
+                            - button "Storage 0 Scopes" [ref=e400]:
+                              - generic [ref=e402]:
+                                - button [ref=e403] [cursor=pointer]
+                                - checkbox
+                              - button "Storage 0 Scopes" [ref=e404] [cursor=pointer]:
+                                - generic "Storage 0 Scopes" [ref=e405]:
+                                  - generic [ref=e406]:
+                                    - paragraph [ref=e407]: Storage
+                                    - generic [ref=e408]: 0 Scopes
+                                - img [ref=e411]
+                            - button "Messaging 0 Scopes" [ref=e415]:
+                              - generic [ref=e417]:
+                                - button [ref=e418] [cursor=pointer]
+                                - checkbox
+                              - button "Messaging 0 Scopes" [ref=e419] [cursor=pointer]:
+                                - generic "Messaging 0 Scopes" [ref=e420]:
+                                  - generic [ref=e421]:
+                                    - paragraph [ref=e422]: Messaging
+                                    - generic [ref=e423]: 0 Scopes
+                                - img [ref=e426]
+                            - button "Sites 0 Scopes" [ref=e430]:
+                              - generic [ref=e432]:
+                                - button [ref=e433] [cursor=pointer]
+                                - checkbox
+                              - button "Sites 0 Scopes" [ref=e434] [cursor=pointer]:
+                                - generic "Sites 0 Scopes" [ref=e435]:
+                                  - generic [ref=e436]:
+                                    - paragraph [ref=e437]: Sites
+                                    - generic [ref=e438]: 0 Scopes
+                                - img [ref=e441]
+                            - button "Other 0 Scopes" [ref=e445]:
+                              - generic [ref=e447]:
+                                - button [ref=e448] [cursor=pointer]
+                                - checkbox
+                              - button "Other 0 Scopes" [ref=e449] [cursor=pointer]:
+                                - generic "Other 0 Scopes" [ref=e450]:
+                                  - generic [ref=e451]:
+                                    - paragraph [ref=e452]: Other
+                                    - generic [ref=e453]: 0 Scopes
+                                - img [ref=e456]
+              - generic [ref=e458]:
+                - button "Cancel" [ref=e459] [cursor=pointer]
+                - button "Create" [ref=e460] [cursor=pointer]
+        - generic [ref=e249]:
+          - separator [ref=e250]
+          - generic [ref=e251]:
+            - generic [ref=e252]:
+              - generic [ref=e253]: ⓒ 2026 Appwrite. All rights reserved.
+              - separator [ref=e255]
+              - generic [ref=e256]:
+                - link "Appwrite on Github" [ref=e257] [cursor=pointer]:
+                  - /url: https://github.com/appwrite/appwrite
+                  - img [ref=e259]
+                - link "Appwrite on Discord" [ref=e261] [cursor=pointer]:
+                  - /url: https://appwrite.io/discord
+                  - img [ref=e263]
+            - generic [ref=e265]:
+              - link "Appwrite releases on Github" [ref=e266] [cursor=pointer]:
+                - /url: https://github.com/appwrite/appwrite/releases
+                - generic [ref=e267]: Version 1.9.0
+              - separator [ref=e269]
+              - link "Docs" [ref=e270] [cursor=pointer]:
+                - /url: https://appwrite.io/docs
+                - generic [ref=e271]: Docs
+              - separator [ref=e273]
+              - link "Terms" [ref=e274] [cursor=pointer]:
+                - /url: https://appwrite.io/terms
+                - generic [ref=e275]: Terms
+              - separator [ref=e277]
+              - link "Privacy" [ref=e278] [cursor=pointer]:
+                - /url: https://appwrite.io/privacy
+                - generic [ref=e279]: Privacy
+    - generic [ref=e280]: Console - Appwrite
+  - img "Appwrite Logo"

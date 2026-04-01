@@ -123,6 +123,7 @@ class Get extends Action
         }
 
         $operations = 0;
+        /** @var array<string, array<mixed>> $collectionsCache */
         $collectionsCache = [];
         $this->processDocument(
             database: $database,

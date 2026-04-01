@@ -1,0 +1,12 @@
+Total messages: 10 (Errors: 10, Warnings: 0)
+
+[ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://plausible.io/api/event:0
+[ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://plausible.io/api/event:0
+[ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://plausible.io/api/event:0
+[ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://plausible.io/api/event:0
+[ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://plausible.io/api/event:0
+[ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://plausible.io/api/event:0
+[ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://plausible.io/api/event:0
+[ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://plausible.io/api/event:0
+[ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://plausible.io/api/event:0
+[ERROR] Failed to load resource: the server responded with a status of 401 () @ https://190.appwrite.org/v1/projects/project-default-69cb4a33001b366949e0/keys:0

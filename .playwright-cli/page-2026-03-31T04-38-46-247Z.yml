@@ -1,0 +1,28 @@
+- generic [active] [ref=e1]:
+  - main [ref=e3]:
+    - generic [ref=e4]:
+      - link "Appwrite Logo" [ref=e6] [cursor=pointer]:
+        - /url: /console
+        - img "Appwrite Logo" [ref=e7]
+      - paragraph [ref=e10]: Build like a team of hundreds_
+    - generic [ref=e13]:
+      - heading "Sign in" [level=3] [ref=e14]
+      - generic [ref=e17]:
+        - generic [ref=e18]:
+          - generic [ref=e19]: Email
+          - textbox "Email" [ref=e21]
+        - generic [ref=e22]:
+          - generic [ref=e23]: Password
+          - generic [ref=e24]:
+            - textbox "Password" [ref=e25]
+            - button [ref=e26] [cursor=pointer]:
+              - img [ref=e28]
+        - button "Sign in" [ref=e31] [cursor=pointer]
+      - list [ref=e32]:
+        - listitem [ref=e33]:
+          - link "Forgot password?" [ref=e34] [cursor=pointer]:
+            - /url: /console/recover
+        - listitem [ref=e35]:
+          - link "Sign up" [ref=e36] [cursor=pointer]:
+            - /url: /console/register?redirect=%2Fconsole%2F
+  - img "Appwrite Logo"
