@@ -4985,7 +4985,7 @@ trait DatabasesBase
         $this->assertEquals(202, $ip['headers']['status-code']);
         $this->assertEquals(202, $url['headers']['status-code']);
         $this->assertEquals(202, $range['headers']['status-code']);
-        $this->assertEquals(202, $floatRange['headers']['status-code']);
+        $this->assertEquals(202, $floatRange['headers']['status-code'], 'Float range creation failed: ' . \json_encode($floatRange['body'] ?? []));
         $this->assertEquals(202, $probability['headers']['status-code']);
         $this->assertEquals(202, $upperBound['headers']['status-code']);
         $this->assertEquals(202, $lowerBound['headers']['status-code']);
