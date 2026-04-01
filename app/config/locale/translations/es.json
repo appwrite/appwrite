@@ -11,7 +11,7 @@
     "emails.verification.buttonText": "Confirmar dirección de correo",
     "emails.verification.signature": "El equipo de {{project}}.",
     "emails.magicSession.subject": "Inicio de sesión",
-    "emails.magicSession.hello": "Hola,",h
+    "emails.magicSession.hello": "Hola,",
     "emails.magicSession.thanks": "Gracias.,",
     "emails.magicSession.signature": "El equipo de {{project}}",
     "emails.recovery.subject": "Restablecer contraseña",
