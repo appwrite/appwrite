@@ -11,32 +11,46 @@ class V21 extends Filter
     public function parse(array $content, string $model): array
     {
         return match ($model) {
+            Response::MODEL_USER => $this->parseUser($content),
+            Response::MODEL_USER_LIST => $this->handleList(
+                $content,
+                'users',
+                fn ($item) => $this->parseUser($item),
+            ),
+            Response::MODEL_ACCOUNT => $this->parseUser($content),
             Response::MODEL_SITE => $this->parseSite($content),
             Response::MODEL_SITE_LIST => $this->handleList(
                 $content,
-                "sites",
+                'sites',
                 fn ($item) => $this->parseSite($item),
             ),
             Response::MODEL_FUNCTION => $this->parseFunction($content),
             Response::MODEL_FUNCTION_LIST => $this->handleList(
                 $content,
-                "functions",
+                'functions',
                 fn ($item) => $this->parseFunction($item),
             ),
             Response::MODEL_DOCUMENT => $this->parseDocument($content),
             Response::MODEL_DOCUMENT_LIST => $this->handleList(
                 $content,
-                "documents",
+                'documents',
                 fn ($item) => $this->parseDocument($item),
             ),
             Response::MODEL_ROW => $this->parseRow($content),
             Response::MODEL_ROW_LIST => $this->handleList(
                 $content,
-                "rows",
+                'rows',
                 fn ($item) => $this->parseRow($item),
             ),
             default => $content,
         };
+    }
+
+    protected function parseUser(array $content): array
+    {
+        unset($content['impersonator']);
+        unset($content['impersonatorUserId']);
+        return $content;
     }
 
     protected function parseSite(array $content): array
