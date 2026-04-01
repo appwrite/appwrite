@@ -22,8 +22,8 @@ class TeamsServerTest extends Scope
     protected function setupTeam(): array
     {
         $key = $this->getProject()['$id'];
-        if (!empty(static::$cachedTeam[$key])) {
-            return static::$cachedTeam[$key];
+        if (!empty(self::$cachedTeam[$key])) {
+            return self::$cachedTeam[$key];
         }
 
         $projectId = $this->getProject()['$id'];
@@ -47,15 +47,15 @@ class TeamsServerTest extends Scope
         $team = $team['body']['data']['teamsCreate'];
         $this->assertEquals('Team Name', $team['name']);
 
-        static::$cachedTeam[$key] = $team;
+        self::$cachedTeam[$key] = $team;
         return $team;
     }
 
     protected function setupMembership(): array
     {
         $key = $this->getProject()['$id'];
-        if (!empty(static::$cachedMembership[$key])) {
-            return static::$cachedMembership[$key];
+        if (!empty(self::$cachedMembership[$key])) {
+            return self::$cachedMembership[$key];
         }
 
         $team = $this->setupTeam();
@@ -83,15 +83,15 @@ class TeamsServerTest extends Scope
         $this->assertEquals($team['_id'], $membership['teamId']);
         $this->assertEquals(['developer'], $membership['roles']);
 
-        static::$cachedMembership[$key] = $membership;
+        self::$cachedMembership[$key] = $membership;
         return $membership;
     }
 
     protected function setupTeamWithPrefs(): array
     {
         $key = $this->getProject()['$id'];
-        if (!empty(static::$cachedTeamWithPrefs[$key])) {
-            return static::$cachedTeamWithPrefs[$key];
+        if (!empty(self::$cachedTeamWithPrefs[$key])) {
+            return self::$cachedTeamWithPrefs[$key];
         }
 
         $team = $this->setupTeam();
@@ -137,7 +137,7 @@ class TeamsServerTest extends Scope
         $this->assertIsArray($prefs['body']['data']['teamsUpdatePrefs']);
         $this->assertEquals('{"key":"value"}', $prefs['body']['data']['teamsUpdatePrefs']['data']);
 
-        static::$cachedTeamWithPrefs[$key] = $fetchedTeam;
+        self::$cachedTeamWithPrefs[$key] = $fetchedTeam;
         return $fetchedTeam;
     }
 
@@ -349,7 +349,7 @@ class TeamsServerTest extends Scope
 
         // Clear cache after deletion
         $key = $this->getProject()['$id'];
-        static::$cachedMembership[$key] = [];
+        self::$cachedMembership[$key] = [];
     }
 
     #[Group('cl-ignore')]
