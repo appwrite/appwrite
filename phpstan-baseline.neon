@@ -187,108 +187,6 @@ parameters:
 			path: app/worker.php
 
 		-
-			message: '#^PHPDoc tag @return with type string is incompatible with native type int\.$#'
-			identifier: return.phpDocType
-			count: 1
-			path: src/Appwrite/Auth/OAuth2.php
-
-		-
-			message: '#^PHPDoc tag @param references unknown parameter\: \$token$#'
-			identifier: parameter.notFound
-			count: 1
-			path: src/Appwrite/Auth/OAuth2/Disqus.php
-
-		-
-			message: '#^PHPDoc tag @param references unknown parameter\: \$value$#'
-			identifier: parameter.notFound
-			count: 1
-			path: src/Appwrite/Auth/Validator/PersonalData.php
-
-		-
-			message: '#^PHPDoc tag @param has invalid value \(DeviceDetector\)\: Unexpected token "\\n     ", expected variable at offset 32 on line 2$#'
-			identifier: phpDoc.parseError
-			count: 1
-			path: src/Appwrite/Detector/Detector.php
-
-		-
-			message: '#^PHPDoc tag @param has invalid value \(string\)\: Unexpected token "\\n     ", expected variable at offset 24 on line 2$#'
-			identifier: phpDoc.parseError
-			count: 1
-			path: src/Appwrite/Detector/Detector.php
-
-		-
-			message: '#^PHPDoc tag @var above a method has no effect\.$#'
-			identifier: varTag.misplaced
-			count: 1
-			path: src/Appwrite/Docker/Compose.php
-
-		-
-			message: '#^PHPDoc tag @var above a method has no effect\.$#'
-			identifier: varTag.misplaced
-			count: 1
-			path: src/Appwrite/Docker/Compose/Service.php
-
-		-
-			message: '#^PHPDoc tag @var above a method has no effect\.$#'
-			identifier: varTag.misplaced
-			count: 1
-			path: src/Appwrite/Docker/Env.php
-
-		-
-			message: '#^PHPDoc tag @param has invalid value \(int port\)\: Unexpected token "port", expected variable at offset 50 on line 4$#'
-			identifier: phpDoc.parseError
-			count: 1
-			path: src/Appwrite/Event/Mail.php
-
-		-
-			message: '#^PHPDoc tag @param references unknown parameter\: \$password$#'
-			identifier: parameter.notFound
-			count: 1
-			path: src/Appwrite/Event/Mail.php
-
-		-
-			message: '#^PHPDoc tag @return with type string is incompatible with native type Appwrite\\Event\\Mail\.$#'
-			identifier: return.phpDocType
-			count: 1
-			path: src/Appwrite/Event/Mail.php
-
-		-
-			message: '#^Method Appwrite\\Event\\Message\\Usage\:\:fromArray\(\) should return static\(Appwrite\\Event\\Message\\Usage\) but returns Appwrite\\Event\\Message\\Usage\.$#'
-			identifier: return.type
-			count: 1
-			path: src/Appwrite/Event/Message/Usage.php
-
-		-
-			message: '#^PHPDoc tag @param references unknown parameter\: \$message$#'
-			identifier: parameter.notFound
-			count: 1
-			path: src/Appwrite/Event/Messaging.php
-
-		-
-			message: '#^PHPDoc tag @return with type string is incompatible with native type Utopia\\Database\\Document\.$#'
-			identifier: return.phpDocType
-			count: 1
-			path: src/Appwrite/Event/Messaging.php
-
-		-
-			message: '#^Method Appwrite\\Functions\\EventProcessor\:\:getFunctionsEvents\(\) should return array\<string, bool\> but returns array\<int\<0, max\>\>\.$#'
-			identifier: return.type
-			count: 1
-			path: src/Appwrite/Functions/EventProcessor.php
-
-		-
-			message: '#^Method Appwrite\\Functions\\EventProcessor\:\:getWebhooksEvents\(\) should return array\<string, bool\> but returns array\<int\<0, max\>\>\.$#'
-			identifier: return.type
-			count: 1
-			path: src/Appwrite/Functions/EventProcessor.php
-
-		-
-			message: '#^Variable \$hostname on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.variable
-			count: 1
-			path: src/Appwrite/Functions/EventProcessor.php
-
-		-
 			message: '#^Anonymous function has an unused use \$context\.$#'
 			identifier: closure.unusedUse
 			count: 1
@@ -361,30 +259,6 @@ parameters:
 			path: src/Appwrite/GraphQL/Types/Mapper.php
 
 		-
-			message: '#^Unsafe access to private property Appwrite\\GraphQL\\Types\\Mapper\:\:\$models through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 3
-			path: src/Appwrite/GraphQL/Types/Mapper.php
-
-		-
-			message: '#^Unsafe call to private method Appwrite\\GraphQL\\Types\\Mapper\:\:getColumnImplementation\(\) through static\:\:\.$#'
-			identifier: staticClassAccess.privateMethod
-			count: 2
-			path: src/Appwrite/GraphQL/Types/Mapper.php
-
-		-
-			message: '#^Unsafe call to private method Appwrite\\GraphQL\\Types\\Mapper\:\:getHashOptionsImplementation\(\) through static\:\:\.$#'
-			identifier: staticClassAccess.privateMethod
-			count: 1
-			path: src/Appwrite/GraphQL/Types/Mapper.php
-
-		-
-			message: '#^Unsafe call to private method Appwrite\\GraphQL\\Types\\Mapper\:\:getUnionImplementation\(\) through static\:\:\.$#'
-			identifier: staticClassAccess.privateMethod
-			count: 1
-			path: src/Appwrite/GraphQL/Types/Mapper.php
-
-		-
 			message: '#^Call to an undefined method Appwrite\\Migration\\Version\\V15\:\:documentsIterator\(\)\.$#'
 			identifier: method.notFound
 			count: 7
@@ -449,12 +323,6 @@ parameters:
 			identifier: parameterByRef.type
 			count: 1
 			path: src/Appwrite/OpenSSL/OpenSSL.php
-
-		-
-			message: '#^PHPDoc tag @param references unknown parameter\: \$projectId$#'
-			identifier: parameter.notFound
-			count: 1
-			path: src/Appwrite/Platform/Action.php
 
 		-
 			message: '#^Variable \$output in empty\(\) always exists and is not falsy\.$#'
@@ -1153,12 +1021,6 @@ parameters:
 			path: src/Appwrite/SDK/Specification/Format/Swagger2.php
 
 		-
-			message: '#^PHPDoc tag @var above a method has no effect\.$#'
-			identifier: varTag.misplaced
-			count: 2
-			path: src/Appwrite/Template/Template.php
-
-		-
 			message: '#^PHPDoc tag @param has invalid value \(Document \$this\)\: Unexpected token "\$this", expected variable at offset 69 on line 4$#'
 			identifier: phpDoc.parseError
 			count: 1
@@ -1170,35 +1032,6 @@ parameters:
 			count: 1
 			path: src/Appwrite/Utopia/Database/Documents/User.php
 
-		-
-			message: '#^Unsafe call to private method Appwrite\\Utopia\\Request\\Filters\\V17\:\:appendSymbol\(\) through static\:\:\.$#'
-			identifier: staticClassAccess.privateMethod
-			count: 4
-			path: src/Appwrite/Utopia/Request/Filters/V17.php
-
-		-
-			message: '#^Unsafe call to private method Appwrite\\Utopia\\Request\\Filters\\V17\:\:isSpecialChar\(\) through static\:\:\.$#'
-			identifier: staticClassAccess.privateMethod
-			count: 1
-			path: src/Appwrite/Utopia/Request/Filters/V17.php
-
-		-
-			message: '#^PHPDoc tag @param has invalid value \(callable The callback to show sensitive information for\)\: Unexpected token "The", expected variable at offset 91 on line 4$#'
-			identifier: phpDoc.parseError
-			count: 1
-			path: src/Appwrite/Utopia/Response.php
-
-		-
-			message: '#^PHPDoc tag @return with type Appwrite\\Utopia\\Response\\Filter is incompatible with native type array\.$#'
-			identifier: return.phpDocType
-			count: 1
-			path: src/Appwrite/Utopia/Response.php
-
-		-
-			message: '#^PHPDoc tag @return with type string is incompatible with native type Utopia\\Database\\Document\.$#'
-			identifier: return.phpDocType
-			count: 1
-			path: src/Appwrite/Utopia/Response/Model/User.php
 		-
 			message: '#^Unsafe access to private property Tests\\E2E\\Services\\Databases\\Legacy\\DatabasesStringTypesTest\:\:\$setupCache through static\:\:\.$#'
 			identifier: staticClassAccess.privateProperty
@@ -1235,106 +1068,10 @@ parameters:
 			path: tests/e2e/Services/Functions/FunctionsCustomServerTest.php
 
 		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\FunctionsClientTest\:\:\$cachedDeployment through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 3
-			path: tests/e2e/Services/GraphQL/FunctionsClientTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\FunctionsClientTest\:\:\$cachedExecution through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 4
-			path: tests/e2e/Services/GraphQL/FunctionsClientTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\FunctionsClientTest\:\:\$cachedFunction through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 3
-			path: tests/e2e/Services/GraphQL/FunctionsClientTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\FunctionsServerTest\:\:\$cachedDeployment through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 4
-			path: tests/e2e/Services/GraphQL/FunctionsServerTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\FunctionsServerTest\:\:\$cachedExecution through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 5
-			path: tests/e2e/Services/GraphQL/FunctionsServerTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\FunctionsServerTest\:\:\$cachedFunction through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 4
-			path: tests/e2e/Services/GraphQL/FunctionsServerTest.php
-
-		-
 			message: '#^Binary operation "\+" between string and 1 results in an error\.$#'
 			identifier: binaryOp.invalid
 			count: 1
 			path: tests/e2e/Services/GraphQL/Legacy/AbuseTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\Legacy\\DatabaseClientTest\:\:\$bulkData through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 4
-			path: tests/e2e/Services/GraphQL/Legacy/DatabaseClientTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\Legacy\\DatabaseClientTest\:\:\$collection through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 4
-			path: tests/e2e/Services/GraphQL/Legacy/DatabaseClientTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\Legacy\\DatabaseClientTest\:\:\$database through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 4
-			path: tests/e2e/Services/GraphQL/Legacy/DatabaseClientTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\Legacy\\DatabaseClientTest\:\:\$document through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 4
-			path: tests/e2e/Services/GraphQL/Legacy/DatabaseClientTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\MessagingTest\:\:\$cachedEmail through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 2
-			path: tests/e2e/Services/GraphQL/MessagingTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\MessagingTest\:\:\$cachedProviders through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 8
-			path: tests/e2e/Services/GraphQL/MessagingTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\MessagingTest\:\:\$cachedPush through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 4
-			path: tests/e2e/Services/GraphQL/MessagingTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\MessagingTest\:\:\$cachedSms through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 4
-			path: tests/e2e/Services/GraphQL/MessagingTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\MessagingTest\:\:\$cachedSubscriber through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 5
-			path: tests/e2e/Services/GraphQL/MessagingTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\MessagingTest\:\:\$cachedTopic through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 9
-			path: tests/e2e/Services/GraphQL/MessagingTest.php
 
 		-
 			message: '#^Variable \$from in empty\(\) is never defined\.$#'
@@ -1349,33 +1086,9 @@ parameters:
 			path: tests/e2e/Services/GraphQL/StorageClientTest.php
 
 		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\StorageClientTest\:\:\$cachedBucket through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 3
-			path: tests/e2e/Services/GraphQL/StorageClientTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\StorageClientTest\:\:\$cachedFile through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 5
-			path: tests/e2e/Services/GraphQL/StorageClientTest.php
-
-		-
 			message: '#^Method Tests\\E2E\\Services\\GraphQL\\StorageServerTest\:\:testGetFileDownload\(\) should return array but return statement is missing\.$#'
 			identifier: return.missing
 			count: 1
-			path: tests/e2e/Services/GraphQL/StorageServerTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\StorageServerTest\:\:\$cachedBucket through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 4
-			path: tests/e2e/Services/GraphQL/StorageServerTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\StorageServerTest\:\:\$cachedFile through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 6
 			path: tests/e2e/Services/GraphQL/StorageServerTest.php
 
 		-
@@ -1383,138 +1096,6 @@ parameters:
 			identifier: binaryOp.invalid
 			count: 1
 			path: tests/e2e/Services/GraphQL/TablesDB/AbuseTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\TablesDB\\DatabaseServerTest\:\:\$cachedBooleanColumnData through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 5
-			path: tests/e2e/Services/GraphQL/TablesDB/DatabaseServerTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\TablesDB\\DatabaseServerTest\:\:\$cachedBulkData through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 4
-			path: tests/e2e/Services/GraphQL/TablesDB/DatabaseServerTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\TablesDB\\DatabaseServerTest\:\:\$cachedDatabase through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 4
-			path: tests/e2e/Services/GraphQL/TablesDB/DatabaseServerTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\TablesDB\\DatabaseServerTest\:\:\$cachedDatetimeColumnData through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 5
-			path: tests/e2e/Services/GraphQL/TablesDB/DatabaseServerTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\TablesDB\\DatabaseServerTest\:\:\$cachedEmailColumnData through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 5
-			path: tests/e2e/Services/GraphQL/TablesDB/DatabaseServerTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\TablesDB\\DatabaseServerTest\:\:\$cachedEnumColumnData through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 5
-			path: tests/e2e/Services/GraphQL/TablesDB/DatabaseServerTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\TablesDB\\DatabaseServerTest\:\:\$cachedFloatColumnData through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 5
-			path: tests/e2e/Services/GraphQL/TablesDB/DatabaseServerTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\TablesDB\\DatabaseServerTest\:\:\$cachedIPColumnData through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 5
-			path: tests/e2e/Services/GraphQL/TablesDB/DatabaseServerTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\TablesDB\\DatabaseServerTest\:\:\$cachedIndexData through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 7
-			path: tests/e2e/Services/GraphQL/TablesDB/DatabaseServerTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\TablesDB\\DatabaseServerTest\:\:\$cachedIntegerColumnData through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 5
-			path: tests/e2e/Services/GraphQL/TablesDB/DatabaseServerTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\TablesDB\\DatabaseServerTest\:\:\$cachedRelationshipColumnData through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 5
-			path: tests/e2e/Services/GraphQL/TablesDB/DatabaseServerTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\TablesDB\\DatabaseServerTest\:\:\$cachedRowData through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 5
-			path: tests/e2e/Services/GraphQL/TablesDB/DatabaseServerTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\TablesDB\\DatabaseServerTest\:\:\$cachedStringColumnData through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 5
-			path: tests/e2e/Services/GraphQL/TablesDB/DatabaseServerTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\TablesDB\\DatabaseServerTest\:\:\$cachedTableData through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 4
-			path: tests/e2e/Services/GraphQL/TablesDB/DatabaseServerTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\TablesDB\\DatabaseServerTest\:\:\$cachedURLColumnData through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 5
-			path: tests/e2e/Services/GraphQL/TablesDB/DatabaseServerTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\TeamsClientTest\:\:\$cachedMembership through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 4
-			path: tests/e2e/Services/GraphQL/TeamsClientTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\TeamsClientTest\:\:\$cachedTeam through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 3
-			path: tests/e2e/Services/GraphQL/TeamsClientTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\TeamsServerTest\:\:\$cachedMembership through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 4
-			path: tests/e2e/Services/GraphQL/TeamsServerTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\TeamsServerTest\:\:\$cachedTeam through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 3
-			path: tests/e2e/Services/GraphQL/TeamsServerTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\TeamsServerTest\:\:\$cachedTeamWithPrefs through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 3
-			path: tests/e2e/Services/GraphQL/TeamsServerTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\UsersTest\:\:\$cachedUser through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 3
-			path: tests/e2e/Services/GraphQL/UsersTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\UsersTest\:\:\$cachedUserTarget through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 5
-			path: tests/e2e/Services/GraphQL/UsersTest.php
 
 		-
 			message: '#^Variable \$from in empty\(\) is never defined\.$#'
@@ -1537,13 +1118,13 @@ parameters:
 		-
 			message: '#^Anonymous function has an unused use \$databaseId\.$#'
 			identifier: closure.unusedUse
-			count: 5
+			count: 6
 			path: tests/e2e/Services/Migrations/MigrationsConsoleClientTest.php
 
 		-
 			message: '#^Anonymous function has an unused use \$tableId\.$#'
 			identifier: closure.unusedUse
-			count: 5
+			count: 6
 			path: tests/e2e/Services/Migrations/MigrationsConsoleClientTest.php
 
 		-
@@ -1587,36 +1168,6 @@ parameters:
 			identifier: method.notFound
 			count: 1
 			path: tests/e2e/Services/TablesDB/Permissions/TablesDBPermissionsTeamTest.php
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\Tokens\\TokensConsoleClientTest\:\:\$bucketAndFileData through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 4
-			path: tests/e2e/Services/Tokens/TokensConsoleClientTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\Tokens\\TokensConsoleClientTest\:\:\$tokenData through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 4
-			path: tests/e2e/Services/Tokens/TokensConsoleClientTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\Tokens\\TokensCustomClientTest\:\:\$bucketAndFileData through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 4
-			path: tests/e2e/Services/Tokens/TokensCustomClientTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\Tokens\\TokensCustomServerTest\:\:\$bucketAndFileData through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 4
-			path: tests/e2e/Services/Tokens/TokensCustomServerTest.php
-
-		-
-			message: '#^Unsafe access to private property Tests\\E2E\\Services\\Tokens\\TokensCustomServerTest\:\:\$tokenData through static\:\:\.$#'
-			identifier: staticClassAccess.privateProperty
-			count: 4
-			path: tests/e2e/Services/Tokens/TokensCustomServerTest.php
-
 		-
 			message: '#^Unsafe access to private property Tests\\E2E\\Services\\Users\\UsersCustomServerTest\:\:\$cachedHashedPasswordUsers through static\:\:\.$#'
 			identifier: staticClassAccess.privateProperty
@@ -1676,75 +1227,3 @@ parameters:
 			identifier: method.notFound
 			count: 1
 			path: tests/unit/Event/EventTest.php
-
-		-
-			message: '#^Call to method parse\(\) on an unknown class Tests\\Unit\\Utopia\\Response\\Filters\\Filter\.$#'
-			identifier: class.notFound
-			count: 6
-			path: tests/unit/Utopia/Response/Filters/V16Test.php
-
-		-
-			message: '#^Property Tests\\Unit\\Utopia\\Response\\Filters\\V16Test\:\:\$filter \(Tests\\Unit\\Utopia\\Response\\Filters\\Filter\) does not accept Appwrite\\Utopia\\Response\\Filters\\V16\.$#'
-			identifier: assign.propertyType
-			count: 1
-			path: tests/unit/Utopia/Response/Filters/V16Test.php
-
-		-
-			message: '#^Property Tests\\Unit\\Utopia\\Response\\Filters\\V16Test\:\:\$filter has unknown class Tests\\Unit\\Utopia\\Response\\Filters\\Filter as its type\.$#'
-			identifier: class.notFound
-			count: 1
-			path: tests/unit/Utopia/Response/Filters/V16Test.php
-
-		-
-			message: '#^Call to method parse\(\) on an unknown class Tests\\Unit\\Utopia\\Response\\Filters\\Filter\.$#'
-			identifier: class.notFound
-			count: 5
-			path: tests/unit/Utopia/Response/Filters/V17Test.php
-
-		-
-			message: '#^Property Tests\\Unit\\Utopia\\Response\\Filters\\V17Test\:\:\$filter \(Tests\\Unit\\Utopia\\Response\\Filters\\Filter\) does not accept Appwrite\\Utopia\\Response\\Filters\\V17\.$#'
-			identifier: assign.propertyType
-			count: 1
-			path: tests/unit/Utopia/Response/Filters/V17Test.php
-
-		-
-			message: '#^Property Tests\\Unit\\Utopia\\Response\\Filters\\V17Test\:\:\$filter has unknown class Tests\\Unit\\Utopia\\Response\\Filters\\Filter as its type\.$#'
-			identifier: class.notFound
-			count: 1
-			path: tests/unit/Utopia/Response/Filters/V17Test.php
-
-		-
-			message: '#^Call to method parse\(\) on an unknown class Tests\\Unit\\Utopia\\Response\\Filters\\Filter\.$#'
-			identifier: class.notFound
-			count: 4
-			path: tests/unit/Utopia/Response/Filters/V18Test.php
-
-		-
-			message: '#^Property Tests\\Unit\\Utopia\\Response\\Filters\\V18Test\:\:\$filter \(Tests\\Unit\\Utopia\\Response\\Filters\\Filter\) does not accept Appwrite\\Utopia\\Response\\Filters\\V18\.$#'
-			identifier: assign.propertyType
-			count: 1
-			path: tests/unit/Utopia/Response/Filters/V18Test.php
-
-		-
-			message: '#^Property Tests\\Unit\\Utopia\\Response\\Filters\\V18Test\:\:\$filter has unknown class Tests\\Unit\\Utopia\\Response\\Filters\\Filter as its type\.$#'
-			identifier: class.notFound
-			count: 1
-			path: tests/unit/Utopia/Response/Filters/V18Test.php
-
-		-
-			message: '#^Call to method parse\(\) on an unknown class Tests\\Unit\\Utopia\\Response\\Filters\\Filter\.$#'
-			identifier: class.notFound
-			count: 11
-			path: tests/unit/Utopia/Response/Filters/V19Test.php
-
-		-
-			message: '#^Property Tests\\Unit\\Utopia\\Response\\Filters\\V19Test\:\:\$filter \(Tests\\Unit\\Utopia\\Response\\Filters\\Filter\) does not accept Appwrite\\Utopia\\Response\\Filters\\V19\.$#'
-			identifier: assign.propertyType
-			count: 1
-			path: tests/unit/Utopia/Response/Filters/V19Test.php
-
-		-
-			message: '#^Property Tests\\Unit\\Utopia\\Response\\Filters\\V19Test\:\:\$filter has unknown class Tests\\Unit\\Utopia\\Response\\Filters\\Filter as its type\.$#'
-			identifier: class.notFound
-			count: 1
-			path: tests/unit/Utopia/Response/Filters/V19Test.php

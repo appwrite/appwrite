@@ -373,7 +373,8 @@
             opensslKey: (formState?.opensslKey || '').trim(),
             assistantOpenAIKey: normalizedAssistantKey,
             accountEmail: normalizedAccountEmail,
-            accountPassword: normalizedAccountPassword
+            accountPassword: normalizedAccountPassword,
+            migrate: formState?.migrate ?? false
         };
     };
 
@@ -721,7 +722,8 @@
             });
             startSyncedSpinnerRotation(list);
 
-            notifyInstallComplete(activeInstall?.installId, sessionDetails).finally(() => {
+            const completeId = activeInstall?.installId || getStoredInstallId?.();
+            notifyInstallComplete(completeId, sessionDetails).finally(() => {
                 setTimeout(() => redirectToApp(protocol), TIMINGS?.redirectDelay ?? 0);
             });
         };
@@ -911,21 +913,28 @@
         };
 
         const isSnapshotTerminal = (snapshot) => {
-            if (!snapshot?.steps) return true;
+            if (!snapshot?.steps) return 'empty';
             const stepEntries = Object.values(snapshot.steps);
-            if (stepEntries.length === 0) return true;
+            if (stepEntries.length === 0) return 'empty';
             const hasError = stepEntries.some((s) => s.status === STATUS.ERROR);
-            if (hasError) return true;
+            if (hasError) return 'error';
             const allCompleted = INSTALLATION_STEPS.every((step) => {
                 const detail = snapshot.steps[step.id];
                 return detail && detail.status === STATUS.COMPLETED;
             });
-            return allCompleted;
+            if (allCompleted) return 'completed';
+            return false;
         };
 
         const resumeInstall = async (installId) => {
             const snapshot = await fetchInstallStatus(installId);
-            if (!snapshot || isSnapshotTerminal(snapshot)) return false;
+            const terminal = isSnapshotTerminal(snapshot);
+            if (!snapshot || terminal) {
+                if (terminal === 'completed') {
+                    return 'completed';
+                }
+                return false;
+            }
             activeInstall = {
                 installId,
                 controller: new AbortController(),
@@ -1069,14 +1078,33 @@
             startInstallStream(newInstallId);
         };
 
+        const recoverToLastStep = () => {
+            clearInstallId?.();
+            clearInstallLock?.();
+            const url = new URL(window.location.href);
+            const lastStep = url.searchParams.get('step');
+            // Stay on the current URL so the user keeps their place;
+            // only navigate away if we're already on step 5 (the
+            // progress screen) since there's nothing to show.
+            if (!lastStep || String(lastStep) === '5') {
+                window.location.href = '/?step=1';
+            }
+        };
+
         const lock = getInstallLock?.();
         const existingInstallId = lock?.installId || getStoredInstallId?.();
         if (existingInstallId) {
-            resumeInstall(existingInstallId).then((resumed) => {
-                if (!resumed) {
-                    clearInstallId?.();
+            resumeInstall(existingInstallId).then((result) => {
+                if (result === 'completed') {
+                    // Install already finished — redirect to console
+                    // instead of bouncing back to step 1.
+                    stopSyncedSpinnerRotation();
+                    setUnloadGuard(false);
                     clearInstallLock?.();
-                    window.location.href = '/?step=1';
+                    clearInstallId?.();
+                    startSslCheck(null);
+                } else if (!result) {
+                    recoverToLastStep();
                 }
             });
         } else {

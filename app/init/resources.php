@@ -888,8 +888,9 @@ Http::setResource('dbForPlatform', function (Group $pools, Cache $cache, Authori
 }, ['pools', 'cache', 'authorization']);
 
 Http::setResource('getDatabasesDB', function (Group $pools, Cache $cache, Document $project, Request $request, UsageContext $usage, Authorization $authorization) {
+    $initializedPools = [];
 
-    return function (Document $database) use ($pools, $cache, $project, $request, $usage, $authorization): Database {
+    return function (Document $database) use ($pools, $cache, $project, $request, $usage, $authorization, &$initializedPools): Database {
         $databaseDSN = $database->getAttribute('database', $project->getAttribute('database', ''));
         $databaseType = $database->getAttribute('type', '');
 
@@ -907,11 +908,12 @@ Http::setResource('getDatabasesDB', function (Group $pools, Cache $cache, Docume
             $dsn = new DSN('mysql://' . $project->getAttribute('database'));
         }
 
-        $pool = $pools->get($databaseDSN->getHost());
+        $databaseHost = $databaseDSN->getHost();
+        $pool = $pools->get($databaseHost);
 
         $adapter = new DatabasePool($pool);
         $database = new Database($adapter, $cache);
-        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+        $sharedTables = \array_filter(\explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', '')));
 
         $database
             ->setDatabase(APP_DATABASE)
@@ -922,10 +924,30 @@ Http::setResource('getDatabasesDB', function (Group $pools, Cache $cache, Docume
             ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
         // inside pools authorization needs to be set first
         $database->getAdapter()->setSupportForAttributes($databaseType !== DOCUMENTSDB);
-        if (\in_array($dsn->getHost(), $sharedTables)) {
+
+        // When the database uses a separate pool (e.g. vectorsdb on PostgreSQL),
+        // always use dedicated mode with namespace isolation. Shared tables mode
+        // can't be used across different engines (e.g. MongoDB UUID tenants are
+        // incompatible with PostgreSQL's integer _tenant column).
+        if ($databaseHost !== $dsn->getHost()) {
+            $database
+                ->setSharedTables(false)
+                ->setTenant(null)
+                ->setNamespace('_' . $project->getSequence());
+
+            $poolKey = $databaseHost . ':' . $database->getNamespace();
+            if (!isset($initializedPools[$poolKey])) {
+                try {
+                    $database->create();
+                } catch (\Utopia\Database\Exception\Duplicate) {
+                    // Schema already exists
+                }
+                $initializedPools[$poolKey] = true;
+            }
+        } elseif (\in_array($dsn->getHost(), $sharedTables)) {
             $database
                 ->setSharedTables(true)
-                ->setTenant((int)$project->getSequence())
+                ->setTenant($project->getSequence())
                 ->setNamespace($dsn->getParam('namespace'));
         } else {
             $database

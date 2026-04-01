@@ -82,12 +82,11 @@ class Create extends Action
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_DETECTION_RUNTIME,
+                        model: [
+                            Response::MODEL_DETECTION_RUNTIME,
+                            Response::MODEL_DETECTION_FRAMEWORK,
+                        ],
                     ),
-                    new SDKResponse(
-                        code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_DETECTION_FRAMEWORK,
-                    )
                 ]
             ))
             ->param('installationId', '', new Text(256), 'Installation Id')

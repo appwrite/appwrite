@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f9225f2b580de0ccb796b2fb8c881384",
+    "content-hash": "b5261855586680e467168f527e0634ae",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -161,16 +161,16 @@
         },
         {
             "name": "appwrite/php-runtimes",
-            "version": "0.19.4",
+            "version": "0.19.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/runtimes.git",
-                "reference": "eea9d1b3ca2540eab623b419c8afde09ef406c0b"
+                "reference": "aa2f7760cd0493c0880209b92df812c9386b3546"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/runtimes/zipball/eea9d1b3ca2540eab623b419c8afde09ef406c0b",
-                "reference": "eea9d1b3ca2540eab623b419c8afde09ef406c0b",
+                "url": "https://api.github.com/repos/appwrite/runtimes/zipball/aa2f7760cd0493c0880209b92df812c9386b3546",
+                "reference": "aa2f7760cd0493c0880209b92df812c9386b3546",
                 "shasum": ""
             },
             "require": {
@@ -210,9 +210,9 @@
             ],
             "support": {
                 "issues": "https://github.com/appwrite/runtimes/issues",
-                "source": "https://github.com/appwrite/runtimes/tree/0.19.4"
+                "source": "https://github.com/appwrite/runtimes/tree/0.19.5"
             },
-            "time": "2026-02-17T10:04:39+00:00"
+            "time": "2026-04-01T01:39:23+00:00"
         },
         {
             "name": "brick/math",
@@ -3850,16 +3850,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "5.3.17",
+            "version": "5.3.19",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "cff2b6ed63d3291b74110d086e16ff089fe05993"
+                "reference": "72ee1614c37e37c7fdd9d4dc87f1f7cdfa1ca691"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/cff2b6ed63d3291b74110d086e16ff089fe05993",
-                "reference": "cff2b6ed63d3291b74110d086e16ff089fe05993",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/72ee1614c37e37c7fdd9d4dc87f1f7cdfa1ca691",
+                "reference": "72ee1614c37e37c7fdd9d4dc87f1f7cdfa1ca691",
                 "shasum": ""
             },
             "require": {
@@ -3903,9 +3903,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/5.3.17"
+                "source": "https://github.com/utopia-php/database/tree/5.3.19"
             },
-            "time": "2026-03-20T01:18:52+00:00"
+            "time": "2026-03-31T15:52:08+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -4518,16 +4518,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.8.3",
+            "version": "1.9.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "8633523b3343d492427331b6eec53f020f6ab7a7"
+                "reference": "7a86aeadf182b63a9f4ceba7e137588b31c5d2e2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/8633523b3343d492427331b6eec53f020f6ab7a7",
-                "reference": "8633523b3343d492427331b6eec53f020f6ab7a7",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/7a86aeadf182b63a9f4ceba7e137588b31c5d2e2",
+                "reference": "7a86aeadf182b63a9f4ceba7e137588b31c5d2e2",
                 "shasum": ""
             },
             "require": {
@@ -4567,9 +4567,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/1.8.3"
+                "source": "https://github.com/utopia-php/migration/tree/1.9.1"
             },
-            "time": "2026-03-19T09:18:47+00:00"
+            "time": "2026-03-25T07:05:27+00:00"
         },
         {
             "name": "utopia-php/mongo",

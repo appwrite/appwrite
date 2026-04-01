@@ -134,7 +134,7 @@ class ModuleTest extends TestCase
         $this->assertActionParams($action, [
             'appDomain', 'httpPort', 'httpsPort', 'emailCertificates', 'opensslKey',
             'assistantOpenAIKey', 'accountEmail', 'accountPassword', 'database',
-            'installId', 'retryStep',
+            'installId', 'retryStep', 'migrate',
         ]);
         $this->assertActionInjects($action, ['request', 'response', 'swooleResponse', 'installerState', 'installerConfig', 'installerPaths']);
     }
