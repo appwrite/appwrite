@@ -389,6 +389,18 @@ class Create extends Action
             ->setParam('tableId', $collection->getId())
             ->setContext($this->getCollectionsEventsContext(), $collection);
 
+        $collectionsCache = [];
+        foreach ($created as $document) {
+            $this->processDocument(
+                database: $database,
+                collection: $collection,
+                document: $document,
+                dbForProject: $dbForProject,
+                collectionsCache: $collectionsCache,
+                authorization: $authorization
+            );
+        }
+
         $usage
             ->addMetric($this->getDatabasesOperationWriteMetric(), 1)
             ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), $this->getDatabasesIdOperationWriteMetric()), 1); // per collection

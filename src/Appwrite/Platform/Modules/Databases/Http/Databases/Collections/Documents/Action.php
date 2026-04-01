@@ -401,4 +401,103 @@ abstract class Action extends DatabasesAction
         $queueForFunctions->reset();
         $queueForWebhooks->reset();
     }
+
+    /**
+     * Stamp database/collection metadata onto a document and recursively
+     * process relationship documents. Called from endpoint actions where
+     * the user-facing collection ID is available.
+     *
+     * @param array<string, array<Document>> $collectionsCache
+     */
+    protected function processDocument(
+        Document $database,
+        Document $collection,
+        Document $document,
+        Database $dbForProject,
+        array &$collectionsCache,
+        \Utopia\Database\Validator\Authorization $authorization,
+        ?int &$operations = null,
+        int $depth = 0,
+    ): bool {
+        if ($operations !== null && $document->isEmpty()) {
+            return false;
+        }
+
+        if ($operations !== null) {
+            $operations++;
+        }
+
+        $collectionId = $collection->getId();
+        $document->removeAttribute('$collection');
+        $document->setAttribute('$databaseId', $database->getId());
+        $document->setAttribute('$' . $this->getCollectionsEventsContext() . 'Id', $collectionId);
+
+        if ($depth >= Database::RELATION_MAX_DEPTH) {
+            return true;
+        }
+
+        $relationships = $collectionsCache[$collectionId] ??= \array_filter(
+            $collection->getAttribute('attributes', []),
+            fn ($attr) => $attr->getAttribute('type') === \Utopia\Query\Schema\ColumnType::Relationship->value
+        );
+
+        foreach ($relationships as $relationship) {
+            $key = $relationship->getAttribute('key');
+            $related = $document->getAttribute($key);
+
+            if (empty($related)) {
+                if (\in_array(\gettype($related), ['array', 'object']) && $operations !== null) {
+                    $operations++;
+                }
+                continue;
+            }
+
+            $relations = \is_array($related) ? $related : [$related];
+            $options = $relationship->getAttribute('options', []);
+            $relatedCollectionId = (\is_array($options) ? ($options['relatedCollection'] ?? null) : null)
+                ?? $relationship->getAttribute('relatedCollection');
+
+            if (!isset($collectionsCache[$relatedCollectionId])) {
+                $relatedCollectionDoc = $authorization->skip(
+                    fn () => $dbForProject->getDocument(
+                        'database_' . $database->getSequence(),
+                        $relatedCollectionId
+                    )
+                );
+
+                $collectionsCache[$relatedCollectionId] = \array_filter(
+                    $relatedCollectionDoc->getAttribute('attributes', []),
+                    fn ($attr) => $attr->getAttribute('type') === \Utopia\Query\Schema\ColumnType::Relationship->value
+                );
+            }
+
+            foreach ($relations as $relation) {
+                if ($relation instanceof Document) {
+                    $relatedCollection = new Document([
+                        '$id' => $relatedCollectionId,
+                        'attributes' => $collectionsCache[$relatedCollectionId],
+                    ]);
+
+                    $this->processDocument(
+                        database: $database,
+                        collection: $relatedCollection,
+                        document: $relation,
+                        dbForProject: $dbForProject,
+                        collectionsCache: $collectionsCache,
+                        authorization: $authorization,
+                        operations: $operations,
+                        depth: $depth + 1
+                    );
+                }
+            }
+
+            if (\is_array($related)) {
+                $document->setAttribute($relationship->getAttribute('key'), \array_values($relations));
+            } elseif (empty($relations)) {
+                $document->setAttribute($relationship->getAttribute('key'), null);
+            }
+        }
+
+        return true;
+    }
 }

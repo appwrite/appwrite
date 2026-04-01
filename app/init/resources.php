@@ -30,7 +30,6 @@ use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Hooks\DocumentUsage;
 use Appwrite\Utopia\Database\Hooks\FunctionCache;
-use Appwrite\Utopia\Database\Hooks\Metadata;
 use Appwrite\Utopia\Database\Hooks\Usage;
 use Appwrite\Utopia\Database\Hooks\UserEvents;
 use Appwrite\Utopia\Request;
@@ -769,39 +768,6 @@ Http::setResource('getDatabasesDB', function (Group $pools, Database $dbForProje
             $databaseIdCollectionIdDocumentsMetric = $databaseType . '.' . $databaseIdCollectionIdDocumentsMetric;
         }
 
-        // Pre-compute collection ID mapping (internal name → user-facing ID)
-        $collectionIdMap = [];
-        try {
-            $databaseKey = 'database_' . $originalDatabase->getSequence();
-            $dbPrefix = $databaseKey . '_';
-            $collections = $authorization->skip(
-                fn () => $dbForProject->silent(
-                    fn () => $dbForProject->find($databaseKey, [
-                        \Utopia\Database\Query::select(['$id', '$sequence']),
-                        \Utopia\Database\Query::limit(5000),
-                    ])
-                )
-            );
-            foreach ($collections as $col) {
-                $seq = $col->getSequence();
-                if ($seq !== null) {
-                    $key = 'collection_' . $seq;
-                    $collectionIdMap[$key] = $col->getId();
-                    $collectionIdMap[$dbPrefix . $key] = $col->getId();
-                }
-            }
-        } catch (\Throwable) {
-            // Database may not have collections yet
-        }
-
-        $metadata = new Metadata(
-            database: $originalDatabase,
-            context: $context,
-        );
-        foreach ($collectionIdMap as $internal => $external) {
-            $metadata->setCollectionId($internal, $external);
-        }
-
         $database
             ->addHook(new DocumentUsage(
                 $usage,
@@ -810,8 +776,7 @@ Http::setResource('getDatabasesDB', function (Group $pools, Database $dbForProje
                 $databaseIdCollectionIdDocumentsMetric,
             ))
             ->addHook(new Permissions())
-            ->addHook(new Relationships($database))
-            ->addHook($metadata);
+            ->addHook(new Relationships($database));
 
         if ($database->getSharedTables() && ($database->getTenant() !== null)) {
             $database->addHook(new Tenancy($database->getTenant()));
