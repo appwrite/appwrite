@@ -187,6 +187,20 @@ class V24 extends Migration
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
 
+                case 'users':
+                    try {
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'impersonator');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create attribute \"impersonator\" in collection {$id}: {$th->getMessage()}");
+                    }
+                    try {
+                        $this->createIndexFromCollection($this->dbForProject, $id, 'impersonator');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create index \"impersonator\" from {$id}: {$th->getMessage()}");
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
                 case 'teams':
                     try {
                         $this->createAttributeFromCollection($this->dbForProject, $id, 'labels');

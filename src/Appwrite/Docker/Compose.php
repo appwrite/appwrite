@@ -12,9 +12,6 @@ class Compose
      */
     protected $compose = [];
 
-    /**
-     * @var string $data
-     */
     public function __construct(string $data)
     {
         $this->compose = yaml_parse($data);

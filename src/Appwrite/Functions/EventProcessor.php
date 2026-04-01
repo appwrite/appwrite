@@ -9,6 +9,18 @@ use Utopia\Database\Query;
 class EventProcessor
 {
     /**
+     * @param array<mixed> $events
+     * @return array<string, bool>
+     */
+    private function getEventMap(array $events): array
+    {
+        return \array_fill_keys(
+            \array_map('strval', \array_unique($events)),
+            true
+        );
+    }
+
+    /**
      * Get function events for a project, using Redis cache
      * @param Document|null $project
      * @param Database $dbForProject
@@ -26,7 +38,7 @@ class EventProcessor
         $cacheKey = \sprintf(
             '%s-cache-%s:%s:%s:project:%s:functions:events',
             $dbForProject->getCacheName(),
-            $hostname ?? '',
+            $hostname,
             $dbForProject->getNamespace(),
             $dbForProject->getTenant(),
             $project->getId()
@@ -36,7 +48,9 @@ class EventProcessor
         $cachedFunctionEvents = $dbForProject->getCache()->load($cacheKey, $ttl);
 
         if ($cachedFunctionEvents !== false) {
-            return \json_decode($cachedFunctionEvents, true) ?? [];
+            $decoded = \json_decode($cachedFunctionEvents, true);
+
+            return \is_array($decoded) ? $this->getEventMap(\array_keys($decoded)) : [];
         }
 
         $events = [];
@@ -63,7 +77,7 @@ class EventProcessor
             }
         }
 
-        $uniqueEvents = \array_flip(\array_unique($events));
+        $uniqueEvents = $this->getEventMap($events);
         $dbForProject->getCache()->save($cacheKey, \json_encode($uniqueEvents));
 
         return $uniqueEvents;
@@ -97,6 +111,6 @@ class EventProcessor
             }
         }
 
-        return \array_flip(\array_unique($events));
+        return $this->getEventMap($events);
     }
 }

@@ -22,8 +22,8 @@ class TokensCustomServerTest extends Scope
 
     protected function setupToken(): array
     {
-        if (!empty(static::$tokenData)) {
-            return static::$tokenData;
+        if (!empty(self::$tokenData)) {
+            return self::$tokenData;
         }
 
         $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
@@ -66,13 +66,13 @@ class TokensCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()));
 
-        static::$tokenData = [
+        self::$tokenData = [
             'fileId' => $fileId,
             'bucketId' => $bucketId,
             'tokenId' => $token['body']['$id'],
         ];
 
-        return static::$tokenData;
+        return self::$tokenData;
     }
 
     public function testCreateToken(): void

@@ -36,6 +36,7 @@ class Install extends Action
     private const string GROWTH_API_URL = 'https://growth.appwrite.io/v1';
 
     protected bool $isUpgrade = false;
+    protected bool $migrate = false;
     protected string $hostPath = '';
     protected ?bool $isLocalInstall = null;
     protected ?array $installerConfig = null;
@@ -323,7 +324,7 @@ class Install extends Action
 
         $shouldGenerateSecrets = !$existingInstallation && !$isUpgrade;
         $input = $this->prepareEnvironmentVariables($userInput, $vars, $shouldGenerateSecrets);
-        $this->performInstallation($httpPort, $httpsPort, $organization, $image, $input, $noStart, null, null, $isUpgrade);
+        $this->performInstallation($httpPort, $httpsPort, $organization, $image, $input, $noStart, null, null, $isUpgrade, migrate: $this->migrate);
     }
 
 
@@ -514,6 +515,7 @@ class Install extends Action
         bool $isUpgrade = false,
         array $account = [],
         ?callable $onComplete = null,
+        bool $migrate = false,
     ): void {
         $isLocalInstall = $this->isLocalInstall();
         $this->applyLocalPaths($isLocalInstall, false);
@@ -636,6 +638,16 @@ class Install extends Action
                     $this->createInitialAdminAccount($account, $progress, $apiUrl, $domain);
                 }
 
+                if ($isUpgrade && $migrate) {
+                    // Allow the containers-completed SSE event to flush
+                    // before blocking on migration exec
+                    usleep(200_000);
+                    $currentStep = InstallerServer::STEP_MIGRATION;
+                    $this->runDatabaseMigration($progress, $isLocalInstall);
+                } elseif ($isUpgrade) {
+                    $this->updateProgress($progress, InstallerServer::STEP_MIGRATION, InstallerServer::STATUS_COMPLETED, messageOverride: 'Migration skipped');
+                }
+
                 // Signal completion before tracking so the SSE stream
                 // finishes and the frontend can redirect immediately.
                 if ($onComplete) {
@@ -743,6 +755,46 @@ class Install extends Action
                 messageOverride: 'Account creation failed: ' . $e->getMessage()
             );
         }
+    }
+
+    private function runDatabaseMigration(?callable $progress, bool $isLocalInstall): void
+    {
+        $this->updateProgress(
+            $progress,
+            InstallerServer::STEP_MIGRATION,
+            InstallerServer::STATUS_IN_PROGRESS,
+            messageOverride: 'Running database migration...'
+        );
+
+        // Allow the SSE chunk to flush before the blocking exec
+        usleep(100_000);
+
+        // Static command — no user input involved
+        $command = $isLocalInstall
+            ? 'docker compose exec appwrite migrate 2>&1'
+            : 'docker exec appwrite migrate 2>&1';
+
+        $output = [];
+        \exec($command, $output, $exit);
+
+        if ($exit !== 0) {
+            $message = trim(implode("\n", $output));
+            $this->updateProgress(
+                $progress,
+                InstallerServer::STEP_MIGRATION,
+                InstallerServer::STATUS_ERROR,
+                details: ['output' => $message],
+                messageOverride: 'Migration failed: ' . ($message ?: 'exit code ' . $exit)
+            );
+            throw new \RuntimeException('Database migration failed', 0, $message !== '' ? new \RuntimeException($message) : null);
+        }
+
+        $this->updateProgress(
+            $progress,
+            InstallerServer::STEP_MIGRATION,
+            InstallerServer::STATUS_COMPLETED,
+            messageOverride: 'Database migration completed'
+        );
     }
 
     private function trackSelfHostedInstall(array $input, bool $isUpgrade, string $version, array $account): void
@@ -1291,7 +1343,7 @@ class Install extends Action
     {
         $argv = $_SERVER['argv'] ?? [];
         foreach ($argv as $arg) {
-            if (\str_starts_with($arg, '--') && !\str_starts_with($arg, '--interactive')) {
+            if (\str_starts_with($arg, '--')) {
                 return true;
             }
         }
