@@ -64,8 +64,8 @@ trait MigrationsBase
      */
     protected function setupMigrationDatabase(): array
     {
-        if (!empty(static::$cachedDatabaseData)) {
-            return static::$cachedDatabaseData;
+        if (!empty(self::$cachedDatabaseData)) {
+            return self::$cachedDatabaseData;
         }
 
         $response = $this->client->call(Client::METHOD_POST, '/databases', [
@@ -81,11 +81,11 @@ trait MigrationsBase
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
 
-        static::$cachedDatabaseData = [
+        self::$cachedDatabaseData = [
             'databaseId' => $response['body']['$id'],
         ];
 
-        return static::$cachedDatabaseData;
+        return self::$cachedDatabaseData;
     }
 
     /**
@@ -94,8 +94,8 @@ trait MigrationsBase
      */
     protected function setupMigrationTable(): array
     {
-        if (!empty(static::$cachedTableData)) {
-            return static::$cachedTableData;
+        if (!empty(self::$cachedTableData)) {
+            return self::$cachedTableData;
         }
 
         // Ensure database exists first
@@ -141,12 +141,12 @@ trait MigrationsBase
             $this->assertEquals('available', $response['body']['status']);
         }, 5000, 500);
 
-        static::$cachedTableData = [
+        self::$cachedTableData = [
             'databaseId' => $databaseId,
             'tableId' => $tableId,
         ];
 
-        return static::$cachedTableData;
+        return self::$cachedTableData;
     }
 
     public function performMigrationSync(array $body): array
@@ -670,7 +670,7 @@ trait MigrationsBase
         ]);
 
         // Clear the cache since we cleaned up
-        static::$cachedDatabaseData = [];
+        self::$cachedDatabaseData = [];
     }
 
     public function testAppwriteMigrationDatabasesRow(): void
@@ -757,8 +757,8 @@ trait MigrationsBase
         ]);
 
         // Clear the caches since we cleaned up
-        static::$cachedDatabaseData = [];
-        static::$cachedTableData = [];
+        self::$cachedDatabaseData = [];
+        self::$cachedTableData = [];
     }
 
     /**
@@ -1331,7 +1331,7 @@ trait MigrationsBase
             ]
         );
 
-        $this->assertEventually(function () use ($missingColumn, $databaseId, $tableId) {
+        $this->assertEventually(function () use ($missingColumn) {
             $migrationId = $missingColumn['body']['$id'];
             $migration = $this->client->call(Client::METHOD_GET, '/migrations/'.$migrationId, array_merge([
                 'content-type' => 'application/json',
@@ -1363,7 +1363,7 @@ trait MigrationsBase
             ]
         );
 
-        $this->assertEventually(function () use ($missingColumn, $databaseId, $tableId) {
+        $this->assertEventually(function () use ($missingColumn) {
             $migrationId = $missingColumn['body']['$id'];
             $migration = $this->client->call(Client::METHOD_GET, '/migrations/'.$migrationId, array_merge([
                 'content-type' => 'application/json',
@@ -1395,7 +1395,7 @@ trait MigrationsBase
             ]
         );
 
-        $this->assertEventually(function () use ($irrelevantColumn, $databaseId, $tableId) {
+        $this->assertEventually(function () use ($irrelevantColumn) {
             $migrationId = $irrelevantColumn['body']['$id'];
             $migration = $this->client->call(Client::METHOD_GET, '/migrations/'.$migrationId, array_merge([
                 'content-type' => 'application/json',
@@ -1422,7 +1422,7 @@ trait MigrationsBase
             ]
         );
 
-        $this->assertEventually(function () use ($migration, $databaseId, $tableId) {
+        $this->assertEventually(function () use ($migration) {
             $migrationId = $migration['body']['$id'];
             $migration = $this->client->call(Client::METHOD_GET, '/migrations/'.$migrationId, array_merge([
                 'content-type' => 'application/json',
@@ -1464,7 +1464,7 @@ trait MigrationsBase
             ]
         );
 
-        $this->assertEventually(function () use ($migration, $databaseId, $tableId) {
+        $this->assertEventually(function () use ($migration) {
             $migrationId = $migration['body']['$id'];
             $migration = $this->client->call(Client::METHOD_GET, '/migrations/'.$migrationId, array_merge([
                 'content-type' => 'application/json',
@@ -4018,7 +4018,7 @@ trait MigrationsBase
             ]
         );
 
-        $this->assertEventually(function () use ($migration, $databaseId, $tableId) {
+        $this->assertEventually(function () use ($migration) {
             $migrationId = $migration['body']['$id'];
             $migration = $this->client->call(Client::METHOD_GET, '/migrations/'.$migrationId, array_merge([
                 'content-type' => 'application/json',

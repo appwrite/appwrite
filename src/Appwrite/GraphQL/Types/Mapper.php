@@ -273,11 +273,9 @@ class Mapper
             case \Appwrite\Auth\Validator\Password::class:
             case \Appwrite\Event\Validator\Event::class:
             case \Appwrite\Event\Validator\FunctionEvent::class:
-            case \Appwrite\Network\Validator\CNAME::class:
             case \Utopia\Emails\Validator\Email::class:
             case \Appwrite\Network\Validator\Redirect::class:
             case \Appwrite\Network\Validator\DNS::class:
-            case \Appwrite\Network\Validator\Origin::class:
             case \Appwrite\Task\Validator\Cron::class:
             case \Appwrite\Utopia\Database\Validator\CustomId::class:
             case \Utopia\Database\Validator\Key::class:
@@ -286,7 +284,7 @@ class Mapper
             case \Utopia\Validator\HexColor::class:
             case \Utopia\Validator\Host::class:
             case \Utopia\Validator\IP::class:
-            case \Utopia\Validator\Origin::class:
+            case \Appwrite\Network\Validator\Origin::class:
             case \Utopia\Validator\Text::class:
             case \Utopia\Validator\URL::class:
             case \Utopia\Validator\WhiteList::class:

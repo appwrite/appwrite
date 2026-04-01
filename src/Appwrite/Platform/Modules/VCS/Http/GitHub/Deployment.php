@@ -49,6 +49,8 @@ trait Deployment
     ) {
         $errors = [];
         foreach ($repositories as $repository) {
+            $logBase = 'vcs.github.event.repo.unknown';
+
             try {
                 $repositoryId = $repository->getId();
                 $projectId = $repository->getAttribute('projectId');
@@ -107,15 +109,8 @@ trait Deployment
 
                 $owner = $github->getOwnerName($providerInstallationId) ?? '';
                 try {
-                    $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
-                    if (empty($repositoryName)) {
-                        throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
-                    }
+                    $repositoryName = $github->getRepositoryName($providerRepositoryId);
                 } catch (RepositoryNotFound $e) {
-                    throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
-                }
-
-                if (empty($repositoryName)) {
                     throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
                 }
 
@@ -291,10 +286,7 @@ trait Deployment
 
                     $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
                     try {
-                        $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
-                        if (empty($repositoryName)) {
-                            throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
-                        }
+                        $repositoryName = $github->getRepositoryName($providerRepositoryId);
                     } catch (RepositoryNotFound $e) {
                         throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
                     }
@@ -501,7 +493,7 @@ trait Deployment
                             $rule = $authorization->skip(fn () => $dbForPlatform->getDocument('rules', $previewRuleId));
 
                             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-                            $previewUrl = !empty($rule) ? ("{$protocol}://" . $rule->getAttribute('domain', '')) : '';
+                            $previewUrl = !$rule->isEmpty() ? ("{$protocol}://" . $rule->getAttribute('domain', '')) : '';
 
                             if (!empty($previewUrl)) {
                                 $comment = new Comment($platform);
@@ -524,10 +516,7 @@ trait Deployment
 
                     $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
                     try {
-                        $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
-                        if (empty($repositoryName)) {
-                            throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
-                        }
+                        $repositoryName = $github->getRepositoryName($providerRepositoryId);
                     } catch (RepositoryNotFound $e) {
                         throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
                     }

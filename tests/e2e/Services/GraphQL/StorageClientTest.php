@@ -229,6 +229,8 @@ class StorageClientTest extends Scope
         ], $this->getHeaders()), $gqlPayload);
 
         $this->assertEquals(47218, \strlen($file['body']));
+
+        return $file;
     }
 
     /**
