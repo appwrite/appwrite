@@ -791,23 +791,33 @@ Http::setResource('getDatabasesDB', function (Group $pools, Database $dbForProje
                     continue;
                 }
                 $options = $attr->getAttribute('options', []);
-                $relatedId = \is_array($options) ? ($options['relatedCollection'] ?? null) : null;
-                $relatedId ??= $attr->getAttribute('relatedCollection');
-                if ($relatedId === null) {
+                $relatedInternalName = \is_array($options) ? ($options['relatedCollection'] ?? null) : null;
+                $relatedInternalName ??= $attr->getAttribute('relatedCollection');
+                if ($relatedInternalName === null) {
                     continue;
                 }
-                // Look up the related collection from dbForProject
-                $relatedCol = $authorization->skip(
-                    fn () => $dbForProject->silent(
-                        fn () => $dbForProject->getDocument($dbPrefix, $relatedId)
-                    )
-                );
-                if (!$relatedCol->isEmpty()) {
-                    $relSeq = $relatedCol->getSequence();
-                    if ($relSeq !== null) {
+                // Extract sequence from internal name (e.g., 'collection_16' → '16')
+                $parts = \explode('_', $relatedInternalName);
+                $relSeq = \end($parts);
+                if (!\is_numeric($relSeq) && !\str_contains($relSeq, '-')) {
+                    continue;
+                }
+                // Find the Appwrite collection document by sequence
+                try {
+                    $relatedCol = $authorization->skip(
+                        fn () => $dbForProject->silent(
+                            fn () => $dbForProject->findOne($dbPrefix, [
+                                \Utopia\Database\Query::equal('$sequence', [$relSeq]),
+                                \Utopia\Database\Query::select(['$id', '$sequence']),
+                            ])
+                        )
+                    );
+                    if ($relatedCol !== null && !$relatedCol->isEmpty()) {
                         $metadata->setCollectionId('collection_' . $relSeq, $relatedCol->getId());
                         $metadata->setCollectionId($dbPrefix . '_collection_' . $relSeq, $relatedCol->getId());
                     }
+                } catch (\Throwable) {
+                    // Skip — related collection may not exist yet
                 }
             }
         }
