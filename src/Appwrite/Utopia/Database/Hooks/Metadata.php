@@ -211,3 +211,4 @@ class Metadata implements Decorator
         ]);
     }
 }
+
