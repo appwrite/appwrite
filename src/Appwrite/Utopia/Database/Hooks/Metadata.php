@@ -101,14 +101,10 @@ class Metadata implements Decorator
 
         try {
             $collections = $this->authorization->skip(
-                fn () => $this->dbForProject->skipValidation(
-                    fn () => $this->dbForProject->silent(
-                        fn () => $this->dbForProject->find($databaseKey, [
-                            \Utopia\Database\Query::select(['$id', '$sequence']),
-                            \Utopia\Database\Query::limit(5000),
-                        ])
-                    )
-                )
+                fn () => $this->dbForProject->find($databaseKey, [
+                    \Utopia\Database\Query::select(['$id', '$sequence']),
+                    \Utopia\Database\Query::limit(5000),
+                ])
             );
 
             foreach ($collections as $col) {
@@ -182,11 +178,9 @@ class Metadata implements Decorator
             $relatedExternalId = $this->resolveCollectionId($internalName);
             try {
                 $relatedCollection = $this->authorization->skip(
-                    fn () => $this->dbForProject->silent(
-                        fn () => $this->dbForProject->getDocument(
-                            'database_' . $this->database->getSequence(),
-                            $relatedExternalId
-                        )
+                    fn () => $this->dbForProject->getDocument(
+                        'database_' . $this->database->getSequence(),
+                        $relatedExternalId
                     )
                 );
 
