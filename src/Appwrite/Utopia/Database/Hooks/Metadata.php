@@ -6,50 +6,56 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Event;
 use Utopia\Database\Hook\Decorator;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Query\Schema\ColumnType;
 
 /**
  * Stamps database/collection metadata onto every document returned from the database,
  * and recursively decorates nested relationship documents.
  *
- * Lazily loads the collection mapping from dbForProject on first use to resolve
- * internal collection names (database_N_collection_M) to user-facing collection IDs.
+ * Collection ID mapping is pre-populated by getDatabasesDB via setCollectionId()
+ * and cached statically per database sequence for the Swoole worker lifetime.
  */
 class Metadata implements Decorator
 {
     /** @var array<string, array<Document>> */
     private array $relationshipCache = [];
 
-    /** @var array<string, array<string, string>> static cache keyed by database sequence */
-    private static array $collectionIdMaps = [];
-
-    /** @var bool whether this instance has initialized its map reference */
-    private bool $mapInitialized = false;
-
-    /** @var array<string, string> reference to the map for this database */
+    /** @var array<string, string> internal collection name -> user-facing collection ID */
     private array $collectionIdMap = [];
+
+    /** @var array<string, array<string, string>> static cache keyed by database sequence */
+    private static array $staticMaps = [];
 
     private int $operations = 0;
 
     public function __construct(
         private Document $database,
-        private Database $dbForProject,
-        private Authorization $authorization,
         private string $context = 'collection',
     ) {
     }
 
     /**
      * Register a mapping from internal collection name to user-facing collection ID.
+     * Also updates the static cache for subsequent requests.
      */
     public function setCollectionId(string $internalName, string $externalId): void
     {
         $this->collectionIdMap[$internalName] = $externalId;
-        $databaseSequence = $this->database->getSequence();
-        if (isset(self::$collectionIdMaps[$databaseSequence])) {
-            self::$collectionIdMaps[$databaseSequence][$internalName] = $externalId;
+        $seq = $this->database->getSequence();
+        self::$staticMaps[$seq][$internalName] = $externalId;
+    }
+
+    /**
+     * Get the cached map for a database sequence, or null if not cached.
+     *
+     * @return array<string, string>|null
+     */
+    public static function getCachedMap(?string $sequence): ?array
+    {
+        if ($sequence === null) {
+            return null;
         }
+        return self::$staticMaps[$sequence] ?? null;
     }
 
     public function decorate(Event $event, Document $collection, Document $document): Document
@@ -59,8 +65,6 @@ class Metadata implements Decorator
         }
 
         $this->operations++;
-
-        $this->ensureMapLoaded();
 
         $collectionId = $this->collectionIdMap[$collection->getId()] ?? $collection->getId();
         $document->setAttribute('$databaseId', $this->database->getId());
@@ -79,51 +83,6 @@ class Metadata implements Decorator
     public function resetOperations(): void
     {
         $this->operations = 0;
-    }
-
-    /**
-     * Lazily load collection mapping from dbForProject.
-     * Queries are wrapped in authorization->skip() and dbForProject->silent()
-     * to prevent lifecycle hooks from firing and avoid permission checks.
-     */
-    private function ensureMapLoaded(): void
-    {
-        if ($this->mapInitialized) {
-            return;
-        }
-
-        $this->mapInitialized = true;
-        $databaseSequence = $this->database->getSequence();
-
-        if (isset(self::$collectionIdMaps[$databaseSequence])) {
-            $this->collectionIdMap = self::$collectionIdMaps[$databaseSequence];
-            return;
-        }
-
-        $metadataCollection = 'database_' . $databaseSequence;
-
-        try {
-            $collections = $this->authorization->skip(
-                fn () => $this->dbForProject->silent(
-                    fn () => $this->dbForProject->find($metadataCollection)
-                )
-            );
-
-            foreach ($collections as $collection) {
-                $externalId = $collection->getId();
-                $sequence = $collection->getSequence();
-
-                $relativeKey = 'collection_' . $sequence;
-                $fullKey = 'database_' . $databaseSequence . '_collection_' . $sequence;
-
-                $this->collectionIdMap[$relativeKey] = $externalId;
-                $this->collectionIdMap[$fullKey] = $externalId;
-            }
-        } catch (\Throwable) {
-            // Silently fail — fall back to internal names
-        }
-
-        self::$collectionIdMaps[$databaseSequence] = $this->collectionIdMap;
     }
 
     private function decorateRelationships(Document $collection, Document $document, int $depth = 0): void
