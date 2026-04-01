@@ -1693,21 +1693,32 @@ export async function createTeamMembership(
   projectId: string,
   teamId: string,
   membershipData: {
-    email: string
     roles: string[]
-    url: string
+    email?: string
+    userId?: string
+    phone?: string
+    url?: string
     name?: string
   },
 ) {
   if (!projectId || !teamId) {
     throw new Error('Project ID and Team ID are required')
   }
+  if (
+    !membershipData.userId &&
+    !membershipData.email &&
+    !membershipData.phone
+  ) {
+    throw new Error('User ID, email, or phone is required')
+  }
 
   const projectSdk = sdk.forProject(projectId)
   return await projectSdk.teams.createMembership({
     teamId,
-    email: membershipData.email,
     roles: membershipData.roles,
+    email: membershipData.email,
+    userId: membershipData.userId,
+    phone: membershipData.phone,
     url: membershipData.url,
     name: membershipData.name,
   })
@@ -1862,23 +1873,31 @@ export function useCreateTeamMembership(
 
   return useMutation({
     mutationFn: (membershipData: {
-      email: string
       roles: string[]
-      url: string
+      email?: string
+      userId?: string
+      phone?: string
+      url?: string
       name?: string
+      teamId?: string
     }) => {
-      if (!projectId || !teamId) {
-        throw new Error('Project ID and Team ID are required')
+      if (!projectId) {
+        throw new Error('Project ID is required')
       }
-      return createTeamMembership(projectId, teamId, membershipData)
+      const resolvedTeamId = teamId || membershipData.teamId
+      if (!resolvedTeamId) {
+        throw new Error('Team ID is required')
+      }
+      return createTeamMembership(projectId, resolvedTeamId, membershipData)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['team', 'memberships', 'project', projectId, teamId],
+        queryKey: ['team', 'memberships', 'project', projectId],
       })
       queryClient.invalidateQueries({
-        queryKey: ['team', 'project', projectId, teamId],
+        queryKey: ['team', 'project', projectId],
       })
+      queryClient.invalidateQueries({ queryKey: ['user', 'memberships'] })
     },
   })
 }

@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { MouseEvent, useEffect, useRef, useState } from 'react'
+import { Check, Copy } from 'lucide-react'
 import {
   Popover,
   PopoverContent,
@@ -154,14 +155,54 @@ export function DateTooltip({
   const localTime = formatDateTime(dateObj)
 
   const [isOpen, setIsOpen] = useState(false)
+  const [copiedField, setCopiedField] = useState<'utc' | 'local' | null>(null)
+  const closeTimeoutRef = useRef<number | null>(null)
+  const isoTime = dateObj.toISOString()
+
+  useEffect(() => {
+    return () => {
+      if (closeTimeoutRef.current !== null) {
+        window.clearTimeout(closeTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  const openPopover = () => {
+    if (closeTimeoutRef.current !== null) {
+      window.clearTimeout(closeTimeoutRef.current)
+      closeTimeoutRef.current = null
+    }
+    setIsOpen(true)
+  }
+
+  const scheduleClosePopover = () => {
+    if (closeTimeoutRef.current !== null) {
+      window.clearTimeout(closeTimeoutRef.current)
+    }
+    closeTimeoutRef.current = window.setTimeout(() => {
+      setIsOpen(false)
+      closeTimeoutRef.current = null
+    }, 120)
+  }
+
+  const handleCopyIso = (
+    field: 'utc' | 'local',
+    event?: MouseEvent<HTMLElement>,
+  ) => {
+    event?.preventDefault()
+    event?.stopPropagation()
+    navigator.clipboard.writeText(isoTime)
+    setCopiedField(field)
+    window.setTimeout(() => setCopiedField(null), 2000)
+  }
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         <span
           className={cn('cursor-default', className)}
-          onMouseEnter={() => setIsOpen(true)}
-          onMouseLeave={() => setIsOpen(false)}
+          onMouseEnter={openPopover}
+          onMouseLeave={scheduleClosePopover}
         >
           {showFormattedDate
             ? formatDateTime(dateObj)
@@ -173,8 +214,10 @@ export function DateTooltip({
         align="center"
         sideOffset={8}
         className="w-auto max-w-[280px] p-0"
-        onMouseEnter={() => setIsOpen(true)}
-        onMouseLeave={() => setIsOpen(false)}
+        onClick={(event) => event.stopPropagation()}
+        onPointerDown={(event) => event.stopPropagation()}
+        onMouseEnter={openPopover}
+        onMouseLeave={scheduleClosePopover}
       >
         <div className="flex flex-col">
           {/* Detailed relative time */}
@@ -186,22 +229,50 @@ export function DateTooltip({
 
           {/* UTC and Local times */}
           <div className="flex flex-col gap-1.5 px-3 py-2">
-            <div className="flex items-center justify-between gap-4">
+            <button
+              type="button"
+              className="group flex w-full cursor-pointer items-center gap-2 rounded px-1 py-0.5 text-left transition-colors hover:bg-muted/40"
+              onClick={(event) => handleCopyIso('utc', event)}
+            >
               <span className="text-[13px] text-popover-foreground">
                 {utcTime}
               </span>
               <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
                 UTC
               </span>
-            </div>
-            <div className="flex items-center justify-between gap-4">
+              <span
+                className="ml-auto inline-flex h-6 w-6 items-center justify-center text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
+                aria-hidden="true"
+              >
+                {copiedField === 'utc' ? (
+                  <Check className="h-3.5 w-3.5" />
+                ) : (
+                  <Copy className="h-3.5 w-3.5" />
+                )}
+              </span>
+            </button>
+            <button
+              type="button"
+              className="group flex w-full cursor-pointer items-center gap-2 rounded px-1 py-0.5 text-left transition-colors hover:bg-muted/40"
+              onClick={(event) => handleCopyIso('local', event)}
+            >
               <span className="text-[13px] text-popover-foreground">
                 {localTime}
               </span>
               <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
                 Local
               </span>
-            </div>
+              <span
+                className="ml-auto inline-flex h-6 w-6 items-center justify-center text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
+                aria-hidden="true"
+              >
+                {copiedField === 'local' ? (
+                  <Check className="h-3.5 w-3.5" />
+                ) : (
+                  <Copy className="h-3.5 w-3.5" />
+                )}
+              </span>
+            </button>
           </div>
         </div>
       </PopoverContent>

@@ -38,6 +38,7 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -76,6 +77,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { MembershipUpdateDrawer } from '../_components/MembershipUpdateDrawer'
+import { MembershipContextMenu } from '../_components/MembershipContextMenu'
 import {
   useUser,
   useUserMemberships,
@@ -100,6 +102,8 @@ import {
   useDeleteAllUserSessions,
   useDeleteProjectUser,
   useUpdateUserImpersonator,
+  useProjectTeams,
+  useCreateTeamMembership,
 } from '@/lib/react-query/hooks/users'
 import { useProject } from '@/lib/react-query/hooks'
 import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
@@ -215,6 +219,8 @@ export function View() {
 
   // State for delete all sessions dialog - must be called before any early returns
   const [deleteAllSessionsDialogOpen, setDeleteAllSessionsDialogOpen] =
+    useState(false)
+  const [createMembershipDialogOpen, setCreateMembershipDialogOpen] =
     useState(false)
   const deleteAllSessions = useDeleteAllUserSessions(
     projectId ?? '',
@@ -413,6 +419,12 @@ export function View() {
             </Button>
           ) : undefined
         }
+        createLabel={activeTab === 'memberships' ? 'Create membership' : undefined}
+        onCreate={
+          activeTab === 'memberships'
+            ? () => setCreateMembershipDialogOpen(true)
+            : undefined
+        }
         contentAfterBorder={
           activeTab === 'targets' ? (
             <div className="border-b border-border bg-blue-500/5">
@@ -451,8 +463,13 @@ export function View() {
             </div>
           )}
           {activeTab === 'memberships' && (
-            <div className="px-4 py-4 sm:px-6">
-              <MembershipsTab projectId={projectId!} userId={userId!} />
+            <div className="px-4 pb-4 sm:px-6 sm:pb-6">
+              <MembershipsTab
+                projectId={projectId!}
+                userId={userId!}
+                createDialogOpen={createMembershipDialogOpen}
+                onCreateDialogOpenChange={setCreateMembershipDialogOpen}
+              />
             </div>
           )}
           {activeTab === 'identities' && (
@@ -1926,11 +1943,17 @@ function DeleteUserSection({
 function MembershipsTab({
   projectId,
   userId,
+  createDialogOpen,
+  onCreateDialogOpenChange,
 }: {
   projectId: string
   userId: string
+  createDialogOpen: boolean
+  onCreateDialogOpenChange: (open: boolean) => void
 }) {
   const { data, isLoading } = useUserMemberships(projectId, userId)
+  const { teams } = useProjectTeams(projectId, 0, 100)
+  const createMembershipMutation = useCreateTeamMembership(projectId, null)
   const [selectedMemberships, setSelectedMemberships] = useState<Set<string>>(
     new Set(),
   )
@@ -1939,10 +1962,37 @@ function MembershipsTab({
     useState<Models.Membership | null>(null)
 
   const memberships = data?.memberships || []
+  const existingTeamIds = new Set(
+    memberships.map((membership) => membership.teamId).filter(Boolean),
+  )
+  const availableTeams = teams.filter((team) => !existingTeamIds.has(team.id))
 
   const openDrawer = (membership: Models.Membership) => {
     setSelectedMembership(membership)
     setDrawerOpen(true)
+  }
+
+  const handleCreateMembership = async (data: {
+    teamId: string
+    roles: string[]
+  }) => {
+    try {
+      const teamName =
+        teams.find((team) => team.id === data.teamId)?.name || 'Team'
+      await createMembershipMutation.mutateAsync({
+        teamId: data.teamId,
+        userId,
+        roles: data.roles,
+      })
+      toast.success(`${teamName} membership created`)
+      onCreateDialogOpenChange(false)
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Failed to create membership',
+      )
+    }
   }
 
   if (isLoading) {
@@ -1955,19 +2005,28 @@ function MembershipsTab({
 
   if (memberships.length === 0) {
     return (
-      <EmptyState
-        icon={Users}
-        title="No memberships available"
-        description="This user is not a member of any teams."
-        isEmpty={true}
-        variant="card"
-        iconSize="md"
-      />
+      <div className="space-y-4">
+        <EmptyState
+          icon={Users}
+          title="No memberships available"
+          description="This user is not a member of any teams."
+          isEmpty={true}
+          variant="card"
+          iconSize="md"
+        />
+        <CreateUserMembershipDialog
+          open={createDialogOpen}
+          onOpenChange={onCreateDialogOpenChange}
+          onSubmit={handleCreateMembership}
+          isLoading={createMembershipMutation.isPending}
+          teams={availableTeams}
+        />
+      </div>
     )
   }
 
   return (
-    <>
+    <div className="space-y-4">
       <div className="rounded-lg border border-border bg-card overflow-hidden">
         <Table>
           <TableHeader>
@@ -2005,99 +2064,105 @@ function MembershipsTab({
           </TableHeader>
           <TableBody>
             {memberships.map((membership) => (
-              <TableRow
+              <MembershipContextMenu
                 key={membership.$id}
-                className="cursor-pointer hover:bg-muted/30 transition-colors"
-                onClick={() => openDrawer(membership)}
+                projectId={projectId}
+                membership={membership}
+                onOpenMembership={() => openDrawer(membership)}
               >
-                <TableCell
-                  className="w-[40px] px-4 py-3"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Checkbox
-                    checked={selectedMemberships.has(membership.$id)}
-                    onCheckedChange={(checked) => {
-                      const newSelected = new Set(selectedMemberships)
-                      if (checked) {
-                        newSelected.add(membership.$id)
-                      } else {
-                        newSelected.delete(membership.$id)
-                      }
-                      setSelectedMemberships(newSelected)
-                    }}
-                  />
-                </TableCell>
-                <TableCell
-                  className="px-4 py-3"
+                <TableRow
+                  className="cursor-pointer hover:bg-muted/30 transition-colors"
                   onClick={() => openDrawer(membership)}
                 >
-                  <div className="flex items-center gap-2">
-                    <InitialsAvatar name={membership.teamName} size="sm" />
-                    <span className="text-[13px] font-medium text-foreground">
-                      {membership.teamName}
-                    </span>
-                  </div>
-                </TableCell>
-                <TableCell
-                  className="px-4 py-3"
-                  onClick={() => openDrawer(membership)}
-                >
-                  <Badge
-                    variant={membership.confirm ? 'active' : 'pending'}
-                    className="text-[10px] shrink-0"
+                  <TableCell
+                    className="w-[40px] px-4 py-3"
+                    onClick={(e) => e.stopPropagation()}
                   >
-                    {membership.confirm ? 'Active' : 'Pending'}
-                  </Badge>
-                </TableCell>
-                <TableCell
-                  className="px-4 py-3"
-                  onClick={() => openDrawer(membership)}
-                >
-                  <div className="flex flex-wrap gap-1.5 items-center">
-                    {(() => {
-                      const roles = membership.roles ?? []
-                      const maxVisible = 2
-                      const visible = roles.slice(0, maxVisible)
-                      const remaining = roles.length - maxVisible
-                      return (
-                        <>
-                          {visible.map((role) => (
-                            <Badge
-                              key={role}
-                              variant="info"
-                              className="text-[10px] shrink-0"
-                            >
-                              {role}
-                            </Badge>
-                          ))}
-                          {remaining > 0 && (
-                            <Badge
-                              variant="info"
-                              className="text-[10px] shrink-0"
-                            >
-                              +{remaining}
-                            </Badge>
-                          )}
-                          {roles.length === 0 && (
-                            <span className="text-[12px] text-muted-foreground">
-                              -
-                            </span>
-                          )}
-                        </>
-                      )
-                    })()}
-                  </div>
-                </TableCell>
-                <TableCell
-                  className="px-4 py-3"
-                  onClick={() => openDrawer(membership)}
-                >
-                  <DateTooltip
-                    date={new Date(membership.joined)}
-                    className="text-[12px] text-muted-foreground"
-                  />
-                </TableCell>
-              </TableRow>
+                    <Checkbox
+                      checked={selectedMemberships.has(membership.$id)}
+                      onCheckedChange={(checked) => {
+                        const newSelected = new Set(selectedMemberships)
+                        if (checked) {
+                          newSelected.add(membership.$id)
+                        } else {
+                          newSelected.delete(membership.$id)
+                        }
+                        setSelectedMemberships(newSelected)
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell
+                    className="px-4 py-3"
+                    onClick={() => openDrawer(membership)}
+                  >
+                    <div className="flex items-center gap-2">
+                      <InitialsAvatar name={membership.teamName} size="sm" />
+                      <span className="text-[13px] font-medium text-foreground">
+                        {membership.teamName}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell
+                    className="px-4 py-3"
+                    onClick={() => openDrawer(membership)}
+                  >
+                    <Badge
+                      variant={membership.confirm ? 'active' : 'pending'}
+                      className="text-[10px] shrink-0"
+                    >
+                      {membership.confirm ? 'Active' : 'Pending'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell
+                    className="px-4 py-3"
+                    onClick={() => openDrawer(membership)}
+                  >
+                    <div className="flex flex-wrap gap-1.5 items-center">
+                      {(() => {
+                        const roles = membership.roles ?? []
+                        const maxVisible = 2
+                        const visible = roles.slice(0, maxVisible)
+                        const remaining = roles.length - maxVisible
+                        return (
+                          <>
+                            {visible.map((role) => (
+                              <Badge
+                                key={role}
+                                variant="info"
+                                className="text-[10px] shrink-0"
+                              >
+                                {role}
+                              </Badge>
+                            ))}
+                            {remaining > 0 && (
+                              <Badge
+                                variant="info"
+                                className="text-[10px] shrink-0"
+                              >
+                                +{remaining}
+                              </Badge>
+                            )}
+                            {roles.length === 0 && (
+                              <span className="text-[12px] text-muted-foreground">
+                                -
+                              </span>
+                            )}
+                          </>
+                        )
+                      })()}
+                    </div>
+                  </TableCell>
+                  <TableCell
+                    className="px-4 py-3"
+                    onClick={() => openDrawer(membership)}
+                  >
+                    <DateTooltip
+                      date={new Date(membership.joined)}
+                      className="text-[12px] text-muted-foreground"
+                    />
+                  </TableCell>
+                </TableRow>
+              </MembershipContextMenu>
             ))}
           </TableBody>
         </Table>
@@ -2110,7 +2175,175 @@ function MembershipsTab({
         projectId={projectId!}
         context="user"
       />
-    </>
+      <CreateUserMembershipDialog
+        open={createDialogOpen}
+        onOpenChange={onCreateDialogOpenChange}
+        onSubmit={handleCreateMembership}
+        isLoading={createMembershipMutation.isPending}
+        teams={availableTeams}
+      />
+    </div>
+  )
+}
+
+interface CreateUserMembershipDialogProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onSubmit: (data: { teamId: string; roles: string[] }) => void
+  isLoading: boolean
+  teams: Array<{ id: string; name: string }>
+}
+
+function CreateUserMembershipDialog({
+  open,
+  onOpenChange,
+  onSubmit,
+  isLoading,
+  teams,
+}: CreateUserMembershipDialogProps) {
+  const [teamId, setTeamId] = useState('')
+  const [roles, setRoles] = useState<string[]>([])
+  const [roleInput, setRoleInput] = useState('')
+  const teamItems = teams.map((team) => ({ value: team.id, label: team.name }))
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      setTeamId('')
+      setRoles([])
+      setRoleInput('')
+    }
+    onOpenChange(nextOpen)
+  }
+
+  const handleAddRole = () => {
+    const nextRole = roleInput.trim()
+    if (!nextRole || roles.includes(nextRole)) {
+      return
+    }
+    setRoles((prev) => [...prev, nextRole])
+    setRoleInput('')
+  }
+
+  const handleRemoveRole = (roleToRemove: string) => {
+    setRoles((prev) => prev.filter((role) => role !== roleToRemove))
+  }
+
+  const handleSubmit = () => {
+    if (!teamId || roles.length === 0) {
+      return
+    }
+    onSubmit({ teamId, roles })
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="sm:max-w-md p-0">
+        <DialogHeader className="px-6 pt-6 pb-4 text-left">
+          <DialogTitle>Create membership</DialogTitle>
+          <DialogDescription className="text-[13px] mt-2">
+            Select a team and assign roles for this user.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="border-t border-border" />
+
+        <div className="px-6 pb-4 pt-0">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="membership-team">
+                Team <span className="text-destructive">*</span>
+              </Label>
+              <SearchableSelect
+                value={teamId}
+                onValueChange={setTeamId}
+                items={teamItems}
+                placeholder="Select a team"
+                searchPlaceholder="Search teams..."
+                emptyMessage="No available teams"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="membership-roles">Roles</Label>
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <Input
+                    id="membership-roles"
+                    value={roleInput}
+                    onChange={(e) => setRoleInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && roleInput.trim()) {
+                        e.preventDefault()
+                        handleAddRole()
+                      }
+                    }}
+                    placeholder="Add role"
+                    autoComplete="off"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleAddRole}
+                    disabled={!roleInput.trim()}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                {roles.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {roles.map((role) => (
+                      <Badge
+                        key={role}
+                        variant="info"
+                        className="text-[10px] shrink-0 pr-1"
+                      >
+                        {role}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveRole(role)}
+                          className="ml-0.5 hover:text-destructive rounded p-0.5"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <Alert>
+                <Info className="h-4 w-4" />
+                <AlertDescription className="text-[12px]">
+                  Roles are used to manage access permissions.{' '}
+                  <a
+                    href="https://appwrite.io/docs/advanced/platform/permissions"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    Learn more about permissions
+                  </a>
+                </AlertDescription>
+              </Alert>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button
+            variant="outline"
+            onClick={() => handleOpenChange(false)}
+            disabled={isLoading}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={!teamId || roles.length === 0 || isLoading}
+          >
+            Create
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }
 
