@@ -37,7 +37,7 @@ Structure::addFormat(APP_DATABASE_ATTRIBUTE_INT_RANGE, function ($attribute) {
 }, ColumnType::Integer);
 
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_FLOAT_RANGE, function ($attribute) {
-    $min = $attribute['formatOptions']['min'] ?? -INF;
-    $max = $attribute['formatOptions']['max'] ?? INF;
+    $min = \floatval($attribute['formatOptions']['min'] ?? $attribute['min'] ?? -INF);
+    $max = \floatval($attribute['formatOptions']['max'] ?? $attribute['max'] ?? INF);
     return new Range($min, $max, Range::TYPE_FLOAT);
 }, ColumnType::Double);
