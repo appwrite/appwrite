@@ -707,9 +707,9 @@ Http::setResource('dbForPlatform', function (Group $pools, Cache $cache, Authori
     return $database;
 }, ['pools', 'cache', 'authorization']);
 
-Http::setResource('getDatabasesDB', function (Group $pools, Database $dbForProject, Cache $cache, Document $project, Request $request, UsageContext $usage, Authorization $authorization) {
+Http::setResource('getDatabasesDB', function (Group $pools, Cache $cache, Document $project, Request $request, UsageContext $usage, Authorization $authorization) {
 
-    return function (Document $database) use ($pools, $dbForProject, $cache, $project, $request, $usage, $authorization): Database {
+    return function (Document $database, ?Document $collection = null) use ($pools, $cache, $project, $request, $usage, $authorization): Database {
         $originalDatabase = $database;
         $context = str_contains($request->getURI(), '/tablesdb/') ? 'table' : 'collection';
         $databaseDSN = $database->getAttribute('database', $project->getAttribute('database', ''));
@@ -774,32 +774,13 @@ Http::setResource('getDatabasesDB', function (Group $pools, Database $dbForProje
             context: $context,
         );
 
-        // Pre-populate collection ID mapping from static cache or single query
-        $databaseSequence = $originalDatabase->getSequence();
-        $cachedMap = Metadata::getCachedMap($databaseSequence);
-        if ($cachedMap !== null) {
-            foreach ($cachedMap as $k => $v) {
-                $metadata->setCollectionId($k, $v);
-            }
-        } else {
-            try {
-                $dbPrefix = 'database_' . $databaseSequence;
-                $collections = $authorization->skip(
-                    fn () => $dbForProject->silent(
-                        fn () => $dbForProject->find($dbPrefix, [
-                            \Utopia\Database\Query::limit(5000),
-                        ])
-                    )
-                );
-                foreach ($collections as $col) {
-                    $seq = $col->getSequence();
-                    if ($seq !== null) {
-                        $metadata->setCollectionId('collection_' . $seq, $col->getId());
-                        $metadata->setCollectionId($dbPrefix . '_collection_' . $seq, $col->getId());
-                    }
-                }
-            } catch (\Throwable) {
-                // Database may not have collections yet
+        // Register collection ID mapping if collection document is provided
+        if ($collection !== null && !$collection->isEmpty()) {
+            $seq = $collection->getSequence();
+            if ($seq !== null) {
+                $dbPrefix = 'database_' . $originalDatabase->getSequence();
+                $metadata->setCollectionId('collection_' . $seq, $collection->getId());
+                $metadata->setCollectionId($dbPrefix . '_collection_' . $seq, $collection->getId());
             }
         }
 
@@ -821,7 +802,7 @@ Http::setResource('getDatabasesDB', function (Group $pools, Database $dbForProje
         return $database;
     };
 
-}, ['pools','dbForProject','cache','project','request','usage','authorization']);
+}, ['pools','cache','project','request','usage','authorization']);
 
 Http::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache, Authorization $authorization) {
     $databases = [];

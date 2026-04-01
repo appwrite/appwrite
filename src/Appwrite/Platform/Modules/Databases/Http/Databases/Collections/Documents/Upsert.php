@@ -127,7 +127,7 @@ class Upsert extends Action
             $data = $this->parseOperators($data, $collection);
         }
 
-        $dbForDatabases = $getDatabasesDB($database);
+        $dbForDatabases = $getDatabasesDB($database, $collection);
         $allowedPermissions = [
             PermissionType::Read,
             PermissionType::Update,

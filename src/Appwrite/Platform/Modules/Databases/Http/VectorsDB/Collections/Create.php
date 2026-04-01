@@ -117,7 +117,7 @@ class Create extends CollectionAction
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
         /** @var Database $dbForDatabases */
-        $dbForDatabases = $getDatabasesDB($database);
+        $dbForDatabases = $getDatabasesDB($database, $collection);
 
         $collections = (Config::getParam('collections', [])['vectorsdb'] ?? [])['collections'] ?? [];
         $attributes = \array_map(function (Attribute $attribute) use ($dimension) {

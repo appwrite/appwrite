@@ -104,7 +104,7 @@ class XList extends Action
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $dbForDatabases = $getDatabasesDB($database);
+        $dbForDatabases = $getDatabasesDB($database, $collection);
         $cursor = Query::getCursorQueries($queries, false);
         $cursor = \reset($cursor);
 

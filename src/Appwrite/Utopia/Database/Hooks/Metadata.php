@@ -12,8 +12,8 @@ use Utopia\Query\Schema\ColumnType;
  * Stamps database/collection metadata onto every document returned from the database,
  * and recursively decorates nested relationship documents.
  *
- * Collection ID mapping is pre-populated by getDatabasesDB via setCollectionId()
- * and cached statically per database sequence for the Swoole worker lifetime.
+ * Collection ID mappings are registered by endpoint actions via setCollectionId()
+ * before querying documents. No bulk queries or static caches are needed.
  */
 class Metadata implements Decorator
 {
@@ -22,9 +22,6 @@ class Metadata implements Decorator
 
     /** @var array<string, string> internal collection name -> user-facing collection ID */
     private array $collectionIdMap = [];
-
-    /** @var array<string, array<string, string>> static cache keyed by database sequence */
-    private static array $staticMaps = [];
 
     private int $operations = 0;
 
@@ -36,26 +33,10 @@ class Metadata implements Decorator
 
     /**
      * Register a mapping from internal collection name to user-facing collection ID.
-     * Also updates the static cache for subsequent requests.
      */
     public function setCollectionId(string $internalName, string $externalId): void
     {
         $this->collectionIdMap[$internalName] = $externalId;
-        $seq = $this->database->getSequence();
-        self::$staticMaps[$seq][$internalName] = $externalId;
-    }
-
-    /**
-     * Get the cached map for a database sequence, or null if not cached.
-     *
-     * @return array<string, string>|null
-     */
-    public static function getCachedMap(?string $sequence): ?array
-    {
-        if ($sequence === null) {
-            return null;
-        }
-        return self::$staticMaps[$sequence] ?? null;
     }
 
     public function decorate(Event $event, Document $collection, Document $document): Document

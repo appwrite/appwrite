@@ -167,7 +167,7 @@ class Upsert extends Action
             return;
         }
 
-        $dbForDatabases = $getDatabasesDB($database);
+        $dbForDatabases = $getDatabasesDB($database, $collection);
         $upserted = [];
 
         try {

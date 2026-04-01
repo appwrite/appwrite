@@ -109,7 +109,7 @@ class Create extends Action
             Query::equal('databaseInternalId', [$db->getSequence()])
         ], 61);
 
-        $dbForDatabases = $getDatabasesDB($db);
+        $dbForDatabases = $getDatabasesDB($db, $collection);
 
         $limit = $dbForDatabases->getLimitForIndexes();
 

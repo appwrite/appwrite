@@ -104,7 +104,7 @@ class Update extends CollectionAction
                 ->setAttribute('search', \implode(' ', [$collectionId, $name ?? $collection->getAttribute('name')]))
         );
 
-        $dbForDatabases = $getDatabasesDB($database);
+        $dbForDatabases = $getDatabasesDB($database, $collection);
         $dbForDatabases->updateCollection('database_' . $database->getSequence() . '_collection_' . $updated->getSequence(), $permissions, $documentSecurity);
 
         $queueForEvents

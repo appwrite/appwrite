@@ -191,7 +191,7 @@ class Update extends Action
             return;
         }
 
-        $dbForDatabases = $getDatabasesDB($database);
+        $dbForDatabases = $getDatabasesDB($database, $collection);
         $documents = [];
 
         try {

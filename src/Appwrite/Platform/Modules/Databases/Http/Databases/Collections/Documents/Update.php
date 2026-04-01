@@ -122,7 +122,7 @@ class Update extends Action
             $data = $this->parseOperators($data, $collection);
         }
 
-        $dbForDatabases = $getDatabasesDB($database);
+        $dbForDatabases = $getDatabasesDB($database, $collection);
         // Read permission should not be required for update
         /** @var Document $document */
         $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();

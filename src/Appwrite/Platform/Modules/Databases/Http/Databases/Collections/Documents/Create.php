@@ -358,7 +358,7 @@ class Create extends Action
             return;
         }
 
-        $dbForDatabases = $getDatabasesDB($database);
+        $dbForDatabases = $getDatabasesDB($database, $collection);
         try {
             $created = [];
             $dbForDatabases->withPreserveDates(
