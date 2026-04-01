@@ -785,6 +785,8 @@ Http::setResource('getDatabasesDB', function (Group $pools, Database $dbForProje
             }
 
             // Also register related collections from relationship attributes
+            // Use static cache to avoid repeated queries across requests
+            static $relatedCache = [];
             $attributes = $collection->getAttribute('attributes', []);
             foreach ($attributes as $attr) {
                 if ($attr->getAttribute('type') !== \Utopia\Query\Schema\ColumnType::Relationship->value) {
@@ -794,6 +796,14 @@ Http::setResource('getDatabasesDB', function (Group $pools, Database $dbForProje
                 $relatedInternalName = \is_array($options) ? ($options['relatedCollection'] ?? null) : null;
                 $relatedInternalName ??= $attr->getAttribute('relatedCollection');
                 if ($relatedInternalName === null) {
+                    continue;
+                }
+                // Check static cache first
+                $cacheKey = $dbPrefix . ':' . $relatedInternalName;
+                if (isset($relatedCache[$cacheKey])) {
+                    [$relKey, $fullKey, $externalId] = $relatedCache[$cacheKey];
+                    $metadata->setCollectionId($relKey, $externalId);
+                    $metadata->setCollectionId($fullKey, $externalId);
                     continue;
                 }
                 // Extract sequence from internal name (e.g., 'collection_16' → '16')
@@ -813,8 +823,11 @@ Http::setResource('getDatabasesDB', function (Group $pools, Database $dbForProje
                         )
                     );
                     if ($relatedCol !== null && !$relatedCol->isEmpty()) {
-                        $metadata->setCollectionId('collection_' . $relSeq, $relatedCol->getId());
-                        $metadata->setCollectionId($dbPrefix . '_collection_' . $relSeq, $relatedCol->getId());
+                        $relKey = 'collection_' . $relSeq;
+                        $fullKey = $dbPrefix . '_collection_' . $relSeq;
+                        $metadata->setCollectionId($relKey, $relatedCol->getId());
+                        $metadata->setCollectionId($fullKey, $relatedCol->getId());
+                        $relatedCache[$cacheKey] = [$relKey, $fullKey, $relatedCol->getId()];
                     }
                 } catch (\Throwable) {
                     // Skip — related collection may not exist yet
