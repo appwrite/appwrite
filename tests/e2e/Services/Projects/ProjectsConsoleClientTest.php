@@ -215,27 +215,21 @@ class ProjectsConsoleClientTest extends Scope
 
     public function testCreateProjectRejectsWhitespaceOnlyName(): void
     {
-        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
-            'name' => 'Whitespace Project Test',
-        ]);
+        $data = $this->setupProjectData();
 
-        $this->assertEquals(201, $team['headers']['status-code']);
+        foreach ([' ', '   ', "\t", " \t "] as $whitespace) {
+            $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'projectId' => ID::unique(),
+                'name' => $whitespace,
+                'teamId' => $data['teamId'],
+                'region' => System::getEnv('_APP_REGION', 'default')
+            ]);
 
-        $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'projectId' => ID::unique(),
-            'name' => ' ',
-            'teamId' => $team['body']['$id'],
-            'region' => System::getEnv('_APP_REGION', 'default')
-        ]);
-
-        $this->assertEquals(400, $response['headers']['status-code']);
+            $this->assertEquals(400, $response['headers']['status-code']);
+        }
     }
 
     public function testCreateDuplicateProject(): void
@@ -965,14 +959,16 @@ class ProjectsConsoleClientTest extends Scope
         $data = $this->setupProjectData();
         $id = $data['projectId'];
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'name' => ' ',
-        ]);
+        foreach ([' ', '   ', "\t", " \t "] as $whitespace) {
+            $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'name' => $whitespace,
+            ]);
 
-        $this->assertEquals(400, $response['headers']['status-code']);
+            $this->assertEquals(400, $response['headers']['status-code']);
+        }
     }
 
     #[Group('smtpAndTemplates')]
