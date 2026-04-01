@@ -125,8 +125,8 @@ class Metadata implements Decorator
                     $this->collectionIdMap['collection_' . $seq] = $col->getId();
                 }
             }
-        } catch (\Throwable) {
-            // Silently fail — fall back to internal names
+        } catch (\Throwable $e) {
+            \Utopia\CLI\Console::warning('[Metadata] Failed to load collection map for ' . $databaseKey . ': ' . $e->getMessage());
         }
     }
 
