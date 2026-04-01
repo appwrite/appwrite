@@ -11,7 +11,7 @@
     "emails.verification.buttonText": "Confirmar dirección de correo",
     "emails.verification.signature": "El equipo de {{project}}.",
     "emails.magicSession.subject": "Inicio de sesión",
-    "emails.magicSession.hello": "Hola,",
+    "emails.magicSession.hello": "Hola,",h
     "emails.magicSession.thanks": "Gracias.,",
     "emails.magicSession.signature": "El equipo de {{project}}",
     "emails.recovery.subject": "Restablecer contraseña",
@@ -246,14 +246,14 @@
     "emails.otpSession.securityPhrase": "La frase de seguridad para este correo electrónico es {{phrase}}. Puedes confiar en este correo si esta frase coincide con la frase mostrada durante el inicio de sesión.",
     "emails.otpSession.thanks": "Gracias.,",
     "emails.otpSession.signature": "El equipo de {{project}}",
-        "emails.sessionAlert.subject": "Alerta de seguridad: nueva sesión en tu cuenta de {{project}}",
-        "emails.sessionAlert.preview": "Nuevo inicio de sesión detectado en {{project}} a las {{time}} UTC.",
-        "emails.sessionAlert.hello": "Hola {{user}},",
-        "emails.sessionAlert.body": "Se ha creado una nueva sesión en tu cuenta de {{b}}{{project}}{{/b}}, {{b}}el {{date}}, {{year}} a las {{time}} UTC{{/b}}.\nAquí están los detalles de la nueva sesión: ",
-        "emails.sessionAlert.listDevice": "Dispositivo: {{b}}{{device}}{{/b}}",
-        "emails.sessionAlert.listIpAddress": "Dirección IP: {{b}}{{ipAddress}}{{/b}}",
-        "emails.sessionAlert.listCountry": "País: {{b}}{{country}}{{/b}}",
-        "emails.sessionAlert.footer": "Si fuiste tú, no necesitas hacer nada más.\nSi no iniciaste esta sesión o sospechas de alguna actividad no autorizada, por favor asegura tu cuenta.",
-        "emails.sessionAlert.thanks": "Gracias,",
-        "emails.sessionAlert.signature": "El equipo de {{project}}"
+    "emails.sessionAlert.subject": "Alerta de seguridad: nueva sesión en tu cuenta de {{project}}",
+    "emails.sessionAlert.preview": "Nuevo inicio de sesión detectado en {{project}} a las {{time}} UTC.",
+    "emails.sessionAlert.hello": "Hola {{user}},",
+    "emails.sessionAlert.body": "Se ha creado una nueva sesión en tu cuenta de {{b}}{{project}}{{/b}}, {{b}}el {{date}}, {{year}} a las {{time}} UTC{{/b}}.\nAquí están los detalles de la nueva sesión: ",
+    "emails.sessionAlert.listDevice": "Dispositivo: {{b}}{{device}}{{/b}}",
+    "emails.sessionAlert.listIpAddress": "Dirección IP: {{b}}{{ipAddress}}{{/b}}",
+    "emails.sessionAlert.listCountry": "País: {{b}}{{country}}{{/b}}",
+    "emails.sessionAlert.footer": "Si fuiste tú, no necesitas hacer nada más.\nSi no iniciaste esta sesión o sospechas de alguna actividad no autorizada, por favor asegura tu cuenta.",
+    "emails.sessionAlert.thanks": "Gracias,",
+    "emails.sessionAlert.signature": "El equipo de {{project}}"
 }
