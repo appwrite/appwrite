@@ -113,10 +113,12 @@ class Metadata implements Decorator
 
         try {
             $collections = $this->authorization->skip(
-                fn () => $this->dbForProject->find($databaseKey, [
-                    \Utopia\Database\Query::select(['$id', '$sequence']),
-                    \Utopia\Database\Query::limit(5000),
-                ])
+                fn () => $this->dbForProject->silent(
+                    fn () => $this->dbForProject->find($databaseKey, [
+                        \Utopia\Database\Query::select(['$id', '$sequence']),
+                        \Utopia\Database\Query::limit(5000),
+                    ])
+                )
             );
 
             foreach ($collections as $col) {
