@@ -4,7 +4,6 @@ namespace Appwrite\Platform\Modules\Teams\Http\Logs;
 
 use Appwrite\Detector\Detector;
 use Appwrite\Extend\Exception;
-use Appwrite\Locale\GeoRecord;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -57,12 +56,12 @@ class XList extends Action
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('geoRecord')
+            ->inject('getGeoForIp')
             ->inject('audit')
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, GeoRecord $geoRecord, Audit $audit)
+    public function action(string $teamId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, callable $getGeoForIp, Audit $audit)
     {
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -117,8 +116,9 @@ class XList extends Action
                 'deviceModel' => $device['deviceModel']
             ]);
 
-            $output[$i]['countryCode'] = $geoRecord->getCountryCode();
-            $output[$i]['countryName'] = $geoRecord->getCountryName();
+            $logGeo = $getGeoForIp($log['ip'] ?? '');
+            $output[$i]['countryCode'] = $logGeo->getCountryCode();
+            $output[$i]['countryName'] = $logGeo->getCountryName();
         }
         $response->dynamic(new Document([
             'total' => $includeTotal ? $audit->countLogsByResource($resource) : 0,

@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Modules\Databases\Http\TablesDB\Logs;
 
 use Appwrite\Extend\Exception;
-use Appwrite\Locale\GeoRecord;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -59,12 +58,12 @@ class XList extends Action
             ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('geoRecord')
+            ->inject('getGeoForIp')
             ->inject('audit')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, array $queries, UtopiaResponse $response, Database $dbForProject, GeoRecord $geoRecord, Audit $audit): void
+    public function action(string $databaseId, array $queries, UtopiaResponse $response, Database $dbForProject, callable $getGeoForIp, Audit $audit): void
     {
         $database = $dbForProject->getDocument('databases', $databaseId);
 
@@ -118,8 +117,9 @@ class XList extends Action
                 'deviceModel' => $device['deviceModel'],
             ]);
 
-            $output[$i]['countryCode'] = $geoRecord->getCountryCode();
-            $output[$i]['countryName'] = $geoRecord->getCountryName();
+            $logGeo = $getGeoForIp($log['ip'] ?? '');
+            $output[$i]['countryCode'] = $logGeo->getCountryCode();
+            $output[$i]['countryName'] = $logGeo->getCountryName();
         }
 
         $response->dynamic(new Document([

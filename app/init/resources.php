@@ -1317,7 +1317,10 @@ Http::setResource('geoRecord', function (Request $request, Locale $locale) {
 
             $response = $client->fetch(\rtrim($geoEndpoint, '/') . "/ips/{$ip}", Client::METHOD_GET);
             if ($response->getStatusCode() === 200) {
-                $record = $response->json();
+                $body = $response->json();
+                if (\is_array($body)) {
+                    $record = $body;
+                }
             }
         } catch (Throwable $th) {
             Console::warning('Geo service unavailable: ' . $th->getMessage());
@@ -1349,6 +1352,67 @@ Http::setResource('geoRecord', function (Request $request, Locale $locale) {
         'currency' => $currency,
     ]);
 }, ['request', 'locale']);
+
+Http::setResource('getGeoForIp', function (Locale $locale) {
+    $cache = [];
+
+    return function (string $ip) use ($locale, &$cache): GeoRecord {
+        if (isset($cache[$ip])) {
+            return $cache[$ip];
+        }
+
+        $record = null;
+        $geoEndpoint = System::getEnv('_APP_GEO_ENDPOINT', '');
+        $geoSecret = System::getEnv('_APP_GEO_SECRET', '');
+
+        if (!empty($geoEndpoint) && !empty($geoSecret) && filter_var($ip, FILTER_VALIDATE_IP)) {
+            try {
+                $client = new Client();
+                $client->addHeader('Authorization', 'Bearer ' . $geoSecret);
+                $client->setTimeout(3000);
+
+                $response = $client->fetch(\rtrim($geoEndpoint, '/') . "/ips/{$ip}", Client::METHOD_GET);
+                if ($response->getStatusCode() === 200) {
+                    $body = $response->json();
+                    if (\is_array($body)) {
+                        $record = $body;
+                    }
+                }
+            } catch (Throwable $th) {
+                Console::warning('Geo service unavailable: ' . $th->getMessage());
+            }
+        }
+
+        $countryCode = $record['countryCode'] ?? '--';
+        $continentCode = $record['continentCode'] ?? '--';
+        $unknownCountry = $locale->getText('locale.country.unknown');
+
+        $eu = Config::getParam('locale-eu');
+        $currencies = Config::getParam('locale-currencies');
+        $currency = null;
+
+        foreach ($currencies as $element) {
+            if (isset($element['locations'], $element['code']) && \in_array($countryCode, $element['locations'])) {
+                $currency = $element['code'];
+                break;
+            }
+        }
+
+        $geoRecord = new GeoRecord([
+            'ip' => $ip,
+            'countryCode' => $locale->getText('countries.' . strtolower($countryCode), false) ? strtolower($countryCode) : '--',
+            'countryName' => $locale->getText('countries.' . strtolower($countryCode), $unknownCountry),
+            'continent' => $locale->getText('continents.' . strtolower($continentCode), $unknownCountry),
+            'continentCode' => $continentCode,
+            'eu' => \in_array($countryCode, $eu),
+            'currency' => $currency,
+        ]);
+
+        $cache[$ip] = $geoRecord;
+
+        return $geoRecord;
+    };
+}, ['locale']);
 
 Http::setResource('passwordsDictionary', function ($register) {
     /** @var Utopia\Registry\Registry $register */
