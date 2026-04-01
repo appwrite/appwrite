@@ -403,7 +403,8 @@ Http::post('/v1/account')
     ->inject('dbForProject')
     ->inject('authorization')
     ->inject('hooks')
-    ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Authorization $authorization, Hooks $hooks) {
+    ->action(function (string $userId, string $email, string $password, ?string $name, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Authorization $authorization, Hooks $hooks) {
+        $name = $name ?? '';
 
         $email = \strtolower($email);
         if ('console' === $project->getId()) {
