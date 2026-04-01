@@ -407,7 +407,7 @@ abstract class Action extends DatabasesAction
      * process relationship documents. Called from endpoint actions where
      * the user-facing collection ID is available.
      *
-     * @param array<string, array<Document>> $collectionsCache
+     * @param array<string, array<mixed>> $collectionsCache
      */
     protected function processDocument(
         Document $database,
