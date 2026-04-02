@@ -786,52 +786,41 @@ Http::setResource('getDatabasesDB', function (Group $pools, Database $dbForProje
             }
 
             // Also register related collections from relationship attributes
-            // Use static cache to avoid repeated queries across requests
-            static $relatedCache = [];
+            // Load ALL collections for this database once and cache statically
+            static $dbCollectionMaps = [];
+            $hasRelationships = false;
             $attributes = $collection->getAttribute('attributes', []);
             foreach ($attributes as $attr) {
-                if ($attr->getAttribute('type') !== \Utopia\Query\Schema\ColumnType::Relationship->value) {
-                    continue;
+                if ($attr->getAttribute('type') === \Utopia\Query\Schema\ColumnType::Relationship->value) {
+                    $hasRelationships = true;
+                    break;
                 }
-                $options = $attr->getAttribute('options', []);
-                $relatedInternalName = \is_array($options) ? ($options['relatedCollection'] ?? null) : null;
-                $relatedInternalName ??= $attr->getAttribute('relatedCollection');
-                if ($relatedInternalName === null) {
-                    continue;
-                }
-                // Check static cache first
-                $cacheKey = $dbPrefix . ':' . $relatedInternalName;
-                if (isset($relatedCache[$cacheKey])) {
-                    [$relKey, $fullKey, $externalId] = $relatedCache[$cacheKey];
-                    $metadata->setCollectionId($relKey, $externalId);
-                    $metadata->setCollectionId($fullKey, $externalId);
-                    continue;
-                }
-                // Extract sequence from internal name (e.g., 'collection_16' → '16')
-                $parts = \explode('_', $relatedInternalName);
-                $relSeq = \end($parts);
-                if (!\is_numeric($relSeq) && !\str_contains($relSeq, '-')) {
-                    continue;
-                }
-                // Find the Appwrite collection document by sequence
+            }
+            if ($hasRelationships && !isset($dbCollectionMaps[$dbPrefix])) {
                 try {
-                    $relatedCol = $authorization->skip(
+                    $allCols = $authorization->skip(
                         fn () => $dbForProject->silent(
-                            fn () => $dbForProject->findOne($dbPrefix, [
-                                \Utopia\Database\Query::equal('$sequence', [$relSeq]),
-                                \Utopia\Database\Query::select(['$id', '$sequence']),
+                            fn () => $dbForProject->find($dbPrefix, [
+                                \Utopia\Database\Query::limit(5000),
                             ])
                         )
                     );
-                    if ($relatedCol !== null && !$relatedCol->isEmpty()) {
-                        $relKey = 'collection_' . $relSeq;
-                        $fullKey = $dbPrefix . '_collection_' . $relSeq;
-                        $metadata->setCollectionId($relKey, $relatedCol->getId());
-                        $metadata->setCollectionId($fullKey, $relatedCol->getId());
-                        $relatedCache[$cacheKey] = [$relKey, $fullKey, $relatedCol->getId()];
+                    $map = [];
+                    foreach ($allCols as $col) {
+                        $colSeq = $col->getSequence();
+                        if ($colSeq !== null) {
+                            $map['collection_' . $colSeq] = $col->getId();
+                            $map[$dbPrefix . '_collection_' . $colSeq] = $col->getId();
+                        }
                     }
+                    $dbCollectionMaps[$dbPrefix] = $map;
                 } catch (\Throwable) {
-                    // Skip — related collection may not exist yet
+                    $dbCollectionMaps[$dbPrefix] = [];
+                }
+            }
+            if (isset($dbCollectionMaps[$dbPrefix])) {
+                foreach ($dbCollectionMaps[$dbPrefix] as $k => $v) {
+                    $metadata->setCollectionId($k, $v);
                 }
             }
         }
