@@ -1337,6 +1337,15 @@ return [
         'description' => '',
         'variables' => [
             [
+                'name' => '_APP_MIGRATION_HOST',
+                'description' => 'The hostname of the Appwrite server used for self-referencing during migrations. This is used to construct the API endpoint for Appwrite-to-Appwrite migrations.',
+                'introduction' => '1.9.0',
+                'default' => 'appwrite',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_MIGRATIONS_FIREBASE_CLIENT_ID',
                 'description' => 'Google OAuth client ID. You can find it in your GCP application settings.',
                 'introduction' => '1.4.0',
