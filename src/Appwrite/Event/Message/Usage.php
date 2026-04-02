@@ -4,6 +4,9 @@ namespace Appwrite\Event\Message;
 
 use Utopia\Database\Document;
 
+/**
+ * @phpstan-consistent-constructor
+ */
 class Usage extends Base
 {
     /**
