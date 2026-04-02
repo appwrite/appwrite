@@ -22,7 +22,7 @@ return [
     'hostnames' => array_filter(array_unique([
         System::getEnv('_APP_DOMAIN', 'localhost'),
         System::getEnv('_APP_CONSOLE_DOMAIN', 'localhost'),
-        System::getEnv('_APP_MIGRATION_HOST'),
+        System::getEnv('_APP_MIGRATION_HOST', 'appwrite'),
     ])),
     'schemas' => \array_filter(\explode(',', System::getEnv('_APP_CONSOLE_SCHEMA', ''))),
     'platformName' => APP_EMAIL_PLATFORM_NAME,
