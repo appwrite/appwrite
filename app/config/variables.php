@@ -534,7 +534,7 @@ return [
         'variables' => [
             [
                 'name' => '_APP_SMTP_HOST',
-                'description' => 'SMTP server host name address. Use an empty string to disable all mail sending from the server. The default value for this variable is an empty string',
+                'description' => 'Primary SMTP server host name address. Leave this empty to disable all internal mail sending from the server. Secondary SMTP settings are ignored unless this host is configured. The default value for this variable is an empty string',
                 'introduction' => '',
                 'default' => '',
                 'required' => false,
@@ -543,7 +543,7 @@ return [
             ],
             [
                 'name' => '_APP_SMTP_PORT',
-                'description' => 'SMTP server TCP port. Empty by default.',
+                'description' => 'Primary SMTP server TCP port. Empty by default.',
                 'introduction' => '',
                 'default' => '',
                 'required' => false,
@@ -552,7 +552,7 @@ return [
             ],
             [
                 'name' => '_APP_SMTP_SECURE',
-                'description' => 'SMTP secure connection protocol. Empty by default, change to \'tls\' or \'ssl\' if running on a secure connection.',
+                'description' => 'Primary SMTP secure connection protocol. Empty by default, change to \'tls\' or \'ssl\' if running on a secure connection.',
                 'introduction' => '',
                 'default' => '',
                 'required' => false,
@@ -561,7 +561,7 @@ return [
             ],
             [
                 'name' => '_APP_SMTP_USERNAME',
-                'description' => 'SMTP server user name. Empty by default.',
+                'description' => 'Primary SMTP server user name. Empty by default.',
                 'introduction' => '',
                 'default' => '',
                 'required' => false,
@@ -570,7 +570,52 @@ return [
             ],
             [
                 'name' => '_APP_SMTP_PASSWORD',
-                'description' => 'SMTP server user password. Empty by default.',
+                'description' => 'Primary SMTP server user password. Empty by default.',
+                'introduction' => '',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_SMTP_HOST_SECONDARY',
+                'description' => 'Secondary SMTP server host name address used as a failover adapter when the primary SMTP adapter throws an exception. Ignored unless the primary SMTP host is configured. Empty by default.',
+                'introduction' => '',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_SMTP_PORT_SECONDARY',
+                'description' => 'Secondary SMTP server TCP port. Ignored unless the primary SMTP host is configured. Empty by default.',
+                'introduction' => '',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_SMTP_SECURE_SECONDARY',
+                'description' => 'Secondary SMTP secure connection protocol. Ignored unless the primary SMTP host is configured. Empty by default, change to \'tls\' or \'ssl\' if running on a secure connection.',
+                'introduction' => '',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_SMTP_USERNAME_SECONDARY',
+                'description' => 'Secondary SMTP server user name. Ignored unless the primary SMTP host is configured. Empty by default.',
+                'introduction' => '',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_SMTP_PASSWORD_SECONDARY',
+                'description' => 'Secondary SMTP server user password. Ignored unless the primary SMTP host is configured. Empty by default.',
                 'introduction' => '',
                 'default' => '',
                 'required' => false,

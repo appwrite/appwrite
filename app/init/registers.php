@@ -4,6 +4,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\GraphQL\Promises\Adapter\Swoole;
 use Appwrite\Hooks\Hooks;
 use Appwrite\PubSub\Adapter\Redis as PubSub;
+use Appwrite\SMTP;
 use Appwrite\URL\URL as AppwriteURL;
 use MaxMind\Db\Reader;
 use Swoole\Database\PDOProxy;
@@ -24,7 +25,6 @@ use Utopia\Logger\Adapter\LogOwl;
 use Utopia\Logger\Adapter\Raygun;
 use Utopia\Logger\Adapter\Sentry;
 use Utopia\Logger\Logger;
-use Utopia\Messaging\Adapter\Email\SMTP;
 use Utopia\Mongo\Client as MongoClient;
 use Utopia\Pools\Adapter\Stack as StackPool;
 use Utopia\Pools\Adapter\Swoole as SwoolePool;
@@ -433,20 +433,7 @@ $register->set('db', function () {
 });
 
 $register->set('smtp', function () {
-    $username = System::getEnv('_APP_SMTP_USERNAME', '');
-    $password = System::getEnv('_APP_SMTP_PASSWORD', '');
-    return new SMTP(
-        host: System::getEnv('_APP_SMTP_HOST', 'smtp'),
-        port: (int) System::getEnv('_APP_SMTP_PORT', 25),
-        username: $username,
-        password: $password,
-        smtpSecure: System::getEnv('_APP_SMTP_SECURE', ''),
-        smtpAutoTLS: false,
-        xMailer: 'Appwrite Mailer',
-        timeout: 10,
-        keepAlive: true,
-        timelimit: 30,
-    );
+    return SMTP\SMTP::createService();
 });
 $register->set('geodb', function () {
     return new Reader(__DIR__ . '/../assets/dbip/dbip-country-lite-2025-12.mmdb');

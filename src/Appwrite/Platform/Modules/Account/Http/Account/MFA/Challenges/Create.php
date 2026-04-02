@@ -13,6 +13,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\SMTP;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Request;
@@ -209,7 +210,7 @@ class Create extends Action
                 $usage->addMetric(METRIC_AUTH_METHOD_PHONE, 1);
                 break;
             case Type::EMAIL:
-                if (empty(System::getEnv('_APP_SMTP_HOST'))) {
+                if (!SMTP\SMTP::isEnabled()) {
                     throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
                 }
                 if (empty($user->getAttribute('email'))) {

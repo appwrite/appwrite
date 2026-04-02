@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\ClamAV\Network;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
+use Appwrite\SMTP;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Config\Config;
 use Utopia\Console;
@@ -12,7 +13,6 @@ use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
 use Utopia\Http\Http;
 use Utopia\Logger\Logger;
-use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Messages\Email as EmailMessage;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
@@ -213,7 +213,11 @@ class Doctor extends Action
         }
 
         try {
-            /** @var EmailAdapter $smtp */
+            if (!SMTP\SMTP::isEnabled()) {
+                throw new \RuntimeException('SMTP disabled');
+            }
+
+            /** @var SMTP\Client $smtp */
             $smtp = $register->get('smtp');
 
             $emailMessage = new EmailMessage(
