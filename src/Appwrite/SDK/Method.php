@@ -197,7 +197,7 @@ class Method
 
     public function isHidden(): bool|array
     {
-        return $this->hide ?? false;
+        return $this->hide;
     }
 
     public function isPackaging(): bool

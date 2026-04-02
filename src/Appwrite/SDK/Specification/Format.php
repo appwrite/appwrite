@@ -204,9 +204,6 @@ abstract class Format
      *
      * Get services value
      *
-     * @param array $services
-     *
-     * @return self
      */
     public function getServices(): array
     {

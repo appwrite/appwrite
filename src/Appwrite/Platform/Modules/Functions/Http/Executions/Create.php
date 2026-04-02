@@ -213,7 +213,10 @@ class Create extends Base
             $current = new Document();
 
             foreach ($sessions as $session) {
-                /** @var Utopia\Database\Document $session */
+                if (!$session instanceof Document) {
+                    continue;
+                }
+
                 if ($proofForToken->verify($store->getProperty('secret', ''), $session->getAttribute('secret'))) { // Find most recent active session for user ID and JWT headers
                     $current = $session;
                 }
@@ -237,11 +240,11 @@ class Create extends Base
         ]);
 
         $executionId = ID::unique();
-        $headers['x-appwrite-execution-id'] = $executionId ?? '';
+        $headers['x-appwrite-execution-id'] = $executionId;
         $headers['x-appwrite-key'] = API_KEY_DYNAMIC . '_' . $apiKey;
         $headers['x-appwrite-trigger'] = 'http';
-        $headers['x-appwrite-user-id'] = $user->getId() ?? '';
-        $headers['x-appwrite-user-jwt'] = $jwt ?? '';
+        $headers['x-appwrite-user-id'] = $user->getId();
+        $headers['x-appwrite-user-jwt'] = $jwt;
         $headers['x-appwrite-country-code'] = '';
         $headers['x-appwrite-continent-code'] = '';
         $headers['x-appwrite-continent-eu'] = 'false';
@@ -350,16 +353,18 @@ class Create extends Base
                 }
             }
 
-            $this->enqueueDeletes(
-                $project,
-                $function->getSequence(),
-                $executionsRetentionCount,
+            if ($executionsRetentionCount > 0 && ENABLE_EXECUTIONS_LIMIT_ON_ROUTE) {
                 $queueForDeletes
-            );
+                    ->setProject($project)
+                    ->setResource($function->getSequence())
+                    ->setResourceType(RESOURCE_TYPE_FUNCTIONS)
+                    ->setType(DELETE_TYPE_EXECUTIONS_LIMIT)
+                    ->trigger();
+            }
 
-            return $response
-                ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
-                ->dynamic($execution, Response::MODEL_EXECUTION);
+            $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
+            $response->dynamic($execution, Response::MODEL_EXECUTION);
+            return;
         }
 
         $durationStart = \microtime(true);
@@ -370,7 +375,7 @@ class Create extends Base
         if ($version === 'v2') {
             $vars = \array_merge($vars, [
                 'APPWRITE_FUNCTION_TRIGGER' => $headers['x-appwrite-trigger'] ?? '',
-                'APPWRITE_FUNCTION_DATA' => $body ?? '',
+                'APPWRITE_FUNCTION_DATA' => $body,
                 'APPWRITE_FUNCTION_USER_ID' => $headers['x-appwrite-user-id'] ?? '',
                 'APPWRITE_FUNCTION_JWT' => $headers['x-appwrite-user-jwt'] ?? ''
             ]);
@@ -537,32 +542,18 @@ class Create extends Base
             }
         }
 
-        $this->enqueueDeletes(
-            $project,
-            $function->getSequence(),
-            $executionsRetentionCount,
+        if ($executionsRetentionCount > 0 && ENABLE_EXECUTIONS_LIMIT_ON_ROUTE) {
             $queueForDeletes
-        );
+                ->setProject($project)
+                ->setResource($function->getSequence())
+                ->setResourceType(RESOURCE_TYPE_FUNCTIONS)
+                ->setType(DELETE_TYPE_EXECUTIONS_LIMIT)
+                ->trigger();
+        }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($execution, Response::MODEL_EXECUTION);
     }
 
-    private function enqueueDeletes(
-        Document $project,
-        string $resourceId,
-        int $executionsRetentionCount,
-        DeleteEvent $queueForDeletes
-    ): void {
-        /* cleanup */
-        if ($executionsRetentionCount > 0 && ENABLE_EXECUTIONS_LIMIT_ON_ROUTE) {
-            $queueForDeletes
-                ->setProject($project)
-                ->setResource($resourceId)
-                ->setResourceType(RESOURCE_TYPE_FUNCTIONS)
-                ->setType(DELETE_TYPE_EXECUTIONS_LIMIT)
-                ->trigger();
-        }
-    }
 }

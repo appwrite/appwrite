@@ -286,6 +286,8 @@ class Create extends Action
             $mimeType = $deviceForFiles->getFileMimeType($path); // Get mime-type before compression and encryption
             $fileHash = $deviceForFiles->getFileHash($path); // Get file hash before compression and encryption
             $data = '';
+            $iv = '';
+            $tag = null;
             // Compression
             $algorithm = $bucket->getAttribute('compression', Compression::NONE);
             if ($fileSize <= APP_STORAGE_READ_BUFFER && $algorithm != Compression::NONE) {

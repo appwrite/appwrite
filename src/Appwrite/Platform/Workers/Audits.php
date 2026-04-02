@@ -6,7 +6,6 @@ use Exception;
 use Throwable;
 use Utopia\Console;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Structure;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
@@ -51,13 +50,11 @@ class Audits extends Action
 
     /**
      * @param Message $message
-     * @param callable $getProjectDB
      * @param Document $project
-     * @param callable $getAudit
+     * @param callable(Document): \Utopia\Audit\Audit $getAudit
      * @return Commit|NoCommit
      * @throws Throwable
      * @throws \Utopia\Database\Exception
-     * @throws Authorization
      * @throws Structure
      */
     public function action(Message $message, Document $project, callable $getAudit): Commit|NoCommit
