@@ -925,15 +925,9 @@ class Swagger2 extends Format
                 }
                 if ($items) {
                     if (!empty($rule['nestedModel']) && !$rule['array']) {
-                        $existing = $output['definitions'][$model->getType()]['properties'][$name];
-                        unset($existing['type']);
-                        $output['definitions'][$model->getType()]['properties'][$name] = \array_merge(
-                            $existing,
-                            ['allOf' => [$items]]
-                        );
-                    } else {
-                        $output['definitions'][$model->getType()]['properties'][$name]['items'] = $items;
+                        unset($output['definitions'][$model->getType()]['properties'][$name]['type']);
                     }
+                    $output['definitions'][$model->getType()]['properties'][$name]['items'] = $items;
                 }
                 if ($rule['type'] === 'enum' && !empty($rule['enum'])) {
                     if ($rule['array']) {
