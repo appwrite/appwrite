@@ -935,7 +935,7 @@ Http::setResource('getDatabasesDB', function (Group $pools, Cache $cache, Docume
             if (\in_array($databaseHost, $dbTypeSharedTables)) {
                 $database
                     ->setSharedTables(true)
-                    ->setTenant($project->getSequence())
+                    ->setTenant((int)$project->getSequence())
                     ->setNamespace($dsn->getParam('namespace'));
             } else {
                 $database
@@ -946,7 +946,7 @@ Http::setResource('getDatabasesDB', function (Group $pools, Cache $cache, Docume
         } elseif (\in_array($dsn->getHost(), $sharedTables)) {
             $database
                 ->setSharedTables(true)
-                ->setTenant($project->getSequence())
+                ->setTenant((int)$project->getSequence())
                 ->setNamespace($dsn->getParam('namespace'));
         } else {
             $database

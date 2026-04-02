@@ -270,7 +270,7 @@ Server::setResource('getDatabasesDB', function (Cache $cache, Registry $register
             if (\in_array($databaseHost, $dbTypeSharedTables)) {
                 $database
                     ->setSharedTables(true)
-                    ->setTenant($projectDocument->getSequence())
+                    ->setTenant((int) $projectDocument->getSequence())
                     ->setNamespace($dsn->getParam('namespace'));
             } else {
                 $database
@@ -281,7 +281,7 @@ Server::setResource('getDatabasesDB', function (Cache $cache, Registry $register
         } elseif (\in_array($dsn->getHost(), $sharedTables, true)) {
             $database
                 ->setSharedTables(true)
-                ->setTenant($projectDocument->getSequence())
+                ->setTenant((int) $projectDocument->getSequence())
                 ->setNamespace($dsn->getParam('namespace'));
         } else {
             $database
