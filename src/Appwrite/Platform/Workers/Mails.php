@@ -175,7 +175,7 @@ class Mails extends Action
         $attachments = null;
         if (!empty($attachment['content'] ?? '')) {
             $attachments = [
-                self::createAttachment(
+                new Attachment(
                     name: $attachment['filename'] ?? 'unknown.file',
                     path: '',
                     type: $attachment['type'] ?? 'plain/text',
@@ -204,14 +204,5 @@ class Mails extends Action
             }
             throw new Exception('Error sending mail: ' . $error->getMessage(), 500);
         }
-    }
-
-    private static function createAttachment(
-        string $name,
-        string $path,
-        string $type,
-        ?string $content = null,
-    ): Attachment {
-        return new Attachment($name, $path, $type, $content);
     }
 }

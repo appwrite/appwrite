@@ -6,6 +6,7 @@ use InvalidArgumentException;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Adapter\Email\SMTP as SMTPAdapter;
 use Utopia\Messaging\Messages\Email as EmailMessage;
+use Utopia\Messaging\Messenger;
 use Utopia\System\System;
 
 class SMTP
@@ -48,8 +49,7 @@ class SMTP
             return new Client(fn (EmailMessage $message): array => $adapters[0]->send($message));
         }
 
-        $messenger = 'Utopia\\Messaging\\Messenger';
-        $sender = new $messenger($adapters);
+        $sender = new Messenger($adapters);
 
         return new Client(fn (EmailMessage $message): array => $sender->send($message));
     }
