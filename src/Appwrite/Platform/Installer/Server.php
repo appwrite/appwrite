@@ -6,6 +6,7 @@ use Appwrite\Platform\Installer\Http\Installer\Error;
 use Appwrite\Platform\Installer\Runtime\Config;
 use Appwrite\Platform\Installer\Runtime\State;
 use Swoole\Http\Server as SwooleServer;
+use Swoole\Runtime;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Http\Adapter\Swoole\Response;
 use Utopia\Http\Adapter\Swoole\Server as SwooleAdapter;
@@ -28,6 +29,7 @@ class Server
     public const string STEP_DOCKER_COMPOSE = 'docker-compose';
     public const string STEP_DOCKER_CONTAINERS = 'docker-containers';
     public const string STEP_ACCOUNT_SETUP = 'account-setup';
+    public const string STEP_MIGRATION = 'migration';
     public const string STEP_SSL_CERTIFICATE = 'ssl-certificate';
 
     public const string STATUS_IN_PROGRESS = 'in-progress';
@@ -129,6 +131,8 @@ class Server
 
     private function startSwooleServer(string $host, int $port, ?string $readyFile = null): void
     {
+        Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
+
         $this->state->clearStaleLock();
 
         // Preload static files into memory

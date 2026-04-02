@@ -13,7 +13,7 @@ $enabledDatabases = $enabledDatabases ?? ['mongodb', 'mariadb', 'postgresql'];
 $isLocalInstall = $isLocalInstall ?? false;
 
 
-$cardStep = min(4, $step);
+$cardStep = ($step === 5) ? 4 : $step;
 $stepFile = __DIR__ . "/installer/templates/steps/step-{$cardStep}.phtml";
 if (!is_file($stepFile)) {
     $stepFile = __DIR__ . "/installer/templates/steps/step-1.phtml";

@@ -3,16 +3,14 @@
 namespace Tests\Unit\Utopia\Response\Filters;
 
 use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Response\Filter;
 use Appwrite\Utopia\Response\Filters\V17;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class V17Test extends TestCase
 {
-    /**
-     * @var Filter
-     */
-    protected $filter = null;
+    protected Filter $filter;
 
     public function setUp(): void
     {

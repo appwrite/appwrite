@@ -25,8 +25,8 @@ class FunctionsServerTest extends Scope
     protected function setupFunction(): array
     {
         $key = $this->getProject()['$id'];
-        if (!empty(static::$cachedFunction[$key])) {
-            return static::$cachedFunction[$key];
+        if (!empty(self::$cachedFunction[$key])) {
+            return self::$cachedFunction[$key];
         }
 
         $projectId = $this->getProject()['$id'];
@@ -79,15 +79,15 @@ class FunctionsServerTest extends Scope
         $this->assertIsArray($variables['body']['data']);
         $this->assertArrayNotHasKey('errors', $variables['body']);
 
-        static::$cachedFunction[$key] = $function;
+        self::$cachedFunction[$key] = $function;
         return $function;
     }
 
     protected function setupDeployment(): array
     {
         $key = $this->getProject()['$id'];
-        if (!empty(static::$cachedDeployment[$key])) {
-            return static::$cachedDeployment[$key];
+        if (!empty(self::$cachedDeployment[$key])) {
+            return self::$cachedDeployment[$key];
         }
 
         $function = $this->setupFunction();
@@ -149,15 +149,15 @@ class FunctionsServerTest extends Scope
             $this->assertEquals('ready', $deployment['status']);
         }, 120000);
 
-        static::$cachedDeployment[$key] = $deployment;
+        self::$cachedDeployment[$key] = $deployment;
         return $deployment;
     }
 
     protected function setupExecution(): array
     {
         $key = $this->getProject()['$id'];
-        if (!empty(static::$cachedExecution[$key])) {
-            return static::$cachedExecution[$key];
+        if (!empty(self::$cachedExecution[$key])) {
+            return self::$cachedExecution[$key];
         }
 
         $deployment = $this->setupDeployment();
@@ -179,8 +179,8 @@ class FunctionsServerTest extends Scope
         $this->assertIsArray($execution['body']['data']);
         $this->assertArrayNotHasKey('errors', $execution['body']);
 
-        static::$cachedExecution[$key] = $execution['body']['data']['functionsCreateExecution'];
-        return static::$cachedExecution[$key];
+        self::$cachedExecution[$key] = $execution['body']['data']['functionsCreateExecution'];
+        return self::$cachedExecution[$key];
     }
 
     public function testCreateFunction(): void
@@ -496,8 +496,8 @@ class FunctionsServerTest extends Scope
 
         // Clear cache after deletion
         $key = $this->getProject()['$id'];
-        static::$cachedDeployment[$key] = [];
-        static::$cachedExecution[$key] = [];
+        self::$cachedDeployment[$key] = [];
+        self::$cachedExecution[$key] = [];
     }
 
     /**
@@ -529,6 +529,6 @@ class FunctionsServerTest extends Scope
 
         // Clear cache after deletion
         $key = $this->getProject()['$id'];
-        static::$cachedFunction[$key] = [];
+        self::$cachedFunction[$key] = [];
     }
 }

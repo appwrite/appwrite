@@ -70,6 +70,7 @@ class Increment extends IncrementDocumentAttribute
             ->inject('usage')
             ->inject('plan')
             ->inject('authorization')
+            ->inject('user')
             ->callback($this->action(...));
     }
 }
