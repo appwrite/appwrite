@@ -932,10 +932,11 @@ class OpenAPI3 extends Format
                 }
                 if ($items) {
                     if (!empty($rule['nestedModel']) && !$rule['array']) {
-                        unset($output['components']['schemas'][$model->getType()]['properties'][$name]['type']);
+                        $existing = $output['components']['schemas'][$model->getType()]['properties'][$name];
+                        unset($existing['type']);
                         $output['components']['schemas'][$model->getType()]['properties'][$name] = \array_merge(
-                            $output['components']['schemas'][$model->getType()]['properties'][$name],
-                            $items
+                            $existing,
+                            ['allOf' => [$items]]
                         );
                     } else {
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['items'] = $items;

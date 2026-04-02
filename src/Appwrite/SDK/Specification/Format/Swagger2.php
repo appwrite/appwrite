@@ -925,10 +925,11 @@ class Swagger2 extends Format
                 }
                 if ($items) {
                     if (!empty($rule['nestedModel']) && !$rule['array']) {
-                        unset($output['definitions'][$model->getType()]['properties'][$name]['type']);
+                        $existing = $output['definitions'][$model->getType()]['properties'][$name];
+                        unset($existing['type']);
                         $output['definitions'][$model->getType()]['properties'][$name] = \array_merge(
-                            $output['definitions'][$model->getType()]['properties'][$name],
-                            $items
+                            $existing,
+                            ['allOf' => [$items]]
                         );
                     } else {
                         $output['definitions'][$model->getType()]['properties'][$name]['items'] = $items;
