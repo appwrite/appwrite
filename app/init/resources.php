@@ -672,10 +672,11 @@ Http::setResource('dbForProject', function (Group $pools, Database $dbForPlatfor
         ->addHook(new UserEvents(
             $project,
             $response,
-            $queueForEventsClone->from($queueForEvents),
-            $queueForFunctions->from($queueForEvents),
-            $queueForWebhooks->from($queueForEvents),
-            $queueForRealtime->from($queueForEvents),
+            $queueForEvents,
+            $queueForEventsClone,
+            $queueForFunctions,
+            $queueForWebhooks,
+            $queueForRealtime,
         ))
         ->addHook(new FunctionCache($project, $database))
         ->addHook(new Permissions());

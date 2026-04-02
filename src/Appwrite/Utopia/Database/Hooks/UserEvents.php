@@ -21,6 +21,7 @@ class UserEvents implements Lifecycle
     public function __construct(
         private Document $project,
         private Response $response,
+        private Event $source,
         private Event $events,
         private Func $functions,
         private Webhook $webhooks,
@@ -39,6 +40,7 @@ class UserEvents implements Lifecycle
         }
 
         $this->events
+            ->from($this->source)
             ->setProject($this->project)
             ->setEvent('users.[userId].create')
             ->setParam('userId', $data->getId())
