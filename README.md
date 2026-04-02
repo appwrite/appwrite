@@ -60,7 +60,7 @@ Table of Contents:
 
 ## Installation & Setup
 
-The easiest way to get started with Appwrite is by [signing up for Appwrite Cloud](https://cloud.appwrite.io/). While Appwrite Cloud is in public beta, you can build with Appwrite completely free, and we won't collect your credit card information.
+The easiest way to get started with Appwrite is by [signing up for Appwrite Cloud](https://cloud.appwrite.io/). You can get started for free by signing up for [Appwrite Cloud](https://appwrite.io/cloud). Appwrite Cloud allows you to build secure, full-stack applications faster with a managed experience.
 
 ## Self-Hosting
 
@@ -183,7 +183,7 @@ Getting started with Appwrite is as easy as creating a new project, choosing you
 - [**MCP**](https://appwrite.io/docs/tooling/mcp) - Use Appwrite's Model Context Protocol (MCP) server to allow LLMs and AI tools like Claude Desktop, Cursor, and Windsurf Editor to directly interact with your Appwrite project through natural language.
 - [**Sites**](https://appwrite.io/docs/products/sites) - Develop, deploy, and scale your web applications directly from Appwrite, alongside your backend.
 
-For the complete API documentation, visit [https://appwrite.io/docs](https://appwrite.io/docs). For more tutorials, news and announcements check out our [blog](https://medium.com/appwrite-io) and [Discord Server](https://discord.gg/GSeTUeA).
+For the complete API documentation, visit [https://appwrite.io/docs](https://appwrite.io/docs). For more tutorials, news and announcements check out our [blog](https://appwrite.io/blog)
 
 ### SDKs
 
