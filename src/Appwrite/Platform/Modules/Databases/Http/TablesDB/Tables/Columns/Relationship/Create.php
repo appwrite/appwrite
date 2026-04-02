@@ -8,9 +8,11 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
+use Utopia\Database\RelationType;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Query\Schema\ForeignKeyAction;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\WhiteList;
@@ -56,18 +58,18 @@ class Create extends RelationshipCreate
             ->param('tableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Table ID.', false, ['dbForProject'])
             ->param('relatedTableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Related Table ID.', false, ['dbForProject'])
             ->param('type', '', new WhiteList([
-                Database::RELATION_ONE_TO_ONE,
-                Database::RELATION_MANY_TO_ONE,
-                Database::RELATION_MANY_TO_MANY,
-                Database::RELATION_ONE_TO_MANY
+                RelationType::OneToOne->value,
+                RelationType::ManyToOne->value,
+                RelationType::ManyToMany->value,
+                RelationType::OneToMany->value
             ], true), 'Relation type')
             ->param('twoWay', false, new Boolean(), 'Is Two Way?', true)
             ->param('key', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'Column Key.', true, ['dbForProject'])
             ->param('twoWayKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'Two Way Column Key.', true, ['dbForProject'])
-            ->param('onDelete', Database::RELATION_MUTATE_RESTRICT, new WhiteList([
-                Database::RELATION_MUTATE_CASCADE,
-                Database::RELATION_MUTATE_RESTRICT,
-                Database::RELATION_MUTATE_SET_NULL
+            ->param('onDelete', ForeignKeyAction::Restrict->value, new WhiteList([
+                ForeignKeyAction::Cascade->value,
+                ForeignKeyAction::Restrict->value,
+                ForeignKeyAction::SetNull->value
             ], true), 'Constraints option', true)
             ->inject('response')
             ->inject('dbForProject')

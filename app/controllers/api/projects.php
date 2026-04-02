@@ -31,6 +31,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Emails\Validator\Email;
 use Utopia\Http\Http;
 use Utopia\Locale\Locale;
+use Utopia\Query\Method as QueryMethod;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
@@ -872,7 +873,7 @@ Http::get('/v1/projects/:projectId/keys')
         }
 
         // Backwards compatibility
-        if (\count(Query::getByType($queries, [Query::TYPE_LIMIT])) === 0) {
+        if (\count(Query::getByType($queries, [QueryMethod::Limit])) === 0) {
             $queries[] = Query::limit(5000);
         }
 
@@ -898,7 +899,7 @@ Http::get('/v1/projects/:projectId/keys')
             $cursor->setValue($cursorDocument);
         }
 
-        $filterQueries = Query::groupByType($queries)['filters'];
+        $filterQueries = Query::groupByType($queries)->filters;
 
         $keys = $dbForPlatform->find('keys', $queries);
 

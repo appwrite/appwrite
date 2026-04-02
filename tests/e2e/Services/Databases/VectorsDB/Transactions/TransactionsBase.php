@@ -8,6 +8,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
+use Utopia\Query\Schema\IndexType;
 
 trait TransactionsBase
 {
@@ -1095,7 +1096,7 @@ trait TransactionsBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'key' => 'embeddings_index',
-            'type' => Database::INDEX_HNSW_EUCLIDEAN,
+            'type' => IndexType::HnswEuclidean->value,
             'attributes' => ['embeddings'],
         ]);
 

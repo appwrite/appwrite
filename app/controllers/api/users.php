@@ -52,6 +52,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
+use Utopia\Database\SetType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Cursor;
@@ -191,7 +192,7 @@ function createUser(Hash $hash, string $userId, ?string $email, ?string $passwor
                     Query::equal('identifier', [$email]),
                 ]);
                 if (!$existingTarget->isEmpty()) {
-                    $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
+                    $user->setAttribute('targets', $existingTarget, SetType::Append);
                 }
             }
         }
@@ -215,7 +216,7 @@ function createUser(Hash $hash, string $userId, ?string $email, ?string $passwor
                     Query::equal('identifier', [$phone]),
                 ]);
                 if (!$existingTarget->isEmpty()) {
-                    $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
+                    $user->setAttribute('targets', $existingTarget, SetType::Append);
                 }
             }
         }
@@ -955,8 +956,8 @@ Http::get('/v1/users/:userId/logs')
         }
 
         $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? 25;
-        $offset = $grouped['offset'] ?? 0;
+        $limit = $grouped->limit ?? 25;
+        $offset = $grouped->offset ?? 0;
 
         $logs = $audit->getLogsByUser($user->getSequence(), limit: $limit, offset: $offset);
         $output = [];

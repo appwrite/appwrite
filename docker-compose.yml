@@ -1362,7 +1362,7 @@ services:
     container_name: appwrite-redis
     command: >
       redis-server
-      --maxmemory            512mb
+      --maxmemory            2048mb
       --maxmemory-policy     allkeys-lru
       --maxmemory-samples    5
     ports:

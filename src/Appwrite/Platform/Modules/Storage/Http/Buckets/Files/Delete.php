@@ -13,6 +13,7 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Exception\NotFound as NotFoundException;
+use Utopia\Database\PermissionType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\UID;
@@ -91,7 +92,7 @@ class Delete extends Action
         }
 
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-        $valid = $authorization->isValid(new Input(Database::PERMISSION_DELETE, $bucket->getDelete()));
+        $valid = $authorization->isValid(new Input(PermissionType::Delete, $bucket->getDelete()));
         if (!$fileSecurity && !$valid) {
             throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
         }
@@ -104,7 +105,7 @@ class Delete extends Action
         }
 
         // Make sure we don't delete the file before the document permission check occurs
-        if ($fileSecurity && !$valid && !$authorization->isValid(new Input(Database::PERMISSION_DELETE, $file->getDelete()))) {
+        if ($fileSecurity && !$valid && !$authorization->isValid(new Input(PermissionType::Delete, $file->getDelete()))) {
             throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
         }
 

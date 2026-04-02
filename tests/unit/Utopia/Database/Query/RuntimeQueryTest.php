@@ -5,6 +5,7 @@ namespace Tests\Unit\Utopia\Database\Query;
 use Appwrite\Utopia\Database\RuntimeQuery;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Query;
+use Utopia\Query\Method;
 
 class RuntimeQueryTest extends TestCase
 {
@@ -21,7 +22,7 @@ class RuntimeQueryTest extends TestCase
      */
     private function compileAndFilter(array $queries, array $payload): ?array
     {
-        $compiled = RuntimeQuery::compile($queries);
+        $compiled = RuntimeQuery::prepare($queries);
         return RuntimeQuery::filter($compiled, $payload);
     }
 
@@ -680,7 +681,7 @@ class RuntimeQueryTest extends TestCase
 
     public function testSelectInAllowedQueries(): void
     {
-        $this->assertContains(Query::TYPE_SELECT, RuntimeQuery::ALLOWED_QUERIES);
+        $this->assertContains(Method::Select, RuntimeQuery::ALLOWED_QUERIES);
     }
 
     public function testIsSelectAllWithNonSelectQuery(): void

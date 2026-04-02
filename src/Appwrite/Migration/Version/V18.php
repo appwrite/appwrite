@@ -8,6 +8,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Query\Schema\ColumnType;
 
 class V18 extends Migration
 {
@@ -56,7 +57,7 @@ class V18 extends Migration
                 $collectionTable = "{$databaseTable}_collection_{$collection->getSequence()}";
 
                 foreach ($collection['attributes'] ?? [] as $attribute) {
-                    if ($attribute['type'] !== Database::VAR_FLOAT) {
+                    if ($attribute['type'] !== ColumnType::Float->value) {
                         continue;
                     }
                     $this->changeAttributeInternalType($collectionTable, $attribute['key'], 'DOUBLE');
@@ -87,7 +88,7 @@ class V18 extends Migration
             Console::log("Migrating Collection \"{$id}\"");
 
             foreach ($collection['attributes'] ?? [] as $attribute) {
-                if ($attribute['type'] !== Database::VAR_FLOAT) {
+                if ($attribute['type'] !== ColumnType::Float->value) {
                     continue;
                 }
                 $this->changeAttributeInternalType($id, $attribute['$id'], 'DOUBLE');

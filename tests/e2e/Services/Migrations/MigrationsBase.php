@@ -17,6 +17,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Sources\Appwrite;
+use Utopia\Query\Schema\IndexType;
 
 trait MigrationsBase
 {
@@ -3262,7 +3263,7 @@ trait MigrationsBase
             'x-appwrite-key' => $sourceProject['apiKey'],
         ], [
             'key' => $sqlIndexKey,
-            'type' => Database::INDEX_UNIQUE,
+            'type' => IndexType::Unique->value,
             'columns' => ['productName'],
         ]);
 
@@ -3329,7 +3330,7 @@ trait MigrationsBase
             'x-appwrite-key' => $sourceProject['apiKey'],
         ], [
             'key' => $documentsIndexKey,
-            'type' => Database::INDEX_UNIQUE,
+            'type' => IndexType::Unique->value,
             'attributes' => ['email'],
         ]);
 
@@ -3429,7 +3430,7 @@ trait MigrationsBase
             }
         }
         $this->assertNotNull($metadataIndex, 'Default metadata index should exist on source collection');
-        $this->assertEquals(Database::INDEX_OBJECT, $metadataIndex['type']);
+        $this->assertEquals(IndexType::Object->value, $metadataIndex['type']);
 
         $vectorEmbeddingIndexKey = 'embedding_euclidean';
         $vectorEmbeddingIndex = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $vectorDatabaseId . '/collections/' . $vectorCollectionId . '/indexes', [
@@ -3438,7 +3439,7 @@ trait MigrationsBase
             'x-appwrite-key' => $sourceProject['apiKey'],
         ], [
             'key' => $vectorEmbeddingIndexKey,
-            'type' => Database::INDEX_HNSW_EUCLIDEAN,
+            'type' => IndexType::HnswEuclidean->value,
             'attributes' => ['embeddings'],
         ]);
         $this->assertEquals(202, $vectorEmbeddingIndex['headers']['status-code']);
@@ -3451,7 +3452,7 @@ trait MigrationsBase
             ]);
 
             $this->assertEquals(200, $index['headers']['status-code']);
-            $this->assertEquals(Database::INDEX_HNSW_EUCLIDEAN, $index['body']['type']);
+            $this->assertEquals(IndexType::HnswEuclidean->value, $index['body']['type']);
             if (isset($index['body']['status'])) {
                 $this->assertEquals('available', $index['body']['status']);
             }
@@ -3683,7 +3684,7 @@ trait MigrationsBase
         ]);
         $this->assertEquals(200, $sqlIndexDestination['headers']['status-code']);
         $this->assertEquals($sqlIndexKey, $sqlIndexDestination['body']['key']);
-        $this->assertEquals(Database::INDEX_UNIQUE, $sqlIndexDestination['body']['type']);
+        $this->assertEquals(IndexType::Unique->value, $sqlIndexDestination['body']['type']);
         if (isset($sqlIndexDestination['body']['columns'])) {
             $this->assertEquals(['productName'], $sqlIndexDestination['body']['columns']);
         }
@@ -3729,7 +3730,7 @@ trait MigrationsBase
         ]);
         $this->assertEquals(200, $documentsIndexDestination['headers']['status-code']);
         $this->assertEquals($documentsIndexKey, $documentsIndexDestination['body']['key']);
-        $this->assertEquals(Database::INDEX_UNIQUE, $documentsIndexDestination['body']['type']);
+        $this->assertEquals(IndexType::Unique->value, $documentsIndexDestination['body']['type']);
         if (isset($documentsIndexDestination['body']['attributes'])) {
             $this->assertEquals(['email'], $documentsIndexDestination['body']['attributes']);
         }
@@ -3772,9 +3773,9 @@ trait MigrationsBase
             }
         }
         $this->assertArrayHasKey($metadataIndexKey, $indexByKey, 'Metadata index should exist on destination');
-        $this->assertEquals(Database::INDEX_OBJECT, $indexByKey[$metadataIndexKey]['type']);
+        $this->assertEquals(IndexType::Object->value, $indexByKey[$metadataIndexKey]['type']);
         $this->assertArrayHasKey($vectorEmbeddingIndexKey, $indexByKey, 'Embeddings HNSW index should exist on destination');
-        $this->assertEquals(Database::INDEX_HNSW_EUCLIDEAN, $indexByKey[$vectorEmbeddingIndexKey]['type']);
+        $this->assertEquals(IndexType::HnswEuclidean->value, $indexByKey[$vectorEmbeddingIndexKey]['type']);
 
         // Validate VectorsDB Document
         $response = $this->client->call(Client::METHOD_GET, '/vectorsdb/' . $vectorDatabaseId . '/collections/' . $vectorCollectionId . '/documents/' . $vectorDocumentId, [

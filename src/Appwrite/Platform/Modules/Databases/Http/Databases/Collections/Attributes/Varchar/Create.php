@@ -17,6 +17,7 @@ use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Http\Http;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
@@ -120,7 +121,7 @@ class Create extends Action
             $collectionId,
             new Document([
                 'key' => $key,
-                'type' => Database::VAR_VARCHAR,
+                'type' => ColumnType::Varchar->value,
                 'size' => $size,
                 'required' => $required,
                 'default' => $default,

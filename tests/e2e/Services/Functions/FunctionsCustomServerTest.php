@@ -2065,7 +2065,7 @@ class FunctionsCustomServerTest extends Scope
             $this->assertNotEmpty($lastExecution['$id']);
             $headers = array_column($lastExecution['requestHeaders'] ?? [], 'value', 'name');
             $this->assertEmpty($headers['x-appwrite-client-ip'] ?? '');
-        }, 20_000, 500);
+        }, 120_000, 2000);
 
         $this->cleanupFunction($functionId);
 

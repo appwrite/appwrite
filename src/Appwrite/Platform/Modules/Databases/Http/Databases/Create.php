@@ -216,15 +216,8 @@ class Create extends Action
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'The "collections" collection is not configured.');
         }
 
-        $attributes = [];
-        foreach ($collections['attributes'] as $attribute) {
-            $attributes[] = new Document($attribute);
-        }
-
-        $indexes = [];
-        foreach ($collections['indexes'] as $index) {
-            $indexes[] = new Document($index);
-        }
+        $attributes = $collections['attributes'];
+        $indexes = $collections['indexes'];
 
         try {
             $dbForProject->createCollection('database_' . $database->getSequence(), $attributes, $indexes);

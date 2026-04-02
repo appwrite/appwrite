@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Tokens\Http\Tokens\Buckets\Files;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Documents\User;
 use Utopia\Database\Database;
+use Utopia\Database\PermissionType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Platform\Action as UtopiaAction;
@@ -22,7 +23,7 @@ class Action extends UtopiaAction
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
-        if (!$authorization->isValid(new Input(Database::PERMISSION_READ, $bucket->getRead()))) {
+        if (!$authorization->isValid(new Input(PermissionType::Read, $bucket->getRead()))) {
             throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
         }
 

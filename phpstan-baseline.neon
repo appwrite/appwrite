@@ -157,12 +157,6 @@ parameters:
 			path: app/init/registers.php
 
 		-
-			message: '#^Variable \$hostname on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.variable
-			count: 1
-			path: app/init/resources.php
-
-		-
 			message: '#^Anonymous function has an unused use \$register\.$#'
 			identifier: closure.unusedUse
 			count: 4
@@ -261,12 +255,6 @@ parameters:
 		-
 			message: '#^Method Appwrite\\Platform\\Modules\\Databases\\Http\\Databases\\Collections\\Documents\\Action\:\:setHttpPath\(\) should return Appwrite\\Platform\\Modules\\Databases\\Http\\Databases\\Action but returns Appwrite\\Platform\\Action\.$#'
 			identifier: return.type
-			count: 1
-			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/Action.php
-
-		-
-			message: '#^Variable \$relations in empty\(\) always exists and is not falsy\.$#'
-			identifier: empty.variable
 			count: 1
 			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/Action.php
 

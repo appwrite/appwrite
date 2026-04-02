@@ -1157,8 +1157,8 @@ Http::get('/v1/messaging/providers/:providerId/logs')
         }
 
         $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? 25;
-        $offset = $grouped['offset'] ?? 0;
+        $limit = $grouped->limit ?? 25;
+        $offset = $grouped->offset ?? 0;
 
         $resource = 'provider/' . $providerId;
         $logs = $audit->getLogsByResource($resource, offset: $offset, limit: $limit);
@@ -2561,8 +2561,8 @@ Http::get('/v1/messaging/topics/:topicId/logs')
         }
 
         $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? 25;
-        $offset = $grouped['offset'] ?? 0;
+        $limit = $grouped->limit ?? 25;
+        $offset = $grouped->offset ?? 0;
 
         $resource = 'topic/' . $topicId;
         $logs = $audit->getLogsByResource($resource, offset: $offset, limit: $limit);
@@ -2976,8 +2976,8 @@ Http::get('/v1/messaging/subscribers/:subscriberId/logs')
         }
 
         $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? 25;
-        $offset = $grouped['offset'] ?? 0;
+        $limit = $grouped->limit ?? 25;
+        $offset = $grouped->offset ?? 0;
 
         $resource = 'subscriber/' . $subscriberId;
         $logs = $audit->getLogsByResource($resource, limit: $limit, offset: $offset);
@@ -3789,8 +3789,8 @@ Http::get('/v1/messaging/messages/:messageId/logs')
         }
 
         $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? 25;
-        $offset = $grouped['offset'] ?? 0;
+        $limit = $grouped->limit ?? 25;
+        $offset = $grouped->offset ?? 0;
 
         $resource = 'message/' . $messageId;
         $logs = $audit->getLogsByResource($resource, limit: $limit, offset: $offset);

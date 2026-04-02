@@ -88,7 +88,7 @@ class Get extends Action
 
         $collection = $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
 
-        $dbForDatabases = $getDatabasesDB($database);
+        $dbForDatabases = $getDatabasesDB($database, $collection);
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         }
@@ -100,7 +100,7 @@ class Get extends Action
         }
 
         try {
-            $selects = Query::groupByType($queries)['selections'] ?? [];
+            $selects = Query::groupByType($queries)->selections ?? [];
             $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
             $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
 
@@ -122,23 +122,9 @@ class Get extends Action
             throw new Exception($this->getNotFoundException(), params: [$documentId]);
         }
 
-        $operations = 0;
-        $collectionsCache = [];
-        $this->processDocument(
-            database: $database,
-            collection: $collection,
-            document: $document,
-            dbForProject: $dbForProject,
-            collectionsCache: $collectionsCache,
-            authorization: $authorization,
-            operations: $operations
-        );
-
         $usage
-            ->addMetric($this->getDatabasesOperationReadMetric(), max($operations, 1))
-            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), $this->getDatabasesIdOperationReadMetric()), $operations);
-
-        $response->addHeader('X-Debug-Operations', $operations);
+            ->addMetric($this->getDatabasesOperationReadMetric(), 1)
+            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), $this->getDatabasesIdOperationReadMetric()), 1);
 
         $response->dynamic($document, $this->getResponseModel());
     }

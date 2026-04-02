@@ -109,8 +109,8 @@ class XList extends Action
         }
 
         try {
-            $selectQueries = Query::groupByType($queries)['selections'] ?? [];
-            $filterQueries = Query::groupByType($queries)['filters'];
+            $selectQueries = Query::groupByType($queries)->selections ?? [];
+            $filterQueries = Query::groupByType($queries)->filters;
 
             $projects = $this->find($dbForPlatform, $queries, $selectQueries);
             $total = $includeTotal ? $dbForPlatform->count('projects', $filterQueries, APP_LIMIT_COUNT) : 0;
@@ -139,8 +139,8 @@ class XList extends Action
         $projectAttributes = $collections['platform']['projects']['attributes'] ?? [];
 
         foreach ($projectAttributes as $attribute) {
-            $attributeId = $attribute['$id'] ?? null;
-            $filters = $attribute['filters'] ?? [];
+            $attributeId = $attribute->key ?? null;
+            $filters = $attribute->filters ?? [];
 
             if ($attributeId === null || empty($filters)) {
                 continue;

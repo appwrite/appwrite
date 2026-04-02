@@ -11,6 +11,7 @@ use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
+use Utopia\Query\Method;
 
 class Realtime extends MessagingAdapter
 {
@@ -84,7 +85,7 @@ class Realtime extends MessagingAdapter
 
         $data = [
             'strings' => $strings,
-            'compiled' => RuntimeQuery::compile($queryGroup),
+            'compiled' => RuntimeQuery::prepare($queryGroup),
         ];
 
         foreach ($roles as $role) {
@@ -414,7 +415,7 @@ class Realtime extends MessagingAdapter
     {
         $queries = Query::parseQueries($queries);
         $stack = $queries;
-        $allowed = implode(', ', RuntimeQuery::ALLOWED_QUERIES);
+        $allowed = implode(', ', array_map(fn (Method $m) => $m->value, RuntimeQuery::ALLOWED_QUERIES));
 
         while (!empty($stack)) {
             $query = array_pop($stack);
@@ -422,15 +423,15 @@ class Realtime extends MessagingAdapter
 
             if (!in_array($method, RuntimeQuery::ALLOWED_QUERIES, true)) {
                 throw new QueryException(
-                    "Query method '{$method}' is not supported in Realtime queries. Allowed: {$allowed}"
+                    "Query method '{$method->value}' is not supported in Realtime queries. Allowed: {$allowed}"
                 );
             }
 
-            if ($method === Query::TYPE_SELECT) {
+            if ($method === Method::Select) {
                 RuntimeQuery::validateSelectQuery($query);
             }
 
-            if (in_array($method, [Query::TYPE_AND, Query::TYPE_OR], true)) {
+            if (in_array($method, [Method::And, Method::Or], true)) {
                 \array_push($stack, ...$query->getValues());
             }
         }

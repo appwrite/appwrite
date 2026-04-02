@@ -79,8 +79,8 @@ class XList extends Action
         }
 
         $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? 25;
-        $offset = $grouped['offset'] ?? 0;
+        $limit = $grouped->limit ?? 25;
+        $offset = $grouped->offset ?? 0;
 
         $resource = 'team/' . $team->getId();
         $logs = $audit->getLogsByResource($resource, offset: $offset, limit: $limit);

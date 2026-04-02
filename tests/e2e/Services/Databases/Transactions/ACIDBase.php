@@ -8,6 +8,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Query\Schema\IndexType;
 
 trait ACIDBase
 {
@@ -69,7 +70,7 @@ trait ACIDBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'key' => 'unique_email',
-            'type' => Database::INDEX_UNIQUE,
+            'type' => IndexType::Unique->value,
             $this->getIndexAttributesParam() => ['email']
         ]);
 

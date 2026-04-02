@@ -104,7 +104,7 @@ class XList extends Action
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $dbForDatabases = $getDatabasesDB($database);
+        $dbForDatabases = $getDatabasesDB($database, $collection);
         $cursor = Query::getCursorQueries($queries, false);
         $cursor = \reset($cursor);
 
@@ -127,7 +127,7 @@ class XList extends Action
         }
 
         try {
-            $selectQueries = Query::groupByType($queries)['selections'] ?? [];
+            $selectQueries = Query::groupByType($queries)->selections ?? [];
             $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
             // Use transaction-aware document retrieval if transactionId is provided
             if ($transactionId !== null) {
@@ -218,20 +218,7 @@ class XList extends Action
             throw new Exception(Exception::DATABASE_TIMEOUT);
         }
 
-        $operations = 0;
-        $collectionsCache = [];
-        foreach ($documents as $document) {
-            $this->processDocument(
-                database: $database,
-                collection: $collection,
-                document: $document,
-                dbForProject: $dbForProject,
-                collectionsCache: $collectionsCache,
-                authorization: $authorization,
-                operations: $operations
-            );
-        }
-
+        $operations = \count($documents);
         $usage
             ->addMetric($this->getDatabasesOperationReadMetric(), max($operations, 1))
             ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), $this->getDatabasesIdOperationReadMetric()), $operations);

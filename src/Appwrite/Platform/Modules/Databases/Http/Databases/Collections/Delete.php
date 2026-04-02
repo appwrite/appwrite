@@ -86,7 +86,7 @@ class Delete extends Action
             throw new Exception(Exception::GENERAL_SERVER_ERROR, "Failed to remove $type from DB");
         }
 
-        $dbForDatabases = $getDatabasesDB($database);
+        $dbForDatabases = $getDatabasesDB($database, $collection);
         $dbForDatabases->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
 
         $queueForDatabase

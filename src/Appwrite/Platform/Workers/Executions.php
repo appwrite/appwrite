@@ -44,9 +44,6 @@ class Executions extends Action
             throw new Exception('Missing execution');
         }
 
-        $project = new Document($payload['project'] ?? []);
-        if ($project->getId() != '6862e6a6000cce69f9da') {
-            $dbForProject->upsertDocument('executions', $execution);
-        }
+        $dbForProject->upsertDocument('executions', $execution);
     }
 }

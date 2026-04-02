@@ -100,7 +100,7 @@ class XList extends Action
             $cursor->setValue($cursorDocument);
         }
 
-        $filterQueries = Query::groupByType($queries)['filters'];
+        $filterQueries = Query::groupByType($queries)->filters;
 
         $rules = $dbForPlatform->find('rules', $queries);
         foreach ($rules as $rule) {

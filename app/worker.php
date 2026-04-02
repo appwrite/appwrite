@@ -34,6 +34,7 @@ use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Hook\Permissions;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
@@ -75,6 +76,7 @@ Server::setResource('dbForPlatform', function (Cache $cache, Registry $register,
         ->setNamespace('_console')
         ->setDocumentType('users', User::class);
 
+    $dbForPlatform->addHook(new Permissions());
     return $dbForPlatform;
 }, ['cache', 'register', 'authorization']);
 
@@ -125,6 +127,8 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
         ->setDatabase(APP_DATABASE)
         ->setAuthorization($authorization)
         ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER);
+
+    $database->addHook(new Permissions());
 
     return $database;
 }, ['cache', 'register', 'message', 'project', 'dbForPlatform', 'authorization']);
@@ -188,6 +192,8 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatf
             ->setAuthorization($authorization)
             ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER);
 
+        $database->addHook(new Permissions());
+
         return $database;
     };
 }, ['pools', 'dbForPlatform', 'cache', 'authorization']);
@@ -211,6 +217,8 @@ Server::setResource('getLogsDB', function (Group $pools, Cache $cache, Authoriza
             ->setNamespace('logsV1')
             ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER)
             ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES_WORKER);
+
+        $database->addHook(new Permissions());
 
         if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
             $database->setTenant($project->getSequence());
@@ -270,6 +278,7 @@ Server::setResource('getDatabasesDB', function (Cache $cache, Registry $register
         }
 
         $database->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER);
+        $database->addHook(new Permissions());
         return $database;
     };
 }, ['cache', 'register', 'project', 'authorization']);

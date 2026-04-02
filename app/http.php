@@ -255,25 +255,8 @@ function createDatabase(Http $app, string $resourceKey, string $dbName, array $c
             continue;
         }
 
-        $attributes = array_map(fn ($attr) => new Document([
-            '$id' => ID::custom($attr['$id']),
-            'type' => $attr['type'],
-            'size' => $attr['size'],
-            'required' => $attr['required'],
-            'signed' => $attr['signed'],
-            'array' => $attr['array'],
-            'filters' => $attr['filters'],
-            'default' => $attr['default'] ?? null,
-            'format' => $attr['format'] ?? ''
-        ]), $collection['attributes']);
-
-        $indexes = array_map(fn ($index) => new Document([
-            '$id' => ID::custom($index['$id']),
-            'type' => $index['type'],
-            'attributes' => $index['attributes'],
-            'lengths' => $index['lengths'],
-            'orders' => $index['orders'],
-        ]), $collection['indexes']);
+        $attributes = $collection['attributes'];
+        $indexes = $collection['indexes'];
 
         $database->createCollection($key, $attributes, $indexes);
         $collectionsCreated++;
@@ -340,25 +323,8 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $tot
                     throw new Exception('Files collection is not configured.');
                 }
 
-                $attributes = array_map(fn ($attr) => new Document([
-                    '$id' => ID::custom($attr['$id']),
-                    'type' => $attr['type'],
-                    'size' => $attr['size'],
-                    'required' => $attr['required'],
-                    'signed' => $attr['signed'],
-                    'array' => $attr['array'],
-                    'filters' => $attr['filters'],
-                    'default' => $attr['default'] ?? null,
-                    'format' => $attr['format'] ?? ''
-                ]), $files['attributes']);
-
-                $indexes = array_map(fn ($index) => new Document([
-                    '$id' => ID::custom($index['$id']),
-                    'type' => $index['type'],
-                    'attributes' => $index['attributes'],
-                    'lengths' => $index['lengths'],
-                    'orders' => $index['orders'],
-                ]), $files['indexes']);
+                $attributes = $files['attributes'];
+                $indexes = $files['indexes'];
 
                 $dbForPlatform->createCollection('bucket_' . $bucket->getSequence(), $attributes, $indexes);
             }
@@ -386,25 +352,8 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $tot
                     throw new Exception('Files collection is not configured.');
                 }
 
-                $attributes = array_map(fn ($attr) => new Document([
-                    '$id' => ID::custom($attr['$id']),
-                    'type' => $attr['type'],
-                    'size' => $attr['size'],
-                    'required' => $attr['required'],
-                    'signed' => $attr['signed'],
-                    'array' => $attr['array'],
-                    'filters' => $attr['filters'],
-                    'default' => $attr['default'] ?? null,
-                    'format' => $attr['format'] ?? ''
-                ]), $files['attributes']);
-
-                $indexes = array_map(fn ($index) => new Document([
-                    '$id' => ID::custom($index['$id']),
-                    'type' => $index['type'],
-                    'attributes' => $index['attributes'],
-                    'lengths' => $index['lengths'],
-                    'orders' => $index['orders'],
-                ]), $files['indexes']);
+                $attributes = $files['attributes'];
+                $indexes = $files['indexes'];
 
                 $authorization->skip(fn () => $dbForPlatform->createCollection('bucket_' . $bucket->getSequence(), $attributes, $indexes));
             }
@@ -481,8 +430,8 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $tot
                     continue;
                 }
 
-                $attributes = \array_map(fn ($attribute) => new Document($attribute), $collection['attributes']);
-                $indexes = \array_map(fn (array $index) => new Document($index), $collection['indexes']);
+                $attributes = $collection['attributes'];
+                $indexes = $collection['indexes'];
 
                 $dbForProject->createCollection($key, $attributes, $indexes);
                 $collectionsCreated++;
