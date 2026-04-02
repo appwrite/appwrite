@@ -924,7 +924,15 @@ class Swagger2 extends Format
                     }
                 }
                 if ($items) {
-                    $output['definitions'][$model->getType()]['properties'][$name]['items'] = $items;
+                    if (!empty($rule['nestedModel']) && !$rule['array']) {
+                        unset($output['definitions'][$model->getType()]['properties'][$name]['type']);
+                        $output['definitions'][$model->getType()]['properties'][$name] = \array_merge(
+                            $output['definitions'][$model->getType()]['properties'][$name],
+                            $items
+                        );
+                    } else {
+                        $output['definitions'][$model->getType()]['properties'][$name]['items'] = $items;
+                    }
                 }
                 if ($rule['type'] === 'enum' && !empty($rule['enum'])) {
                     if ($rule['array']) {

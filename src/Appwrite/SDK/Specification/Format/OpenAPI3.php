@@ -931,7 +931,15 @@ class OpenAPI3 extends Format
                     }
                 }
                 if ($items) {
-                    $output['components']['schemas'][$model->getType()]['properties'][$name]['items'] = $items;
+                    if (!empty($rule['nestedModel']) && !$rule['array']) {
+                        unset($output['components']['schemas'][$model->getType()]['properties'][$name]['type']);
+                        $output['components']['schemas'][$model->getType()]['properties'][$name] = \array_merge(
+                            $output['components']['schemas'][$model->getType()]['properties'][$name],
+                            $items
+                        );
+                    } else {
+                        $output['components']['schemas'][$model->getType()]['properties'][$name]['items'] = $items;
+                    }
                 }
                 if ($rule['type'] === 'enum' && !empty($rule['enum'])) {
                     if ($rule['array']) {
