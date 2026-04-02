@@ -11,6 +11,7 @@ use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\SMTP;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
@@ -115,7 +116,7 @@ class Create extends Action
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'At least one of userId, email, or phone is required');
         }
 
-        if (! $isPrivilegedUser && ! $isAppUser && empty(System::getEnv('_APP_SMTP_HOST'))) {
+        if (! $isPrivilegedUser && ! $isAppUser && !SMTP\SMTP::isEnabled()) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED);
         }
 

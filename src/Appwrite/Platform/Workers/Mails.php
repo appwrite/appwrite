@@ -2,13 +2,13 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\SMTP;
 use Appwrite\Template\Template;
 use Exception;
 use Swoole\Runtime;
 use Utopia\Database\Document;
 use Utopia\Logger\Log;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
-use Utopia\Messaging\Adapter\Email\SMTP;
 use Utopia\Messaging\Messages\Email as EmailMessage;
 use Utopia\Messaging\Messages\Email\Attachment;
 use Utopia\Platform\Action;
@@ -69,7 +69,7 @@ class Mails extends Action
 
         $smtp = $payload['smtp'];
 
-        if (empty($smtp) && empty(System::getEnv('_APP_SMTP_HOST'))) {
+        if (empty($smtp) && !SMTP\SMTP::isEnabled()) {
             throw new Exception('Skipped mail processing. No SMTP configuration has been set.');
         }
 
@@ -135,21 +135,16 @@ class Mails extends Action
         // render() will return the subject in <p> tags, so use strip_tags() to remove them
         $subject = \strip_tags($subjectTemplate->render());
 
-        /** @var EmailAdapter $adapter */
+        /** @var SMTP\Client|EmailAdapter $adapter */
         $adapter = empty($smtp)
             ? $register->get('smtp')
-            : new SMTP(
-                host: $smtp['host'],
-                port: (int) $smtp['port'],
-                username: $smtp['username'] ?? '',
-                password: $smtp['password'] ?? '',
-                smtpSecure: $smtp['secure'] ?? '',
-                smtpAutoTLS: false,
-                xMailer: 'Appwrite Mailer',
-                timeout: 10,
-                keepAlive: true,
-                timelimit: 30,
-            );
+            : SMTP\SMTP::createAdapter([
+                'host' => $smtp['host'],
+                'port' => (int) $smtp['port'],
+                'username' => $smtp['username'] ?? '',
+                'password' => $smtp['password'] ?? '',
+                'secure' => $smtp['secure'] ?? '',
+            ]);
 
         // Resolve from/replyTo using fallback hierarchy: Custom options > SMTP config > Defaults
         $defaultFromEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
@@ -180,7 +175,7 @@ class Mails extends Action
         $attachments = null;
         if (!empty($attachment['content'] ?? '')) {
             $attachments = [
-                new Attachment(
+                self::createAttachment(
                     name: $attachment['filename'] ?? 'unknown.file',
                     path: '',
                     type: $attachment['type'] ?? 'plain/text',
@@ -209,5 +204,14 @@ class Mails extends Action
             }
             throw new Exception('Error sending mail: ' . $error->getMessage(), 500);
         }
+    }
+
+    private static function createAttachment(
+        string $name,
+        string $path,
+        string $type,
+        ?string $content = null,
+    ): Attachment {
+        return new Attachment($name, $path, $type, $content);
     }
 }

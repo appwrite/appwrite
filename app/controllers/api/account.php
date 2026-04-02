@@ -24,6 +24,7 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\SMTP;
 use Appwrite\Template\Template;
 use Appwrite\URL\URL as URLParser;
 use Appwrite\Usage\Context;
@@ -2244,7 +2245,7 @@ Http::post('/v1/account/tokens/magic-url')
     ->inject('platform')
     ->inject('authorization')
     ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, array $plan, ProofsPassword $proofForPassword, array $platform, Authorization $authorization) {
-        if (empty(System::getEnv('_APP_SMTP_HOST'))) {
+        if (!SMTP\SMTP::isEnabled()) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
 
@@ -2553,7 +2554,7 @@ Http::post('/v1/account/tokens/email')
     ->inject('proofForCode')
     ->inject('authorization')
     ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, array $plan, ProofsPassword $proofForPassword, ProofsCode $proofForCode, Authorization $authorization) {
-        if (empty(System::getEnv('_APP_SMTP_HOST'))) {
+        if (!SMTP\SMTP::isEnabled()) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
 
@@ -3789,7 +3790,7 @@ Http::post('/v1/account/recovery')
     ->inject('authorization')
     ->action(function (string $email, string $url, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Mail $queueForMails, Event $queueForEvents, ProofsToken $proofForToken, Authorization $authorization) {
 
-        if (empty(System::getEnv('_APP_SMTP_HOST'))) {
+        if (!SMTP\SMTP::isEnabled()) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
         }
 
@@ -4102,7 +4103,7 @@ Http::post('/v1/account/verifications/email')
     ->inject('authorization')
     ->action(function (string $url, Request $request, Response $response, Document $project, array $platform, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, ProofsToken $proofForToken, Authorization $authorization) {
 
-        if (empty(System::getEnv('_APP_SMTP_HOST'))) {
+        if (!SMTP\SMTP::isEnabled()) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
         }
 

@@ -291,6 +291,14 @@ services:
       - _APP_DB_ADAPTER
       - _APP_SMTP_HOST
       - _APP_SMTP_PORT
+      - _APP_SMTP_SECURE
+      - _APP_SMTP_USERNAME
+      - _APP_SMTP_PASSWORD
+      - _APP_SMTP_HOST_SECONDARY
+      - _APP_SMTP_PORT_SECONDARY
+      - _APP_SMTP_SECURE_SECONDARY
+      - _APP_SMTP_USERNAME_SECONDARY
+      - _APP_SMTP_PASSWORD_SECONDARY
 
   appwrite-worker-builds:
     entrypoint: worker-builds
