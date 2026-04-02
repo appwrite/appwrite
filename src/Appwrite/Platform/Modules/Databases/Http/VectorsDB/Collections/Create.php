@@ -137,8 +137,9 @@ class Create extends CollectionAction
                 id: 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
                 permissions: $permissions,
                 documentSecurity: $documentSecurity,
-                attributes:$attributes,
-                indexes:$indexes
+                attributes: $attributes,
+                indexes: $indexes,
+                metadata: ['externalId' => $collectionId],
             );
             // Create attribute and indexes metadata documents in the attributes and indexes collections
             // needed for the get and list calls

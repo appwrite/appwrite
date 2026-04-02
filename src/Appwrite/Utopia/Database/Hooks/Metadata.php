@@ -12,16 +12,14 @@ use Utopia\Query\Schema\ColumnType;
  * Stamps database/collection metadata onto every document returned from the database,
  * and recursively decorates nested relationship documents.
  *
- * Collection ID mappings are registered by endpoint actions via setCollectionId()
- * before querying documents. No bulk queries or static caches are needed.
+ * Uses the 'externalId' attribute stored on the collection metadata document
+ * to resolve internal collection names to user-facing collection IDs.
+ * Zero queries — externalId is set during createCollection.
  */
 class Metadata implements Decorator
 {
     /** @var array<string, array<Document>> */
     private array $relationshipCache = [];
-
-    /** @var array<string, string> internal collection name -> user-facing collection ID */
-    private array $collectionIdMap = [];
 
     private int $operations = 0;
 
@@ -29,14 +27,6 @@ class Metadata implements Decorator
         private Document $database,
         private string $context = 'collection',
     ) {
-    }
-
-    /**
-     * Register a mapping from internal collection name to user-facing collection ID.
-     */
-    public function setCollectionId(string $internalName, string $externalId): void
-    {
-        $this->collectionIdMap[$internalName] = $externalId;
     }
 
     public function decorate(Event $event, Document $collection, Document $document): Document
@@ -47,7 +37,7 @@ class Metadata implements Decorator
 
         $this->operations++;
 
-        $collectionId = $this->collectionIdMap[$collection->getId()] ?? $collection->getId();
+        $collectionId = $collection->getAttribute('externalId', $collection->getId());
         $document->setAttribute('$databaseId', $this->database->getId());
         $document->setAttribute('$' . $this->context . 'Id', $collectionId);
 
@@ -87,16 +77,15 @@ class Metadata implements Decorator
             }
 
             $relations = \is_array($related) ? $related : [$related];
-            $options = $relationship->getAttribute('options', []);
-            $relatedInternalName = (\is_array($options) ? ($options['relatedCollection'] ?? null) : null)
-                ?? $relationship->getAttribute('relatedCollection');
-            $relatedExternalId = $this->collectionIdMap[$relatedInternalName] ?? $relatedInternalName;
 
             foreach ($relations as $relation) {
                 if ($relation instanceof Document) {
                     $this->operations++;
                     $relation->setAttribute('$databaseId', $this->database->getId());
-                    $relation->setAttribute('$' . $this->context . 'Id', $relatedExternalId);
+                    // Related documents get their $collection set by the database library
+                    // which points to the related collection's metadata — read its externalId
+                    $relCollection = $relation->getCollection();
+                    $relation->setAttribute('$' . $this->context . 'Id', $relCollection ?: $collectionId);
                 }
             }
         }

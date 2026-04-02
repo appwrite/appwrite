@@ -708,9 +708,9 @@ Http::setResource('dbForPlatform', function (Group $pools, Cache $cache, Authori
     return $database;
 }, ['pools', 'cache', 'authorization']);
 
-Http::setResource('getDatabasesDB', function (Group $pools, Database $dbForProject, Cache $cache, Document $project, Request $request, UsageContext $usage, Authorization $authorization) {
+Http::setResource('getDatabasesDB', function (Group $pools, Cache $cache, Document $project, Request $request, UsageContext $usage, Authorization $authorization) {
 
-    return function (Document $database, ?Document $collection = null) use ($pools, $dbForProject, $cache, $project, $request, $usage, $authorization): Database {
+    return function (Document $database, ?Document $collection = null) use ($pools, $cache, $project, $request, $usage, $authorization): Database {
         $originalDatabase = $database;
         $context = str_contains($request->getURI(), '/tablesdb/') ? 'table' : 'collection';
         $databaseDSN = $database->getAttribute('database', $project->getAttribute('database', ''));
@@ -770,61 +770,6 @@ Http::setResource('getDatabasesDB', function (Group $pools, Database $dbForProje
             $databaseIdCollectionIdDocumentsMetric = $databaseType . '.' . $databaseIdCollectionIdDocumentsMetric;
         }
 
-        $metadata = new Metadata(
-            database: $originalDatabase,
-            context: $context,
-        );
-
-        // Register collection ID mapping if collection document is provided
-        if ($collection !== null && !$collection->isEmpty()) {
-            $dbSeq = $originalDatabase->getSequence();
-            $dbPrefix = 'database_' . $dbSeq;
-            $seq = $collection->getSequence();
-            if ($seq !== null) {
-                $metadata->setCollectionId('collection_' . $seq, $collection->getId());
-                $metadata->setCollectionId($dbPrefix . '_collection_' . $seq, $collection->getId());
-            }
-
-            // Also register related collections from relationship attributes
-            // Load ALL collections for this database once and cache statically
-            static $dbCollectionMaps = [];
-            $hasRelationships = false;
-            $attributes = $collection->getAttribute('attributes', []);
-            foreach ($attributes as $attr) {
-                if ($attr->getAttribute('type') === \Utopia\Query\Schema\ColumnType::Relationship->value) {
-                    $hasRelationships = true;
-                    break;
-                }
-            }
-            if ($hasRelationships && !isset($dbCollectionMaps[$dbPrefix])) {
-                try {
-                    $allCols = $authorization->skip(
-                        fn () => $dbForProject->silent(
-                            fn () => $dbForProject->find($dbPrefix, [
-                                \Utopia\Database\Query::limit(5000),
-                            ])
-                        )
-                    );
-                    $map = [];
-                    foreach ($allCols as $col) {
-                        $colSeq = $col->getSequence();
-                        if ($colSeq !== null) {
-                            $map['collection_' . $colSeq] = $col->getId();
-                            $map[$dbPrefix . '_collection_' . $colSeq] = $col->getId();
-                        }
-                    }
-                    $dbCollectionMaps[$dbPrefix] = $map;
-                } catch (\Throwable) {
-                    $dbCollectionMaps[$dbPrefix] = [];
-                }
-            }
-            if (isset($dbCollectionMaps[$dbPrefix])) {
-                foreach ($dbCollectionMaps[$dbPrefix] as $k => $v) {
-                    $metadata->setCollectionId($k, $v);
-                }
-            }
-        }
-
         $database
             ->addHook(new DocumentUsage(
                 $usage,
@@ -834,7 +779,10 @@ Http::setResource('getDatabasesDB', function (Group $pools, Database $dbForProje
             ))
             ->addHook(new Permissions())
             ->addHook(new Relationships($database))
-            ->addHook($metadata);
+            ->addHook(new Metadata(
+                database: $originalDatabase,
+                context: $context,
+            ));
 
         if ($database->getSharedTables() && ($database->getTenant() !== null)) {
             $database->addHook(new Tenancy($database->getTenant()));
@@ -843,7 +791,7 @@ Http::setResource('getDatabasesDB', function (Group $pools, Database $dbForProje
         return $database;
     };
 
-}, ['pools','dbForProject','cache','project','request','usage','authorization']);
+}, ['pools','cache','project','request','usage','authorization']);
 
 Http::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache, Authorization $authorization) {
     $databases = [];
