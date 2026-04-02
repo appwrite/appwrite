@@ -184,46 +184,6 @@ Getting started with Appwrite is as easy as creating a new project, choosing you
 - [**Sites**](https://appwrite.io/docs/products/sites) - Develop, deploy, and scale your web applications directly from Appwrite, alongside your backend.
 
 For the complete API documentation, visit [https://appwrite.io/docs](https://appwrite.io/docs).
-appwrite
-Repository navigation
-Code
-Issues
-488
- (488)
-Pull requests
-296
- (296)
-Discussions
-Actions
-Projects
-Security and quality
-Insights
-Important update
-On April 24 we'll start using GitHub Copilot interaction data for AI model training unless you opt out. Review this update and manage your preferences in your GitHub account settings.
-docs: update legacy blog and discord links to official vanity URLs
-#11760
-Open
-Curbe6
-wants to merge 1 commit into
-appwrite:1.9.x
-from
-Curbe6:patch-1
-+2
--2
-Lines changed: 2 additions & 2 deletions
-Conversation3 (3)
-Commits1 (1)
-Checks1 (1)
-Files changed1 (1)
-Pull Request Toolbar
-0 / 1 viewed
-‎README.md‎
-+2
--2
-Lines changed: 2 additions & 2 deletions
-
-
-Original file line number	Diff line number	Diff line change
 
 ## Installation & Setup
 
@@ -238,24 +198,6 @@ Resolved
 - [**Sites**](https://appwrite.io/docs/products/sites) - Develop, deploy, and scale your web applications directly from Appwrite, alongside your backend.
 
 For the complete API documentation, visit [https://appwrite.io/docs](https://appwrite.io/docs). For more tutorials, news and announcements check out our [blog](https://medium.com/appwrite-io) and [Discord Server](https://discord.gg/GSeTUeA).
-For the complete API documentation, visit [https://appwrite.io/docs](https://appwrite.io/docs). For more tutorials, news and announcements check out our [blog](https://appwrite.io/blog)
-Comment on line R186
-greptile-apps[bot] commented 9 minutes ago
-@greptile-apps[bot]
-greptile-apps[bot]
-9 minutes ago
-Contributor
-P1 Discord link removed instead of updated
-
-The PR description states the goal is to update the Discord invite link to the official vanity URL https://appwrite.io/discord, but instead the Discord link was completely dropped. As a result, readers have no way to find the community Discord from this paragraph.
-
-Additionally, the sentence now ends without a period, leaving it grammatically incomplete.
-
-Suggested change
-For the complete API documentation, visit [https://appwrite.io/docs](https://appwrite.io/docs). For more tutorials, news and announcements check out our [blog](https://appwrite.io/blog) and [Discord Server](https://appwrite.io/discord).
-Write a reply
-
-### SDKs
 
 
 ### SDKs
