@@ -54,7 +54,7 @@ class Rule extends Model
             ])
             ->addRule('redirectStatusCode', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Status code to apply during redirect. Only applicable if type is "redirect".',
+                'description' => 'Status code to apply during redirect. Only applicable if type is "redirect", defaults to 301.',
                 'default' => 301,
                 'example' => 301,
             ])
