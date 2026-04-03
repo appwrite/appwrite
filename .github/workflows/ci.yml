@@ -218,7 +218,8 @@ jobs:
             const decode = (content) => JSON.parse(Buffer.from(content, 'base64').toString());
             const databaseChanged = getDbVersion(decode(base.content)) !== getDbVersion(decode(head.content));
 
-            core.setOutput('databases', JSON.stringify(databaseChanged ? allDatabases : defaultDatabases));
+            // Like cloud: database version change expands modes only, not engines
+            core.setOutput('databases', JSON.stringify(defaultDatabases));
             core.setOutput('modes', JSON.stringify(databaseChanged ? allModes : defaultModes));
 
   build:

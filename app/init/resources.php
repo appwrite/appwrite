@@ -633,7 +633,7 @@ Http::setResource('dbForProject', function (Group $pools, Database $dbForPlatfor
     if (\in_array($dsn->getHost(), $sharedTables)) {
         $database
             ->setSharedTables(true)
-            ->setTenant($project->getSequence())
+            ->setTenant((int)$project->getSequence())
             ->setNamespace($dsn->getParam('namespace'));
     } else {
         $database
@@ -1054,7 +1054,7 @@ Http::setResource('getProjectDB', function (Group $pools, Database $dbForPlatfor
             if (\in_array($dsn->getHost(), $sharedTables)) {
                 $database
                     ->setSharedTables(true)
-                    ->setTenant($project->getSequence())
+                    ->setTenant((int)$project->getSequence())
                     ->setNamespace($dsn->getParam('namespace'));
             } else {
                 $database
@@ -1085,7 +1085,7 @@ Http::setResource('getLogsDB', function (Group $pools, Cache $cache, Authorizati
 
     return function (?Document $project = null) use ($pools, $cache, $authorization, &$database) {
         if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant($project->getSequence());
+            $database->setTenant((int)$project->getSequence());
             return $database;
         }
 
@@ -1102,7 +1102,7 @@ Http::setResource('getLogsDB', function (Group $pools, Cache $cache, Authorizati
 
         // set tenant
         if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant($project->getSequence());
+            $database->setTenant((int)$project->getSequence());
         }
 
         return $database;
