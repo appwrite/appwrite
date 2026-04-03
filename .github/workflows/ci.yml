@@ -191,7 +191,7 @@ jobs:
             const allDatabases = ['MariaDB', 'PostgreSQL', 'MongoDB'];
             const allModes = ['dedicated', 'shared_v1', 'shared_v2'];
 
-            const defaultDatabases = ['MongoDB'];
+            const defaultDatabases = ['MariaDB'];
             const defaultModes = ['dedicated'];
 
             const pr = context.payload.pull_request;
