@@ -21,8 +21,10 @@ import {
   BrainCircuit,
   ExternalLink,
   RefreshCw,
-  Globe,
+  Sun,
+  Moon,
 } from 'lucide-react'
+import { useTheme } from 'next-themes'
 import {
   getDeploymentStatusBadge,
   isDeploymentCompleted,
@@ -56,11 +58,6 @@ import {
   TooltipContent,
 } from '@/components/ui/tooltip'
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -74,6 +71,9 @@ import {
   useDeploymentProxyRules,
   useFunctionDeploymentProxyRules,
 } from '@/lib/react-query/hooks'
+import { sdk } from '@/lib/appwrite/sdk'
+import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
+import { cn } from '@/lib/utils'
 
 function formatSize(bytes: number): string {
   if (bytes === 0) return '0 B'
@@ -89,6 +89,18 @@ function formatDuration(seconds: number): string {
   const secs = seconds % 60
   return `${minutes}m ${secs}s`
 }
+
+/** Popovers/menus/dialogs must sit above fullscreen WizardLayout (z-[9998]). */
+const WIZARD_PORTAL_Z_DROPDOWN = 'z-[10050]'
+const WIZARD_PORTAL_Z_POPOVER = 'z-[10050]'
+const WIZARD_DIALOG_OVERLAY_Z = 'z-[10050]'
+const WIZARD_DIALOG_CONTENT_Z = 'z-[10051]'
+
+const SCREENSHOTS_BUCKET_ID = 'screenshots'
+const SCREENSHOT_PREVIEW_WIDTH = 1280
+const SCREENSHOT_PREVIEW_HEIGHT = 720
+/** After copying a deployment URL, hide the copy control after this delay (ms). */
+const URL_COPY_HIDE_DELAY_MS = 500
 
 // GitHub Icon Component
 function GitHubIcon({ className }: { className?: string }) {
@@ -392,7 +404,7 @@ export interface DeploymentDetailViewConfig {
   deployment: Models.Deployment | undefined
   isLoading: boolean
   parentResource:
-    | { name?: string; deploymentId?: string; runtime?: string }
+    | { name?: string; deploymentId?: string; runtime?: string; framework?: string }
     | undefined // site or function
   deployments: Models.Deployment[]
   relatedData?: { total?: number } // logs or executions count
@@ -480,6 +492,13 @@ export function DeploymentDetailView({
   const hasUserScrolledRef = useRef(false)
   const [isAtTop, setIsAtTop] = useState(true)
   const [isAtBottom, setIsAtBottom] = useState(false)
+  /** URL row copy icon stays hidden after copy until pointer leaves that row. */
+  const [urlCopyHiddenUntilLeave, setUrlCopyHiddenUntilLeave] = useState<
+    string | null
+  >(null)
+  const urlCopyHideAfterCopyTimeoutRef = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null)
 
   // Live elapsed seconds when deployment is processing/building (updates every second)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
@@ -554,6 +573,64 @@ export function DeploymentDetailView({
 
   const proxyRules = isSiteDeployment ? siteProxyRules : functionProxyRules
 
+  /** Domains from proxy rules returned for this deployment ID only (SDK queries). */
+  const visitEntries = useMemo(() => {
+    const domains = new Set<string>()
+    for (const r of proxyRules.rules) {
+      if (!r.domain) continue
+      if (r.type !== 'deployment' && r.type !== 'redirect') continue
+      domains.add(r.domain)
+    }
+    return Array.from(domains)
+  }, [proxyRules.rules])
+
+  useEffect(() => {
+    if (urlCopyHideAfterCopyTimeoutRef.current) {
+      clearTimeout(urlCopyHideAfterCopyTimeoutRef.current)
+      urlCopyHideAfterCopyTimeoutRef.current = null
+    }
+    setUrlCopyHiddenUntilLeave(null)
+  }, [deployment?.$id])
+
+  useEffect(() => {
+    return () => {
+      if (urlCopyHideAfterCopyTimeoutRef.current) {
+        clearTimeout(urlCopyHideAfterCopyTimeoutRef.current)
+        urlCopyHideAfterCopyTimeoutRef.current = null
+      }
+    }
+  }, [])
+
+  const { resolvedTheme } = useTheme()
+  const [sidebarScreenshotLoaded, setSidebarScreenshotLoaded] = useState(false)
+  const [sidebarScreenshotThemeOverride, setSidebarScreenshotThemeOverride] =
+    useState<'light' | 'dark' | null>(null)
+
+  const defaultScreenshotTheme = useMemo((): 'light' | 'dark' => {
+    if (typeof window === 'undefined') return 'dark'
+    if (resolvedTheme === 'dark') return 'dark'
+    if (resolvedTheme === 'light') return 'light'
+    if (
+      resolvedTheme === 'system' &&
+      window.matchMedia('(prefers-color-scheme: dark)').matches
+    )
+      return 'dark'
+    return 'light'
+  }, [resolvedTheme])
+
+  const sidebarScreenshotTheme =
+    sidebarScreenshotThemeOverride ?? defaultScreenshotTheme
+
+  const sidebarScreenshotFileId = deployment
+    ? sidebarScreenshotTheme === 'dark'
+      ? deployment.screenshotDark
+      : deployment.screenshotLight
+    : null
+
+  useEffect(() => {
+    setSidebarScreenshotLoaded(false)
+  }, [deployment?.$id, sidebarScreenshotTheme, sidebarScreenshotFileId])
+
   // Check if deployment failed (including timeout)
   const isDeploymentFailed = deployment
     ? deployment.status === 'failed' ||
@@ -607,12 +684,384 @@ export function DeploymentDetailView({
   const commitUrl = deployment ? getCommitUrl(deployment) : null
   const branchUrl = deployment ? getBranchUrl(deployment) : null
 
+  const resolvedCommitUrl =
+    deployment?.providerCommitUrl || commitUrl || null
+  const resolvedBranchUrl =
+    deployment?.providerBranchUrl || branchUrl || null
+
   // Get status badge
   const statusBadge = deployment
     ? getDeploymentStatusBadge(deployment.status, deployment.$createdAt)
     : null
 
   const buildLogs = deployment?.buildLogs || ''
+
+  const deploymentDetailSidebar = useMemo(() => {
+    if (!deployment) return null
+
+    const screenshotId =
+      sidebarScreenshotTheme === 'dark'
+        ? deployment.screenshotDark
+        : deployment.screenshotLight
+    const screenshotUrl =
+      isSiteDeployment && screenshotId
+        ? sdk.forConsole.storage.getFilePreview({
+            bucketId: SCREENSHOTS_BUCKET_ID,
+            fileId: screenshotId,
+            width: SCREENSHOT_PREVIEW_WIDTH,
+            height: SCREENSHOT_PREVIEW_HEIGHT,
+          })
+        : null
+
+    const typeLabel =
+      deployment.type === 'cli'
+        ? 'CLI'
+        : deployment.type === 'manual'
+          ? 'Manual'
+          : deployment.type === 'vcs'
+            ? 'VCS'
+            : deployment.type || 'N/A'
+
+    return (
+      <div className="divide-y divide-border pb-4 [&>section:first-of-type]:!pt-0 [&>section:first-of-type]:pb-3">
+        {isSiteDeployment && (
+          <section className="space-y-2.5 py-3">
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Preview
+              </h3>
+              <div className="flex items-center gap-0.5 rounded border border-border/60 bg-muted/40 p-0.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSidebarScreenshotThemeOverride('light')
+                    setSidebarScreenshotLoaded(false)
+                  }}
+                  className={cn(
+                    'rounded p-1 transition-colors',
+                    sidebarScreenshotTheme === 'light'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                  )}
+                  title="Light screenshot"
+                >
+                  <Sun className="h-3 w-3" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSidebarScreenshotThemeOverride('dark')
+                    setSidebarScreenshotLoaded(false)
+                  }}
+                  className={cn(
+                    'rounded p-1 transition-colors',
+                    sidebarScreenshotTheme === 'dark'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                  )}
+                  title="Dark screenshot"
+                >
+                  <Moon className="h-3 w-3" />
+                </button>
+              </div>
+            </div>
+            <div className="relative w-full aspect-video overflow-hidden rounded border border-border bg-muted">
+              {screenshotUrl ? (
+                <div className="absolute inset-0">
+                  <img
+                    key={screenshotId}
+                    src={screenshotUrl}
+                    alt="Deployment screenshot"
+                    onLoad={() => setSidebarScreenshotLoaded(true)}
+                    className={cn(
+                      'h-full w-full object-cover object-top transition-opacity duration-300',
+                      sidebarScreenshotLoaded ? 'opacity-100' : 'opacity-0',
+                    )}
+                  />
+                  {parentResource?.framework ? (
+                    <div className="absolute bottom-1 left-1 flex h-6 w-6 items-center justify-center rounded border border-border/60 bg-background/90">
+                      <FrameworkIcon
+                        framework={parentResource.framework}
+                        size="sm"
+                      />
+                    </div>
+                  ) : null}
+                </div>
+              ) : (
+                <div className="flex h-full items-center justify-center px-2">
+                  <p className="text-center text-[10px] leading-snug text-muted-foreground">
+                    {isDeploymentCompleted(deployment.status)
+                      ? 'No preview'
+                      : 'Not ready'}
+                  </p>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
+        {(isSiteDeployment || visitEntries.length > 0) && (
+          <section className="space-y-2 py-3">
+            <h3 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              URLs
+            </h3>
+            {!isActiveDeployment && visitEntries.length > 0 ? (
+              <p className="text-[10px] leading-snug text-muted-foreground">
+                Live traffic uses the active deployment until you activate this
+                one.
+              </p>
+            ) : null}
+            {visitEntries.length === 0 ? (
+              isSiteDeployment ? (
+                <p className="text-[10px] leading-snug text-muted-foreground">
+                  No proxy rules reference this deployment.
+                </p>
+              ) : null
+            ) : (
+              <ul className="space-y-0">
+                {visitEntries.map((domain) => {
+                  const copyHiddenUntilLeave =
+                    urlCopyHiddenUntilLeave === domain
+                  return (
+                    <li
+                      key={domain}
+                      className="group flex min-w-0 items-center gap-1 py-0.5"
+                      onMouseLeave={() => {
+                        if (urlCopyHideAfterCopyTimeoutRef.current) {
+                          clearTimeout(urlCopyHideAfterCopyTimeoutRef.current)
+                          urlCopyHideAfterCopyTimeoutRef.current = null
+                        }
+                        setUrlCopyHiddenUntilLeave((blocked) =>
+                          blocked === domain ? null : blocked,
+                        )
+                      }}
+                    >
+                      <a
+                        href={`https://${domain}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title={`Open ${domain} in new tab`}
+                        className="flex min-w-0 flex-1 items-center gap-1 overflow-hidden font-mono text-[11px] text-foreground hover:text-primary"
+                      >
+                        <span className="min-w-0 truncate">{domain}</span>
+                        <ExternalLink
+                          className="h-3 w-3 shrink-0 text-muted-foreground opacity-70 group-hover:opacity-100 group-hover:text-primary"
+                          aria-hidden
+                        />
+                      </a>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className={cn(
+                          'h-6 w-6 shrink-0 p-0 text-muted-foreground transition-opacity duration-150',
+                          'hover:bg-muted/60 hover:text-foreground',
+                          copyHiddenUntilLeave
+                            ? 'pointer-events-none opacity-0'
+                            : 'pointer-events-none opacity-0 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100',
+                        )}
+                        onClick={(e) => {
+                          const el = e.currentTarget as HTMLButtonElement
+                          void navigator.clipboard.writeText(
+                            `https://${domain}`,
+                          )
+                          toast.success('URL copied')
+                          el.blur()
+                          if (urlCopyHideAfterCopyTimeoutRef.current) {
+                            clearTimeout(
+                              urlCopyHideAfterCopyTimeoutRef.current,
+                            )
+                          }
+                          urlCopyHideAfterCopyTimeoutRef.current =
+                            window.setTimeout(() => {
+                              urlCopyHideAfterCopyTimeoutRef.current = null
+                              setUrlCopyHiddenUntilLeave(domain)
+                            }, URL_COPY_HIDE_DELAY_MS)
+                        }}
+                      >
+                        <Copy className="h-3 w-3" />
+                      </Button>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+          </section>
+        )}
+
+        {(deployment.providerCommitMessage ||
+          deployment.providerCommitHash) && (
+          <section className="space-y-2 py-3">
+            <h3 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Commit
+            </h3>
+            {deployment.providerCommitMessage ? (
+              <p className="break-words text-[11px] leading-snug whitespace-pre-wrap text-foreground">
+                {deployment.providerCommitMessage}
+              </p>
+            ) : null}
+            {deployment.providerCommitHash ? (
+              <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                <GitCommit className="h-3 w-3 shrink-0 text-muted-foreground" />
+                {resolvedCommitUrl ? (
+                  <a
+                    href={resolvedCommitUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-mono text-[11px] font-medium text-primary hover:underline"
+                  >
+                    {deployment.providerCommitHash.slice(0, 7)}
+                  </a>
+                ) : (
+                  <span className="font-mono text-[11px] font-medium text-foreground">
+                    {deployment.providerCommitHash.slice(0, 7)}
+                  </span>
+                )}
+              </div>
+            ) : null}
+          </section>
+        )}
+
+        {deployment.providerBranch ? (
+          <section className="space-y-2 py-3">
+            <h3 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Branch
+            </h3>
+            <div className="flex min-w-0 items-center gap-1.5">
+              <GitBranch className="h-3 w-3 shrink-0 text-muted-foreground" />
+              {resolvedBranchUrl ? (
+                <a
+                  href={resolvedBranchUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="truncate text-[11px] font-medium text-foreground hover:text-primary"
+                >
+                  {deployment.providerBranch}
+                </a>
+              ) : (
+                <span className="truncate text-[11px] font-medium text-foreground">
+                  {deployment.providerBranch}
+                </span>
+              )}
+            </div>
+          </section>
+        ) : null}
+
+        {vcsProvider &&
+        deployment.providerRepositoryOwner &&
+        deployment.providerRepositoryName ? (
+          <section className="space-y-2 py-3">
+            <h3 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Repository
+            </h3>
+            <div className="flex min-w-0 items-center gap-1.5">
+              <span className="shrink-0 text-muted-foreground [&_svg]:h-3 [&_svg]:w-3">
+                {vcsProvider.icon}
+              </span>
+              {repositoryUrl ? (
+                <a
+                  href={repositoryUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="truncate text-[11px] font-medium text-foreground hover:text-primary"
+                >
+                  {deployment.providerRepositoryOwner}/
+                  {deployment.providerRepositoryName}
+                </a>
+              ) : (
+                <span className="truncate text-[11px] font-medium text-foreground">
+                  {deployment.providerRepositoryOwner}/
+                  {deployment.providerRepositoryName}
+                </span>
+              )}
+            </div>
+          </section>
+        ) : null}
+
+        <section className="space-y-2 py-3">
+          <h3 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Details
+          </h3>
+          <div className="space-y-2 text-[11px]">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-muted-foreground">Size</span>
+              <span className="shrink-0 font-medium text-foreground">
+                {formatSize(
+                  (deployment.buildSize || 0) + (deployment.sourceSize || 0),
+                )}
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1">
+                <span className="text-muted-foreground">Type</span>
+                <TooltipProvider delayDuration={0}>
+                  <TooltipPrimitive.Root>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        className="inline-flex items-center justify-center focus:outline-none"
+                      >
+                        <HelpCircle className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="top"
+                      sideOffset={4}
+                      className={cn('max-w-xs', WIZARD_PORTAL_Z_POPOVER)}
+                    >
+                      <p className="text-[12px]">
+                        {deployment.type === 'vcs'
+                          ? 'VCS (Version Control System) deployments are triggered from a connected Git repository and enable automatic deployments on code pushes.'
+                          : deployment.type === 'cli'
+                            ? 'CLI deployments are created using the Appwrite command line tool, useful for developer workflows and scripted automation.'
+                            : deployment.type === 'manual'
+                              ? 'Manual deployments are created by uploading code through the Console or API, or by redeploying an existing deployment. Useful for quick testing and re-running builds.'
+                              : 'The deployment type indicates how this deployment was created.'}
+                      </p>
+                    </TooltipContent>
+                  </TooltipPrimitive.Root>
+                </TooltipProvider>
+              </div>
+              <span className="shrink-0 font-medium text-foreground">
+                {typeLabel}
+              </span>
+            </div>
+            {showRuntime && parentResource?.runtime && RuntimeIcon ? (
+              <div className="flex min-w-0 items-center justify-between gap-2">
+                <span className="shrink-0 text-muted-foreground">Runtime</span>
+                <div className="flex min-w-0 items-center gap-1">
+                  <RuntimeIcon
+                    runtime={parentResource.runtime}
+                    size="sm"
+                    className="h-3 w-3 shrink-0"
+                  />
+                  <span className="truncate font-mono font-medium text-foreground">
+                    {parentResource.runtime}
+                  </span>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </section>
+      </div>
+    )
+  }, [
+    deployment,
+    isSiteDeployment,
+    isActiveDeployment,
+    parentResource?.framework,
+    parentResource?.runtime,
+    visitEntries,
+    vcsProvider,
+    repositoryUrl,
+    resolvedCommitUrl,
+    resolvedBranchUrl,
+    showRuntime,
+    RuntimeIcon,
+    sidebarScreenshotTheme,
+    sidebarScreenshotLoaded,
+    urlCopyHiddenUntilLeave,
+  ])
 
   const refetchAndNavigate = async () => {
     for (const queryKey of invalidateQueries) {
@@ -762,11 +1211,10 @@ export function DeploymentDetailView({
     toast.success('Logs downloaded')
   }
 
-  // Find the scrollable parent element (WizardLayout's content wrapper)
+  // Logs scroll in a dedicated pane; include self then walk up for overflow-y auto/scroll
   const getScrollContainer = useCallback((): HTMLElement | null => {
     if (!logsContainerRef.current) return null
-    // Walk up the DOM to find the scrollable parent
-    let element: HTMLElement | null = logsContainerRef.current.parentElement
+    let element: HTMLElement | null = logsContainerRef.current
     while (element) {
       const style = window.getComputedStyle(element)
       const overflowY = style.overflowY
@@ -881,9 +1329,9 @@ export function DeploymentDetailView({
     }
   }
 
-  // Line click: toggle URL line param and copy "Line N" to clipboard
+  // Line click: toggle URL line param (selection only; copy uses row button)
   const handleLineClick = useCallback(
-    async (lineNumber: number) => {
+    (lineNumber: number) => {
       const isSelected = selectedLine === lineNumber
       if (isSelected) {
         navigate({
@@ -901,13 +1349,6 @@ export function DeploymentDetailView({
           search: (prev: unknown) => ({ ...(prev || {}), line: lineNumber }),
           replace: true,
         })
-        const lineRef = `Line ${lineNumber}`
-        try {
-          await navigator.clipboard.writeText(lineRef)
-          toast.success(`Copied "${lineRef}" to clipboard`)
-        } catch {
-          // Ignore clipboard errors
-        }
       }
     },
     [selectedLine, navigate, location.pathname],
@@ -1047,7 +1488,7 @@ export function DeploymentDetailView({
       headerBottom={
         <>
           {/* Metadata - Part of Header */}
-          <div className="border-t border-border bg-muted/20">
+          <div className="border-y border-border bg-muted/20">
             <div className="px-4 sm:px-6 py-3 sm:py-4">
               <div className="flex items-center gap-3 sm:gap-6 flex-wrap">
                 {/* Deployed */}
@@ -1058,195 +1499,6 @@ export function DeploymentDetailView({
                   <span className="text-[12px] sm:text-[13px] font-medium text-foreground">
                     <DateTooltip date={deployment.$createdAt} />
                   </span>
-                </div>
-
-                {/* Total size */}
-                <div className="flex items-center gap-2">
-                  <span className="text-[12px] sm:text-[13px] text-muted-foreground">
-                    Size
-                  </span>
-                  <span className="text-[12px] sm:text-[13px] font-medium text-foreground">
-                    {formatSize(
-                      (deployment.buildSize || 0) +
-                        (deployment.sourceSize || 0),
-                    )}
-                  </span>
-                </div>
-
-                {/* Source */}
-                {vcsProvider &&
-                  deployment.providerRepositoryOwner &&
-                  deployment.providerRepositoryName && (
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-[12px] sm:text-[13px] text-muted-foreground shrink-0">
-                        Source
-                      </span>
-                      <div className="flex items-center gap-1.5 min-w-0">
-                        <span className="text-muted-foreground shrink-0">
-                          {vcsProvider.icon}
-                        </span>
-                        {repositoryUrl ? (
-                          <a
-                            href={repositoryUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[12px] sm:text-[13px] font-medium text-foreground hover:text-primary transition-colors truncate"
-                          >
-                            {deployment.providerRepositoryOwner}/
-                            {deployment.providerRepositoryName}
-                          </a>
-                        ) : (
-                          <span className="text-[12px] sm:text-[13px] font-medium text-foreground truncate">
-                            {deployment.providerRepositoryOwner}/
-                            {deployment.providerRepositoryName}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                {/* Branch */}
-                {deployment.providerBranch && (
-                  <div className="flex items-center gap-2 min-w-0">
-                    <GitBranch className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                    {branchUrl ? (
-                      <a
-                        href={branchUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[12px] sm:text-[13px] font-medium text-foreground hover:text-primary transition-colors truncate"
-                      >
-                        {deployment.providerBranch}
-                      </a>
-                    ) : (
-                      <span className="text-[12px] sm:text-[13px] font-medium text-foreground truncate">
-                        {deployment.providerBranch}
-                      </span>
-                    )}
-                  </div>
-                )}
-
-                {/* Commit Hash */}
-                {deployment.providerCommitHash && (
-                  <div className="flex items-center gap-2 min-w-0">
-                    <GitCommit className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                    {deployment.providerCommitMessage ? (
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <button
-                            type="button"
-                            className="text-[12px] sm:text-[13px] font-mono font-medium text-foreground hover:text-primary transition-colors cursor-pointer text-left"
-                          >
-                            {deployment.providerCommitHash.slice(0, 7)}
-                          </button>
-                        </PopoverTrigger>
-                        <PopoverContent
-                          side="bottom"
-                          align="start"
-                          className="max-w-sm z-[200]"
-                          sideOffset={4}
-                        >
-                          <div className="space-y-2">
-                            <p className="text-[13px] whitespace-pre-wrap break-words text-foreground">
-                              {deployment.providerCommitMessage}
-                            </p>
-                            {commitUrl && (
-                              <a
-                                href={commitUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-[12px] text-primary hover:underline inline-block"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                View commit →
-                              </a>
-                            )}
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-                    ) : (
-                      <>
-                        {commitUrl ? (
-                          <a
-                            href={commitUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[12px] sm:text-[13px] font-mono font-medium text-foreground hover:text-primary transition-colors"
-                          >
-                            {deployment.providerCommitHash.slice(0, 7)}
-                          </a>
-                        ) : (
-                          <span className="text-[12px] sm:text-[13px] font-mono font-medium text-foreground">
-                            {deployment.providerCommitHash.slice(0, 7)}
-                          </span>
-                        )}
-                      </>
-                    )}
-                  </div>
-                )}
-
-                {/* Runtime - Only for functions */}
-                {showRuntime && parentResource?.runtime && RuntimeIcon && (
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-[12px] sm:text-[13px] text-muted-foreground shrink-0">
-                      Runtime
-                    </span>
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <RuntimeIcon
-                        runtime={parentResource.runtime}
-                        size="sm"
-                        className="h-3.5 w-3.5 shrink-0"
-                      />
-                      <span className="text-[12px] sm:text-[13px] font-mono font-medium text-foreground truncate">
-                        {parentResource.runtime}
-                      </span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Type */}
-                <div className="flex items-center gap-2">
-                  <span className="text-[13px] text-muted-foreground">
-                    Type
-                  </span>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[13px] font-medium text-foreground">
-                      {deployment.type === 'cli'
-                        ? 'CLI'
-                        : deployment.type === 'manual'
-                          ? 'Manual'
-                          : deployment.type === 'vcs'
-                            ? 'VCS'
-                            : deployment.type || 'N/A'}
-                    </span>
-                    <TooltipProvider delayDuration={0}>
-                      <TooltipPrimitive.Root>
-                        <TooltipTrigger asChild>
-                          <button
-                            type="button"
-                            className="inline-flex items-center justify-center focus:outline-none"
-                          >
-                            <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent
-                          side="top"
-                          sideOffset={4}
-                          className="max-w-xs z-[200]"
-                        >
-                          <p className="text-[12px]">
-                            {deployment.type === 'vcs'
-                              ? 'VCS (Version Control System) deployments are triggered from a connected Git repository and enable automatic deployments on code pushes.'
-                              : deployment.type === 'cli'
-                                ? 'CLI deployments are created using the Appwrite command line tool, useful for developer workflows and scripted automation.'
-                                : deployment.type === 'manual'
-                                  ? 'Manual deployments are created by uploading code through the Console or API, or by redeploying an existing deployment. Useful for quick testing and re-running builds.'
-                                  : 'The deployment type indicates how this deployment was created.'}
-                          </p>
-                        </TooltipContent>
-                      </TooltipPrimitive.Root>
-                    </TooltipProvider>
-                  </div>
                 </div>
 
                 {/* Build duration and Status - at end */}
@@ -1306,7 +1558,10 @@ export function DeploymentDetailView({
                         </DropdownMenuTrigger>
                         <DropdownMenuContent
                           align="end"
-                          className="z-[200] min-w-[180px]"
+                          className={cn(
+                            'min-w-[180px]',
+                            WIZARD_PORTAL_Z_DROPDOWN,
+                          )}
                         >
                           {aiChatIDEs.map((ide) => (
                             <DropdownMenuItem
@@ -1335,54 +1590,6 @@ export function DeploymentDetailView({
               </div>
             </div>
           </div>
-          {/* Search - Part of Header */}
-          <div className="border-t border-border px-4 sm:px-6 py-3">
-            <TooltipProvider>
-              <div className="flex items-center gap-2">
-                <div className="relative flex-1 min-w-0">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search logs..."
-                    value={logsSearch}
-                    onChange={(e) => setLogsSearch(e.target.value)}
-                    className="pl-9 h-9 text-[13px]"
-                  />
-                </div>
-                <TooltipPrimitive.Root>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleDownloadLogs}
-                      disabled={!buildLogs}
-                      className="h-9 w-9 p-0 shrink-0"
-                    >
-                      <Download className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Download logs</p>
-                  </TooltipContent>
-                </TooltipPrimitive.Root>
-                <TooltipPrimitive.Root>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleCopyLogs}
-                      disabled={!buildLogs}
-                      className="h-9 w-9 p-0 shrink-0"
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Copy logs</p>
-                  </TooltipContent>
-                </TooltipPrimitive.Root>
-              </div>
-            </TooltipProvider>
-          </div>
         </>
       }
       fullscreen
@@ -1392,15 +1599,18 @@ export function DeploymentDetailView({
       showBackButton={true}
       backButtonLabel="Deployments"
       contentPadding={false}
+      contentWrapperClassName="flex min-h-0 flex-1 flex-col overflow-hidden"
+      fullscreenContentXClassName="pl-0 pr-0"
+      fullscreenInnerClassName="flex min-h-0 flex-1 flex-col"
       onClose={() => {
         navigate({
           to: listRoute as unknown,
           params: { projectId, [parentResourceParam]: resourceId } as unknown,
         })
       }}
-      contentClassName="flex flex-col h-full min-h-0 overflow-hidden -mx-6"
+      contentClassName="flex min-h-0 flex-1 flex-col gap-0 overflow-hidden lg:flex-row"
       footer={
-        <div className="hidden sm:flex flex-row items-center justify-between gap-2 w-full">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-2 w-full">
           {/* Left side - Cancel (when building) or Delete button */}
           <div className="flex items-center">
             {deployment &&
@@ -1422,11 +1632,11 @@ export function DeploymentDetailView({
                   <TooltipTrigger asChild>
                     <span>
                       <Button
-                        variant="destructive"
+                        variant="outline"
                         size="sm"
                         onClick={() => setDeleteDialogOpen(true)}
                         disabled={isActiveDeployment}
-                        className="h-9 text-[13px]"
+                        className="h-9 text-[13px] border-destructive/35 text-destructive hover:bg-destructive/10 hover:text-destructive hover:border-destructive/50"
                       >
                         <Trash2 className="mr-1.5 h-4 w-4" />
                         Delete
@@ -1434,7 +1644,10 @@ export function DeploymentDetailView({
                     </span>
                   </TooltipTrigger>
                   {isActiveDeployment && (
-                    <TooltipContent sideOffset={4} className="z-[200]">
+                    <TooltipContent
+                      sideOffset={4}
+                      className={WIZARD_PORTAL_Z_POPOVER}
+                    >
                       <p>
                         Cannot delete the active deployment. Please activate
                         another deployment first.
@@ -1447,16 +1660,24 @@ export function DeploymentDetailView({
           </div>
 
           {/* Right side - Individual buttons */}
-          <div className="flex items-center gap-2 ml-auto">
+          <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="h-9 text-[13px]">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-9 text-[13px]"
+                >
                   <Download className="mr-1.5 h-4 w-4" />
                   Download
                   <ChevronDown className="ml-1.5 h-3.5 w-3.5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="z-[200]">
+              <DropdownMenuContent
+                align="end"
+                className={WIZARD_PORTAL_Z_DROPDOWN}
+              >
                 <DropdownMenuItem onClick={handleDownloadSource}>
                   <FileCode className="mr-2 h-4 w-4" />
                   Source code
@@ -1477,6 +1698,7 @@ export function DeploymentDetailView({
             </DropdownMenu>
             {onRedeploy && (
               <Button
+                type="button"
                 variant="outline"
                 size="sm"
                 onClick={() => setRedeployDialogOpen(true)}
@@ -1492,6 +1714,7 @@ export function DeploymentDetailView({
                 <TooltipTrigger asChild>
                   <span>
                     <Button
+                      type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => {
@@ -1516,7 +1739,10 @@ export function DeploymentDetailView({
                   </span>
                 </TooltipTrigger>
                 {(isActiveDeployment || deployment?.status !== 'ready') && (
-                  <TooltipContent sideOffset={4} className="z-[200]">
+                  <TooltipContent
+                    sideOffset={4}
+                    className={WIZARD_PORTAL_Z_POPOVER}
+                  >
                     <p>
                       {isActiveDeployment
                         ? 'This deployment is already active.'
@@ -1526,111 +1752,135 @@ export function DeploymentDetailView({
                 )}
               </TooltipPrimitive.Root>
             </TooltipProvider>
-            {proxyRules.rules.length > 0 && (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-9 text-[13px]"
-                  >
-                    <Globe className="mr-1.5 h-4 w-4" />
-                    Visit
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent align="end" className="z-[200] w-80">
-                  <div className="space-y-3">
-                    <div>
-                      <h4 className="text-[13px] font-semibold text-foreground mb-2">
-                        Domains
-                      </h4>
-                      <div className="space-y-1.5">
-                        {proxyRules.rules.map((rule) => (
-                          <a
-                            key={rule.$id}
-                            href={`https://${rule.domain}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 transition-colors group"
-                          >
-                            <Globe className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground shrink-0" />
-                            <span className="text-[12px] font-mono text-foreground group-hover:text-primary flex-1 truncate">
-                              {rule.domain}
-                            </span>
-                            <ExternalLink className="h-3 w-3 text-muted-foreground group-hover:text-foreground shrink-0" />
-                          </a>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
-            )}
           </div>
         </div>
       }
     >
-      <div
-        ref={logsContainerRef}
-        className="flex flex-col flex-1 min-h-0 overflow-hidden"
-      >
-        {/* Build Logs */}
-        <BuildLogsView
-          buildLogs={buildLogs}
-          searchTerm={logsSearch}
-          selectedLine={selectedLine}
-          onLineClick={handleLineClick}
-          lineRefs={lineRefs}
-          emptyMessage="No build logs available."
-        />
+      <>
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden lg:flex-row">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:border-r lg:border-border">
+            <div className="min-w-0 shrink-0 border-b border-border">
+              <TooltipProvider>
+                <div className="flex min-w-0 items-center gap-2 py-3 pl-6 pr-4 sm:pr-5">
+                  <div className="relative min-w-0 flex-1">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      placeholder="Search logs..."
+                      value={logsSearch}
+                      onChange={(e) => setLogsSearch(e.target.value)}
+                      className="h-9 w-full min-w-0 pl-9 text-[13px]"
+                    />
+                  </div>
+                  <TooltipPrimitive.Root>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleDownloadLogs}
+                        disabled={!buildLogs}
+                        className="h-9 w-9 shrink-0 p-0"
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Download logs</p>
+                    </TooltipContent>
+                  </TooltipPrimitive.Root>
+                  <TooltipPrimitive.Root>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleCopyLogs}
+                        disabled={!buildLogs}
+                        className="h-9 w-9 shrink-0 p-0"
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Copy logs</p>
+                    </TooltipContent>
+                  </TooltipPrimitive.Root>
+                </div>
+              </TooltipProvider>
+            </div>
+            <div
+              ref={logsContainerRef}
+              className="flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-y-auto overflow-x-hidden"
+            >
+              <div className="min-h-full min-w-0 pl-6 pr-4 sm:pr-5">
+                <BuildLogsView
+                  buildLogs={buildLogs}
+                  searchTerm={logsSearch}
+                  selectedLine={selectedLine}
+                  onLineClick={handleLineClick}
+                  lineRefs={lineRefs}
+                  emptyMessage="No build logs available."
+                  lineHorizontalPaddingClass="pl-0 pr-0"
+                />
+              </div>
+            </div>
+          </div>
 
-        {/* Scroll Control Buttons - Fixed position in viewport */}
+          <aside className="flex max-h-[min(45vh,22rem)] min-h-0 w-full shrink-0 flex-col overflow-y-auto border-t border-border bg-muted/15 px-4 py-3 sm:px-5 lg:max-h-none lg:w-[min(100%,20rem)] lg:px-6 xl:w-[min(100%,22rem)] lg:border-t-0 lg:bg-muted/10 lg:py-3">
+            {deploymentDetailSidebar}
+          </aside>
+        </div>
+
+        {/* Scroll controls: fixed over logs; inset from right on lg+ to clear the side panel */}
         {buildLogs && (
-          <div className="fixed bottom-24 right-8 flex flex-col gap-2 z-[101]">
-            <TooltipProvider>
-              <TooltipPrimitive.Root>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleScrollToTop}
-                    disabled={isAtTop}
-                    className="h-8 w-8 p-0 bg-card/95 backdrop-blur-sm"
-                  >
-                    <ArrowUp className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="left">
-                  <p>Scroll to top</p>
-                </TooltipContent>
-              </TooltipPrimitive.Root>
-              <TooltipPrimitive.Root>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleScrollToBottom}
-                    disabled={isAtBottom}
-                    className="h-8 w-8 p-0 bg-card/95 backdrop-blur-sm"
-                  >
-                    <ArrowDown className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="left">
-                  <p>Scroll to bottom</p>
-                </TooltipContent>
-              </TooltipPrimitive.Root>
-            </TooltipProvider>
+          <div className="pointer-events-none fixed bottom-24 right-8 z-[101] lg:right-[calc(20rem+1.25rem)] xl:right-[calc(22rem+1.25rem)]">
+            <div className="pointer-events-auto flex flex-col gap-2">
+              <TooltipProvider>
+                <TooltipPrimitive.Root>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleScrollToTop}
+                      disabled={isAtTop}
+                      className="h-8 w-8 p-0 bg-card/95 backdrop-blur-sm"
+                    >
+                      <ArrowUp className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="left">
+                    <p>Scroll to top</p>
+                  </TooltipContent>
+                </TooltipPrimitive.Root>
+                <TooltipPrimitive.Root>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleScrollToBottom}
+                      disabled={isAtBottom}
+                      className="h-8 w-8 p-0 bg-card/95 backdrop-blur-sm"
+                    >
+                      <ArrowDown className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="left">
+                    <p>Scroll to bottom</p>
+                  </TooltipContent>
+                </TooltipPrimitive.Root>
+              </TooltipProvider>
+            </div>
           </div>
         )}
-      </div>
+      </>
 
       {/* Cancel build confirmation */}
       <Dialog
         open={cancelBuildDialogOpen}
         onOpenChange={setCancelBuildDialogOpen}
       >
-        <DialogContent className="sm:max-w-md p-0">
+        <DialogContent
+          overlayClassName={WIZARD_DIALOG_OVERLAY_Z}
+          className={cn('sm:max-w-md p-0', WIZARD_DIALOG_CONTENT_Z)}
+        >
           <DialogHeader className="px-6 pt-6 pb-4 text-left">
             <DialogTitle>Cancel build</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
@@ -1665,7 +1915,10 @@ export function DeploymentDetailView({
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-md p-0">
+        <DialogContent
+          overlayClassName={WIZARD_DIALOG_OVERLAY_Z}
+          className={cn('sm:max-w-md p-0', WIZARD_DIALOG_CONTENT_Z)}
+        >
           <DialogHeader className="px-6 pt-6 pb-4 text-left">
             <DialogTitle>Delete deployment</DialogTitle>
           </DialogHeader>
@@ -1700,7 +1953,10 @@ export function DeploymentDetailView({
       {/* Redeploy Confirmation Dialog */}
       {onRedeploy && (
         <Dialog open={redeployDialogOpen} onOpenChange={setRedeployDialogOpen}>
-          <DialogContent className="sm:max-w-md p-0">
+          <DialogContent
+            overlayClassName={WIZARD_DIALOG_OVERLAY_Z}
+            className={cn('sm:max-w-md p-0', WIZARD_DIALOG_CONTENT_Z)}
+          >
             <DialogHeader className="px-6 pt-6 pb-4 text-left">
               <DialogTitle>Redeploy deployment</DialogTitle>
             </DialogHeader>
@@ -1708,8 +1964,9 @@ export function DeploymentDetailView({
             <div className="px-6 pb-4 pt-4">
               <DialogDescription className="text-[13px] mb-4">
                 This will create a new build for this deployment using the
-                current function configuration. The original deployment's code
-                will be preserved and used for the new build.
+                current {isSiteDeployment ? 'site' : 'function'} configuration.
+                The original deployment&apos;s code will be preserved and used
+                for the new build.
               </DialogDescription>
               <DeploymentInfo deployment={deployment} showStatus={true} />
             </div>
@@ -1738,7 +1995,10 @@ export function DeploymentDetailView({
       {/* Activate Confirmation Dialog */}
       {onActivate && (
         <Dialog open={activateDialogOpen} onOpenChange={setActivateDialogOpen}>
-          <DialogContent className="sm:max-w-md p-0">
+          <DialogContent
+            overlayClassName={WIZARD_DIALOG_OVERLAY_Z}
+            className={cn('sm:max-w-md p-0', WIZARD_DIALOG_CONTENT_Z)}
+          >
             <DialogHeader className="px-6 pt-6 pb-4 text-left">
               <DialogTitle>Activate deployment</DialogTitle>
             </DialogHeader>

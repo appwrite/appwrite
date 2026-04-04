@@ -16,7 +16,10 @@ import { useMemo } from 'react'
 import { Query, ID, Status } from '@appwrite.io/console'
 import type { Project } from '@/lib/utils/mock-data'
 import { sdk, setProjectRegion } from '@/lib/appwrite/sdk'
-import { generateFingerprintToken } from '@/lib/fingerprint'
+import {
+  ensureFingerprintServerTimeSynced,
+  generateFingerprintToken,
+} from '@/lib/fingerprint'
 import {
   DEFAULT_STALE_TIME,
   LONG_STALE_TIME,
@@ -443,10 +446,15 @@ export function useResumeProject(projectId: string | undefined) {
   return useMutation({
     mutationFn: async () => {
       if (!projectId) throw new Error('Project ID is required')
-      const fingerprint = await generateFingerprintToken()
       const client = sdk.forConsole.client as {
         headers?: Record<string, string>
+        config?: { endpoint?: string; project?: string }
       }
+      await ensureFingerprintServerTimeSynced(
+        client.config?.endpoint ?? '',
+        client.config?.project ?? 'console',
+      )
+      const fingerprint = await generateFingerprintToken()
       if (client.headers)
         client.headers[CONSOLE_FINGERPRINT_HEADER] = fingerprint
       try {

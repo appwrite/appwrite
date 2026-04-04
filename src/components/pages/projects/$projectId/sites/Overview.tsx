@@ -17,6 +17,7 @@ import {
   ExternalLink,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { CopyableId } from '@/components/global/shared/CopyableId'
@@ -592,7 +593,12 @@ export function View() {
                         siteId: siteId!,
                         deploymentId: deploymentData.$id,
                       }}
-                      className="block px-6 py-4 hover:bg-muted/30 transition-colors"
+                      className={cn(
+                        'block px-6 py-4 transition-colors',
+                        isActive
+                          ? 'bg-muted/40 dark:bg-muted/35 hover:bg-muted/55 dark:hover:bg-muted/50'
+                          : 'hover:bg-muted/30',
+                      )}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3 min-w-0 flex-1">

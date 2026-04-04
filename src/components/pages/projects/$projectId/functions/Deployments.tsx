@@ -1319,7 +1319,9 @@ export function View() {
                           className={cn(
                             selectedDeployments.has(deployment.$id)
                               ? 'bg-muted'
-                              : 'hover:bg-muted/50',
+                              : isActive
+                                ? 'bg-muted/40 dark:bg-muted/35 hover:bg-muted/55 dark:hover:bg-muted/50'
+                                : 'hover:bg-muted/50',
                             'cursor-pointer',
                           )}
                           onClick={() => {

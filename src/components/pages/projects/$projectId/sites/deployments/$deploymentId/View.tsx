@@ -118,6 +118,7 @@ export function View() {
       parentResource={{
         name: site?.name,
         deploymentId: site?.deploymentId,
+        framework: site?.framework,
       }}
       deployments={[]}
       deploymentDetailRoute="/projects/$projectId/sites/$siteId/deployments/$deploymentId"

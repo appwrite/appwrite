@@ -328,7 +328,8 @@ export async function fetchFunctionDomains(
 }
 
 /**
- * Query function to fetch proxy rules for a function deployment
+ * Query function to fetch proxy rules for a function deployment (project Console SDK).
+ * Only rules for this deployment ID — deployment and redirect rows that reference it.
  */
 export async function fetchFunctionDeploymentProxyRules(
   projectId: string,
@@ -341,7 +342,7 @@ export async function fetchFunctionDeploymentProxyRules(
 
   const projectSdk = sdk.forProject(projectId)
   const queries = [
-    Query.equal('type', 'deployment'),
+    Query.equal('type', ['deployment', 'redirect']),
     Query.equal('deploymentId', deploymentId),
     Query.equal('deploymentResourceType', 'function'),
     Query.equal('deploymentResourceId', functionId),

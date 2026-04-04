@@ -46,6 +46,21 @@ interface WizardLayoutProps {
   footerAlign?: 'left' | 'right'
   /** Whether to apply default content padding (default: true) */
   contentPadding?: boolean
+  /**
+   * When fullscreen, merged into the main content wrapper (between header and footer).
+   * Use with `overflow-hidden` and `flex flex-col min-h-0` when children manage their own scroll.
+   */
+  contentWrapperClassName?: string
+  /**
+   * When fullscreen, merged into the inner `px-6` container around children/sidebar.
+   * Use `flex min-h-0 flex-1 flex-col` so full-height split layouts fill the viewport.
+   */
+  fullscreenInnerClassName?: string
+  /**
+   * When fullscreen, replaces the default horizontal padding (`px-6`) on the inner container.
+   * Use e.g. `pl-6` only when the right edge should be flush with the viewport.
+   */
+  fullscreenContentXClassName?: string
 }
 
 /**
@@ -95,6 +110,9 @@ export function WizardLayout({
   onBack,
   footerAlign = 'left',
   contentPadding = true,
+  contentWrapperClassName,
+  fullscreenInnerClassName,
+  fullscreenContentXClassName,
 }: WizardLayoutProps) {
   // Use smart navigation hook for consistent back behavior
   // Navigation priority: fallbackPath (if provided) > browser history > root
@@ -188,7 +206,7 @@ export function WizardLayout({
     : 'border-b border-border/30 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80'
 
   const contentWrapperClasses = fullscreen
-    ? 'flex-1 min-h-0 overflow-y-auto'
+    ? cn('flex-1 min-h-0 overflow-y-auto', contentWrapperClassName)
     : 'mx-auto w-full max-w-7xl flex-1 overflow-y-auto px-4 pb-4 sm:px-6 sm:pb-6'
 
   const footerClasses = fullscreen
@@ -272,9 +290,11 @@ export function WizardLayout({
         {fullscreen && (
           <div
             className={cn(
-              'mx-auto w-full px-6',
+              'mx-auto w-full',
+              fullscreenContentXClassName ?? 'px-6',
               constrainWidth && maxWidth,
               contentPadding && (fullscreen ? 'py-6' : 'pt-6'),
+              fullscreenInnerClassName,
             )}
           >
             {useSidebar ? (

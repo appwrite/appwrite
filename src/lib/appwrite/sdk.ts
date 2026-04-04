@@ -39,6 +39,10 @@ import {
 } from '@/lib/debug-endpoint'
 import { wrapServiceObject } from '@/lib/appwrite/slow-call-reporting'
 import { CONSOLE_IMPERSONATION_TARGET_KEY } from '@/lib/console-impersonation'
+import {
+  ensureFingerprintServerTimeSynced,
+  resetFingerprintServerTimeCache,
+} from '@/lib/fingerprint'
 
 /**
  * True when the endpoint host is a known multi-region Appwrite cloud host
@@ -182,13 +186,25 @@ clientConsole.setEndpoint(endpoint).setProject('console')
 // Configure Project client (will be set per-project)
 clientProject.setEndpoint(endpoint).setMode('admin')
 
+function scheduleConsoleFingerprintServerTimeSync(): Promise<void> {
+  if (typeof window === 'undefined') return Promise.resolve()
+  const ep = clientConsole.config.endpoint as string | undefined
+  const proj = clientConsole.config.project as string | undefined
+  if (!ep?.trim() || !proj?.trim()) return Promise.resolve()
+  return ensureFingerprintServerTimeSynced(ep, proj)
+}
+
 // When debug endpoint override changes, re-apply base endpoint to both clients
 if (typeof window !== 'undefined') {
   subscribeToDebugEndpointChange(() => {
     const base = getApiEndpoint()
     clientConsole.setEndpoint(base)
     clientProject.setEndpoint(base)
+    resetFingerprintServerTimeCache()
+    void scheduleConsoleFingerprintServerTimeSync()
   })
+
+  void scheduleConsoleFingerprintServerTimeSync()
 }
 
 // Realtime instances: one per client (console vs project).
