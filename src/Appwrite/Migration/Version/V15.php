@@ -1224,7 +1224,7 @@ class V15 extends Migration
      * @param \Utopia\Database\Document $document
      * @return \Utopia\Database\Document
      */
-    protected function fixDocument(Document $document)
+    protected function fixDocument(Document $document): Document
     {
         switch ($document->getCollection()) {
             case 'cache':
@@ -1234,7 +1234,7 @@ class V15 extends Migration
                  * skipping migration for 'cache' and 'variables'.
                  * 'users' already migrated.
                  */
-                return;
+                return $document;
 
             case '_metadata':
                 /**
@@ -1480,7 +1480,6 @@ class V15 extends Migration
      * Filter from the 'encrypt' filter.
      *
      * @param string $value
-     * @return string|false
      */
     protected function encryptFilter(string $value): string
     {
@@ -1492,8 +1491,8 @@ class V15 extends Migration
             'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
             'method' => OpenSSL::CIPHER_AES_128_GCM,
             'iv' => \bin2hex($iv),
-            'tag' => \bin2hex($tag ?? ''),
+            'tag' => \bin2hex($tag),
             'version' => '1',
-        ]);
+        ]) ?: '';
     }
 }

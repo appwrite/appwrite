@@ -7,6 +7,7 @@ use Appwrite\Docker\Env;
 use Appwrite\Platform\Installer\Runtime\State;
 use Appwrite\Platform\Installer\Server as InstallerServer;
 use Appwrite\Utopia\View;
+use Swoole\Coroutine;
 use Utopia\Auth\Proofs\Password;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Config\Config;
@@ -35,6 +36,7 @@ class Install extends Action
     private const string GROWTH_API_URL = 'https://growth.appwrite.io/v1';
 
     protected bool $isUpgrade = false;
+    protected bool $migrate = false;
     protected string $hostPath = '';
     protected ?bool $isLocalInstall = null;
     protected ?array $installerConfig = null;
@@ -211,20 +213,21 @@ class Install extends Action
         }
 
         // If interactive and web mode enabled, start web server
-        if ($interactive === 'Y' && Console::isInteractive()) {
+        // Skip the web installer when explicit CLI params are provided
+        if ($interactive === 'Y' && Console::isInteractive() && !$this->hasExplicitCliParams()) {
             Console::success('Starting web installer...');
             Console::info('Open your browser at: http://localhost:' . InstallerServer::INSTALLER_WEB_PORT);
             Console::info('Press Ctrl+C to cancel installation');
 
             $detectedDb = ($existingInstallation && isset($existingDatabase)) ? $existingDatabase : null;
-            $this->startWebServer($defaultHttpPort, $defaultHttpsPort, $organization, $image, $noStart, $vars, $isUpgrade, $detectedDb);
+            $this->startWebServer($defaultHttpPort, $defaultHttpsPort, $organization, $image, $noStart, $vars, $isUpgrade || $existingInstallation, $detectedDb);
             return;
         }
 
         // Fall back to CLI mode
         $enableAssistant = false;
         $assistantExistsInOldCompose = false;
-        if ($existingInstallation && isset($compose)) {
+        if ($existingInstallation) {
             try {
                 $assistantService = $compose->getService('appwrite-assistant');
                 $assistantExistsInOldCompose = $assistantService !== null;
@@ -321,7 +324,7 @@ class Install extends Action
 
         $shouldGenerateSecrets = !$existingInstallation && !$isUpgrade;
         $input = $this->prepareEnvironmentVariables($userInput, $vars, $shouldGenerateSecrets);
-        $this->performInstallation($httpPort, $httpsPort, $organization, $image, $input, $noStart, null, null, $isUpgrade);
+        $this->performInstallation($httpPort, $httpsPort, $organization, $image, $input, $noStart, null, null, $isUpgrade, migrate: $this->migrate);
     }
 
 
@@ -510,7 +513,9 @@ class Install extends Action
         ?callable $progress = null,
         ?string $resumeFromStep = null,
         bool $isUpgrade = false,
-        array $account = []
+        array $account = [],
+        ?callable $onComplete = null,
+        bool $migrate = false,
     ): void {
         $isLocalInstall = $this->isLocalInstall();
         $this->applyLocalPaths($isLocalInstall, false);
@@ -633,8 +638,34 @@ class Install extends Action
                     $this->createInitialAdminAccount($account, $progress, $apiUrl, $domain);
                 }
 
-                // Track installs
-                $this->trackSelfHostedInstall($input, $isUpgrade, $version, $account);
+                if ($isUpgrade && $migrate) {
+                    // Allow the containers-completed SSE event to flush
+                    // before blocking on migration exec
+                    usleep(200_000);
+                    $currentStep = InstallerServer::STEP_MIGRATION;
+                    $this->runDatabaseMigration($progress, $isLocalInstall);
+                } elseif ($isUpgrade) {
+                    $this->updateProgress($progress, InstallerServer::STEP_MIGRATION, InstallerServer::STATUS_COMPLETED, messageOverride: 'Migration skipped');
+                }
+
+                // Signal completion before tracking so the SSE stream
+                // finishes and the frontend can redirect immediately.
+                if ($onComplete) {
+                    try {
+                        $onComplete();
+                    } catch (\Throwable) {
+                    }
+                }
+
+                // Run tracking in a coroutine when inside a Swoole
+                // request so it doesn't block the worker.
+                if (Coroutine::getCid() !== -1) {
+                    go(function () use ($input, $isUpgrade, $version, $account) {
+                        $this->trackSelfHostedInstall($input, $isUpgrade, $version, $account);
+                    });
+                } else {
+                    $this->trackSelfHostedInstall($input, $isUpgrade, $version, $account);
+                }
 
                 if ($isCLI) {
                     Console::success('Appwrite installed successfully');
@@ -726,6 +757,46 @@ class Install extends Action
         }
     }
 
+    private function runDatabaseMigration(?callable $progress, bool $isLocalInstall): void
+    {
+        $this->updateProgress(
+            $progress,
+            InstallerServer::STEP_MIGRATION,
+            InstallerServer::STATUS_IN_PROGRESS,
+            messageOverride: 'Running database migration...'
+        );
+
+        // Allow the SSE chunk to flush before the blocking exec
+        usleep(100_000);
+
+        // Static command — no user input involved
+        $command = $isLocalInstall
+            ? 'docker compose exec appwrite migrate 2>&1'
+            : 'docker exec appwrite migrate 2>&1';
+
+        $output = [];
+        \exec($command, $output, $exit);
+
+        if ($exit !== 0) {
+            $message = trim(implode("\n", $output));
+            $this->updateProgress(
+                $progress,
+                InstallerServer::STEP_MIGRATION,
+                InstallerServer::STATUS_ERROR,
+                details: ['output' => $message],
+                messageOverride: 'Migration failed: ' . ($message ?: 'exit code ' . $exit)
+            );
+            throw new \RuntimeException('Database migration failed', 0, $message !== '' ? new \RuntimeException($message) : null);
+        }
+
+        $this->updateProgress(
+            $progress,
+            InstallerServer::STEP_MIGRATION,
+            InstallerServer::STATUS_COMPLETED,
+            messageOverride: 'Database migration completed'
+        );
+    }
+
     private function trackSelfHostedInstall(array $input, bool $isUpgrade, string $version, array $account): void
     {
         if ($this->isLocalInstall()) {
@@ -753,7 +824,7 @@ class Install extends Action
         $name = $account['name'] ?? 'Admin';
         $email = $account['email'] ?? 'admin@selfhosted.local';
 
-        $hostIp = gethostbyname($domain);
+        $hostIp = @gethostbyname($domain);
 
         $payload = [
             'action' => $type,
@@ -767,7 +838,7 @@ class Install extends Action
                 'email' => $email,
                 'domain' => $domain,
                 'database' => $database,
-                'hostIp' => $hostIp !== $domain ? $hostIp : null,
+                'ip' => ($hostIp !== false && $hostIp !== $domain) ? $hostIp : null,
                 'os' => php_uname('s') . ' ' . php_uname('r'),
                 'arch' => php_uname('m'),
                 'cpus' => ((int) trim((string) \shell_exec('nproc'))) ?: null,
@@ -778,6 +849,8 @@ class Install extends Action
         try {
             $client = new Client();
             $client
+                ->setConnectTimeout(5000)
+                ->setTimeout(5000)
                 ->addHeader('Content-Type', 'application/json')
                 ->fetch(self::GROWTH_API_URL . '/analytics', Client::METHOD_POST, $payload);
         } catch (\Throwable) {
@@ -1259,6 +1332,22 @@ class Install extends Action
         }
         $this->path = '/usr/src/code';
         $this->hostPath = $this->getInstallerHostPath();
+    }
+
+    /**
+     * Check if any installer-specific CLI params were explicitly passed.
+     * When params like --database or --http-port are provided, the user
+     * intends to run in CLI mode rather than launching the web installer.
+     */
+    private function hasExplicitCliParams(): bool
+    {
+        $argv = $_SERVER['argv'] ?? [];
+        foreach ($argv as $arg) {
+            if (\str_starts_with($arg, '--')) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

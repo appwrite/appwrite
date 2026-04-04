@@ -347,8 +347,8 @@ class Specs extends Action
         $keys = $this->getKeys();
 
         $generatedFiles = [];
-        $endpoint = System::getEnv('_APP_HOME', '[HOSTNAME]');
-        $email = System::getEnv('_APP_SYSTEM_TEAM_EMAIL', APP_EMAIL_TEAM);
+        $endpoint = System::getEnv('_APP_HOME', 'https://appwrite.io');
+        $email = System::getEnv('_APP_SYSTEM_TEAM_EMAIL', 'team@appwrite.io');
         $specsDir = __DIR__ . '/../../../../app/config/specs';
 
         if (!is_dir($specsDir) && !@mkdir($specsDir, 0755, true) && !is_dir($specsDir)) {

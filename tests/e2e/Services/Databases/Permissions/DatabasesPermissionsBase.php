@@ -45,6 +45,12 @@ trait DatabasesPermissionsBase
         return $recordId ? "{$base}/{$recordId}" : $base;
     }
 
+    protected function getIndexUrl(string $databaseId, string $containerId, string $indexId = ''): string
+    {
+        $base = "{$this->getContainerUrl($databaseId, $containerId)}/indexes";
+        return $indexId ? "{$base}/{$indexId}" : $base;
+    }
+
     // User Management Methods
     public function createUser(string $id, string $email, string $password = 'test123!'): array
     {

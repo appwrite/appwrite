@@ -33,7 +33,7 @@ class Functions extends Action
     }
 
     /**
-     * @throws Exception
+     * @throws \Exception
      */
     public function __construct()
     {
@@ -256,7 +256,7 @@ class Functions extends Action
      * @param Document $user
      * @param string|null $jwt
      * @param string|null $event
-     * @throws Exception
+     * @throws \Exception
      */
     private function fail(
         string $message,
@@ -271,10 +271,10 @@ class Functions extends Action
         ?string $event = null,
     ): void {
         $executionId = ID::unique();
-        $headers['x-appwrite-execution-id'] = $executionId ?? '';
+        $headers['x-appwrite-execution-id'] = $executionId;
         $headers['x-appwrite-trigger'] = $trigger;
         $headers['x-appwrite-event'] = $event ?? '';
-        $headers['x-appwrite-user-id'] = $user->getId() ?? '';
+        $headers['x-appwrite-user-id'] = $user->getId();
         $headers['x-appwrite-user-jwt'] = $jwt ?? '';
 
         $headersFiltered = [];
@@ -458,8 +458,8 @@ class Functions extends Action
         if ($version === 'v2') {
             $vars = \array_merge($vars, [
                 'APPWRITE_FUNCTION_TRIGGER' => $headers['x-appwrite-trigger'] ?? '',
-                'APPWRITE_FUNCTION_DATA' => $body ?? '',
-                'APPWRITE_FUNCTION_EVENT_DATA' => $body ?? '',
+                'APPWRITE_FUNCTION_DATA' => $body,
+                'APPWRITE_FUNCTION_EVENT_DATA' => $body,
                 'APPWRITE_FUNCTION_EVENT' => $headers['x-appwrite-event'] ?? '',
                 'APPWRITE_FUNCTION_USER_ID' => $headers['x-appwrite-user-id'] ?? '',
                 'APPWRITE_FUNCTION_JWT' => $headers['x-appwrite-user-jwt'] ?? ''
@@ -508,6 +508,9 @@ class Functions extends Action
         ]);
 
         /** Execute function */
+        $error = null;
+        $errorCode = 0;
+
         try {
             $version = $function->getAttribute('version', 'v2');
             $command = $runtime['startCommand'];

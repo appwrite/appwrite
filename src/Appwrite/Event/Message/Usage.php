@@ -40,7 +40,8 @@ class Usage extends Base
      */
     public static function fromArray(array $data): static
     {
-        return new self(
+        /** @phpstan-ignore new.static (subclass constructors are backwards-compatible via optional params) */
+        return new static(
             project: new Document($data['project'] ?? []),
             metrics: $data['metrics'] ?? [],
             reduce: array_map(fn (array $doc) => new Document($doc), $data['reduce'] ?? []),
