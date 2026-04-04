@@ -686,7 +686,10 @@ class Migrations extends Action
             'openSSLTag' => null,
             'openSSLIV' => null,
             'search' => \implode(' ', [$fileId, $filename]),
-            'metadata' => ['content_type' => $mime]
+            'metadata' => [
+                'content_type' => $mime,
+                'encryption' => false,
+            ]
         ]));
 
         Console::info("Created file document in bucket: $fileId");
