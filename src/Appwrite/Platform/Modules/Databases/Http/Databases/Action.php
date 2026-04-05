@@ -17,7 +17,7 @@ class Action extends AppwriteAction
         return $this->context;
     }
 
-    public function setHttpPath(string $path): AppwriteAction
+    public function setHttpPath(string $path): self
     {
         if (\str_contains($path, '/tablesdb')) {
             $this->context = DATABASE_TYPE_TABLESDB;
@@ -28,7 +28,8 @@ class Action extends AppwriteAction
         if (\str_contains($path, '/vectorsdb')) {
             $this->context = DATABASE_TYPE_VECTORSDB;
         }
-        return parent::setHttpPath($path);
+        parent::setHttpPath($path);
+        return $this;
     }
 
     /**

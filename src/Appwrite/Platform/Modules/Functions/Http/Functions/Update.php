@@ -170,8 +170,6 @@ class Update extends Base
             $runtime = $function->getAttribute('runtime');
         }
 
-        $enabled ??= $function->getAttribute('enabled', true);
-
         $repositoryId = $function->getAttribute('repositoryId', '');
         $repositoryInternalId = $function->getAttribute('repositoryInternalId', '');
 

@@ -1,7 +1,6 @@
 <?php
 
 require_once __DIR__ . '/init.php';
-
 use Appwrite\Certificates\LetsEncrypt;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Build;
@@ -280,14 +279,14 @@ Server::setResource('abuseRetention', function () {
 
 Server::setResource('auditRetention', function (Document $project) {
     if ($project->getId() === 'console') {
-        return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE', 15778800)); // 6 months
+        return DateTime::addSeconds(new \DateTime(), -1 * (int) System::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE', 15778800)); // 6 months
     }
 
-    return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 1209600)); // 14 days
+    return DateTime::addSeconds(new \DateTime(), -1 * (int) System::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 1209600)); // 14 days
 }, ['project']);
 
 Server::setResource('executionRetention', function () {
-    return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600)); // 14 days
+    return DateTime::addSeconds(new \DateTime(), -1 * (int) System::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600)); // 14 days
 });
 
 Server::setResource('cache', function (Registry $register) {

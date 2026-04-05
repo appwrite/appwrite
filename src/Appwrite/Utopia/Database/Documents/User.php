@@ -86,7 +86,6 @@ class User extends Document
     /**
      * Check if user is anonymous.
      *
-     * @param Document $this
      * @return bool
      */
     public function isAnonymous(): bool
@@ -153,7 +152,6 @@ class User extends Document
     /**
      * Verify session and check that its not expired.
      *
-     * @param array<Document> $sessions
      * @param string $secret
      *
      * @return bool|string
