@@ -75,7 +75,7 @@ class Create extends Action
             ->label('event', 'teams.[teamId].create')
             ->label('scope', 'teams.write')
             ->param('teamId', '', new CustomId(), 'Team ID.')
-            ->param('name', null, new Text(128), 'Team name.')
+            ->param('name', null, new Nullable(new Text(128)), ...)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
@@ -84,7 +84,7 @@ class Create extends Action
 
     public function action(
         string $teamId,
-        string $name,
+        ?string $name,
         Response $response,
         Database $dbForProject,
         Event $queueForEvents,
