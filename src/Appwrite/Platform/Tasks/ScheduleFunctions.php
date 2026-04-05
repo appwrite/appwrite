@@ -61,7 +61,7 @@ class ScheduleFunctions extends ScheduleBase
             $nextDate = $cron->getNextRunDate();
             $next = DateTime::format($nextDate);
 
-            $currentTick = $next < $timeFrame;
+            $currentTick = $next <= $timeFrame;
 
             if (!$currentTick) {
                 continue;
@@ -88,7 +88,7 @@ class ScheduleFunctions extends ScheduleBase
                     $scheduleKey = $delayConfig['key'];
                     // Ensure schedule was not deleted
                     if (!\array_key_exists($scheduleKey, $this->schedules)) {
-                        return;
+                        continue;
                     }
 
                     $schedule = $this->schedules[$scheduleKey];
