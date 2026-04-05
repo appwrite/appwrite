@@ -103,6 +103,9 @@ class XList extends Action
             $os = $detector->getOS();
             $client = $detector->getClient();
             $device = $detector->getDevice();
+            $deviceName = \is_array($device) ? ($device['deviceName'] ?? '') : '';
+            $deviceBrand = \is_array($device) ? ($device['deviceBrand'] ?? '') : '';
+            $deviceModel = \is_array($device) ? ($device['deviceModel'] ?? '') : '';
 
             $output[$i] = new Document([
                 'event' => $log['event'],
@@ -121,9 +124,9 @@ class XList extends Action
                 'clientVersion' => $client['clientVersion'],
                 'clientEngine' => $client['clientEngine'],
                 'clientEngineVersion' => $client['clientEngineVersion'],
-                'deviceName' => $device['deviceName'],
-                'deviceBrand' => $device['deviceBrand'],
-                'deviceModel' => $device['deviceModel'],
+                'deviceName' => $deviceName,
+                'deviceBrand' => $deviceBrand,
+                'deviceModel' => $deviceModel,
             ]);
 
             $record = $geodb->get($log['ip']);

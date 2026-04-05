@@ -66,7 +66,7 @@ class Update extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, string $membershipId, array $roles, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Authorization $authorization, Event $queueForEvents)
+    public function action(string $teamId, string $membershipId, array $roles, Request $request, Response $response, User $user, Document $project, Database $dbForProject, Authorization $authorization, Event $queueForEvents)
     {
         $team = $dbForProject->getDocument('teams', $teamId);
         if ($team->isEmpty()) {
@@ -83,8 +83,8 @@ class Update extends Action
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
-        $isAppUser = User::isApp($authorization->getRoles());
+        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
+        $isAppUser = $user->isApp($authorization->getRoles());
         $isOwner = $authorization->hasRole('team:' . $team->getId() . '/owner');
 
         if ($project->getId() === 'console') {

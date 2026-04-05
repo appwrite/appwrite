@@ -13,7 +13,10 @@
         DOCKER_COMPOSE: 'docker-compose',
         ENV_VARS: 'env-vars',
         DOCKER_CONTAINERS: 'docker-containers',
-        ACCOUNT_SETUP: 'account-setup'
+        ACCOUNT_SETUP: 'account-setup',
+        MIGRATION: 'migration',
+        SSL_CERTIFICATE: 'ssl-certificate',
+        REDIRECT: 'redirect'
     });
 
     const STATUS = Object.freeze({
@@ -50,6 +53,11 @@
             id: STEP_IDS.DOCKER_CONTAINERS,
             inProgress: 'Restarting Docker containers...',
             done: 'Docker containers restarted'
+        },
+        {
+            id: STEP_IDS.MIGRATION,
+            inProgress: 'Running database migration...',
+            done: 'Database migration completed'
         }
     ] : [
         {
@@ -75,7 +83,7 @@
         {
             id: STEP_IDS.ACCOUNT_SETUP,
             inProgress: 'Creating Appwrite account...',
-            done: 'Appwrite account created (redirecting...)'
+            done: 'Appwrite account created'
         }
     ]);
 
@@ -93,7 +101,7 @@
     const clampStep = (step) => {
         const numeric = Number(step);
         if (Number.isNaN(numeric)) return 1;
-        return Math.max(1, Math.min(5, numeric));
+        return Math.max(1, Math.min(6, numeric));
     };
 
     window.InstallerStepsContext = Object.freeze({

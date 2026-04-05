@@ -21,8 +21,8 @@ class UsersTest extends Scope
     protected function setupUser(): array
     {
         $key = $this->getProject()['$id'];
-        if (!empty(static::$cachedUser[$key])) {
-            return static::$cachedUser[$key];
+        if (!empty(self::$cachedUser[$key])) {
+            return self::$cachedUser[$key];
         }
 
         $projectId = $this->getProject()['$id'];
@@ -50,15 +50,15 @@ class UsersTest extends Scope
         $this->assertEquals('Project User', $user['name']);
         $this->assertEquals($email, $user['email']);
 
-        static::$cachedUser[$key] = $user;
+        self::$cachedUser[$key] = $user;
         return $user;
     }
 
     protected function setupUserTarget(): array
     {
         $key = $this->getProject()['$id'];
-        if (!empty(static::$cachedUserTarget[$key])) {
-            return static::$cachedUserTarget[$key];
+        if (!empty(self::$cachedUserTarget[$key])) {
+            return self::$cachedUserTarget[$key];
         }
 
         $user = $this->setupUser();
@@ -106,8 +106,8 @@ class UsersTest extends Scope
         $this->assertEquals(200, $target['headers']['status-code']);
         $this->assertEquals('random-email@mail.org', $target['body']['data']['usersCreateTarget']['identifier']);
 
-        static::$cachedUserTarget[$key] = $target['body']['data']['usersCreateTarget'];
-        return static::$cachedUserTarget[$key];
+        self::$cachedUserTarget[$key] = $target['body']['data']['usersCreateTarget'];
+        return self::$cachedUserTarget[$key];
     }
 
     public function testCreateUser(): void
@@ -581,7 +581,7 @@ class UsersTest extends Scope
 
         // Clear cache after deletion
         $key = $this->getProject()['$id'];
-        static::$cachedUserTarget[$key] = [];
+        self::$cachedUserTarget[$key] = [];
     }
 
     public function testDeleteUser()

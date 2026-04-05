@@ -32,6 +32,10 @@ class Response extends SwooleResponse
     public const MODEL_BASE_LIST = 'baseList';
     public const MODEL_USAGE_DATABASES = 'usageDatabases';
     public const MODEL_USAGE_DATABASE = 'usageDatabase';
+    public const MODEL_USAGE_DOCUMENTSDBS = 'usageDocumentsDBs';
+    public const MODEL_USAGE_DOCUMENTSDB = 'usageDocumentsDB';
+    public const MODEL_USAGE_VECTORSDBS = 'usageVectorsDBs';
+    public const MODEL_USAGE_VECTORSDB = 'usageVectorsDB';
     public const MODEL_USAGE_TABLE = 'usageTable';
     public const MODEL_USAGE_COLLECTION = 'usageCollection';
     public const MODEL_USAGE_USERS = 'usageUsers';
@@ -48,6 +52,10 @@ class Response extends SwooleResponse
     public const MODEL_DATABASE_LIST = 'databaseList';
     public const MODEL_COLLECTION = 'collection';
     public const MODEL_COLLECTION_LIST = 'collectionList';
+    public const MODEL_VECTORSDB_COLLECTION = 'vectorsdbCollection';
+    public const MODEL_VECTORSDB_COLLECTION_LIST = 'vectorsdbCollectionList';
+    public const MODEL_EMBEDDING = 'embedding';
+    public const MODEL_EMBEDDING_LIST = 'embeddingList';
     public const MODEL_TABLE = 'table';
     public const MODEL_TABLE_LIST = 'tableList';
     public const MODEL_INDEX = 'index';
@@ -79,6 +87,8 @@ class Response extends SwooleResponse
     public const MODEL_ATTRIBUTE_TEXT = 'attributeText';
     public const MODEL_ATTRIBUTE_MEDIUMTEXT = 'attributeMediumtext';
     public const MODEL_ATTRIBUTE_LONGTEXT = 'attributeLongtext';
+    public const MODEL_ATTRIBUTE_OBJECT = 'attributeObject';
+    public const MODEL_ATTRIBUTE_VECTOR = 'attributeVector';
 
     // Database Columns
     public const MODEL_COLUMN = 'column';
@@ -495,8 +505,9 @@ class Response extends SwooleResponse
 
             if ($rule['sensitive']) {
                 $roles = $this->authorization->getRoles();
-                $isPrivilegedUser = DBUser::isPrivileged($roles);
-                $isAppUser = DBUser::isApp($roles);
+                $user = $this->user ?? new DBUser();
+                $isPrivilegedUser = $user->isPrivileged($roles);
+                $isAppUser = $user->isApp($roles);
 
                 if ((!$isPrivilegedUser && !$isAppUser) && !self::$showSensitive) {
                     $data->setAttribute($key, '');
@@ -618,9 +629,9 @@ class Response extends SwooleResponse
     }
 
     /**
-     * Return the currently set filter
+     * Return the currently set filters
      *
-     * @return Filter
+     * @return array<Filter>
      */
     public function getFilters(): array
     {
@@ -650,7 +661,7 @@ class Response extends SwooleResponse
     /**
      * Static wrapper to show sensitive data in response
      *
-     * @param callable The callback to show sensitive information for
+     * @param callable(): array $callback The callback to show sensitive information for
      * @return array
      */
     public static function showSensitive(callable $callback): array
@@ -664,9 +675,15 @@ class Response extends SwooleResponse
     }
 
     private ?Authorization $authorization = null;
+    private ?DBUser $user = null;
 
     public function setAuthorization(Authorization $authorization): void
     {
         $this->authorization = $authorization;
+    }
+
+    public function setUser(DBUser $user): void
+    {
+        $this->user = $user;
     }
 }

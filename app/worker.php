@@ -1,7 +1,6 @@
 <?php
 
 require_once __DIR__ . '/init.php';
-
 use Appwrite\Certificates\LetsEncrypt;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Build;
@@ -220,20 +219,74 @@ Server::setResource('getLogsDB', function (Group $pools, Cache $cache, Authoriza
     };
 }, ['pools', 'cache', 'authorization']);
 
+Server::setResource('getDatabasesDB', function (Cache $cache, Registry $register, Document $project, Authorization $authorization) {
+    return function (Document $database, ?Document $projectDocument = null) use ($cache, $register, $project, $authorization): Database {
+        $projectDocument ??= $project;
+        $databaseDSN = $database->getAttribute('database', $project->getAttribute('database', ''));
+        $databaseType = $database->getAttribute('type', '');
+
+        // Backwards‑compatibility: older or seeded legacy databases may not have a DSN stored
+        // in the "database" attribute. In that case, fall back to the project's database DSN.
+        if ($databaseDSN === '') {
+            $databaseDSN = $projectDocument->getAttribute('database', '');
+        }
+
+        try {
+            $databaseDSN = new DSN($databaseDSN);
+        } catch (\InvalidArgumentException) {
+            $databaseDSN = new DSN('mysql://'.$databaseDSN);
+        }
+
+        try {
+            $dsn = new DSN($projectDocument->getAttribute('database'));
+        } catch (\InvalidArgumentException) {
+            // Temporary fallback until all projects use shared tables
+            $dsn = new DSN('mysql://' . $projectDocument->getAttribute('database'));
+        }
+
+        $pools = $register->get('pools');
+        $pool = $pools->get($databaseDSN->getHost());
+
+        $adapter = new DatabasePool($pool);
+        $database = new Database($adapter, $cache);
+        $database
+            ->setDatabase(APP_DATABASE)
+            ->setAuthorization($authorization);
+        $database->getAdapter()->setSupportForAttributes($databaseType !== DOCUMENTSDB);
+
+        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+
+        if (\in_array($dsn->getHost(), $sharedTables, true)) {
+            $database
+                ->setSharedTables(true)
+                ->setTenant((int) $projectDocument->getSequence())
+                ->setNamespace($dsn->getParam('namespace'));
+        } else {
+            $database
+                ->setSharedTables(false)
+                ->setTenant(null)
+                ->setNamespace('_' . $projectDocument->getSequence());
+        }
+
+        $database->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER);
+        return $database;
+    };
+}, ['cache', 'register', 'project', 'authorization']);
+
 Server::setResource('abuseRetention', function () {
     return time() - (int) System::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400); // 1 day
 });
 
 Server::setResource('auditRetention', function (Document $project) {
     if ($project->getId() === 'console') {
-        return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE', 15778800)); // 6 months
+        return DateTime::addSeconds(new \DateTime(), -1 * (int) System::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE', 15778800)); // 6 months
     }
 
-    return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 1209600)); // 14 days
+    return DateTime::addSeconds(new \DateTime(), -1 * (int) System::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 1209600)); // 14 days
 }, ['project']);
 
 Server::setResource('executionRetention', function () {
-    return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600)); // 14 days
+    return DateTime::addSeconds(new \DateTime(), -1 * (int) System::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600)); // 14 days
 });
 
 Server::setResource('cache', function (Registry $register) {

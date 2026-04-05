@@ -3,6 +3,8 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/init/span.php';
 
+global $register;
+
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Swoole\Constant;
@@ -31,7 +33,6 @@ use Utopia\Http\Files;
 use Utopia\Http\Http;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
-use Utopia\Pools\Group;
 use Utopia\Span\Span;
 use Utopia\System\System;
 
@@ -103,7 +104,7 @@ function dispatch(Server $server, int $fd, int $type, $data = null): int
         $lines = explode("\n", $data, 3);
         $request = $lines[0];
         if (count($lines) > 1) {
-            $domain = trim(explode('Host: ', $lines[1])[1]);
+            $domain = trim(explode('Host: ', $lines[1])[1] ?? '');
         }
 
         // Sync executions are considered risky
@@ -196,6 +197,8 @@ include __DIR__ . '/controllers/general.php';
 
 function createDatabase(Http $app, string $resourceKey, string $dbName, array $collections, mixed $pools, ?callable $extraSetup = null): void
 {
+    $max = 15;
+    $sleep = 2;
     $max = 15;
     $sleep = 2;
     $attempts = 0;
@@ -291,7 +294,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $tot
 
     go(function () use ($register, $app) {
         $pools = $register->get('pools');
-        /** @var Group $pools */
+        /** @var \Utopia\Pools\Group $pools */
         Http::setResource('pools', fn () => $pools);
 
         /** @var array $collections */
@@ -409,13 +412,29 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $tot
         });
 
         $projectCollections = $collections['projects'];
+
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
         $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
         $sharedTablesV2 = \array_diff($sharedTables, $sharedTablesV1);
 
+        $documentsSharedTables = \explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES', ''));
+        $documentsSharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES_V1', ''));
+        $documentsSharedTablesV2 = \array_diff($documentsSharedTables, $documentsSharedTablesV1);
+
+        $vectorSharedTables = \explode(',', System::getEnv('_APP_DATABASE_VECTORSDB_SHARED_TABLES', ''));
+        $vectorSharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_VECTORSDB_SHARED_TABLES_V1', ''));
+        $vectorSharedTablesV2 = \array_diff($vectorSharedTables, $vectorSharedTablesV1);
+
         $cache = $app->getResource('cache');
 
-        foreach ($sharedTablesV2 as $hostname) {
+        // All shared tables V2 pools that need project metadata collections
+        $sharedTablesV2All = \array_values(\array_unique(\array_filter([
+            ...$sharedTablesV2,
+            ...$documentsSharedTablesV2,
+            ...$vectorSharedTablesV2,
+        ])));
+
+        foreach ($sharedTablesV2All as $hostname) {
             Span::init('database.setup');
             Span::add('database.hostname', $hostname);
 
@@ -637,7 +656,7 @@ $http->on(Constant::EVENT_TASK, function () use ($register) {
     /** @var Utopia\Database\Database $dbForPlatform */
     $dbForPlatform = $app->getResource('dbForPlatform');
 
-    /** @var Table $riskyDomains */
+    /** @var \Swoole\Table $riskyDomains */
     $riskyDomains = $app->getResource('riskyDomains');
 
     Timer::tick(DOMAIN_SYNC_TIMER * 1000, function () use ($dbForPlatform, $riskyDomains, &$lastSyncUpdate, $app) {

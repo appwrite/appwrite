@@ -12,7 +12,7 @@
     const { validateInstallRequest } = window.InstallerStepsProgress || {};
 
     const isUpgrade = document.body?.dataset.upgrade === 'true';
-    const stepFlow = isUpgrade ? [1, 4, 5] : [1, 2, 3, 4, 5];
+    const stepFlow = isUpgrade ? [1, 6, 4, 5] : [1, 2, 3, 4, 5];
     const cardSteps = stepFlow.filter((step) => step !== 5);
 
     const normalizeStep = (step) => {
@@ -53,7 +53,7 @@
     let pendingStep = null;
     let pendingPushState = false;
 
-    const clampStep = (step) => Math.max(1, Math.min(5, step));
+    const clampStep = (step) => Math.max(1, Math.min(6, step));
     const isInstallLocked = () => Boolean(window.InstallerSteps?.isInstallLocked?.());
 
     const scrollToFirstError = (panel) => {
@@ -399,11 +399,18 @@
                 }
             }
         }
-        if (action === 'next' && String(target) === '5' && typeof validateInstallRequest === 'function') {
-            const isValid = await validateInstallRequest();
-            if (!isValid) {
-                return;
+        if (action === 'next' && String(target) === '5') {
+            if (typeof validateInstallRequest === 'function') {
+                const isValid = await validateInstallRequest();
+                if (!isValid) {
+                    return;
+                }
             }
+            // Clear stale install data from previous runs so initStep5
+            // starts a fresh install instead of trying to resume.
+            const { clearInstallLock, clearInstallId } = window.InstallerStepsState || {};
+            clearInstallLock?.();
+            clearInstallId?.();
         }
         if (isInstallLocked() && Number(target) !== 5) {
             requestStep(5, true);

@@ -83,7 +83,7 @@ class WebhooksCustomServerTest extends Scope
         $stdout = '';
         $folder = 'timeout';
         $code = realpath(__DIR__ . '/../../../resources/functions') . "/{$folder}/code.tar.gz";
-        Console::execute('cd ' . realpath(__DIR__ . "/../../../resources/functions") . "/{$folder}  && tar --exclude code.tar.gz -czf code.tar.gz .", '', $stdout, $stderr);
+        Console::execute('cd ' . realpath(__DIR__ . "/../../../resources/functions") . "/{$folder}  && tar --exclude code.tar.gz --exclude node_modules -czf code.tar.gz .", '', $stdout, $stderr);
 
         // Create variable first
         $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', array_merge([
@@ -734,7 +734,7 @@ class WebhooksCustomServerTest extends Scope
         $stdout = '';
         $folder = 'timeout';
         $code = realpath(__DIR__ . '/../../../resources/functions') . "/{$folder}/code.tar.gz";
-        Console::execute('cd ' . realpath(__DIR__ . "/../../../resources/functions") . "/{$folder}  && tar --exclude code.tar.gz -czf code.tar.gz .", '', $stdout, $stderr);
+        Console::execute('cd ' . realpath(__DIR__ . "/../../../resources/functions") . "/{$folder}  && tar --exclude code.tar.gz --exclude node_modules -czf code.tar.gz .", '', $stdout, $stderr);
 
         $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
             'content-type' => 'multipart/form-data',

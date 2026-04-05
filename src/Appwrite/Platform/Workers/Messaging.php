@@ -285,7 +285,7 @@ class Messaging extends Action
 
                         try {
                             $response = $adapter->send($data);
-                            $deliveredTotal += $response['deliveredTo'];
+                            $deliveredTotal += (int) $response['deliveredTo'];
                             foreach ($response['results'] as $result) {
                                 if ($result['status'] === 'failure') {
                                     $deliveryErrors[] = "Failed sending to target {$result['recipient']} with error: {$result['error']}";
@@ -380,7 +380,7 @@ class Messaging extends Action
         ]));
 
         // Delete any attachments that were downloaded to local storage
-        if ($provider->getAttribute('type') === MESSAGE_TYPE_EMAIL) {
+        if ($providerType === MESSAGE_TYPE_EMAIL) {
             if ($deviceForFiles->getType() === Storage::DEVICE_LOCAL) {
                 return;
             }
