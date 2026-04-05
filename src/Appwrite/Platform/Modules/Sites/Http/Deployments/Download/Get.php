@@ -105,6 +105,15 @@ class Get extends Action
             $end = $request->getRangeEnd();
             $unit = $request->getRangeUnit();
 
+            // Workaround: the framework's parseRange() rejects single-byte
+            // ranges like "bytes=0-0" (where start == end).  Fall back to
+            // manual parsing so valid RFC 7233 requests are honoured.
+            if ($unit === null && \preg_match('/^(\w+)=(\d+)-(\d+)$/', $rangeHeader, $m)) {
+                $unit = $m[1];
+                $start = (int) $m[2];
+                $end = (int) $m[3];
+            }
+
             if ($end === null) {
                 $end = min(($start + MAX_OUTPUT_CHUNK_SIZE - 1), ($size - 1));
             }
