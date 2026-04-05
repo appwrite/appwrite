@@ -49,6 +49,7 @@ $swooleAdapter = new Server(
     port: System::getEnv('PORT', 80),
     settings: [
         'http_compression' => false,
+        'open_http_keepalive' => false,
         'package_max_length' => $payloadSize,
         'output_buffer_size' => $payloadSize,
     ],
