@@ -780,6 +780,7 @@ trait StorageBase
 
         $this->assertEquals(206, $file51a['headers']['status-code']);
         $this->assertEquals('1', $file51a['headers']['content-length']);
+        $this->assertEquals('bytes', $file51a['headers']['accept-ranges']);
 
         // Test ranged download - with invalid range
         $file52 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/download', array_merge([
@@ -863,6 +864,8 @@ trait StorageBase
         $this->assertEquals(200, $file7['headers']['status-code']);
         $this->assertEquals('attachment; filename="large-file.mp4"', $file7['headers']['content-disposition']);
         $this->assertEquals('video/mp4', $file7['headers']['content-type']);
+        $this->assertEquals('bytes', $file7['headers']['accept-ranges']);
+        $this->assertNotEmpty($file7['headers']['content-length']);
         $this->assertNotEmpty($fileData);
         $this->assertEquals(md5_file(realpath(__DIR__ . '/../../../resources/disk-a/large-file.mp4')), md5($fileData)); // validate the file is downloaded correctly
 

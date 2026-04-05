@@ -144,7 +144,7 @@ class Get extends Action
                 $end = min(($start + APP_STORAGE_READ_BUFFER - 1), ($size - 1));
             }
 
-            if ($unit != 'bytes' || $start > $end || $end >= $size) {
+            if ($unit !== 'bytes' || $start > $end || $end >= $size) {
                 throw new Exception(Exception::STORAGE_INVALID_RANGE);
             }
 
