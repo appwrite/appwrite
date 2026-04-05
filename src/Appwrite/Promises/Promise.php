@@ -2,6 +2,7 @@
 
 namespace Appwrite\Promises;
 
+/** @phpstan-consistent-constructor */
 abstract class Promise
 {
     protected const STATE_PENDING = 1;

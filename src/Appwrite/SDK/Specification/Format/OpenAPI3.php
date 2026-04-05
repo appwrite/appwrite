@@ -79,8 +79,8 @@ class OpenAPI3 extends Format
             $output['components']['securitySchemes']['Key']['x-appwrite'] = ['demo' => '<YOUR_API_KEY>'];
         }
 
-        if (isset($output['securityDefinitions']['JWT'])) {
-            $output['securityDefinitions']['JWT']['x-appwrite'] = ['demo' => '<YOUR_JWT>'];
+        if (isset($output['components']['securitySchemes']['JWT'])) {
+            $output['components']['securitySchemes']['JWT']['x-appwrite'] = ['demo' => '<YOUR_JWT>'];
         }
 
         if (isset($output['components']['securitySchemes']['Locale'])) {
@@ -99,7 +99,7 @@ class OpenAPI3 extends Format
 
             $sdk = $route->getLabel('sdk', false);
 
-            if (empty($sdk)) {
+            if ($sdk === false) {
                 continue;
             }
 
@@ -125,7 +125,9 @@ class OpenAPI3 extends Format
 
             $namespace = $sdk->getNamespace() ?? 'default';
 
-            $desc ??= '';
+            if ($desc === null) {
+                $desc = '';
+            }
             $descContents = \str_ends_with($desc, '.md') ? \file_get_contents($desc) : $desc;
 
             $temp = [
@@ -163,7 +165,7 @@ class OpenAPI3 extends Format
                 ];
             }
 
-            if (!empty($additionalMethods)) {
+            if (\is_array($additionalMethods) && \count($additionalMethods) > 0) {
                 $temp['x-appwrite']['methods'] = [];
                 foreach ($additionalMethods as $methodObj) {
                     /** @var Method $methodObj */
@@ -329,7 +331,7 @@ class OpenAPI3 extends Format
 
                 if (($response->getCode() ?? 500) === 204) {
                     $temp['responses'][(string)$response->getCode() ?? '500']['description'] = 'No content';
-                    unset($temp['responses'][(string)$response->getCode() ?? '500']['schema']);
+                    unset($temp['responses'][(string)$response->getCode() ?? '500']['content']);
                 }
             }
 
@@ -383,7 +385,7 @@ class OpenAPI3 extends Format
                     $validator = $validator->getValidator();
                 }
 
-                $class = !empty($validator)
+                $class = $validator instanceof Validator
                     ? \get_class($validator)
                     : '';
 
@@ -431,7 +433,7 @@ class OpenAPI3 extends Format
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['x-example'] = ($param['example'] ?? '') ?: '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
                         break;
-                    case \Utopia\Database\Validator\DatetimeValidator::class:
+                    case \Utopia\Database\Validator\Datetime::class:
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'datetime';
                         $node['schema']['x-example'] = ($param['example'] ?? '') ?: Model::TYPE_DATETIME_EXAMPLE;
@@ -463,7 +465,6 @@ class OpenAPI3 extends Format
                         $node['schema']['x-example'] = ($param['example'] ?? '') ?: 'https://example.com';
                         break;
                     case \Utopia\Validator\JSON::class:
-                    case \Utopia\Validator\Mock::class:
                     case \Utopia\Validator\Assoc::class:
                         $param['default'] = (empty($param['default'])) ? new \stdClass() : $param['default'];
                         $node['schema']['type'] = 'object';
@@ -559,12 +560,6 @@ class OpenAPI3 extends Format
                     case \Utopia\Validator\FloatValidator::class:
                         $node['schema']['type'] = 'number';
                         $node['schema']['format'] = 'float';
-                        if (!empty($param['example'])) {
-                            $node['schema']['x-example'] = $param['example'];
-                        }
-                        break;
-                    case \Utopia\Validator\Length::class:
-                        $node['schema']['type'] = $validator->getType();
                         if (!empty($param['example'])) {
                             $node['schema']['x-example'] = $param['example'];
                         }

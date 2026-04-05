@@ -285,7 +285,7 @@ class Event
      *
      * @param string $key
      * @param Document $context
-     * @return self
+     * @return static
      */
     public function setContext(string $key, Document $context): self
     {
@@ -309,7 +309,7 @@ class Event
     /**
      * Set class used for this event.
      * @param string $class
-     * @return self
+     * @return static
      */
     public function setClass(string $class): self
     {
@@ -519,6 +519,7 @@ class Event
      * @param string $pattern
      * @param array $params
      * @param ?Document $database
+     * @param ?Document $database
      * @return array
      * @throws \InvalidArgumentException
      */
@@ -533,7 +534,7 @@ class Event
         $parsed = self::parseEventPattern($pattern);
         // to switch the resource types from databases to the required prefix
         // eg; all databases events get fired with databases. prefix which mainly depicts legacy type
-        // so a projection from databases to the actual prefix
+        // so a projection from databases to the actual prefix(documentsdb, vectorsdb,etc)
         if ((str_contains($pattern, 'databases.') && $database && $database->getAttribute('type') !== 'legacy')) {
             $parsed = self::getDatabaseTypeEvents($database, $parsed);
         }
@@ -647,10 +648,8 @@ class Event
      *
      * @param Event $event
      *
-     * @return self
-     *
      */
-    public function from(Event $event): self
+    public function from(Event $event): static
     {
         $this->project = $event->getProject();
         $this->user = $event->getUser();
@@ -695,7 +694,6 @@ class Event
             )
         ) {
             $pairedEvents = [];
-
             foreach ($events as $event) {
                 $pairedEvents[] = $event;
                 // tablesdb needs databases event with tables and collections
@@ -743,6 +741,13 @@ class Event
                     'documents'    => 'rows',
                     'collections'  => 'tables',
                     'attributes'   => 'columns',
+                ];
+                break;
+            case 'documentsdb':
+            case 'vectorsdb':
+                // sending the type itself(eg: documentsdb, vectorsdb)
+                $eventMap = [
+                    'databases'    => $database->getAttribute('type')
                 ];
                 break;
         }

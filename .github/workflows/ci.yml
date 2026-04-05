@@ -150,8 +150,16 @@ jobs:
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress --ignore-platform-reqs
 
+      - name: Cache PHPStan result cache
+        uses: actions/cache@v4
+        with:
+          path: .phpstan-cache
+          key: phpstan-${{ github.sha }}
+          restore-keys: |
+            phpstan-
+
       - name: Run PHPStan
-        run: composer analyze
+        run: composer analyze -- --no-progress
 
   locale:
     name: Checks / Locale

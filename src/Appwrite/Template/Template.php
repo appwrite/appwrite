@@ -149,7 +149,7 @@ class Template extends View
     /**
      * From Camel Case
      *
-     * @var string $input
+     * @param string $input
      *
      * @return string
      */
@@ -167,7 +167,7 @@ class Template extends View
     /**
      * From Camel Case to Dash Case
      *
-     * @var string $input
+     * @param string $input
      *
      * @return string
      */

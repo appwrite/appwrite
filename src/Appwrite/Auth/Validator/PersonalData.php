@@ -33,7 +33,7 @@ class PersonalData extends Password
     /**
      * Is valid.
      *
-     * @param mixed $value
+     * @param mixed $password
      *
      * @return bool
      */

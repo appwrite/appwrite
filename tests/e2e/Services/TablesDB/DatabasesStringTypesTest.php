@@ -29,8 +29,8 @@ class DatabasesStringTypesTest extends Scope
     protected function setupDatabaseAndTable(): array
     {
         $cacheKey = $this->getProject()['$id'] ?? 'default';
-        if (!empty(static::$setupCache[$cacheKey])) {
-            return static::$setupCache[$cacheKey];
+        if (!empty(self::$setupCache[$cacheKey])) {
+            return self::$setupCache[$cacheKey];
         }
 
         $projectId = $this->getProject()['$id'];
@@ -131,7 +131,7 @@ class DatabasesStringTypesTest extends Scope
 
         // Cache before waiting so that if waitForAllAttributes times out,
         // subsequent calls don't try to re-create the same columns (causing 409)
-        static::$setupCache[$cacheKey] = [
+        self::$setupCache[$cacheKey] = [
             'databaseId' => $databaseId,
             'tableId' => $tableId,
         ];
@@ -139,7 +139,7 @@ class DatabasesStringTypesTest extends Scope
         // Wait for all columns to be available
         $this->waitForAllAttributes($databaseId, $tableId);
 
-        return static::$setupCache[$cacheKey];
+        return self::$setupCache[$cacheKey];
     }
 
     public function testCreateDatabase(): void

@@ -87,16 +87,11 @@ class Get extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        switch ($type) {
-            case 'output':
-                $path = $deployment->getAttribute('buildPath', '');
-                $device = $deviceForBuilds;
-                break;
-            case 'source':
-                $path = $deployment->getAttribute('sourcePath', '');
-                $device = $deviceForSites;
-                break;
-        }
+        [$path, $device] = match ($type) {
+            'output' => [$deployment->getAttribute('buildPath', ''), $deviceForBuilds],
+            'source' => [$deployment->getAttribute('sourcePath', ''), $deviceForSites],
+            default => throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid deployment download type.'),
+        };
 
         if (!$device->exists($path)) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);

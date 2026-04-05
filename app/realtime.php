@@ -237,7 +237,6 @@ if (!function_exists('getTelemetry')) {
 if (!function_exists('triggerStats')) {
     function triggerStats(array $event, string $projectId): void
     {
-        return;
     }
 }
 
@@ -320,14 +319,14 @@ if (!function_exists('logError')) {
 
 $server->error(logError(...));
 
-$server->onStart(function () use ($stats, $register, $containerId, &$statsDocument) {
+$server->onStart(function () use ($stats, $containerId, &$statsDocument) {
     sleep(5); // wait for the initial database schema to be ready
     Console::success('Server started successfully');
 
     /**
      * Create document for this worker to share stats across Containers.
      */
-    go(function () use ($register, $containerId, &$statsDocument) {
+    go(function () use ($containerId, &$statsDocument) {
         $attempts = 0;
         $database = getConsoleDB();
 
@@ -357,7 +356,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
      */
     // TODO: Remove this if check once it doesn't cause issues for cloud
     if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
-        Timer::tick(5000, function () use ($register, $stats, &$statsDocument) {
+        Timer::tick(5000, function () use ($stats, &$statsDocument) {
             $payload = [];
             foreach ($stats as $projectId => $value) {
                 $payload[$projectId] = $stats->get($projectId, 'connectionsTotal');
@@ -396,7 +395,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
     $attempts = 0;
     $start = time();
 
-    Timer::tick(5000, function () use ($server, $register, $realtime, $stats) {
+    Timer::tick(5000, function () use ($server, $realtime, $stats) {
         /**
          * Sending current connections to project channels on the console project every 5 seconds.
          */
@@ -518,7 +517,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         $project = $consoleDatabase->getAuthorization()->skip(fn () => $consoleDatabase->getDocument('projects', $projectId));
                         $database = getProjectDB($project);
 
-                        /** @var Appwrite\Utopia\Database\Documents\User $user */
+                        /** @var User $user */
                         $user = $database->getDocument('users', $userId);
 
                         $roles = $user->getRoles($database->getAuthorization());
@@ -642,10 +641,14 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Missing or unknown project ID');
         }
 
+        $timelimit = $app->getResource('timelimit');
+        $user = $app->getResource('user'); /** @var User $user */
+        $logUser = $user;
+
         if (
             array_key_exists('realtime', $project->getAttribute('apis', []))
             && !$project->getAttribute('apis', [])['realtime']
-            && !(User::isPrivileged($authorization->getRoles()) || User::isApp($authorization->getRoles()))
+            && !($user->isPrivileged($authorization->getRoles()) || $user->isApp($authorization->getRoles()))
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }
@@ -655,10 +658,6 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         if (!empty($projectRegion) && $projectRegion !== $currentRegion) {
             throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'Project is not accessible in this region. Please make sure you are using the correct endpoint');
         }
-
-        $timelimit = $app->getResource('timelimit');
-        $user = $app->getResource('user'); /** @var User $user */
-        $logUser = $user;
 
         /*
          * Abuse Check
@@ -798,7 +797,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
     }
 });
 
-$server->onMessage(function (int $connection, string $message) use ($server, $register, $realtime, $containerId) {
+$server->onMessage(function (int $connection, string $message) use ($server, $realtime, $containerId) {
     $project = null;
     $authorization = null;
 
@@ -810,7 +809,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         // Get authorization from connection (stored during onOpen)
         $authorization = $realtime->connections[$connection]['authorization'] ?? null;
         if ($authorization === null) {
-            $authorization = new Authorization('');
+            $authorization = new Authorization();
         }
 
         $database = getConsoleDB();

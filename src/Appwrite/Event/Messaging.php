@@ -86,7 +86,7 @@ class Messaging extends Event
     /**
      * Returns message document for the messaging event.
      *
-     * @return string
+     * @return Document
      */
     public function getMessage(): Document
     {
@@ -96,7 +96,7 @@ class Messaging extends Event
     /**
      * Sets message ID for the messaging event.
      *
-     * @param string $message
+     * @param string $messageId
      * @return self
      */
     public function setMessageId(string $messageId): self

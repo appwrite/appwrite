@@ -166,14 +166,14 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 if ($request->getMethod() !== Request::METHOD_GET) {
                     throw new AppwriteException(AppwriteException::GENERAL_PROTOCOL_UNSUPPORTED, 'Method unsupported over HTTP. Please use HTTPS instead.', view: $errorView);
                 }
-                return $response->redirect('https://' . $request->getHostname() . $request->getURI());
+                $response->redirect('https://' . $request->getHostname() . $request->getURI());
+                return false;
             }
         }
 
         /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
 
-        /** @var Document $deployment */
         if (!empty($rule->getAttribute('deploymentId', ''))) {
             $deployment = $authorization->skip(fn () => $dbForProject->getDocument('deployments', $rule->getAttribute('deploymentId')));
         } else {
@@ -244,6 +244,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         if ($isPreview && $requirePreview) {
             $cookie = $request->getCookie(COOKIE_NAME_PREVIEW, '');
             $authorized = false;
+            $user = new Document();
 
             // Security checks to mark authorized true
             if (!empty($cookie)) {
@@ -273,7 +274,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
                 $membershipExists = false;
                 $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
-                if (!$project->isEmpty() && isset($user)) {
+                if (!$project->isEmpty() && !$user->isEmpty()) {
                     $teamId = $project->getAttribute('teamId', '');
                     $membership = $user->find('teamId', $teamId, 'memberships');
                     if (!empty($membership)) {
@@ -379,7 +380,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         $executionId = ID::unique();
 
         $headers = \array_merge([], $requestHeaders);
-        $headers['x-appwrite-execution-id'] = $executionId ?? '';
+        $headers['x-appwrite-execution-id'] = $executionId;
         $headers['x-appwrite-user-id'] = '';
         $headers['x-appwrite-country-code'] = '';
         $headers['x-appwrite-continent-code'] = '';
@@ -459,7 +460,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         if ($version === 'v2') {
             $vars = \array_merge($vars, [
                 'APPWRITE_FUNCTION_TRIGGER' => $headers['x-appwrite-trigger'] ?? '',
-                'APPWRITE_FUNCTION_DATA' => $body ?? '',
+                'APPWRITE_FUNCTION_DATA' => $body,
                 'APPWRITE_FUNCTION_USER_ID' => $headers['x-appwrite-user-id'] ?? '',
                 'APPWRITE_FUNCTION_JWT' => $headers['x-appwrite-user-jwt'] ?? ''
             ]);
@@ -529,6 +530,11 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         }
 
         /** Execute function */
+        $executionResponse = [
+            'headers' => [],
+            'body' => '',
+        ];
+
         try {
             $version = match ($type) {
                 'function' => $resource->getAttribute('version', 'v2'),
@@ -734,7 +740,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         $execution->setAttribute('responseBody', $executionResponse['body'] ?? '');
         $execution->setAttribute('responseHeaders', $headers);
 
-        $body = $execution['responseBody'] ?? '';
+        $body = $execution['responseBody'];
 
         $contentType = 'text/plain';
         foreach ($executionResponse['headers'] as $name => $values) {
@@ -865,9 +871,9 @@ Http::init()
         Request::setRoute($route);
 
         if ($route === null) {
-            return $response
-                ->setStatusCode(404)
-                ->send('Not Found');
+            $response->setStatusCode(404);
+            $response->send('Not Found');
+            return;
         }
 
         $requestFormat = $request->getHeader('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
@@ -973,7 +979,8 @@ Http::init()
                     throw new AppwriteException(AppwriteException::GENERAL_PROTOCOL_UNSUPPORTED, 'Method unsupported over HTTP. Please use HTTPS instead.');
                 }
 
-                return $response->redirect('https://' . $request->getHostname() . $request->getURI());
+                $response->redirect('https://' . $request->getHostname() . $request->getURI());
+                return;
             }
         }
     });
@@ -1190,6 +1197,15 @@ Http::error()
     ->inject('devKey')
     ->inject('authorization')
     ->action(function (Throwable $error, Http $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, Bus $bus, Document $devKey, Authorization $authorization) {
+        $trace = $error->getTrace();
+
+        foreach (array_slice($trace, 0, 100) as $index => $traceEntry) {
+            $file = isset($traceEntry['file']) ? $traceEntry['file'] : '[internal function]';
+            $line = isset($traceEntry['line']) ? $traceEntry['line'] : '';
+            $function = isset($traceEntry['function']) ? $traceEntry['function'] : '';
+            Console::error("[$index] $file : $line -> $function()");
+        }
+
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->getRoute();
         $class = \get_class($error);
@@ -1261,7 +1277,16 @@ Http::error()
          * If not a publishable error, track usage stats. Publishable errors are >= 500 or those explicitly marked as publish=true in errors.php
          */
         if (!$publish && $project->getId() !== 'console') {
-            if (!DBUser::isPrivileged($authorization->getRoles())) {
+            $errorUser = new DBUser();
+            try {
+                $resolvedUser = $utopia->getResource('user');
+                if ($resolvedUser instanceof DBUser) {
+                    $errorUser = $resolvedUser;
+                }
+            } catch (\Throwable) {
+                // User resource may not be available in error context
+            }
+            if (!$errorUser->isPrivileged($authorization->getRoles())) {
                 $bus->dispatch(new RequestCompleted(
                     project: $project->getArrayCopy(),
                     request: $request,

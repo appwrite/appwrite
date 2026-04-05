@@ -23,8 +23,8 @@ class StorageClientTest extends Scope
     protected function setupBucket(): array
     {
         $key = $this->getProject()['$id'];
-        if (!empty(static::$cachedBucket[$key])) {
-            return static::$cachedBucket[$key];
+        if (!empty(self::$cachedBucket[$key])) {
+            return self::$cachedBucket[$key];
         }
 
         $projectId = $this->getProject()['$id'];
@@ -55,15 +55,15 @@ class StorageClientTest extends Scope
         $bucket = $bucket['body']['data']['storageCreateBucket'];
         $this->assertEquals('Actors', $bucket['name']);
 
-        static::$cachedBucket[$key] = $bucket;
+        self::$cachedBucket[$key] = $bucket;
         return $bucket;
     }
 
     protected function setupFile(): array
     {
         $key = $this->getProject()['$id'];
-        if (!empty(static::$cachedFile[$key])) {
-            return static::$cachedFile[$key];
+        if (!empty(self::$cachedFile[$key])) {
+            return self::$cachedFile[$key];
         }
 
         $bucket = $this->setupBucket();
@@ -99,8 +99,8 @@ class StorageClientTest extends Scope
         $this->assertIsArray($file['body']['data']);
         $this->assertArrayNotHasKey('errors', $file['body']);
 
-        static::$cachedFile[$key] = $file['body']['data']['storageCreateFile'];
-        return static::$cachedFile[$key];
+        self::$cachedFile[$key] = $file['body']['data']['storageCreateFile'];
+        return self::$cachedFile[$key];
     }
 
     public function testCreateBucket(): void
@@ -229,6 +229,8 @@ class StorageClientTest extends Scope
         ], $this->getHeaders()), $gqlPayload);
 
         $this->assertEquals(47218, \strlen($file['body']));
+
+        return $file;
     }
 
     /**
@@ -319,6 +321,6 @@ class StorageClientTest extends Scope
 
         // Clear cache after deletion
         $key = $this->getProject()['$id'];
-        static::$cachedFile[$key] = [];
+        self::$cachedFile[$key] = [];
     }
 }

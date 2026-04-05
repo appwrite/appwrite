@@ -204,9 +204,6 @@ abstract class Format
      *
      * Get services value
      *
-     * @param array $services
-     *
-     * @return self
      */
     public function getServices(): array
     {
@@ -309,7 +306,7 @@ abstract class Format
                     case 'createIndex':
                         switch ($param) {
                             case 'type':
-                                return 'IndexType';
+                                return 'DatabasesIndexType';
                             case 'orders':
                                 return 'OrderBy';
                         }
@@ -342,7 +339,45 @@ abstract class Format
                     case 'createIndex':
                         switch ($param) {
                             case 'type':
-                                return 'IndexType';
+                                return 'TablesDBIndexType';
+                            case 'orders':
+                                return 'OrderBy';
+                        }
+                }
+                break;
+            case 'documentsDB':
+                switch ($method) {
+                    case 'getUsage':
+                    case 'listUsage':
+                    case 'getCollectionUsage':
+                        switch ($param) {
+                            case 'range':
+                                return 'UsageRange';
+                        }
+                        break;
+                    case 'createIndex':
+                        switch ($param) {
+                            case 'type':
+                                return 'DocumentsDBIndexType';
+                            case 'orders':
+                                return 'OrderBy';
+                        }
+                }
+                break;
+            case 'vectorsDB':
+                switch ($method) {
+                    case 'getUsage':
+                    case 'listUsage':
+                    case 'getCollectionUsage':
+                        switch ($param) {
+                            case 'range':
+                                return 'UsageRange';
+                        }
+                        break;
+                    case 'createIndex':
+                        switch ($param) {
+                            case 'type':
+                                return 'VectorsDBIndexType';
                             case 'orders':
                                 return 'OrderBy';
                         }
@@ -630,6 +665,8 @@ abstract class Format
                 }
                 break;
             case 'databases':
+            case 'documentsDB':
+            case 'vectorsDB':
                 switch ($method) {
                     case 'getUsage':
                     case 'listUsage':

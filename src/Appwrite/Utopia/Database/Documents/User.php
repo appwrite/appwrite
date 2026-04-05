@@ -86,7 +86,6 @@ class User extends Document
     /**
      * Check if user is anonymous.
      *
-     * @param Document $this
      * @return bool
      */
     public function isAnonymous(): bool
@@ -102,7 +101,7 @@ class User extends Document
      *
      * @return bool
      */
-    public static function isPrivileged(array $roles): bool
+    public function isPrivileged(array $roles): bool
     {
         if (
             in_array(self::ROLE_OWNER, $roles) ||
@@ -122,7 +121,7 @@ class User extends Document
      *
      * @return bool
      */
-    public static function isApp(array $roles): bool
+    public function isApp(array $roles): bool
     {
         if (in_array(self::ROLE_APPS, $roles)) {
             return true;
@@ -153,7 +152,6 @@ class User extends Document
     /**
      * Verify session and check that its not expired.
      *
-     * @param array<Document> $sessions
      * @param string $secret
      *
      * @return bool|string
@@ -173,8 +171,6 @@ class User extends Document
                 return $session->getId();
             }
         }
-
-        return false;
 
         return false;
     }

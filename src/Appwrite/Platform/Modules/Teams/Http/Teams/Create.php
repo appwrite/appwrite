@@ -68,10 +68,10 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, string $name, array $roles, Response $response, Document $user, Database $dbForProject, Authorization $authorization, Event $queueForEvents)
+    public function action(string $teamId, string $name, array $roles, Response $response, User $user, Database $dbForProject, Authorization $authorization, Event $queueForEvents)
     {
-        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
-        $isAppUser = User::isApp($authorization->getRoles());
+        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
+        $isAppUser = $user->isApp($authorization->getRoles());
 
         $teamId = $teamId == 'unique()' ? ID::unique() : $teamId;
 

@@ -20,8 +20,8 @@ class TeamsClientTest extends Scope
     protected function setupTeam(): array
     {
         $key = $this->getProject()['$id'];
-        if (!empty(static::$cachedTeam[$key])) {
-            return static::$cachedTeam[$key];
+        if (!empty(self::$cachedTeam[$key])) {
+            return self::$cachedTeam[$key];
         }
 
         $projectId = $this->getProject()['$id'];
@@ -45,15 +45,15 @@ class TeamsClientTest extends Scope
         $team = $team['body']['data']['teamsCreate'];
         $this->assertEquals('Team Name', $team['name']);
 
-        static::$cachedTeam[$key] = $team;
+        self::$cachedTeam[$key] = $team;
         return $team;
     }
 
     protected function setupMembership(): array
     {
         $key = $this->getProject()['$id'];
-        if (!empty(static::$cachedMembership[$key])) {
-            return static::$cachedMembership[$key];
+        if (!empty(self::$cachedMembership[$key])) {
+            return self::$cachedMembership[$key];
         }
 
         $team = $this->setupTeam();
@@ -82,7 +82,7 @@ class TeamsClientTest extends Scope
         $this->assertEquals($team['_id'], $membership['teamId']);
         $this->assertEquals(['developer'], $membership['roles']);
 
-        static::$cachedMembership[$key] = $membership;
+        self::$cachedMembership[$key] = $membership;
         return $membership;
     }
 
@@ -211,6 +211,6 @@ class TeamsClientTest extends Scope
 
         // Clear cache after deletion
         $key = $this->getProject()['$id'];
-        static::$cachedMembership[$key] = [];
+        self::$cachedMembership[$key] = [];
     }
 }
