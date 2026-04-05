@@ -227,7 +227,7 @@ class Install extends Action
         // Fall back to CLI mode
         $enableAssistant = false;
         $assistantExistsInOldCompose = false;
-        if ($existingInstallation && isset($compose)) {
+        if ($existingInstallation) {
             try {
                 $assistantService = $compose->getService('appwrite-assistant');
                 $assistantExistsInOldCompose = $assistantService !== null;

@@ -99,8 +99,6 @@ class Update extends Action
         // Map aggregate permissions into the multiple permissions they represent.
         $permissions = Permission::aggregate($permissions);
 
-        $enabled ??= $collection->getAttribute('enabled', true);
-
         $collection = $dbForProject->updateDocument(
             'database_' . $database->getSequence(),
             $collectionId,

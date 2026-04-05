@@ -285,7 +285,7 @@ class Event
      *
      * @param string $key
      * @param Document $context
-     * @return self
+     * @return static
      */
     public function setContext(string $key, Document $context): self
     {
@@ -309,7 +309,7 @@ class Event
     /**
      * Set class used for this event.
      * @param string $class
-     * @return self
+     * @return static
      */
     public function setClass(string $class): self
     {
@@ -648,10 +648,8 @@ class Event
      *
      * @param Event $event
      *
-     * @return self
-     *
      */
-    public function from(Event $event): self
+    public function from(Event $event): static
     {
         $this->project = $event->getProject();
         $this->user = $event->getUser();

@@ -25,9 +25,6 @@ class SiteUseCases
     public const FORMS = 'forms';
     public const DASHBOARD = 'dashboard';
 
-    /**
-     * @var array<string>
-     */
     public static function getAll(): array
     {
         return [
@@ -252,7 +249,7 @@ return [
         'frameworks' => [
             getFramework('VITE', [
                 'providerRootDirectory' => './vite/vitepress',
-                'outputDirectory' => '404.html',
+                'fallbackFile' => '404.html',
                 'installCommand' => 'npm i vitepress && npm install',
                 'buildCommand' => 'npm run docs:build',
                 'outputDirectory' => './.vitepress/dist',
@@ -275,7 +272,7 @@ return [
         'frameworks' => [
             getFramework('VUE', [
                 'providerRootDirectory' => './vue/vuepress',
-                'outputDirectory' => '404.html',
+                'fallbackFile' => '404.html',
                 'installCommand' => 'npm install',
                 'buildCommand' => 'npm run build',
                 'outputDirectory' => './src/.vuepress/dist',
@@ -298,7 +295,7 @@ return [
         'frameworks' => [
             getFramework('REACT', [
                 'providerRootDirectory' => './react/docusaurus',
-                'outputDirectory' => '404.html',
+                'fallbackFile' => '404.html',
                 'installCommand' => 'npm install',
                 'buildCommand' => 'npm run build',
                 'outputDirectory' => './build',

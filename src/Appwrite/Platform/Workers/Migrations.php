@@ -408,6 +408,7 @@ class Migrations extends Action
         $tempAPIKey = $this->generateAPIKey($project);
 
         $transfer = $source = $destination = null;
+        $aggregatedResources = [];
 
         $host = System::getEnv('_APP_MIGRATION_HOST');
         if (empty($host)) {
@@ -444,7 +445,6 @@ class Migrations extends Action
                 $destination
             );
 
-            $aggregatedResources = [];
             /** Start Transfer */
             if (empty($source->getErrors())) {
                 $migration->setAttribute('stage', 'migrating');

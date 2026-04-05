@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b5261855586680e467168f527e0634ae",
+    "content-hash": "4fe91e67f343fbe6deac1fdc7eda949f",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4467,23 +4467,23 @@
         },
         {
             "name": "utopia-php/messaging",
-            "version": "0.20.1",
+            "version": "0.22.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/messaging.git",
-                "reference": "fcb4c3c46a48008a677957690bd45ec934dd33b0"
+                "reference": "a6ac04fd204fb6a16bf8c75a84d0b9fc10aa5030"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/fcb4c3c46a48008a677957690bd45ec934dd33b0",
-                "reference": "fcb4c3c46a48008a677957690bd45ec934dd33b0",
+                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/a6ac04fd204fb6a16bf8c75a84d0b9fc10aa5030",
+                "reference": "a6ac04fd204fb6a16bf8c75a84d0b9fc10aa5030",
                 "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
                 "ext-openssl": "*",
                 "giggsey/libphonenumber-for-php-lite": "9.0.23",
-                "php": ">=8.0.0",
+                "php": ">=8.1.0",
                 "phpmailer/phpmailer": "6.9.1"
             },
             "require-dev": {
@@ -4512,9 +4512,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/messaging/issues",
-                "source": "https://github.com/utopia-php/messaging/tree/0.20.1"
+                "source": "https://github.com/utopia-php/messaging/tree/0.22.0"
             },
-            "time": "2026-02-06T09:56:06+00:00"
+            "time": "2026-04-02T04:09:19+00:00"
         },
         {
             "name": "utopia-php/migration",

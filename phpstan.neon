@@ -1,6 +1,3 @@
-includes:
-  - phpstan-baseline.neon
-
 parameters:
   level: 3
   tmpDir: .phpstan-cache
@@ -15,4 +12,3 @@ parameters:
     - vendor/swoole/ide-helper
   excludePaths:
     - tests/resources
-
