@@ -9,6 +9,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Operation;
 use Appwrite\Utopia\Response as UtopiaResponse;
+use Utopia\Database\Database;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
@@ -48,7 +49,7 @@ class Create extends OperationsCreate
                 ],
                 contentType: ContentType::JSON
             ))
-            ->param('transactionId', '', new UID(), 'Transaction ID.')
+            ->param('transactionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Transaction ID.', false, ['dbForProject'])
             ->param('operations', [], new ArrayList(new Operation(type: 'tablesdb')), 'Array of staged operations.', true)
             ->inject('response')
             ->inject('dbForProject')

@@ -114,7 +114,11 @@ class Create extends Action
                     ->setAttribute('personalRefreshToken', $refreshToken)
                     ->setAttribute('personalAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')));
 
-                $dbForPlatform->updateDocument('installations', $installation->getId(), $installation);
+                $dbForPlatform->updateDocument('installations', $installation->getId(), new Document([
+                    'personalAccessToken' => $installation->getAttribute('personalAccessToken'),
+                    'personalRefreshToken' => $installation->getAttribute('personalRefreshToken'),
+                    'personalAccessTokenExpiry' => $installation->getAttribute('personalAccessTokenExpiry'),
+                ]));
             }
 
             try {
@@ -152,6 +156,8 @@ class Create extends Action
         $repository['pushedAt'] = $repository['pushed_at'] ?? '';
         $repository['organization'] = $installation->getAttribute('organization', '');
         $repository['provider'] = $installation->getAttribute('provider', '');
+        $repository['providerInstallationId'] = $installation->getAttribute('providerInstallationId', '');
+        $repository['authorized'] = true;
 
         $response->dynamic(new Document($repository), Response::MODEL_PROVIDER_REPOSITORY);
     }

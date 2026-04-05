@@ -572,7 +572,15 @@ class FunctionsCustomClientTest extends Scope
         ]);
         $this->assertEquals(202, $attribute['headers']['status-code']);
 
-        sleep(2);
+        $this->assertEventually(function () use ($databaseId, $collectionId) {
+            $attr = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/name', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals(200, $attr['headers']['status-code']);
+            $this->assertEquals('available', $attr['body']['status']);
+        }, 30_000, 500);
 
         $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
             'content-type' => 'application/json',

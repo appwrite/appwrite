@@ -64,7 +64,7 @@ class Create extends Base
                     )
                 ],
             ))
-            ->param('siteId', '', new UID(), 'Site ID.')
+            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
             ->param('repository', '', new Text(128, 0), 'Repository name of the template.')
             ->param('owner', '', new Text(128, 0), 'The name of the owner of the template.')
             ->param('rootDirectory', '', new Text(128, 0), 'Path to site code in the template repo.')
@@ -187,7 +187,12 @@ class Create extends Base
             ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
             ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
             ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-        $dbForProject->updateDocument('sites', $site->getId(), $site);
+        $dbForProject->updateDocument('sites', $site->getId(), new Document([
+            'latestDeploymentId' => $site->getAttribute('latestDeploymentId'),
+            'latestDeploymentInternalId' => $site->getAttribute('latestDeploymentInternalId'),
+            'latestDeploymentCreatedAt' => $site->getAttribute('latestDeploymentCreatedAt'),
+            'latestDeploymentStatus' => $site->getAttribute('latestDeploymentStatus'),
+        ]));
 
         $sitesDomain = $platform['sitesDomain'];
         $domain = ID::unique() . "." . $sitesDomain;

@@ -26,7 +26,7 @@ $console = [
             'hostname' => 'localhost',
         ], // Current host is added on app init
     ],
-    'region' => 'fra',
+    'region' => System::getEnv('_APP_REGION', 'default'),
     'legalName' => '',
     'legalCountry' => '',
     'legalState' => '',

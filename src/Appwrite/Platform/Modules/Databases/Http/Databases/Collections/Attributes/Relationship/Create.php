@@ -62,9 +62,9 @@ class Create extends Action
                     replaceWith: 'tablesDB.createRelationshipColumn',
                 ),
             ))
-            ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('collectionId', '', new UID(), 'Collection ID.')
-            ->param('relatedCollectionId', '', new UID(), 'Related Collection ID.')
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
+            ->param('relatedCollectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Related Collection ID.', false, ['dbForProject'])
             ->param('type', '', new WhiteList([
                 Database::RELATION_ONE_TO_ONE,
                 Database::RELATION_MANY_TO_ONE,
@@ -72,8 +72,8 @@ class Create extends Action
                 Database::RELATION_ONE_TO_MANY
             ], true), 'Relation type')
             ->param('twoWay', false, new Boolean(), 'Is Two Way?', true)
-            ->param('key', null, new Nullable(new Key()), 'Attribute Key.', true)
-            ->param('twoWayKey', null, new Nullable(new Key()), 'Two Way Attribute Key.', true)
+            ->param('key', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'Attribute Key.', true, ['dbForProject'])
+            ->param('twoWayKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'Two Way Attribute Key.', true, ['dbForProject'])
             ->param('onDelete', Database::RELATION_MUTATE_RESTRICT, new WhiteList([
                 Database::RELATION_MUTATE_CASCADE,
                 Database::RELATION_MUTATE_RESTRICT,
@@ -89,6 +89,10 @@ class Create extends Action
 
     public function action(string $databaseId, string $collectionId, string $relatedCollectionId, string $type, bool $twoWay, ?string $key, ?string $twoWayKey, string $onDelete, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $authorization): void
     {
+        if (!$dbForProject->getAdapter()->getSupportForRelationships()) {
+            throw new Exception(Exception::GENERAL_FEATURE_UNSUPPORTED, 'Relationships are not supported by this database.');
+        }
+
         $key ??= $relatedCollectionId;
         $twoWayKeyWasProvided = $twoWayKey !== null;
         $twoWayKey ??= $collectionId;

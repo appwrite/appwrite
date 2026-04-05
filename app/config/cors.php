@@ -28,6 +28,9 @@ return [
         'X-Appwrite-Timestamp',
         'X-Appwrite-Session',
         'X-Appwrite-Platform',
+        'X-Appwrite-Impersonate-User-Id',
+        'X-Appwrite-Impersonate-User-Email',
+        'X-Appwrite-Impersonate-User-Phone',
         // SDK generator
         'X-SDK-Version',
         'X-SDK-Name',

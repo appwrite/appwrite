@@ -11,6 +11,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -52,8 +53,8 @@ class Delete extends Base
                 ],
                 contentType: ContentType::NONE
             ))
-            ->param('functionId', '', new UID(), 'Function unique ID.', false)
-            ->param('variableId', '', new UID(), 'Variable unique ID.', false)
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function unique ID.', false, ['dbForProject'])
+            ->param('variableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Variable unique ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('dbForPlatform')
@@ -86,7 +87,8 @@ class Delete extends Base
 
         $dbForProject->deleteDocument('variables', $variable->getId());
 
-        $dbForProject->updateDocument('functions', $function->getId(), $function->setAttribute('live', false));
+        $function->setAttribute('live', false);
+        $dbForProject->updateDocument('functions', $function->getId(), new Document(['live' => false]));
 
         // Inform scheduler to pull the latest changes
         $schedule = $dbForPlatform->getDocument('schedules', $function->getAttribute('scheduleId'));
@@ -94,7 +96,11 @@ class Delete extends Base
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deploymentId')));
-        $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
+        $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), new Document([
+            'resourceUpdatedAt' => $schedule->getAttribute('resourceUpdatedAt'),
+            'schedule' => $schedule->getAttribute('schedule'),
+            'active' => $schedule->getAttribute('active'),
+        ])));
 
         $response->noContent();
     }

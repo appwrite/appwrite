@@ -47,6 +47,36 @@ Examples:
 'resourceType' => 'deployments'
 ```
 
+## Performance Patterns
+
+### Document Update Optimization
+
+When updating documents, always pass only the changed attributes as a sparse `Document` rather than the full document. This is more efficient because `updateDocument()` internally performs `array_merge($old, $new)`.
+
+**Correct Pattern:**
+```php
+// Good: Pass only changed attributes directly
+$user = $dbForProject->updateDocument('users', $user->getId(), new Document([
+    'name' => $name,
+    'email' => $email,
+]));
+```
+
+**Incorrect Pattern:**
+```php
+$user->setAttribute('name', $name);
+$user->setAttribute('email', $email);
+
+// Bad: Passing full document is inefficient
+$user = $dbForProject->updateDocument('users', $user->getId(), $user);
+```
+
+**Exceptions:**
+- Migration files (need full document updates by design)
+- Cases already using `array_merge()` with `getArrayCopy()`
+- Updates where almost all attributes of the document change at once (sparse update provides little benefit compared to passing the full document)
+- Complex nested relationship logic where full document state is required
+
 ## Security Considerations
 
 ### Critical Security Practices

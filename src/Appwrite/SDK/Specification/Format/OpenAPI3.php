@@ -450,7 +450,7 @@ class OpenAPI3 extends Format
                             Database::VAR_POLYGON => '[[[1, 2], [3, 4], [5, 6], [1, 2]]]',
                         };
                         break;
-                    case \Appwrite\Network\Validator\Email::class:
+                    case \Utopia\Emails\Validator\Email::class:
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'email';
                         $node['schema']['x-example'] = ($param['example'] ?? '') ?: 'email@example.com';
@@ -839,6 +839,10 @@ class OpenAPI3 extends Format
                     case 'string':
                     case 'datetime':
                     case 'payload':
+                        $type = 'string';
+                        break;
+
+                    case 'id':
                         $type = 'string';
                         break;
 

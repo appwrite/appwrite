@@ -18,19 +18,19 @@ class Log extends Model
             ])
             ->addRule('userId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'User ID.',
+                'description' => 'User ID of the actor recorded for this log. During impersonation, this is the original impersonator, not the impersonated target user.',
                 'default' => '',
                 'example' => '610fc2f985ee0',
             ])
             ->addRule('userEmail', [
                 'type' => self::TYPE_STRING,
-                'description' => 'User Email.',
+                'description' => 'User email of the actor recorded for this log. During impersonation, this is the original impersonator.',
                 'default' => '',
                 'example' => 'john@appwrite.io',
             ])
             ->addRule('userName', [
                 'type' => self::TYPE_STRING,
-                'description' => 'User Name.',
+                'description' => 'User name of the actor recorded for this log. During impersonation, this is the original impersonator.',
                 'default' => '',
                 'example' => 'John Doe',
             ])

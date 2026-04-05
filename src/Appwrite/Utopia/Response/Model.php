@@ -17,6 +17,7 @@ abstract class Model
     public const TYPE_PAYLOAD = 'payload';
     public const TYPE_ARRAY = 'array';
     public const TYPE_ENUM = 'enum';
+    public const TYPE_ID = 'id';
 
     /**
      * @var bool

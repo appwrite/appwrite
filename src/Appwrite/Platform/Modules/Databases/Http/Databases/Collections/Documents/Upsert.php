@@ -4,13 +4,13 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documen
 
 use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Event;
-use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response as UtopiaResponse;
@@ -77,25 +77,25 @@ class Upsert extends Action
                     ),
                 ),
             ])
-            ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('collectionId', '', new UID(), 'Collection ID.')
-            ->param('documentId', '', new CustomId(), 'Document ID.')
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
+            ->param('documentId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Document ID.', false, ['dbForProject'])
             ->param('data', [], new JSON(), 'Document data as JSON object. Include all required attributes of the document to be created or updated.', true, example: '{"username":"walter.obrien","email":"walter.obrien@example.com","fullName":"Walter O\'Brien","age":30,"isAdmin":false}')
             ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE])), 'An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
-            ->param('transactionId', null, new Nullable(new UID()), 'Transaction ID for staging the operation.', true)
+            ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
             ->inject('requestTimestamp')
             ->inject('response')
             ->inject('user')
             ->inject('dbForProject')
             ->inject('queueForEvents')
-            ->inject('queueForStatsUsage')
+            ->inject('usage')
             ->inject('transactionState')
             ->inject('plan')
             ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?string $transactionId, ?\DateTime $requestTimestamp, UtopiaResponse $response, Document $user, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage, TransactionState $transactionState, array $plan, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?string $transactionId, ?\DateTime $requestTimestamp, UtopiaResponse $response, Document $user, Database $dbForProject, Event $queueForEvents, Context $usage, TransactionState $transactionState, array $plan, Authorization $authorization): void
     {
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
@@ -256,7 +256,7 @@ class Upsert extends Action
 
         $setCollection($collection, $newDocument);
 
-        $queueForStatsUsage
+        $usage
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, \max(1, $operations))
             ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), \max(1, $operations));
 

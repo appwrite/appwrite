@@ -6,6 +6,7 @@ use Appwrite\SDK\Language\AgentSkills;
 use Appwrite\SDK\Language\Android;
 use Appwrite\SDK\Language\Apple;
 use Appwrite\SDK\Language\CLI;
+use Appwrite\SDK\Language\CursorPlugin;
 use Appwrite\SDK\Language\Dart;
 use Appwrite\SDK\Language\Deno;
 use Appwrite\SDK\Language\DotNet;
@@ -24,6 +25,7 @@ use Appwrite\SDK\Language\Swift;
 use Appwrite\SDK\Language\Web;
 use Appwrite\SDK\SDK;
 use Appwrite\Spec\Swagger2;
+use CzProject\GitPhp\Git;
 use Utopia\Agents\Adapters\OpenAI;
 use Utopia\Agents\DiffCheck\DiffCheck;
 use Utopia\Agents\DiffCheck\Options as DiffCheckOptions;
@@ -40,28 +42,6 @@ use Utopia\Validator\WhiteList;
 
 class SDKs extends Action
 {
-    protected array $supportedSDKS = [
-        'web',
-        'cli',
-        'php',
-        'nodejs',
-        'deno',
-        'python',
-        'ruby',
-        'flutter',
-        'react-native',
-        'dart',
-        'go',
-        'swift',
-        'apple',
-        'dotnet',
-        'android',
-        'graphql',
-        'rest',
-        'markdown',
-        'agent-skills',
-    ];
-
     public static function getName(): string
     {
         return 'sdks';
@@ -70,6 +50,19 @@ class SDKs extends Action
     public static function getPlatforms(): array
     {
         return Specs::getPlatforms();
+    }
+
+    protected function getSdkConfigPath(): string
+    {
+        return __DIR__ . '/../../../../app/config/sdks.php';
+    }
+
+    protected function getSupportedSDKs(): array
+    {
+        return \array_unique(\array_merge(...\array_values(\array_map(
+            fn ($platform) => \array_column($platform['sdks'], 'key'),
+            Config::getParam('sdks')
+        ))));
     }
 
     public function __construct()
@@ -98,8 +91,9 @@ class SDKs extends Action
         if (! $sdks) {
             $selectedPlatform ??= Console::confirm('Choose Platform ("' . implode('", "', static::getPlatforms()) . '" or "*" for all):');
             $selectedSDK ??= \strtolower(Console::confirm('Choose SDK ("*" for all):'));
-            if ($selectedSDK !== '*' && ! \in_array($selectedSDK, $this->supportedSDKS)) {
-                throw new \Exception('Unknown SDK "' . $selectedSDK . '" given. Options are: ' . implode(', ', $this->supportedSDKS));
+            $supportedSDKs = $this->getSupportedSDKs();
+            if ($selectedSDK !== '*' && ! \in_array($selectedSDK, $supportedSDKs)) {
+                throw new \Exception('Unknown SDK "' . $selectedSDK . '" given. Options are: ' . implode(', ', $supportedSDKs));
             }
         } else {
             $sdks = explode(',', $sdks);
@@ -115,9 +109,6 @@ class SDKs extends Action
 
             $prUrls = [];
 
-            if ($git) {
-                $message ??= Console::confirm('Please enter your commit message:');
-            }
         } elseif ($examplesOnly) {
             $git = false;
             $prUrls = [];
@@ -309,6 +300,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     case 'agent-skills':
                         $config = new AgentSkills();
                         break;
+                    case 'cursor-plugin':
+                        $config = new CursorPlugin();
+                        break;
                     default:
                         throw new \Exception('Language "' . $language['key'] . '" not supported');
                 }
@@ -332,7 +326,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     }
 
                     // Check if release already exists
-                    $checkReleaseCommand = 'gh release view "' . $releaseVersion . '" --repo "' . $repoName . '" --json url --jq ".url" 2>/dev/null';
+                    $checkReleaseCommand = 'gh release view ' . \escapeshellarg($releaseVersion) . ' --repo ' . \escapeshellarg($repoName) . ' --json url --jq ".url" 2>/dev/null';
                     $existingReleaseUrl = trim(\shell_exec($checkReleaseCommand) ?? '');
 
                     if (! empty($existingReleaseUrl)) {
@@ -363,7 +357,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     }
 
                     $previousVersion = '';
-                    $tagListCommand = 'gh release list --repo "' . $repoName . '" --limit 1 --json tagName --jq ".[0].tagName" 2>&1';
+                    $tagListCommand = 'gh release list --repo ' . \escapeshellarg($repoName) . ' --limit 1 --json tagName --jq ".[0].tagName" 2>&1';
                     $previousVersion = trim(\shell_exec($tagListCommand) ?? '');
 
                     $formattedNotes = "## What's Changed\n\n";
@@ -391,11 +385,11 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         $tempNotesFile = \tempnam(\sys_get_temp_dir(), 'release_notes_');
                         \file_put_contents($tempNotesFile, $formattedNotes);
 
-                        $releaseCommand = 'gh release create "' . $releaseVersion . '" \
-                            --repo "' . $repoName . '" \
-                            --title "' . $releaseTitle . '" \
-                            --notes-file "' . $tempNotesFile . '" \
-                            --target "' . $releaseTarget . '" \
+                        $releaseCommand = 'gh release create ' . \escapeshellarg($releaseVersion) . ' \
+                            --repo ' . \escapeshellarg($repoName) . ' \
+                            --title ' . \escapeshellarg($releaseTitle) . ' \
+                            --notes-file ' . \escapeshellarg($tempNotesFile) . ' \
+                            --target ' . \escapeshellarg($releaseTarget) . ' \
                             2>&1';
 
                         $releaseOutput = [];
@@ -481,12 +475,15 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 $useAi = ($ai !== 'no');
                 $apiKey = $useAi ? System::getEnv('_APP_ASSISTANT_OPENAI_API_KEY', '') : '';
                 $aiChangelog = ''; // Track AI-generated changelog for PR description
-                Console::info('Checking for _APP_ASSISTANT_OPENAI_API_KEY... [' . (! empty($apiKey) ? 'FOUND' : 'NOT FOUND') . ']');
+
                 if (! empty($apiKey) && ! $examplesOnly) {
-                    Console::info("Using AI to determine version bump and changelog for {$language['name']} SDK...");
+                    Console::info("Analyzing SDK changes with AI...");
                     $aiResult = $this->generateVersionAndChangelog($language, $result);
 
-                    if ($aiResult !== null) {
+                    if (!empty($aiResult['skip'])) {
+                        Console::warning("Skipping {$language['name']} SDK generation");
+                        continue;
+                    } elseif ($aiResult !== null) {
                         $newVersion = $aiResult['version'];
                         $newChangelog = $aiResult['changelog'];
                         $aiChangelog = $newChangelog; // Store for PR description
@@ -494,23 +491,25 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         // Update the version in the config
                         $this->updateSdkVersion($key, $language['key'], $newVersion);
 
-                        // Update the changelog file
+                        // Update the source changelog file
                         $this->updateChangelogFile($language['changelog'], $newVersion, $newChangelog);
+
+                        // Re-read updated changelog so regeneration includes the new entry
+                        $updatedChangelog = \file_get_contents($language['changelog']);
+                        $sdk->setChangelog($updatedChangelog);
 
                         // Reload the language config with updated values
                         $language['version'] = $newVersion;
 
-                        // Regenerate SDK with new version
+                        // Regenerate SDK with new version and updated changelog
                         $sdk->setVersion($newVersion);
                         try {
                             $sdk->generate($result);
                         } catch (\Throwable $exception) {
                             Console::error($exception->getMessage());
                         }
-
-                        Console::success("AI determined version: {$newVersion} ({$aiResult['versionBump']} bump)");
                     } else {
-                        Console::warning('AI version generation failed, using existing version');
+                        Console::warning('AI analysis failed, using existing version');
                     }
                 }
 
@@ -518,147 +517,26 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 $gitBranch = $language['gitBranch'];
 
                 $repoBranch = $language['repoBranch'] ?? 'main';
-                if ($git && ! empty($gitUrl)) {
-                    \exec('rm -rf ' . $target . ' && \
-                        mkdir -p ' . $target . ' && \
-                        cd ' . $target . ' && \
-                        git init && \
-                        git config core.ignorecase false && \
-                        git config pull.rebase false && \
-                        git remote add origin ' . $gitUrl . ' && \
-                        git fetch origin && \
-                        (git checkout -f ' . $repoBranch . ' 2>/dev/null || git checkout -b ' . $repoBranch . ') && \
-                        git pull origin ' . $repoBranch . ' && \
-                        (git checkout -f ' . $gitBranch . ' 2>/dev/null || git checkout -b ' . $gitBranch . ') && \
-                        (git fetch origin ' . $gitBranch . ' 2>/dev/null || git push -u origin ' . $gitBranch . ') && \
-                        git reset --hard origin/' . $gitBranch . ' 2>/dev/null || true && \
-                        (test -d .github && cp -r .github /tmp/.github-backup-$$ || true) && \
-                        git rm -rf --cached . && \
-                        git clean -fdx -e .git -e .github && \
-                        cp -r ' . $result . '/. ' . $target . '/ && \
-                        (test -d /tmp/.github-backup-$$ && cp -rn /tmp/.github-backup-$$/.github . && rm -rf /tmp/.github-backup-$$ || true) && \
-                        git add -A && \
-                        git commit -m "' . $message . '" && \
-                        git push -u origin ' . $gitBranch . '
-                    ');
-
-                    Console::success("Pushed {$language['name']} SDK to {$gitUrl}");
-                    if ($git) {
-                        $prTitle = "feat: {$language['name']} SDK update for version {$language['version']}";
-                        $prBody = "This PR contains updates to the {$language['name']} SDK for version {$language['version']} . ";
-                        $repoName = $language['gitUserName'] . '/' . $language['gitRepoName'];
-
-                        Console::info("Creating pull request for {$language['name']} SDK...");
-
-                        $prCommand = 'cd ' . $target . ' && \
-                            gh pr create \
-                            --repo "' . $repoName . '" \
-                            --title "' . $prTitle . '" \
-                            --body "' . $prBody . '" \
-                            --base "' . $repoBranch . '" \
-                            --head "' . $gitBranch . '" \
-                            2>&1';
-
-                        $prOutput = [];
-                        $prReturnCode = 0;
-                        \exec($prCommand, $prOutput, $prReturnCode);
-
-                        if ($prReturnCode === 0) {
-                            Console::success("Successfully created pull request for {$language['name']} SDK");
-                            if (! empty($prOutput)) {
-                                $prUrls[$language['name']] = end($prOutput);
-                            }
-                        } else {
-                            $errorMessage = implode("\n", $prOutput);
-                            if (strpos($errorMessage, 'already exists') !== false) {
-                                Console::warning("Pull request already exists for {$language['name']} SDK, updating title and body...");
-                                $prNumberCommand = 'cd ' . $target . ' && \
-                                    gh pr list \
-                                    --repo "' . $repoName . '" \
-                                    --head "' . $gitBranch . '" \
-                                    --json number \
-                                    --jq ".[0].number" \
-                                    2>&1';
-
-                                $prNumberOutput = [];
-                                $prNumberReturnCode = 0;
-                                \exec($prNumberCommand, $prNumberOutput, $prNumberReturnCode);
-
-                                if ($prNumberReturnCode === 0 && ! empty($prNumberOutput[0])) {
-                                    $prNumber = trim($prNumberOutput[0]);
-
-                                    // Use API directly to update PR to avoid deprecated projectCards field
-                                    $updateCommand = 'cd ' . $target . ' && \
-                                        gh api \
-                                        --method PATCH \
-                                        -H "Accept: application/vnd.github+json" \
-                                        -H "X-GitHub-Api-Version: 2022-11-28" \
-                                        /repos/' . $repoName . '/pulls/' . $prNumber . ' \
-                                        -f title="' . $prTitle . '" \
-                                        -f body="' . $prBody . '" \
-                                        2>&1';
-
-                                    $updateOutput = [];
-                                    $updateReturnCode = 0;
-                                    \exec($updateCommand, $updateOutput, $updateReturnCode);
-
-                                    if ($updateReturnCode === 0) {
-                                        Console::success("Successfully updated pull request for {$language['name']} SDK");
-
-                                        $prUrlCommand = 'cd ' . $target . ' && \
-                                            gh pr list \
-                                            --repo "' . $repoName . '" \
-                                            --head "' . $gitBranch . '" \
-                                            --json url \
-                                            --jq ".[0].url" \
-                                            2>&1';
-
-                                        $prUrlOutput = [];
-                                        $prUrlReturnCode = 0;
-                                        \exec($prUrlCommand, $prUrlOutput, $prUrlReturnCode);
-
-                                        if ($prUrlReturnCode === 0 && ! empty($prUrlOutput)) {
-                                            $prUrls[$language['name']] = trim($prUrlOutput[0]);
-                                        }
-                                    } else {
-                                        $updateErrorMessage = implode("\n", $updateOutput);
-                                        Console::error("Failed to update pull request for {$language['name']} SDK: " . $updateErrorMessage);
-                                    }
-                                } else {
-                                    Console::error("Failed to get PR number for {$language['name']} SDK");
-                                }
-                            } else {
-                                Console::error("Failed to create pull request for {$language['name']} SDK: " . $errorMessage);
-                            }
-                        }
+                if ($git && !empty($gitUrl)) {
+                    // Generate commit message: use provided message, AI changelog, or fallback
+                    if (! empty($message)) {
+                        $commitMessage = $message;
+                    } elseif (! empty($aiChangelog) && $aiChangelog !== '* No user-facing SDK changes.') {
+                        $commitMessage = "feat: update {$language['name']} SDK to {$language['version']}\n\n{$aiChangelog}";
+                    } else {
+                        $commitMessage = "chore: update {$language['name']} SDK to {$language['version']}";
                     }
 
-                    \exec('chmod -R u+w ' . $target . ' && rm -rf ' . $target);
-                    Console::success("Remove temp directory '{$target}' for {$language['name']} SDK");
-                }
+                    $pushSuccess = $this->pushToGit($language, $target, $result, $gitUrl, $gitBranch, $repoBranch, $commitMessage);
 
-                $docDirectories = $language['docDirectories'] ?? [''];
-
-                if ($version === 'latest') {
-                    continue;
-                }
-
-                foreach ($docDirectories as $languageTitle => $path) {
-                    $languagePath = strtolower($languageTitle !== 0 ? '/' . $languageTitle : '');
-                    $examplesSource = $result . '/docs/examples' . $languagePath;
-
-                    if (! \is_dir($examplesSource)) {
-                        Console::warning("No code examples found for {$language['name']} SDK at: {$examplesSource}. Skipping copy.");
-
-                        continue;
+                    if ($pushSuccess) {
+                        $this->createPullRequest($language, $target, $gitBranch, $repoBranch, $aiChangelog, $prUrls);
                     }
 
-                    \exec(
-                        'mkdir -p ' . $resultExamples . $languagePath . ' && \
-                        cp -r ' . $examplesSource . ' ' . $resultExamples
-                    );
-                    Console::success("Copied code examples for {$language['name']} SDK to: {$resultExamples}");
+                    $this->cleanupTarget($target, $language['name']);
                 }
+
+                $this->copyExamples($language, $version, $result, $resultExamples);
             }
         }
 
@@ -669,6 +547,176 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 Console::log("{$sdkName}: {$url}");
             }
             Console::log('');
+        }
+    }
+
+    private function pushToGit(array $language, string $target, string $result, string $gitUrl, string $gitBranch, string $repoBranch, string $commitMessage): bool
+    {
+        Console::info("Preparing {$language['name']} SDK repository...");
+
+        try {
+            // Init fresh repo
+            \exec('rm -rf ' . \escapeshellarg($target));
+            \mkdir($target, 0755, true);
+
+            $gitClient = new Git();
+            $repo = $gitClient->init($target);
+
+            $repo->execute('config', 'core.ignorecase', 'false');
+            $repo->execute('config', 'pull.rebase', 'false');
+            $repo->execute('config', 'advice.defaultBranchName', 'false');
+            $repo->addRemote('origin', $gitUrl);
+
+            // Fetch and checkout base branch (or create if new repo)
+            try {
+                $repo->execute('fetch', 'origin', '--quiet', '--no-tags', '--depth', '1', $repoBranch);
+                try {
+                    $repo->execute('checkout', '-f', $repoBranch);
+                } catch (\Throwable) {
+                    $repo->execute('checkout', '-b', $repoBranch);
+                }
+            } catch (\Throwable) {
+                $repo->execute('checkout', '-b', $repoBranch);
+            }
+
+            try {
+                $repo->execute('pull', 'origin', $repoBranch, '--quiet', '--no-tags');
+            } catch (\Throwable) {
+            }
+
+            // Checkout dev branch (or create if it doesn't exist)
+            try {
+                $repo->execute('checkout', '-f', $gitBranch);
+            } catch (\Throwable) {
+                $repo->execute('checkout', '-b', $gitBranch);
+            }
+
+            // Fetch dev branch, or push to create it on remote
+            try {
+                $repo->execute('fetch', 'origin', $gitBranch, '--quiet', '--no-tags', '--depth', '1');
+            } catch (\Throwable) {
+                try {
+                    $repo->execute('push', '-u', 'origin', $gitBranch, '--quiet');
+                } catch (\Throwable) {
+                }
+            }
+
+            // Sync with remote dev branch
+            try {
+                $repo->execute('reset', '--hard', "origin/{$gitBranch}");
+            } catch (\Throwable) {
+            }
+
+            // Backup .github before cleaning working tree
+            $githubDir = $target . '/.github';
+            $githubBackup = \sys_get_temp_dir() . '/.github-backup-' . \getmypid();
+            $hasGithubDir = \is_dir($githubDir);
+            if ($hasGithubDir) {
+                \exec('cp -r ' . \escapeshellarg($githubDir) . ' ' . \escapeshellarg($githubBackup));
+            }
+
+            // Clean working tree
+            try {
+                $repo->execute('rm', '-rf', '--cached', '.');
+            } catch (\Throwable) {
+            }
+            try {
+                $repo->execute('clean', '-fdx', '-e', '.git', '-e', '.github');
+            } catch (\Throwable) {
+            }
+
+            // Copy generated SDK and restore .github
+            \exec('cp -r ' . \escapeshellarg($result . '/.') . ' ' . \escapeshellarg($target . '/'));
+
+            if ($hasGithubDir && \is_dir($githubBackup)) {
+                \exec('cp -rn ' . \escapeshellarg($githubBackup . '/.github') . ' ' . \escapeshellarg($target . '/') . ' 2>/dev/null');
+                \exec('rm -rf ' . \escapeshellarg($githubBackup));
+            }
+
+            // Stage, commit, push
+            $repo->addAllChanges();
+            $repo->commit($commitMessage);
+            $repo->execute('push', '-u', 'origin', $gitBranch, '--quiet');
+        } catch (\Throwable $e) {
+            Console::warning("Git operations failed for {$language['name']} SDK: " . $e->getMessage());
+            return false;
+        }
+
+        Console::success("Pushed {$language['name']} SDK to {$gitUrl}");
+        return true;
+    }
+
+    private function createPullRequest(array $language, string $target, string $gitBranch, string $repoBranch, string $aiChangelog, array &$prUrls): void
+    {
+        $prTitle = "feat: {$language['name']} SDK update for version {$language['version']}";
+        $prBody = "This PR contains updates to the {$language['name']} SDK for version {$language['version']}.";
+        if (!empty($aiChangelog) && $aiChangelog !== '* No user-facing SDK changes.') {
+            $prBody .= "\n\n## Changes\n\n{$aiChangelog}";
+        }
+        $repoName = $language['gitUserName'] . '/' . $language['gitRepoName'];
+
+        Console::info("Creating pull request for {$language['name']} SDK...");
+
+        $prCommand = 'cd ' . $target . ' && \
+            gh pr create \
+            --repo ' . \escapeshellarg($repoName) . ' \
+            --title ' . \escapeshellarg($prTitle) . ' \
+            --body ' . \escapeshellarg($prBody) . ' \
+            --base ' . \escapeshellarg($repoBranch) . ' \
+            --head ' . \escapeshellarg($gitBranch) . ' \
+            2>&1';
+
+        $prOutput = [];
+        $prReturnCode = 0;
+        \exec($prCommand, $prOutput, $prReturnCode);
+
+        if ($prReturnCode === 0) {
+            Console::success("Successfully created pull request for {$language['name']} SDK");
+            foreach ($prOutput as $line) {
+                if (\str_starts_with(trim($line), 'https://')) {
+                    $prUrls[$language['name']] = trim($line);
+                    break;
+                }
+            }
+        } else {
+            $errorMessage = implode("\n", $prOutput);
+            if (strpos($errorMessage, 'already exists') === false) {
+                Console::error("Failed to create pull request for {$language['name']} SDK: " . $errorMessage);
+            } else {
+                $this->updateExistingPr($target, $repoName, $gitBranch, $prTitle, $prBody, $language['name'], $prUrls);
+            }
+        }
+    }
+
+    private function cleanupTarget(string $target, string $languageName): void
+    {
+        \exec('chmod -R u+w ' . $target . ' && rm -rf ' . $target);
+        Console::success("Remove temp directory '{$target}' for {$languageName} SDK");
+    }
+
+    private function copyExamples(array $language, string $version, string $result, string $resultExamples): void
+    {
+        $docDirectories = $language['docDirectories'] ?? [''];
+
+        if ($version === 'latest') {
+            return;
+        }
+
+        foreach ($docDirectories as $languageTitle => $path) {
+            $languagePath = strtolower($languageTitle !== 0 ? '/' . $languageTitle : '');
+            $examplesSource = $result . '/docs/examples' . $languagePath;
+
+            if (! \is_dir($examplesSource)) {
+                Console::warning("No code examples found for {$language['name']} SDK at: {$examplesSource}. Skipping copy.");
+
+                continue;
+            }
+
+            \exec(
+                'mkdir -p ' . $resultExamples . $languagePath . ' && \
+                cp -r ' . $examplesSource . ' ' . $resultExamples
+            );
+            Console::success("Copied code examples for {$language['name']} SDK to: {$resultExamples}");
         }
     }
 
@@ -759,37 +807,54 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 required: $object->getNames()
             );
 
+            $isBeta = !empty($language['beta']);
+            $betaNote = $isBeta
+                ? "\n            Note: This SDK is in beta (version < 1.0.0). Do NOT bump to 1.0.0. Use `minor` for both breaking changes and new features, `patch` for bug fixes only."
+                : '';
+
             $prompt = <<<PROMPT
-                Analyze the following git diff for the {$language['name']} SDK and determine:
+            You are a technical writer generating a changelog for the {$language['name']} SDK release.
 
-                Required output:
-                1. The appropriate version bump (`major`, `minor`, or `patch`) using semantic versioning.
-                2. The new version number (current version: {$language['version']}).
-                3. A clear, user-facing changelog.
+            Analyze the git diff below and return a JSON response with the version bump type, new version number, and changelog.
 
-                Semantic versioning rules:
-                - `major`: breaking, non-backward-compatible changes.
-                - `minor`: backward-compatible new features.
-                - `patch`: backward-compatible fixes or small improvements.
+            ## Versioning
 
-                Changelog rules:
-                - Include only user-facing SDK changes.
-                - Exclude internal/project-infra changes (for example `.github/workflows/**`, `.github/ISSUE_TEMPLATE/**`, CI/release automation/template cleanup).
-                - Never add "Internal housekeeping" style entries.
-                - If only excluded changes exist, return exactly: `* No user-facing SDK changes.`
+            Current version: {$language['version']}
 
-                Diff context:
-                - Stats: {{diff_stats}}
-                - Base repository: {{base}}
-                - Generated SDK path: {{target}}
-
-                Git diff (truncated to 500 lines):
-                ```diff
-                {{diff}}
-                ```
-
-                Provide your analysis in the requested JSON format.
-                PROMPT;
+            Determine the semantic version bump:
+            - `major`: Breaking changes (removed/renamed public APIs, changed method signatures, dropped support)
+            - `minor`: New features that are backward-compatible (new methods, new optional parameters, new classes)
+            - `patch`: Bug fixes, documentation updates, refactors with no API surface change
+            {$betaNote}
+            When multiple change types are present, use the highest severity bump.
+            
+            ## Changelog guidelines
+            
+            Write from the SDK consumer's perspective. Each entry should be a single line, max 15 words, in past tense.
+            
+            Prefixes by category:
+            - **Breaking:** renamed/removed/changed APIs → "Breaking: Renamed `oldMethod()` to `newMethod()`"
+            - **Added:** new features/options/endpoints → "Added `streamResponse` option to client configuration"
+            - **Fixed:** bug fixes/corrections → "Fixed incorrect timeout handling in retry logic"
+            - **Updated:** dependency bumps, doc improvements → "Updated authentication examples for OAuth 2.0 flow"
+            
+            Rules:
+            - Only include changes visible to SDK users (public API, behavior, docs, examples, CLI)
+            - Ignore: CI/CD pipelines (.github/), internal tooling, code formatting, test infrastructure
+            - Consolidate related changes into one entry (e.g., "Added `timeout`, `retries`, and `baseUrl` options" not three separate lines)
+            - Wrap all method names, parameter names, class names, and code identifiers in backticks (e.g., `listDocuments`, `ttl`)
+            - If the diff contains zero user-facing changes, return a single entry: "No user-facing SDK changes"
+            - Do not speculate — only document what the diff explicitly shows
+            
+            ## Diff context
+            
+            - Stats: {{diff_stats}}
+            - Base repository: {{base}}
+            - Generated SDK path: {{target}}
+            ```diff
+            {{diff}}
+            ```
+            PROMPT;
 
             $options = (new DiffCheckOptions())
                 ->setSchema($schema)
@@ -800,11 +865,13 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 ->setExcludePaths([
                     '.github/workflows/**',
                     '.github/ISSUE_TEMPLATE/**',
+                    '.git/**',
                 ])
                 ->setMaxDiffLines(500)
                 ->setUserId('sdk-analyst');
 
             Console::info("Running DiffCheck for {$language['name']} SDK...");
+
             $result = (new DiffCheck())->run(
                 runner: $adapter,
                 base: DiffCheckRepository::remote($gitUrl, $repoBranch),
@@ -814,7 +881,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
             );
 
             if (!$result['hasChanges']) {
-                Console::warning("No changes detected for {$language['name']} SDK");
+                Console::info("✓ No changes detected - SDK is up to date");
                 return null;
             }
 
@@ -822,21 +889,15 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
             if (empty(trim($responseContent))) {
                 Console::warning('AI returned empty response');
-
                 return null;
             }
-
-            Console::log('AI raw response:');
-            Console::log($responseContent);
-            Console::log('--- End of AI response ---');
 
             $parsed = json_decode($responseContent, true);
 
             if (json_last_error() !== JSON_ERROR_NONE) {
                 Console::warning('Failed to parse AI response as JSON: ' . json_last_error_msg());
-                Console::log('Raw response that failed to parse:');
+                Console::log('Raw response:');
                 Console::log($responseContent);
-
                 return null;
             }
 
@@ -845,7 +906,20 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 return null;
             }
 
-            Console::info("AI analysis complete - Version bump: {$parsed['versionBump']}, New version: {$parsed['version']}");
+            // Guard: beta SDKs must not be bumped to >= 1.0.0
+            if ($isBeta && ($parsed['versionBump'] === 'major' || \version_compare($parsed['version'], '1.0.0', '>='))) {
+                Console::warning("Beta SDK {$language['name']} cannot have a major bump or version >= 1.0.0 (AI suggested {$parsed['version']}), skipping");
+                return ['skip' => true];
+            }
+
+            Console::success("✓ Analysis complete");
+            Console::log("  Version: {$language['version']} → {$parsed['version']} ({$parsed['versionBump']} bump)");
+            Console::log("  Changelog:");
+            foreach (explode("\n", $parsed['changelog']) as $line) {
+                if (trim($line)) {
+                    Console::log("    {$line}");
+                }
+            }
 
             return [
                 'version' => $parsed['version'],
@@ -854,7 +928,6 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
             ];
         } catch (\Throwable $e) {
             Console::error('Error generating version and changelog: ' . $e->getMessage());
-
             return null;
         }
     }
@@ -869,38 +942,53 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
      */
     private function updateSdkVersion(string $platform, string $sdkKey, string $newVersion): bool
     {
-        $configPath = __DIR__ . '/../../../../app/config/sdks.php';
+        $configPath = $this->getSdkConfigPath();
 
         if (! file_exists($configPath)) {
             Console::error("Config file not found: {$configPath}");
-
             return false;
         }
 
         $content = file_get_contents($configPath);
 
-        // Find and replace the version for this specific SDK
-        // Pattern matches the version line in the SDK array
-        $pattern = '/(\[\s*[\'"]key[\'"]\s*=>\s*[\'"]' . preg_quote($sdkKey, '/') . '[\'"]\s*,[\s\S]*?[\'"]version[\'"]\s*=>\s*[\'"])([^\'"]+)([\'"])/m';
+        // First, try to find inline version in SDK array (pattern 1)
+        // Pattern matches: ['key' => 'nodejs', ... 'version' => '22.1.2']
+        $inlinePattern = '/(\[\s*[\'"]key[\'"]\s*=>\s*[\'"]' . preg_quote($sdkKey, '/') . '[\'"]\s*,[\s\S]*?[\'"]version[\'"]\s*=>\s*[\'"])([^\'"]+)([\'"])/m';
 
-        if (preg_match($pattern, $content, $matches)) {
+        if (preg_match($inlinePattern, $content, $matches)) {
             $oldVersion = $matches[2];
-            $newContent = preg_replace($pattern, '${1}' . $newVersion . '${3}', $content);
+            $newContent = preg_replace($inlinePattern, '${1}' . $newVersion . '${3}', $content);
 
             if (file_put_contents($configPath, $newContent) !== false) {
                 Console::success("Updated {$sdkKey} version from {$oldVersion} to {$newVersion} in config");
-
                 return true;
             } else {
                 Console::error('Failed to write config file');
-
                 return false;
             }
-        } else {
-            Console::warning("Could not find version entry for {$sdkKey} in config");
-
-            return false;
         }
+
+        // Second, try to find version in array format (pattern 2)
+        // Pattern matches: 'nodejs' => '22.1.2', or "nodejs" => "22.1.2",
+        // Also handles extra whitespace: 'nodejs'  =>  '22.1.2',
+        $arrayPattern = '/([\'"]' . preg_quote($sdkKey, '/') . '[\'"]\s*=>\s*[\'"])([^\'"]+)([\'"],)/m';
+
+        if (preg_match($arrayPattern, $content, $matches)) {
+            $oldVersion = $matches[2];
+            $newContent = preg_replace($arrayPattern, '${1}' . $newVersion . '${3}', $content);
+
+            if (file_put_contents($configPath, $newContent) !== false) {
+                Console::success("Updated {$sdkKey} version from {$oldVersion} to {$newVersion} in config");
+                return true;
+            } else {
+                Console::error('Failed to write config file');
+                return false;
+            }
+        }
+
+        Console::warning("Could not find version entry for {$sdkKey} in config");
+
+        return false;
     }
 
     /**
@@ -952,12 +1040,71 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
         if (file_put_contents($changelogPath, $newContent) !== false) {
             Console::success("Updated changelog at {$changelogPath} with version {$version}");
-
             return true;
         } else {
             Console::error('Failed to write changelog file');
-
             return false;
+        }
+    }
+
+    private function updateExistingPr(string $target, string $repoName, string $gitBranch, string $prTitle, string $prBody, string $sdkName, array &$prUrls): void
+    {
+        Console::warning("Pull request already exists for {$sdkName} SDK, updating title and body...");
+
+        $prNumberCommand = 'cd ' . $target . ' && \
+            gh pr list \
+            --repo ' . \escapeshellarg($repoName) . ' \
+            --head ' . \escapeshellarg($gitBranch) . ' \
+            --json number \
+            --jq ".[0].number" \
+            2>&1';
+
+        $prNumberOutput = [];
+        $prNumberReturnCode = 0;
+        \exec($prNumberCommand, $prNumberOutput, $prNumberReturnCode);
+
+        if ($prNumberReturnCode !== 0 || empty($prNumberOutput[0])) {
+            Console::error("Failed to get PR number for {$sdkName} SDK");
+            return;
+        }
+
+        $prNumber = trim($prNumberOutput[0]);
+        $apiPath = "/repos/{$repoName}/pulls/{$prNumber}";
+        $updateCommand = 'cd ' . $target . ' && \
+            gh api \
+            --method PATCH \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            ' . \escapeshellarg($apiPath) . ' \
+            -f title=' . \escapeshellarg($prTitle) . ' \
+            -f body=' . \escapeshellarg($prBody) . ' \
+            2>&1';
+
+        $updateOutput = [];
+        $updateReturnCode = 0;
+        \exec($updateCommand, $updateOutput, $updateReturnCode);
+
+        if ($updateReturnCode !== 0) {
+            Console::error("Failed to update pull request for {$sdkName} SDK: " . implode("\n", $updateOutput));
+            return;
+        }
+
+        Console::success("Successfully updated pull request for {$sdkName} SDK");
+
+        $prUrlCommand = 'cd ' . $target . ' && \
+            gh pr list \
+            --repo ' . \escapeshellarg($repoName) . ' \
+            --head ' . \escapeshellarg($gitBranch) . ' \
+            --json url \
+            --jq ".[0].url" \
+            2>&1';
+
+        $prUrlOutput = [];
+        $prUrlReturnCode = 0;
+        \exec($prUrlCommand, $prUrlOutput, $prUrlReturnCode);
+
+        if ($prUrlReturnCode === 0 && ! empty($prUrlOutput)) {
+            $prUrls[$sdkName] = trim($prUrlOutput[0]);
         }
     }
 }

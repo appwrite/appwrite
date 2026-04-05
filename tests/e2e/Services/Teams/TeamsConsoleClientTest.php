@@ -14,12 +14,10 @@ class TeamsConsoleClientTest extends Scope
     use ProjectConsole;
     use SideClient;
 
-    /**
-     * @depends testCreateTeam
-     */
-    public function testTeamCreateMembershipConsole($data): array
+    public function testTeamCreateMembershipConsole(): void
     {
-        $teamUid = $data['teamUid'] ?? '';
+        $teamData = $this->createTeamHelper();
+        $teamUid = $teamData['teamUid'];
         $email = uniqid() . 'friend@localhost.test';
         $name = 'Friend User';
 
@@ -34,17 +32,12 @@ class TeamsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-
-        return $data;
     }
 
-    /**
-     * @depends testCreateTeam
-     */
-    public function testTeamMembershipPerms($data): array
+    public function testTeamMembershipPerms(): void
     {
-        $teamUid = $data['teamUid'] ?? '';
-        $teamName = $data['teamName'] ?? '';
+        $teamData = $this->createTeamHelper();
+        $teamUid = $teamData['teamUid'];
         $email = uniqid() . 'friend@localhost.test';
         $name = 'Friend User';
         $password = 'password';
@@ -112,16 +105,16 @@ class TeamsConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(204, $response['headers']['status-code']);
-
-        return $data;
     }
 
-    /** @depends testUpdateTeamMembership */
-    public function testUpdateTeamMembershipRoles($data): array
+    public function testUpdateTeamMembershipRoles(): void
     {
-        $teamUid = $data['teamUid'] ?? '';
-        $membershipUid = $data['membershipUid'] ?? '';
-        $session = $data['session'] ?? '';
+        $teamData = $this->createTeamHelper();
+        $membershipData = $this->createAndAcceptMembershipHelper($teamData['teamUid'], $teamData['teamName']);
+
+        $teamUid = $membershipData['teamUid'];
+        $membershipUid = $membershipData['membershipUid'];
+        $session = $membershipData['session'];
 
         /**
          * Test for unknown team
@@ -164,18 +157,20 @@ class TeamsConsoleClientTest extends Scope
 
         $this->assertEquals(401, $response['headers']['status-code']);
         $this->assertEquals('User is not allowed to modify roles', $response['body']['message']);
-
-        return $data;
     }
 
-    /**
-     * @depends testUpdateTeamMembershipRoles
-     */
-    public function testDeleteTeamMembership($data): array
+    public function testDeleteTeamMembership(): void
     {
-        $teamUid = $data['teamUid'] ?? '';
-        $membershipUid = $data['membershipUid'] ?? '';
-        $session = $data['session'] ?? '';
+        $teamData = $this->createTeamHelper();
+        $teamUid = $teamData['teamUid'];
+        $teamName = $teamData['teamName'];
+
+        // Create multiple memberships for the delete test
+        $this->createPendingMembershipHelper($teamUid, $teamName);
+        $membershipData = $this->createAndAcceptMembershipHelper($teamUid, $teamName);
+
+        $membershipUid = $membershipData['membershipUid'];
+        $session = $membershipData['session'];
 
         $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', array_merge([
             'content-type' => 'application/json',
@@ -249,7 +244,5 @@ class TeamsConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-
-        return [];
     }
 }

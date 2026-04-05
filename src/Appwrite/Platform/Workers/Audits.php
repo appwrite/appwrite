@@ -82,28 +82,52 @@ class Audits extends Action
         $ip = $payload['ip'] ?? '';
         $user = new Document($payload['user'] ?? []);
 
-        $userName = $user->getAttribute('name', '');
-        $userEmail = $user->getAttribute('email', '');
+        $impersonatorUserId = $user->getAttribute('impersonatorUserId');
+        $actorUserId = $impersonatorUserId ?: $user->getId();
+        $actorUserInternalId = $impersonatorUserId
+            ? $user->getAttribute('impersonatorUserInternalId')
+            : $user->getSequence();
+        $actorUserName = $impersonatorUserId
+            ? $user->getAttribute('impersonatorUserName', '')
+            : $user->getAttribute('name', '');
+        $actorUserEmail = $impersonatorUserId
+            ? $user->getAttribute('impersonatorUserEmail', '')
+            : $user->getAttribute('email', '');
         $userType = $user->getAttribute('type', ACTIVITY_TYPE_USER);
 
         // Create event data
         $eventData = [
-            'userId' => $user->getSequence(),
+            'userId' => $actorUserInternalId,
             'event' => $event,
             'resource' => $resource,
             'userAgent' => $userAgent,
             'ip' => $ip,
             'location' => '',
             'data' => [
-                'userId' => $user->getId(),
-                'userName' => $userName,
-                'userEmail' => $userEmail,
+                'userId' => $actorUserId,
+                'userName' => $actorUserName,
+                'userEmail' => $actorUserEmail,
                 'userType' => $userType,
                 'mode' => $mode,
                 'data' => $auditPayload,
             ],
             'time' => date("Y-m-d H:i:s", $message->getTimestamp()),
         ];
+
+        if (!empty($impersonatorUserId)) {
+            $eventData['data']['data'] = \is_array($auditPayload)
+                ? \array_merge($auditPayload, [
+                    'impersonatedUserId' => $user->getId(),
+                    'impersonatedUserName' => $user->getAttribute('name', ''),
+                    'impersonatedUserEmail' => $user->getAttribute('email', ''),
+                ])
+                : [
+                    'payload' => $auditPayload,
+                    'impersonatedUserId' => $user->getId(),
+                    'impersonatedUserName' => $user->getAttribute('name', ''),
+                    'impersonatedUserEmail' => $user->getAttribute('email', ''),
+                ];
+        }
 
         if (isset($this->logs[$project->getSequence()])) {
             $this->logs[$project->getSequence()]['logs'][] = $eventData;

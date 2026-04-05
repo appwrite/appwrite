@@ -7,7 +7,6 @@ use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
-use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -15,6 +14,7 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Template\Template;
+use Appwrite\Usage\Context;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use libphonenumber\NumberParseException;
@@ -104,7 +104,7 @@ class Create extends Action
             ->inject('queueForMessaging')
             ->inject('queueForMails')
             ->inject('timelimit')
-            ->inject('queueForStatsUsage')
+            ->inject('usage')
             ->inject('plan')
             ->inject('proofForToken')
             ->inject('proofForCode')
@@ -124,7 +124,7 @@ class Create extends Action
         Messaging $queueForMessaging,
         Mail $queueForMails,
         callable $timelimit,
-        StatsUsage $queueForStatsUsage,
+        Context $usage,
         array $plan,
         ProofsToken $proofForToken,
         ProofsCode $proofForCode
@@ -201,16 +201,12 @@ class Create extends Action
                     $countryCode = $helper->parse($phone)->getCountryCode();
 
                     if (!empty($countryCode)) {
-                        $queueForStatsUsage
-                            ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
+                        $usage->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
                     }
                 } catch (NumberParseException $e) {
                     // Ignore invalid phone number for country code stats
                 }
-                $queueForStatsUsage
-                    ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
-                    ->setProject($project)
-                    ->trigger();
+                $usage->addMetric(METRIC_AUTH_METHOD_PHONE, 1);
                 break;
             case Type::EMAIL:
                 if (empty(System::getEnv('_APP_SMTP_HOST'))) {

@@ -85,11 +85,23 @@ class Get extends Action
 
         $repository = $github->getRepository($owner, $repositoryName);
 
+        $authorized = false;
+        try {
+            $installationRepository = $github->getInstallationRepository($repositoryName);
+            if (!empty($installationRepository)) {
+                $authorized = true;
+            }
+        } catch (RepositoryNotFound $e) {
+            $authorized = false;
+        }
+
         $repository['id'] = \strval($repository['id']) ?? '';
         $repository['pushedAt'] = $repository['pushed_at'] ?? '';
         $repository['organization'] = $installation->getAttribute('organization', '');
         $repository['provider'] = $installation->getAttribute('provider', '');
         $repository['defaultBranch'] =  $repository['default_branch'] ?? '';
+        $repository['authorized'] = $authorized;
+        $repository['providerInstallationId'] = $providerInstallationId;
 
         $response->dynamic(new Document($repository), Response::MODEL_PROVIDER_REPOSITORY);
     }

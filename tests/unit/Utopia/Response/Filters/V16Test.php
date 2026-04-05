@@ -5,6 +5,7 @@ namespace Tests\Unit\Utopia\Response\Filters;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filters\V16;
 use Cron\CronExpression;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\DateTime;
 
@@ -24,7 +25,7 @@ class V16Test extends TestCase
     {
     }
 
-    public function deploymentProvider(): array
+    public static function deploymentProvider(): array
     {
         return [
             'buildStdout and buildStderr' => [
@@ -64,9 +65,7 @@ class V16Test extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider deploymentProvider
-     */
+    #[DataProvider('deploymentProvider')]
     public function testDeployment(array $content, array $expected): void
     {
         $model = Response::MODEL_DEPLOYMENT;
@@ -76,7 +75,7 @@ class V16Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public function executionProvider(): array
+    public static function executionProvider(): array
     {
         return [
             'statusCode' => [
@@ -114,9 +113,7 @@ class V16Test extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider executionProvider
-     */
+    #[DataProvider('executionProvider')]
     public function testExecution(array $content, array $expected): void
     {
         $model = Response::MODEL_EXECUTION;
@@ -126,7 +123,7 @@ class V16Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public function functionProvider(): array
+    public static function functionProvider(): array
     {
         return [
             'empty schedule' => [
@@ -142,9 +139,7 @@ class V16Test extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider functionProvider
-     */
+    #[DataProvider('functionProvider')]
     public function testFunction(array $content, array $expected): void
     {
         $model = Response::MODEL_FUNCTION;
@@ -175,7 +170,7 @@ class V16Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public function projectProvider(): array
+    public static function projectProvider(): array
     {
         return [
             'oAuthProviders' => [
@@ -212,9 +207,7 @@ class V16Test extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider projectProvider
-     */
+    #[DataProvider('projectProvider')]
     public function testProject(array $content, array $expected): void
     {
         $model = Response::MODEL_PROJECT;
@@ -224,7 +217,7 @@ class V16Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public function variableProvider(): array
+    public static function variableProvider(): array
     {
         return [
             'functionId' => [
@@ -238,9 +231,7 @@ class V16Test extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider variableProvider
-     */
+    #[DataProvider('variableProvider')]
     public function testVariable(array $content, array $expected): void
     {
         $model = Response::MODEL_VARIABLE;

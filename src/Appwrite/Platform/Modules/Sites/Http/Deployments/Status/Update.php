@@ -50,8 +50,8 @@ class Update extends Action
                     )
                 ]
             ))
-            ->param('siteId', '', new UID(), 'Site ID.')
-            ->param('deploymentId', '', new UID(), 'Deployment ID.')
+            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
+            ->param('deploymentId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Deployment ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')
@@ -89,7 +89,7 @@ class Update extends Action
         $endTime = new \DateTime('now');
         $duration = $endTime->getTimestamp() - $startTime->getTimestamp();
 
-        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment->setAttributes([
+        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
             'buildEndedAt' => DateTime::now(),
             'buildDuration' => $duration,
             'status' => 'canceled'
@@ -97,16 +97,15 @@ class Update extends Action
 
         if ($deployment->getSequence() === $site->getAttribute('latestDeploymentInternalId', '')) {
             $site = $site->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-            $dbForProject->updateDocument('sites', $site->getId(), $site);
+            $dbForProject->updateDocument('sites', $site->getId(), new Document([
+                'latestDeploymentStatus' => $site->getAttribute('latestDeploymentStatus'),
+            ]));
         }
 
         try {
             $executor->deleteRuntime($project->getId(), $deploymentId . "-build");
-        } catch (\Throwable $th) {
-            // Don't throw if the deployment doesn't exist
-            if ($th->getCode() !== 404) {
-                throw $th;
-            }
+        } catch (\Throwable) {
+            // Best-effort cleanup — deployment status is already 'canceled'
         }
 
         $queueForEvents

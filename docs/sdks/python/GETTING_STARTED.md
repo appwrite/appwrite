@@ -20,10 +20,16 @@ client = Client()
 ### Make Your First Request
 Once your SDK object is set, create any of the Appwrite service objects and choose any request to send. Full documentation for any service method you would like to use can be found in your SDK documentation or in the [API References](https://appwrite.io/docs) section.
 
+All service methods return typed Pydantic models, so you can access response fields as attributes:
+
 ```python
 users = Users(client)
 
-result = users.create(ID.unique(), email = "email@example.com", phone = "+123456789", password = "password", name = "Walter O'Brien")
+user = users.create(ID.unique(), email = "email@example.com", phone = "+123456789", password = "password", name = "Walter O'Brien")
+
+print(user.name)   # "Walter O'Brien"
+print(user.email)  # "email@example.com"
+print(user.id)     # The generated user ID
 ```
 
 ### Full Example
@@ -43,7 +49,60 @@ client = Client()
 
 users = Users(client)
 
-result = users.create(ID.unique(), email = "email@example.com", phone = "+123456789", password = "password", name = "Walter O'Brien")
+user = users.create(ID.unique(), email = "email@example.com", phone = "+123456789", password = "password", name = "Walter O'Brien")
+
+print(user.name)       # Access fields as attributes
+print(user.to_dict())  # Convert to dictionary if needed
+```
+
+### Type Safety with Models
+
+The Appwrite Python SDK provides type safety when working with database rows through generic methods. Methods like `get_row`, `list_rows`, and others accept a `model_type` parameter that allows you to specify your custom Pydantic model for full type safety.
+
+```python
+from pydantic import BaseModel
+from datetime import datetime
+from typing import Optional
+from appwrite.client import Client
+from appwrite.services.tables_db import TablesDB
+
+# Define your custom model matching your table schema
+class Post(BaseModel):
+    postId: int
+    authorId: int
+    title: str
+    content: str
+    createdAt: datetime
+    updatedAt: datetime
+    isPublished: bool
+    excerpt: Optional[str] = None
+
+client = Client()
+# ... configure your client ...
+
+tables_db = TablesDB(client)
+
+# Fetch a single row with type safety
+row = tables_db.get_row(
+    database_id="your-database-id",
+    table_id="your-table-id",
+    row_id="your-row-id",
+    model_type=Post  # Pass your custom model type
+)
+
+print(row.data.title)     # Fully typed - IDE autocomplete works
+print(row.data.postId)    # int type, not Any
+print(row.data.createdAt) # datetime type
+
+# Fetch multiple rows with type safety
+result = tables_db.list_rows(
+    database_id="your-database-id",
+    table_id="your-table-id",
+    model_type=Post
+)
+
+for row in result.rows:
+    print(f"{row.data.title} by {row.data.authorId}")
 ```
 
 ### Error Handling
@@ -52,7 +111,8 @@ The Appwrite Python SDK raises `AppwriteException` object with `message`, `code`
 ```python
 users = Users(client)
 try:
-  result = users.create(ID.unique(), email = "email@example.com", phone = "+123456789", password = "password", name = "Walter O'Brien")
+  user = users.create(ID.unique(), email = "email@example.com", phone = "+123456789", password = "password", name = "Walter O'Brien")
+  print(user.name)
 except AppwriteException as e:
   print(e.message)
 ```

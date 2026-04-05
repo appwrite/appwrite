@@ -31,7 +31,6 @@ Http::get('/v1/mock/tests/general/oauth2')
     ->param('state', '', new Text(1024), 'OAuth2 state.')
     ->inject('response')
     ->action(function (string $client_id, string $redirectURI, string $scope, string $state, Response $response) {
-
         $response->redirect($redirectURI . '?' . \http_build_query(['code' => 'abcdef', 'state' => $state]));
     });
 

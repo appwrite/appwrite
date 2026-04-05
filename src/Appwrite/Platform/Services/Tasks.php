@@ -16,6 +16,7 @@ use Appwrite\Platform\Tasks\SDKs;
 use Appwrite\Platform\Tasks\Specs;
 use Appwrite\Platform\Tasks\SSL;
 use Appwrite\Platform\Tasks\StatsResources;
+use Appwrite\Platform\Tasks\TimeTravel;
 use Appwrite\Platform\Tasks\Upgrade;
 use Appwrite\Platform\Tasks\Vars;
 use Appwrite\Platform\Tasks\Version;
@@ -44,6 +45,7 @@ class Tasks extends Service
             ->addAction(Vars::getName(), new Vars())
             ->addAction(Version::getName(), new Version())
             ->addAction(StatsResources::getName(), new StatsResources())
+            ->addAction(TimeTravel::getName(), new TimeTravel())
         ;
     }
 }

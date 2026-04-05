@@ -4,6 +4,7 @@ namespace Tests\Unit\Utopia\Response\Filters;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filters\V17;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class V17Test extends TestCase
@@ -22,7 +23,7 @@ class V17Test extends TestCase
     {
     }
 
-    public function projectProvider(): array
+    public static function projectProvider(): array
     {
         return [
             'rename providers' => [
@@ -52,9 +53,7 @@ class V17Test extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider projectProvider
-     */
+    #[DataProvider('projectProvider')]
     public function testProject(array $content, array $expected): void
     {
         $model = Response::MODEL_PROJECT;
@@ -64,7 +63,7 @@ class V17Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public function userProvider(): array
+    public static function userProvider(): array
     {
         return [
             'remove targets' => [
@@ -78,9 +77,7 @@ class V17Test extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider userProvider
-     */
+    #[DataProvider('userProvider')]
     public function testUser(array $content, array $expected): void
     {
         $model = Response::MODEL_USER;
@@ -90,7 +87,7 @@ class V17Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public function tokenProvider(): array
+    public static function tokenProvider(): array
     {
         return [
             'remove securityPhrase' => [
@@ -103,9 +100,7 @@ class V17Test extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider tokenProvider
-     */
+    #[DataProvider('tokenProvider')]
     public function testToken(array $content, array $expected): void
     {
         $model = Response::MODEL_TOKEN;
@@ -115,7 +110,7 @@ class V17Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public function membershipProvider(): array
+    public static function membershipProvider(): array
     {
         return [
             'remove mfa' => [
@@ -128,9 +123,7 @@ class V17Test extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider membershipProvider
-     */
+    #[DataProvider('membershipProvider')]
     public function testMembership(array $content, array $expected): void
     {
         $model = Response::MODEL_MEMBERSHIP;
@@ -140,7 +133,7 @@ class V17Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public function sessionProvider(): array
+    public static function sessionProvider(): array
     {
         return [
             'remove factors and secrets' => [
@@ -154,9 +147,7 @@ class V17Test extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider sessionProvider
-     */
+    #[DataProvider('sessionProvider')]
     public function testSession(array $content, array $expected): void
     {
         $model = Response::MODEL_SESSION;
@@ -166,7 +157,7 @@ class V17Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public function webhookProvider(): array
+    public static function webhookProvider(): array
     {
         return [
             'remove webhook additions' => [

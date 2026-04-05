@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Avatars\Http\Screenshots;
 
-use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Avatars\Http\Action;
 use Appwrite\SDK\AuthType;
@@ -10,6 +9,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
@@ -84,11 +84,11 @@ class Get extends Action
             ->param('quality', -1, new Range(-1, 100), 'Screenshot quality. Pass an integer between 0 to 100. Defaults to keep existing image quality.', true, example: '85')
             ->param('output', '', new WhiteList(\array_keys(Config::getParam('storage-outputs')), true), 'Output format type (jpeg, jpg, png, gif and webp).', true, example: 'jpeg')
             ->inject('response')
-            ->inject('queueForStatsUsage')
+            ->inject('usage')
             ->callback($this->action(...));
     }
 
-    public function action(string $url, array $headers, int $viewportWidth, int $viewportHeight, float $scale, string $theme, string $userAgent, bool $fullpage, string $locale, string $timezone, float $latitude, float $longitude, float $accuracy, bool $touch, array $permissions, int $sleep, int $width, int $height, int $quality, string $output, Response $response, StatsUsage $queueForStatsUsage)
+    public function action(string $url, array $headers, int $viewportWidth, int $viewportHeight, float $scale, string $theme, string $userAgent, bool $fullpage, string $locale, string $timezone, float $latitude, float $longitude, float $accuracy, bool $touch, array $permissions, int $sleep, int $width, int $height, int $quality, string $output, Response $response, Context $usage)
     {
         if (!\extension_loaded('imagick')) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
@@ -210,7 +210,7 @@ class Get extends Action
             $outputs = Config::getParam('storage-outputs');
             $contentType = $outputs[$output] ?? $outputs['png'];
 
-            $queueForStatsUsage->addMetric(METRIC_AVATARS_SCREENSHOTS_GENERATED, 1);
+            $usage->addMetric(METRIC_AVATARS_SCREENSHOTS_GENERATED, 1);
 
             $response
                 ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
