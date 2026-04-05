@@ -1,0 +1,160 @@
+# Test-specific containers for shared tables testing
+# Provides separate MongoDB and PostgreSQL instances for documentsdb/vectorsdb shared tables
+
+x-logging: &x-logging
+  logging:
+    driver: "json-file"
+    options:
+      max-file: "5"
+      max-size: "10m"
+
+services:
+  appwrite:
+    depends_on:
+      mongodb-shared-tables-v1:
+        condition: service_healthy
+      mongodb-shared-tables-v2:
+        condition: service_healthy
+      postgresql-shared-tables-v1:
+        condition: service_healthy
+      postgresql-shared-tables-v2:
+        condition: service_healthy
+
+  appwrite-realtime:
+    depends_on:
+      mongodb-shared-tables-v1:
+        condition: service_healthy
+      mongodb-shared-tables-v2:
+        condition: service_healthy
+      postgresql-shared-tables-v1:
+        condition: service_healthy
+      postgresql-shared-tables-v2:
+        condition: service_healthy
+
+  mongodb-shared-tables-v1:
+    image: mongo:8.2.5
+    container_name: appwrite-mongodb-shared-tables-v1
+    <<: *x-logging
+    networks:
+      - appwrite
+    volumes:
+      - appwrite-mongodb-shared-tables-v1:/data/db
+      - appwrite-mongodb-shared-tables-v1-keyfile:/data/keyfile
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - ./mongo-entrypoint.sh:/mongo-entrypoint.sh:ro
+    ports:
+      - "27018:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
+      - MONGO_INITDB_DATABASE=${_APP_DB_SCHEMA}
+      - MONGO_INITDB_USERNAME=${_APP_DB_USER}
+      - MONGO_INITDB_PASSWORD=${_APP_DB_PASS}
+    entrypoint: ["/bin/bash", "/mongo-entrypoint.sh"]
+    healthcheck:
+      test: |
+        bash -c "
+          if mongosh -u root -p ${_APP_DB_ROOT_PASS} --authenticationDatabase admin --quiet --eval 'rs.status().ok' 2>/dev/null | grep -q 1; then
+            exit 0
+          else
+            mongosh -u root -p ${_APP_DB_ROOT_PASS} --authenticationDatabase admin --quiet --eval \"
+              rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'appwrite-mongodb-shared-tables-v1:27017'}]})
+            \" 2>/dev/null || exit 1
+          fi
+        "
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  mongodb-shared-tables-v2:
+    image: mongo:8.2.5
+    container_name: appwrite-mongodb-shared-tables-v2
+    <<: *x-logging
+    networks:
+      - appwrite
+    volumes:
+      - appwrite-mongodb-shared-tables-v2:/data/db
+      - appwrite-mongodb-shared-tables-v2-keyfile:/data/keyfile
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - ./mongo-entrypoint.sh:/mongo-entrypoint.sh:ro
+    ports:
+      - "27019:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
+      - MONGO_INITDB_DATABASE=${_APP_DB_SCHEMA}
+      - MONGO_INITDB_USERNAME=${_APP_DB_USER}
+      - MONGO_INITDB_PASSWORD=${_APP_DB_PASS}
+    entrypoint: ["/bin/bash", "/mongo-entrypoint.sh"]
+    healthcheck:
+      test: |
+        bash -c "
+          if mongosh -u root -p ${_APP_DB_ROOT_PASS} --authenticationDatabase admin --quiet --eval 'rs.status().ok' 2>/dev/null | grep -q 1; then
+            exit 0
+          else
+            mongosh -u root -p ${_APP_DB_ROOT_PASS} --authenticationDatabase admin --quiet --eval \"
+              rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'appwrite-mongodb-shared-tables-v2:27017'}]})
+            \" 2>/dev/null || exit 1
+          fi
+        "
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  postgresql-shared-tables-v1:
+    image: appwrite/postgres:0.1.0
+    container_name: appwrite-postgresql-shared-tables-v1
+    <<: *x-logging
+    networks:
+      - appwrite
+    volumes:
+      - appwrite-postgresql-shared-tables-v1:/var/lib/postgresql/18/data:rw
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_DB=${_APP_DB_SCHEMA}
+      - POSTGRES_USER=${_APP_DB_USER}
+      - POSTGRES_PASSWORD=${_APP_DB_PASS}
+    command: postgres -c 'max_connections=500'
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${_APP_DB_USER} -d ${_APP_DB_SCHEMA}"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  postgresql-shared-tables-v2:
+    image: appwrite/postgres:0.1.0
+    container_name: appwrite-postgresql-shared-tables-v2
+    <<: *x-logging
+    networks:
+      - appwrite
+    volumes:
+      - appwrite-postgresql-shared-tables-v2:/var/lib/postgresql/18/data:rw
+    ports:
+      - "5434:5432"
+    environment:
+      - POSTGRES_DB=${_APP_DB_SCHEMA}
+      - POSTGRES_USER=${_APP_DB_USER}
+      - POSTGRES_PASSWORD=${_APP_DB_PASS}
+    command: postgres -c 'max_connections=500'
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${_APP_DB_USER} -d ${_APP_DB_SCHEMA}"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+networks:
+  appwrite:
+    name: appwrite
+
+volumes:
+  appwrite-mongodb-shared-tables-v1:
+  appwrite-mongodb-shared-tables-v1-keyfile:
+  appwrite-mongodb-shared-tables-v2:
+  appwrite-mongodb-shared-tables-v2-keyfile:
+  appwrite-postgresql-shared-tables-v1:
+  appwrite-postgresql-shared-tables-v2:
