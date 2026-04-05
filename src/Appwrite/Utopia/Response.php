@@ -8,6 +8,7 @@ use Appwrite\Utopia\Response\Filter;
 use Appwrite\Utopia\Response\Model;
 use Exception;
 use JsonException;
+use Swoole\Coroutine;
 use Swoole\Http\Response as SwooleHTTPResponse;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
@@ -19,6 +20,8 @@ use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
  */
 class Response extends SwooleResponse
 {
+    private const SHOW_SENSITIVE_CONTEXT_KEY = '__appwrite_response_show_sensitive';
+
     // General
     public const MODEL_NONE = 'none';
     public const MODEL_ANY = 'any';
@@ -509,7 +512,7 @@ class Response extends SwooleResponse
                 $isPrivilegedUser = $user->isPrivileged($roles);
                 $isAppUser = $user->isApp($roles);
 
-                if ((!$isPrivilegedUser && !$isAppUser) && !self::$showSensitive) {
+                if ((!$isPrivilegedUser && !$isAppUser) && !self::isShowingSensitive()) {
                     $data->setAttribute($key, '');
                 }
             }
@@ -666,12 +669,33 @@ class Response extends SwooleResponse
      */
     public static function showSensitive(callable $callback): array
     {
+        $previous = self::isShowingSensitive();
+
         try {
-            self::$showSensitive = true;
+            self::setShowSensitive(true);
             return $callback();
         } finally {
-            self::$showSensitive = false;
+            self::setShowSensitive($previous);
         }
+    }
+
+    private static function isShowingSensitive(): bool
+    {
+        if (Coroutine::getCid() !== -1) {
+            return (bool) (Coroutine::getContext()[self::SHOW_SENSITIVE_CONTEXT_KEY] ?? false);
+        }
+
+        return self::$showSensitive;
+    }
+
+    private static function setShowSensitive(bool $value): void
+    {
+        if (Coroutine::getCid() !== -1) {
+            Coroutine::getContext()[self::SHOW_SENSITIVE_CONTEXT_KEY] = $value;
+            return;
+        }
+
+        self::$showSensitive = $value;
     }
 
     private ?Authorization $authorization = null;

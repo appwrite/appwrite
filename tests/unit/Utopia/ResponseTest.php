@@ -5,6 +5,7 @@ namespace Tests\Unit\Utopia;
 use Appwrite\Utopia\Response;
 use Exception;
 use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
 use Swoole\Http\Response as SwooleResponse;
 use Tests\Unit\Utopia\Response\Filters\First;
 use Tests\Unit\Utopia\Response\Filters\Second;
@@ -175,5 +176,27 @@ class ResponseTest extends TestCase
         $this->assertArrayHasKey('boolean', $singleFromArray);
         $this->assertArrayHasKey('required', $single);
         $this->assertArrayNotHasKey('hidden', $singleFromArray);
+    }
+
+    public function testShowSensitiveRestoresPreviousState(): void
+    {
+        $isShowingSensitive = new ReflectionMethod(Response::class, 'isShowingSensitive');
+
+        $this->assertFalse($isShowingSensitive->invoke(null));
+
+        $payload = Response::showSensitive(function () use ($isShowingSensitive) {
+            return [
+                'outer' => $isShowingSensitive->invoke(null),
+                'inner' => Response::showSensitive(fn () => [
+                    'state' => $isShowingSensitive->invoke(null),
+                ]),
+                'afterInner' => $isShowingSensitive->invoke(null),
+            ];
+        });
+
+        $this->assertTrue($payload['outer']);
+        $this->assertTrue($payload['inner']['state']);
+        $this->assertTrue($payload['afterInner']);
+        $this->assertFalse($isShowingSensitive->invoke(null));
     }
 }

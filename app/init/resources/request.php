@@ -29,6 +29,7 @@ use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\Agents\Adapters\Ollama;
 use Utopia\Agents\Agent;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
@@ -83,6 +84,27 @@ return function (Container $container): void {
     $container->set('store', function (): Store {
         return new Store();
     }, []);
+
+    $container->set('redis', function () {
+        $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
+        $port = System::getEnv('_APP_REDIS_PORT', 6379);
+        $pass = System::getEnv('_APP_REDIS_PASS', '');
+
+        $redis = new \Redis();
+        @$redis->connect($host, (int) $port);
+        if ($pass) {
+            $redis->auth($pass);
+        }
+        $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
+
+        return $redis;
+    }, []);
+
+    $container->set('timelimit', function (\Redis $redis) {
+        return function (string $key, int $limit, int $time) use ($redis) {
+            return new TimeLimitRedis($key, $limit, $time, $redis);
+        };
+    }, ['redis']);
 
     $container->set('proofForPassword', function (): Password {
         $hash = new Argon2();

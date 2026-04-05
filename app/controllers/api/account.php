@@ -58,6 +58,7 @@ use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
+use Utopia\Domains\Domain;
 use Utopia\Emails\Email;
 use Utopia\Emails\Validator\Email as EmailValidator;
 use Utopia\Http\Http;
@@ -74,6 +75,73 @@ use Utopia\Validator\WhiteList;
 
 $oauthDefaultSuccess = '/console/auth/oauth2/success';
 $oauthDefaultFailure = '/console/auth/oauth2/failure';
+
+function isRequestDomainVerified(Request $request): bool
+{
+    $origin = \parse_url($request->getOrigin($request->getReferer('')), PHP_URL_HOST);
+    $selfDomain = new Domain($request->getHostname());
+    $endDomain = new Domain((string) $origin);
+
+    return ($selfDomain->getRegisterable() === $endDomain->getRegisterable())
+        && $endDomain->getRegisterable() !== '';
+}
+
+function getRequestCookieDomain(Request $request, Document $project): ?string
+{
+    $localHosts = ['localhost', 'localhost:' . $request->getPort()];
+
+    $migrationHost = System::getEnv('_APP_MIGRATION_HOST');
+    if (!empty($migrationHost)) {
+        $localHosts[] = $migrationHost;
+        $localHosts[] = $migrationHost . ':' . $request->getPort();
+    }
+
+    $hostname = $request->getHostname();
+    $isLocalHost = \in_array($hostname, $localHosts, true);
+    $isIpAddress = \filter_var($hostname, FILTER_VALIDATE_IP) !== false;
+
+    if ($isLocalHost || $isIpAddress) {
+        return null;
+    }
+
+    $isConsoleProject = $project->getAttribute('$id', '') === 'console';
+    $isConsoleRootSession = System::getEnv('_APP_CONSOLE_ROOT_SESSION', 'disabled') === 'enabled';
+
+    if ($isConsoleProject && $isConsoleRootSession) {
+        $domain = new Domain($hostname);
+        return '.' . $domain->getRegisterable();
+    }
+
+    return '.' . $hostname;
+}
+
+function addSessionCookies(Request $request, Response $response, Store $store, Document $project, string $encoded, int $expire): void
+{
+    if (!isRequestDomainVerified($request)) {
+        $response->addHeader('X-Fallback-Cookies', \json_encode([$store->getKey() => $encoded]));
+    }
+
+    $protocol = $request->getProtocol();
+    $cookieDomain = getRequestCookieDomain($request, $project);
+
+    $response
+        ->addCookie($store->getKey() . '_legacy', $encoded, $expire, '/', $cookieDomain, ('https' === $protocol), true, null)
+        ->addCookie($store->getKey(), $encoded, $expire, '/', $cookieDomain, ('https' === $protocol), true, Response::COOKIE_SAMESITE_NONE);
+}
+
+function clearSessionCookies(Request $request, Response $response, Store $store, Document $project): void
+{
+    if (!isRequestDomainVerified($request)) {
+        $response->addHeader('X-Fallback-Cookies', \json_encode([]));
+    }
+
+    $protocol = $request->getProtocol();
+    $cookieDomain = getRequestCookieDomain($request, $project);
+
+    $response
+        ->addCookie($store->getKey() . '_legacy', '', \time() - 3600, '/', $cookieDomain, ('https' === $protocol), true, null)
+        ->addCookie($store->getKey(), '', \time() - 3600, '/', $cookieDomain, ('https' === $protocol), true, Response::COOKIE_SAMESITE_NONE);
+}
 
 function sendSessionAlert(Locale $locale, Document $user, Document $project, array $platform, Document $session, Mail $queueForMails)
 {
@@ -345,17 +413,9 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         ->setProperty('secret', $sessionSecret)
         ->encode();
 
-    if (!Config::getParam('domainVerification')) {
-        $response->addHeader('X-Fallback-Cookies', \json_encode([$store->getKey() => $encoded]));
-    }
-
     $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
-    $protocol = $request->getProtocol();
-
-    $response
-        ->addCookie($store->getKey() . '_legacy', $encoded, (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-        ->addCookie($store->getKey(), $encoded, (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-        ->setStatusCode(Response::STATUS_CODE_CREATED);
+    addSessionCookies($request, $response, $store, $project, $encoded, (new \DateTime($expire))->getTimestamp());
+    $response->setStatusCode(Response::STATUS_CODE_CREATED);
 
     $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
@@ -714,23 +774,18 @@ Http::delete('/v1/account/sessions')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
+    ->inject('project')
     ->inject('locale')
     ->inject('queueForEvents')
     ->inject('queueForDeletes')
     ->inject('store')
     ->inject('proofForToken')
-    ->action(function (Request $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Delete $queueForDeletes, Store $store, ProofsToken $proofForToken) {
-
-        $protocol = $request->getProtocol();
+    ->action(function (Request $request, Response $response, User $user, Database $dbForProject, Document $project, Locale $locale, Event $queueForEvents, Delete $queueForDeletes, Store $store, ProofsToken $proofForToken) {
         $sessions = $user->getAttribute('sessions', []);
         $currentSession = null;
 
         foreach ($sessions as $session) {/** @var Document $session */
             $dbForProject->deleteDocument('sessions', $session->getId());
-
-            if (!Config::getParam('domainVerification')) {
-                $response->addHeader('X-Fallback-Cookies', \json_encode([]));
-            }
 
             $session
                 ->setAttribute('current', false)
@@ -740,9 +795,7 @@ Http::delete('/v1/account/sessions')
                 $session->setAttribute('current', true);
 
                 // If current session delete the cookies too
-                $response
-                    ->addCookie($store->getKey() . '_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-                    ->addCookie($store->getKey(), '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'));
+                clearSessionCookies($request, $response, $store, $project);
 
                 // Use current session for events.
                 $currentSession = $session;
@@ -844,14 +897,13 @@ Http::delete('/v1/account/sessions/:sessionId')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
+    ->inject('project')
     ->inject('locale')
     ->inject('queueForEvents')
     ->inject('queueForDeletes')
     ->inject('store')
     ->inject('proofForToken')
-    ->action(function (?string $sessionId, ?\DateTime $requestTimestamp, Request $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Delete $queueForDeletes, Store $store, ProofsToken $proofForToken) {
-
-        $protocol = $request->getProtocol();
+    ->action(function (?string $sessionId, ?\DateTime $requestTimestamp, Request $request, Response $response, User $user, Database $dbForProject, Document $project, Locale $locale, Event $queueForEvents, Delete $queueForDeletes, Store $store, ProofsToken $proofForToken) {
         $sessionId = ($sessionId === 'current')
             ? $user->sessionVerify($store->getProperty('secret', ''), $proofForToken)
             : $sessionId;
@@ -875,13 +927,7 @@ Http::delete('/v1/account/sessions/:sessionId')
                     ->setAttribute('current', true)
                     ->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')));
 
-                if (!Config::getParam('domainVerification')) {
-                    $response->addHeader('X-Fallback-Cookies', \json_encode([]));
-                }
-
-                $response
-                    ->addCookie($store->getKey() . '_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-                    ->addCookie($store->getKey(), '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'));
+                clearSessionCookies($request, $response, $store, $project);
             }
 
             $dbForProject->purgeCachedDocument('users', $user->getId());
@@ -1110,17 +1156,9 @@ Http::post('/v1/account/sessions/email')
             ->setProperty('secret', $secret)
             ->encode();
 
-        if (!Config::getParam('domainVerification')) {
-            $response->addHeader('X-Fallback-Cookies', \json_encode([$store->getKey() => $encoded]));
-        }
-
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
-
-        $response
-            ->addCookie($store->getKey() . '_legacy', $encoded, (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-            ->addCookie($store->getKey(), $encoded, (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-        ;
+        addSessionCookies($request, $response, $store, $project, $encoded, (new \DateTime($expire))->getTimestamp());
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
 
         $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
@@ -1276,17 +1314,9 @@ Http::post('/v1/account/sessions/anonymous')
             ->setProperty('secret', $secret)
             ->encode();
 
-        if (!Config::getParam('domainVerification')) {
-            $response->addHeader('X-Fallback-Cookies', \json_encode([$store->getKey() => $encoded]));
-        }
-
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
-
-        $response
-            ->addCookie($store->getKey() . '_legacy', $encoded, (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-            ->addCookie($store->getKey(), $encoded, (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-        ;
+        addSessionCookies($request, $response, $store, $project, $encoded, (new \DateTime($expire))->getTimestamp());
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
 
         $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
@@ -2055,10 +2085,6 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 ->setProperty('secret', $secret)
                 ->encode();
 
-            if (!Config::getParam('domainVerification')) {
-                $response->addHeader('X-Fallback-Cookies', \json_encode([$store->getKey() => $encoded]));
-            }
-
             $queueForEvents
                 ->setParam('userId', $user->getId())
                 ->setParam('sessionId', $session->getId())
@@ -2068,14 +2094,12 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             // TODO: Remove this deprecated workaround - support only token
             if ($state['success']['path'] == $oauthDefaultSuccess) {
                 $query['project'] = $project->getId();
-                $query['domain'] = Config::getParam('cookieDomain');
+                $query['domain'] = getRequestCookieDomain($request, $project);
                 $query['key'] = $store->getKey();
                 $query['secret'] = $encoded;
             }
 
-            $response
-                ->addCookie($store->getKey() . '_legacy', $encoded, (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-                ->addCookie($store->getKey(), $encoded, (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'));
+            addSessionCookies($request, $response, $store, $project, $encoded, (new \DateTime($expire))->getTimestamp());
         }
 
         if (isset($sessionUpgrade) && $sessionUpgrade && isset($session)) {
@@ -3725,9 +3749,10 @@ Http::patch('/v1/account/status')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
+    ->inject('project')
     ->inject('queueForEvents')
     ->inject('store')
-    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Store $store) {
+    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Event $queueForEvents, Store $store) {
 
         $user->setAttribute('status', false);
 
@@ -3737,15 +3762,7 @@ Http::patch('/v1/account/status')
             ->setParam('userId', $user->getId())
             ->setPayload($response->output($user, Response::MODEL_ACCOUNT));
 
-        if (!Config::getParam('domainVerification')) {
-            $response->addHeader('X-Fallback-Cookies', \json_encode([]));
-        }
-
-        $protocol = $request->getProtocol();
-        $response
-            ->addCookie($store->getKey() . '_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-            ->addCookie($store->getKey(), '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-        ;
+        clearSessionCookies($request, $response, $store, $project);
 
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
