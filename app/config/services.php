@@ -160,7 +160,7 @@ return [
         'name' => 'Teams',
         'subtitle' => 'The Teams service allows you to group users of your project and to enable them to share read and write access to your project resources',
         'description' => '/docs/services/teams.md',
-        'controller' => '', // Uses modules
+        'controller' => 'api/teams.php',
         'sdk' => true,
         'docs' => true,
         'docsUrl' => 'https://appwrite.io/docs/client/teams',
@@ -188,7 +188,7 @@ return [
         'name' => 'VCS',
         'subtitle' => 'The VCS service allows you to interact with providers like GitHub, GitLab etc.',
         'description' => '',
-        'controller' => '', // Uses modules
+        'controller' => 'api/vcs.php',
         'sdk' => false,
         'docs' => false,
         'docsUrl' => '',

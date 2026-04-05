@@ -1,1 +1,0 @@
-Update a transaction, to either commit or roll back its operations.

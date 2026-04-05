@@ -4,7 +4,6 @@
 $common = include __DIR__ . '/collections/common.php';
 $projects = include __DIR__ . '/collections/projects.php';
 $databases = include __DIR__ . '/collections/databases.php';
-$vectorsdb = include __DIR__ . '/collections/vectorsdb.php';
 $platform = include __DIR__ . '/collections/platform.php';
 $logs = include __DIR__ . '/collections/logs.php';
 
@@ -27,7 +26,6 @@ unset($common['files']);
 $collections = [
     'buckets' => $buckets,
     'databases' => $databases,
-    'vectorsdb' => $vectorsdb,
     'projects' => array_merge_recursive($projects, $common),
     'console' => array_merge_recursive($platform, $common),
     'logs' => $logs,

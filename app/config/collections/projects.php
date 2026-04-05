@@ -61,15 +61,6 @@ return [
                 'array' => false,
                 'filters' => [],
             ],
-            [
-                '$id' => ID::custom('database'),
-                'type' => Database::VAR_STRING,
-                'size' => 128,
-                'required' => false,
-                'signed' => true,
-                'array' => false,
-                'filters' => [],
-            ]
         ],
         'indexes' => [
             [
@@ -786,7 +777,6 @@ return [
                 'filters' => [],
             ],
             [
-                // At the moment, always empty (no runtime supports it yet)
                 'array' => false,
                 '$id' => ID::custom('startCommand'),
                 'type' => Database::VAR_STRING,
@@ -2199,6 +2189,13 @@ return [
                 'attributes' => ['duration'],
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => ID::custom('_key_function_internal_id'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['resourceInternalId'],
+                'lengths' => [],
+                'orders' => [],
             ],
             [
                 '$id' => ID::custom('_key_resourceType'),

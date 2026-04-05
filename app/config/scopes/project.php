@@ -145,12 +145,6 @@ return [ // List of publicly visible scopes
     'rules.write' => [
         'description' => 'Access to create, update, and delete your project\'s proxy rules',
     ],
-    'schedules.read' => [
-        'description' => 'Access to read your project\'s schedules',
-    ],
-    'schedules.write' => [
-        'description' => 'Access to create, update, and delete your project\'s schedules',
-    ],
     'migrations.read' => [
         'description' => 'Access to read your project\'s migrations',
     ],
@@ -171,21 +165,5 @@ return [ // List of publicly visible scopes
     ],
     'tokens.write' => [
         'description' => 'Access to create, update, and delete your project\'s tokens',
-    ],
-    "webhooks.read" => [
-        "description" =>
-            "Access to read project\'s webhooks",
-    ],
-    "webhooks.write" => [
-        "description" =>
-            "Access to create, update, and delete project\'s webhooks",
-    ],
-    "project.read" => [
-        "description" =>
-            "Access to read project\'s information",
-    ],
-    "project.write" => [
-        "description" =>
-            "Access to update project\'s information",
     ],
 ];

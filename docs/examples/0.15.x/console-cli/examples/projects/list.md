@@ -1,0 +1,7 @@
+appwrite projects list \
+
+
+
+
+
+

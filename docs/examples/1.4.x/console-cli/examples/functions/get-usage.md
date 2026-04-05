@@ -1,0 +1,2 @@
+appwrite functions getUsage \
+

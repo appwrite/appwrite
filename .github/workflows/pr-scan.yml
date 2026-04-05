@@ -1,0 +1,105 @@
+name: PR Security Scan
+on: 
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+ 
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+    - name: Check out code 
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
+        fetch-depth: 0
+        submodules: 'recursive'
+
+    - name: Build the Docker image
+      uses: docker/build-push-action@v5
+      with: 
+        context: .
+        push: false
+        load: true
+        tags: pr_image:${{ github.sha }}
+
+    - name: Run Trivy vulnerability scanner on image
+      uses: aquasecurity/trivy-action@0.20.0
+      with:
+        image-ref: 'pr_image:${{ github.sha }}'
+        format: 'json'
+        output: 'trivy-image-results.json'
+        severity: 'CRITICAL,HIGH'
+
+    - name: Run Trivy vulnerability scanner on source code
+      uses: aquasecurity/trivy-action@0.20.0
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'json'
+        output: 'trivy-fs-results.json'
+        severity: 'CRITICAL,HIGH'
+
+    - name: Process Trivy scan results
+      id: process-results
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          let commentBody = '## Security Scan Results for PR\n\n';
+          
+          function processResults(results, title) {
+            let sectionBody = `### ${title}\n\n`;
+            if (results.Results && results.Results.some(result => result.Vulnerabilities && result.Vulnerabilities.length > 0)) {
+              sectionBody += '| Package | Version | Vulnerability | Severity |\n';
+              sectionBody += '|---------|---------|----------------|----------|\n';
+              
+              const uniqueVulns = new Set();
+              results.Results.forEach(result => {
+                if (result.Vulnerabilities) {
+                  result.Vulnerabilities.forEach(vuln => {
+                    const vulnKey = `${vuln.PkgName}-${vuln.InstalledVersion}-${vuln.VulnerabilityID}`;
+                    if (!uniqueVulns.has(vulnKey)) {
+                      uniqueVulns.add(vulnKey);
+                      sectionBody += `| ${vuln.PkgName} | ${vuln.InstalledVersion} | [${vuln.VulnerabilityID}](https://nvd.nist.gov/vuln/detail/${vuln.VulnerabilityID}) | ${vuln.Severity} |\n`;
+                    }
+                  });
+                }
+              });
+            } else {
+              sectionBody += '🎉 No vulnerabilities found!\n';
+            }
+            return sectionBody;
+          }
+          
+          try {
+            const imageResults = JSON.parse(fs.readFileSync('trivy-image-results.json', 'utf8'));
+            const fsResults = JSON.parse(fs.readFileSync('trivy-fs-results.json', 'utf8'));
+            
+            commentBody += processResults(imageResults, "Docker Image Scan Results");
+            commentBody += '\n';
+            commentBody += processResults(fsResults, "Source Code Scan Results");
+            
+          } catch (error) {
+            commentBody += `There was an error while running the security scan: ${error.message}\n`;
+            commentBody += 'Please contact the core team for assistance.';
+          }
+          
+          core.setOutput('comment-body', commentBody);
+    - name: Find Comment
+      uses: peter-evans/find-comment@v3
+      id: fc
+      with:
+        issue-number: ${{ github.event.pull_request.number }}
+        comment-author: 'github-actions[bot]'
+        body-includes: Security Scan Results for PR
+
+    - name: Create or update comment
+      uses: peter-evans/create-or-update-comment@v3
+      with:
+        issue-number: ${{ github.event.pull_request.number }}
+        comment-id: ${{ steps.fc.outputs.comment-id }}
+        body: ${{ steps.process-results.outputs.comment-body }}
+        edit-mode: replace

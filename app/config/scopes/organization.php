@@ -31,4 +31,12 @@ return [
         "description" =>
             "Access to create, update, and delete project\'s development keys",
     ],
+    "webhooks.read" => [
+        "description" =>
+            "Access to read project\'s webhooks",
+    ],
+    "webhooks.write" => [
+        "description" =>
+            "Access to create, update, and delete project\'s webhooks",
+    ],
 ];

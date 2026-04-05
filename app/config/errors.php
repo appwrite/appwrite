@@ -27,7 +27,7 @@ return [
     Exception::GENERAL_RESOURCE_BLOCKED => [
         'name' => Exception::GENERAL_RESOURCE_BLOCKED,
         'description' => 'Access to this resource is blocked.',
-        'code' => 403,
+        'code' => 401,
     ],
     Exception::GENERAL_UNKNOWN_ORIGIN => [
         'name' => Exception::GENERAL_UNKNOWN_ORIGIN,
@@ -139,11 +139,6 @@ return [
         'description' => 'There was an error processing your request. Please check the inputs and try again.',
         'code' => 400,
     ],
-    Exception::GENERAL_FEATURE_UNSUPPORTED => [
-        'name' => Exception::GENERAL_FEATURE_UNSUPPORTED,
-        'description' => 'This feature is not supported with your current configuration.',
-        'code' => 400,
-    ],
 
     /** User Errors */
     Exception::USER_COUNT_EXCEEDED => [
@@ -168,8 +163,8 @@ return [
     ],
     Exception::USER_BLOCKED => [
         'name' => Exception::USER_BLOCKED,
-        'description' => 'The current user has been blocked.',
-        'code' => 403,
+        'description' => 'The current user has been blocked. You can unblock the user by making a request to the User API\'s "Update User Status" endpoint or in the Appwrite Console\'s Auth section.',
+        'code' => 401,
     ],
     Exception::USER_INVALID_TOKEN => [
         'name' => Exception::USER_INVALID_TOKEN,
@@ -629,11 +624,6 @@ return [
         'name' => Exception::SITE_NOT_FOUND,
         'description' => 'Site with the requested ID could not be found.',
         'code' => 404,
-    ],
-    Exception::SITE_ALREADY_EXISTS => [
-        'name' => Exception::SITE_ALREADY_EXISTS,
-        'description' => 'Site with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
-        'code' => 409,
     ],
     Exception::SITE_TEMPLATE_NOT_FOUND => [
         'name' => Exception::SITE_TEMPLATE_NOT_FOUND,
@@ -1144,11 +1134,6 @@ return [
         'description' => 'Webhook with the requested ID could not be found.',
         'code' => 404,
     ],
-    Exception::WEBHOOK_ALREADY_EXISTS => [
-        'name' => Exception::WEBHOOK_ALREADY_EXISTS,
-        'description' => 'Webhook with the same ID already exists. Try again with a different ID.',
-        'code' => 409,
-    ],
     Exception::KEY_NOT_FOUND => [
         'name' => Exception::KEY_NOT_FOUND,
         'description' => 'Key with the requested ID could not be found.',
@@ -1205,11 +1190,6 @@ return [
         'name' => Exception::MIGRATION_IN_PROGRESS,
         'description' => 'Migration is already in progress. You can check the status of the migration in your Appwrite Console\'s "Settings" > "Migrations".',
         'code' => 409,
-    ],
-    Exception::MIGRATION_DATABASE_TYPE_UNSUPPORTED => [
-        'name' => Exception::MIGRATION_DATABASE_TYPE_UNSUPPORTED,
-        'description' => 'The specified database type is not supported for CSV import or export operations.',
-        'code' => 400,
     ],
 
     /** Realtime */
@@ -1305,11 +1285,6 @@ return [
         'name' => Exception::MESSAGE_NOT_FOUND,
         'description' => 'Message with the requested ID could not be found.',
         'code' => 404,
-    ],
-    Exception::MESSAGE_ALREADY_EXISTS => [
-        'name' => Exception::MESSAGE_ALREADY_EXISTS,
-        'description' => 'Message with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
-        'code' => 409,
     ],
     Exception::MESSAGE_MISSING_TARGET => [
         'name' => Exception::MESSAGE_MISSING_TARGET,

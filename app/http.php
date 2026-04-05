@@ -1,7 +1,7 @@
 <?php
 
 require_once __DIR__ . '/../vendor/autoload.php';
-require_once __DIR__ . '/init/span.php';
+require_once __DIR__ . '/init/di-container.php';
 
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -15,9 +15,9 @@ use Swoole\Timer;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Adapter\SQL as AuditAdapterSQL;
 use Utopia\Audit\Audit;
+use Utopia\CLI\Console;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
-use Utopia\Console;
 use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -27,29 +27,21 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
-use Utopia\Http\Files;
-use Utopia\Http\Http;
+use Utopia\DI\Container;
+use Utopia\Http;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Pools\Group;
-use Utopia\Span\Span;
+use Utopia\Swoole\Files;
 use Utopia\System\System;
+
+Files::load(__DIR__.'/../public');
 
 const DOMAIN_SYNC_TIMER = 30; // 30 seconds
 
-$files = new Files();
-$files->load(__DIR__ . '/../public');
-
-$riskyDomains = new Table(100_000);
-$riskyDomains->column('value', Table::TYPE_INT, 1);
-$riskyDomains->create();
-
-$certifiedDomains = new Table(100_000);
-$certifiedDomains->column('value', Table::TYPE_INT, 1);
-$certifiedDomains->create();
-
-Http::setResource('riskyDomains', fn () => $riskyDomains);
-Http::setResource('certifiedDomains', fn () => $certifiedDomains);
+$domains = new Table(1_000_000); // 1 million rows
+$domains->column('value', Table::TYPE_INT, 1);
+$domains->create();
 
 $http = new Server(
     host: "0.0.0.0",
@@ -78,7 +70,7 @@ $totalWorkers = intval(System::getEnv('_APP_CPU_NUM', swoole_cpu_num())) * intva
 function dispatch(Server $server, int $fd, int $type, $data = null): int
 {
     $resolveWorkerId = function (Server $server, $data = null) {
-        global $totalWorkers, $riskyDomains;
+        global $totalWorkers, $domains;
 
         // If data is not set we can send request to any worker
         // first we try to pick idle worker, if not we randomly pick a worker
@@ -110,7 +102,7 @@ function dispatch(Server $server, int $fd, int $type, $data = null): int
         $risky = false;
         if (str_starts_with($request, 'POST') && str_contains($request, '/executions')) {
             $risky = true;
-        } elseif ($riskyDomains->get(md5($domain), 'value') === 1) {
+        } elseif ($domains->get(md5($domain), 'value') === 1) {
             // executions request coming from custom domain
             $risky = true;
         } else {
@@ -173,6 +165,7 @@ $http
     ]);
 
 $http->on(Constant::EVENT_WORKER_START, function ($server, $workerId) {
+    Console::success('Worker ' . ++$workerId . ' started successfully');
 });
 
 $http->on(Constant::EVENT_WORKER_STOP, function ($server, $workerId) {
@@ -188,18 +181,12 @@ $http->on(Constant::EVENT_AFTER_RELOAD, function ($server) {
     Console::success('Reload completed...');
 });
 
-Http::setResource('bus', function ($register, $utopia) {
-    return $register->get('bus')->setResolver(fn (string $name) => $utopia->getResource($name));
-}, ['register', 'utopia']);
-
 include __DIR__ . '/controllers/general.php';
 
 function createDatabase(Http $app, string $resourceKey, string $dbName, array $collections, mixed $pools, ?callable $extraSetup = null): void
 {
-    $max = 15;
-    $sleep = 2;
-    $max = 15;
-    $sleep = 2;
+    $max = 10;
+    $sleep = 1;
     $attempts = 0;
 
     while (true) {
@@ -209,8 +196,8 @@ function createDatabase(Http $app, string $resourceKey, string $dbName, array $c
             /* @var $database Database */
             $database = is_callable($resource) ? $resource() : $resource;
             break; // exit loop on success
-        } catch (\Throwable $e) {
-            Console::warning("  └── Database not ready ({$dbName}). Retrying connection ({$attempts}): " . $e->getMessage());
+        } catch (\Exception $e) {
+            Console::warning("  └── Database not ready. Retrying connection ({$attempts})...");
             if ($attempts >= $max) {
                 throw new \Exception('  └── Failed to connect to database: ' . $e->getMessage());
             }
@@ -218,34 +205,17 @@ function createDatabase(Http $app, string $resourceKey, string $dbName, array $c
         }
     }
 
-    Span::init("database.setup");
-    Span::add('database.name', $dbName);
+    Console::success("[Setup] - $dbName database init started...");
 
-    $attempts = 0;
-    while (true) {
-        try {
-            $attempts++;
-            Console::info("  └── Creating database: $dbName...");
-            $database->create();
-            break; // exit loop on success
-        } catch (\Exception $e) {
-            if ($e instanceof DuplicateException) {
-                Span::add('database.exists', true);
-                Console::info("  └── Skip: metadata table already exists");
-                break;
-            }
-
-            Console::warning("  └── Database create failed. Retrying ({$attempts})...");
-            if ($attempts >= $max) {
-                throw new \Exception('  └── Failed to create database: ' . $e->getMessage());
-            }
-
-            \sleep($sleep);
-        }
+    // Attempt to create the database
+    try {
+        Console::info("  └── Creating database: $dbName...");
+        $database->create();
+    } catch (\Exception $e) {
+        Console::info("  └── Skip: metadata table already exists");
     }
 
     // Process collections
-    $collectionsCreated = 0;
     foreach ($collections as $key => $collection) {
         if (($collection['$collection'] ?? '') !== Database::METADATA) {
             continue;
@@ -254,6 +224,8 @@ function createDatabase(Http $app, string $resourceKey, string $dbName, array $c
         if (!$database->getCollection($key)->isEmpty()) {
             continue;
         }
+
+        Console::info("    └── Creating collection: {$collection['$id']}...");
 
         $attributes = array_map(fn ($attr) => new Document([
             '$id' => ID::custom($attr['$id']),
@@ -276,22 +248,21 @@ function createDatabase(Http $app, string $resourceKey, string $dbName, array $c
         ]), $collection['indexes']);
 
         $database->createCollection($key, $attributes, $indexes);
-        $collectionsCreated++;
     }
-
-    Span::add('database.collections_created', $collectionsCreated);
 
     if ($extraSetup) {
         $extraSetup($database);
     }
-
-    Span::current()?->finish();
 }
 
-$http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $totalWorkers, $register) {
+$http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $register) {
     $app = new Http('UTC');
 
-    go(function () use ($register, $app) {
+    // Initialize DI Container for dependency injection (PR #11564)
+    $diContainer = createDIContainer();
+    Http::setResource('di', fn () => $diContainer);
+
+    go(function () use ($register, $app, $diContainer) {
         $pools = $register->get('pools');
         /** @var Group $pools */
         Http::setResource('pools', fn () => $pools);
@@ -313,6 +284,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $tot
             }
 
             if ($dbForPlatform->getDocument('buckets', 'default')->isEmpty()) {
+                Console::info("    └── Creating default bucket...");
                 $dbForPlatform->createDocument('buckets', new Document([
                     '$id' => ID::custom('default'),
                     '$collection' => ID::custom('buckets'),
@@ -335,6 +307,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $tot
 
                 $bucket = $dbForPlatform->getDocument('buckets', 'default');
 
+                Console::info("    └── Creating files collection for default bucket...");
                 $files = $collections['buckets']['files'] ?? [];
                 if (empty($files)) {
                     throw new Exception('Files collection is not configured.');
@@ -364,6 +337,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $tot
             }
 
             if ($authorization->skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots')->isEmpty())) {
+                Console::info("    └── Creating screenshots bucket...");
                 $authorization->skip(fn () => $dbForPlatform->createDocument('buckets', new Document([
                     '$id' => ID::custom('screenshots'),
                     '$collection' => ID::custom('buckets'),
@@ -381,6 +355,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $tot
 
                 $bucket = $authorization->skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots'));
 
+                Console::info("    └── Creating files collection for screenshots bucket...");
                 $files = $collections['buckets']['files'] ?? [];
                 if (empty($files)) {
                     throw new Exception('Files collection is not configured.');
@@ -411,32 +386,13 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $tot
         });
 
         $projectCollections = $collections['projects'];
-
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
         $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
         $sharedTablesV2 = \array_diff($sharedTables, $sharedTablesV1);
 
-        $documentsSharedTables = \explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES', ''));
-        $documentsSharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES_V1', ''));
-        $documentsSharedTablesV2 = \array_diff($documentsSharedTables, $documentsSharedTablesV1);
-
-        $vectorSharedTables = \explode(',', System::getEnv('_APP_DATABASE_VECTORSDB_SHARED_TABLES', ''));
-        $vectorSharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_VECTORSDB_SHARED_TABLES_V1', ''));
-        $vectorSharedTablesV2 = \array_diff($vectorSharedTables, $vectorSharedTablesV1);
-
         $cache = $app->getResource('cache');
 
-        // All shared tables V2 pools that need project metadata collections
-        $sharedTablesV2All = \array_values(\array_unique(\array_filter([
-            ...$sharedTablesV2,
-            ...$documentsSharedTablesV2,
-            ...$vectorSharedTablesV2,
-        ])));
-
-        foreach ($sharedTablesV2All as $hostname) {
-            Span::init('database.setup');
-            Span::add('database.hostname', $hostname);
-
+        foreach ($sharedTablesV2 as $hostname) {
             $adapter = new DatabasePool($pools->get($hostname));
             $dbForProject = (new Database($adapter, $cache))
                 ->setDatabase('appwrite')
@@ -444,26 +400,11 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $tot
                 ->setTenant(null)
                 ->setNamespace(System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', ''));
 
-            $max = 15;
-            $sleep = 2;
-            $attempts = 0;
-            while (true) {
-                try {
-                    $attempts++;
-                    Console::success('[Setup] - Creating project database: ' . $hostname . '...');
-                    $dbForProject->create();
-                    break; // exit loop on success
-                } catch (DuplicateException) {
-                    Span::add('database.exists', true);
-                    Console::success('[Setup] - Skip: metadata table already exists');
-                    break;
-                } catch (\Throwable $e) {
-                    Console::warning("  └── Project database create failed. Retrying ({$attempts})...");
-                    if ($attempts >= $max) {
-                        throw new \Exception('  └── Failed to create project database: ' . $e->getMessage());
-                    }
-                    sleep($sleep);
-                }
+            try {
+                Console::success('[Setup] - Creating project database: ' . $hostname . '...');
+                $dbForProject->create();
+            } catch (DuplicateException) {
+                Console::success('[Setup] - Skip: metadata table already exists');
             }
 
             if ($dbForProject->getCollection(AuditAdapterSQL::COLLECTION)->isEmpty()) {
@@ -472,7 +413,6 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $tot
                 $audit->setup();
             }
 
-            $collectionsCreated = 0;
             foreach ($projectCollections as $key => $collection) {
                 if (($collection['$collection'] ?? '') !== Database::METADATA) {
                     continue;
@@ -484,21 +424,17 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $tot
                 $attributes = \array_map(fn ($attribute) => new Document($attribute), $collection['attributes']);
                 $indexes = \array_map(fn (array $index) => new Document($index), $collection['indexes']);
 
-                $dbForProject->createCollection($key, $attributes, $indexes);
-                $collectionsCreated++;
-            }
+                Console::success('[Setup] - Creating project collection: ' . $collection['$id'] . '...');
 
-            Span::add('database.collections_created', $collectionsCreated);
-            Span::current()?->finish();
+                $dbForProject->createCollection($key, $attributes, $indexes);
+            }
         }
+
+        Console::success('[Setup] - Server database init completed...');
     });
 
-    Span::init('http.server.start');
-    Span::add('server.workers', $totalWorkers);
-    Span::add('server.payload_size', $payloadSize);
-    Span::add('server.master_pid', $http->master_pid);
-    Span::add('server.manager_pid', $http->manager_pid);
-    Span::current()?->finish();
+    Console::success('Server started successfully (max payload is ' . number_format($payloadSize) . ' bytes)');
+    Console::info("Master pid {$http->master_pid}, manager pid {$http->manager_pid}");
 
     // Start the task that starts fetching custom domains
     $http->task([], 0);
@@ -510,25 +446,21 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $tot
     });
 });
 
-$http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($register, $files) {
-    Span::init('http.request');
-
+$http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($register) {
     Http::setResource('swooleRequest', fn () => $swooleRequest);
     Http::setResource('swooleResponse', fn () => $swooleResponse);
 
     $request = new Request($swooleRequest);
     $response = new Response($swooleResponse);
 
-    Span::add('http.method', $request->getMethod());
-
-    if ($files->isFileLoaded($request->getURI())) {
-        $time = (60 * 60 * 24 * 45); // 45 days cache
+    if (Files::isFileLoaded($request->getURI())) {
+        $time = (60 * 60 * 24 * 365 * 2); // 45 days cache
 
         $response
-            ->setContentType($files->getFileMimeType($request->getURI()))
+            ->setContentType(Files::getFileMimeType($request->getURI()))
             ->addHeader('Cache-Control', 'public, max-age=' . $time)
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $time) . ' GMT') // 45 days cache
-            ->send($files->getFileContents($request->getURI()));
+            ->send(Files::getFileContents($request->getURI()));
 
         return;
     }
@@ -549,12 +481,7 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
         $authorization->addRole(Role::any()->toString());
 
         $app->run($request, $response);
-
-        $route = $app->getRoute();
-        Span::add('http.path', $route?->getPath() ?? 'unknown');
     } catch (\Throwable $th) {
-        Span::error($th);
-
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
         $logger = $app->getResource("logger");
@@ -582,8 +509,8 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
             $log->setType(Log::TYPE_ERROR);
             $log->setMessage($th->getMessage());
 
-            $log->addTag('method', $route?->getMethod() ?? $request->getMethod());
-            $log->addTag('url', $route?->getPath() ?? $request->getURI());
+            $log->addTag('method', $route->getMethod());
+            $log->addTag('url', $route->getPath());
             $log->addTag('verboseType', get_class($th));
             $log->addTag('code', $th->getCode());
             // $log->addTag('projectId', $project->getId()); // TODO: Figure out how to get ProjectID, if it becomes relevant
@@ -595,18 +522,12 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
             $log->addExtra('trace', $th->getTraceAsString());
             $log->addExtra('roles', isset($authorization) ? $authorization->getRoles() : []);
 
-            $sdk = $route?->getLabel("sdk", false);
+            $sdk = $route->getLabel("sdk", false);
 
             $action = 'UNKNOWN_NAMESPACE.UNKNOWN.METHOD';
             if (!empty($sdk)) {
-                if (\is_array($sdk)) {
-                    $sdk = $sdk[0];
-                }
                 /** @var Appwrite\SDK\Method $sdk */
                 $action = $sdk->getNamespace() . '.' . $sdk->getMethodName();
-            } elseif ($route === null) {
-                $path = ltrim(parse_url($request->getURI(), PHP_URL_PATH) ?? '/', '/') ?: 'root';
-                $action = 'http.' . $request->getMethod() . '.' . $path;
             }
 
             $log->setAction($action);
@@ -622,6 +543,12 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
                 Console::error('Error pushing log: ' . $th->getMessage());
             }
         }
+
+        Console::error('[Error] Type: ' . get_class($th));
+        Console::error('[Error] Message: ' . $th->getMessage());
+        Console::error('[Error] File: ' . $th->getFile());
+        Console::error('[Error] Line: ' . $th->getLine());
+        Console::error('[Error] Trace: ' . $th->getTraceAsString());
 
         $swooleResponse->setStatusCode(500);
 
@@ -639,14 +566,11 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
         ];
 
         $swooleResponse->end(\json_encode($output));
-    } finally {
-        Span::add('http.response.code', $response->getStatusCode());
-        Span::current()?->finish();
     }
 });
 
 // Fetch domains every `DOMAIN_SYNC_TIMER` seconds and update in the memory
-$http->on(Constant::EVENT_TASK, function () use ($register) {
+$http->on(Constant::EVENT_TASK, function () use ($register, $domains) {
     $lastSyncUpdate = null;
     $pools = $register->get('pools');
     Http::setResource('pools', fn () => $pools);
@@ -655,10 +579,7 @@ $http->on(Constant::EVENT_TASK, function () use ($register) {
     /** @var Utopia\Database\Database $dbForPlatform */
     $dbForPlatform = $app->getResource('dbForPlatform');
 
-    /** @var Table $riskyDomains */
-    $riskyDomains = $app->getResource('riskyDomains');
-
-    Timer::tick(DOMAIN_SYNC_TIMER * 1000, function () use ($dbForPlatform, $riskyDomains, &$lastSyncUpdate, $app) {
+    Timer::tick(DOMAIN_SYNC_TIMER * 1000, function () use ($dbForPlatform, $domains, &$lastSyncUpdate, $app) {
         try {
             $time = DateTime::now();
             $limit = 1000;
@@ -670,7 +591,7 @@ $http->on(Constant::EVENT_TASK, function () use ($register) {
                 if ($latestDocument !== null) {
                     $queries[] =  Query::cursorAfter($latestDocument);
                 }
-                if ($lastSyncUpdate !== null) {
+                if ($lastSyncUpdate != null) {
                     $queries[] = Query::greaterThanEqual('$updatedAt', $lastSyncUpdate);
                 }
                 $results = [];
@@ -678,7 +599,7 @@ $http->on(Constant::EVENT_TASK, function () use ($register) {
                     $authorization = $app->getResource('authorization');
                     $results = $authorization->skip(fn () =>  $dbForPlatform->find('rules', $queries));
                 } catch (Throwable $th) {
-                    Console::error('rules ' . $th->getMessage());
+                    Console::error($th->getMessage());
                 }
 
                 $sum = count($results);
@@ -711,7 +632,7 @@ $http->on(Constant::EVENT_TASK, function () use ($register) {
                         continue;
                     }
 
-                    $riskyDomains->set(md5($domain), ['value' => 1]);
+                    $domains->set(md5($domain), ['value' => 1]);
                 }
                 $latestDocument = !empty(array_key_last($results)) ? $results[array_key_last($results)] : null;
             }

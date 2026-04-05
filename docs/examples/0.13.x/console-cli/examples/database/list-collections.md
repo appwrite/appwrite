@@ -1,0 +1,7 @@
+appwrite database listCollections \
+
+
+
+
+
+

@@ -765,11 +765,17 @@ class Deletes extends Action
                     $databasesToClean
                 ));
             } elseif ($sharedTablesV1) {
+                // Safe delete: Build dynamic queries to exclude project collection IDs from metadata deletion
+                $queries = \array_map(
+                    fn ($id) => Query::notEqual('$id', $id),
+                    $projectCollectionIds
+                );
+
+                $queries[] = Query::orderAsc();
+
                 $this->deleteByGroup(
                     Database::METADATA,
-                    [
-                        Query::orderAsc()
-                    ],
+                    $queries,
                     $dbForProject
                 );
             } elseif ($sharedTablesV2) {

@@ -1,1 +1,0 @@
-List indexes in the collection.

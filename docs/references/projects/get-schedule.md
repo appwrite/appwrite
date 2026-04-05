@@ -1,1 +1,0 @@
-Get a schedule by its unique ID.

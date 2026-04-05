@@ -215,6 +215,51 @@ class Builds extends Action
             throw new \Exception('Deployment not found');
         }
 
+        // Early PR-authorization gate for external contributions
+        $providerRepositoryId = $deployment->getAttribute('providerRepositoryId', '');
+        $providerPullRequestId = $deployment->getAttribute('providerPullRequestId', '');
+        $providerBranch = $deployment->getAttribute('providerBranch', '');
+        $external = !empty($providerPullRequestId) && ($deployment->getAttribute('external', false) === true);
+
+        // Empty providerRepositoryId marks deployment as failed
+        if (empty($providerRepositoryId) && $deployment->getAttribute('type') === 'vcs') {
+            Console::error('Deployment failed: Empty providerRepositoryId for VCS deployment');
+            $deployment->setAttribute('status', 'failed');
+            $deployment->setAttribute('buildLogs', 'Error: Invalid repository configuration');
+            $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                'status' => 'failed',
+                'buildLogs' => 'Error: Invalid repository configuration',
+            ]));
+            $queueForRealtime
+                ->setPayload($deployment->getArrayCopy())
+                ->trigger();
+            return;
+        }
+
+        // External PR authorization check
+        if ($external && !empty($providerRepositoryId)) {
+            // Check if this PR is authorized in the repository document
+            $repository = $dbForProject->findOne('repositories', [
+                Query::equal('providerRepositoryId', [$providerRepositoryId]),
+            ]);
+
+            if (!$repository->isEmpty()) {
+                $authorizedPullRequestIds = $repository->getAttribute('providerPullRequestIds', []);
+                if (!in_array($providerPullRequestId, $authorizedPullRequestIds)) {
+                    // External PR not authorized - remain in waiting state
+                    Console::info("External PR {$providerPullRequestId} not authorized for repository {$providerRepositoryId}");
+                    $deployment->setAttribute('status', 'waiting');
+                    $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                        'status' => 'waiting',
+                    ]));
+                    $queueForRealtime
+                        ->setPayload($deployment->getArrayCopy())
+                        ->trigger();
+                    return;
+                }
+            }
+        }
+
         if ($resource->getCollection() === 'functions' && empty($deployment->getAttribute('entrypoint', ''))) {
             throw new \Exception('Entrypoint for your Appwrite Function is missing. Please specify it when making deployment or update the entrypoint under your function\'s "Settings" > "Configuration" > "Entrypoint".');
         }

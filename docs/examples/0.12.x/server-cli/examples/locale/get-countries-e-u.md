@@ -1,0 +1,1 @@
+appwrite locale getCountriesEU
