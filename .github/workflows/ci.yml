@@ -390,19 +390,7 @@ jobs:
         service: [
           Migrations
         ]
-        include:
-          - service: Databases
-            runner: blacksmith-4vcpu-ubuntu-2404
-          - service: Sites
-            runner: blacksmith-4vcpu-ubuntu-2404
-          - service: Functions
-            runner: blacksmith-4vcpu-ubuntu-2404
-          - service: Avatars
-            runner: blacksmith-4vcpu-ubuntu-2404
-          - service: Realtime
-            runner: blacksmith-4vcpu-ubuntu-2404
-          - service: TablesDB
-            runner: blacksmith-4vcpu-ubuntu-2404
+        # TEMP: include block removed to avoid phantom matrix entries
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
