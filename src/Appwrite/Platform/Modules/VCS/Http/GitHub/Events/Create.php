@@ -231,10 +231,8 @@ class Create extends Action
             $this->createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $external, $dbForPlatform, $authorization, $queueForBuilds, $getProjectDB, $platform);
         } elseif ($action == "closed") {
             // Allowed external contributions cleanup
-
             $providerRepositoryId = $parsedPayload["repositoryId"] ?? '';
-            $providerPullRequestId = $parsedPayload["pullRequestNumber"] ?? '';
-            $external = $parsedPayload["external"] ?? true;
+            // $providerPullRequestId and $external already extracted at method start
 
             if ($external) {
                 $repositories = $authorization->skip(fn () => $dbForPlatform->find('repositories', [

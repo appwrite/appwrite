@@ -204,9 +204,10 @@ class Builds extends Action
             // Validate required fields for PR deployments
             if (empty($providerRepositoryId)) {
                 Console::warning("Empty repository ID for PR #{$providerPullRequestId}, marking as failed");
-                $deployment->setAttribute('status', 'failed');
-                $deployment->setAttribute('buildCompletedAt', DateTime::now());
-                $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+                $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                    'status' => 'failed',
+                    'buildCompletedAt' => DateTime::now(),
+                ]));
                 return;
             }
             
@@ -242,25 +243,14 @@ class Builds extends Action
                     return;
                 }
                 
-                // PR is authorized, update status to 'processing' and proceed with build
-                Console::info("PR #{$providerPullRequestId} is authorized, updating status to processing");
-                $deployment->setAttribute('status', 'processing');
-                $deployment->setAttribute('buildStartedAt', DateTime::now());
-                $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
-                
-                // Update realtime to show build is starting
-                $queueForRealtime
-                    ->setSubscribers(['console'])
-                    ->setProject($project)
-                    ->setEvent("{$resource->getCollection()}.[{$resourceKey}].deployments.[deploymentId].update")
-                    ->setParam($resourceKey, $resource->getId())
-                    ->setParam('deploymentId', $deployment->getId())
-                    ->trigger();
+                // PR is authorized, proceed with build (status will be updated below)
+                Console::info("PR #{$providerPullRequestId} is authorized, proceeding with build");
             } catch (\Throwable $e) {
                 Console::error("Error checking authorization for PR #{$providerPullRequestId}: " . $e->getMessage());
-                $deployment->setAttribute('status', 'failed');
-                $deployment->setAttribute('buildCompletedAt', DateTime::now());
-                $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+                $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                    'status' => 'failed',
+                    'buildCompletedAt' => DateTime::now(),
+                ]));
                 return;
             }
         }

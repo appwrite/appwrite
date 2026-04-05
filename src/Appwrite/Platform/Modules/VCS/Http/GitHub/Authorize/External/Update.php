@@ -107,7 +107,7 @@ class Update extends Action
         
         while ($retries < 10) {
             try {
-                $dbForProject->createDocument('vcsCommentLocks', new Document([
+                $dbForPlatform->createDocument('vcsCommentLocks', new Document([
                     '$id' => $lockId
                 ]));
                 $lockAcquired = true;
@@ -174,7 +174,7 @@ class Update extends Action
             Query::limit(1)
         ]));
 
-        if (!$existingDeployments->isEmpty()) {
+        if (!empty($existingDeployments)) {
             // Re-trigger the existing deployment instead of creating a new one
             $existingDeployment = $existingDeployments[0];
             $resourceId = $existingDeployment->getAttribute('resourceId');
@@ -205,7 +205,7 @@ class Update extends Action
 
         } finally {
             // Always release the lock
-            $authorization->skip(fn () => $dbForProject->deleteDocument('vcsCommentLocks', $lockId));
+            $authorization->skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $lockId));
         }
 
         $response->noContent();

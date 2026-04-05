@@ -273,22 +273,22 @@ trait Deployment
                 }
 
                 // Update commit status BEFORE triggering build job to avoid race condition
-                $resourceName = $resource->getAttribute('name');
-                $projectName = $project->getAttribute('name');
-                $name = "{$resourceName} ({$projectName})";
-                $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-                $hostname = $platform['consoleHostname'] ?? '';
-                
-                if ($isAuthorized) {
-                    $message = 'Build starting...';
-                    $providerTargetUrl = $protocol . '://' . $hostname . "/console/project-" . $project->getAttribute('region', 'default') . "-{$projectId}/{$resourceCollection}/{$resourceType}-{$resourceId}";
-                    $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $providerTargetUrl, $name);
-                    Console::info("Updated commit status to 'pending' for authorized PR #{$providerPullRequestId}");
-                } else {
-                    $authorizeUrl = $protocol . '://' . $hostname . "/console/git/authorize-contributor?projectId={$projectId}&installationId={$installationId}&repositoryId={$repositoryId}&providerPullRequestId={$providerPullRequestId}";
-                    $message = 'Authorization required for external contributor.';
-                    $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $authorizeUrl, $name);
-                    Console::info("Updated commit status to 'pending' for external PR #{$providerPullRequestId}");
+                if (!empty($providerCommitHash) && $resource->getAttribute('providerSilentMode', false) === false) {
+                    $resourceName = $resource->getAttribute('name');
+                    $projectName = $project->getAttribute('name');
+                    $name = "{$resourceName} ({$projectName})";
+                    // Reuse $protocol and $hostname already declared above
+                    
+                    if ($isAuthorized) {
+                        $message = 'Build starting...';
+                        $providerTargetUrl = $protocol . '://' . $hostname . "/console/project-" . $project->getAttribute('region', 'default') . "-{$projectId}/{$resourceCollection}/{$resourceType}-{$resourceId}";
+                        $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $providerTargetUrl, $name);
+                        Console::info("Updated commit status to 'pending' for authorized PR #{$providerPullRequestId}");
+                    } else {
+                        $message = 'Authorization required for external contributor.';
+                        $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $authorizeUrl, $name);
+                        Console::info("Updated commit status to 'pending' for external PR #{$providerPullRequestId}");
+                    }
                 }
 
                 $commands = [];
