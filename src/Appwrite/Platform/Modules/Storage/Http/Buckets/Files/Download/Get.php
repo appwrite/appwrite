@@ -209,6 +209,7 @@ class Get extends Action
         }
 
         if ($size > APP_STORAGE_READ_BUFFER) {
+            $response->addHeader('Content-Length', (string) $size);
             for ($i = 0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
                 $response->chunk(
                     $deviceForFiles->read(
