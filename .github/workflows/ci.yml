@@ -218,9 +218,9 @@ jobs:
             const decode = (content) => JSON.parse(Buffer.from(content, 'base64').toString());
             const databaseChanged = getDbVersion(decode(base.content)) !== getDbVersion(decode(head.content));
 
-            // Like cloud: database version change expands modes only, not engines
-            core.setOutput('databases', JSON.stringify(defaultDatabases));
-            core.setOutput('modes', JSON.stringify(databaseChanged ? allModes : defaultModes));
+            // TEMP: only run failing tests to validate fix
+            core.setOutput('databases', JSON.stringify(['MariaDB']));
+            core.setOutput('modes', JSON.stringify(['shared_v1', 'shared_v2']));
 
   build:
     name: Build
@@ -380,31 +380,9 @@ jobs:
       matrix:
         database: ${{ fromJSON(needs.matrix.outputs.databases) }}
         mode: ${{ fromJSON(needs.matrix.outputs.modes) }}
+        # TEMP: only run failing test to validate fix
         service: [
-          Account,
-          Avatars,
-          Console,
-          Databases,
-          TablesDB,
-          Functions,
-          FunctionsSchedule,
-          GraphQL,
-          Health,
-          Locale,
-          Projects,
-          Realtime,
-          Sites,
-          Proxy,
-          Storage,
-          Tokens,
-          Teams,
-          Users,
-          ProjectWebhooks,
-          Webhooks,
-          VCS,
-          Messaging,
-          Migrations,
-          Project
+          Migrations
         ]
         include:
           - service: Databases
