@@ -194,10 +194,16 @@ class Get extends Action
 
         $size = $deviceForFiles->getFileSize($path);
         if ($size > APP_STORAGE_READ_BUFFER) {
-            $response->stream(
-                fn (int $offset, int $length) => $deviceForFiles->read($path, $offset, $length),
-                $size
-            );
+            for ($i = 0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
+                $response->chunk(
+                    $deviceForFiles->read(
+                        $path,
+                        ($i * MAX_OUTPUT_CHUNK_SIZE),
+                        min(MAX_OUTPUT_CHUNK_SIZE, $size - ($i * MAX_OUTPUT_CHUNK_SIZE))
+                    ),
+                    (($i + 1) * MAX_OUTPUT_CHUNK_SIZE) >= $size
+                );
+            }
         } else {
             $response->send($deviceForFiles->read($path));
         }

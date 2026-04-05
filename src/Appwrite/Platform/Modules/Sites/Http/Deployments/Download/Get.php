@@ -132,10 +132,16 @@ class Get extends Action
         }
 
         if ($size > APP_STORAGE_READ_BUFFER) {
-            $response->stream(
-                fn (int $offset, int $length) => $device->read($path, $offset, $length),
-                $size
-            );
+            for ($i = 0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
+                $response->chunk(
+                    $device->read(
+                        $path,
+                        ($i * MAX_OUTPUT_CHUNK_SIZE),
+                        min(MAX_OUTPUT_CHUNK_SIZE, $size - ($i * MAX_OUTPUT_CHUNK_SIZE))
+                    ),
+                    (($i + 1) * MAX_OUTPUT_CHUNK_SIZE) >= $size
+                );
+            }
         } else {
             $response->send($device->read($path));
         }
