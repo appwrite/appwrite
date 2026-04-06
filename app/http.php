@@ -7,6 +7,7 @@ $registerRequestResources = require __DIR__ . '/init/resources/request.php';
 
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Swoole\Runtime;
 use Swoole\Table;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Adapter\SQL as AuditAdapterSQL;
@@ -33,6 +34,8 @@ use function Swoole\Coroutine\run;
 
 $files = new Files();
 $files->load(__DIR__ . '/../public');
+
+Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
 $certifiedDomains = new Table(100_000);
 $certifiedDomains->column('value', Table::TYPE_INT, 1);
