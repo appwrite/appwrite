@@ -3,6 +3,7 @@
 namespace Appwrite\Utopia\Http\Adapter\SwooleCoroutine;
 
 use Swoole\Coroutine;
+use Swoole\Coroutine\Channel;
 use Swoole\Coroutine\Http\Server as SwooleServer;
 use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
@@ -17,22 +18,40 @@ class Server extends Adapter
 
     protected SwooleServer $server;
     protected Container $container;
+    protected ?Channel $requestSemaphore = null;
 
     /** @var callable|null */
     protected $onStartCallback = null;
 
-    public function __construct(string $host, ?string $port = null, array $settings = [], ?Container $container = null)
-    {
+    public function __construct(
+        string $host,
+        ?string $port = null,
+        array $settings = [],
+        ?Container $container = null,
+        ?int $maxConcurrency = null,
+    ) {
         $this->server = new SwooleServer($host, $port, false, true);
         $this->server->set(\array_merge($settings, [
             'http_parse_cookie' => false,
         ]));
         $this->container = $container ?? new Container();
+
+        if ($maxConcurrency !== null && $maxConcurrency > 0) {
+            $this->requestSemaphore = new Channel($maxConcurrency);
+
+            for ($i = 0; $i < $maxConcurrency; $i++) {
+                $this->requestSemaphore->push(true);
+            }
+        }
     }
 
     public function onRequest(callable $callback)
     {
         $this->server->handle('/', function (SwooleRequest $request, SwooleResponse $response) use ($callback) {
+            if ($this->requestSemaphore !== null) {
+                $this->requestSemaphore->pop();
+            }
+
             $requestContainer = new Container($this->container);
             $requestContainer->set('swooleRequest', fn () => $request);
             $requestContainer->set('swooleResponse', fn () => $response);
@@ -43,6 +62,10 @@ class Server extends Adapter
                 \call_user_func($callback, new Request($request), new Response($response));
             } finally {
                 unset(Coroutine::getContext()[self::REQUEST_CONTAINER_CONTEXT_KEY]);
+
+                if ($this->requestSemaphore !== null) {
+                    $this->requestSemaphore->push(true);
+                }
             }
         });
     }

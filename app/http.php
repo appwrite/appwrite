@@ -42,7 +42,30 @@ $container->set('pools', function ($register) {
     return $register->get('pools');
 }, ['register']);
 
+function parseMemoryLimitToBytes(string|false $memoryLimit): int
+{
+    if ($memoryLimit === false || $memoryLimit === '' || $memoryLimit === '-1') {
+        return 0;
+    }
+
+    $memoryLimit = trim($memoryLimit);
+    $value = (int) $memoryLimit;
+    $unit = strtolower(substr($memoryLimit, -1));
+
+    return match ($unit) {
+        'g' => $value * 1024 * 1024 * 1024,
+        'm' => $value * 1024 * 1024,
+        'k' => $value * 1024,
+        default => $value,
+    };
+}
+
+$memoryLimitBytes = parseMemoryLimitToBytes(\ini_get('memory_limit'));
 $payloadSize = 12 * (1024 * 1024); // 12MB - adding slight buffer for headers and other data that might be sent with the payload - update later with valid testing
+$requestMemoryBudget = $payloadSize * 8;
+$memoryReserve = 256 * 1024 * 1024;
+$computedMaxConcurrency = max(1, (int) floor(max($memoryLimitBytes - $memoryReserve, $requestMemoryBudget) / $requestMemoryBudget));
+$maxConcurrency = (int) System::getEnv('_APP_HTTP_COROUTINE_MAX_CONCURRENCY', $computedMaxConcurrency);
 
 $swooleAdapter = new Server(
     host: "0.0.0.0",
@@ -54,6 +77,7 @@ $swooleAdapter = new Server(
         'output_buffer_size' => $payloadSize,
     ],
     container: $container,
+    maxConcurrency: $maxConcurrency,
 );
 
 $container->set('container', fn () => fn () => $swooleAdapter->getContainer());
@@ -158,7 +182,7 @@ function createDatabase(Http $app, string $resourceKey, string $dbName, array $c
 
 // The coroutine adapter does not expose process-worker hooks, so startup work stays in
 // a single onStart callback and request routing falls back to coroutine scheduling.
-$swooleAdapter->onStart(function () use ($payloadSize, $swooleAdapter) {
+$swooleAdapter->onStart(function () use ($payloadSize, $swooleAdapter, $maxConcurrency) {
     $app = new Http($swooleAdapter, 'UTC');
 
     /** @var \Utopia\Pools\Group $pools */
@@ -366,6 +390,7 @@ $swooleAdapter->onStart(function () use ($payloadSize, $swooleAdapter) {
     Span::init('http.server.start');
     Span::add('server.adapter', 'swoole-coroutine');
     Span::add('server.payload_size', $payloadSize);
+    Span::add('server.max_concurrency', $maxConcurrency);
     Span::current()?->finish();
 });
 
