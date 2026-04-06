@@ -218,8 +218,9 @@ jobs:
             const decode = (content) => JSON.parse(Buffer.from(content, 'base64').toString());
             const databaseChanged = getDbVersion(decode(base.content)) !== getDbVersion(decode(head.content));
 
-            core.setOutput('databases', JSON.stringify(databaseChanged ? allDatabases : defaultDatabases));
-            core.setOutput('modes', JSON.stringify(databaseChanged ? allModes : defaultModes));
+            // TEMP: only run failing MongoDB shared tests
+            core.setOutput('databases', JSON.stringify(['MongoDB']));
+            core.setOutput('modes', JSON.stringify(['shared_v1', 'shared_v2']));
 
   build:
     name: Build
@@ -379,45 +380,16 @@ jobs:
       matrix:
         database: ${{ fromJSON(needs.matrix.outputs.databases) }}
         mode: ${{ fromJSON(needs.matrix.outputs.modes) }}
+        # TEMP: only the 14 failing services
         service: [
-          Account,
-          Avatars,
-          Console,
           Databases,
           TablesDB,
           Functions,
-          FunctionsSchedule,
           GraphQL,
-          Health,
-          Locale,
-          Projects,
           Realtime,
-          Sites,
-          Proxy,
-          Storage,
-          Tokens,
-          Teams,
-          Users,
           ProjectWebhooks,
-          Webhooks,
-          VCS,
-          Messaging,
-          Migrations,
-          Project
+          Migrations
         ]
-        include:
-          - service: Databases
-            runner: blacksmith-4vcpu-ubuntu-2404
-          - service: Sites
-            runner: blacksmith-4vcpu-ubuntu-2404
-          - service: Functions
-            runner: blacksmith-4vcpu-ubuntu-2404
-          - service: Avatars
-            runner: blacksmith-4vcpu-ubuntu-2404
-          - service: Realtime
-            runner: blacksmith-4vcpu-ubuntu-2404
-          - service: TablesDB
-            runner: blacksmith-4vcpu-ubuntu-2404
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
