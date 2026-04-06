@@ -97,7 +97,10 @@ class Get extends Action
         $space = 0;
 
         $linkTags = [];
-        $html = \preg_replace('/<!--.*?-->/s', '', $res->getBody()) ?? $res->getBody();
+        $html = $res->getBody();
+        $html = \preg_replace('/<!--.*?-->/s', '', $html) ?? $html;
+        $html = \preg_replace('/<script\b[^>]*>.*?<\/script>/is', '', $html) ?? $html;
+        $html = \preg_replace('/<style\b[^>]*>.*?<\/style>/is', '', $html) ?? $html;
         \preg_match_all('/<link\b[^>]*>/i', $html, $linkTags);
 
         foreach ($linkTags[0] ?? [] as $tag) {
