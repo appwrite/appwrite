@@ -251,6 +251,11 @@ $register->set('pools', function () {
     $workerCount = intval(System::getEnv('_APP_CPU_NUM', swoole_cpu_num())) * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
     $processCount = $isCoroutineHttp ? 1 : $workerCount;
     $poolSize = max(1, (int)($instanceConnections / $processCount));
+    // The coroutine HTTP server collapses worker fan-out into one process, but the hot
+    // Redis-backed request paths still see roughly the same concurrent pressure as before.
+    // Size these pools to match the previous worker-level concurrency instead of the much
+    // smaller shared DB budget used by other connection types.
+    $redisHotPathPoolSize = $isCoroutineHttp ? max($poolSize, $workerCount) : $poolSize;
 
     foreach ($connections as $key => $connection) {
         $type = $connection['type'] ?? '';
@@ -337,7 +342,11 @@ $register->set('pools', function () {
 
             $poolAdapter = System::getEnv('_APP_POOL_ADAPTER', default: 'stack') === 'swoole' ? new SwoolePool() : new StackPool();
 
-            $pool = new Pool($poolAdapter, $name, $poolSize, function () use ($type, $resource, $dsn) {
+            $currentPoolSize = \in_array($type, ['cache', 'publisher', 'consumer', 'pubsub'], true)
+                ? $redisHotPathPoolSize
+                : $poolSize;
+
+            $pool = new Pool($poolAdapter, $name, $currentPoolSize, function () use ($type, $resource, $dsn) {
                 // Get Adapter
                 switch ($type) {
                     case 'database':

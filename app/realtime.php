@@ -639,6 +639,17 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
     $connectionContainer->set('response', fn () => $response);
 
     $registerRequestResources($connectionContainer);
+    // Realtime keeps a coroutine-local persistent Redis connection for abuse checks.
+    // Overriding the request-scoped HTTP resource avoids opening a fresh TCP socket on
+    // every websocket connection under load.
+    $connectionContainer->set('redis', function () {
+        return getRedis();
+    }, []);
+    $connectionContainer->set('timelimit', function () {
+        return function (string $key, int $limit, int $time) {
+            return new TimeLimitRedis($key, $limit, $time, getRedis());
+        };
+    }, []);
 
     $project = null;
     $logUser = null;
