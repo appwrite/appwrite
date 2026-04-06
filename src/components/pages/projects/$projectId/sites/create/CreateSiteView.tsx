@@ -700,7 +700,7 @@ export function CreateSiteView() {
                 </Button>
               </PopoverTrigger>
               <PopoverContent
-                className="w-[200px] p-0 z-[100]"
+                className="w-[200px] p-0"
                 align="start"
                 sideOffset={4}
               >
@@ -759,7 +759,7 @@ export function CreateSiteView() {
                 </Button>
               </PopoverTrigger>
               <PopoverContent
-                className="w-[220px] p-0 z-[100]"
+                className="w-[220px] p-0"
                 align="start"
                 sideOffset={4}
               >
