@@ -49,6 +49,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
+use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
 use Utopia\Http\Http;
 use Utopia\Locale\Locale;
@@ -345,6 +346,52 @@ return function (Container $container): void {
 
         return array_unique($allowed);
     }, ['platform', 'project']);
+
+    /**
+     * Whether the request origin is verified against the request hostname.
+     */
+    $container->set('domainVerification', function (Request $request) {
+        $origin = \parse_url($request->getOrigin($request->getReferer('')), PHP_URL_HOST);
+        $selfDomain = new Domain($request->getHostname());
+        $endDomain = new Domain((string) $origin);
+
+        return ($selfDomain->getRegisterable() === $endDomain->getRegisterable())
+            && $endDomain->getRegisterable() !== '';
+    }, ['request']);
+
+    /**
+     * Cookie domain for the current request.
+     */
+    $container->set('cookieDomain', function (Request $request, Document $project) {
+        $localHosts = ['localhost', 'localhost:' . $request->getPort()];
+
+        $migrationHost = System::getEnv('_APP_MIGRATION_HOST');
+        if (!empty($migrationHost)) {
+            // Treat the migration host like localhost because internal migration and CI
+            // traffic may use it before a public domain is configured.
+            $localHosts[] = $migrationHost;
+            $localHosts[] = $migrationHost . ':' . $request->getPort();
+        }
+
+        $hostname = $request->getHostname();
+        $isLocalHost = \in_array($hostname, $localHosts, true);
+        $isIpAddress = \filter_var($hostname, FILTER_VALIDATE_IP) !== false;
+
+        if ($isLocalHost || $isIpAddress) {
+            return;
+        }
+
+        $isConsoleProject = $project->getAttribute('$id', '') === 'console';
+        $isConsoleRootSession = System::getEnv('_APP_CONSOLE_ROOT_SESSION', 'disabled') === 'enabled';
+
+        if ($isConsoleProject && $isConsoleRootSession) {
+            $domain = new Domain($hostname);
+
+            return '.' . $domain->getRegisterable();
+        }
+
+        return '.' . $hostname;
+    }, ['request', 'project']);
 
     /**
      * Rule associated with a request origin.

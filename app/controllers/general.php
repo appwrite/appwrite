@@ -61,6 +61,8 @@ use Utopia\System\System;
 use Utopia\Validator;
 use Utopia\Validator\Text;
 
+Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
+
 function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Event $queueForEvents, Bus $bus, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, Authorization $authorization, ?Key $apiKey, DeleteEvent $queueForDeletes, int $executionsRetentionCount)
 {
     $host = $request->getHostname() ?? '';
@@ -901,6 +903,8 @@ Http::init()
 
         $migrationHost = System::getEnv('_APP_MIGRATION_HOST');
         if (!empty($migrationHost)) {
+            // Treat the migration host like localhost because internal migration and
+            // CI traffic may use it before a public domain is configured.
             $localHosts[] = $migrationHost;
             $localHosts[] = $migrationHost.':'.$request->getPort();
         }
@@ -1467,7 +1471,9 @@ Http::error()
         try {
             $cors = $utopia->getResource('cors');
             foreach ($cors->headers($request->getOrigin()) as $name => $value) {
-                $response->addHeader($name, $value, override: true);
+                $response
+                    ->removeHeader($name)
+                    ->addHeader($name, $value);
             }
         } catch (Throwable) {
             // Degrade gracefully - error response without CORS is no worse than before.

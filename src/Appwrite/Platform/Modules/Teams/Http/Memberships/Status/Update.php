@@ -14,6 +14,7 @@ use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
+use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -22,9 +23,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
-use Utopia\Domains\Domain;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\System\System;
 use Utopia\Validator\Text;
 
 class Update extends Action
@@ -75,10 +74,12 @@ class Update extends Action
             ->inject('queueForEvents')
             ->inject('store')
             ->inject('proofForToken')
+            ->inject('domainVerification')
+            ->inject('cookieDomain')
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Authorization $authorization, $project, Reader $geodb, Event $queueForEvents, Store $store, Token $proofForToken)
+    public function action(string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Authorization $authorization, $project, Reader $geodb, Event $queueForEvents, Store $store, Token $proofForToken, bool $domainVerification, ?string $cookieDomain)
     {
         $protocol = $request->getProtocol();
 
@@ -163,11 +164,9 @@ class Update extends Action
                 ->setProperty('secret', $secret)
                 ->encode();
 
-            if (!$this->isDomainVerified($request)) {
+            if (!$domainVerification) {
                 $response->addHeader('X-Fallback-Cookies', \json_encode([$store->getKey() => $encoded]));
             }
-
-            $cookieDomain = $this->getCookieDomain($request, $project);
 
             $response
                 ->addCookie(
@@ -187,7 +186,7 @@ class Update extends Action
                     domain: $cookieDomain,
                     secure: ('https' === $protocol),
                     httponly: true,
-                    sameSite: Response::COOKIE_SAMESITE_NONE
+                    sameSite: Config::getParam('cookieSamesite')
                 )
             ;
         }
@@ -211,44 +210,5 @@ class Update extends Action
                 ->setAttribute('userEmail', $user->getAttribute('email')),
             Response::MODEL_MEMBERSHIP
         );
-    }
-
-    private function isDomainVerified(Request $request): bool
-    {
-        $origin = \parse_url($request->getOrigin($request->getReferer('')), PHP_URL_HOST);
-        $selfDomain = new Domain($request->getHostname());
-        $endDomain = new Domain((string) $origin);
-
-        return ($selfDomain->getRegisterable() === $endDomain->getRegisterable())
-            && $endDomain->getRegisterable() !== '';
-    }
-
-    private function getCookieDomain(Request $request, Document $project): ?string
-    {
-        $localHosts = ['localhost', 'localhost:' . $request->getPort()];
-
-        $migrationHost = System::getEnv('_APP_MIGRATION_HOST');
-        if (!empty($migrationHost)) {
-            $localHosts[] = $migrationHost;
-            $localHosts[] = $migrationHost . ':' . $request->getPort();
-        }
-
-        $hostname = $request->getHostname();
-        $isLocalHost = \in_array($hostname, $localHosts, true);
-        $isIpAddress = \filter_var($hostname, FILTER_VALIDATE_IP) !== false;
-
-        if ($isLocalHost || $isIpAddress) {
-            return null;
-        }
-
-        $isConsoleProject = $project->getAttribute('$id', '') === 'console';
-        $isConsoleRootSession = System::getEnv('_APP_CONSOLE_ROOT_SESSION', 'disabled') === 'enabled';
-
-        if ($isConsoleProject && $isConsoleRootSession) {
-            $domain = new Domain($hostname);
-            return '.' . $domain->getRegisterable();
-        }
-
-        return '.' . $hostname;
     }
 }
