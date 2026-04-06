@@ -74,13 +74,6 @@ if (
 }
 
 $payloadSize = 12 * (1024 * 1024); // 12MB - adding slight buffer for headers and other data that might be sent with the payload - update later with valid testing
-$requestMemoryBudget = max($payloadSize * 8, 256 * 1024 * 1024);
-$memoryReserve = 256 * 1024 * 1024;
-$availableRequestMemory = max($memoryLimitBytes - $memoryReserve, 0);
-$computedMaxConcurrency = $availableRequestMemory > 0
-    ? max(2, (int) floor($availableRequestMemory / $requestMemoryBudget))
-    : 2;
-$maxConcurrency = max(2, (int) System::getEnv('_APP_HTTP_COROUTINE_MAX_CONCURRENCY', $computedMaxConcurrency));
 
 $swooleAdapter = new Server(
     host: "0.0.0.0",
@@ -92,7 +85,6 @@ $swooleAdapter = new Server(
         'output_buffer_size' => $payloadSize,
     ],
     container: $container,
-    maxConcurrency: $maxConcurrency,
 );
 
 $container->set('container', fn () => fn () => $swooleAdapter->getContainer());
@@ -197,7 +189,7 @@ function createDatabase(Http $app, string $resourceKey, string $dbName, array $c
 
 // The coroutine adapter does not expose process-worker hooks, so startup work stays in
 // a single onStart callback and request routing falls back to coroutine scheduling.
-$swooleAdapter->onStart(function () use ($payloadSize, $swooleAdapter, $maxConcurrency) {
+$swooleAdapter->onStart(function () use ($payloadSize, $swooleAdapter) {
     $app = new Http($swooleAdapter, 'UTC');
 
     /** @var \Utopia\Pools\Group $pools */
@@ -406,7 +398,6 @@ $swooleAdapter->onStart(function () use ($payloadSize, $swooleAdapter, $maxConcu
     Span::add('server.adapter', 'swoole-coroutine');
     Span::add('server.memory_limit', \ini_get('memory_limit'));
     Span::add('server.payload_size', $payloadSize);
-    Span::add('server.max_concurrency', $maxConcurrency);
     Span::current()?->finish();
 });
 
