@@ -49,7 +49,6 @@ class Action extends PlatformAction
 
         $image = new Image(\file_get_contents($path));
         $image->crop((int) $width, (int) $height);
-        $output = (empty($output)) ? $type : $output;
         $data = $image->output($output, $quality);
         $response
             ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days

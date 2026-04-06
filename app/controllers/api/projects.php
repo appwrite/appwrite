@@ -1570,7 +1570,7 @@ Http::post('/v1/projects/:projectId/smtp/tests')
                 ->trigger();
         }
 
-        return $response->noContent();
+        $response->noContent();
     });
 
 Http::get('/v1/projects/:projectId/templates/sms/:type/:locale')

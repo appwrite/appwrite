@@ -74,10 +74,12 @@ class Update extends Action
             ->inject('queueForEvents')
             ->inject('store')
             ->inject('proofForToken')
+            ->inject('domainVerification')
+            ->inject('cookieDomain')
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Authorization $authorization, $project, Reader $geodb, Event $queueForEvents, Store $store, Token $proofForToken)
+    public function action(string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Authorization $authorization, $project, Reader $geodb, Event $queueForEvents, Store $store, Token $proofForToken, bool $domainVerification, ?string $cookieDomain)
     {
         $protocol = $request->getProtocol();
 
@@ -162,7 +164,7 @@ class Update extends Action
                 ->setProperty('secret', $secret)
                 ->encode();
 
-            if (!Config::getParam('domainVerification')) {
+            if (!$domainVerification) {
                 $response->addHeader('X-Fallback-Cookies', \json_encode([$store->getKey() => $encoded]));
             }
 
@@ -172,7 +174,7 @@ class Update extends Action
                     value: $encoded,
                     expire: (new \DateTime($expire))->getTimestamp(),
                     path: '/',
-                    domain: Config::getParam('cookieDomain'),
+                    domain: $cookieDomain,
                     secure: ('https' === $protocol),
                     httponly: true
                 )
@@ -181,7 +183,7 @@ class Update extends Action
                     value: $encoded,
                     expire: (new \DateTime($expire))->getTimestamp(),
                     path: '/',
-                    domain: Config::getParam('cookieDomain'),
+                    domain: $cookieDomain,
                     secure: ('https' === $protocol),
                     httponly: true,
                     sameSite: Config::getParam('cookieSamesite')

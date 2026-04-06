@@ -478,6 +478,10 @@ body {
     overflow: hidden;
 }
 
+.installer-page[data-upgrade='true'] .installer-step {
+    min-height: 0;
+}
+
 .action-shell {
     display: flex;
     flex-direction: column;
@@ -1807,4 +1811,93 @@ body {
     .action-bar {
         gap: var(--gap-s);
     }
+}
+
+.migration-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--gap-l);
+    padding: var(--space-6);
+    background: var(--bgcolor-neutral-default);
+    border-radius: var(--border-radius-m);
+    outline: var(--border-width-s) solid var(--border-neutral);
+    outline-offset: calc(var(--border-width-s) * -1);
+    cursor: pointer;
+    transition: outline-color 0.15s ease-in-out;
+}
+
+.migration-option:hover {
+    outline-color: var(--border-neutral-stronger);
+}
+
+.migration-option-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.migration-switch {
+    flex-shrink: 0;
+}
+
+.migration-switch-track {
+    position: relative;
+    display: block;
+    width: 32px;
+    height: 20px;
+    border-radius: 10px;
+    background: var(--bgcolor-neutral-invert-weaker);
+    transition: background 0.15s ease-in-out;
+}
+
+.migration-switch-thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--bgcolor-neutral-primary);
+    transition: transform 0.15s ease-in-out;
+}
+
+#run-migration:checked ~ .migration-switch-track {
+    background: var(--bgcolor-neutral-invert-weak);
+}
+
+#run-migration:checked ~ .migration-switch-track .migration-switch-thumb {
+    transform: translateX(12px);
+}
+
+#run-migration:focus-visible ~ .migration-switch-track {
+    box-shadow: 0 0 0 var(--border-width-l) var(--border-focus);
+}
+
+.migration-hint {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--gap-s);
+    padding: 0 var(--space-2);
+}
+
+.migration-hint-icon {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    color: var(--fgcolor-neutral-tertiary);
+    margin-top: 1px;
+}
+
+.migration-hint-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.migration-code {
+    padding: 1px 4px;
+    border-radius: var(--border-radius-xs, 4px);
+    background: var(--bgcolor-neutral-secondary);
+    font-family: monospace;
+    font-size: inherit;
 }

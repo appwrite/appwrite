@@ -26,8 +26,8 @@ class MessagingTest extends Scope
     protected function setupProviders(): array
     {
         $key = $this->getProject()['$id'];
-        if (!empty(static::$cachedProviders[$key])) {
-            return static::$cachedProviders[$key];
+        if (!empty(self::$cachedProviders[$key])) {
+            return self::$cachedProviders[$key];
         }
 
         $providersParams = [
@@ -128,15 +128,15 @@ class MessagingTest extends Scope
             $this->assertEquals($providersParams[$providerKey]['name'], $response['body']['data']['messagingCreate' . $providerKey . 'Provider']['name']);
         }
 
-        static::$cachedProviders[$key] = $providers;
+        self::$cachedProviders[$key] = $providers;
         return $providers;
     }
 
     protected function setupUpdatedProviders(): array
     {
         $key = $this->getProject()['$id'] . '_updated';
-        if (!empty(static::$cachedProviders[$key])) {
-            return static::$cachedProviders[$key];
+        if (!empty(self::$cachedProviders[$key])) {
+            return self::$cachedProviders[$key];
         }
 
         $providers = $this->setupProviders();
@@ -247,15 +247,15 @@ class MessagingTest extends Scope
         $this->assertEquals('Mailgun2', $response['body']['data']['messagingUpdateMailgunProvider']['name']);
         $this->assertEquals(false, $response['body']['data']['messagingUpdateMailgunProvider']['enabled']);
 
-        static::$cachedProviders[$key] = $providers;
+        self::$cachedProviders[$key] = $providers;
         return $providers;
     }
 
     protected function setupTopic(): array
     {
         $key = $this->getProject()['$id'];
-        if (!empty(static::$cachedTopic[$key])) {
-            return static::$cachedTopic[$key];
+        if (!empty(self::$cachedTopic[$key])) {
+            return self::$cachedTopic[$key];
         }
 
         $query = $this->getQuery(self::CREATE_TOPIC);
@@ -275,15 +275,15 @@ class MessagingTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('topic1', $response['body']['data']['messagingCreateTopic']['name']);
 
-        static::$cachedTopic[$key] = $response['body']['data']['messagingCreateTopic'];
-        return static::$cachedTopic[$key];
+        self::$cachedTopic[$key] = $response['body']['data']['messagingCreateTopic'];
+        return self::$cachedTopic[$key];
     }
 
     protected function setupUpdatedTopic(): string
     {
         $key = $this->getProject()['$id'] . '_updated';
-        if (!empty(static::$cachedTopic[$key])) {
-            return static::$cachedTopic[$key];
+        if (!empty(self::$cachedTopic[$key])) {
+            return self::$cachedTopic[$key];
         }
 
         $topic = $this->setupTopic();
@@ -306,15 +306,15 @@ class MessagingTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('topic2', $response['body']['data']['messagingUpdateTopic']['name']);
 
-        static::$cachedTopic[$key] = $topicId;
+        self::$cachedTopic[$key] = $topicId;
         return $topicId;
     }
 
     protected function setupSubscriber(): array
     {
         $key = $this->getProject()['$id'];
-        if (!empty(static::$cachedSubscriber[$key])) {
-            return static::$cachedSubscriber[$key];
+        if (!empty(self::$cachedSubscriber[$key])) {
+            return self::$cachedSubscriber[$key];
         }
 
         $topic = $this->setupTopic();
@@ -386,15 +386,15 @@ class MessagingTest extends Scope
         $this->assertEquals($response['body']['data']['messagingCreateSubscriber']['targetId'], $targetId);
         $this->assertEquals($response['body']['data']['messagingCreateSubscriber']['target']['userId'], $userId);
 
-        static::$cachedSubscriber[$key] = $response['body']['data']['messagingCreateSubscriber'];
-        return static::$cachedSubscriber[$key];
+        self::$cachedSubscriber[$key] = $response['body']['data']['messagingCreateSubscriber'];
+        return self::$cachedSubscriber[$key];
     }
 
     protected function setupEmail(): array
     {
         $key = $this->getProject()['$id'];
-        if (!empty(static::$cachedEmail[$key])) {
-            return static::$cachedEmail[$key];
+        if (!empty(self::$cachedEmail[$key])) {
+            return self::$cachedEmail[$key];
         }
 
         if (empty(System::getEnv('_APP_MESSAGE_EMAIL_TEST_DSN'))) {
@@ -409,7 +409,7 @@ class MessagingTest extends Scope
         $apiKey = $emailDSN->getPassword();
         $domain = $emailDSN->getUser();
 
-        if (empty($to) || empty($from) || empty($apiKey) || empty($domain) || empty($isEuRegion)) {
+        if (empty($to) || empty($fromName) || empty($fromEmail) || empty($apiKey) || empty($domain) || empty($isEuRegion)) {
             $this->markTestSkipped('Email provider not configured');
         }
 
@@ -550,15 +550,15 @@ class MessagingTest extends Scope
         $this->assertEquals(1, $message['body']['data']['messagingGetMessage']['deliveredTotal']);
         $this->assertEquals(0, \count($message['body']['data']['messagingGetMessage']['deliveryErrors']));
 
-        static::$cachedEmail[$key] = $message['body']['data']['messagingGetMessage'];
-        return static::$cachedEmail[$key];
+        self::$cachedEmail[$key] = $message['body']['data']['messagingGetMessage'];
+        return self::$cachedEmail[$key];
     }
 
     protected function setupSms(): array
     {
         $key = $this->getProject()['$id'];
-        if (!empty(static::$cachedSms[$key])) {
-            return static::$cachedSms[$key];
+        if (!empty(self::$cachedSms[$key])) {
+            return self::$cachedSms[$key];
         }
 
         if (empty(System::getEnv('_APP_MESSAGE_SMS_TEST_DSN'))) {
@@ -709,15 +709,15 @@ class MessagingTest extends Scope
         $this->assertEquals(1, $message['body']['data']['messagingGetMessage']['deliveredTotal']);
         $this->assertEquals(0, \count($message['body']['data']['messagingGetMessage']['deliveryErrors']));
 
-        static::$cachedSms[$key] = $message['body']['data']['messagingGetMessage'];
-        return static::$cachedSms[$key];
+        self::$cachedSms[$key] = $message['body']['data']['messagingGetMessage'];
+        return self::$cachedSms[$key];
     }
 
     protected function setupPush(): array
     {
         $key = $this->getProject()['$id'];
-        if (!empty(static::$cachedPush[$key])) {
-            return static::$cachedPush[$key];
+        if (!empty(self::$cachedPush[$key])) {
+            return self::$cachedPush[$key];
         }
 
         if (empty(System::getEnv('_APP_MESSAGE_PUSH_TEST_DSN'))) {
@@ -870,8 +870,8 @@ class MessagingTest extends Scope
         $this->assertEquals(1, $message['body']['data']['messagingGetMessage']['deliveredTotal']);
         $this->assertEquals(0, \count($message['body']['data']['messagingGetMessage']['deliveryErrors']));
 
-        static::$cachedPush[$key] = $message['body']['data']['messagingGetMessage'];
-        return static::$cachedPush[$key];
+        self::$cachedPush[$key] = $message['body']['data']['messagingGetMessage'];
+        return self::$cachedPush[$key];
     }
 
     public function testCreateProviders(): void
@@ -945,8 +945,8 @@ class MessagingTest extends Scope
 
         // Clear cache after deletion
         $key = $this->getProject()['$id'];
-        static::$cachedProviders[$key] = [];
-        static::$cachedProviders[$key . '_updated'] = [];
+        self::$cachedProviders[$key] = [];
+        self::$cachedProviders[$key . '_updated'] = [];
     }
 
     public function testCreateTopic(): void
@@ -1081,7 +1081,7 @@ class MessagingTest extends Scope
 
         // Clear cache after deletion
         $key = $this->getProject()['$id'];
-        static::$cachedSubscriber[$key] = [];
+        self::$cachedSubscriber[$key] = [];
     }
 
     public function testDeleteTopic()
@@ -1105,8 +1105,8 @@ class MessagingTest extends Scope
 
         // Clear cache after deletion
         $key = $this->getProject()['$id'];
-        static::$cachedTopic[$key] = [];
-        static::$cachedTopic[$key . '_updated'] = [];
+        self::$cachedTopic[$key] = [];
+        self::$cachedTopic[$key . '_updated'] = [];
     }
 
     public function testSendEmail(): void

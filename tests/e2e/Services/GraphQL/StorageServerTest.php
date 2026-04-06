@@ -23,8 +23,8 @@ class StorageServerTest extends Scope
     protected function setupBucket(): array
     {
         $key = $this->getProject()['$id'];
-        if (!empty(static::$cachedBucket[$key])) {
-            return static::$cachedBucket[$key];
+        if (!empty(self::$cachedBucket[$key])) {
+            return self::$cachedBucket[$key];
         }
 
         $projectId = $this->getProject()['$id'];
@@ -54,15 +54,15 @@ class StorageServerTest extends Scope
         $bucket = $bucket['body']['data']['storageCreateBucket'];
         $this->assertEquals('Actors', $bucket['name']);
 
-        static::$cachedBucket[$key] = $bucket;
+        self::$cachedBucket[$key] = $bucket;
         return $bucket;
     }
 
     protected function setupFile(): array
     {
         $key = $this->getProject()['$id'];
-        if (!empty(static::$cachedFile[$key])) {
-            return static::$cachedFile[$key];
+        if (!empty(self::$cachedFile[$key])) {
+            return self::$cachedFile[$key];
         }
 
         $bucket = $this->setupBucket();
@@ -98,8 +98,8 @@ class StorageServerTest extends Scope
         $this->assertIsArray($file['body']['data']);
         $this->assertArrayNotHasKey('errors', $file['body']);
 
-        static::$cachedFile[$key] = $file['body']['data']['storageCreateFile'];
-        return static::$cachedFile[$key];
+        self::$cachedFile[$key] = $file['body']['data']['storageCreateFile'];
+        return self::$cachedFile[$key];
     }
 
     public function testCreateBucket(): void
@@ -291,6 +291,8 @@ class StorageServerTest extends Scope
         ], $this->getHeaders()), $gqlPayload);
 
         $this->assertEquals(47218, \strlen($file['body']));
+
+        return $file;
     }
 
     /**
@@ -413,7 +415,7 @@ class StorageServerTest extends Scope
 
         // Clear cache after deletion
         $key = $this->getProject()['$id'];
-        static::$cachedFile[$key] = [];
+        self::$cachedFile[$key] = [];
     }
 
     /**
@@ -443,7 +445,7 @@ class StorageServerTest extends Scope
 
         // Clear cache after deletion
         $key = $this->getProject()['$id'];
-        static::$cachedBucket[$key] = [];
-        static::$cachedFile[$key] = [];
+        self::$cachedBucket[$key] = [];
+        self::$cachedFile[$key] = [];
     }
 }

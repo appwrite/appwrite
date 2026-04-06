@@ -28,8 +28,8 @@ trait UsersBase
     protected function setupUser(): array
     {
         $projectId = $this->getProject()['$id'];
-        if (!empty(static::$cachedUser[$projectId])) {
-            return static::$cachedUser[$projectId];
+        if (!empty(self::$cachedUser[$projectId])) {
+            return self::$cachedUser[$projectId];
         }
 
         $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
@@ -52,16 +52,16 @@ trait UsersBase
             ]);
 
             if (!empty($response['body']['users'])) {
-                static::$cachedUser[$projectId] = ['userId' => $response['body']['users'][0]['$id']];
-                return static::$cachedUser[$projectId];
+                self::$cachedUser[$projectId] = ['userId' => $response['body']['users'][0]['$id']];
+                return self::$cachedUser[$projectId];
             }
         }
 
         if ($user['headers']['status-code'] === 201) {
-            static::$cachedUser[$projectId] = ['userId' => $user['body']['$id']];
+            self::$cachedUser[$projectId] = ['userId' => $user['body']['$id']];
         }
 
-        return static::$cachedUser[$projectId];
+        return self::$cachedUser[$projectId];
     }
 
     /**
@@ -90,7 +90,7 @@ trait UsersBase
     protected function setupHashedPasswordUsers(): void
     {
         $projectId = $this->getProject()['$id'];
-        if (!empty(static::$cachedHashedPasswordUsers[$projectId])) {
+        if (!empty(self::$cachedHashedPasswordUsers[$projectId])) {
             return;
         }
 
@@ -180,7 +180,7 @@ trait UsersBase
             'passwordSignerKey' => 'XyEKE9RcTDeLEsL/RjwPDBv/RqDl8fb3gpYEOQaPihbxf1ZAtSOHCjuAAa7Q3oHpCYhXSN9tizHgVOwn6krflQ==',
         ]);
 
-        static::$cachedHashedPasswordUsers[$projectId] = true;
+        self::$cachedHashedPasswordUsers[$projectId] = true;
     }
 
     /**
@@ -189,8 +189,8 @@ trait UsersBase
     protected function setupUserTarget(): array
     {
         $projectId = $this->getProject()['$id'];
-        if (!empty(static::$cachedUserTarget[$projectId])) {
-            return static::$cachedUserTarget[$projectId];
+        if (!empty(self::$cachedUserTarget[$projectId])) {
+            return self::$cachedUserTarget[$projectId];
         }
 
         $data = $this->setupUser();
@@ -233,10 +233,10 @@ trait UsersBase
         ]);
 
         if ($response['headers']['status-code'] === 201) {
-            static::$cachedUserTarget[$projectId] = $response['body'];
+            self::$cachedUserTarget[$projectId] = $response['body'];
         }
 
-        return static::$cachedUserTarget[$projectId] ?? [];
+        return self::$cachedUserTarget[$projectId] ?? [];
     }
 
     /**
@@ -247,7 +247,7 @@ trait UsersBase
         $data = $this->setupUser();
         $projectId = $this->getProject()['$id'];
 
-        if (static::$userNameUpdated) {
+        if (self::$userNameUpdated) {
             return $data;
         }
 
@@ -258,7 +258,7 @@ trait UsersBase
             'name' => 'Updated name',
         ]);
 
-        static::$userNameUpdated = true;
+        self::$userNameUpdated = true;
         return $data;
     }
 
@@ -270,7 +270,7 @@ trait UsersBase
         $data = $this->setupUser();
         $projectId = $this->getProject()['$id'];
 
-        if (static::$userEmailUpdated) {
+        if (self::$userEmailUpdated) {
             return $data;
         }
 
@@ -281,7 +281,7 @@ trait UsersBase
             'email' => 'users.service@updated.com',
         ]);
 
-        static::$userEmailUpdated = true;
+        self::$userEmailUpdated = true;
         return $data;
     }
 
@@ -293,7 +293,7 @@ trait UsersBase
         $data = $this->setupUser();
         $projectId = $this->getProject()['$id'];
 
-        if (static::$userNumberUpdated) {
+        if (self::$userNumberUpdated) {
             return $data;
         }
 
@@ -304,7 +304,7 @@ trait UsersBase
             'number' => '+910000000000',
         ]);
 
-        static::$userNumberUpdated = true;
+        self::$userNumberUpdated = true;
         return $data;
     }
 
@@ -474,7 +474,7 @@ trait UsersBase
 
         // Cache the user ID for other tests
         $projectId = $this->getProject()['$id'];
-        static::$cachedUser[$projectId] = ['userId' => $body['$id']];
+        self::$cachedUser[$projectId] = ['userId' => $body['$id']];
     }
 
     /**
@@ -1274,7 +1274,7 @@ trait UsersBase
         $this->assertEquals($user['body']['name'], 'Updated name');
 
         // Mark name as updated for search tests
-        static::$userNameUpdated = true;
+        self::$userNameUpdated = true;
     }
 
     public function testUpdateUserNameSearch(): void
@@ -1357,7 +1357,7 @@ trait UsersBase
         $this->assertEquals($user['body']['email'], 'users.service@updated.com');
 
         // Mark email as updated for search tests
-        static::$userEmailUpdated = true;
+        self::$userEmailUpdated = true;
     }
 
     public function testUpdateUserEmailSearch(): void
@@ -1645,7 +1645,7 @@ trait UsersBase
         $this->assertEquals($response['body']['type'], $errorType);
 
         // Mark phone as updated for search tests
-        static::$userNumberUpdated = true;
+        self::$userNumberUpdated = true;
     }
 
     public function testUpdateTwoUsersPhoneToEmpty(): void
@@ -1954,7 +1954,7 @@ trait UsersBase
 
         // Cache for other tests
         $projectId = $this->getProject()['$id'];
-        static::$cachedUserTarget[$projectId] = $response['body'];
+        self::$cachedUserTarget[$projectId] = $response['body'];
     }
 
     public function testUpdateUserTarget(): void
@@ -1973,7 +1973,7 @@ trait UsersBase
 
         // Update cache with new data
         $projectId = $this->getProject()['$id'];
-        static::$cachedUserTarget[$projectId] = $response['body'];
+        self::$cachedUserTarget[$projectId] = $response['body'];
     }
 
     public function testListUserTarget(): void
@@ -2014,7 +2014,7 @@ trait UsersBase
 
         // Clear cached target since it was deleted
         $projectId = $this->getProject()['$id'];
-        unset(static::$cachedUserTarget[$projectId]);
+        unset(self::$cachedUserTarget[$projectId]);
 
         $response = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/targets', array_merge([
             'content-type' => 'application/json',

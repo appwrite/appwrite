@@ -329,17 +329,20 @@ $setResource('bus', function (Registry $register) use ($cli) {
 
 $setResource('telemetry', fn () => new NoTelemetry(), []);
 
+$exitCode = 0;
+
 $cli
     ->error()
     ->inject('error')
     ->inject('logError')
-    ->action(function (Throwable $error, callable $logError) use ($taskName) {
+    ->action(function (Throwable $error, callable $logError) use ($taskName, &$exitCode) {
         call_user_func_array($logError, [
             $error,
             'Task',
             $taskName,
         ]);
 
+        $exitCode = 1;
         Timer::clearAll();
     });
 
@@ -348,3 +351,4 @@ $cli->shutdown()->action(fn () => Timer::clearAll());
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 require_once __DIR__ . '/init/span.php';
 run($cli->run(...));
+Console::exit($exitCode);

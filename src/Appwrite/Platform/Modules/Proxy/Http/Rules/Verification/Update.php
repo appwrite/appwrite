@@ -83,7 +83,8 @@ class Update extends Action
 
         // If rule is already verified or in certificate generation state, don't queue for verification again
         if ($rule->getAttribute('status') === RULE_STATUS_VERIFIED || $rule->getAttribute('status') === RULE_STATUS_CERTIFICATE_GENERATING) {
-            return $response->dynamic($rule, Response::MODEL_PROXY_RULE);
+            $response->dynamic($rule, Response::MODEL_PROXY_RULE);
+            return;
         }
 
         try {

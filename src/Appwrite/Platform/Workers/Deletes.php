@@ -24,7 +24,6 @@ use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
@@ -363,7 +362,6 @@ class Deletes extends Action
     /**
      * @param Document $project
      * @param callable $getProjectDB
-     * @param Document $target
      * @return void
      * @throws Exception
      */
@@ -438,7 +436,6 @@ class Deletes extends Action
      * @param string $resource
      * @param string|null $resourceType
      * @return void
-     * @throws Authorization
      * @throws Exception
      */
     private function deleteCacheByResource(Document $project, callable $getProjectDB, string $resource, ?string $resourceType = null): void
@@ -525,7 +522,6 @@ class Deletes extends Action
     }
 
     /**
-     * @param Database $dbForPlatform
      * @param callable $getProjectDB
      * @param string $hourlyUsageRetentionDatetime
      * @return void
@@ -603,7 +599,6 @@ class Deletes extends Action
      * @param Database $dbForPlatform
      * @param Document $document
      * @return void
-     * @throws Authorization
      * @throws DatabaseException
      * @throws Conflict
      * @throws Restricted
@@ -640,7 +635,6 @@ class Deletes extends Action
      * @param Document $document
      * @return void
      * @throws Exception
-     * @throws Authorization
      * @throws DatabaseException
      */
     protected function deleteProject(Database $dbForPlatform, callable $getProjectDB, callable $getDatabasesDB, Device $deviceForFiles, Device $deviceForSites, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, Document $document): void
@@ -980,7 +974,7 @@ class Deletes extends Action
             // fast path, no need to list anything!
             $delete($dbForProject, $resourceInternalId, $resourceType);
         } else {
-            $processResource = function (string $type) use ($dbForProject, $delete, $resourceType) {
+            $processResource = function (string $type) use ($dbForProject, $delete) {
                 $this->listByGroup(
                     collection: $type,
                     queries: [
@@ -1154,7 +1148,7 @@ class Deletes extends Action
             Query::equal('resourceInternalId', [$siteInternalId]),
             Query::equal('resourceType', ['sites']),
             Query::orderAsc()
-        ], $dbForProject, function (Document $document) use ($project, $certificates, $deviceForSites, $deviceForBuilds, $deviceForFiles, $dbForPlatform, &$deploymentInternalIds) {
+        ], $dbForProject, function (Document $document) use ($deviceForSites, $deviceForBuilds, $deviceForFiles, $dbForPlatform, &$deploymentInternalIds, &$deploymentIds) {
             $deploymentInternalIds[] = $document->getSequence();
             $deploymentIds[] = $document->getId();
             $this->deleteBuildFiles($deviceForBuilds, $document);
@@ -1223,7 +1217,7 @@ class Deletes extends Action
             Query::equal('deploymentResourceInternalId', [$functionInternalId]),
             Query::equal('projectInternalId', [$project->getSequence()]),
             Query::orderAsc()
-        ], $dbForPlatform, function (Document $document) use ($project, $dbForPlatform, $certificates) {
+        ], $dbForPlatform, function (Document $document) use ($dbForPlatform, $certificates) {
             $this->deleteRule($dbForPlatform, $document, $certificates);
         });
 
@@ -1247,7 +1241,7 @@ class Deletes extends Action
             Query::equal('resourceInternalId', [$functionInternalId]),
             Query::equal('resourceType', ['functions']),
             Query::orderAsc()
-        ], $dbForProject, function (Document $document) use ($dbForPlatform, $project, $certificates, $deviceForFunctions, $deviceForBuilds, &$deploymentInternalIds) {
+        ], $dbForProject, function (Document $document) use ($deviceForFunctions, $deviceForBuilds, &$deploymentInternalIds) {
             $deploymentInternalIds[] = $document->getSequence();
             $this->deleteDeploymentFiles($deviceForFunctions, $document);
             $this->deleteBuildFiles($deviceForBuilds, $document);
@@ -1378,7 +1372,7 @@ class Deletes extends Action
 
     /**
      * @param Device $device
-     * @param Document $build
+     * @param Document $deployment
      * @return void
      */
     private function deleteBuildFiles(Device $device, Document $deployment): void
@@ -1688,9 +1682,9 @@ class Deletes extends Action
         try {
             $dbForProject->deleteDocuments('transactions', [
                 Query::lessThan('expiresAt', DateTime::format(new \DateTime())),
-            ], onNext: function (Document $transaction) use ($dbForProject, $project, &$transactionInternalIds) {
+            ], onNext: function (Document $transaction) use (&$transactionInternalIds) {
                 $transactionInternalIds[] = $transaction->getSequence();
-            }, onError: function (Throwable $th) use ($project) {
+            }, onError: function (Throwable $th) {
                 // Swallow errors to avoid breaking the cleanup process
             });
         } catch (Throwable $th) {
@@ -1703,7 +1697,7 @@ class Deletes extends Action
 
         $dbForProject->deleteDocuments('transactionLogs', [
             Query::equal('transactionInternalId', $transactionInternalIds),
-        ], onError: function (Throwable $th) use ($project) {
+        ], onError: function (Throwable $th) {
             // Swallow errors to avoid breaking the cleanup process
         });
     }

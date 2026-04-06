@@ -17,7 +17,7 @@ class Request extends UtopiaRequest
      * @var array<Filter>
      */
     private array $filters = [];
-    private static ?Route $route = null;
+    private ?Route $route = null;
 
     public function __construct(SwooleRequest $request)
     {
@@ -34,11 +34,11 @@ class Request extends UtopiaRequest
     {
         $parameters = parent::getParams();
 
-        if (!$this->hasFilters() || !self::hasRoute()) {
+        if (!$this->hasFilters() || !$this->hasRoute()) {
             return $parameters;
         }
 
-        $methods = self::getRoute()->getLabel('sdk', null);
+        $methods = $this->getRoute()?->getLabel('sdk', null);
 
         if (empty($methods)) {
             return $parameters;
@@ -131,9 +131,9 @@ class Request extends UtopiaRequest
      *
      * @return void
      */
-    public static function setRoute(?Route $route): void
+    public function setRoute(?Route $route): void
     {
-        self::$route = $route;
+        $this->route = $route;
     }
 
     /**
@@ -141,9 +141,9 @@ class Request extends UtopiaRequest
      *
      * @return Route|null
      */
-    public static function getRoute(): ?Route
+    public function getRoute(): ?Route
     {
-        return self::$route;
+        return $this->route;
     }
 
     /**
@@ -151,9 +151,9 @@ class Request extends UtopiaRequest
      *
      * @return bool
      */
-    public static function hasRoute(): bool
+    public function hasRoute(): bool
     {
-        return self::$route !== null;
+        return $this->route !== null;
     }
 
     /**
@@ -215,7 +215,7 @@ class Request extends UtopiaRequest
         $forwardedUserAgent = $this->getHeader('x-forwarded-user-agent');
         if (!empty($forwardedUserAgent)) {
             $roles = $this->authorization->getRoles();
-            $isAppUser = User::isApp($roles);
+            $isAppUser = $this->user?->isApp($roles) ?? false;
 
             if ($isAppUser) {
                 return $forwardedUserAgent;
@@ -239,9 +239,15 @@ class Request extends UtopiaRequest
     }
 
     private ?Authorization $authorization = null;
+    private ?User $user = null;
 
     public function setAuthorization(Authorization $authorization): void
     {
         $this->authorization = $authorization;
+    }
+
+    public function setUser(User $user): void
+    {
+        $this->user = $user;
     }
 }

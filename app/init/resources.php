@@ -53,6 +53,7 @@ use Utopia\Database\DateTime as DatabaseDateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
 use Utopia\Http\Http;
 use Utopia\Locale\Locale;
@@ -250,6 +251,52 @@ Http::setResource('allowedSchemes', function (array $platform, Document $project
 }, ['platform', 'project']);
 
 /**
+ * Whether the request origin is verified against the request hostname.
+ */
+Http::setResource('domainVerification', function (Request $request) {
+    $origin = \parse_url($request->getOrigin($request->getReferer('')), PHP_URL_HOST);
+    $selfDomain = new Domain($request->getHostname());
+    $endDomain = new Domain((string) $origin);
+
+    return ($selfDomain->getRegisterable() === $endDomain->getRegisterable())
+        && $endDomain->getRegisterable() !== '';
+}, ['request']);
+
+/**
+ * Cookie domain for the current request.
+ */
+Http::setResource('cookieDomain', function (Request $request, Document $project) {
+    $localHosts = ['localhost', 'localhost:' . $request->getPort()];
+
+    $migrationHost = System::getEnv('_APP_MIGRATION_HOST');
+    if (!empty($migrationHost)) {
+        // Treat the migration host like localhost because internal migration and CI
+        // traffic may use it before a public domain is configured.
+        $localHosts[] = $migrationHost;
+        $localHosts[] = $migrationHost . ':' . $request->getPort();
+    }
+
+    $hostname = $request->getHostname();
+    $isLocalHost = \in_array($hostname, $localHosts, true);
+    $isIpAddress = \filter_var($hostname, FILTER_VALIDATE_IP) !== false;
+
+    if ($isLocalHost || $isIpAddress) {
+        return;
+    }
+
+    $isConsoleProject = $project->getAttribute('$id', '') === 'console';
+    $isConsoleRootSession = System::getEnv('_APP_CONSOLE_ROOT_SESSION', 'disabled') === 'enabled';
+
+    if ($isConsoleProject && $isConsoleRootSession) {
+        $domain = new Domain($hostname);
+
+        return '.' . $domain->getRegisterable();
+    }
+
+    return '.' . $hostname;
+}, ['request', 'project']);
+
+/**
  * Rule associated with a request origin.
  */
 Http::setResource('rule', function (Request $request, Database $dbForPlatform, Document $project, Authorization $authorization) {
@@ -432,8 +479,10 @@ Http::setResource('user', function (string $mode, Document $project, Document $c
         $jwtUserId = $payload['userId'] ?? '';
         if (! empty($jwtUserId)) {
             if ($mode === APP_MODE_ADMIN) {
+                /** @var User $user */
                 $user = $dbForPlatform->getDocument('users', $jwtUserId);
             } else {
+                /** @var User $user */
                 $user = $dbForProject->getDocument('users', $jwtUserId);
             }
         }
@@ -453,6 +502,7 @@ Http::setResource('user', function (string $mode, Document $project, Document $c
             throw new Exception(Exception::USER_API_KEY_AND_SESSION_SET);
         }
 
+        /** @var User $accountKeyUser */
         $accountKeyUser = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('users', $accountKeyUserId));
         if (! $accountKeyUser->isEmpty()) {
             $key = $accountKeyUser->find(
@@ -693,7 +743,7 @@ Http::setResource('dbForProject', function (Group $pools, Database $dbForPlatfor
         $cacheKey = \sprintf(
             '%s-cache-%s:%s:%s:project:%s:functions:events',
             $dbForProject->getCacheName(),
-            $hostname ?? '',
+            $hostname,
             $dbForProject->getNamespace(),
             $dbForProject->getTenant(),
             $project->getId()

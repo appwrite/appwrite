@@ -3668,7 +3668,6 @@ trait DatabasesBase
         ]);
 
         $adapter = getenv('_APP_DB_ADAPTER');
-
         if ($adapter === 'mongodb' || !$this->getSupportForAttributes()) {
             $this->assertEquals(400, $response['headers']['status-code']);
         } else {
