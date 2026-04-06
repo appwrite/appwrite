@@ -60,11 +60,24 @@ function parseMemoryLimitToBytes(string|false $memoryLimit): int
     };
 }
 
+$minimumCoroutineMemoryLimit = System::getEnv('_APP_HTTP_COROUTINE_MEMORY_LIMIT', '1G');
 $memoryLimitBytes = parseMemoryLimitToBytes(\ini_get('memory_limit'));
+$minimumCoroutineMemoryLimitBytes = parseMemoryLimitToBytes($minimumCoroutineMemoryLimit);
+
+if (
+    $minimumCoroutineMemoryLimitBytes > 0
+    && $memoryLimitBytes > 0
+    && $memoryLimitBytes < $minimumCoroutineMemoryLimitBytes
+) {
+    \ini_set('memory_limit', $minimumCoroutineMemoryLimit);
+    $memoryLimitBytes = parseMemoryLimitToBytes(\ini_get('memory_limit'));
+}
+
 $payloadSize = 12 * (1024 * 1024); // 12MB - adding slight buffer for headers and other data that might be sent with the payload - update later with valid testing
-$requestMemoryBudget = $payloadSize * 8;
+$requestMemoryBudget = max($payloadSize * 8, 256 * 1024 * 1024);
 $memoryReserve = 256 * 1024 * 1024;
-$computedMaxConcurrency = max(1, (int) floor(max($memoryLimitBytes - $memoryReserve, $requestMemoryBudget) / $requestMemoryBudget));
+$availableRequestMemory = max($memoryLimitBytes - $memoryReserve, 0);
+$computedMaxConcurrency = 1;
 $maxConcurrency = (int) System::getEnv('_APP_HTTP_COROUTINE_MAX_CONCURRENCY', $computedMaxConcurrency);
 
 $swooleAdapter = new Server(
@@ -389,6 +402,7 @@ $swooleAdapter->onStart(function () use ($payloadSize, $swooleAdapter, $maxConcu
 
     Span::init('http.server.start');
     Span::add('server.adapter', 'swoole-coroutine');
+    Span::add('server.memory_limit', \ini_get('memory_limit'));
     Span::add('server.payload_size', $payloadSize);
     Span::add('server.max_concurrency', $maxConcurrency);
     Span::current()?->finish();
@@ -533,6 +547,11 @@ $swooleAdapter->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files
         $request->resetFilters();
         $request->setRoute(null);
         $response->resetFilters();
+
+        gc_collect_cycles();
+        if (\function_exists('gc_mem_caches')) {
+            gc_mem_caches();
+        }
     }
 });
 
