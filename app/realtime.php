@@ -383,6 +383,22 @@ $server->onStart(function () use ($stats, $containerId, &$statsDocument) {
     }
 });
 
+function cloudRealtimeLogConnectionHostnames(Http $app, Document $project, Request $request): void
+{
+    try {
+        /** @var array<int, string> $allowed */
+        $allowed = $app->getResource('allowedHostnames');
+        Console::info(sprintf(
+            '[Realtime] project=%s origin=%s allowedHostnames=%s',
+            $project->getId(),
+            $request->getOrigin(),
+            json_encode(array_values($allowed))
+        ));
+    } catch (Throwable $e) {
+        Console::error('[Realtime] allowedHostnames log failed: ' . $e->getMessage());
+    }
+}
+
 $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime) {
     Console::success('Worker ' . $workerId . ' started successfully');
 
@@ -688,6 +704,9 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
          */
         $origin = $request->getOrigin();
         $originValidator = $app->getResource('originValidator');
+        
+    
+        cloudRealtimeLogConnectionHostnames($app, $project, $request);
 
         if (!empty($origin) && !$originValidator->isValid($origin) && $project->getId() !== 'console') {
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, $originValidator->getDescription());
