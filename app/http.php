@@ -34,6 +34,8 @@ use Utopia\Logger\Log\User;
 use Utopia\Span\Span;
 use Utopia\System\System;
 
+use function Swoole\Coroutine\run;
+
 $files = new Files();
 $files->load(__DIR__ . '/../public');
 
@@ -192,8 +194,6 @@ function createDatabase(Http $app, string $resourceKey, string $dbName, array $c
     Span::current()?->finish();
 }
 
-// The coroutine adapter does not expose process-worker hooks, so startup work stays in
-// a single onStart callback and request routing falls back to coroutine scheduling.
 $swooleAdapter->onStart(function () use ($payloadSize, $swooleAdapter) {
     $app = new Http($swooleAdapter, 'UTC');
 
@@ -553,6 +553,6 @@ $swooleAdapter->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files
     }
 });
 
-\Swoole\Coroutine\run(static function () use ($swooleAdapter): void {
+run(static function () use ($swooleAdapter): void {
     $swooleAdapter->start();
 });
