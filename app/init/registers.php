@@ -245,12 +245,7 @@ $register->set('pools', function () {
     $maxConnections = (int) System::getEnv('_APP_CONNECTIONS_MAX', 151);
     $instanceConnections = $maxConnections / (int) System::getEnv('_APP_POOL_CLIENTS', 14);
 
-    $scriptPath = (string) ($_SERVER['SCRIPT_FILENAME'] ?? '');
-    if ($scriptPath === '') {
-        $scriptPath = (string) ($_SERVER['argv'][0] ?? '');
-    }
-
-    $scriptPath = \str_replace('\\', '/', $scriptPath);
+    $scriptPath = \str_replace('\\', '/', (string) ($_SERVER['argv'][0] ?? ''));
     $isCoroutineHttp = $scriptPath === 'app/http.php' || \str_ends_with($scriptPath, '/app/http.php');
 
     $workerCount = intval(System::getEnv('_APP_CPU_NUM', swoole_cpu_num())) * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
