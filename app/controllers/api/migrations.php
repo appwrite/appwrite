@@ -589,25 +589,13 @@ Http::post('/v1/migrations/csv/exports')
         // Schemaless databases (DocumentsDB, VectorsDB) allow queries on dynamic fields
         $isSchemaless = in_array($databaseType, [DATABASE_TYPE_DOCUMENTSDB, DATABASE_TYPE_VECTORSDB]);
 
-//        $validator = new Documents(
-//            attributes: $collection->getAttribute('attributes', []),
-//            indexes: $collection->getAttribute('indexes', []),
-//            idAttributeType: $dbForProject->getAdapter()->getIdAttributeType(),
-//            supportForAttributes: !$isSchemaless,
-//        );
-//
-//        if (!$validator->isValid($parsedQueries)) {
-//            throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
-//        }
-
-        shmuel
-
         $context = new QueryContext();
         $context->add($collection);
 
         $validator = new DocumentsValidator(
             $context,
             idAttributeType: $dbForProject->getAdapter()->getIdAttributeType(),
+            supportForAttributes: !$isSchemaless,
         );
 
         if (!$validator->isValid($parsedQueries)) {
