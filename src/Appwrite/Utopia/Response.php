@@ -299,7 +299,7 @@ class Response extends SwooleResponse
     /**
      * @var bool
      */
-    protected static bool $showSensitive = false;
+    protected bool $showSensitive = false;
 
     /**
      * @var array<string, Model>
@@ -509,7 +509,7 @@ class Response extends SwooleResponse
                 $isPrivilegedUser = $user->isPrivileged($roles);
                 $isAppUser = $user->isApp($roles);
 
-                if ((!$isPrivilegedUser && !$isAppUser) && !self::$showSensitive) {
+                if ((!$isPrivilegedUser && !$isAppUser) && !$this->showSensitive) {
                     $data->setAttribute($key, '');
                 }
             }
@@ -659,18 +659,20 @@ class Response extends SwooleResponse
     }
 
     /**
-     * Static wrapper to show sensitive data in response
+     * Wrapper to show sensitive data in response
      *
      * @param callable(): array $callback The callback to show sensitive information for
      * @return array
      */
-    public static function showSensitive(callable $callback): array
+    public function showSensitive(callable $callback): array
     {
+        $previous = $this->showSensitive;
+
         try {
-            self::$showSensitive = true;
+            $this->showSensitive = true;
             return $callback();
         } finally {
-            self::$showSensitive = false;
+            $this->showSensitive = $previous;
         }
     }
 
