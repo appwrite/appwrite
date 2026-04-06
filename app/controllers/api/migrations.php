@@ -63,6 +63,21 @@ function getDatabaseResourceType(string $databaseType): string
     };
 }
 
+function throwMigrationReportProviderException(\Throwable $e): void
+{
+    if ($e->getCode() === 403) {
+        throw new Exception(
+            Exception::MIGRATION_PROVIDER_ERROR,
+            $e->getMessage() !== '' ? $e->getMessage() : 'Missing required scopes.'
+        );
+    }
+
+    throw new Exception(
+        Exception::MIGRATION_PROVIDER_ERROR,
+        'Unable to connect to the migration source. Please verify your credentials and ensure the source is reachable from this server. Check for network restrictions such as firewalls, IP allowlists, or outbound connectivity limits.'
+    );
+}
+
 Http::post('/v1/migrations/appwrite')
     ->groups(['api', 'migrations'])
     ->desc('Create Appwrite migration')
@@ -1050,10 +1065,7 @@ Http::get('/v1/migrations/appwrite/report')
             $appwrite = new Appwrite($projectID, $endpoint, $key, $getDatabasesDB);
             $report = $appwrite->report($resources);
         } catch (\Throwable $e) {
-            throw new Exception(
-                Exception::MIGRATION_PROVIDER_ERROR,
-                'Unable to connect to the migration source. Please verify your credentials and ensure the source is reachable from this server. Check for network restrictions such as firewalls, IP allowlists, or outbound connectivity limits.'
-            );
+            throwMigrationReportProviderException($e);
         }
 
         $response
@@ -1096,10 +1108,7 @@ Http::get('/v1/migrations/firebase/report')
             $firebase = new Firebase($serviceAccount);
             $report = $firebase->report($resources);
         } catch (\Throwable $e) {
-            throw new Exception(
-                Exception::MIGRATION_PROVIDER_ERROR,
-                'Unable to connect to the migration source. Please verify your credentials and ensure the source is reachable from this server. Check for network restrictions such as firewalls, IP allowlists, or outbound connectivity limits.'
-            );
+            throwMigrationReportProviderException($e);
         }
 
         $response
@@ -1138,10 +1147,7 @@ Http::get('/v1/migrations/supabase/report')
             $supabase = new Supabase($endpoint, $apiKey, $databaseHost, 'postgres', $username, $password, $port);
             $report = $supabase->report($resources);
         } catch (\Throwable $e) {
-            throw new Exception(
-                Exception::MIGRATION_PROVIDER_ERROR,
-                'Unable to connect to the migration source. Please verify your credentials and ensure the source is reachable from this server. Check for network restrictions such as firewalls, IP allowlists, or outbound connectivity limits.'
-            );
+            throwMigrationReportProviderException($e);
         }
 
         $response
@@ -1180,10 +1186,7 @@ Http::get('/v1/migrations/nhost/report')
             $nhost = new NHost($subdomain, $region, $adminSecret, $database, $username, $password, $port);
             $report = $nhost->report($resources);
         } catch (\Throwable $e) {
-            throw new Exception(
-                Exception::MIGRATION_PROVIDER_ERROR,
-                'Unable to connect to the migration source. Please verify your credentials and ensure the source is reachable from this server. Check for network restrictions such as firewalls, IP allowlists, or outbound connectivity limits.'
-            );
+            throwMigrationReportProviderException($e);
         }
 
         $response
