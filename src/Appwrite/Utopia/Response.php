@@ -8,7 +8,6 @@ use Appwrite\Utopia\Response\Filter;
 use Appwrite\Utopia\Response\Model;
 use Exception;
 use JsonException;
-use Swoole\Coroutine;
 use Swoole\Http\Response as SwooleHTTPResponse;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
@@ -20,8 +19,6 @@ use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
  */
 class Response extends SwooleResponse
 {
-    private const SHOW_SENSITIVE_CONTEXT_KEY = '__appwrite_response_show_sensitive';
-
     // General
     public const MODEL_NONE = 'none';
     public const MODEL_ANY = 'any';
@@ -302,7 +299,7 @@ class Response extends SwooleResponse
     /**
      * @var bool
      */
-    protected static bool $showSensitive = false;
+    protected bool $showSensitive = false;
 
     /**
      * @var array<string, Model>
@@ -512,7 +509,7 @@ class Response extends SwooleResponse
                 $isPrivilegedUser = $user->isPrivileged($roles);
                 $isAppUser = $user->isApp($roles);
 
-                if ((!$isPrivilegedUser && !$isAppUser) && !self::isShowingSensitive()) {
+                if ((!$isPrivilegedUser && !$isAppUser) && !$this->showSensitive) {
                     $data->setAttribute($key, '');
                 }
             }
@@ -662,40 +659,21 @@ class Response extends SwooleResponse
     }
 
     /**
-     * Static wrapper to show sensitive data in response
+     * Wrapper to show sensitive data in response
      *
      * @param callable(): array $callback The callback to show sensitive information for
      * @return array
      */
-    public static function showSensitive(callable $callback): array
+    public function showSensitive(callable $callback): array
     {
-        $previous = self::isShowingSensitive();
+        $previous = $this->showSensitive;
 
         try {
-            self::setShowSensitive(true);
+            $this->showSensitive = true;
             return $callback();
         } finally {
-            self::setShowSensitive($previous);
+            $this->showSensitive = $previous;
         }
-    }
-
-    private static function isShowingSensitive(): bool
-    {
-        if (Coroutine::getCid() !== -1) {
-            return (bool) (Coroutine::getContext()[self::SHOW_SENSITIVE_CONTEXT_KEY] ?? false);
-        }
-
-        return self::$showSensitive;
-    }
-
-    private static function setShowSensitive(bool $value): void
-    {
-        if (Coroutine::getCid() !== -1) {
-            Coroutine::getContext()[self::SHOW_SENSITIVE_CONTEXT_KEY] = $value;
-            return;
-        }
-
-        self::$showSensitive = $value;
     }
 
     private ?Authorization $authorization = null;

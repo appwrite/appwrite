@@ -5,7 +5,7 @@ namespace Tests\Unit\Utopia;
 use Appwrite\Utopia\Response;
 use Exception;
 use PHPUnit\Framework\TestCase;
-use ReflectionMethod;
+use ReflectionProperty;
 use Swoole\Http\Response as SwooleResponse;
 use Tests\Unit\Utopia\Response\Filters\First;
 use Tests\Unit\Utopia\Response\Filters\Second;
@@ -180,23 +180,23 @@ class ResponseTest extends TestCase
 
     public function testShowSensitiveRestoresPreviousState(): void
     {
-        $isShowingSensitive = new ReflectionMethod(Response::class, 'isShowingSensitive');
+        $isShowingSensitive = new ReflectionProperty(Response::class, 'showSensitive');
 
-        $this->assertFalse($isShowingSensitive->invoke(null));
+        $this->assertFalse($isShowingSensitive->getValue($this->response));
 
-        $payload = Response::showSensitive(function () use ($isShowingSensitive) {
+        $payload = $this->response->showSensitive(function () use ($isShowingSensitive) {
             return [
-                'outer' => $isShowingSensitive->invoke(null),
-                'inner' => Response::showSensitive(fn () => [
-                    'state' => $isShowingSensitive->invoke(null),
+                'outer' => $isShowingSensitive->getValue($this->response),
+                'inner' => $this->response->showSensitive(fn () => [
+                    'state' => $isShowingSensitive->getValue($this->response),
                 ]),
-                'afterInner' => $isShowingSensitive->invoke(null),
+                'afterInner' => $isShowingSensitive->getValue($this->response),
             ];
         });
 
         $this->assertTrue($payload['outer']);
         $this->assertTrue($payload['inner']['state']);
         $this->assertTrue($payload['afterInner']);
-        $this->assertFalse($isShowingSensitive->invoke(null));
+        $this->assertFalse($isShowingSensitive->getValue($this->response));
     }
 }
