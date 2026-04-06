@@ -19,6 +19,7 @@ class Server extends Adapter
     protected SwooleServer $server;
     protected Container $container;
     protected ?Channel $requestSemaphore = null;
+    protected ?int $maxConcurrency = null;
 
     /** @var callable|null */
     protected $onStartCallback = null;
@@ -35,14 +36,7 @@ class Server extends Adapter
             'http_parse_cookie' => false,
         ]));
         $this->container = $container ?? new Container();
-
-        if ($maxConcurrency !== null && $maxConcurrency > 0) {
-            $this->requestSemaphore = new Channel($maxConcurrency);
-
-            for ($i = 0; $i < $maxConcurrency; $i++) {
-                $this->requestSemaphore->push(true);
-            }
-        }
+        $this->maxConcurrency = ($maxConcurrency !== null && $maxConcurrency > 0) ? $maxConcurrency : null;
     }
 
     public function onRequest(callable $callback)
@@ -92,11 +86,26 @@ class Server extends Adapter
     public function start()
     {
         go(function () {
+            $this->initializeRequestSemaphore();
+
             if ($this->onStartCallback) {
                 \call_user_func($this->onStartCallback, $this);
             }
 
             $this->server->start();
         });
+    }
+
+    private function initializeRequestSemaphore(): void
+    {
+        if ($this->requestSemaphore !== null || $this->maxConcurrency === null) {
+            return;
+        }
+
+        $this->requestSemaphore = new Channel($this->maxConcurrency);
+
+        for ($i = 0; $i < $this->maxConcurrency; $i++) {
+            $this->requestSemaphore->push(true);
+        }
     }
 }
