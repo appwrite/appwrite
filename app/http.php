@@ -5,7 +5,6 @@ require_once __DIR__ . '/init/span.php';
 
 $registerRequestResources = require __DIR__ . '/init/resources/request.php';
 
-use Appwrite\Utopia\Http\Adapter\SwooleCoroutine\Server;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Swoole\Table;
@@ -22,6 +21,7 @@ use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Http\Adapter\SwooleCoroutine\Server;
 use Utopia\Http\Files;
 use Utopia\Http\Http;
 use Utopia\Logger\Log;
