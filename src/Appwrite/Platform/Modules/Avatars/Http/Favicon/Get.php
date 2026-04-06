@@ -204,7 +204,6 @@ class Get extends Action
 
         $image = new Image($data);
         $image->crop((int) $width, (int) $height);
-        $output = (empty($output)) ? $type : $output;
         $data = $image->output($output, $quality);
 
         $response

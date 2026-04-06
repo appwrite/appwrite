@@ -110,10 +110,7 @@ class Update extends Action
         $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
 
         try {
-            $providerRepositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
-            if (empty($providerRepositoryName)) {
-                throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
-            }
+            $providerRepositoryName = $github->getRepositoryName($providerRepositoryId);
         } catch (RepositoryNotFound $e) {
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }

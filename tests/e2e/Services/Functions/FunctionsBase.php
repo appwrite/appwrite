@@ -100,6 +100,24 @@ trait FunctionsBase
                     'x-appwrite-key' => $this->getProject()['apiKey'],
                 ]));
                 $this->assertNotEquals(401, $function['headers']['status-code'], 'Auth failed while polling function activation');
+
+                if (
+                    ($function['body']['deploymentId'] ?? '') !== $deploymentId
+                    && ($function['body']['latestDeploymentId'] ?? '') === $deploymentId
+                    && ($function['body']['latestDeploymentStatus'] ?? '') === 'ready'
+                ) {
+                    $activation = $this->updateFunctionDeployment($functionId, $deploymentId);
+                    $this->assertContains(
+                        $activation['headers']['status-code'],
+                        [200, 409],
+                        'Deployment activation request failed: ' . json_encode($activation['body'], JSON_PRETTY_PRINT)
+                    );
+
+                    if ($activation['headers']['status-code'] === 200) {
+                        $function = $activation;
+                    }
+                }
+
                 $this->assertEquals($deploymentId, $function['body']['deploymentId'] ?? '', 'Deployment is not activated, deployment: ' . json_encode($function['body'], JSON_PRETTY_PRINT));
             }, 120000, 500);
         }

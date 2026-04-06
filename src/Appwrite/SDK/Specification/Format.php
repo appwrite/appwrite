@@ -204,13 +204,29 @@ abstract class Format
      *
      * Get services value
      *
-     * @param array $services
-     *
-     * @return self
      */
     public function getServices(): array
     {
         return $this->services;
+    }
+
+    protected function getDescriptionContents(?string $description): string
+    {
+        if ($description === null || $description === '') {
+            return '';
+        }
+
+        if (!\str_ends_with($description, '.md')) {
+            return $description;
+        }
+
+        $contents = @\file_get_contents($description);
+
+        if ($contents === false) {
+            throw new \RuntimeException('Documentation file not found or unreadable: ' . $description);
+        }
+
+        return $contents;
     }
 
     protected function getRequestEnumName(string $service, string $method, string $param): ?string

@@ -450,7 +450,7 @@ class Builds extends Action
 
                     $providerCommitHash = \trim($stdout);
 
-                    $deployment->setAttribute('providerCommitHash', $providerCommitHash ?? '');
+                    $deployment->setAttribute('providerCommitHash', $providerCommitHash);
                     $deployment->setAttribute('providerCommitAuthorUrl', APP_VCS_GITHUB_URL);
                     $deployment->setAttribute('providerCommitAuthor', APP_VCS_GITHUB_USERNAME);
                     $deployment->setAttribute('providerCommitMessage', "Create '" . $resource->getAttribute('name', '') . "' function");
@@ -862,7 +862,7 @@ class Builds extends Action
             if (\str_contains($logs, '{APPWRITE_DETECTION_SEPARATOR_START}')) {
                 [$logsBefore, $detectionLogsStart] = \explode('{APPWRITE_DETECTION_SEPARATOR_START}', $logs, 2);
                 [$detectionLogs, $logsAfter] = \explode('{APPWRITE_DETECTION_SEPARATOR_END}', $detectionLogsStart, 2);
-                $logs = ($logsBefore ?? '') . ($logsAfter ?? '');
+                $logs = $logsBefore . $logsAfter;
             }
 
             $deployment->setAttribute('buildLogs', $logs);
@@ -1203,6 +1203,8 @@ class Builds extends Action
     protected function sendUsage(Document $resource, Document $deployment, Document $project, Context $usage, UsagePublisher $publisherForUsage): void
     {
         $spec = Config::getParam('specifications')[$resource->getAttribute('buildSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
+        $cpus = (int) ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT);
+        $memory = (int) ($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT);
 
         switch ($deployment->getAttribute('status')) {
             case 'ready':
@@ -1364,6 +1366,8 @@ class Builds extends Action
         Realtime $queueForRealtime,
         array $platform
     ): void {
+        $deployment = new Document();
+
         try {
             if ($resource->getAttribute('providerSilentMode', false) === true) {
                 return;
@@ -1444,7 +1448,7 @@ class Builds extends Action
                     $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
                     $previewUrl = match ($resource->getCollection()) {
                         'functions' => '',
-                        'sites' => ! empty($rule) ? ("{$protocol}://" . $rule->getAttribute('domain', '')) : '',
+                        'sites' => !$rule->isEmpty() ? ("{$protocol}://" . $rule->getAttribute('domain', '')) : '',
                         default => throw new \Exception('Invalid resource type')
                     };
 

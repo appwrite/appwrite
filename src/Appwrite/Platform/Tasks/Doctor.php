@@ -4,7 +4,6 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\ClamAV\Network;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
-use PHPMailer\PHPMailer\PHPMailer;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Config\Config;
 use Utopia\Console;
@@ -13,6 +12,8 @@ use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
 use Utopia\Http\Http;
 use Utopia\Logger\Logger;
+use Utopia\Messaging\Adapter\Email as EmailAdapter;
+use Utopia\Messaging\Messages\Email as EmailMessage;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
 use Utopia\Queue\Broker\Pool as BrokerPool;
@@ -124,7 +125,7 @@ class Doctor extends Action
         $providerConfig = System::getEnv('_APP_LOGGING_CONFIG', '');
 
         try {
-            $loggingProvider = new DSN($providerConfig ?? '');
+            $loggingProvider = new DSN($providerConfig);
 
             $providerName = $loggingProvider->getScheme();
 
@@ -212,15 +213,18 @@ class Doctor extends Action
         }
 
         try {
-            /* @var PHPMailer $mail */
-            $mail = $register->get('smtp');
+            /** @var EmailAdapter $smtp */
+            $smtp = $register->get('smtp');
 
-            $mail->addAddress('demo@example.com', 'Example.com');
-            $mail->Subject = 'Test SMTP Connection';
-            $mail->Body = 'Hello World';
-            $mail->AltBody = 'Hello World';
+            $emailMessage = new EmailMessage(
+                to: ['demo@example.com'],
+                subject: 'Test SMTP Connection',
+                content: 'Hello World',
+                fromName: \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server')),
+                fromEmail: System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM),
+            );
 
-            $mail->send();
+            $smtp->send($emailMessage);
             Console::success('🟢 ' . str_pad("SMTP", 50, '.') . 'connected');
         } catch (\Throwable) {
             Console::error('🔴 ' . str_pad("SMTP", 47, '.') . 'disconnected');

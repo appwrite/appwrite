@@ -122,7 +122,6 @@ class Update extends Action
 
         $dbForDatabases = $getDatabasesDB($database);
         // Read permission should not be required for update
-        /** @var Document $document */
         $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
 
         if ($transactionId !== null) {

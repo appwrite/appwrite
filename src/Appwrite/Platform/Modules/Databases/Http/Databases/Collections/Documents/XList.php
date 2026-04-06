@@ -147,7 +147,7 @@ class XList extends Action
                     $cacheKeyBase = \sprintf(
                         '%s-cache-%s:%s:%s:collection:%s:%s:user:%s:%s',
                         $dbForProject->getCacheName(),
-                        $hostname ?? '',
+                        $hostname,
                         $dbForProject->getNamespace(),
                         $dbForProject->getTenant(),
                         $collectionId,

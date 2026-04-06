@@ -566,6 +566,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
                 $repoBranch = $language['repoBranch'] ?? 'main';
                 if ($git && !empty($gitUrl)) {
+                    $prUrls = [];
+
                     // Generate commit message: use provided message, AI changelog, or fallback
                     if (! empty($message)) {
                         $commitMessage = $message;

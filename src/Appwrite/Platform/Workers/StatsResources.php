@@ -208,7 +208,7 @@ class StatsResources extends Action
     {
         $totalFiles = 0;
         $totalStorage = 0;
-        $this->foreachDocument($dbForProject, 'buckets', [], function ($bucket) use ($dbForProject, $dbForLogs, $region, &$totalFiles, &$totalStorage) {
+        $this->foreachDocument($dbForProject, 'buckets', [], function ($bucket) use ($dbForProject, $region, &$totalFiles, &$totalStorage) {
             try {
                 $files = $dbForProject->count('bucket_' . $bucket->getSequence());
             } catch (Throwable $th) {

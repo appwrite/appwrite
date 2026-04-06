@@ -130,9 +130,26 @@ class Create extends CollectionAction
             $indexes[] = new Document($index);
         }
         try {
-            // passing null in creates only creates the metadata collection
-            if (!$dbForDatabases->exists(null, Database::METADATA)) {
-                $dbForDatabases->create();
+            // Bootstrap the database metadata without a separate existence
+            // check to avoid races when multiple first collections are created
+            // concurrently for the same VectorsDB database.
+            for ($attempt = 0; $attempt < 5; $attempt++) {
+                try {
+                    $dbForDatabases->create();
+                    break;
+                } catch (DuplicateException) {
+                    break;
+                } catch (\Throwable $e) {
+                    if ($dbForDatabases->exists(null, Database::METADATA)) {
+                        break;
+                    }
+
+                    if ($attempt === 4) {
+                        throw $e;
+                    }
+
+                    \usleep(100_000);
+                }
             }
             $dbForDatabases->createCollection(
                 id: 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),

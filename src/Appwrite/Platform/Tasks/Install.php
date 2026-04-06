@@ -227,7 +227,7 @@ class Install extends Action
         // Fall back to CLI mode
         $enableAssistant = false;
         $assistantExistsInOldCompose = false;
-        if ($existingInstallation && isset($compose)) {
+        if ($existingInstallation) {
             try {
                 $assistantService = $compose->getService('appwrite-assistant');
                 $assistantExistsInOldCompose = $assistantService !== null;
@@ -1343,7 +1343,7 @@ class Install extends Action
     {
         $argv = $_SERVER['argv'] ?? [];
         foreach ($argv as $arg) {
-            if (\str_starts_with($arg, '--') && !\str_starts_with($arg, '--interactive')) {
+            if (\str_starts_with($arg, '--')) {
                 return true;
             }
         }

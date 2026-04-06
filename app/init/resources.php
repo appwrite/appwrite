@@ -696,7 +696,7 @@ Http::setResource('dbForProject', function (Group $pools, Database $dbForPlatfor
         $cacheKey = \sprintf(
             '%s-cache-%s:%s:%s:project:%s:functions:events',
             $dbForProject->getCacheName(),
-            $hostname ?? '',
+            $hostname,
             $dbForProject->getNamespace(),
             $dbForProject->getTenant(),
             $project->getId()

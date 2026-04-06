@@ -3,6 +3,8 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/init/span.php';
 
+global $register;
+
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Swoole\Constant;
@@ -31,7 +33,6 @@ use Utopia\Http\Files;
 use Utopia\Http\Http;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
-use Utopia\Pools\Group;
 use Utopia\Span\Span;
 use Utopia\System\System;
 
@@ -293,7 +294,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $tot
 
     go(function () use ($register, $app) {
         $pools = $register->get('pools');
-        /** @var Group $pools */
+        /** @var \Utopia\Pools\Group $pools */
         Http::setResource('pools', fn () => $pools);
 
         /** @var array $collections */
@@ -655,7 +656,7 @@ $http->on(Constant::EVENT_TASK, function () use ($register) {
     /** @var Utopia\Database\Database $dbForPlatform */
     $dbForPlatform = $app->getResource('dbForPlatform');
 
-    /** @var Table $riskyDomains */
+    /** @var \Swoole\Table $riskyDomains */
     $riskyDomains = $app->getResource('riskyDomains');
 
     Timer::tick(DOMAIN_SYNC_TIMER * 1000, function () use ($dbForPlatform, $riskyDomains, &$lastSyncUpdate, $app) {

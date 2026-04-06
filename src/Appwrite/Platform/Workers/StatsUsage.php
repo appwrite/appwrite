@@ -140,7 +140,7 @@ class StatsUsage extends Action
 
     /**
      * @param Message $message
-     * @param callable(): Database $getProjectDB
+     * @param callable(Document): Database $getProjectDB
      * @param callable(): Database $getLogsDB
      * @param Registry $register
      * @return void
@@ -212,7 +212,7 @@ class StatsUsage extends Action
     * @param Document $project
     * @param Document $document
     * @param array $metrics
-    * @param  callable(): Database $getProjectDB
+    * @param  callable(Document): Database $getProjectDB
     * @param string $databaseType Database type from context
     * @return void
     */
@@ -394,7 +394,7 @@ class StatsUsage extends Action
 
     /**
      * Commit stats to DB
-     * @param callable(): Database $getProjectDB
+     * @param callable(Document): Database $getProjectDB
      * @return void
      */
     public function commitToDb(callable $getProjectDB): void
@@ -459,7 +459,7 @@ class StatsUsage extends Action
                 /**
                  * Sort by unique index key reduce locks/deadlocks
                  */
-                usort($projectStats['stats'], function ($a, $b) use ($sequence) {
+                usort($projectStats['stats'], function ($a, $b) {
                     // Metric DESC
                     $cmp = strcmp($b['metric'], $a['metric']);
                     if ($cmp !== 0) {

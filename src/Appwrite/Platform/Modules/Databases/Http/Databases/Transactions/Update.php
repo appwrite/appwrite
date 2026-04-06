@@ -105,8 +105,7 @@ class Update extends Action
      * @throws Exception
      * @throws \Throwable
      * @throws \Utopia\Database\Exception
-     * @throws Authorization
-     * @throws Structure
+     * @throws StructureException
      * @throws \Utopia\Http\Exception
      */
     public function action(string $transactionId, bool $commit, bool $rollback, Document $project, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, User $user, TransactionState $transactionState, Delete $queueForDeletes, Event $queueForEvents, Context $usage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, Authorization $authorization, EventProcessor $eventProcessor): void
@@ -183,7 +182,7 @@ class Update extends Action
             $dbForDatabases = $getDatabasesDB($databaseDoc);
 
             try {
-                $dbForDatabases->withTransaction(function () use ($dbForDatabases, $dbForProject, $transactionState, $queueForDeletes, $transactionId, &$transaction, &$operations, &$totalOperations, &$databaseOperations, &$currentDocumentId, $queueForEvents, $usage, $queueForRealtime, $queueForFunctions, $queueForWebhooks, $authorization) {
+                $dbForDatabases->withTransaction(function () use ($dbForDatabases, $dbForProject, $transactionState, $queueForDeletes, $transactionId, &$transaction, &$operations, &$totalOperations, &$databaseOperations, &$currentDocumentId, $authorization) {
                     $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                         'status' => 'committing',
                     ])));
