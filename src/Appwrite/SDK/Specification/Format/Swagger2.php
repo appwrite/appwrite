@@ -126,10 +126,7 @@ class Swagger2 extends Format
             $sdkPlatforms = array_values(array_unique($sdkPlatforms));
             $namespace = $sdk->getNamespace() ?? 'default';
 
-            if ($desc === null) {
-                $desc = '';
-            }
-            $descContents = \str_ends_with($desc, '.md') ? \file_get_contents($desc) : $desc;
+            $descContents = $this->getDescriptionContents($desc);
 
             $temp = [
                 'summary' => $route->getDesc(),
@@ -201,7 +198,7 @@ class Swagger2 extends Format
                         'parameters' => [],
                         'required' => [],
                         'responses' => [],
-                        'description' => ($desc) ? \file_get_contents($desc) : '',
+                        'description' => $this->getDescriptionContents($desc),
                         'demo' => \strtolower($namespace) . '/' . Template::fromCamelCaseToDash($methodObj->getMethodName()) . '.md',
                         'public' => $methodObj->isPublic(),
                     ];
