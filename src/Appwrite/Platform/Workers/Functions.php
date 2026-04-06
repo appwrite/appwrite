@@ -556,10 +556,12 @@ class Functions extends Action
             $logs = $executionResponse['logs'] ?? '';
 
             if (\is_string($logs) && \strlen($logs) > $maxLogLength) {
+                $separator = "\n";
                 $warningMessage = "[WARNING] Logs truncated. The output exceeded {$maxLogLength} characters.\n";
-                $warningLength = \strlen($warningMessage);
-                $maxContentLength = max(0, $maxLogLength - $warningLength);
-                $logs = \substr($logs, 0, $maxContentLength) . "\n" . $warningMessage;
+                // BUG-03 fix: subtract separator length so total never exceeds $maxLogLength.
+                // Without this: content(limit-W) + separator(1) + warning(W) = limit+1 — off by one.
+                $maxContentLength = max(0, $maxLogLength - \strlen($warningMessage) - \strlen($separator));
+                $logs = \substr($logs, 0, $maxContentLength) . $separator . $warningMessage;
             }
 
             // Truncate errors if they exceed the limit
@@ -567,10 +569,11 @@ class Functions extends Action
             $errors = $executionResponse['errors'] ?? '';
 
             if (\is_string($errors) && \strlen($errors) > $maxErrorLength) {
+                $separator = "\n";
                 $warningMessage = "[WARNING] Errors truncated. The output exceeded {$maxErrorLength} characters.\n";
-                $warningLength = \strlen($warningMessage);
-                $maxContentLength = max(0, $maxErrorLength - $warningLength);
-                $errors = \substr($errors, 0, $maxContentLength) . "\n" . $warningMessage;
+                // BUG-03 fix: subtract separator length so total never exceeds $maxErrorLength.
+                $maxContentLength = max(0, $maxErrorLength - \strlen($warningMessage) - \strlen($separator));
+                $errors = \substr($errors, 0, $maxContentLength) . $separator . $warningMessage;
             }
 
             /** Update execution status */

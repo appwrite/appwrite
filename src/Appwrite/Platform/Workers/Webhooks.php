@@ -101,7 +101,27 @@ class Webhooks extends Action
 
         $url = \rawurldecode($webhook->getAttribute('url'));
         $signatureKey = $webhook->getAttribute('signatureKey');
-        $signature = base64_encode(hash_hmac('sha256', $url . $payload, $signatureKey, true)); // BUG-06: upgraded from SHA-1 (deprecated) to SHA-256
+
+        /**
+         * Configurable primary signature algorithm.
+         *
+         * Default: sha1 — preserves full backward compatibility with existing consumers.
+         * New installs: set _APP_WEBHOOK_SIGNATURE_ALGO=sha256 to use the stronger algorithm.
+         *
+         * NOTE: Consumers MUST use hash_equals() for constant-time signature verification
+         * to prevent timing-based attacks.
+         *
+         * @see https://appwrite.io/docs/webhooks#signature
+         */
+        $algo = System::getEnv('_APP_WEBHOOK_SIGNATURE_ALGO', 'sha1');
+
+        // Primary signature — algorithm controlled by env var (default: sha1, backward-compat).
+        $signature = base64_encode(hash_hmac($algo, $url . $payload, $signatureKey, true));
+
+        // SHA-256 signature always computed and sent in a dedicated header.
+        // Consumers SHOULD migrate to validating 'X-Appwrite-Webhook-Signature-256'.
+        // @deprecated X-Appwrite-Webhook-Signature (sha1) — will be removed in a future release.
+        $signatureSha256 = base64_encode(hash_hmac('sha256', $url . $payload, $signatureKey, true));
         $httpUser = $webhook->getAttribute('httpUser');
         $httpPass = $webhook->getAttribute('httpPass');
         $ch = \curl_init($webhook->getAttribute('url'));
@@ -129,7 +149,8 @@ class Webhooks extends Action
                     'X-' . APP_NAME . '-Webhook-Name: ' . $webhook->getAttribute('name', ''),
                     'X-' . APP_NAME . '-Webhook-User-Id: ' . $user->getId(),
                     'X-' . APP_NAME . '-Webhook-Project-Id: ' . $project->getId(),
-                    'X-' . APP_NAME . '-Webhook-Signature: ' . $signature,
+                    'X-' . APP_NAME . '-Webhook-Signature: '     . $signature,      // primary (default sha1; set _APP_WEBHOOK_SIGNATURE_ALGO=sha256 for new installs)
+                    'X-' . APP_NAME . '-Webhook-Signature-256: ' . $signatureSha256, // always SHA-256; consumers SHOULD migrate to validating this header
                 ]
             );
             \curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
