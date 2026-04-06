@@ -553,4 +553,6 @@ $swooleAdapter->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files
     }
 });
 
-$swooleAdapter->start();
+\Swoole\Coroutine\run(static function () use ($swooleAdapter): void {
+    $swooleAdapter->start();
+});
