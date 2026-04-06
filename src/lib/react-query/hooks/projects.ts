@@ -1074,6 +1074,7 @@ export function useCreateProjectVariable(projectId: string | null | undefined) {
 
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.projectApi.createVariable({
+        variableId: ID.unique(),
         key: key.trim(),
         value,
         secret,
