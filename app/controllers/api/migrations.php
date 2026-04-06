@@ -65,17 +65,22 @@ function getDatabaseResourceType(string $databaseType): string
 
 function throwMigrationReportProviderException(\Throwable $e): void
 {
-    if ($e->getCode() === 403) {
-        throw new Exception(
-            Exception::MIGRATION_PROVIDER_ERROR,
-            $e->getMessage() !== '' ? $e->getMessage() : 'Missing required scopes.'
-        );
+    $defaultConnectivity = 'Unable to connect to the migration source. Please verify your credentials and ensure the source is reachable from this server. Check for network restrictions such as firewalls, IP allowlists, or outbound connectivity limits.';
+
+    for ($cur = $e; $cur !== null; $cur = $cur->getPrevious()) {
+        if (! $cur instanceof \Appwrite\AppwriteException) {
+            continue;
+        }
+
+        if ((int) $cur->getCode() === 401 && $cur->getType() === Exception::GENERAL_UNAUTHORIZED_SCOPE) {
+            throw new Exception(
+                Exception::GENERAL_UNAUTHORIZED_SCOPE,
+                $cur->getMessage() !== '' ? $cur->getMessage() : null
+            );
+        }
     }
 
-    throw new Exception(
-        Exception::MIGRATION_PROVIDER_ERROR,
-        'Unable to connect to the migration source. Please verify your credentials and ensure the source is reachable from this server. Check for network restrictions such as firewalls, IP allowlists, or outbound connectivity limits.'
-    );
+    throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, $defaultConnectivity);
 }
 
 Http::post('/v1/migrations/appwrite')
