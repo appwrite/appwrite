@@ -102,6 +102,7 @@ class Get extends Action
         foreach ($linkTags[0] ?? [] as $tag) {
             $attributes = [];
 
+            // Match HTML attributes in double quotes, single quotes, or bare form.
             \preg_match_all('/([a-zA-Z:-]+)\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|([^\s"\'>]+))/s', $tag, $attributeMatches, \PREG_SET_ORDER);
 
             foreach ($attributeMatches as $attributeMatch) {
