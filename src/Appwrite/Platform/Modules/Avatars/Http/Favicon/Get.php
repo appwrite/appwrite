@@ -11,8 +11,6 @@ use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\URL\URL as URLParse;
 use Appwrite\Utopia\Response;
-use DOMDocument;
-use DOMElement;
 use enshrined\svgSanitize\Sanitizer as SvgSanitizer;
 use Utopia\Domains\Domain;
 use Utopia\Fetch\Client;
@@ -94,50 +92,56 @@ class Get extends Action
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
 
-        $doc = new DOMDocument();
-        $doc->strictErrorChecking = false;
-        @$doc->loadHTML($res->getBody());
-
-        $links = $doc->getElementsByTagName('link') ?? [];
         $outputHref = '';
         $outputExt = '';
         $space = 0;
 
-        foreach ($links as $link) { /* @var $link DOMElement */
-            $href = $link->getAttribute('href');
-            $rel = $link->getAttribute('rel');
-            $sizes = $link->getAttribute('sizes');
+        $linkTags = [];
+        \preg_match_all('/<link\b[^>]*>/i', $res->getBody(), $linkTags);
+
+        foreach ($linkTags[0] ?? [] as $tag) {
+            $attributes = [];
+
+            \preg_match_all('/([a-zA-Z:-]+)\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|([^\s"\'>]+))/s', $tag, $attributeMatches, \PREG_SET_ORDER);
+
+            foreach ($attributeMatches as $attributeMatch) {
+                $attributes[\strtolower($attributeMatch[1])] = \html_entity_decode(
+                    $attributeMatch[2] ?: $attributeMatch[3] ?: $attributeMatch[4],
+                    \ENT_QUOTES | \ENT_HTML5
+                );
+            }
+
+            $href = $attributes['href'] ?? '';
+            $rel = \strtolower(\preg_replace('/\s+/', ' ', \trim($attributes['rel'] ?? '')));
+            $sizes = $attributes['sizes'] ?? '';
+
+            if (empty($href) || !\in_array($rel, ['icon', 'shortcut icon'], true)) {
+                continue;
+            }
+
             $absolute = URLParse::unparse(\array_merge(\parse_url($url), \parse_url($href)));
 
-            switch (\strtolower($rel)) {
-                case 'icon':
-                case 'shortcut icon':
-                    //case 'apple-touch-icon':
-                    $ext = \pathinfo(\parse_url($absolute, PHP_URL_PATH), PATHINFO_EXTENSION);
+            $ext = \pathinfo(\parse_url($absolute, PHP_URL_PATH), PATHINFO_EXTENSION);
 
-                    switch ($ext) {
-                        case 'svg':
-                            // SVG icons are prioritized by assigning the maximum possible value.
-                            $space = PHP_INT_MAX;
-                            $outputHref = $absolute;
-                            $outputExt = $ext;
-                            break;
-                        case 'ico':
-                        case 'png':
-                        case 'jpg':
-                        case 'jpeg':
-                            $size = \explode('x', \strtolower($sizes));
+            switch ($ext) {
+                case 'svg':
+                    $space = PHP_INT_MAX;
+                    $outputHref = $absolute;
+                    $outputExt = $ext;
+                    break;
+                case 'ico':
+                case 'png':
+                case 'jpg':
+                case 'jpeg':
+                    $size = \explode('x', \strtolower($sizes));
 
-                            $sizeWidth = (int) ($size[0] ?? 0);
-                            $sizeHeight = (int) ($size[1] ?? 0);
+                    $sizeWidth = (int) ($size[0] ?? 0);
+                    $sizeHeight = (int) ($size[1] ?? 0);
 
-                            if (($sizeWidth * $sizeHeight) >= $space) {
-                                $space = $sizeWidth * $sizeHeight;
-                                $outputHref = $absolute;
-                                $outputExt = $ext;
-                            }
-
-                            break;
+                    if (($sizeWidth * $sizeHeight) >= $space) {
+                        $space = $sizeWidth * $sizeHeight;
+                        $outputHref = $absolute;
+                        $outputExt = $ext;
                     }
 
                     break;
