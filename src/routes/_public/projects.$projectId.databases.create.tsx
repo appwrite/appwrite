@@ -10,6 +10,9 @@ export const Route = createFileRoute(
   head: () => ({
     meta: [{ title: pageTitle('Create database', 'Databases') }],
   }),
+  // Disable lazy split for this route: avoids dev failures loading
+  // `*.tsx?tsr-split=component` (e.g. rolldown/vite transform or HMR edge cases).
+  codeSplitGroupings: [],
   component: CreateDatabaseWizardPage,
 })
 
@@ -22,7 +25,7 @@ function CreateDatabaseWizardPage() {
   useEffect(() => {
     if (!showWizard && projectId) {
       navigate({
-        to: '/projects/$projectId/databases/',
+        to: '/projects/$projectId/databases',
         params: { projectId },
         search: { create: 'database' },
         replace: true,

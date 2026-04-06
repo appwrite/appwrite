@@ -63,13 +63,13 @@ export function DatabaseContextMenu({
 
   const navigateToTab = (
     path:
-      | '/projects/$projectId/databases/$databaseId/'
-      | '/projects/$projectId/databases/$databaseId/visualizer'
-      | '/projects/$projectId/databases/$databaseId/security'
-      | '/projects/$projectId/databases/$databaseId/insights'
-      | '/projects/$projectId/databases/$databaseId/backups'
-      | '/projects/$projectId/databases/$databaseId/export-import'
-      | '/projects/$projectId/databases/$databaseId/settings',
+      | '/projects/$projectId/databases/$dbKind/$databaseId/'
+      | '/projects/$projectId/databases/$dbKind/$databaseId/visualizer'
+      | '/projects/$projectId/databases/$dbKind/$databaseId/security'
+      | '/projects/$projectId/databases/$dbKind/$databaseId/insights'
+      | '/projects/$projectId/databases/$dbKind/$databaseId/backups'
+      | '/projects/$projectId/databases/$dbKind/$databaseId/export-import'
+      | '/projects/$projectId/databases/$dbKind/$databaseId/settings',
   ) => {
     navigate({
       to: path,
@@ -83,7 +83,7 @@ export function DatabaseContextMenu({
       <ContextMenuContent className="w-56">
         <ContextMenuItem
           onSelect={() =>
-            navigateToTab('/projects/$projectId/databases/$databaseId/')
+            navigateToTab('/projects/$projectId/databases/$dbKind/$databaseId/')
           }
         >
           <ContextMenuIcon icon={Table2} />
@@ -92,7 +92,7 @@ export function DatabaseContextMenu({
         <ContextMenuItem
           onSelect={() =>
             navigateToTab(
-              '/projects/$projectId/databases/$databaseId/visualizer',
+              '/projects/$projectId/databases/$dbKind/$databaseId/visualizer',
             )
           }
         >
@@ -103,7 +103,7 @@ export function DatabaseContextMenu({
           <ContextMenuItem
             onSelect={() =>
               navigateToTab(
-                '/projects/$projectId/databases/$databaseId/security',
+                '/projects/$projectId/databases/$dbKind/$databaseId/security',
               )
             }
           >
@@ -115,7 +115,7 @@ export function DatabaseContextMenu({
           <ContextMenuItem
             onSelect={() =>
               navigateToTab(
-                '/projects/$projectId/databases/$databaseId/insights',
+                '/projects/$projectId/databases/$dbKind/$databaseId/insights',
               )
             }
           >
@@ -127,7 +127,7 @@ export function DatabaseContextMenu({
           <ContextMenuItem
             onSelect={() =>
               navigateToTab(
-                '/projects/$projectId/databases/$databaseId/backups',
+                '/projects/$projectId/databases/$dbKind/$databaseId/backups',
               )
             }
           >
@@ -138,7 +138,7 @@ export function DatabaseContextMenu({
         <ContextMenuItem
           onSelect={() =>
             navigateToTab(
-              '/projects/$projectId/databases/$databaseId/export-import',
+              '/projects/$projectId/databases/$dbKind/$databaseId/export-import',
             )
           }
         >
@@ -149,7 +149,7 @@ export function DatabaseContextMenu({
           <ContextMenuItem
             onSelect={() =>
               navigateToTab(
-                '/projects/$projectId/databases/$databaseId/settings',
+                '/projects/$projectId/databases/$dbKind/$databaseId/settings',
               )
             }
           >

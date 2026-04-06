@@ -1274,14 +1274,14 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
   // Context menu handlers
   const handleNavigateToTable = (tableId: string) => {
     navigate({
-      to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
+      to: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/rows',
       params: { projectId, databaseId, tableId },
     })
   }
 
   const handleNavigateToSettings = (tableId: string) => {
     navigate({
-      to: '/projects/$projectId/databases/$databaseId/tables/$tableId/settings',
+      to: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/settings',
       params: { projectId, databaseId, tableId },
     })
   }

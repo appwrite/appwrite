@@ -50,9 +50,15 @@ export function readConsoleImpersonationOperatorSnapshot():
   }
 }
 
+export type ConsoleImpersonationSessionOptions = {
+  /** Use before `location.replace` to `/account` so listeners don't refetch while still on another route. */
+  skipNotify?: boolean
+}
+
 export function persistConsoleImpersonationSession(
   targetUserId: string,
   operator: ConsoleImpersonationOperatorSnapshot,
+  options?: ConsoleImpersonationSessionOptions,
 ) {
   if (typeof window === 'undefined') return
   try {
@@ -64,10 +70,14 @@ export function persistConsoleImpersonationSession(
   } catch {
     /* private mode */
   }
-  notifyConsoleImpersonationChanged()
+  if (!options?.skipNotify) {
+    notifyConsoleImpersonationChanged()
+  }
 }
 
-export function clearConsoleImpersonationSession() {
+export function clearConsoleImpersonationSession(
+  options?: ConsoleImpersonationSessionOptions,
+) {
   if (typeof window === 'undefined') return
   try {
     sessionStorage.removeItem(CONSOLE_IMPERSONATION_TARGET_KEY)
@@ -75,7 +85,9 @@ export function clearConsoleImpersonationSession() {
   } catch {
     /* ignore */
   }
-  notifyConsoleImpersonationChanged()
+  if (!options?.skipNotify) {
+    notifyConsoleImpersonationChanged()
+  }
 }
 
 export function notifyConsoleImpersonationChanged() {

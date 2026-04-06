@@ -12,7 +12,7 @@ import {
   keepPreviousData,
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
-import { Query, ID } from '@appwrite.io/console'
+import { Query, ID, DatabaseType } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import type { Database, Collection } from '@/lib/utils/mock-data'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -21,6 +21,77 @@ import {
   DEFAULT_PAGE_SIZE,
   COLUMNS_INDEXES_DEFAULT_PAGE_SIZE,
 } from './constants'
+
+const MERGED_DATABASE_LIST_LIMIT = 500
+
+/** Resolve a database from whichever product API owns it (Tables, Documents, or Vectors). */
+export async function getDatabaseModel(
+  projectId: string,
+  databaseId: string,
+): Promise<Models.Database | null> {
+  if (!projectId || !databaseId) return null
+  const projectSdk = sdk.forProject(projectId)
+  for (const tryGet of [
+    () => projectSdk.tablesDB.get({ databaseId }),
+    () => projectSdk.documentsDB.get({ databaseId }),
+    () => projectSdk.vectorsDB.get({ databaseId }),
+  ]) {
+    try {
+      const d = await tryGet()
+      if (d?.$id) return d
+    } catch {
+      /* try next backend */
+    }
+  }
+  return null
+}
+
+function flattenDocumentForTableRow(
+  doc: Record<string, unknown>,
+): Record<string, unknown> {
+  const base: Record<string, unknown> = {
+    $id: doc.$id,
+    $sequence: doc.$sequence,
+    $createdAt: doc.$createdAt,
+    $updatedAt: doc.$updatedAt,
+    $permissions: doc.$permissions,
+  }
+  const nested = doc.data
+  if (nested && typeof nested === 'object' && !Array.isArray(nested)) {
+    return { ...base, ...(nested as Record<string, unknown>) }
+  }
+  return { ...doc }
+}
+
+function mapCollectionAttributesToColumnLike(
+  attributes: unknown[] | undefined,
+): unknown[] {
+  if (!Array.isArray(attributes)) return []
+  return attributes.map((raw) => {
+    const a = raw as Record<string, unknown>
+    const key = String(a.key ?? '')
+    const type = String(a.type ?? 'string')
+    return {
+      ...a,
+      key,
+      type,
+      status: (a.status as string) || 'available',
+    }
+  })
+}
+
+function normalizeIndexesForTableUi<T extends Record<string, unknown>>(
+  indexes: T[] | undefined,
+): T[] {
+  if (!indexes?.length) return []
+  return indexes.map((idx) => {
+    const cols = idx.columns ?? idx.attributes
+    return {
+      ...idx,
+      columns: Array.isArray(cols) ? cols : [],
+    } as T
+  })
+}
 
 // ============================================================================
 // QUERY FUNCTIONS
@@ -49,27 +120,44 @@ export async function fetchProjectDatabases(
   }
 
   const projectSdk = sdk.forProject(projectId)
-  const queries = [
+  const mergeQueries = [
     ...(filterQueries ?? []),
     Query.orderDesc('$createdAt'),
-    Query.limit(limit),
-    Query.offset(page * limit),
+    Query.limit(MERGED_DATABASE_LIST_LIMIT),
   ]
+  const searchArg = search?.trim() || undefined
 
-  // Use TablesDB API to list databases
-  let response: Models.DatabaseList
-  try {
-    response = await projectSdk.tablesDB.list({
-      queries,
-      search: search?.trim() || undefined,
-    })
-  } catch {
-    response = { databases: [], total: 0 }
+  const settled = await Promise.allSettled([
+    projectSdk.tablesDB.list({ queries: mergeQueries, search: searchArg }),
+    projectSdk.documentsDB.list({ queries: mergeQueries, search: searchArg }),
+    projectSdk.vectorsDB.list({ queries: mergeQueries, search: searchArg }),
+  ])
+
+  const merged: Models.Database[] = []
+  for (const s of settled) {
+    if (s.status === 'fulfilled' && s.value.databases?.length) {
+      merged.push(...s.value.databases)
+    }
   }
 
+  const byId = new Map<string, Models.Database>()
+  for (const d of merged) {
+    if (d?.$id && !byId.has(d.$id)) {
+      byId.set(d.$id, d)
+    }
+  }
+
+  const sorted = [...byId.values()].sort(
+    (a, b) =>
+      new Date(b.$createdAt).getTime() - new Date(a.$createdAt).getTime(),
+  )
+
+  const total = sorted.length
+  const slice = sorted.slice(page * limit, page * limit + limit)
+
   return {
-    databases: response.databases ?? [],
-    total: response.total ?? 0,
+    databases: slice,
+    total,
   }
 }
 
@@ -90,17 +178,20 @@ export async function fetchProjectDatabase(
     return null
   }
 
-  const projectSdk = sdk.forProject(projectId)
   try {
-    const db = await projectSdk.tablesDB.get({ databaseId })
+    const db = await getDatabaseModel(projectId, databaseId)
 
     if (!db) {
       return null
     }
 
-    // Map to our Database type
+    const dbRecord = db as unknown as Record<string, unknown>
     const backupPolicies =
-      db.backupPolicies || db.backups || db.policies || db.backup || []
+      dbRecord.backupPolicies ||
+      dbRecord.backups ||
+      dbRecord.policies ||
+      dbRecord.backup ||
+      []
     const backupPoliciesArray = Array.isArray(backupPolicies)
       ? backupPolicies
       : backupPolicies
@@ -109,21 +200,22 @@ export async function fetchProjectDatabase(
     const backupPolicyCount = backupPoliciesArray.length
     const hasBackupPolicy =
       backupPolicyCount > 0 ||
-      db.backupEnabled === true ||
-      db.backupPolicyEnabled === true
+      dbRecord.backupEnabled === true ||
+      dbRecord.backupPolicyEnabled === true
     const backupPolicy = backupPoliciesArray[0] || null
 
     return {
       $id: db.$id,
       name: db.name || 'Unnamed Database',
-      tables: db.collections?.length || 0,
-      rows: db.documents || 0,
-      enabled: db.enabled !== false, // Default to true if not specified
+      tables: (dbRecord.collections as unknown[] | undefined)?.length || 0,
+      rows: (dbRecord.documents as number | undefined) || 0,
+      enabled: db.enabled !== false,
       createdAt: db.$createdAt || new Date().toISOString(),
       updatedAt: db.$updatedAt || db.$createdAt || new Date().toISOString(),
       hasBackupPolicy,
       backupPolicy,
       backupPolicyCount,
+      databaseType: db.type,
     } as Database & {
       enabled: boolean
       createdAt: string
@@ -131,6 +223,7 @@ export async function fetchProjectDatabase(
       hasBackupPolicy: boolean
       backupPolicy: Record<string, unknown> | null
       backupPolicyCount: number
+      databaseType: DatabaseType
     }
   } catch {
     return null
@@ -148,6 +241,7 @@ export async function fetchProjectDatabase(
 export async function createProjectDatabase(
   projectId: string,
   data: { databaseId?: string | null; name: string },
+  backend: DatabaseType = DatabaseType.Tablesdb,
 ) {
   if (!projectId) {
     throw new Error('Project ID is required')
@@ -157,10 +251,14 @@ export async function createProjectDatabase(
     data.databaseId && data.databaseId.trim() !== ''
       ? data.databaseId.trim()
       : ID.unique()
-  return await projectSdk.tablesDB.create({
-    databaseId,
-    name: data.name.trim(),
-  })
+  const name = data.name.trim()
+  if (backend === DatabaseType.Documentsdb) {
+    return await projectSdk.documentsDB.create({ databaseId, name })
+  }
+  if (backend === DatabaseType.Vectorsdb) {
+    return await projectSdk.vectorsDB.create({ databaseId, name })
+  }
+  return await projectSdk.tablesDB.create({ databaseId, name })
 }
 
 /**
@@ -174,7 +272,7 @@ export async function createProjectDatabase(
 export async function createProjectTable(
   projectId: string,
   databaseId: string,
-  data: { tableId?: string | null; name: string },
+  data: { tableId?: string | null; name: string; dimension?: number },
 ) {
   if (!projectId || !databaseId) {
     throw new Error('Project ID and Database ID are required')
@@ -184,6 +282,30 @@ export async function createProjectTable(
     data.tableId && data.tableId.trim() !== ''
       ? data.tableId.trim()
       : ID.unique()
+
+  const dm = await getDatabaseModel(projectId, databaseId)
+  const kind = dm?.type ?? DatabaseType.Tablesdb
+
+  if (kind === DatabaseType.Vectorsdb) {
+    const dimension =
+      typeof data.dimension === 'number' && data.dimension > 0
+        ? data.dimension
+        : 384
+    return await projectSdk.vectorsDB.createCollection({
+      databaseId,
+      collectionId: tableId,
+      name: data.name.trim(),
+      dimension,
+    })
+  }
+
+  if (kind === DatabaseType.Documentsdb) {
+    return await projectSdk.documentsDB.createCollection({
+      databaseId,
+      collectionId: tableId,
+      name: data.name.trim(),
+    })
+  }
 
   return await projectSdk.tablesDB.createTable({
     databaseId,
@@ -382,14 +504,49 @@ export async function fetchProjectTables(
     Query.limit(limit),
     Query.offset(page * limit),
   ]
+  const searchArg = search?.trim() || undefined
 
-  // Use TablesDB API to list tables (collections)
+  const dm = await getDatabaseModel(projectId, databaseId)
+  const kind = dm?.type ?? DatabaseType.Tablesdb
+
+  if (kind === DatabaseType.Documentsdb) {
+    try {
+      const response = await projectSdk.documentsDB.listCollections({
+        databaseId,
+        queries,
+        search: searchArg,
+      })
+      return {
+        tables: response.collections ?? [],
+        total: response.total ?? 0,
+      }
+    } catch {
+      return { tables: [], total: 0 }
+    }
+  }
+
+  if (kind === DatabaseType.Vectorsdb) {
+    try {
+      const response = await projectSdk.vectorsDB.listCollections({
+        databaseId,
+        queries,
+        search: searchArg,
+      })
+      return {
+        tables: response.collections ?? [],
+        total: response.total ?? 0,
+      }
+    } catch {
+      return { tables: [], total: 0 }
+    }
+  }
+
   let response: Models.TableList
   try {
     response = await projectSdk.tablesDB.listTables({
       databaseId,
       queries,
-      search: search?.trim() || undefined,
+      search: searchArg,
     })
   } catch {
     response = { tables: [], total: 0 }
@@ -421,10 +578,36 @@ export async function fetchAllProjectTablesForVisualizer(
   const projectSdk = sdk.forProject(projectId)
   const queries = [
     Query.orderDesc('$createdAt'),
-    Query.limit(1000), // Fetch all tables (high limit)
+    Query.limit(1000),
   ]
 
-  // Use TablesDB API to list tables (collections)
+  const dm = await getDatabaseModel(projectId, databaseId)
+  const kind = dm?.type ?? DatabaseType.Tablesdb
+
+  if (kind === DatabaseType.Documentsdb) {
+    try {
+      const response = await projectSdk.documentsDB.listCollections({
+        databaseId,
+        queries,
+      })
+      return { tables: response.collections ?? [] }
+    } catch {
+      return { tables: [] }
+    }
+  }
+
+  if (kind === DatabaseType.Vectorsdb) {
+    try {
+      const response = await projectSdk.vectorsDB.listCollections({
+        databaseId,
+        queries,
+      })
+      return { tables: response.collections ?? [] }
+    } catch {
+      return { tables: [] }
+    }
+  }
+
   let response: Models.TableList
   try {
     response = await projectSdk.tablesDB.listTables({
@@ -432,7 +615,7 @@ export async function fetchAllProjectTablesForVisualizer(
       queries,
     })
   } catch {
-    response = { tables: [] }
+    response = { tables: [], total: 0 }
   }
 
   return {
@@ -481,22 +664,45 @@ export async function fetchProjectTableRows(
     Query.offset(page * limit),
   ]
 
-  // Use TablesDB API to list rows
-  let response: unknown
+  const dm = await getDatabaseModel(projectId, databaseId)
+  const kind = dm?.type ?? DatabaseType.Tablesdb
+
+  if (kind === DatabaseType.Documentsdb || kind === DatabaseType.Vectorsdb) {
+    const listFn =
+      kind === DatabaseType.Documentsdb
+        ? projectSdk.documentsDB.listDocuments.bind(projectSdk.documentsDB)
+        : projectSdk.vectorsDB.listDocuments.bind(projectSdk.vectorsDB)
+    try {
+      const response = await listFn({
+        databaseId,
+        collectionId: tableId,
+        queries,
+        total: true,
+      })
+      const docs = (response.documents ?? []) as Record<string, unknown>[]
+      return {
+        rows: docs.map((d) => flattenDocumentForTableRow(d)),
+        total: response.total ?? 0,
+      }
+    } catch {
+      return { rows: [], total: 0 }
+    }
+  }
+
+  let response: { rows?: unknown[]; documents?: unknown[]; total?: number }
   try {
     if (typeof projectSdk.tablesDB.listRows === 'function') {
-      // Note: search might need to be passed differently depending on SDK version
-      const listRowsParams: unknown = {
+      const listRowsParams: Record<string, unknown> = {
         databaseId,
         tableId,
         queries,
       }
-      // Try to add search if the method supports it
       if (search?.trim()) {
-        // Some SDK versions might support search in queries or as a separate param
         listRowsParams.search = search.trim()
       }
-      response = await projectSdk.tablesDB.listRows(listRowsParams)
+      response = (await projectSdk.tablesDB.listRows(
+        listRowsParams as never,
+      )) as typeof response
     } else {
       response = { rows: [], total: 0 }
     }
@@ -523,7 +729,26 @@ export async function fetchProjectTableRow(
     return null
   }
   const projectSdk = sdk.forProject(projectId)
+  const dm = await getDatabaseModel(projectId, databaseId)
+  const kind = dm?.type ?? DatabaseType.Tablesdb
+
   try {
+    if (kind === DatabaseType.Documentsdb) {
+      const doc = await projectSdk.documentsDB.getDocument({
+        databaseId,
+        collectionId: tableId,
+        documentId: rowId,
+      })
+      return flattenDocumentForTableRow(doc as Record<string, unknown>)
+    }
+    if (kind === DatabaseType.Vectorsdb) {
+      const doc = await projectSdk.vectorsDB.getDocument({
+        databaseId,
+        collectionId: tableId,
+        documentId: rowId,
+      })
+      return flattenDocumentForTableRow(doc as Record<string, unknown>)
+    }
     if (typeof projectSdk.tablesDB.getRow === 'function') {
       return await projectSdk.tablesDB.getRow({
         databaseId,
@@ -532,7 +757,7 @@ export async function fetchProjectTableRow(
       })
     }
   } catch {
-    // Row may not exist or no permission
+    /* not found or no permission */
   }
   return null
 }
@@ -569,6 +794,35 @@ export async function fetchProjectTableColumns(
     Query.limit(limit),
     Query.offset(page * limit),
   ]
+
+  const dm = await getDatabaseModel(projectId, databaseId)
+  const kind = dm?.type ?? DatabaseType.Tablesdb
+
+  if (kind === DatabaseType.Documentsdb) {
+    try {
+      const coll = await projectSdk.documentsDB.getCollection({
+        databaseId,
+        collectionId: tableId,
+      })
+      const cols = mapCollectionAttributesToColumnLike(coll.attributes)
+      return { columns: cols, total: cols.length }
+    } catch {
+      return { columns: [], total: 0 }
+    }
+  }
+
+  if (kind === DatabaseType.Vectorsdb) {
+    try {
+      const coll = await projectSdk.vectorsDB.getCollection({
+        databaseId,
+        collectionId: tableId,
+      })
+      const cols = mapCollectionAttributesToColumnLike(coll.attributes)
+      return { columns: cols, total: cols.length }
+    } catch {
+      return { columns: [], total: 0 }
+    }
+  }
 
   try {
     const response = await projectSdk.tablesDB.listColumns({
@@ -617,6 +871,47 @@ export async function fetchProjectTableIndexes(
     Query.offset(page * limit),
   ]
 
+  const dm = await getDatabaseModel(projectId, databaseId)
+  const kind = dm?.type ?? DatabaseType.Tablesdb
+
+  if (kind === DatabaseType.Documentsdb) {
+    try {
+      const response = await projectSdk.documentsDB.listIndexes({
+        databaseId,
+        collectionId: tableId,
+        queries,
+        total: true,
+      })
+      return {
+        indexes: normalizeIndexesForTableUi(
+          response.indexes as Record<string, unknown>[] | undefined,
+        ),
+        total: response.total ?? 0,
+      }
+    } catch {
+      return { indexes: [], total: 0 }
+    }
+  }
+
+  if (kind === DatabaseType.Vectorsdb) {
+    try {
+      const response = await projectSdk.vectorsDB.listIndexes({
+        databaseId,
+        collectionId: tableId,
+        queries,
+        total: true,
+      })
+      return {
+        indexes: normalizeIndexesForTableUi(
+          response.indexes as Record<string, unknown>[] | undefined,
+        ),
+        total: response.total ?? 0,
+      }
+    } catch {
+      return { indexes: [], total: 0 }
+    }
+  }
+
   try {
     const response = await projectSdk.tablesDB.listIndexes({
       databaseId,
@@ -653,35 +948,51 @@ export async function fetchProjectTable(
   }
 
   const projectSdk = sdk.forProject(projectId)
+  const dm = await getDatabaseModel(projectId, databaseId)
+  const kind = dm?.type ?? DatabaseType.Tablesdb
+
   try {
-    let response: unknown
-    if (typeof projectSdk.tablesDB.getTable === 'function') {
-      response = await projectSdk.tablesDB.getTable({ databaseId, tableId })
-    } else if (
-      typeof (projectSdk.tablesDB as unknown).getCollection === 'function'
-    ) {
-      response = await (projectSdk.tablesDB as unknown).getCollection({
+    let response: Record<string, unknown> | null = null
+
+    if (kind === DatabaseType.Documentsdb) {
+      response = (await projectSdk.documentsDB.getCollection({
+        databaseId,
+        collectionId: tableId,
+      })) as unknown as Record<string, unknown>
+    } else if (kind === DatabaseType.Vectorsdb) {
+      response = (await projectSdk.vectorsDB.getCollection({
+        databaseId,
+        collectionId: tableId,
+      })) as unknown as Record<string, unknown>
+    } else if (typeof projectSdk.tablesDB.getTable === 'function') {
+      response = (await projectSdk.tablesDB.getTable({
         databaseId,
         tableId,
-      })
-    } else {
-      return null
+      })) as unknown as Record<string, unknown>
     }
 
     if (!response) {
       return null
     }
 
+    const rowSecurity =
+      response.rowSecurity === true || response.documentSecurity === true
+
     return {
-      $id: response.$id,
-      name: response.name || 'Unnamed Table',
+      $id: response.$id as string,
+      name: (response.name as string) || 'Unnamed Table',
       databaseId: databaseId,
-      enabled: response.enabled !== false, // Default to true if not specified
-      rowSecurity: response.rowSecurity === true,
-      $permissions: response.$permissions || [],
-      $createdAt: response.$createdAt || new Date().toISOString(),
+      enabled: response.enabled !== false,
+      rowSecurity,
+      $permissions: (response.$permissions as string[]) || [],
+      $createdAt:
+        (response.$createdAt as string) || new Date().toISOString(),
       $updatedAt:
-        response.$updatedAt || response.$createdAt || new Date().toISOString(),
+        (response.$updatedAt as string) ||
+        (response.$createdAt as string) ||
+        new Date().toISOString(),
+      dimension:
+        typeof response.dimension === 'number' ? response.dimension : undefined,
     }
   } catch {
     return null
@@ -711,6 +1022,25 @@ export async function deleteProjectTableRow(
   }
 
   const projectSdk = sdk.forProject(projectId)
+  const dm = await getDatabaseModel(projectId, databaseId)
+  const kind = dm?.type ?? DatabaseType.Tablesdb
+
+  if (kind === DatabaseType.Documentsdb) {
+    await projectSdk.documentsDB.deleteDocument({
+      databaseId,
+      collectionId: tableId,
+      documentId: rowId,
+    })
+    return
+  }
+  if (kind === DatabaseType.Vectorsdb) {
+    await projectSdk.vectorsDB.deleteDocument({
+      databaseId,
+      collectionId: tableId,
+      documentId: rowId,
+    })
+    return
+  }
 
   if (typeof projectSdk.tablesDB.deleteRow === 'function') {
     await projectSdk.tablesDB.deleteRow({
@@ -745,30 +1075,74 @@ export async function createProjectTableRow(
   }
 
   const projectSdk = sdk.forProject(projectId)
+  const dm = await getDatabaseModel(projectId, databaseId)
+  const kind = dm?.type ?? DatabaseType.Tablesdb
+  const { ID } = await import('@appwrite.io/console')
+  const id = rowId || (data.$id as string) || ID.unique()
+
+  const payload = { ...data } as Record<string, unknown>
+  if (payload.$id) delete payload.$id
+
+  if (kind === DatabaseType.Documentsdb) {
+    const createParams: {
+      databaseId: string
+      collectionId: string
+      documentId: string
+      data: Record<string, unknown>
+      permissions?: string[]
+    } = {
+      databaseId,
+      collectionId: tableId,
+      documentId: id,
+      data: payload,
+    }
+    if (permissions && permissions.length > 0) {
+      createParams.permissions = permissions
+    }
+    const created = await projectSdk.documentsDB.createDocument(
+      createParams as never,
+    )
+    return flattenDocumentForTableRow(created as Record<string, unknown>)
+  }
+
+  if (kind === DatabaseType.Vectorsdb) {
+    const createParams: {
+      databaseId: string
+      collectionId: string
+      documentId: string
+      data: Record<string, unknown>
+      permissions?: string[]
+    } = {
+      databaseId,
+      collectionId: tableId,
+      documentId: id,
+      data: payload,
+    }
+    if (permissions && permissions.length > 0) {
+      createParams.permissions = permissions
+    }
+    const created = await projectSdk.vectorsDB.createDocument(
+      createParams as never,
+    )
+    return flattenDocumentForTableRow(created as Record<string, unknown>)
+  }
 
   if (typeof projectSdk.tablesDB.createRow === 'function') {
-    const { ID } = await import('@appwrite.io/console')
-    const createParams: unknown = {
+    const createParams: Record<string, unknown> = {
       databaseId,
       tableId,
-      rowId: rowId || data.$id || ID.unique(),
-      data: { ...data },
+      rowId: id,
+      data: { ...payload },
     }
 
-    // Remove $id from data if it exists (it's passed as rowId)
-    if (createParams.data.$id) {
-      delete createParams.data.$id
-    }
-
-    // Add permissions if provided
     if (permissions && permissions.length > 0) {
       createParams.permissions = permissions
     }
 
-    return await projectSdk.tablesDB.createRow(createParams)
-  } else {
-    throw new Error('Create row method not available')
+    return await projectSdk.tablesDB.createRow(createParams as never)
   }
+
+  throw new Error('Create row method not available')
 }
 
 /**
@@ -793,29 +1167,72 @@ export async function updateProjectTableRow(
   }
 
   const projectSdk = sdk.forProject(projectId)
+  const dm = await getDatabaseModel(projectId, databaseId)
+  const kind = dm?.type ?? DatabaseType.Tablesdb
+
+  const payload = { ...data } as Record<string, unknown>
+  if (payload.$id) delete payload.$id
+
+  if (kind === DatabaseType.Documentsdb) {
+    const updateParams: {
+      databaseId: string
+      collectionId: string
+      documentId: string
+      data: Record<string, unknown>
+      permissions?: string[]
+    } = {
+      databaseId,
+      collectionId: tableId,
+      documentId: rowId,
+      data: payload,
+    }
+    if (permissions !== undefined) {
+      updateParams.permissions = permissions
+    }
+    const updated = await projectSdk.documentsDB.updateDocument(
+      updateParams as never,
+    )
+    return flattenDocumentForTableRow(updated as Record<string, unknown>)
+  }
+
+  if (kind === DatabaseType.Vectorsdb) {
+    const updateParams: {
+      databaseId: string
+      collectionId: string
+      documentId: string
+      data: Record<string, unknown>
+      permissions?: string[]
+    } = {
+      databaseId,
+      collectionId: tableId,
+      documentId: rowId,
+      data: payload,
+    }
+    if (permissions !== undefined) {
+      updateParams.permissions = permissions
+    }
+    const updated = await projectSdk.vectorsDB.updateDocument(
+      updateParams as never,
+    )
+    return flattenDocumentForTableRow(updated as Record<string, unknown>)
+  }
 
   if (typeof projectSdk.tablesDB.updateRow === 'function') {
-    const updateParams: unknown = {
+    const updateParams: Record<string, unknown> = {
       databaseId,
       tableId,
       rowId,
-      data: { ...data },
+      data: payload,
     }
 
-    // Remove $id from data if it exists (it's passed as rowId)
-    if (updateParams.data.$id) {
-      delete updateParams.data.$id
-    }
-
-    // Add permissions if provided (including empty array to clear permissions)
     if (permissions !== undefined) {
       updateParams.permissions = permissions
     }
 
-    return await projectSdk.tablesDB.updateRow(updateParams)
-  } else {
-    throw new Error('Update row method not available')
+    return await projectSdk.tablesDB.updateRow(updateParams as never)
   }
+
+  throw new Error('Update row method not available')
 }
 
 /**
@@ -848,15 +1265,22 @@ export async function createProjectTableRows(
   let created = 0
 
   // If no relationship columns, try bulk insert
-  if (
-    !hasRelationshipColumns &&
-    typeof (projectSdk.tablesDB as unknown).createRows === 'function'
-  ) {
+  const tablesBulk = projectSdk.tablesDB as unknown as {
+    createRows?: (p: {
+      databaseId: string
+      tableId: string
+      rows: { rowId: string; data: Record<string, unknown> }[]
+    }) => Promise<unknown>
+  }
+
+  if (!hasRelationshipColumns && typeof tablesBulk.createRows === 'function') {
     try {
       const { ID } = await import('@appwrite.io/console')
       const rowsToInsert = rows.map((row) => {
-        const rowData = { ...row }
-        const rowId = row.$id || ID.unique()
+        const rowRec = row as Record<string, unknown>
+        const rowData = { ...rowRec }
+        const rowId =
+          typeof rowRec.$id === 'string' ? rowRec.$id : ID.unique()
         if (rowData.$id) {
           delete rowData.$id
         }
@@ -866,7 +1290,7 @@ export async function createProjectTableRows(
         }
       })
 
-      await (projectSdk.tablesDB as unknown).createRows({
+      await tablesBulk.createRows({
         databaseId,
         tableId,
         rows: rowsToInsert,
@@ -885,12 +1309,13 @@ export async function createProjectTableRows(
       const batch = rows.slice(i, i + batchSize)
       const batchPromises = batch.map(async (row) => {
         try {
+          const rid = (row as Record<string, unknown>).$id
           await createProjectTableRow(
             projectId,
             databaseId,
             tableId,
             row,
-            row.$id,
+            typeof rid === 'string' ? rid : undefined,
           )
           created++
         } catch (error) {
@@ -938,6 +1363,10 @@ export async function createProjectTableColumn(
   } = data
   // TablesDB create methods only add encrypt to payload when typeof encrypt !== 'undefined'. Always pass explicit boolean for text types.
   const encrypt = data.encrypt === true
+  const colKey = typeof key === 'string' ? key : String(key ?? '')
+  if (!colKey) {
+    throw new Error('Column key is required')
+  }
 
   // Call the appropriate method based on column type (TablesDB: createXColumn with databaseId, tableId, key, ...)
   switch (type) {
@@ -945,138 +1374,138 @@ export async function createProjectTableColumn(
       return await projectSdk.tablesDB.createVarcharColumn({
         databaseId,
         tableId,
-        key,
+        key: colKey,
         size: size ?? 255,
         required,
         xdefault,
         array,
         encrypt,
-      })
+      } as never)
     case 'text':
       return await projectSdk.tablesDB.createTextColumn({
         databaseId,
         tableId,
-        key,
+        key: colKey,
         required,
         xdefault,
         array,
         encrypt,
-      })
+      } as never)
     case 'mediumtext':
       return await projectSdk.tablesDB.createMediumtextColumn({
         databaseId,
         tableId,
-        key,
+        key: colKey,
         required,
         xdefault,
         array,
         encrypt,
-      })
+      } as never)
     case 'longtext':
       return await projectSdk.tablesDB.createLongtextColumn({
         databaseId,
         tableId,
-        key,
+        key: colKey,
         required,
         xdefault,
         array,
         encrypt,
-      })
+      } as never)
     case 'string':
       return await projectSdk.tablesDB.createStringColumn({
         databaseId,
         tableId,
-        key,
+        key: colKey,
         size: size || 255,
         required,
         xdefault,
         array,
         encrypt,
-      })
+      } as never)
     case 'integer':
       return await projectSdk.tablesDB.createIntegerColumn({
         databaseId,
         tableId,
-        key,
+        key: colKey,
         required,
         min,
         max,
         xdefault,
         array,
-      })
+      } as never)
     case 'double':
     case 'float':
       return await projectSdk.tablesDB.createFloatColumn({
         databaseId,
         tableId,
-        key,
+        key: colKey,
         required,
         min,
         max,
         xdefault,
         array,
-      })
+      } as never)
     case 'boolean':
       return await projectSdk.tablesDB.createBooleanColumn({
         databaseId,
         tableId,
-        key,
+        key: colKey,
         required,
         xdefault,
         array,
-      })
+      } as never)
     case 'datetime':
       return await projectSdk.tablesDB.createDatetimeColumn({
         databaseId,
         tableId,
-        key,
+        key: colKey,
         required,
         xdefault,
         array,
-      })
+      } as never)
     case 'email':
       return await projectSdk.tablesDB.createEmailColumn({
         databaseId,
         tableId,
-        key,
+        key: colKey,
         required,
         xdefault,
         array,
-      })
+      } as never)
     case 'ip':
       return await projectSdk.tablesDB.createIpColumn({
         databaseId,
         tableId,
-        key,
+        key: colKey,
         required,
         xdefault,
         array,
-      })
+      } as never)
     case 'url':
       return await projectSdk.tablesDB.createUrlColumn({
         databaseId,
         tableId,
-        key,
+        key: colKey,
         required,
         xdefault,
         array,
-      })
+      } as never)
     case 'enum':
       return await projectSdk.tablesDB.createEnumColumn({
         databaseId,
         tableId,
-        key,
-        elements: elements || [],
+        key: colKey,
+        elements: (Array.isArray(elements) ? elements : []) as string[],
         required,
         xdefault,
         array,
-      })
+      } as never)
     case 'relationship':
       return await projectSdk.tablesDB.createRelationshipColumn({
         databaseId,
         tableId,
-        ...columnData,
-      })
+        ...(columnData as object),
+      } as never)
     default:
       throw new Error(`Unsupported column type: ${type}`)
   }
@@ -1129,7 +1558,7 @@ export async function updateProjectTableColumn(
         size,
         newKey,
         encrypt,
-      })
+      } as never)
     case 'text':
       return await projectSdk.tablesDB.updateTextColumn({
         databaseId,
@@ -1139,7 +1568,7 @@ export async function updateProjectTableColumn(
         xdefault,
         newKey,
         encrypt,
-      })
+      } as never)
     case 'mediumtext':
       return await projectSdk.tablesDB.updateMediumtextColumn({
         databaseId,
@@ -1149,7 +1578,7 @@ export async function updateProjectTableColumn(
         xdefault,
         newKey,
         encrypt,
-      })
+      } as never)
     case 'longtext':
       return await projectSdk.tablesDB.updateLongtextColumn({
         databaseId,
@@ -1159,7 +1588,7 @@ export async function updateProjectTableColumn(
         xdefault,
         newKey,
         encrypt,
-      })
+      } as never)
     case 'string':
       return await projectSdk.tablesDB.updateStringColumn({
         databaseId,
@@ -1170,7 +1599,7 @@ export async function updateProjectTableColumn(
         size,
         newKey,
         encrypt,
-      })
+      } as never)
     case 'integer':
       return await projectSdk.tablesDB.updateIntegerColumn({
         databaseId,
@@ -1181,7 +1610,7 @@ export async function updateProjectTableColumn(
         max,
         xdefault,
         newKey,
-      })
+      } as never)
     case 'double':
     case 'float':
       return await projectSdk.tablesDB.updateFloatColumn({
@@ -1193,7 +1622,7 @@ export async function updateProjectTableColumn(
         max,
         xdefault,
         newKey,
-      })
+      } as never)
     case 'boolean':
       return await projectSdk.tablesDB.updateBooleanColumn({
         databaseId,
@@ -1202,7 +1631,7 @@ export async function updateProjectTableColumn(
         required,
         xdefault,
         newKey,
-      })
+      } as never)
     case 'datetime':
       return await projectSdk.tablesDB.updateDatetimeColumn({
         databaseId,
@@ -1211,7 +1640,7 @@ export async function updateProjectTableColumn(
         required,
         xdefault,
         newKey,
-      })
+      } as never)
     case 'email':
       return await projectSdk.tablesDB.updateEmailColumn({
         databaseId,
@@ -1220,7 +1649,7 @@ export async function updateProjectTableColumn(
         required,
         xdefault,
         newKey,
-      })
+      } as never)
     case 'ip':
       return await projectSdk.tablesDB.updateIpColumn({
         databaseId,
@@ -1229,7 +1658,7 @@ export async function updateProjectTableColumn(
         required,
         xdefault,
         newKey,
-      })
+      } as never)
     case 'url':
       return await projectSdk.tablesDB.updateUrlColumn({
         databaseId,
@@ -1238,25 +1667,25 @@ export async function updateProjectTableColumn(
         required,
         xdefault,
         newKey,
-      })
+      } as never)
     case 'enum':
       return await projectSdk.tablesDB.updateEnumColumn({
         databaseId,
         tableId,
         key: columnKey,
-        elements: elements || [],
+        elements: (Array.isArray(elements) ? elements : []) as string[],
         required,
         xdefault,
         newKey,
-      })
+      } as never)
     case 'relationship':
       return await projectSdk.tablesDB.updateRelationshipColumn({
         databaseId,
         tableId,
         key: columnKey,
-        onDelete: columnData.onDelete,
+        onDelete: (columnData as Record<string, unknown>).onDelete,
         newKey,
-      })
+      } as never)
     case 'point':
       return await projectSdk.tablesDB.updatePointColumn({
         databaseId,
@@ -1265,7 +1694,7 @@ export async function updateProjectTableColumn(
         required,
         xdefault,
         newKey,
-      })
+      } as never)
     case 'linestring':
       return await projectSdk.tablesDB.updateLineColumn({
         databaseId,
@@ -1274,7 +1703,7 @@ export async function updateProjectTableColumn(
         required,
         xdefault,
         newKey,
-      })
+      } as never)
     case 'polygon':
       return await projectSdk.tablesDB.updatePolygonColumn({
         databaseId,
@@ -1283,7 +1712,7 @@ export async function updateProjectTableColumn(
         required,
         xdefault,
         newKey,
-      })
+      } as never)
     default:
       throw new Error(`Unsupported column type for update: ${type}`)
   }
@@ -1308,17 +1737,28 @@ export async function deleteProjectTableColumn(
   }
 
   const projectSdk = sdk.forProject(projectId)
+  const tdb = projectSdk.tablesDB as unknown as {
+    deleteAttribute?: (p: {
+      databaseId: string
+      tableId: string
+      key: string
+    }) => Promise<unknown>
+    deleteColumn?: (p: {
+      databaseId: string
+      tableId: string
+      key: string
+    }) => Promise<unknown>
+  }
 
-  if (typeof (projectSdk.tablesDB as unknown).deleteAttribute === 'function') {
-    return await (projectSdk.tablesDB as unknown).deleteAttribute({
+  if (typeof tdb.deleteAttribute === 'function') {
+    return await tdb.deleteAttribute({
       databaseId,
       tableId,
       key: columnKey,
     })
-  } else if (
-    typeof (projectSdk.tablesDB as unknown).deleteColumn === 'function'
-  ) {
-    return await (projectSdk.tablesDB as unknown).deleteColumn({
+  }
+  if (typeof tdb.deleteColumn === 'function') {
+    return await tdb.deleteColumn({
       databaseId,
       tableId,
       key: columnKey,
@@ -1347,16 +1787,52 @@ export async function createProjectTableIndex(
   }
 
   const projectSdk = sdk.forProject(projectId)
+  const dm = await getDatabaseModel(projectId, databaseId)
+  const kind = dm?.type ?? DatabaseType.Tablesdb
 
-  if (typeof (projectSdk.tablesDB as unknown).createIndex === 'function') {
-    return await (projectSdk.tablesDB as unknown).createIndex({
+  const raw = indexData as Record<string, unknown>
+  const key = raw.key as string
+  const type = raw.type
+  const columns = (raw.columns as string[]) || (raw.attributes as string[]) || []
+  const orders = raw.orders as string[] | undefined
+  const lengths = raw.lengths as number[] | undefined
+
+  if (kind === DatabaseType.Documentsdb) {
+    return await projectSdk.documentsDB.createIndex({
+      databaseId,
+      collectionId: tableId,
+      key,
+      type: type as never,
+      attributes: columns,
+      orders: orders as never,
+      lengths,
+    })
+  }
+
+  if (kind === DatabaseType.Vectorsdb) {
+    return await projectSdk.vectorsDB.createIndex({
+      databaseId,
+      collectionId: tableId,
+      key,
+      type: type as never,
+      attributes: columns,
+      orders: orders as never,
+      lengths,
+    })
+  }
+
+  const tdbIdx = projectSdk.tablesDB as unknown as {
+    createIndex?: (p: Record<string, unknown>) => Promise<unknown>
+  }
+  if (typeof tdbIdx.createIndex === 'function') {
+    return await tdbIdx.createIndex({
       databaseId,
       tableId,
-      ...indexData,
+      ...(indexData as object),
     })
-  } else {
-    throw new Error('Create index method not available')
   }
+
+  throw new Error('Create index method not available')
 }
 
 /**
@@ -1378,16 +1854,41 @@ export async function deleteProjectTableIndex(
   }
 
   const projectSdk = sdk.forProject(projectId)
+  const dm = await getDatabaseModel(projectId, databaseId)
+  const kind = dm?.type ?? DatabaseType.Tablesdb
 
-  if (typeof (projectSdk.tablesDB as unknown).deleteIndex === 'function') {
-    return await (projectSdk.tablesDB as unknown).deleteIndex({
+  if (kind === DatabaseType.Documentsdb) {
+    return await projectSdk.documentsDB.deleteIndex({
+      databaseId,
+      collectionId: tableId,
+      key: indexKey,
+    })
+  }
+
+  if (kind === DatabaseType.Vectorsdb) {
+    return await projectSdk.vectorsDB.deleteIndex({
+      databaseId,
+      collectionId: tableId,
+      key: indexKey,
+    })
+  }
+
+  const tdbDelIdx = projectSdk.tablesDB as unknown as {
+    deleteIndex?: (p: {
+      databaseId: string
+      tableId: string
+      key: string
+    }) => Promise<unknown>
+  }
+  if (typeof tdbDelIdx.deleteIndex === 'function') {
+    return await tdbDelIdx.deleteIndex({
       databaseId,
       tableId,
       key: indexKey,
     })
-  } else {
-    throw new Error('Delete index method not available')
   }
+
+  throw new Error('Delete index method not available')
 }
 
 /**
@@ -1414,24 +1915,38 @@ export async function updateProjectTable(
   }
 
   const projectSdk = sdk.forProject(projectId)
+  const dm = await getDatabaseModel(projectId, databaseId)
+  const kind = dm?.type ?? DatabaseType.Tablesdb
 
-  if (typeof (projectSdk.tablesDB as unknown).updateTable === 'function') {
-    return await (projectSdk.tablesDB as unknown).updateTable({
-      databaseId,
-      tableId,
-      ...data,
-    })
-  } else if (
-    typeof (projectSdk.tablesDB as unknown).updateCollection === 'function'
-  ) {
-    return await (projectSdk.tablesDB as unknown).updateCollection({
-      databaseId,
-      tableId,
-      ...data,
-    })
-  } else {
-    throw new Error('Update table method not available')
+  const collectionPayload = {
+    databaseId,
+    collectionId: tableId,
+    name: data.name,
+    permissions: data.permissions,
+    documentSecurity: data.rowSecurity,
+    enabled: data.enabled,
   }
+
+  if (kind === DatabaseType.Documentsdb) {
+    return await projectSdk.documentsDB.updateCollection(collectionPayload)
+  }
+
+  if (kind === DatabaseType.Vectorsdb) {
+    return await projectSdk.vectorsDB.updateCollection(collectionPayload)
+  }
+
+  const tdbUp = projectSdk.tablesDB as unknown as {
+    updateTable?: (p: Record<string, unknown>) => Promise<unknown>
+  }
+  if (typeof tdbUp.updateTable === 'function') {
+    return await tdbUp.updateTable({
+      databaseId,
+      tableId,
+      ...data,
+    })
+  }
+
+  throw new Error('Update table method not available')
 }
 
 /**
@@ -1451,22 +1966,34 @@ export async function deleteProjectTable(
   }
 
   const projectSdk = sdk.forProject(projectId)
+  const dm = await getDatabaseModel(projectId, databaseId)
+  const kind = dm?.type ?? DatabaseType.Tablesdb
 
-  if (typeof (projectSdk.tablesDB as unknown).deleteTable === 'function') {
-    return await (projectSdk.tablesDB as unknown).deleteTable({
+  if (kind === DatabaseType.Documentsdb) {
+    return await projectSdk.documentsDB.deleteCollection({
       databaseId,
-      tableId,
+      collectionId: tableId,
     })
-  } else if (
-    typeof (projectSdk.tablesDB as unknown).deleteCollection === 'function'
-  ) {
-    return await (projectSdk.tablesDB as unknown).deleteCollection({
-      databaseId,
-      tableId,
-    })
-  } else {
-    throw new Error('Delete table method not available')
   }
+
+  if (kind === DatabaseType.Vectorsdb) {
+    return await projectSdk.vectorsDB.deleteCollection({
+      databaseId,
+      collectionId: tableId,
+    })
+  }
+
+  const tdbDel = projectSdk.tablesDB as unknown as {
+    deleteTable?: (p: { databaseId: string; tableId: string }) => Promise<unknown>
+  }
+  if (typeof tdbDel.deleteTable === 'function') {
+    return await tdbDel.deleteTable({
+      databaseId,
+      tableId,
+    })
+  }
+
+  throw new Error('Delete table method not available')
 }
 
 // ============================================================================
@@ -1821,14 +2348,15 @@ export function useProjectDatabases(
     if (!databasesData?.databases) return []
 
     return databasesData.databases.map((db: unknown) => {
+      const d = db as Record<string, unknown>
       // Get table count and row count if available
       // These might need to be fetched separately or calculated
-      const tables = db.collections?.length || 0
-      const rows = db.documents || 0 // This might not be available directly
+      const tables = (d.collections as unknown[] | undefined)?.length || 0
+      const rows = (d.documents as number | undefined) || 0
 
       // Check for backup policies - check multiple possible field names
       const backupPolicies =
-        db.backupPolicies || db.backups || db.policies || db.backup || []
+        d.backupPolicies || d.backups || d.policies || d.backup || []
       const backupPoliciesArray = Array.isArray(backupPolicies)
         ? backupPolicies
         : backupPolicies
@@ -1837,21 +2365,25 @@ export function useProjectDatabases(
       const backupPolicyCount = backupPoliciesArray.length
       const hasBackupPolicy =
         backupPolicyCount > 0 ||
-        db.backupEnabled === true ||
-        db.backupPolicyEnabled === true
+        d.backupEnabled === true ||
+        d.backupPolicyEnabled === true
       const backupPolicy = backupPoliciesArray[0] || null
 
       return {
-        $id: db.$id,
-        name: db.name || 'Unnamed Database',
+        $id: d.$id as string,
+        name: (d.name as string) || 'Unnamed Database',
         tables,
         rows,
-        enabled: db.enabled !== false, // Default to true if not specified
-        createdAt: db.$createdAt || new Date().toISOString(),
-        updatedAt: db.$updatedAt || db.$createdAt || new Date().toISOString(),
+        enabled: d.enabled !== false, // Default to true if not specified
+        createdAt: (d.$createdAt as string) || new Date().toISOString(),
+        updatedAt:
+          (d.$updatedAt as string) ||
+          (d.$createdAt as string) ||
+          new Date().toISOString(),
         hasBackupPolicy,
         backupPolicy,
         backupPolicyCount,
+        databaseType: (d as unknown as Models.Database).type,
       } as Database & {
         enabled: boolean
         createdAt: string
@@ -1859,6 +2391,7 @@ export function useProjectDatabases(
         hasBackupPolicy: boolean
         backupPolicy: unknown
         backupPolicyCount: number
+        databaseType?: DatabaseType
       }
     })
   }, [databasesData])
@@ -1953,15 +2486,20 @@ export function useProjectTables(
   const tables = useMemo(() => {
     if (!tablesData?.tables) return []
 
-    return tablesData.tables.map((table: unknown) => ({
-      $id: table.$id,
-      name: table.name || 'Unnamed Table',
-      databaseId: databaseId || '',
-      rows: table.total || 0, // Total rows count if available
-      columns: table.attributes?.length || 0, // Column count from attributes
-      indexes: table.indexes?.length || 0, // Index count if available
-      enabled: table.enabled !== false, // Default to true if not specified
-    })) as Collection[]
+    return tablesData.tables.map((table: unknown) => {
+      const t = table as Record<string, unknown>
+      const attrs = t.attributes as unknown[] | undefined
+      const idxs = t.indexes as unknown[] | undefined
+      return {
+        $id: t.$id as string,
+        name: (t.name as string) || 'Unnamed Table',
+        databaseId: databaseId || '',
+        rows: (t.total as number) || 0,
+        columns: attrs?.length || 0,
+        indexes: idxs?.length || 0,
+        enabled: t.enabled !== false,
+      }
+    }) as Collection[]
   }, [tablesData, databaseId])
 
   const totalPages = useMemo(() => {

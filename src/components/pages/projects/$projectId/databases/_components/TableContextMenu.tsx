@@ -36,11 +36,18 @@ import {
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { deleteProjectTable } from '@/lib/react-query/hooks'
+import {
+  dbNavLink,
+  type DatabaseRouteKind,
+  usesCollectionsPath,
+} from '@/lib/database-routes'
 import { CreateTableSimilar } from './CreateTableSimilar'
 
 interface TableContextMenuProps {
   projectId: string
   databaseId: string
+  /** Route segment for this database product (drives tables vs collections URLs). */
+  dbKind: DatabaseRouteKind
   table: { $id: string; name?: string }
   children: React.ReactNode
   onCreateSimilar?: (newTableId: string) => void
@@ -49,17 +56,30 @@ interface TableContextMenuProps {
   showSecuritySettings?: boolean
 }
 
-const TABLE_TABS_ALL = [
+type TableContextTabPath =
+  | 'rows'
+  | 'columns'
+  | 'indexes'
+  | 'security'
+  | 'settings'
+
+const TABLE_TABS_ALL: {
+  id: string
+  label: string
+  path: TableContextTabPath
+  icon: typeof Table2
+}[] = [
   { id: 'rows', label: 'Rows', path: 'rows', icon: Table2 },
   { id: 'columns', label: 'Columns', path: 'columns', icon: LayoutGrid },
   { id: 'indexes', label: 'Indexes', path: 'indexes', icon: Key },
   { id: 'security', label: 'Security', path: 'security', icon: Lock },
   { id: 'settings', label: 'Settings', path: 'settings', icon: Settings },
-] as const
+]
 
 export function TableContextMenu({
   projectId,
   databaseId,
+  dbKind,
   table,
   children,
   onCreateSimilar,
@@ -70,16 +90,18 @@ export function TableContextMenu({
   const queryClient = useQueryClient()
   const [createSimilarOpen, setCreateSimilarOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const nav = useMemo(() => dbNavLink(dbKind), [dbKind])
 
-  const tableTabs = useMemo(
-    () =>
-      showSecuritySettings
-        ? TABLE_TABS_ALL
-        : TABLE_TABS_ALL.filter(
-            (t) => t.id !== 'security' && t.id !== 'settings',
-          ),
-    [showSecuritySettings],
-  )
+  const tableTabs = useMemo(() => {
+    let tabs = TABLE_TABS_ALL
+    if (usesCollectionsPath(dbKind)) {
+      tabs = tabs.filter((t) => t.id !== 'columns')
+    }
+    if (!showSecuritySettings) {
+      tabs = tabs.filter((t) => t.id !== 'security' && t.id !== 'settings')
+    }
+    return tabs
+  }, [dbKind, showSecuritySettings])
 
   const deleteTableMutation = useMutation({
     mutationFn: () => deleteProjectTable(projectId, databaseId, table.$id),
@@ -90,8 +112,12 @@ export function TableContextMenu({
       })
       toast.success(`${table.name ?? table.$id} has been deleted`)
       navigate({
-        to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
-        params: { projectId, databaseId, tableId: '-' },
+        ...nav.dataGrid({
+          projectId,
+          dbKind,
+          databaseId,
+          resourceId: '-',
+        }),
         replace: true,
       })
       onDeleted?.()
@@ -101,11 +127,13 @@ export function TableContextMenu({
     },
   })
 
-  const tableHref = useMemo(
-    () =>
-      `${window.location.origin}/projects/${projectId}/databases/${databaseId}/tables/${table.$id}/rows`,
-    [projectId, databaseId, table.$id],
-  )
+  const tableHref = useMemo(() => {
+    const coll = usesCollectionsPath(dbKind)
+    const path = coll
+      ? `/projects/${projectId}/databases/${dbKind}/${databaseId}/collections/${table.$id}/documents`
+      : `/projects/${projectId}/databases/${dbKind}/${databaseId}/tables/${table.$id}/rows`
+    return `${window.location.origin}${path}`
+  }, [projectId, dbKind, databaseId, table.$id])
 
   const handleCopyId = async () => {
     try {
@@ -154,18 +182,30 @@ export function TableContextMenu({
     await handleCopyJson()
   }
 
-  const handleGoToTab = (
-    path: 'rows' | 'columns' | 'indexes' | 'security' | 'settings',
-  ) => {
-    navigate({
-      to: `/projects/$projectId/databases/$databaseId/tables/$tableId/${path}` as
-        | '/projects/$projectId/databases/$databaseId/tables/$tableId/rows'
-        | '/projects/$projectId/databases/$databaseId/tables/$tableId/columns'
-        | '/projects/$projectId/databases/$databaseId/tables/$tableId/indexes'
-        | '/projects/$projectId/databases/$databaseId/tables/$tableId/security'
-        | '/projects/$projectId/databases/$databaseId/tables/$tableId/settings',
-      params: { projectId, databaseId, tableId: table.$id },
-    })
+  const handleGoToTab = (path: TableContextTabPath) => {
+    const p = {
+      projectId,
+      dbKind,
+      databaseId,
+      resourceId: table.$id,
+    }
+    if (path === 'rows') {
+      navigate({ ...nav.dataGrid(p) })
+      return
+    }
+    if (path === 'columns') {
+      navigate({ ...nav.columns(p) })
+      return
+    }
+    if (path === 'indexes') {
+      navigate({ ...nav.indexes(p) })
+      return
+    }
+    if (path === 'security') {
+      navigate({ ...nav.security(p) })
+      return
+    }
+    navigate({ ...nav.settings(p) })
   }
 
   const handleDeleteClick = () => {

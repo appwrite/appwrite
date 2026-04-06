@@ -1,9 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import {
-  keepPreviousData,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { Eye, Users, Loader2 } from 'lucide-react'
 import { AppwriteException, type Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
@@ -75,7 +71,6 @@ function recentImpersonationUserToModel(
 export function ImpersonateConsoleUserPopover() {
   const { account: accountRaw } = useAuth()
   const account = accountRaw as ConsoleAccount | undefined
-  const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
@@ -186,10 +181,9 @@ export function ImpersonateConsoleUserPopover() {
     try {
       await persistRecentImpersonation(user)
       applyConsoleImpersonateUserId(targetId)
-      persistConsoleImpersonationSession(targetId, operator)
-      setOpen(false)
-      setSearch('')
-      queryClient.clear()
+      persistConsoleImpersonationSession(targetId, operator, {
+        skipNotify: true,
+      })
       hardNavigateToAccountAfterImpersonation()
     } catch (e) {
       console.error(e)
@@ -206,7 +200,7 @@ export function ImpersonateConsoleUserPopover() {
   const handleStop = async () => {
     const opId = readConsoleImpersonationOperatorSnapshot()?.$id
     clearConsoleImpersonateUser()
-    clearConsoleImpersonationSession()
+    clearConsoleImpersonationSession({ skipNotify: true })
     setOpen(false)
     if (opId) {
       void flushRecentImpersonationUsersToAccountPrefs(opId).catch((e) => {

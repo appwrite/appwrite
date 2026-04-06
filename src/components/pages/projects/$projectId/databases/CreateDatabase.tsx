@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label'
 import { IdInput } from '@/components/ui/id-input'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { AlertCircle } from 'lucide-react'
+import { DEFAULT_NEW_DATABASE_NAME } from '@/lib/default-new-database-name'
 
 /**
  * Validates Appwrite database ID: 1–36 chars, alphanumeric, underscore, hyphen, period.
@@ -41,7 +42,7 @@ export function CreateDatabase({
   backupsEnabled,
 }: CreateDatabaseProps) {
   const [databaseId, setDatabaseId] = useState<string | undefined>(undefined)
-  const [name, setName] = useState('')
+  const [name, setName] = useState(DEFAULT_NEW_DATABASE_NAME)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -55,7 +56,7 @@ export function CreateDatabase({
 
   const resetForm = () => {
     setDatabaseId(undefined)
-    setName('')
+    setName(DEFAULT_NEW_DATABASE_NAME)
     setErrors({})
   }
 

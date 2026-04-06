@@ -29,6 +29,8 @@ import {
   Sites,
   Tokens,
   TablesDB,
+  DocumentsDB,
+  VectorsDB,
   Domains,
   Organizations,
   Webhooks,
@@ -313,6 +315,8 @@ const sdkForProjectRaw = {
   migrations: new Migrations(clientProject),
   sites: new Sites(clientProject),
   tablesDB: new TablesDB(clientProject),
+  documentsDB: new DocumentsDB(clientProject),
+  vectorsDB: new VectorsDB(clientProject),
   console: new Console(clientProject), // for suggestions API
   webhooks: new Webhooks(clientProject),
 }

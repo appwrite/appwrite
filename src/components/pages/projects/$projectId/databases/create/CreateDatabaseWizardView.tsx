@@ -25,8 +25,11 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { createProjectDatabase } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { DatabaseType } from '@appwrite.io/console'
 import { cn } from '@/lib/utils'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { TABLE_DB_SPEC_OPTIONS as SPEC_OPTIONS } from '@/lib/database-specs'
+import { DEFAULT_NEW_DATABASE_NAME } from '@/lib/default-new-database-name'
 
 export type DatabaseTypeOption = 'TablesDB' | 'DocumentsDB' | 'VectorsDB'
 
@@ -76,13 +79,17 @@ const DB_TYPE_OPTIONS: DbTypeChoice[] = [
   },
 ]
 
-import { TABLE_DB_SPEC_OPTIONS as SPEC_OPTIONS } from '@/lib/database-specs'
-
 function validateDatabaseId(id: string): boolean {
   if (!id || id.length === 0) return true
   if (id.length > 36) return false
   if (!/^[a-zA-Z0-9_]/.test(id)) return false
   return /^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(id)
+}
+
+function wizardBackend(t: DatabaseTypeOption): DatabaseType {
+  if (t === 'DocumentsDB') return DatabaseType.Documentsdb
+  if (t === 'VectorsDB') return DatabaseType.Vectorsdb
+  return DatabaseType.Tablesdb
 }
 
 export function CreateDatabaseWizardView() {
@@ -94,7 +101,7 @@ export function CreateDatabaseWizardView() {
 
   const [dbType, setDbType] = useState<DatabaseTypeOption | null>(null)
   const [specId, setSpecId] = useState<string | null>(null)
-  const [name, setName] = useState('')
+  const [name, setName] = useState(DEFAULT_NEW_DATABASE_NAME)
   const [databaseId, setDatabaseId] = useState<string | undefined>(undefined)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -127,8 +134,12 @@ export function CreateDatabaseWizardView() {
   )
 
   const createMutation = useMutation({
-    mutationFn: (data: { databaseId?: string; name: string }) =>
-      createProjectDatabase(pid, data),
+    mutationFn: (data: { databaseId?: string; name: string }) => {
+      if (!dbType) {
+        throw new Error('Database type is required')
+      }
+      return createProjectDatabase(pid, data, wizardBackend(dbType))
+    },
     onSuccess: async (database) => {
       await queryClient.refetchQueries({
         queryKey: ['databases', 'project', pid],
@@ -161,11 +172,14 @@ export function CreateDatabaseWizardView() {
   }
 
   const isCreatePending = createMutation.isPending
-  const showNameForm =
-    selectedSpec && (!isTablesDB || selectedSpec.id === 'shared')
+  const showNameForm = Boolean(
+    dbType &&
+      (!showSpecsForType ||
+        (selectedSpec != null &&
+          (!isTablesDB || selectedSpec.id === 'shared'))),
+  )
 
-  const canCreate =
-    showNameForm && dbType === 'TablesDB' && name.trim().length > 0
+  const canCreate = Boolean(showNameForm && name.trim().length > 0 && dbType)
   const footer = (
     <div className="flex w-full justify-end">
       <Button

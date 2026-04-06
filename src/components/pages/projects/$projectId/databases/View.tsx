@@ -80,6 +80,7 @@ import {
   tableQueryOptions,
   tableColumnsQueryOptions,
   tableRowsQueryOptions,
+  databaseQueryOptions,
   type TablesSortBy,
 } from '@/lib/react-query/hooks'
 import {
@@ -130,6 +131,14 @@ import {
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { TABLE_DB_SPEC_OPTIONS } from '@/lib/database-specs'
 import type { Models } from '@appwrite.io/console'
+import { DatabaseType as ApiDatabaseType } from '@appwrite.io/console'
+import {
+  databaseRouteKindFromApiType,
+  dbNavLink,
+  type DatabaseRouteKind,
+} from '@/lib/database-routes'
+import { getDatabaseConsoleLabels } from '@/lib/database-console-labels'
+import { DocumentsJsonSpreadsheet } from './_components/DocumentsJsonSpreadsheet'
 
 /** Database list item: API may return extra backup/createdAt fields */
 type DatabaseWithBackup = Models.Database & {
@@ -304,6 +313,18 @@ export function View() {
   const { features } = useConsoleProfile()
   const useCreateDatabaseWizard = features.dedicatedDbsSupport
   const queryClient = useQueryClient()
+  const databaseDeepLink = (
+    databaseId: string,
+    apiType: ApiDatabaseType | undefined,
+  ) => {
+    const dbKind = databaseRouteKindFromApiType(apiType)
+    return dbNavLink(dbKind).dataGrid({
+      projectId: projectId!,
+      dbKind,
+      databaseId,
+      resourceId: '-',
+    })
+  }
   const isDatabasesIndex =
     location.pathname.replace(/\/$/, '') === `/projects/${projectId}/databases`
   const databaseListParams = useMemo(() => {
@@ -696,12 +717,10 @@ export function View() {
       })
       setCreateDatabaseDialogOpen(false)
       navigate({
-        to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
-        params: {
-          projectId: projectId!,
-          databaseId: database.$id,
-          tableId: '-',
-        },
+        ...databaseDeepLink(
+          database.$id,
+          (database as { databaseType?: ApiDatabaseType }).databaseType,
+        ),
       })
     },
     onError: (error: Error) => {
@@ -956,12 +975,11 @@ export function View() {
                               return
                             }
                             navigate({
-                              to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
-                              params: {
-                                projectId,
-                                databaseId: db.$id,
-                                tableId: '-',
-                              },
+                              ...databaseDeepLink(
+                                db.$id,
+                                (db as { databaseType?: ApiDatabaseType })
+                                  .databaseType,
+                              ),
                             })
                           }}
                         >
@@ -976,12 +994,11 @@ export function View() {
                           </TableCell>
                           <TableCell className="px-4 py-3">
                             <Link
-                              to="/projects/$projectId/databases/$databaseId/tables/$tableId/rows"
-                              params={{
-                                projectId,
-                                databaseId: db.$id,
-                                tableId: '-',
-                              }}
+                              {...databaseDeepLink(
+                                db.$id,
+                                (db as { databaseType?: ApiDatabaseType })
+                                  .databaseType,
+                              )}
                               className="block group"
                             >
                               <div className="flex items-center gap-3 min-w-0">
@@ -1044,12 +1061,11 @@ export function View() {
                           )}
                           <TableCell className="px-4 py-3">
                             <Link
-                              to="/projects/$projectId/databases/$databaseId/tables/$tableId/rows"
-                              params={{
-                                projectId,
-                                databaseId: db.$id,
-                                tableId: '-',
-                              }}
+                              {...databaseDeepLink(
+                                db.$id,
+                                (db as { databaseType?: ApiDatabaseType })
+                                  .databaseType,
+                              )}
                               className="block text-right"
                             >
                               <DateTooltip
@@ -1065,12 +1081,11 @@ export function View() {
                           </TableCell>
                           <TableCell className="px-4 py-3">
                             <Link
-                              to="/projects/$projectId/databases/$databaseId/tables/$tableId/rows"
-                              params={{
-                                projectId,
-                                databaseId: db.$id,
-                                tableId: '-',
-                              }}
+                              {...databaseDeepLink(
+                                db.$id,
+                                (db as { databaseType?: ApiDatabaseType })
+                                  .databaseType,
+                              )}
                               className="block text-right"
                             >
                               <DateTooltip
@@ -1139,8 +1154,10 @@ export function View() {
                     showInsights={features.databaseInsights}
                   >
                     <Link
-                      to="/projects/$projectId/databases/$databaseId/tables/$tableId/rows"
-                      params={{ projectId, databaseId: db.$id, tableId: '-' }}
+                      {...databaseDeepLink(
+                        db.$id,
+                        (db as { databaseType?: ApiDatabaseType }).databaseType,
+                      )}
                     >
                       <ResourceCard
                         title={db.name}
@@ -1306,9 +1323,12 @@ interface DatabaseDetailLayoutProps {
 export function DatabaseDetailLayout({
   databaseId,
 }: DatabaseDetailLayoutProps) {
-  const { projectId } = useParams({
-    from: '/_public/projects/$projectId/databases/$databaseId',
-  })
+  const params = useParams({ strict: false })
+  const projectId = params.projectId as string
+  const routeDbKind =
+    (params.dbKind as DatabaseRouteKind | undefined) ?? 'tablesdb'
+  const dbLabels = getDatabaseConsoleLabels(routeDbKind)
+  const layoutNav = useMemo(() => dbNavLink(routeDbKind), [routeDbKind])
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [tablesExpanded, setTablesExpanded] = useState(true)
@@ -1328,12 +1348,19 @@ export function DatabaseDetailLayout({
       })
       setCreateTableDialogOpen(false)
       navigate({
-        to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
-        params: { projectId: projectId!, databaseId, tableId: table.$id },
+        ...layoutNav.dataGrid({
+          projectId: projectId!,
+          dbKind: routeDbKind,
+          databaseId,
+          resourceId: table.$id,
+        }),
       })
     },
     onError: (error: Error) => {
-      toast.error(getErrorMessage(error) || 'Failed to create table')
+      toast.error(
+        getErrorMessage(error) ||
+          `Failed to create ${dbLabels.containerSingular}`,
+      )
     },
   })
 
@@ -1394,7 +1421,9 @@ export function DatabaseDetailLayout({
               <ChevronRight className="h-3.5 w-3.5 shrink-0" />
             )}
             <Table2 className="h-3.5 w-3.5 shrink-0" />
-            <span className="flex-1 text-[13px] font-medium">Tables</span>
+            <span className="flex-1 text-[13px] font-medium">
+              {dbLabels.containerPluralTitle}
+            </span>
             <span className="text-[11px] text-muted-foreground">
               {dbTables.length}
             </span>
@@ -1409,11 +1438,16 @@ export function DatabaseDetailLayout({
                     key={table.$id}
                     projectId={projectId}
                     databaseId={databaseId}
+                    dbKind={routeDbKind}
                     table={table}
                   >
                     <Link
-                      to="/projects/$projectId/databases/$databaseId/tables/$tableId/rows"
-                      params={{ projectId, databaseId, tableId: table.$id }}
+                      {...layoutNav.dataGrid({
+                        projectId,
+                        dbKind: routeDbKind,
+                        databaseId,
+                        resourceId: table.$id,
+                      })}
                       className={cn(
                         'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors',
                         selectedTable?.$id === table.$id
@@ -1433,8 +1467,12 @@ export function DatabaseDetailLayout({
                 ) : (
                   <Link
                     key={table.$id}
-                    to="/projects/$projectId/databases/$databaseId/tables/$tableId/rows"
-                    params={{ projectId: '', databaseId, tableId: table.$id }}
+                    {...layoutNav.dataGrid({
+                      projectId: '',
+                      dbKind: routeDbKind,
+                      databaseId,
+                      resourceId: table.$id,
+                    })}
                     className={cn(
                       'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors',
                       selectedTable?.$id === table.$id
@@ -1453,21 +1491,21 @@ export function DatabaseDetailLayout({
                 ),
               )}
 
-              {/* Create Table Button */}
+              {/* Create container */}
               <button
                 onClick={() => setCreateTableDialogOpen(true)}
                 className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground cursor-pointer"
               >
                 <Plus className="h-3.5 w-3.5 shrink-0" />
-                <span className="text-[13px]">Create table</span>
+                <span className="text-[13px]">{dbLabels.createContainer}</span>
               </button>
             </div>
           )}
 
           {/* Security Link */}
           <Link
-            to="/projects/$projectId/databases/$databaseId/security"
-            params={{ projectId, databaseId }}
+            to="/projects/$projectId/databases/$dbKind/$databaseId/security"
+            params={{ projectId, dbKind: routeDbKind, databaseId }}
             className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
           >
             <Lock className="h-3.5 w-3.5 shrink-0" />
@@ -1476,8 +1514,8 @@ export function DatabaseDetailLayout({
 
           {features.dedicatedDbsTablesDB && (
             <Link
-              to="/projects/$projectId/databases/$databaseId/settings"
-              params={{ projectId, databaseId }}
+              to="/projects/$projectId/databases/$dbKind/$databaseId/settings"
+              params={{ projectId, dbKind: routeDbKind, databaseId }}
               className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
             >
               <Cpu className="h-3.5 w-3.5 shrink-0" />
@@ -1504,8 +1542,8 @@ export function DatabaseDetailLayout({
           )}
           {features.databaseBackups && (
             <Link
-              to="/projects/$projectId/databases/$databaseId/backups"
-              params={{ projectId, databaseId }}
+              to="/projects/$projectId/databases/$dbKind/$databaseId/backups"
+              params={{ projectId, dbKind: routeDbKind, databaseId }}
               className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
             >
               <Archive className="h-3.5 w-3.5 shrink-0" />
@@ -1515,8 +1553,8 @@ export function DatabaseDetailLayout({
 
           {/* Settings Link */}
           <Link
-            to="/projects/$projectId/databases/$databaseId/settings"
-            params={{ projectId, databaseId }}
+            to="/projects/$projectId/databases/$dbKind/$databaseId/settings"
+            params={{ projectId, dbKind: routeDbKind, databaseId }}
             className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
           >
             <Settings className="h-3.5 w-3.5 shrink-0" />
@@ -1531,7 +1569,7 @@ export function DatabaseDetailLayout({
           <div className="flex flex-1 items-center justify-center">
             <div className="text-center">
               <p className="text-muted-foreground">
-                Select a table from the sidebar
+                {dbLabels.selectContainerHint}
               </p>
             </div>
           </div>
@@ -1539,8 +1577,8 @@ export function DatabaseDetailLayout({
           <div className="flex flex-1 items-center justify-center">
             <EmptyState
               icon={Table2}
-              title="No tables yet"
-              description="Create your first table to get started"
+              title={dbLabels.emptyContainersTitle}
+              description={dbLabels.emptyContainersDescription}
               isEmpty={true}
               iconSize="md"
             />
@@ -1571,7 +1609,13 @@ export type DatabaseTabId =
 interface TableViewProps {
   databaseId: string
   tableId: string
-  activeTab: 'rows' | 'columns' | 'indexes' | 'security' | 'settings'
+  activeTab:
+    | 'rows'
+    | 'documents'
+    | 'columns'
+    | 'indexes'
+    | 'security'
+    | 'settings'
   /** When set, main content shows database-level tab (visualizer, backups, etc.) instead of table tabs */
   databaseTab?: DatabaseTabId
 }
@@ -1617,25 +1661,6 @@ export function TableView({
   const { features } = useConsoleProfile()
   const useCreateDatabaseWizard = features.dedicatedDbsSupport
 
-  // Debug: create 50 random tables (only when debug mode is open and on tables list)
-  const createFiftyTablesMutation = useMutation({
-    mutationFn: async () => {
-      const names = Array.from({ length: 50 }, (_, i) => `Table ${i + 1}`)
-      for (const name of names) {
-        await createProjectTable(projectId, databaseId, { name })
-      }
-    },
-    onSuccess: async () => {
-      await queryClient.refetchQueries({
-        queryKey: ['tables', 'project', projectId, databaseId],
-      })
-      toast.success('Created 50 tables')
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to create tables')
-    },
-  })
-
   // Sidebar tables list: search, pagination, order (API-backed)
   const [sidebarTablesSearch, setSidebarTablesSearch] = useState('')
   const [sidebarTablesRequestedPage, setSidebarTablesRequestedPage] =
@@ -1654,6 +1679,27 @@ export function TableView({
     projectId,
     databaseId,
   )
+
+  const databaseApiType = (database as { databaseType?: ApiDatabaseType } | null)
+    ?.databaseType
+  const isDocumentsDb = databaseApiType === ApiDatabaseType.Documentsdb
+  const isVectorsDb = databaseApiType === ApiDatabaseType.Vectorsdb
+  const routeDbKind =
+    (params.dbKind as DatabaseRouteKind | undefined) ??
+    databaseRouteKindFromApiType(databaseApiType)
+  const dbLabels = getDatabaseConsoleLabels(routeDbKind)
+  const dbNav = useMemo(() => dbNavLink(routeDbKind), [routeDbKind])
+  const tableNavParams = useMemo(
+    () => ({
+      projectId,
+      dbKind: routeDbKind,
+      databaseId,
+      resourceId: tableId,
+    }),
+    [projectId, routeDbKind, databaseId, tableId],
+  )
+  const showColumnsTab = !isDocumentsDb && !isVectorsDb
+  const showDocumentsTab = isDocumentsDb
 
   // Fetch tables for the database (full list for selectedTable and total count)
   const { tables: dbTables, isLoading: tablesLoading } = useProjectTables(
@@ -1743,6 +1789,30 @@ export function TableView({
     useState(false)
   const queryClient = useQueryClient()
 
+  // Debug: create 50 random containers (only when debug mode is open and on tables list)
+  const createFiftyTablesMutation = useMutation({
+    mutationFn: async () => {
+      const names = Array.from({ length: 50 }, (_, i) => `Table ${i + 1}`)
+      for (const name of names) {
+        await createProjectTable(projectId, databaseId, { name })
+      }
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['tables', 'project', projectId, databaseId],
+      })
+      toast.success(
+        `Created 50 ${dbLabels.containerPlural}`,
+      )
+    },
+    onError: (error: Error) => {
+      toast.error(
+        error.message ||
+          `Failed to create ${dbLabels.containerPlural}`,
+      )
+    },
+  })
+
   const { project } = useProject(projectId)
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
   const { access } = useOrganizationScopes(project?.teamId)
@@ -1767,8 +1837,7 @@ export function TableView({
       (activeTab === 'security' || activeTab === 'settings')
     ) {
       navigate({
-        to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
-        params: { projectId, databaseId, tableId },
+        ...dbNav.dataGrid(tableNavParams),
         replace: true,
       })
     }
@@ -1776,10 +1845,35 @@ export function TableView({
     showTableSecuritySettings,
     activeTab,
     selectedTable,
-    projectId,
-    databaseId,
-    tableId,
+    dbNav,
+    tableNavParams,
     navigate,
+  ])
+
+  // Columns / documents routes are not valid for every database kind
+  useEffect(() => {
+    if (tableId === '-' || !selectedTable) return
+    if (activeTab === 'columns' && !showColumnsTab) {
+      navigate({
+        ...dbNav.dataGrid(tableNavParams),
+        replace: true,
+      })
+    }
+    if (activeTab === 'documents' && !showDocumentsTab) {
+      navigate({
+        ...dbNav.dataGrid(tableNavParams),
+        replace: true,
+      })
+    }
+  }, [
+    tableId,
+    selectedTable,
+    activeTab,
+    showColumnsTab,
+    showDocumentsTab,
+    navigate,
+    dbNav,
+    tableNavParams,
   ])
 
   // Reset rows total when switching tables
@@ -1806,15 +1900,19 @@ export function TableView({
       navigate({ to: '/projects/$projectId/databases', params: { projectId } })
     } else {
       navigate({
-        to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
-        params: { projectId, databaseId, tableId: '-' },
+        ...dbNav.dataGrid({
+          projectId,
+          dbKind: routeDbKind,
+          databaseId,
+          resourceId: '-',
+        }),
       })
     }
   }
 
   // Create table mutation for TableView
   const createTableMutation = useMutation({
-    mutationFn: (data: { tableId?: string; name: string }) =>
+    mutationFn: (data: { tableId?: string; name: string; dimension?: number }) =>
       createProjectTable(projectId!, databaseId!, data),
     onSuccess: async (table) => {
       toast.success(`${table.name} has been created`)
@@ -1823,14 +1921,13 @@ export function TableView({
         queryKey: ['tables', 'project', projectId, databaseId],
       })
       setCreateTableDialogOpen(false)
-      // Navigate to the new table's rows tab
       navigate({
-        to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
-        params: {
+        ...dbNav.dataGrid({
           projectId: projectId!,
+          dbKind: routeDbKind,
           databaseId: databaseId!,
-          tableId: table.$id,
-        },
+          resourceId: table.$id,
+        }),
       })
     },
     onError: (error: Error) => {
@@ -1858,25 +1955,40 @@ export function TableView({
           ),
         )
         const firstTable = sortedTables[0]
+        const nextKind = databaseRouteKindFromApiType(
+          (database as { databaseType?: ApiDatabaseType }).databaseType,
+        )
+        const nextNav = dbNavLink(nextKind)
         if (firstTable?.$id) {
           navigate({
-            to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
-            params: {
+            ...nextNav.dataGrid({
               projectId,
+              dbKind: nextKind,
               databaseId: database.$id,
-              tableId: firstTable.$id,
-            },
+              resourceId: firstTable.$id,
+            }),
           })
         } else {
           navigate({
-            to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
-            params: { projectId, databaseId: database.$id, tableId: '-' },
+            ...nextNav.dataGrid({
+              projectId,
+              dbKind: nextKind,
+              databaseId: database.$id,
+              resourceId: '-',
+            }),
           })
         }
       } catch {
+        const nextKind = databaseRouteKindFromApiType(
+          (database as { databaseType?: ApiDatabaseType }).databaseType,
+        )
         navigate({
-          to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
-          params: { projectId, databaseId: database.$id, tableId: '-' },
+          ...dbNavLink(nextKind).dataGrid({
+            projectId,
+            dbKind: nextKind,
+            databaseId: database.$id,
+            resourceId: '-',
+          }),
         })
       }
     },
@@ -1903,50 +2015,72 @@ export function TableView({
   )
 
   const tableTabs: Tab[] = useMemo(() => {
+    const grid = dbNav.dataGrid(tableNavParams)
     const all: Tab[] = [
       {
         id: 'rows',
-        label: 'Rows',
-        to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
-        params: { projectId, databaseId, tableId },
+        label: dbLabels.gridDataTabLabel,
+        to: grid.to,
+        params: grid.params,
       },
-      {
-        id: 'columns',
-        label: 'Columns',
-        to: '/projects/$projectId/databases/$databaseId/tables/$tableId/columns',
-        params: { projectId, databaseId, tableId },
-      },
+      ...(showDocumentsTab
+        ? [
+            {
+              id: 'documents' as const,
+              label: dbLabels.jsonDocumentsTabLabel,
+              ...dbNav.dataJson(tableNavParams),
+            },
+          ]
+        : []),
+      ...(showColumnsTab
+        ? [
+            {
+              id: 'columns' as const,
+              label: dbLabels.schemaPluralTitle,
+              ...dbNav.columns(tableNavParams),
+            },
+          ]
+        : []),
       {
         id: 'indexes',
         label: 'Indexes',
-        to: '/projects/$projectId/databases/$databaseId/tables/$tableId/indexes',
-        params: { projectId, databaseId, tableId },
+        ...dbNav.indexes(tableNavParams),
       },
       ...(showTableSecuritySettings
         ? [
             {
               id: 'security' as const,
               label: 'Security',
-              to: '/projects/$projectId/databases/$databaseId/tables/$tableId/security',
-              params: { projectId, databaseId, tableId },
+              ...dbNav.security(tableNavParams),
             },
             {
               id: 'settings' as const,
               label: 'Settings',
-              to: '/projects/$projectId/databases/$databaseId/tables/$tableId/settings',
-              params: { projectId, databaseId, tableId },
+              ...dbNav.settings(tableNavParams),
             },
           ]
         : []),
     ]
     return all
-  }, [projectId, databaseId, tableId, showTableSecuritySettings])
+  }, [
+    dbNav,
+    tableNavParams,
+    showTableSecuritySettings,
+    showColumnsTab,
+    showDocumentsTab,
+    dbLabels.gridDataTabLabel,
+    dbLabels.jsonDocumentsTabLabel,
+    dbLabels.schemaPluralTitle,
+  ])
 
   const ROWS_DEFAULT_SORT_BY = '$createdAt'
   const ROWS_DEFAULT_SORT_ORDER = 'desc' as const
   const isRowsTab = activeTab === 'rows' && tableId !== '-'
+  const isDocumentsTab = activeTab === 'documents' && tableId !== '-'
+  const isTableDataTab =
+    (activeTab === 'rows' || activeTab === 'documents') && tableId !== '-'
   const rowsListParams = useMemo(() => {
-    if (!isRowsTab || typeof search !== 'object') return null
+    if (!isTableDataTab || typeof search !== 'object') return null
     const url = new URL(
       location.pathname + location.search,
       window.location.origin,
@@ -1990,7 +2124,7 @@ export function TableView({
       sortBy: parsed.sortBy,
       sortOrder: parsed.sortOrder,
     }
-  }, [isRowsTab, search, location.pathname, location.search])
+  }, [isTableDataTab, search, location.pathname, location.search])
 
   const rowsUrlPage = rowsListParams?.page ?? 1
   const rowsUrlLimit = rowsListParams?.limit ?? ROWS_DEFAULT_PAGE_SIZE
@@ -2014,6 +2148,36 @@ export function TableView({
 
   const [rowsFiltersOpen, setRowsFiltersOpen] = useState(false)
 
+  const navigateToRowsWithOpenCreate = useCallback(() => {
+    navigate({
+      ...dbNav.dataGrid(tableNavParams),
+      search: (prev: Record<string, unknown>) => {
+        const built = buildListSearchParams({
+          search: rowsUrlSearch ?? undefined,
+          query: rowsFilterQueryString || undefined,
+          page: rowsUrlPage,
+          limit: rowsUrlLimit,
+          sort:
+            rowsSortBy !== ROWS_DEFAULT_SORT_BY ||
+            rowsSortOrder !== ROWS_DEFAULT_SORT_ORDER
+              ? encodeSort(rowsSortBy, rowsSortOrder)
+              : undefined,
+        })
+        return { ...prev, ...built, openRowCreate: '1' }
+      },
+    })
+  }, [
+    navigate,
+    dbNav,
+    tableNavParams,
+    rowsUrlSearch,
+    rowsFilterQueryString,
+    rowsUrlPage,
+    rowsUrlLimit,
+    rowsSortBy,
+    rowsSortOrder,
+  ])
+
   const navigateToRowsList = (params: {
     search?: string
     query?: string
@@ -2023,9 +2187,13 @@ export function TableView({
   }) => {
     const hasQueryKey = 'query' in params
     const hasSortKey = 'sort' in params
+    const listLink =
+      activeTab === 'documents'
+        ? dbNav.dataJson(tableNavParams)
+        : dbNav.dataGrid(tableNavParams)
+
     navigate({
-      to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
-      params: { projectId, databaseId, tableId },
+      ...listLink,
       search: (prev: Record<string, unknown>) => {
         const built = buildListSearchParams({
           search: params.search ?? rowsUrlSearch ?? undefined,
@@ -2173,11 +2341,13 @@ export function TableView({
   const getCreateLabel = () => {
     switch (activeTab) {
       case 'rows':
-        return 'Create row'
+        return dbLabels.createRecord
+      case 'documents':
+        return dbLabels.createRecord
       case 'columns':
-        return 'Create column'
+        return dbLabels.createSchema
       case 'indexes':
-        return 'Create index'
+        return dbLabels.createIndex
       default:
         return undefined
     }
@@ -2211,7 +2381,7 @@ export function TableView({
       <div className="flex h-full items-center justify-center">
         <div className="text-center">
           <p className="text-[14px] font-medium text-foreground">
-            Table not found
+            {dbLabels.containerSingularTitle} not found
           </p>
           <Button variant="link" onClick={handleBackToDatabase}>
             Back to database
@@ -2222,9 +2392,9 @@ export function TableView({
   }
 
   return (
-    <div className="@container flex h-full">
+    <div className="@container flex h-full min-h-0 min-w-0">
       {/* Tables Sidebar - sticky sections: database selector, create table, scrollable list, bottom nav */}
-      <div className="hidden w-56 shrink-0 flex-col border-r border-border lg:flex lg:h-full">
+      <div className="hidden min-h-0 w-56 shrink-0 flex-col border-r border-border lg:flex lg:h-full">
         {/* 1. Sticky top: Database selector */}
         <div className="flex shrink-0 flex-col border-b border-border bg-background">
           <div className="flex items-center gap-2 border-b border-border px-3 py-2.5">
@@ -2248,6 +2418,12 @@ export function TableView({
               createDisabledTooltip={createPermissionTooltip}
               onSelect={async (newDatabaseId) => {
                 try {
+                  const newDb = await queryClient.ensureQueryData(
+                    databaseQueryOptions(projectId, newDatabaseId),
+                  )
+                  const nextDbKind = databaseRouteKindFromApiType(
+                    (newDb as { databaseType?: ApiDatabaseType }).databaseType,
+                  )
                   const tablesData = await queryClient.ensureQueryData(
                     tablesQueryOptions(
                       projectId,
@@ -2266,21 +2442,32 @@ export function TableView({
                   )
                   const firstTable = sorted[0] as { $id?: string } | undefined
                   navigate({
-                    to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
-                    params: {
+                    ...dbNavLink(nextDbKind).dataGrid({
                       projectId,
+                      dbKind: nextDbKind,
                       databaseId: newDatabaseId,
-                      tableId: firstTable?.$id ?? '-',
-                    },
+                      resourceId: firstTable?.$id ?? '-',
+                    }),
                   })
                 } catch {
+                  let nextDbKind: DatabaseRouteKind = 'tablesdb'
+                  try {
+                    const newDb = await queryClient.ensureQueryData(
+                      databaseQueryOptions(projectId, newDatabaseId),
+                    )
+                    nextDbKind = databaseRouteKindFromApiType(
+                      (newDb as { databaseType?: ApiDatabaseType }).databaseType,
+                    )
+                  } catch {
+                    // keep tablesdb default
+                  }
                   navigate({
-                    to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
-                    params: {
+                    ...dbNavLink(nextDbKind).dataGrid({
                       projectId,
+                      dbKind: nextDbKind,
                       databaseId: newDatabaseId,
-                      tableId: '-',
-                    },
+                      resourceId: '-',
+                    }),
                   })
                 }
               }}
@@ -2304,7 +2491,7 @@ export function TableView({
                 <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   type="text"
-                  placeholder="Search tables..."
+                  placeholder={dbLabels.searchContainersPlaceholder}
                   value={sidebarTablesSearch}
                   onChange={(e) => setSidebarTablesSearch(e.target.value)}
                   className="h-8 pl-8 pr-2 text-[13px]"
@@ -2319,7 +2506,7 @@ export function TableView({
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 shrink-0"
-                          aria-label="Sort tables"
+                          aria-label={dbLabels.sortContainersAriaLabel}
                         >
                           <ArrowUpDown className="h-3.5 w-3.5" />
                         </Button>
@@ -2332,7 +2519,7 @@ export function TableView({
                 </TooltipProvider>
                 <DropdownMenuContent align="end" className="w-52">
                   <DropdownMenuLabel className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                    Sort tables
+                    {dbLabels.sortContainersMenu}
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuRadioGroup
@@ -2391,6 +2578,7 @@ export function TableView({
                       key={table.$id}
                       projectId={projectId!}
                       databaseId={databaseId}
+                      dbKind={routeDbKind}
                       table={table}
                       showSecuritySettings={showTableSecuritySettings}
                       onCreateSimilar={async (newTableId) => {
@@ -2430,18 +2618,22 @@ export function TableView({
                           ),
                         ])
                         navigate({
-                          to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
-                          params: {
+                          ...dbNav.dataGrid({
                             projectId: projectId!,
+                            dbKind: routeDbKind,
                             databaseId,
-                            tableId: newTableId,
-                          },
+                            resourceId: newTableId,
+                          }),
                         })
                       }}
                     >
                       <Link
-                        to="/projects/$projectId/databases/$databaseId/tables/$tableId/rows"
-                        params={{ projectId, databaseId, tableId: table.$id }}
+                        {...dbNav.dataGrid({
+                          projectId,
+                          dbKind: routeDbKind,
+                          databaseId,
+                          resourceId: table.$id,
+                        })}
                         className={cn(
                           'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
                           isTableSelected
@@ -2467,8 +2659,8 @@ export function TableView({
             <div className="flex items-center justify-between gap-1 text-[11px] text-muted-foreground">
               <span className="shrink-0 tabular-nums">
                 {sidebarTablesTotal === 0
-                  ? '0 tables'
-                  : `${(sidebarTablesDisplayedPage - 1) * sidebarTablesPageSize + 1}-${Math.min(sidebarTablesDisplayedPage * sidebarTablesPageSize, sidebarTablesTotal ?? 0)} of ${(sidebarTablesTotal ?? 0).toLocaleString()}`}
+                  ? `0 ${dbLabels.containerPlural}`
+                  : `${(sidebarTablesDisplayedPage - 1) * sidebarTablesPageSize + 1}-${Math.min(sidebarTablesDisplayedPage * sidebarTablesPageSize, sidebarTablesTotal ?? 0)} of ${(sidebarTablesTotal ?? 0).toLocaleString()} ${dbLabels.containerPlural}`}
               </span>
               <div className="flex items-center gap-0.5">
                 <Button
@@ -2512,7 +2704,7 @@ export function TableView({
                       disabled
                     >
                       <Plus className="h-4 w-4" />
-                      Create table
+                      {dbLabels.createContainer}
                     </Button>
                   </span>
                 </TooltipTrigger>
@@ -2528,7 +2720,7 @@ export function TableView({
                 onClick={() => setCreateTableDialogOpen(true)}
               >
                 <Plus className="h-4 w-4" />
-                Create table
+                {dbLabels.createContainer}
               </Button>
             )}
           </div>
@@ -2537,8 +2729,7 @@ export function TableView({
         {/* 4. Sticky bottom: Nav links (match main sidebar item size and spacing) */}
         <div className="shrink-0 space-y-0.5 border-t border-border bg-background px-2.5 py-2">
           <Link
-            to="/projects/$projectId/databases/$databaseId/tables/$tableId/visualizer"
-            params={{ projectId, databaseId, tableId }}
+            {...dbNav.visualizer(tableNavParams)}
             className={cn(
               'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
               databaseTab === 'visualizer'
@@ -2551,8 +2742,7 @@ export function TableView({
           </Link>
           {!noCreateDbPermission && (
             <Link
-              to="/projects/$projectId/databases/$databaseId/tables/$tableId/db-security"
-              params={{ projectId, databaseId, tableId }}
+              {...dbNav.dbSecurity(tableNavParams)}
               className={cn(
                 'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
                 databaseTab === 'db-security'
@@ -2566,8 +2756,7 @@ export function TableView({
           )}
           {features.databaseInsights && (
             <Link
-              to="/projects/$projectId/databases/$databaseId/tables/$tableId/insights"
-              params={{ projectId, databaseId, tableId }}
+              {...dbNav.insights(tableNavParams)}
               className={cn(
                 'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
                 databaseTab === 'insights'
@@ -2581,8 +2770,7 @@ export function TableView({
           )}
           {features.databaseBackups && (
             <Link
-              to="/projects/$projectId/databases/$databaseId/tables/$tableId/backups"
-              params={{ projectId, databaseId, tableId }}
+              {...dbNav.backups(tableNavParams)}
               className={cn(
                 'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
                 databaseTab === 'backups'
@@ -2595,8 +2783,7 @@ export function TableView({
             </Link>
           )}
           <Link
-            to="/projects/$projectId/databases/$databaseId/tables/$tableId/export-import"
-            params={{ projectId, databaseId, tableId }}
+            {...dbNav.exportImport(tableNavParams)}
             className={cn(
               'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
               databaseTab === 'export-import'
@@ -2609,8 +2796,7 @@ export function TableView({
           </Link>
           {!noCreateDbPermission && (
             <Link
-              to="/projects/$projectId/databases/$databaseId/tables/$tableId/db-settings"
-              params={{ projectId, databaseId, tableId }}
+              {...dbNav.dbSettings(tableNavParams)}
               className={cn(
                 'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
                 databaseTab === 'db-settings'
@@ -2626,14 +2812,14 @@ export function TableView({
       </div>
 
       {/* Main Content */}
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <ServiceHeader
           title={
             isDatabaseLevelView ? (
               databaseTab ? (
                 DATABASE_TAB_LABELS[databaseTab]
               ) : (
-                'Tables'
+                dbLabels.containerPluralTitle
               )
             ) : (
               <div className="flex items-center gap-2 min-w-0">
@@ -2654,7 +2840,7 @@ export function TableView({
           createLabel={isDatabaseLevelView ? undefined : getCreateLabel()}
           createDisabled={
             !isDatabaseLevelView &&
-            (activeTab === 'rows'
+            (activeTab === 'rows' || activeTab === 'documents'
               ? noCreateRowPermission
               : activeTab === 'columns' || activeTab === 'indexes'
                 ? noCreateTablePermission
@@ -2669,6 +2855,8 @@ export function TableView({
               : () => {
                   if (activeTab === 'rows' && openCreateRowDrawerRef.current) {
                     openCreateRowDrawerRef.current()
+                  } else if (activeTab === 'documents') {
+                    navigateToRowsWithOpenCreate()
                   } else if (
                     activeTab === 'columns' &&
                     openCreateColumnDialogRef.current
@@ -2685,6 +2873,7 @@ export function TableView({
           showFilters={
             !isDatabaseLevelView &&
             (activeTab === 'rows' ||
+              activeTab === 'documents' ||
               activeTab === 'columns' ||
               activeTab === 'indexes')
           }
@@ -2698,7 +2887,7 @@ export function TableView({
                 onRemoveFilter={rowsRemoveFilter}
                 onClearAll={rowsClearAllFilters}
                 onApplyFilter={rowsApplyFilter}
-                resourceLabel="rows"
+                resourceLabel={dbLabels.recordPlural}
                 filterScope={`databases.rows.${databaseId}.${tableId}`}
                 onApplyQuery={(queryParam, sortParam) =>
                   navigateToRowsList({
@@ -2718,8 +2907,43 @@ export function TableView({
                 )}
                 onReset={() => {
                   navigate({
-                    to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
-                    params: { projectId, databaseId, tableId },
+                    ...dbNav.dataGrid(tableNavParams),
+                    search: { page: 1, limit: rowsUrlLimit },
+                    replace: true,
+                  })
+                }}
+                teamId={project?.teamId}
+              />
+            ) : !isDatabaseLevelView && activeTab === 'documents' ? (
+              <FiltersPopover
+                open={rowsFiltersOpen}
+                onOpenChange={setRowsFiltersOpen}
+                columns={rowsFilterColumns}
+                filterMap={rowsFilterMap}
+                onRemoveFilter={rowsRemoveFilter}
+                onClearAll={rowsClearAllFilters}
+                onApplyFilter={rowsApplyFilter}
+                resourceLabel={dbLabels.recordPlural}
+                filterScope={`databases.documents.${databaseId}.${tableId}`}
+                onApplyQuery={(queryParam, sortParam) =>
+                  navigateToRowsList({
+                    search: rowsUrlSearch ?? undefined,
+                    query: queryParam ?? undefined,
+                    page: 1,
+                    limit: rowsUrlLimit,
+                    sort: sortParam ?? undefined,
+                  })
+                }
+                sortBy={rowsSortBy}
+                sortOrder={rowsSortOrder}
+                onSortChange={handleRowsSortChange}
+                defaultSortParam={encodeSort(
+                  ROWS_DEFAULT_SORT_BY,
+                  ROWS_DEFAULT_SORT_ORDER,
+                )}
+                onReset={() => {
+                  navigate({
+                    ...dbNav.dataJson(tableNavParams),
                     search: { page: 1, limit: rowsUrlLimit },
                     replace: true,
                   })
@@ -2735,7 +2959,7 @@ export function TableView({
                 onRemoveFilter={columnsRemoveFilter}
                 onClearAll={columnsClearAllFilters}
                 onApplyFilter={columnsApplyFilter}
-                resourceLabel="columns"
+                resourceLabel={dbLabels.schemaPlural}
                 filterScope={`databases.columns.${databaseId}.${tableId}`}
                 onApplyQuery={(queryParam) =>
                   navigateTableDetailSearch({
@@ -2764,9 +2988,13 @@ export function TableView({
               />
             ) : undefined
           }
-          showRefresh={!isDatabaseLevelView && activeTab === 'rows'}
+          showRefresh={
+            !isDatabaseLevelView &&
+            (activeTab === 'rows' || activeTab === 'documents')
+          }
           onRefresh={
-            !isDatabaseLevelView && activeTab === 'rows'
+            !isDatabaseLevelView &&
+            (activeTab === 'rows' || activeTab === 'documents')
               ? async () => {
                   if (rowsRefetchRef.current) {
                     refreshStartTimeRef.current = Date.now()
@@ -2782,9 +3010,13 @@ export function TableView({
                       await new Promise((resolve) =>
                         setTimeout(resolve, remaining),
                       )
-                      toast.success('Rows refreshed successfully')
+                      toast.success(
+                        `${dbLabels.recordPluralTitle} refreshed successfully`,
+                      )
                     } catch {
-                      toast.error('Failed to refresh rows')
+                      toast.error(
+                        `Failed to refresh ${dbLabels.recordPlural}`,
+                      )
                     } finally {
                       setIsRefreshingRows(false)
                       refreshStartTimeRef.current = null
@@ -2827,10 +3059,14 @@ export function TableView({
                     className="h-9"
                   >
                     <Lightbulb className="h-3.5 w-3.5 shrink-0 sm:mr-1.5" />
-                    <span className="hidden sm:inline">Suggest columns</span>
+                    <span className="hidden sm:inline">
+                      Suggest {dbLabels.schemaPluralTitle.toLowerCase()}
+                    </span>
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="bottom">Suggest columns</TooltipContent>
+                <TooltipContent side="bottom">
+                  Suggest {dbLabels.schemaPluralTitle.toLowerCase()}
+                </TooltipContent>
               </Tooltip>
             ) : activeTab === 'indexes' ? (
               <Tooltip>
@@ -2867,7 +3103,7 @@ export function TableView({
               >
                 {createFiftyTablesMutation.isPending
                   ? 'Creating…'
-                  : 'Debug: Create 50 tables'}
+                  : dbLabels.debugCreateManyContainers}
               </Button>
             ) : undefined
           }
@@ -2883,6 +3119,12 @@ export function TableView({
                   createDisabledTooltip={createPermissionTooltip}
                   onSelect={async (newDatabaseId) => {
                     try {
+                      const newDb = await queryClient.ensureQueryData(
+                        databaseQueryOptions(projectId, newDatabaseId),
+                      )
+                      const nextDbKind = databaseRouteKindFromApiType(
+                        (newDb as { databaseType?: ApiDatabaseType }).databaseType,
+                      )
                       const tablesData = await queryClient.ensureQueryData(
                         tablesQueryOptions(
                           projectId,
@@ -2903,21 +3145,32 @@ export function TableView({
                         | { $id?: string }
                         | undefined
                       navigate({
-                        to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
-                        params: {
+                        ...dbNavLink(nextDbKind).dataGrid({
                           projectId,
+                          dbKind: nextDbKind,
                           databaseId: newDatabaseId,
-                          tableId: firstTable?.$id ?? '-',
-                        },
+                          resourceId: firstTable?.$id ?? '-',
+                        }),
                       })
                     } catch {
+                      let nextDbKind: DatabaseRouteKind = 'tablesdb'
+                      try {
+                        const newDb = await queryClient.ensureQueryData(
+                          databaseQueryOptions(projectId, newDatabaseId),
+                        )
+                        nextDbKind = databaseRouteKindFromApiType(
+                          (newDb as { databaseType?: ApiDatabaseType }).databaseType,
+                        )
+                      } catch {
+                        // keep tablesdb default
+                      }
                       navigate({
-                        to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
-                        params: {
+                        ...dbNavLink(nextDbKind).dataGrid({
                           projectId,
+                          dbKind: nextDbKind,
                           databaseId: newDatabaseId,
-                          tableId: '-',
-                        },
+                          resourceId: '-',
+                        }),
                       })
                     }
                   }}
@@ -2939,12 +3192,12 @@ export function TableView({
                   createDisabledTooltip={createPermissionTooltip}
                   onSelect={(newTableId) => {
                     navigate({
-                      to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
-                      params: {
+                      ...dbNav.dataGrid({
                         projectId,
+                        dbKind: routeDbKind,
                         databaseId,
-                        tableId: newTableId,
-                      },
+                        resourceId: newTableId,
+                      }),
                     })
                   }}
                   onCreateClick={() => setCreateTableDialogOpen(true)}
@@ -2968,8 +3221,12 @@ export function TableView({
                           users through the API. Console actions remain
                           available.{' '}
                           <Link
-                            to="/projects/$projectId/databases/$databaseId/settings"
-                            params={{ projectId, databaseId }}
+                            to="/projects/$projectId/databases/$dbKind/$databaseId/settings"
+                            params={{
+                              projectId,
+                              dbKind: routeDbKind,
+                              databaseId,
+                            }}
                             className="font-medium underline hover:no-underline inline"
                           >
                             Enable it in the Settings tab
@@ -2989,14 +3246,18 @@ export function TableView({
                     >
                       <AlertCircle className="h-4 w-4 text-amber-500" />
                       <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
-                        Table is disabled
+                        {dbLabels.disabledContainerTitle}
                       </AlertTitle>
                       <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
                         <span className="inline">
-                          This table is currently disabled.{' '}
+                          {dbLabels.disabledContainerBodyPrefix}{' '}
                           <Link
-                            to="/projects/$projectId/databases/$databaseId/tables/$tableId/settings"
-                            params={{ projectId, databaseId, tableId }}
+                            {...dbNav.settings({
+                              projectId,
+                              dbKind: routeDbKind,
+                              databaseId,
+                              resourceId: tableId,
+                            })}
                             className="font-medium underline hover:no-underline inline"
                           >
                             Enable it in the Settings tab
@@ -3044,6 +3305,24 @@ export function TableView({
                   rowsSortBy={rowsSortBy}
                   rowsSortOrder={rowsSortOrder}
                   onNavigateToRowsList={navigateToRowsList}
+                />
+              )}
+              {activeTab === 'documents' && selectedTable && (
+                <DocumentsJsonSpreadsheet
+                  table={selectedTable}
+                  canWriteRows={!noCreateRowPermission}
+                  rowsUrlSearch={rowsUrlSearch}
+                  rowsUrlPage={rowsUrlPage}
+                  rowsUrlLimit={rowsUrlLimit}
+                  rowsFilterQueries={rowsFilterQueries}
+                  rowsFilterQueryString={rowsFilterQueryString}
+                  rowsSortBy={rowsSortBy}
+                  rowsSortOrder={rowsSortOrder}
+                  onNavigateToList={navigateToRowsList}
+                  onRefetchReady={(refetchFn) => {
+                    rowsRefetchRef.current = refetchFn
+                  }}
+                  onRowsCountChange={handleRowsCountChange}
                 />
               )}
               {activeTab === 'columns' && (
@@ -3097,6 +3376,9 @@ export function TableView({
         onOpenChange={setCreateTableDialogOpen}
         onCreate={(data) => createTableMutation.mutate(data)}
         isLoading={createTableMutation.isPending}
+        variant={
+          isVectorsDb ? 'vectors' : isDocumentsDb ? 'documents' : 'tables'
+        }
       />
       {/* Import CSV Dialog */}
       {tableId !== '-' && (
@@ -3137,6 +3419,10 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
     strict: false,
   })
   const projectId = params.projectId as string
+  const routeDbKind =
+    (params.dbKind as DatabaseRouteKind | undefined) ?? 'tablesdb'
+  const dbLabels = getDatabaseConsoleLabels(routeDbKind)
+  const emptyStateNav = useMemo(() => dbNavLink(routeDbKind), [routeDbKind])
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [tablesExpanded, setTablesExpanded] = useState(true)
@@ -3154,16 +3440,19 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
       })
       setCreateTableDialogOpen(false)
       navigate({
-        to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
-        params: {
+        ...emptyStateNav.dataGrid({
           projectId: projectId!,
+          dbKind: routeDbKind,
           databaseId: databaseId!,
-          tableId: table.$id,
-        },
+          resourceId: table.$id,
+        }),
       })
     },
     onError: (error: Error) => {
-      toast.error(getErrorMessage(error) || 'Failed to create table')
+      toast.error(
+        getErrorMessage(error) ||
+          `Failed to create ${dbLabels.containerSingular}`,
+      )
     },
   })
 
@@ -3189,9 +3478,14 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
     )
   }
 
+  const databaseApiType = (database as { databaseType?: ApiDatabaseType })
+    .databaseType
+  const isDocumentsDb = databaseApiType === ApiDatabaseType.Documentsdb
+  const isVectorsDb = databaseApiType === ApiDatabaseType.Vectorsdb
+
   return (
     <div className="@container flex h-full">
-      {/* Tables Sidebar */}
+      {/* Containers sidebar */}
       <div className="hidden w-56 shrink-0 flex-col border-r border-border lg:flex">
         {/* Database Header with back button */}
         <div className="flex items-center gap-2 border-b border-border px-3 py-2.5">
@@ -3220,28 +3514,29 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
               <ChevronRight className="h-3.5 w-3.5 shrink-0" />
             )}
             <Table2 className="h-3.5 w-3.5 shrink-0" />
-            <span className="flex-1 text-[13px] font-medium">Tables</span>
+            <span className="flex-1 text-[13px] font-medium">
+              {dbLabels.containerPluralTitle}
+            </span>
             <span className="text-[11px] text-muted-foreground">0</span>
           </button>
 
           {/* Tables List (collapsible) - Empty state */}
           {tablesExpanded && (
             <div className="ml-3 mt-0.5 border-l border-border pl-2">
-              {/* Create Table Button */}
               <button
                 onClick={() => setCreateTableDialogOpen(true)}
                 className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground cursor-pointer"
               >
                 <Plus className="h-3.5 w-3.5 shrink-0" />
-                <span className="text-[13px]">Create table</span>
+                <span className="text-[13px]">{dbLabels.createContainer}</span>
               </button>
             </div>
           )}
 
           {/* Security Link */}
           <Link
-            to="/projects/$projectId/databases/$databaseId/security"
-            params={{ projectId, databaseId }}
+            to="/projects/$projectId/databases/$dbKind/$databaseId/security"
+            params={{ projectId, dbKind: routeDbKind, databaseId }}
             className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
           >
             <Lock className="h-3.5 w-3.5 shrink-0" />
@@ -3250,8 +3545,8 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
 
           {features.dedicatedDbsTablesDB && (
             <Link
-              to="/projects/$projectId/databases/$databaseId/settings"
-              params={{ projectId, databaseId }}
+              to="/projects/$projectId/databases/$dbKind/$databaseId/settings"
+              params={{ projectId, dbKind: routeDbKind, databaseId }}
               className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
             >
               <Cpu className="h-3.5 w-3.5 shrink-0" />
@@ -3278,8 +3573,8 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
           )}
           {features.databaseBackups && (
             <Link
-              to="/projects/$projectId/databases/$databaseId/backups"
-              params={{ projectId, databaseId }}
+              to="/projects/$projectId/databases/$dbKind/$databaseId/backups"
+              params={{ projectId, dbKind: routeDbKind, databaseId }}
               className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
             >
               <Archive className="h-3.5 w-3.5 shrink-0" />
@@ -3289,8 +3584,8 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
 
           {/* Settings Link */}
           <Link
-            to="/projects/$projectId/databases/$databaseId/settings"
-            params={{ projectId, databaseId }}
+            to="/projects/$projectId/databases/$dbKind/$databaseId/settings"
+            params={{ projectId, dbKind: routeDbKind, databaseId }}
             className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
           >
             <Settings className="h-3.5 w-3.5 shrink-0" />
@@ -3314,8 +3609,8 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
           <div className="text-center">
             <EmptyState
               icon={Table2}
-              title="No tables yet"
-              description="Create your first table to get started"
+              title={dbLabels.emptyContainersTitle}
+              description={dbLabels.emptyContainersDescription}
               isEmpty={true}
               iconSize="md"
             />
@@ -3324,7 +3619,7 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
               className="mt-4"
             >
               <Plus className="mr-1.5 h-4 w-4" />
-              Create table
+              {dbLabels.createContainer}
             </Button>
           </div>
         </div>
@@ -3334,6 +3629,9 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
         onOpenChange={setCreateTableDialogOpen}
         onCreate={(data) => createTableMutation.mutate(data)}
         isLoading={createTableMutation.isPending}
+        variant={
+          isVectorsDb ? 'vectors' : isDocumentsDb ? 'documents' : 'tables'
+        }
       />
     </div>
   )
@@ -3388,6 +3686,16 @@ export function DatabaseOverview({
     projectId,
     databaseId,
   )
+
+  const routeDbKind =
+    (params.dbKind as DatabaseRouteKind | undefined) ??
+    databaseRouteKindFromApiType(database?.databaseType)
+  const dbLabels = getDatabaseConsoleLabels(routeDbKind)
+  const overviewDbNav = useMemo(() => dbNavLink(routeDbKind), [routeDbKind])
+  const databaseApiType = (database as { databaseType?: ApiDatabaseType } | null)
+    ?.databaseType
+  const isDocumentsDb = databaseApiType === ApiDatabaseType.Documentsdb
+  const isVectorsDb = databaseApiType === ApiDatabaseType.Vectorsdb
 
   // Update databaseName and enabled when database changes
   useEffect(() => {
@@ -3707,8 +4015,8 @@ export function DatabaseOverview({
       (activeTab === 'insights' && !features.databaseInsights)
     ) {
       navigate({
-        to: '/projects/$projectId/databases/$databaseId',
-        params: { projectId, databaseId },
+        to: '/projects/$projectId/databases/$dbKind/$databaseId/',
+        params: { projectId, dbKind: routeDbKind, databaseId },
         replace: true,
       })
     }
@@ -3718,6 +4026,7 @@ export function DatabaseOverview({
     features.databaseInsights,
     projectId,
     databaseId,
+    routeDbKind,
     navigate,
   ])
 
@@ -3728,35 +4037,42 @@ export function DatabaseOverview({
       (activeTab === 'security' || activeTab === 'settings')
     ) {
       navigate({
-        to: '/projects/$projectId/databases/$databaseId',
-        params: { projectId, databaseId },
+        to: '/projects/$projectId/databases/$dbKind/$databaseId/',
+        params: { projectId, dbKind: routeDbKind, databaseId },
         replace: true,
       })
     }
-  }, [showDbSecuritySettings, activeTab, projectId, databaseId, navigate])
+  }, [
+    showDbSecuritySettings,
+    activeTab,
+    projectId,
+    databaseId,
+    routeDbKind,
+    navigate,
+  ])
 
   const databaseTabs: Tab[] = useMemo(
     () =>
       [
         {
           id: 'tables',
-          label: 'Tables',
-          to: '/projects/$projectId/databases/$databaseId/',
-          params: { projectId, databaseId },
+          label: dbLabels.databaseOverviewTabLabel,
+          to: '/projects/$projectId/databases/$dbKind/$databaseId/',
+          params: { projectId, dbKind: routeDbKind, databaseId },
         },
         {
           id: 'visualizer',
           label: 'Visualizer',
-          to: '/projects/$projectId/databases/$databaseId/visualizer',
-          params: { projectId, databaseId },
+          to: '/projects/$projectId/databases/$dbKind/$databaseId/visualizer',
+          params: { projectId, dbKind: routeDbKind, databaseId },
         },
         ...(showDbSecuritySettings
           ? [
               {
                 id: 'security' as const,
                 label: 'Security',
-                to: '/projects/$projectId/databases/$databaseId/security',
-                params: { projectId, databaseId },
+                to: '/projects/$projectId/databases/$dbKind/$databaseId/security',
+                params: { projectId, dbKind: routeDbKind, databaseId },
               },
             ]
           : []),
@@ -3765,8 +4081,8 @@ export function DatabaseOverview({
               {
                 id: 'insights' as const,
                 label: 'Insights',
-                to: '/projects/$projectId/databases/$databaseId/insights',
-                params: { projectId, databaseId },
+                to: '/projects/$projectId/databases/$dbKind/$databaseId/insights',
+                params: { projectId, dbKind: routeDbKind, databaseId },
               },
             ]
           : []),
@@ -3775,24 +4091,24 @@ export function DatabaseOverview({
               {
                 id: 'backups' as const,
                 label: 'Backups',
-                to: '/projects/$projectId/databases/$databaseId/backups',
-                params: { projectId, databaseId },
+                to: '/projects/$projectId/databases/$dbKind/$databaseId/backups',
+                params: { projectId, dbKind: routeDbKind, databaseId },
               },
             ]
           : []),
         {
           id: 'export-import',
           label: 'Export / Import',
-          to: '/projects/$projectId/databases/$databaseId/export-import',
-          params: { projectId, databaseId },
+          to: '/projects/$projectId/databases/$dbKind/$databaseId/export-import',
+          params: { projectId, dbKind: routeDbKind, databaseId },
         },
         ...(showDbSecuritySettings
           ? [
               {
                 id: 'settings' as const,
                 label: 'Settings',
-                to: '/projects/$projectId/databases/$databaseId/settings',
-                params: { projectId, databaseId },
+                to: '/projects/$projectId/databases/$dbKind/$databaseId/settings',
+                params: { projectId, dbKind: routeDbKind, databaseId },
               },
             ]
           : []),
@@ -3800,6 +4116,8 @@ export function DatabaseOverview({
     [
       projectId,
       databaseId,
+      routeDbKind,
+      dbLabels.databaseOverviewTabLabel,
       features.databaseBackups,
       features.databaseInsights,
       showDbSecuritySettings,
@@ -3834,18 +4152,20 @@ export function DatabaseOverview({
         queryKey: ['tables', 'project', projectId, databaseId],
       })
       setCreateTableDialogOpen(false)
-      // Navigate to the new table's rows tab
       navigate({
-        to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
-        params: {
+        ...overviewDbNav.dataGrid({
           projectId: projectId!,
+          dbKind: routeDbKind,
           databaseId: databaseId!,
-          tableId: table.$id,
-        },
+          resourceId: table.$id,
+        }),
       })
     },
     onError: (error: Error) => {
-      toast.error(getErrorMessage(error) || 'Failed to create table')
+      toast.error(
+        getErrorMessage(error) ||
+          `Failed to create ${dbLabels.containerSingular}`,
+      )
     },
   })
 
@@ -3867,13 +4187,20 @@ export function DatabaseOverview({
         queryKey: ['tables', 'project', projectId, databaseId],
       })
       toast.success(
-        `Successfully deleted ${selectedTables.size} table${selectedTables.size > 1 ? 's' : ''}`,
+        `Successfully deleted ${selectedTables.size} ${
+          selectedTables.size === 1
+            ? dbLabels.containerSingular
+            : dbLabels.containerPlural
+        }`,
       )
       setSelectedTables(new Set())
       setBulkDeleteDialogOpen(false)
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to delete tables')
+      toast.error(
+        error.message ||
+          `Failed to delete ${dbLabels.containerPlural}`,
+      )
     },
   })
 
@@ -3963,13 +4290,17 @@ export function DatabaseOverview({
           tabs={databaseTabs}
           activeTab={activeTab}
           searchPlaceholder={
-            activeTab === 'tables' ? 'Search tables...' : undefined
+            activeTab === 'tables'
+              ? dbLabels.searchContainersPlaceholder
+              : undefined
           }
           searchValue={activeTab === 'tables' ? searchValue : ''}
           onSearchChange={
             activeTab === 'tables' ? handleSearchChange : undefined
           }
-          createLabel={activeTab === 'tables' ? 'Create table' : undefined}
+          createLabel={
+            activeTab === 'tables' ? dbLabels.createContainer : undefined
+          }
           createDisabled={
             activeTab === 'tables' ? noCreateTablePermission : false
           }
@@ -4102,9 +4433,10 @@ export function DatabaseOverview({
                         This database is disabled and not accessible to end
                         users through the API. Console actions remain available.{' '}
                         <Link
-                          to="/projects/$projectId/databases/$databaseId/settings"
+                          to="/projects/$projectId/databases/$dbKind/$databaseId/settings"
                           params={{
                             projectId: projectId!,
+                            dbKind: routeDbKind,
                             databaseId: databaseId,
                           }}
                           className="font-medium underline hover:no-underline inline"
@@ -4127,7 +4459,9 @@ export function DatabaseOverview({
           <div className="mx-auto w-full max-w-7xl px-4 pt-4 pb-4 sm:px-6 sm:pt-6 sm:pb-6">
             {showTablesLoading ? (
               <div className="rounded-lg border border-border bg-card py-12 text-center">
-                <div className="text-muted-foreground">Loading tables...</div>
+                <div className="text-muted-foreground">
+                  Loading {dbLabels.containerPlural}…
+                </div>
               </div>
             ) : paginatedTables.length > 0 ? (
               <>
@@ -4145,13 +4479,13 @@ export function DatabaseOverview({
                           />
                         </TableHead>
                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                          Table
+                          {dbLabels.containerSingularTitle}
                         </TableHead>
                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
-                          Columns
+                          {dbLabels.schemaPluralTitle}
                         </TableHead>
                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
-                          Rows
+                          {dbLabels.recordPluralTitle}
                         </TableHead>
                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
                           Indexes
@@ -4179,12 +4513,12 @@ export function DatabaseOverview({
                               return
                             }
                             navigate({
-                              to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
-                              params: {
+                              ...overviewDbNav.dataGrid({
                                 projectId,
+                                dbKind: routeDbKind,
                                 databaseId,
-                                tableId: table.$id,
-                              },
+                                resourceId: table.$id,
+                              }),
                             })
                           }}
                         >
@@ -4201,6 +4535,7 @@ export function DatabaseOverview({
                             <TableContextMenu
                               projectId={projectId}
                               databaseId={databaseId}
+                              dbKind={routeDbKind}
                               table={table}
                               showSecuritySettings={showTableSecuritySettings}
                               onCreateSimilar={async () => {
@@ -4215,12 +4550,12 @@ export function DatabaseOverview({
                               }}
                             >
                               <Link
-                                to="/projects/$projectId/databases/$databaseId/tables/$tableId/rows"
-                                params={{
+                                {...overviewDbNav.dataGrid({
                                   projectId,
+                                  dbKind: routeDbKind,
                                   databaseId,
-                                  tableId: table.$id,
-                                }}
+                                  resourceId: table.$id,
+                                })}
                                 className="block group"
                               >
                                 <div className="flex items-center gap-3 min-w-0">
@@ -4247,12 +4582,12 @@ export function DatabaseOverview({
                           </TableCell>
                           <TableCell className="px-4 py-3">
                             <Link
-                              to="/projects/$projectId/databases/$databaseId/tables/$tableId/rows"
-                              params={{
+                              {...overviewDbNav.dataGrid({
                                 projectId,
+                                dbKind: routeDbKind,
                                 databaseId,
-                                tableId: table.$id,
-                              }}
+                                resourceId: table.$id,
+                              })}
                               className="block text-right"
                             >
                               <span className="text-[12px] text-foreground font-mono">
@@ -4262,12 +4597,12 @@ export function DatabaseOverview({
                           </TableCell>
                           <TableCell className="px-4 py-3">
                             <Link
-                              to="/projects/$projectId/databases/$databaseId/tables/$tableId/rows"
-                              params={{
+                              {...overviewDbNav.dataGrid({
                                 projectId,
+                                dbKind: routeDbKind,
                                 databaseId,
-                                tableId: table.$id,
-                              }}
+                                resourceId: table.$id,
+                              })}
                               className="block text-right"
                             >
                               <span className="text-[12px] text-muted-foreground font-mono">
@@ -4277,12 +4612,12 @@ export function DatabaseOverview({
                           </TableCell>
                           <TableCell className="px-4 py-3">
                             <Link
-                              to="/projects/$projectId/databases/$databaseId/tables/$tableId/rows"
-                              params={{
+                              {...overviewDbNav.dataGrid({
                                 projectId,
+                                dbKind: routeDbKind,
                                 databaseId,
-                                tableId: table.$id,
-                              }}
+                                resourceId: table.$id,
+                              })}
                               className="block text-right"
                             >
                               <span className="text-[12px] text-muted-foreground font-mono">
@@ -4302,7 +4637,7 @@ export function DatabaseOverview({
                   pageSizeOptions={[10, 25, 50, 100]}
                   onPageChange={handleTablesPageChange}
                   onPageSizeChange={handleTablesPageSizeChange}
-                  itemLabel="tables"
+                  itemLabel={dbLabels.paginationItemLabel}
                   className="py-2"
                 />
 
@@ -4311,8 +4646,11 @@ export function DatabaseOverview({
                   <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
                     <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
                       <Badge variant="secondary" className="h-6 px-2.5">
-                        {selectedTables.size} table
-                        {selectedTables.size > 1 ? 's' : ''} selected
+                        {selectedTables.size}{' '}
+                        {selectedTables.size === 1
+                          ? dbLabels.containerSingular
+                          : dbLabels.containerPlural}{' '}
+                        selected
                       </Badge>
                       <div className="flex items-center gap-2">
                         <Button
@@ -4344,11 +4682,15 @@ export function DatabaseOverview({
                 >
                   <DialogContent className="sm:max-w-md p-0">
                     <DialogHeader className="px-6 pt-6 text-left">
-                      <DialogTitle>Delete Tables</DialogTitle>
+                      <DialogTitle>
+                        Delete {dbLabels.containerPluralTitle}
+                      </DialogTitle>
                       <DialogDescription className="text-[13px] mt-2">
                         Are you sure you want to delete {selectedTables.size}{' '}
-                        table{selectedTables.size > 1 ? 's' : ''}? This action
-                        cannot be undone.
+                        {selectedTables.size === 1
+                          ? dbLabels.containerSingular
+                          : dbLabels.containerPlural}
+                        ? This action cannot be undone.
                       </DialogDescription>
                     </DialogHeader>
 
@@ -4381,8 +4723,8 @@ export function DatabaseOverview({
             ) : (
               <EmptyState
                 icon={Table2}
-                title="No tables yet"
-                description="Create your first table to get started"
+                title={dbLabels.emptyContainersTitle}
+                description={dbLabels.emptyContainersDescription}
                 isEmpty={true}
                 variant="card"
               >
@@ -4391,17 +4733,17 @@ export function DatabaseOverview({
                     <Table2 className="h-6 w-6 text-muted-foreground" />
                   </div>
                   <p className="mb-1 text-[14px] font-medium text-foreground">
-                    No tables yet
+                    {dbLabels.emptyContainersTitle}
                   </p>
                   <p className="mb-4 text-[13px] text-muted-foreground">
-                    Create your first table to get started
+                    {dbLabels.emptyContainersDescription}
                   </p>
                   <Button
                     onClick={() => setCreateTableDialogOpen(true)}
                     className="gap-1.5"
                   >
                     <Plus className="h-4 w-4" />
-                    Create table
+                    {dbLabels.createContainer}
                   </Button>
                 </div>
               </EmptyState>
@@ -4728,8 +5070,8 @@ export function DatabaseOverview({
                 <div className="border-t border-destructive/20" />
                 <div className="px-6 py-4">
                   <p className="text-[13px] text-muted-foreground">
-                    Permanently delete this database and all its tables. This
-                    action cannot be undone.
+                    Permanently delete this database and all its{' '}
+                    {dbLabels.containerPlural}. This action cannot be undone.
                   </p>
 
                   {/* Database Info Summary */}
@@ -4743,7 +5085,10 @@ export function DatabaseOverview({
                           {database.name}
                         </p>
                         <p className="text-[12px] text-muted-foreground">
-                          {tablesTotal} table{tablesTotal !== 1 ? 's' : ''}
+                          {tablesTotal}{' '}
+                          {tablesTotal === 1
+                            ? dbLabels.containerSingular
+                            : dbLabels.containerPlural}
                         </p>
                       </div>
                     </div>
@@ -4774,8 +5119,8 @@ export function DatabaseOverview({
                               {database.name}
                             </span>
                           )}{' '}
-                          and all its tables and data? This action cannot be
-                          undone.
+                          and all its {dbLabels.containerPlural} and data? This
+                          action cannot be undone.
                         </DialogDescription>
                       </DialogHeader>
                       <div className="border-t border-border" />
@@ -4874,6 +5219,9 @@ export function DatabaseOverview({
         onOpenChange={setCreateTableDialogOpen}
         onCreate={(data) => createTableMutation.mutate(data)}
         isLoading={createTableMutation.isPending}
+        variant={
+          isVectorsDb ? 'vectors' : isDocumentsDb ? 'documents' : 'tables'
+        }
       />
     </div>
   )
@@ -4966,6 +5314,9 @@ function RowEditDrawer({
 }: RowEditDrawerProps) {
   const params = useParams({ strict: false })
   const projectId = params.projectId as string | undefined
+  const routeDbKind =
+    (params.dbKind as DatabaseRouteKind | undefined) ?? 'tablesdb'
+  const dbLabels = getDatabaseConsoleLabels(routeDbKind)
   const isCreateMode = !row
 
   const [formData, setFormData] = useState<
@@ -5243,7 +5594,11 @@ function RowEditDrawer({
     <BaseDrawer
       open={open}
       onOpenChange={handleOpenChange}
-      title={isCreateMode ? 'Create Row' : 'Update Row'}
+      title={
+        isCreateMode
+          ? dbLabels.createRecord
+          : `Update ${dbLabels.recordSingularTitle}`
+      }
       maxWidth="sm:max-w-2xl"
       headerActions={
         !isCreateMode ? (
@@ -6165,7 +6520,7 @@ function RowEditDrawer({
         {/* Footer with actions */}
         <div className="flex-shrink-0 flex items-center justify-start gap-2 border-t border-border bg-muted/30 px-6 py-4">
           <Button onClick={handleSave} disabled={isSaving}>
-            {isCreateMode ? 'Create Row' : 'Update'}
+            {isCreateMode ? dbLabels.createRecord : 'Update'}
           </Button>
           <Button
             variant="outline"
@@ -6233,6 +6588,10 @@ function RowsSpreadsheet({
   })
   const projectId = params.projectId as string
   const databaseId = params.databaseId as string
+  const routeDbKind =
+    (params.dbKind as DatabaseRouteKind | undefined) ?? 'tablesdb'
+  const dbLabels = getDatabaseConsoleLabels(routeDbKind)
+  const rsNav = useMemo(() => dbNavLink(routeDbKind), [routeDbKind])
   const tableId = table.$id
 
   const urlDriven = onNavigateToRowsList != null
@@ -6289,6 +6648,11 @@ function RowsSpreadsheet({
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const location = useLocation()
+  const routeSearch = useSearch({ strict: false }) as
+    | Record<string, unknown>
+    | undefined
+  const openRowCreateFlag = routeSearch?.openRowCreate === '1'
+  const openRowCreateConsumedRef = useRef(false)
 
   useEffect(() => {
     if (urlDriven && rowsUrlPage != null && rowsUrlLimit != null) {
@@ -6466,6 +6830,28 @@ function RowsSpreadsheet({
       openCreateRowFnRef.current = openFn
     }
   }, [onCreateRowReady])
+
+  useEffect(() => {
+    if (!urlDriven) return
+    if (!openRowCreateFlag) {
+      openRowCreateConsumedRef.current = false
+      return
+    }
+    if (openRowCreateConsumedRef.current) return
+    openRowCreateConsumedRef.current = true
+    setSelectedRowForEdit(null)
+    setFocusedField(null)
+    setDrawerInitialTab(null)
+    setEditDrawerOpen(true)
+    navigate({
+      search: (prev: Record<string, unknown>) => {
+        const next = { ...prev }
+        delete next.openRowCreate
+        return next
+      },
+      replace: true,
+    })
+  }, [urlDriven, openRowCreateFlag, navigate])
 
   // Store create column function from parent
   useEffect(() => {
@@ -6841,13 +7227,19 @@ function RowsSpreadsheet({
         queryKey: ['rows', 'project', projectId, databaseId, tableId],
       })
       toast.success(
-        `Successfully deleted ${selectedRows.size} row${selectedRows.size > 1 ? 's' : ''}`,
+        `Successfully deleted ${selectedRows.size} ${
+          selectedRows.size === 1
+            ? dbLabels.recordSingular
+            : dbLabels.recordPlural
+        }`,
       )
       setSelectedRows(new Set())
       setDeleteDialogOpen(false)
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to delete rows')
+      toast.error(
+        error.message || `Failed to delete ${dbLabels.recordPlural}`,
+      )
     },
   })
 
@@ -6871,10 +7263,13 @@ function RowsSpreadsheet({
       await queryClient.refetchQueries({
         queryKey: ['rows', 'project', projectId, databaseId, tableId],
       })
-      toast.success('Row duplicated')
+      toast.success(`${dbLabels.recordSingularTitle} duplicated`)
     },
     onError: (error: Error) => {
-      toast.error(error.message ?? 'Failed to duplicate row')
+      toast.error(
+        error.message ??
+          `Failed to duplicate ${dbLabels.recordSingular}`,
+      )
     },
   })
 
@@ -6911,7 +7306,9 @@ function RowsSpreadsheet({
           c.type !== 'relationship' && (!c.status || c.status === 'available'),
       )
       if (dataProducingColumns.length === 0) {
-        throw new Error('Add at least one column to generate sample data.')
+        throw new Error(
+          `Add at least one ${dbLabels.schemaSingularTitle.toLowerCase()} to generate sample data.`,
+        )
       }
 
       const sampleRows = generateSampleRows(columns, rowCount)
@@ -6996,7 +7393,9 @@ function RowsSpreadsheet({
   if (showRowsLoading || (columnsLoading && apiColumns.length === 0)) {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="text-muted-foreground">Loading rows...</div>
+        <div className="text-muted-foreground">
+          Loading {dbLabels.recordPlural}…
+        </div>
       </div>
     )
   }
@@ -7042,10 +7441,13 @@ function RowsSpreadsheet({
     }
 
     const handleSuggestColumns = () => {
-      // Navigate to columns tab with search parameter to auto-open modal
       navigate({
-        to: '/projects/$projectId/databases/$databaseId/tables/$tableId/columns',
-        params: { projectId, databaseId, tableId },
+        ...rsNav.columns({
+          projectId,
+          dbKind: routeDbKind,
+          databaseId,
+          resourceId: tableId,
+        }),
         search: { openSuggest: 'true' },
       })
     }
@@ -7071,12 +7473,14 @@ function RowsSpreadsheet({
             <Table2 className="h-12 w-12 text-muted-foreground/50" />
             <div className="space-y-2 text-center">
               <p className="text-sm font-medium text-foreground">
-                {hasColumns ? 'No rows found' : 'No columns yet'}
+                {hasColumns
+                  ? `No ${dbLabels.recordPlural} found`
+                  : `No ${dbLabels.schemaPlural} yet`}
               </p>
               <p className="text-xs text-muted-foreground max-w-sm">
                 {hasColumns
-                  ? 'This table is empty. Get started by creating a row, adding columns, or generating sample data.'
-                  : 'This table has no columns yet. Create your first column to get started.'}
+                  ? `This ${dbLabels.containerSingular} is empty. Get started by creating a ${dbLabels.recordSingular}, adding ${dbLabels.schemaPlural}, or generating sample data.`
+                  : `This ${dbLabels.containerSingular} has no ${dbLabels.schemaPlural} yet. Create your first ${dbLabels.schemaSingularTitle.toLowerCase()} to get started.`}
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3 w-full max-w-2xl">
@@ -7091,10 +7495,10 @@ function RowsSpreadsheet({
                         </div>
                         <div className="min-w-0 flex-1">
                           <h3 className="text-sm font-medium text-foreground">
-                            Suggest columns
+                            Suggest {dbLabels.schemaPluralTitle.toLowerCase()}
                           </h3>
                           <p className="mt-1 text-xs text-muted-foreground">
-                            Use AI to generate columns
+                            Use AI to generate {dbLabels.schemaPlural}
                           </p>
                         </div>
                       </div>
@@ -7115,10 +7519,10 @@ function RowsSpreadsheet({
                     </div>
                     <div className="min-w-0 flex-1">
                       <h3 className="text-sm font-medium text-foreground">
-                        Suggest columns
+                        Suggest {dbLabels.schemaPluralTitle.toLowerCase()}
                       </h3>
                       <p className="mt-1 text-xs text-muted-foreground">
-                        Use AI to generate columns
+                        Use AI to generate {dbLabels.schemaPlural}
                       </p>
                     </div>
                   </div>
@@ -7135,10 +7539,11 @@ function RowsSpreadsheet({
                           </div>
                           <div className="min-w-0 flex-1">
                             <h3 className="text-sm font-medium text-foreground">
-                              Create row
+                              Create {dbLabels.recordSingular}
                             </h3>
                             <p className="mt-1 text-xs text-muted-foreground">
-                              Add a new row to this table
+                              Add a new {dbLabels.recordSingular} to this{' '}
+                              {dbLabels.containerSingular}
                             </p>
                           </div>
                         </div>
@@ -7159,10 +7564,11 @@ function RowsSpreadsheet({
                       </div>
                       <div className="min-w-0 flex-1">
                         <h3 className="text-sm font-medium text-foreground">
-                          Create row
+                          Create {dbLabels.recordSingular}
                         </h3>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          Add a new row to this table
+                          Add a new {dbLabels.recordSingular} to this{' '}
+                          {dbLabels.containerSingular}
                         </p>
                       </div>
                     </div>
@@ -7178,10 +7584,10 @@ function RowsSpreadsheet({
                         </div>
                         <div className="min-w-0 flex-1">
                           <h3 className="text-sm font-medium text-foreground">
-                            Create column
+                            Create {dbLabels.schemaSingularTitle.toLowerCase()}
                           </h3>
                           <p className="mt-1 text-xs text-muted-foreground">
-                            Create columns manually
+                            Create {dbLabels.schemaPlural} manually
                           </p>
                         </div>
                       </div>
@@ -7202,10 +7608,10 @@ function RowsSpreadsheet({
                     </div>
                     <div className="min-w-0 flex-1">
                       <h3 className="text-sm font-medium text-foreground">
-                        Create column
+                        Create {dbLabels.schemaSingularTitle.toLowerCase()}
                       </h3>
                       <p className="mt-1 text-xs text-muted-foreground">
-                        Create columns manually
+                        Create {dbLabels.schemaPlural} manually
                       </p>
                     </div>
                   </div>
@@ -10431,6 +10837,9 @@ function TableSettings({ table }: SpreadsheetProps) {
   })
   const projectId = params.projectId as string
   const databaseId = params.databaseId as string
+  const routeDbKind =
+    (params.dbKind as DatabaseRouteKind | undefined) ?? 'tablesdb'
+  const settingsNav = useMemo(() => dbNavLink(routeDbKind), [routeDbKind])
   const tableId = table.$id
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -10633,8 +11042,12 @@ function TableSettings({ table }: SpreadsheetProps) {
       setDeleteError(null)
 
       navigate({
-        to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
-        params: { projectId, databaseId, tableId: '-' },
+        ...settingsNav.dataGrid({
+          projectId,
+          dbKind: routeDbKind,
+          databaseId,
+          resourceId: '-',
+        }),
         replace: true,
       })
     },

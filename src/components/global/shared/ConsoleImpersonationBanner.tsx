@@ -46,7 +46,7 @@ export function ConsoleImpersonationBanner({
   const handleExit = async () => {
     const opId = readConsoleImpersonationOperatorSnapshot()?.$id
     clearConsoleImpersonateUser()
-    clearConsoleImpersonationSession()
+    clearConsoleImpersonationSession({ skipNotify: true })
     if (opId) {
       void flushRecentImpersonationUsersToAccountPrefs(opId).catch((e) => {
         console.error(e)

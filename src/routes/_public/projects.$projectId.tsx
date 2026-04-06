@@ -23,6 +23,45 @@ import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleIm
 import { reportConsoleAccess } from '@/lib/appwrite/console-access'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 
+/** Tab segment for routes under `.../tables/:tableId/<tab>` or `.../collections/:id/<tab>` */
+const DATABASE_TABLE_VIEW_TABS = new Set([
+  'rows',
+  'documents',
+  'columns',
+  'indexes',
+  'security',
+  'settings',
+  'visualizer',
+  'insights',
+  'backups',
+  'export-import',
+  'db-security',
+  'db-settings',
+  'json',
+])
+
+/**
+ * Resolves the `<tab>` segment for database table routes.
+ * - Current: /projects/:p/databases/:dbKind/:databaseId/tables/:tableId/:tab
+ * - Legacy: /projects/:p/databases/:databaseId/tables/:tableId/:tab
+ */
+function getDatabaseTablesRouteTab(pathParts: string[]): string | undefined {
+  if (pathParts[3] !== 'databases') return undefined
+  if (pathParts.length >= 8 && pathParts[5] === 'tables') {
+    const tab = pathParts[7]
+    if (tab && DATABASE_TABLE_VIEW_TABS.has(tab)) return tab
+  }
+  if (pathParts.length >= 9 && pathParts[6] === 'tables') {
+    const tab = pathParts[8]
+    if (tab && DATABASE_TABLE_VIEW_TABS.has(tab)) return tab
+  }
+  if (pathParts.length >= 9 && pathParts[6] === 'collections') {
+    const tab = pathParts[8]
+    if (tab && DATABASE_TABLE_VIEW_TABS.has(tab)) return tab
+  }
+  return undefined
+}
+
 /** Loader return: project data for first paint (avoids layout shift for paused curtain). */
 export type ProjectLayoutLoaderData =
   | {
@@ -117,33 +156,16 @@ function ProjectLayout() {
   const isPaused =
     (isPausedFromProject || isPausedFromLoader) && !hidePausedCurtain
 
-  // Extract active section from pathname
+  // Extract active section from pathname (leading empty segment from split)
   const pathParts = location.pathname.split('/')
   const activeSection = pathParts[3] || 'overview'
 
-  // Check if we're in a database table view (rows, columns, indexes, security, settings, visualizer, insights, backups, export-import, db-security, db-settings)
-  // Pattern: /projects/:projectId/databases/:databaseId/tables/:tableId/<tab>
-  const isDatabaseSpreadsheetView =
-    activeSection === 'databases' &&
-    pathParts.length >= 8 &&
-    pathParts[5] === 'tables' &&
-    [
-      'rows',
-      'columns',
-      'indexes',
-      'security',
-      'settings',
-      'visualizer',
-      'insights',
-      'backups',
-      'export-import',
-      'db-security',
-      'db-settings',
-    ].includes(pathParts[7])
+  const databaseTablesRouteTab = getDatabaseTablesRouteTab(pathParts)
 
-  // Visualizer is now under tables/:tableId/visualizer; keep for backwards compatibility with redirect
-  const isDatabaseVisualizerView =
-    isDatabaseSpreadsheetView && pathParts[7] === 'visualizer'
+  const isDatabaseSpreadsheetView =
+    activeSection === 'databases' && databaseTablesRouteTab != null
+
+  const isDatabaseVisualizerView = databaseTablesRouteTab === 'visualizer'
 
   // Functions local code editor (Monaco)
   const isFunctionsEditorView =

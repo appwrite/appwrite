@@ -13,6 +13,8 @@ export const listSearchSchema = z.object({
   page: z.coerce.number().int().min(1).optional().catch(undefined),
   limit: z.coerce.number().int().min(1).max(100).optional().catch(undefined),
   sort: z.string().optional().catch(undefined),
+  /** When set to "1", rows view opens the create-row drawer once then strips this param */
+  openRowCreate: z.literal('1').optional().catch(undefined),
 })
 
 export type ListSearch = z.infer<typeof listSearchSchema>

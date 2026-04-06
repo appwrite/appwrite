@@ -1,14 +1,36 @@
-import { createFileRoute, Outlet } from '@tanstack/react-router'
-import { pageTitle } from '@/lib/utils/page-title'
+import { createFileRoute, redirect } from '@tanstack/react-router'
+import {
+  databaseRouteKindFromApiType,
+  DATABASE_HOME_TO,
+} from '@/lib/database-routes'
+import type { DatabaseType } from '@appwrite.io/console'
+import {
+  databaseQueryOptions,
+  projectQueryOptions,
+} from '@/lib/react-query/hooks'
 
+/**
+ * Legacy path without product segment: /projects/:projectId/databases/:databaseId
+ * Redirects to /projects/:projectId/databases/:dbKind/:databaseId
+ */
 export const Route = createFileRoute(
   '/_public/projects/$projectId/databases/$databaseId',
 )({
-  head: () => ({ meta: [{ title: pageTitle('Databases') }] }),
-  component: DatabaseLayout,
+  beforeLoad: async ({ params, context }) => {
+    if (typeof window === 'undefined') return
+    const { projectId, databaseId } = params
+    const { queryClient } = context
+    await queryClient.ensureQueryData(projectQueryOptions(projectId))
+    const db = await queryClient.ensureQueryData(
+      databaseQueryOptions(projectId, databaseId),
+    )
+    const dbKind = databaseRouteKindFromApiType(
+      (db as { databaseType?: DatabaseType } | null)?.databaseType,
+    )
+    throw redirect({
+      to: DATABASE_HOME_TO,
+      params: { projectId, dbKind, databaseId },
+      replace: true,
+    })
+  },
 })
-
-// Layout route that renders child routes (table views)
-function DatabaseLayout() {
-  return <Outlet />
-}
