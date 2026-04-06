@@ -77,8 +77,10 @@ $payloadSize = 12 * (1024 * 1024); // 12MB - adding slight buffer for headers an
 $requestMemoryBudget = max($payloadSize * 8, 256 * 1024 * 1024);
 $memoryReserve = 256 * 1024 * 1024;
 $availableRequestMemory = max($memoryLimitBytes - $memoryReserve, 0);
-$computedMaxConcurrency = 1;
-$maxConcurrency = (int) System::getEnv('_APP_HTTP_COROUTINE_MAX_CONCURRENCY', $computedMaxConcurrency);
+$computedMaxConcurrency = $availableRequestMemory > 0
+    ? max(2, (int) floor($availableRequestMemory / $requestMemoryBudget))
+    : 2;
+$maxConcurrency = max(2, (int) System::getEnv('_APP_HTTP_COROUTINE_MAX_CONCURRENCY', $computedMaxConcurrency));
 
 $swooleAdapter = new Server(
     host: "0.0.0.0",
