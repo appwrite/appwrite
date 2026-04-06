@@ -97,7 +97,8 @@ class Get extends Action
         $space = 0;
 
         $linkTags = [];
-        \preg_match_all('/<link\b[^>]*>/i', $res->getBody(), $linkTags);
+        $html = \preg_replace('/<!--.*?-->/s', '', $res->getBody()) ?? $res->getBody();
+        \preg_match_all('/<link\b[^>]*>/i', $html, $linkTags);
 
         foreach ($linkTags[0] ?? [] as $tag) {
             $attributes = [];
@@ -107,7 +108,7 @@ class Get extends Action
 
             foreach ($attributeMatches as $attributeMatch) {
                 $attributes[\strtolower($attributeMatch[1])] = \html_entity_decode(
-                    $attributeMatch[2] ?: $attributeMatch[3] ?: $attributeMatch[4],
+                    $attributeMatch[2] !== '' ? $attributeMatch[2] : ($attributeMatch[3] !== '' ? $attributeMatch[3] : $attributeMatch[4]),
                     \ENT_QUOTES | \ENT_HTML5
                 );
             }
