@@ -392,8 +392,19 @@ class Certificates extends Action
             $certificate->removeAttribute('$sequence');
             $certificate = $dbForPlatform->createDocument('certificates', $certificate);
         } else {
-            $certificate = new Document(\array_merge($existingCertificate->getArrayCopy(), $certificate->getArrayCopy()));
-            $certificate = $dbForPlatform->updateDocument('certificates', $certificate->getId(), $certificate);
+            // BUG-07 fix: sparse update — only send the fields that the certificate job
+            // actually modifies, not a full document merge (which is inefficient and violates
+            // the codebase convention documented in AGENTS.md).
+            $sparseUpdate = [];
+            foreach (['logs', 'attempts', 'issueDate', 'renewDate'] as $attr) {
+                $value = $certificate->getAttribute($attr);
+                if ($value !== null) {
+                    $sparseUpdate[$attr] = $value;
+                }
+            }
+            $dbForPlatform->updateDocument('certificates', $existingCertificate->getId(), new Document($sparseUpdate));
+            // Reconstruct the local certificate with full data so callers have a complete Document.
+            $certificate = new Document(\array_merge($existingCertificate->getArrayCopy(), $sparseUpdate));
         }
 
         return $certificate;

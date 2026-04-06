@@ -591,21 +591,27 @@ class Deletes extends Action
     protected function deleteProjectsByTeam(Database $dbForPlatform, callable $getProjectDB, callable $getDatabasesDB, CertificatesAdapter $certificates, Document $document): void
     {
 
-        $projects = $dbForPlatform->find('projects', [
-            Query::equal('teamInternalId', [$document->getSequence()]),
-            Query::equal('region', [System::getEnv('_APP_REGION', 'default')])
-        ]);
+        // BUG-05 fix: Removed the region filter — it caused projects in other regions to be
+        // permanently orphaned when a team was deleted. Also replaced find() (no limit = OOM
+        // risk on large teams) with listByGroup() which paginates in 1 000-document windows.
+        $this->listByGroup(
+            'projects',
+            [
+                Query::equal('teamInternalId', [$document->getSequence()]),
+                Query::orderAsc(),
+            ],
+            $dbForPlatform,
+            function (Document $project) use ($dbForPlatform, $getProjectDB, $getDatabasesDB, $certificates) {
+                $deviceForFiles     = getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
+                $deviceForSites     = getDevice(APP_STORAGE_SITES . '/app-' . $project->getId());
+                $deviceForFunctions = getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
+                $deviceForBuilds    = getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
+                $deviceForCache     = getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId());
 
-        foreach ($projects as $project) {
-            $deviceForFiles = getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
-            $deviceForSites = getDevice(APP_STORAGE_SITES . '/app-' . $project->getId());
-            $deviceForFunctions = getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
-            $deviceForBuilds = getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
-            $deviceForCache = getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId());
-
-            $this->deleteProject($dbForPlatform, $getProjectDB, $getDatabasesDB, $deviceForFiles, $deviceForSites, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $project);
-            $dbForPlatform->deleteDocument('projects', $project->getId());
-        }
+                $this->deleteProject($dbForPlatform, $getProjectDB, $getDatabasesDB, $deviceForFiles, $deviceForSites, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $project);
+                $dbForPlatform->deleteDocument('projects', $project->getId());
+            }
+        );
     }
 
     /**
@@ -1030,10 +1036,11 @@ class Deletes extends Action
     private function deleteRealtimeUsage(Database $dbForPlatform, string $datetime): void
     {
         // Delete Dead Realtime Logs
+        // IMP-05 fix: removed the conflicting Query::orderAsc() — having both orderDesc('timestamp')
+        // and a bare orderAsc() produces undefined sort behaviour across DB adapters.
         $this->deleteByGroup('realtime', [
             Query::lessThan('timestamp', $datetime),
             Query::orderDesc('timestamp'),
-            Query::orderAsc(),
         ], $dbForPlatform);
     }
 
@@ -1454,13 +1461,13 @@ class Deletes extends Action
 
         while ($sum === $limit) {
 
-            $queries = \array_merge([Query::limit($limit)], $queries);
+            $iterationQueries = \array_merge([Query::limit($limit)], $queries);
 
             if ($cursor !== null) {
-                $queries[] = Query::cursorAfter($cursor);
+                $iterationQueries[] = Query::cursorAfter($cursor);
             }
 
-            $results = $database->find($collection, $queries);
+            $results = $database->find($collection, $iterationQueries);
 
             $sum = \count($results);
 
@@ -1493,8 +1500,10 @@ class Deletes extends Action
         $certificates->deleteCertificate($domain);
 
         // Delete certificate document, so Appwrite is aware of change
-        if (isset($document['certificateId'])) {
-            $dbForPlatform->deleteDocument('certificates', $document['certificateId']);
+        // BUG-04 fix: use getAttribute() consistently instead of array-access on Document.
+        $certificateId = $document->getAttribute('certificateId', '');
+        if (!empty($certificateId)) {
+            $dbForPlatform->deleteDocument('certificates', $certificateId);
         }
     }
 

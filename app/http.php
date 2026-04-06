@@ -199,8 +199,6 @@ function createDatabase(Http $app, string $resourceKey, string $dbName, array $c
 {
     $max = 15;
     $sleep = 2;
-    $max = 15;
-    $sleep = 2;
     $attempts = 0;
 
     while (true) {

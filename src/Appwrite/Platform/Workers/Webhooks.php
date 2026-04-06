@@ -101,7 +101,7 @@ class Webhooks extends Action
 
         $url = \rawurldecode($webhook->getAttribute('url'));
         $signatureKey = $webhook->getAttribute('signatureKey');
-        $signature = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
+        $signature = base64_encode(hash_hmac('sha256', $url . $payload, $signatureKey, true)); // BUG-06: upgraded from SHA-1 (deprecated) to SHA-256
         $httpUser = $webhook->getAttribute('httpUser');
         $httpPass = $webhook->getAttribute('httpPass');
         $ch = \curl_init($webhook->getAttribute('url'));

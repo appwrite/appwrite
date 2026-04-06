@@ -678,7 +678,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 $warningMessage = "[WARNING] Logs truncated. The output exceeded {$maxLogLength} characters.\n";
                 $warningLength = \strlen($warningMessage);
                 $maxContentLength = max(0, $maxLogLength - $warningLength);
-                $logs = $warningMessage . ($maxContentLength > 0 ? \substr($logs, -$maxContentLength) : '');
+                $logs = \substr($logs, 0, $maxContentLength) . "\n" . $warningMessage;
             }
 
             // Truncate errors if they exceed the limit
@@ -689,7 +689,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 $warningMessage = "[WARNING] Errors truncated. The output exceeded {$maxErrorLength} characters.\n";
                 $warningLength = \strlen($warningMessage);
                 $maxContentLength = max(0, $maxErrorLength - $warningLength);
-                $errors = $warningMessage . ($maxContentLength > 0 ? \substr($errors, -$maxContentLength) : '');
+                $errors = \substr($errors, 0, $maxContentLength) . "\n" . $warningMessage;
             }
             /** Update execution status */
             $status = $executionResponse['statusCode'] >= 500 ? 'failed' : 'completed';
