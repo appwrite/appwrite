@@ -245,8 +245,11 @@ $register->set('pools', function () {
     $maxConnections = (int) System::getEnv('_APP_CONNECTIONS_MAX', 151);
     $instanceConnections = $maxConnections / (int) System::getEnv('_APP_POOL_CLIENTS', 14);
 
+    $scriptPath = \str_replace('\\', '/', (string) ($_SERVER['SCRIPT_FILENAME'] ?? ''));
+    $isCoroutineHttp = \str_ends_with($scriptPath, '/app/http.php');
+
     $workerCount = intval(System::getEnv('_APP_CPU_NUM', swoole_cpu_num())) * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
-    $processCount = max(1, (int) System::getEnv('_APP_POOL_PROCESS_COUNT', (string) $workerCount));
+    $processCount = $isCoroutineHttp ? 1 : $workerCount;
     $poolSize = max(1, (int)($instanceConnections / $processCount));
 
     foreach ($connections as $key => $connection) {
