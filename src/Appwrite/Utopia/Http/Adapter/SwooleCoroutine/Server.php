@@ -85,7 +85,7 @@ class Server extends Adapter
 
     public function start()
     {
-        go(function () {
+        $startServer = function (): void {
             $this->initializeRequestSemaphore();
 
             if ($this->onStartCallback) {
@@ -93,7 +93,15 @@ class Server extends Adapter
             }
 
             $this->server->start();
-        });
+        };
+
+        if (Coroutine::getCid() !== -1) {
+            $startServer();
+
+            return;
+        }
+
+        \Swoole\Coroutine\run($startServer);
     }
 
     private function initializeRequestSemaphore(): void
