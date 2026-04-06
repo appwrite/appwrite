@@ -61,8 +61,6 @@ use Utopia\System\System;
 use Utopia\Validator;
 use Utopia\Validator\Text;
 
-Config::setParam('domainVerification', false);
-Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
 function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Event $queueForEvents, Bus $bus, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, Authorization $authorization, ?Key $apiKey, DeleteEvent $queueForDeletes, int $executionsRetentionCount)
@@ -868,7 +866,7 @@ Http::init()
         * Request format
         */
         $route = $utopia->getRoute();
-        Request::setRoute($route);
+        $request->setRoute($route);
 
         if ($route === null) {
             $response->setStatusCode(404);
@@ -904,39 +902,15 @@ Http::init()
             $locale->setDefault($localeParam);
         }
 
-        $origin = \parse_url($request->getOrigin($request->getReferer('')), PHP_URL_HOST);
-        $selfDomain = new Domain($request->getHostname());
-        $endDomain = new Domain((string)$origin);
-        Config::setParam(
-            'domainVerification',
-            ($selfDomain->getRegisterable() === $endDomain->getRegisterable()) &&
-                $endDomain->getRegisterable() !== ''
-        );
-
         $localHosts = ['localhost','localhost:'.$request->getPort()];
 
         $migrationHost = System::getEnv('_APP_MIGRATION_HOST');
         if (!empty($migrationHost)) {
+            // Treat the migration host like localhost because internal migration and
+            // CI traffic may use it before a public domain is configured.
             $localHosts[] = $migrationHost;
             $localHosts[] = $migrationHost.':'.$request->getPort();
         }
-
-        $isLocalHost = in_array($request->getHostname(), $localHosts);
-        $isIpAddress = filter_var($request->getHostname(), FILTER_VALIDATE_IP) !== false;
-
-        $isConsoleProject = $project->getAttribute('$id', '') === 'console';
-        $isConsoleRootSession = System::getEnv('_APP_CONSOLE_ROOT_SESSION', 'disabled') === 'enabled';
-
-        Config::setParam(
-            'cookieDomain',
-            $isLocalHost || $isIpAddress
-                ? null
-                : (
-                    $isConsoleProject && $isConsoleRootSession
-                    ? '.' . $selfDomain->getRegisterable()
-                    : '.' . $request->getHostname()
-                )
-        );
 
         $warnings = [];
 
@@ -1019,7 +993,7 @@ Http::init()
             return;
         }
         $route = $request->getRoute();
-        if ($route->getLabel('origin', false) === '*') {
+        if ($route?->getLabel('origin', false) === '*') {
             return;
         }
         if (!$originValidator->isValid($origin)) {
@@ -1492,6 +1466,19 @@ Http::error()
             'version' => APP_VERSION_STABLE,
             'type' => $type,
         ];
+
+        // Add CORS headers to error responses so browsers can read the error.
+        // Wrapped in try-catch: if the error itself is a DB failure, resolving
+        // the cors resource (which depends on rule -> DB) would cascade.
+        // Uses override:true to avoid duplicate headers if init() already set them.
+        try {
+            $cors = $utopia->getResource('cors');
+            foreach ($cors->headers($request->getOrigin()) as $name => $value) {
+                $response->addHeader($name, $value, override: true);
+            }
+        } catch (Throwable) {
+            // Degrade gracefully - error response without CORS is no worse than before.
+        }
 
         $response
             ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
