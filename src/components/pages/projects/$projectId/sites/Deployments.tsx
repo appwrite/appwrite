@@ -42,6 +42,7 @@ import {
   isDeploymentInProgress,
   isDeploymentTimeout,
 } from '@/lib/utils/deployment-status'
+import { getDeploymentRepositoryWebUrl } from '@/lib/utils/deployment-repository-url'
 import {
   Tooltip,
   TooltipContent,
@@ -986,12 +987,28 @@ export function View() {
                                 <div className="text-[12px] text-muted-foreground mb-1.5">
                                   Source
                                 </div>
-                                <div className="flex items-center gap-1.5 text-[13px] text-foreground">
+                                <div className="flex items-center gap-1.5 text-[13px] text-foreground min-w-0">
                                   {vcsProvider.icon}
-                                  <span>
-                                    {cardDeployment.providerRepositoryOwner}/
-                                    {cardDeployment.providerRepositoryName}
-                                  </span>
+                                  {(() => {
+                                    const repoUrl =
+                                      getDeploymentRepositoryWebUrl(
+                                        cardDeployment,
+                                      )
+                                    const label = `${cardDeployment.providerRepositoryOwner}/${cardDeployment.providerRepositoryName}`
+                                    return repoUrl ? (
+                                      <a
+                                        href={repoUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="truncate hover:underline text-foreground"
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        {label}
+                                      </a>
+                                    ) : (
+                                      <span className="truncate">{label}</span>
+                                    )
+                                  })()}
                                 </div>
                               </div>
                             )}
@@ -1510,15 +1527,29 @@ export function View() {
                                   repositoryOwner && repositoryName
 
                                 if (hasRepository) {
+                                  const repoUrl = getDeploymentRepositoryWebUrl(
+                                    deploymentData,
+                                  )
+                                  const label = `${repositoryOwner}/${repositoryName}`
                                   return (
                                     <Badge
                                       variant="outline"
-                                      className="text-[11px] h-6 px-2.5 gap-1.5"
+                                      className="text-[11px] h-6 px-2.5 gap-1.5 max-w-full"
                                     >
                                       {vcsProvider.icon}
-                                      <span>
-                                        {repositoryOwner}/{repositoryName}
-                                      </span>
+                                      {repoUrl ? (
+                                        <a
+                                          href={repoUrl}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="truncate hover:underline"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          {label}
+                                        </a>
+                                      ) : (
+                                        <span className="truncate">{label}</span>
+                                      )}
                                     </Badge>
                                   )
                                 }

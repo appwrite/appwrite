@@ -31,6 +31,7 @@ import {
   isDeploymentInProgress,
   isDeploymentTimeout,
 } from '@/lib/utils/deployment-status'
+import { getDeploymentRepositoryWebUrl } from '@/lib/utils/deployment-repository-url'
 import {
   getAIChatIDEs,
   generateAIChatDeeplink,
@@ -229,36 +230,6 @@ function getVcsProviderType(
     if (provider === 'github') return 'github'
     if (provider === 'gitlab') return 'gitlab'
     if (provider === 'bitbucket') return 'bitbucket'
-  }
-
-  return null
-}
-
-/**
- * Build repository URL from deployment VCS provider info
- */
-function getRepositoryUrl(deployment: unknown): string | null {
-  if (
-    !deployment.providerRepositoryOwner ||
-    !deployment.providerRepositoryName
-  ) {
-    return null
-  }
-
-  const owner = deployment.providerRepositoryOwner
-  const repo = deployment.providerRepositoryName
-  const provider = getVcsProviderType(deployment)
-
-  if (!provider) return null
-
-  if (provider === 'github') {
-    return `https://github.com/${owner}/${repo}`
-  }
-  if (provider === 'gitlab') {
-    return `https://gitlab.com/${owner}/${repo}`
-  }
-  if (provider === 'bitbucket') {
-    return `https://bitbucket.org/${owner}/${repo}`
   }
 
   return null
@@ -680,7 +651,9 @@ export function DeploymentDetailView({
   const vcsProvider = deployment ? getVcsProvider(deployment) : null
 
   // Get repository URLs
-  const repositoryUrl = deployment ? getRepositoryUrl(deployment) : null
+  const repositoryUrl = deployment
+    ? getDeploymentRepositoryWebUrl(deployment)
+    : null
   const commitUrl = deployment ? getCommitUrl(deployment) : null
   const branchUrl = deployment ? getBranchUrl(deployment) : null
 
