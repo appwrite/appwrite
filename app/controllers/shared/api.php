@@ -742,12 +742,23 @@ Http::shutdown()
             return;
         }
 
-        for ($i = 0; $i < ($count - $sessionLimit); $i++) {
-            $session = array_shift($sessions);
-            $dbForProject->deleteDocument('sessions', $session->getId());
-        }
+        try {
+            for ($i = 0; $i < ($count - $sessionLimit); $i++) {
+                $session = array_shift($sessions);
 
-        $dbForProject->purgeCachedDocument('users', $userId);
+                if (!$session instanceof Document) {
+                    continue;
+                }
+
+                $dbForProject->deleteDocument('sessions', $session->getId());
+            }
+        } catch (\Throwable) {
+            // Session-limit cleanup is best-effort. Concurrent session creation can race with
+            // older-session deletion, but that should not fail the request that just created a
+            // valid session for the user.
+        } finally {
+            $dbForProject->purgeCachedDocument('users', $userId);
+        }
     });
 
 Http::shutdown()
