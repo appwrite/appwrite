@@ -11,8 +11,6 @@ use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\URL\URL as URLParse;
 use Appwrite\Utopia\Response;
-use DOMDocument;
-use DOMElement;
 use enshrined\svgSanitize\Sanitizer as SvgSanitizer;
 use Utopia\Domains\Domain;
 use Utopia\Fetch\Client;
@@ -94,19 +92,19 @@ class Get extends Action
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
 
-        $doc = new DOMDocument();
-        $doc->strictErrorChecking = false;
-        @$doc->loadHTML($res->getBody());
-
-        $links = $doc->getElementsByTagName('link') ?? [];
         $outputHref = '';
         $outputExt = '';
         $space = 0;
 
-        foreach ($links as $link) { /* @var $link DOMElement */
-            $href = $link->getAttribute('href');
-            $rel = $link->getAttribute('rel');
-            $sizes = $link->getAttribute('sizes');
+        foreach ($this->findLinkTags($res->getBody()) as $attributes) {
+            $href = $attributes['href'] ?? '';
+            $rel = $attributes['rel'] ?? '';
+            $sizes = $attributes['sizes'] ?? '';
+
+            if (empty($href)) {
+                continue;
+            }
+
             $absolute = URLParse::unparse(\array_merge(\parse_url($url), \parse_url($href)));
 
             switch (\strtolower($rel)) {
@@ -211,5 +209,39 @@ class Get extends Action
             ->setContentType('image/png')
             ->file($data);
         unset($image);
+    }
+
+    /**
+     * Avoid DOMDocument HTML parsing here because libxml state is not reliable under coroutine concurrency.
+     *
+     * @return array<int, array<string, string>>
+     */
+    private function findLinkTags(string $html): array
+    {
+        if (!\preg_match_all('/<link\b[^>]*>/i', $html, $matches)) {
+            return [];
+        }
+
+        $links = [];
+
+        foreach ($matches[0] as $tag) {
+            $attributes = [];
+
+            if (\preg_match_all('/([a-zA-Z:-]+)\s*=\s*([\'"])(.*?)\2/s', $tag, $attributeMatches, \PREG_SET_ORDER)) {
+                foreach ($attributeMatches as $attributeMatch) {
+                    $attributes[\strtolower($attributeMatch[1])] = \html_entity_decode($attributeMatch[3], \ENT_QUOTES | \ENT_HTML5);
+                }
+            }
+
+            $rel = \strtolower(\preg_replace('/\s+/', ' ', \trim($attributes['rel'] ?? '')));
+
+            if (!\in_array($rel, ['icon', 'shortcut icon'], true)) {
+                continue;
+            }
+
+            $links[] = $attributes;
+        }
+
+        return $links;
     }
 }
