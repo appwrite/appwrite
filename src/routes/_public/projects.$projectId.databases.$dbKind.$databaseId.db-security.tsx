@@ -1,17 +1,14 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import { TableView } from '@/components/pages/projects/$projectId/databases/View'
 import {
   projectQueryOptions,
   databaseQueryOptions,
-  tablesQueryOptions,
-  allTablesForVisualizerQueryOptions,
 } from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
-
-const TABLES_PER_PAGE = 100
+import { canAccessDatabaseSecuritySettings } from '@/lib/console-rbac-loader'
 
 export const Route = createFileRoute(
-  '/_public/projects/$projectId/databases/$dbKind/$databaseId/visualizer',
+  '/_public/projects/$projectId/databases/$dbKind/$databaseId/db-security',
 )({
   head: ({ loaderData }) => ({
     meta: [
@@ -23,20 +20,26 @@ export const Route = createFileRoute(
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return
 
-    const { projectId, databaseId } = params
+    const { projectId, dbKind, databaseId } = params
     const { queryClient } = context
 
     if (!projectId || !databaseId) return
 
+    const canAccess = await canAccessDatabaseSecuritySettings(
+      queryClient,
+      projectId,
+    )
+    if (!canAccess) {
+      throw redirect({
+        to: '/projects/$projectId/databases/$dbKind/$databaseId/',
+        params: { projectId, dbKind, databaseId },
+        replace: true,
+      })
+    }
+
     await queryClient.ensureQueryData(projectQueryOptions(projectId))
     await queryClient.ensureQueryData(
       databaseQueryOptions(projectId, databaseId),
-    )
-    await queryClient.ensureQueryData(
-      tablesQueryOptions(projectId, databaseId, 0, TABLES_PER_PAGE, undefined),
-    )
-    await queryClient.ensureQueryData(
-      allTablesForVisualizerQueryOptions(projectId, databaseId),
     )
 
     const database = queryClient.getQueryData<{ name?: string }>(
@@ -44,17 +47,17 @@ export const Route = createFileRoute(
     )
     return { database }
   },
-  component: VisualizerPage,
+  component: DbSecurityPage,
 })
 
-function VisualizerPage() {
+function DbSecurityPage() {
   const { databaseId } = Route.useParams()
   return (
     <TableView
       databaseId={databaseId}
       tableId="-"
       activeTab="rows"
-      databaseTab="visualizer"
+      databaseTab="db-security"
     />
   )
 }

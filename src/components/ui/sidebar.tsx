@@ -6,6 +6,7 @@ import { cva, VariantProps } from 'class-variance-authority'
 import { PanelLeftIcon } from 'lucide-react'
 
 import { useIsMobile } from '@/hooks/use-mobile'
+import { shouldSuppressGlobalShortcuts } from '@/lib/global-shortcut-suppress'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -100,6 +101,9 @@ function SidebarProvider({
         event.key === SIDEBAR_KEYBOARD_SHORTCUT &&
         (event.metaKey || event.ctrlKey)
       ) {
+        if (shouldSuppressGlobalShortcuts(document.activeElement)) {
+          return
+        }
         event.preventDefault()
         toggleSidebar()
       }

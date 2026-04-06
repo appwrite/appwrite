@@ -1,98 +1,16 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
-import { TableView } from '@/components/pages/projects/$projectId/databases/View'
-import {
-  projectQueryOptions,
-  databaseQueryOptions,
-  tablesQueryOptions,
-  databaseCsvMigrationsQueryOptions,
-} from '@/lib/react-query/hooks'
-import { pageTitle } from '@/lib/utils/page-title'
+import { createFileRoute } from '@tanstack/react-router'
 import { throwRedirectTablesDbFromCollectionsChild } from '@/lib/database-route-redirects'
-
-const TABLES_PER_PAGE = 500
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/export-import',
 )({
-  head: ({ loaderData }) => ({
-    meta: [
-      {
-        title: pageTitle(loaderData?.database?.name ?? 'Database', 'Databases'),
-      },
-    ],
-  }),
-  loader: async ({ params, context }) => {
-    if (typeof window === 'undefined') return
-
-    const { projectId, dbKind, databaseId, collectionId } = params
-    const { queryClient } = context
-
-    if (!projectId || !databaseId) return
-
-    throwRedirectTablesDbFromCollectionsChild(dbKind, 'export-import', {
-      projectId,
-      dbKind,
-      databaseId,
-      collectionId,
+  loader: ({ params }) => {
+    throwRedirectTablesDbFromCollectionsChild(params.dbKind, 'export-import', {
+      projectId: params.projectId,
+      dbKind: params.dbKind,
+      databaseId: params.databaseId,
+      collectionId: params.collectionId,
     })
-
-    await queryClient.ensureQueryData(projectQueryOptions(projectId))
-    await queryClient.ensureQueryData(
-      databaseQueryOptions(projectId, databaseId),
-    )
-    const tablesData = await queryClient.ensureQueryData(
-      tablesQueryOptions(projectId, databaseId, 0, TABLES_PER_PAGE, undefined),
-    )
-
-    if (collectionId !== '-') {
-      const tableExists = (tablesData.tables || []).some(
-        (t: { $id: string }) => t.$id === collectionId,
-      )
-      if (!tableExists) {
-        const first = [...(tablesData.tables || [])].sort((a, b) =>
-          (a.name?.toLowerCase() || '').localeCompare(
-            b.name?.toLowerCase() || '',
-          ),
-        )[0]
-        throw redirect({
-          to: '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/export-import',
-          params: {
-            projectId,
-            databaseId,
-            collectionId: first?.$id ?? '-',
-          },
-          replace: true,
-        })
-      }
-    }
-
-    const tableIds = (tablesData.tables || []).map(
-      (t: { $id: string }) => t.$id,
-    )
-    if (tableIds.length > 0) {
-      await queryClient
-        .ensureQueryData(
-          databaseCsvMigrationsQueryOptions(projectId, databaseId, tableIds),
-        )
-        .catch(() => {})
-    }
-
-    const database = queryClient.getQueryData<{ name?: string }>(
-      databaseQueryOptions(projectId, databaseId).queryKey,
-    )
-    return { database }
   },
-  component: ExportImportPage,
+  component: () => null,
 })
-
-function ExportImportPage() {
-  const { databaseId, collectionId } = Route.useParams()
-  return (
-    <TableView
-      databaseId={databaseId}
-      collectionId={collectionId}
-      activeTab="rows"
-      databaseTab="export-import"
-    />
-  )
-}

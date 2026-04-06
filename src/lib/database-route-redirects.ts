@@ -11,6 +11,26 @@ type RedirectOptions = {
 }
 
 /**
+ * Canonical paths for database-wide tabs (same URL for tablesdb, documentsdb, vectorsdb).
+ * Not nested under /tables/:id or /collections/:id.
+ */
+export const DATABASE_LEVEL_TAB_PATH = {
+  visualizer: '/projects/$projectId/databases/$dbKind/$databaseId/visualizer',
+  backups: '/projects/$projectId/databases/$dbKind/$databaseId/backups',
+  'export-import':
+    '/projects/$projectId/databases/$dbKind/$databaseId/export-import',
+  insights: '/projects/$projectId/databases/$dbKind/$databaseId/insights',
+  'db-security': '/projects/$projectId/databases/$dbKind/$databaseId/db-security',
+  'db-settings': '/projects/$projectId/databases/$dbKind/$databaseId/settings',
+} as const
+
+export type DatabaseLevelTab = keyof typeof DATABASE_LEVEL_TAB_PATH
+
+function isDatabaseLevelTab(tab: string): tab is DatabaseLevelTab {
+  return Object.prototype.hasOwnProperty.call(DATABASE_LEVEL_TAB_PATH, tab)
+}
+
+/**
  * In `tables/...` route loaders: send Documents DB / Vectors DB traffic to the
  * native `collections/...` URLs.
  */
@@ -49,12 +69,6 @@ const COLLECTIONS_TO_TABLES_ROUTE: Record<
   | 'indexes'
   | 'security'
   | 'settings'
-  | 'visualizer'
-  | 'backups'
-  | 'export-import'
-  | 'insights'
-  | 'db-security'
-  | 'db-settings'
   | 'columns',
   string
 > = {
@@ -68,18 +82,6 @@ const COLLECTIONS_TO_TABLES_ROUTE: Record<
     '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/security',
   settings:
     '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/settings',
-  visualizer:
-    '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/visualizer',
-  backups:
-    '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/backups',
-  'export-import':
-    '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/export-import',
-  insights:
-    '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/insights',
-  'db-security':
-    '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/db-security',
-  'db-settings':
-    '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/db-settings',
   columns:
     '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/columns',
 }
@@ -91,12 +93,27 @@ type DbIdParams = {
   collectionId: string
 }
 
+export type CrossLayoutRedirectTab =
+  | keyof typeof COLLECTIONS_TO_TABLES_ROUTE
+  | DatabaseLevelTab
+
 /** Call at the start of `collections/...` route loaders when the URL must be tables-only. */
 export function throwRedirectTablesDbFromCollectionsChild(
   dbKind: string,
-  tab: keyof typeof COLLECTIONS_TO_TABLES_ROUTE,
+  tab: CrossLayoutRedirectTab,
   p: DbIdParams,
 ): void {
+  if (isDatabaseLevelTab(tab)) {
+    throw redirect({
+      to: DATABASE_LEVEL_TAB_PATH[tab],
+      params: {
+        projectId: p.projectId,
+        dbKind: p.dbKind,
+        databaseId: p.databaseId,
+      },
+      replace: true,
+    })
+  }
   if (dbKind !== 'tablesdb') return
   throw redirect({
     to: COLLECTIONS_TO_TABLES_ROUTE[tab],
@@ -116,37 +133,19 @@ const TABLES_TO_COLLECTIONS_ROUTE: Record<
   | 'indexes'
   | 'security'
   | 'settings'
-  | 'visualizer'
-  | 'backups'
-  | 'export-import'
-  | 'insights'
-  | 'db-security'
-  | 'db-settings'
   | 'columns',
   string
 > = {
   dataGrid:
     '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/documents',
   dataJson:
-    '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/json',
+    '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/documents',
   indexes:
     '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/indexes',
   security:
     '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/security',
   settings:
     '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/settings',
-  visualizer:
-    '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/visualizer',
-  backups:
-    '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/backups',
-  'export-import':
-    '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/export-import',
-  insights:
-    '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/insights',
-  'db-security':
-    '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/db-security',
-  'db-settings':
-    '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/db-settings',
   columns:
     '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/columns',
 }
@@ -161,10 +160,20 @@ type TableIdParams = {
 /** Call at the start of `tables/...` route loaders for Documents / Vectors DB. */
 export function throwRedirectCollectionsDbFromTablesChild(
   dbKind: string,
-  tab: keyof typeof TABLES_TO_COLLECTIONS_ROUTE,
+  tab: CrossLayoutRedirectTab,
   p: TableIdParams,
 ): void {
-  if (dbKind !== 'documentsdb' && dbKind !== 'vectorsdb') return
+  if (isDatabaseLevelTab(tab)) {
+    throw redirect({
+      to: DATABASE_LEVEL_TAB_PATH[tab],
+      params: {
+        projectId: p.projectId,
+        dbKind: p.dbKind,
+        databaseId: p.databaseId,
+      },
+      replace: true,
+    })
+  }
   if (tab === 'dataJson' && dbKind === 'vectorsdb') {
     throw redirect({
       to: TABLES_TO_COLLECTIONS_ROUTE.dataGrid,
@@ -177,6 +186,7 @@ export function throwRedirectCollectionsDbFromTablesChild(
       replace: true,
     })
   }
+  if (dbKind !== 'documentsdb' && dbKind !== 'vectorsdb') return
   throw redirect({
     to: TABLES_TO_COLLECTIONS_ROUTE[tab],
     params: {

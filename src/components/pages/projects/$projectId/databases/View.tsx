@@ -8,6 +8,7 @@ import {
   Database,
   Plus,
   List,
+  Layers,
   LayoutGrid,
   Settings,
   Key,
@@ -41,6 +42,9 @@ import {
   Copy,
   Pencil,
   Search,
+  Braces,
+  Redo2,
+  Undo2,
 } from 'lucide-react'
 import {
   databases,
@@ -131,6 +135,7 @@ import {
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { TABLE_DB_SPEC_OPTIONS } from '@/lib/database-specs'
 import type { Models } from '@appwrite.io/console'
+import type { editor } from 'monaco-editor'
 import { DatabaseType as ApiDatabaseType } from '@appwrite.io/console'
 import {
   databaseRouteKindFromApiType,
@@ -203,6 +208,10 @@ import { ResourceCard } from '../shared/ResourceCard'
 import { Card } from '@/components/ui/card'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { CopyableId } from '@/components/global/shared/CopyableId'
+import {
+  CodeEditor,
+  type CodeEditorRef,
+} from '@/components/global/shared/CodeEditor'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { SampleDataModal } from './tables/SampleData'
@@ -250,6 +259,7 @@ import {
   buildListSearchParams,
   MIN_SEARCH_LENGTH,
   databasesFilterColumns,
+  appendDocumentsDbCustomAttributeFilter,
   rowsFilterColumnsFromAttributes,
   tableColumnsFilterColumns,
   tableIndexesFilterColumns,
@@ -295,6 +305,24 @@ const headerCellBorderClass =
 const bodyCellBorderClass =
   'border-b border-r border-gray-200 dark:border-border'
 const lastCellBorderClass = 'border-b border-gray-200 dark:border-border'
+
+const DOCUMENTS_TABLE_PANE_WIDTH_STORAGE_KEY =
+  'console.documentsTablePaneWidthPx'
+const DOCUMENTS_TABLE_PANE_MIN_PX = 260
+const DOCUMENTS_PREVIEW_PANE_MIN_PX = 280
+/** Checkbox + row-actions column width; documents list uses `table-fixed` so edges stay this size. */
+const ROWS_TABLE_EDGE_COL_PX = 40
+
+function readStoredDocumentsTablePaneWidthPx(): number {
+  if (typeof window === 'undefined') return 440
+  const raw = localStorage.getItem(DOCUMENTS_TABLE_PANE_WIDTH_STORAGE_KEY)
+  const n = raw ? parseInt(raw, 10) : NaN
+  return Number.isFinite(n) &&
+    n >= DOCUMENTS_TABLE_PANE_MIN_PX &&
+    n <= 4000
+    ? n
+    : 440
+}
 
 // Main databases list view - used at /projects/:projectId/databases
 export function View() {
@@ -1328,6 +1356,8 @@ export function DatabaseDetailLayout({
   const routeDbKind =
     (params.dbKind as DatabaseRouteKind | undefined) ?? 'tablesdb'
   const dbLabels = getDatabaseConsoleLabels(routeDbKind)
+  const ContainerListIcon =
+    dbLabels.sdkListContainersMethod === 'listCollections' ? Layers : Table2
   const layoutNav = useMemo(() => dbNavLink(routeDbKind), [routeDbKind])
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -1420,7 +1450,7 @@ export function DatabaseDetailLayout({
             ) : (
               <ChevronRight className="h-3.5 w-3.5 shrink-0" />
             )}
-            <Table2 className="h-3.5 w-3.5 shrink-0" />
+            <ContainerListIcon className="h-3.5 w-3.5 shrink-0" />
             <span className="flex-1 text-[13px] font-medium">
               {dbLabels.containerPluralTitle}
             </span>
@@ -1455,7 +1485,7 @@ export function DatabaseDetailLayout({
                           : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
                       )}
                     >
-                      <Table2 className="h-3.5 w-3.5 shrink-0" />
+                      <ContainerListIcon className="h-3.5 w-3.5 shrink-0" />
                       <span className="min-w-0 flex-1 truncate text-[13px]">
                         {table.name}
                       </span>
@@ -1480,7 +1510,7 @@ export function DatabaseDetailLayout({
                         : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
                     )}
                   >
-                    <Table2 className="h-3.5 w-3.5 shrink-0" />
+                    <ContainerListIcon className="h-3.5 w-3.5 shrink-0" />
                     <span className="min-w-0 flex-1 truncate text-[13px]">
                       {table.name}
                     </span>
@@ -1504,7 +1534,7 @@ export function DatabaseDetailLayout({
 
           {/* Security Link */}
           <Link
-            to="/projects/$projectId/databases/$dbKind/$databaseId/security"
+            to="/projects/$projectId/databases/$dbKind/$databaseId/db-security"
             params={{ projectId, dbKind: routeDbKind, databaseId }}
             className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
           >
@@ -1576,7 +1606,7 @@ export function DatabaseDetailLayout({
         ) : (
           <div className="flex flex-1 items-center justify-center">
             <EmptyState
-              icon={Table2}
+              icon={ContainerListIcon}
               title={dbLabels.emptyContainersTitle}
               description={dbLabels.emptyContainersDescription}
               isEmpty={true}
@@ -1602,7 +1632,7 @@ export type DatabaseTabId =
   | 'backups'
   | 'export-import'
   | 'db-security'
-  | 'db-settings'
+  | 'settings'
   | 'browser'
 
 // Table View - shows table content with tabs; can also show database-level tabs when databaseTab is set or tableId is '-'
@@ -1629,7 +1659,7 @@ const DATABASE_TAB_TO_OVERVIEW: Record<
   backups: 'backups',
   'export-import': 'export-import',
   'db-security': 'security',
-  'db-settings': 'settings',
+  settings: 'settings',
   browser: 'browser',
 }
 
@@ -1639,7 +1669,7 @@ const DATABASE_TAB_LABELS: Record<DatabaseTabId, string> = {
   backups: 'Backups',
   'export-import': 'Export / Import',
   'db-security': 'Security',
-  'db-settings': 'Settings',
+  settings: 'Settings',
   browser: 'Browser',
 }
 
@@ -1688,6 +1718,8 @@ export function TableView({
     (params.dbKind as DatabaseRouteKind | undefined) ??
     databaseRouteKindFromApiType(databaseApiType)
   const dbLabels = getDatabaseConsoleLabels(routeDbKind)
+  const ContainerListIcon =
+    dbLabels.sdkListContainersMethod === 'listCollections' ? Layers : Table2
   const dbNav = useMemo(() => dbNavLink(routeDbKind), [routeDbKind])
   const tableNavParams = useMemo(
     () => ({
@@ -1699,7 +1731,6 @@ export function TableView({
     [projectId, routeDbKind, databaseId, tableId],
   )
   const showColumnsTab = !isDocumentsDb && !isVectorsDb
-  const showDocumentsTab = isDocumentsDb
 
   // Fetch tables for the database (full list for selectedTable and total count)
   const { tables: dbTables, isLoading: tablesLoading } = useProjectTables(
@@ -1859,7 +1890,7 @@ export function TableView({
         replace: true,
       })
     }
-    if (activeTab === 'documents' && !showDocumentsTab) {
+    if (activeTab === 'documents' && isDocumentsDb) {
       navigate({
         ...dbNav.dataGrid(tableNavParams),
         replace: true,
@@ -1870,7 +1901,7 @@ export function TableView({
     selectedTable,
     activeTab,
     showColumnsTab,
-    showDocumentsTab,
+    isDocumentsDb,
     navigate,
     dbNav,
     tableNavParams,
@@ -2023,15 +2054,6 @@ export function TableView({
         to: grid.to,
         params: grid.params,
       },
-      ...(showDocumentsTab
-        ? [
-            {
-              id: 'documents' as const,
-              label: dbLabels.jsonDocumentsTabLabel,
-              ...dbNav.dataJson(tableNavParams),
-            },
-          ]
-        : []),
       ...(showColumnsTab
         ? [
             {
@@ -2067,16 +2089,12 @@ export function TableView({
     tableNavParams,
     showTableSecuritySettings,
     showColumnsTab,
-    showDocumentsTab,
     dbLabels.gridDataTabLabel,
-    dbLabels.jsonDocumentsTabLabel,
     dbLabels.schemaPluralTitle,
   ])
 
   const ROWS_DEFAULT_SORT_BY = '$createdAt'
   const ROWS_DEFAULT_SORT_ORDER = 'desc' as const
-  const isRowsTab = activeTab === 'rows' && tableId !== '-'
-  const isDocumentsTab = activeTab === 'documents' && tableId !== '-'
   const isTableDataTab =
     (activeTab === 'rows' || activeTab === 'documents') && tableId !== '-'
   const rowsListParams = useMemo(() => {
@@ -2137,14 +2155,13 @@ export function TableView({
   const rowsFilterQueryString =
     rowsFilterMap.size > 0 ? mapToQueryParam(rowsFilterMap) : ''
 
-  const rowsFilterColumns = useMemo(
-    () =>
-      rowsFilterColumnsFromAttributes(
-        tableColumns,
-        tableIndexes as TableIndexForFilters[],
-      ),
-    [tableColumns, tableIndexes],
-  )
+  const rowsFilterColumns = useMemo(() => {
+    const base = rowsFilterColumnsFromAttributes(
+      tableColumns,
+      tableIndexes as TableIndexForFilters[],
+    )
+    return isDocumentsDb ? appendDocumentsDbCustomAttributeFilter(base) : base
+  }, [tableColumns, tableIndexes, isDocumentsDb])
 
   const [rowsFiltersOpen, setRowsFiltersOpen] = useState(false)
 
@@ -2188,7 +2205,7 @@ export function TableView({
     const hasQueryKey = 'query' in params
     const hasSortKey = 'sort' in params
     const listLink =
-      activeTab === 'documents'
+      activeTab === 'documents' && !isDocumentsDb
         ? dbNav.dataJson(tableNavParams)
         : dbNav.dataGrid(tableNavParams)
 
@@ -2641,7 +2658,7 @@ export function TableView({
                             : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
                         )}
                       >
-                        <Table2 className="h-3.5 w-3.5 shrink-0" />
+                        <ContainerListIcon className="h-3.5 w-3.5 shrink-0" />
                         <span className="min-w-0 flex-1 truncate">
                           {table.name}
                         </span>
@@ -2799,7 +2816,7 @@ export function TableView({
               {...dbNav.dbSettings(tableNavParams)}
               className={cn(
                 'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
-                databaseTab === 'db-settings'
+                databaseTab === 'settings'
                   ? 'bg-accent text-foreground'
                   : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
               )}
@@ -2878,7 +2895,8 @@ export function TableView({
               activeTab === 'indexes')
           }
           filterTrigger={
-            !isDatabaseLevelView && activeTab === 'rows' ? (
+            !isDatabaseLevelView &&
+            (activeTab === 'rows' || activeTab === 'documents') ? (
               <FiltersPopover
                 open={rowsFiltersOpen}
                 onOpenChange={setRowsFiltersOpen}
@@ -2888,7 +2906,11 @@ export function TableView({
                 onClearAll={rowsClearAllFilters}
                 onApplyFilter={rowsApplyFilter}
                 resourceLabel={dbLabels.recordPlural}
-                filterScope={`databases.rows.${databaseId}.${tableId}`}
+                filterScope={
+                  activeTab === 'rows' && isDocumentsDb
+                    ? `databases.documents.${databaseId}.${tableId}`
+                    : `databases.rows.${databaseId}.${tableId}`
+                }
                 onApplyQuery={(queryParam, sortParam) =>
                   navigateToRowsList({
                     search: rowsUrlSearch ?? undefined,
@@ -2907,43 +2929,9 @@ export function TableView({
                 )}
                 onReset={() => {
                   navigate({
-                    ...dbNav.dataGrid(tableNavParams),
-                    search: { page: 1, limit: rowsUrlLimit },
-                    replace: true,
-                  })
-                }}
-                teamId={project?.teamId}
-              />
-            ) : !isDatabaseLevelView && activeTab === 'documents' ? (
-              <FiltersPopover
-                open={rowsFiltersOpen}
-                onOpenChange={setRowsFiltersOpen}
-                columns={rowsFilterColumns}
-                filterMap={rowsFilterMap}
-                onRemoveFilter={rowsRemoveFilter}
-                onClearAll={rowsClearAllFilters}
-                onApplyFilter={rowsApplyFilter}
-                resourceLabel={dbLabels.recordPlural}
-                filterScope={`databases.documents.${databaseId}.${tableId}`}
-                onApplyQuery={(queryParam, sortParam) =>
-                  navigateToRowsList({
-                    search: rowsUrlSearch ?? undefined,
-                    query: queryParam ?? undefined,
-                    page: 1,
-                    limit: rowsUrlLimit,
-                    sort: sortParam ?? undefined,
-                  })
-                }
-                sortBy={rowsSortBy}
-                sortOrder={rowsSortOrder}
-                onSortChange={handleRowsSortChange}
-                defaultSortParam={encodeSort(
-                  ROWS_DEFAULT_SORT_BY,
-                  ROWS_DEFAULT_SORT_ORDER,
-                )}
-                onReset={() => {
-                  navigate({
-                    ...dbNav.dataJson(tableNavParams),
+                    ...(activeTab === 'documents' && !isDocumentsDb
+                      ? dbNav.dataJson(tableNavParams)
+                      : dbNav.dataGrid(tableNavParams)),
                     search: { page: 1, limit: rowsUrlLimit },
                     replace: true,
                   })
@@ -3093,7 +3081,7 @@ export function TableView({
           fullWidthBorder
           fullWidth={!isDatabaseLevelView || databaseTab === 'visualizer'}
           rightContent={
-            isDatabaseLevelView && isDebugModeOpen ? (
+            isDatabaseLevelView && isDebugModeOpen && !isDocumentsDb ? (
               <Button
                 variant="outline"
                 size="sm"
@@ -3273,7 +3261,14 @@ export function TableView({
           }
         />
 
-        <div className={cn('flex-1 min-h-0 overflow-y-auto')}>
+        <div
+          className={cn(
+            'flex-1 min-h-0',
+            isDocumentsDb && activeTab === 'rows'
+              ? 'flex min-h-0 flex-col overflow-hidden'
+              : 'overflow-y-auto',
+          )}
+        >
           {isDatabaseLevelView ? (
             <DatabaseOverview
               databaseId={databaseId}
@@ -3284,47 +3279,65 @@ export function TableView({
             />
           ) : (
             <>
-              {activeTab === 'rows' && (
-                <RowsSpreadsheet
-                  table={selectedTable}
-                  canWriteRows={!noCreateRowPermission}
-                  canWriteTables={!noCreateTablePermission}
-                  onRefetchReady={(refetchFn) => {
-                    rowsRefetchRef.current = refetchFn
-                  }}
-                  onCreateRowReady={(openCreateDrawer) => {
-                    openCreateRowDrawerRef.current = openCreateDrawer
-                  }}
-                  onCreateColumnReady={openCreateColumnDialogRef.current}
-                  onRowsCountChange={handleRowsCountChange}
-                  rowsUrlSearch={rowsUrlSearch}
-                  rowsUrlPage={rowsUrlPage}
-                  rowsUrlLimit={rowsUrlLimit}
-                  rowsFilterQueries={rowsFilterQueries}
-                  rowsFilterQueryString={rowsFilterQueryString}
-                  rowsSortBy={rowsSortBy}
-                  rowsSortOrder={rowsSortOrder}
-                  onNavigateToRowsList={navigateToRowsList}
-                />
-              )}
-              {activeTab === 'documents' && selectedTable && (
-                <DocumentsJsonSpreadsheet
-                  table={selectedTable}
-                  canWriteRows={!noCreateRowPermission}
-                  rowsUrlSearch={rowsUrlSearch}
-                  rowsUrlPage={rowsUrlPage}
-                  rowsUrlLimit={rowsUrlLimit}
-                  rowsFilterQueries={rowsFilterQueries}
-                  rowsFilterQueryString={rowsFilterQueryString}
-                  rowsSortBy={rowsSortBy}
-                  rowsSortOrder={rowsSortOrder}
-                  onNavigateToList={navigateToRowsList}
-                  onRefetchReady={(refetchFn) => {
-                    rowsRefetchRef.current = refetchFn
-                  }}
-                  onRowsCountChange={handleRowsCountChange}
-                />
-              )}
+              {activeTab === 'rows' && selectedTable ? (
+                <div
+                  className={cn(
+                    isDocumentsDb
+                      ? 'flex min-h-0 min-w-0 flex-1 flex-col'
+                      : 'contents',
+                  )}
+                >
+                  <RowsSpreadsheet
+                    table={selectedTable}
+                    canWriteRows={!noCreateRowPermission}
+                    canWriteTables={!noCreateTablePermission}
+                    onRefetchReady={(refetchFn) => {
+                      rowsRefetchRef.current = refetchFn
+                    }}
+                    onCreateRowReady={(openCreateDrawer) => {
+                      openCreateRowDrawerRef.current = openCreateDrawer
+                    }}
+                    onCreateColumnReady={openCreateColumnDialogRef.current}
+                    onRowsCountChange={handleRowsCountChange}
+                    rowsUrlSearch={rowsUrlSearch}
+                    rowsUrlPage={rowsUrlPage}
+                    rowsUrlLimit={rowsUrlLimit}
+                    rowsFilterQueries={rowsFilterQueries}
+                    rowsFilterQueryString={rowsFilterQueryString}
+                    rowsSortBy={rowsSortBy}
+                    rowsSortOrder={rowsSortOrder}
+                    onNavigateToRowsList={navigateToRowsList}
+                  />
+                </div>
+              ) : null}
+              {selectedTable &&
+                activeTab === 'documents' &&
+                !isDocumentsDb && (
+                  <>
+                    <DocumentsJsonSpreadsheet
+                      table={selectedTable}
+                      canWriteRows={!noCreateRowPermission}
+                      rowsUrlSearch={rowsUrlSearch}
+                      rowsUrlPage={rowsUrlPage}
+                      rowsUrlLimit={rowsUrlLimit}
+                      rowsFilterQueries={rowsFilterQueries}
+                      rowsFilterQueryString={rowsFilterQueryString}
+                      rowsSortBy={rowsSortBy}
+                      rowsSortOrder={rowsSortOrder}
+                      onNavigateToList={navigateToRowsList}
+                      onRefetchReady={(refetchFn) => {
+                        rowsRefetchRef.current = refetchFn
+                      }}
+                      onRowsCountChange={handleRowsCountChange}
+                    />
+                    <DocumentsRowCreateBridge
+                      table={selectedTable}
+                      onCreateRowReady={(openFn) => {
+                        openCreateRowDrawerRef.current = openFn
+                      }}
+                    />
+                  </>
+                )}
               {activeTab === 'columns' && (
                 <ColumnsSpreadsheet
                   table={selectedTable}
@@ -3422,6 +3435,8 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
   const routeDbKind =
     (params.dbKind as DatabaseRouteKind | undefined) ?? 'tablesdb'
   const dbLabels = getDatabaseConsoleLabels(routeDbKind)
+  const ContainerListIcon =
+    dbLabels.sdkListContainersMethod === 'listCollections' ? Layers : Table2
   const emptyStateNav = useMemo(() => dbNavLink(routeDbKind), [routeDbKind])
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -3513,7 +3528,7 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
             ) : (
               <ChevronRight className="h-3.5 w-3.5 shrink-0" />
             )}
-            <Table2 className="h-3.5 w-3.5 shrink-0" />
+            <ContainerListIcon className="h-3.5 w-3.5 shrink-0" />
             <span className="flex-1 text-[13px] font-medium">
               {dbLabels.containerPluralTitle}
             </span>
@@ -3535,7 +3550,7 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
 
           {/* Security Link */}
           <Link
-            to="/projects/$projectId/databases/$dbKind/$databaseId/security"
+            to="/projects/$projectId/databases/$dbKind/$databaseId/db-security"
             params={{ projectId, dbKind: routeDbKind, databaseId }}
             className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
           >
@@ -3608,7 +3623,7 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
         <div className="flex flex-1 items-center justify-center">
           <div className="text-center">
             <EmptyState
-              icon={Table2}
+              icon={ContainerListIcon}
               title={dbLabels.emptyContainersTitle}
               description={dbLabels.emptyContainersDescription}
               isEmpty={true}
@@ -3691,6 +3706,8 @@ export function DatabaseOverview({
     (params.dbKind as DatabaseRouteKind | undefined) ??
     databaseRouteKindFromApiType(database?.databaseType)
   const dbLabels = getDatabaseConsoleLabels(routeDbKind)
+  const ContainerListIcon =
+    dbLabels.sdkListContainersMethod === 'listCollections' ? Layers : Table2
   const overviewDbNav = useMemo(() => dbNavLink(routeDbKind), [routeDbKind])
   const databaseApiType = (database as { databaseType?: ApiDatabaseType } | null)
     ?.databaseType
@@ -4071,7 +4088,7 @@ export function DatabaseOverview({
               {
                 id: 'security' as const,
                 label: 'Security',
-                to: '/projects/$projectId/databases/$dbKind/$databaseId/security',
+                to: '/projects/$projectId/databases/$dbKind/$databaseId/db-security',
                 params: { projectId, dbKind: routeDbKind, databaseId },
               },
             ]
@@ -4559,7 +4576,7 @@ export function DatabaseOverview({
                                 className="block group"
                               >
                                 <div className="flex items-center gap-3 min-w-0">
-                                  <Table2 className="h-4 w-4 text-muted-foreground/60 shrink-0" />
+                                  <ContainerListIcon className="h-4 w-4 text-muted-foreground/60 shrink-0" />
                                   <div className="flex-1 min-w-0">
                                     <p className="truncate text-[13px] font-medium text-foreground group-hover:text-primary transition-colors">
                                       {table.name}
@@ -4715,14 +4732,14 @@ export function DatabaseOverview({
               </>
             ) : searchValue ? (
               <EmptyState
-                icon={Table2}
+                icon={ContainerListIcon}
                 isEmpty={false}
                 hasFilters={true}
                 variant="card"
               />
             ) : (
               <EmptyState
-                icon={Table2}
+                icon={ContainerListIcon}
                 title={dbLabels.emptyContainersTitle}
                 description={dbLabels.emptyContainersDescription}
                 isEmpty={true}
@@ -4730,7 +4747,7 @@ export function DatabaseOverview({
               >
                 <div className="flex flex-col items-center text-center">
                   <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                    <Table2 className="h-6 w-6 text-muted-foreground" />
+                    <ContainerListIcon className="h-6 w-6 text-muted-foreground" />
                   </div>
                   <p className="mb-1 text-[14px] font-medium text-foreground">
                     {dbLabels.emptyContainersTitle}
@@ -5239,6 +5256,59 @@ interface RowData {
   $permissions?: string[]
 }
 
+/** Flat document object for the inline JSON editor (metadata + attributes). */
+function buildInlineDocumentJsonObjectFromRow(row: RowData): Record<string, unknown> {
+  const o: Record<string, unknown> = {
+    $id: row.$id,
+    $permissions: row.$permissions ?? [],
+  }
+  if (row.$sequence !== undefined && row.$sequence !== null) {
+    o.$sequence = row.$sequence
+  }
+  if (row.$createdAt !== undefined) o.$createdAt = row.$createdAt
+  if (row.$updatedAt !== undefined) o.$updatedAt = row.$updatedAt
+  Object.assign(o, row.data)
+  return o
+}
+
+function buildInlineDocumentJsonObjectForCreate(
+  columns: unknown[],
+): Record<string, unknown> {
+  const now = new Date().toISOString()
+  const o: Record<string, unknown> = {
+    $id: '',
+    $permissions: [],
+    $createdAt: now,
+    $updatedAt: now,
+  }
+  columns.forEach((col: unknown) => {
+    const c = col as {
+      key?: string
+      name?: string
+      $id?: string
+      attribute?: string
+      attributeId?: string
+      default?: unknown
+      type?: string
+      array?: boolean
+    }
+    const colKey =
+      c.key || c.name || c.$id || c.attribute || c.attributeId
+    if (colKey && !String(colKey).startsWith('$')) {
+      if (c.default !== undefined && c.default !== null) {
+        o[colKey] = c.default
+      } else if (c.type === 'boolean') {
+        o[colKey] = false
+      } else if (c.array) {
+        o[colKey] = []
+      } else {
+        o[colKey] = ''
+      }
+    }
+  })
+  return o
+}
+
 import { PointEditor, LineEditor, PolygonEditor } from './tables/spatial'
 
 // Row Update Drawer Component
@@ -5258,6 +5328,8 @@ interface RowEditDrawerProps {
     permissions?: string[],
   ) => void
   isSaving?: boolean
+  /** Documents DB: render beside the table instead of a sheet */
+  presentation?: 'drawer' | 'inline'
 }
 
 function formatDateTimeLocalForInput(d: Date): string {
@@ -5302,6 +5374,33 @@ function normalizeValueForColumn(
   return value as unknown[]
 }
 
+function getTableColumnKey(col: unknown): string | null {
+  const c = col as {
+    key?: string
+    name?: string
+    $id?: string
+    attribute?: string
+    attributeId?: string
+  }
+  const colKey = c.key || c.name || c.$id || c.attribute || c.attributeId
+  if (!colKey || String(colKey).startsWith('$')) return null
+  return String(colKey)
+}
+
+function defaultFormValueForColumn(col: unknown): string | number | boolean | unknown[] | null {
+  const c = col as {
+    default?: unknown
+    type?: string
+    array?: boolean
+  }
+  if (c.default !== undefined && c.default !== null) {
+    return c.default as string | number | boolean | unknown[] | null
+  }
+  if (c.type === 'boolean') return false
+  if (c.array) return []
+  return ''
+}
+
 function RowEditDrawer({
   open,
   onOpenChange,
@@ -5311,6 +5410,7 @@ function RowEditDrawer({
   columns = [],
   onSave,
   isSaving = false,
+  presentation = 'drawer',
 }: RowEditDrawerProps) {
   const params = useParams({ strict: false })
   const projectId = params.projectId as string | undefined
@@ -5318,6 +5418,35 @@ function RowEditDrawer({
     (params.dbKind as DatabaseRouteKind | undefined) ?? 'tablesdb'
   const dbLabels = getDatabaseConsoleLabels(routeDbKind)
   const isCreateMode = !row
+  const hideSequenceInEditor = routeDbKind === 'documentsdb'
+
+  const dataTabFieldKeys = useMemo(() => {
+    const sys = ['$createdAt', '$updatedAt'] as const
+    if (isCreateMode) {
+      const keys: string[] = [...sys]
+      for (const col of columns) {
+        const k = getTableColumnKey(col)
+        if (k && !keys.includes(k)) keys.push(k)
+      }
+      return keys
+    }
+    if (!row) return [...sys]
+    const keys: string[] = [...sys]
+    const seen = new Set<string>([...sys])
+    for (const k of Object.keys(row.data)) {
+      if (k.startsWith('$')) continue
+      keys.push(k)
+      seen.add(k)
+    }
+    for (const col of columns) {
+      const k = getTableColumnKey(col)
+      if (k && !seen.has(k)) {
+        keys.push(k)
+        seen.add(k)
+      }
+    }
+    return keys
+  }, [isCreateMode, row, columns])
 
   const [formData, setFormData] = useState<
     Record<string, string | number | boolean | unknown[] | null>
@@ -5339,8 +5468,16 @@ function RowEditDrawer({
     index: number
   } | null>(null)
   const [linkCopied, setLinkCopied] = useState(false)
+  const [documentViewLinkCopied, setDocumentViewLinkCopied] = useState(false)
+  const [documentJsonCopied, setDocumentJsonCopied] = useState(false)
   const [activeTab, setActiveTab] = useState('data')
   const [rowPermissions, setRowPermissions] = useState<string[]>([])
+  const [documentJsonText, setDocumentJsonText] = useState('{}')
+  const [documentJsonBaseline, setDocumentJsonBaseline] = useState('{}')
+  const documentJsonEditorRef = useRef<CodeEditorRef>(null)
+  const [jsonEditorCanUndo, setJsonEditorCanUndo] = useState(false)
+  const [jsonEditorCanRedo, setJsonEditorCanRedo] = useState(false)
+  const documentJsonUndoRedoDisposeRef = useRef<(() => void) | null>(null)
 
   // When drawer opens with initialTab (e.g. from "Update permissions" context menu), switch to that tab
   useEffect(() => {
@@ -5358,6 +5495,15 @@ function RowEditDrawer({
       setRowPermissions([])
     }
   }, [row])
+
+  useEffect(() => {
+    if (presentation !== 'inline' || !open) return
+    const next = row
+      ? JSON.stringify(buildInlineDocumentJsonObjectFromRow(row), null, 2)
+      : JSON.stringify(buildInlineDocumentJsonObjectForCreate(columns), null, 2)
+    setDocumentJsonText(next)
+    setDocumentJsonBaseline(next)
+  }, [presentation, open, row?.$id, columns, row])
 
   // Update form data when row changes - only when row actually changes
   useEffect(() => {
@@ -5381,6 +5527,11 @@ function RowEditDrawer({
       })
       initialData['$createdAt'] = row.$createdAt ?? null
       initialData['$updatedAt'] = row.$updatedAt ?? null
+      for (const col of columns) {
+        const colKey = getTableColumnKey(col)
+        if (!colKey || colKey in initialData) continue
+        initialData[colKey] = defaultFormValueForColumn(col)
+      }
       setFormData(initialData)
       fieldRefs.current = {}
       // Reset custom row ID when editing existing row
@@ -5392,20 +5543,9 @@ function RowEditDrawer({
         string | number | boolean | unknown[] | null
       > = {}
       columns.forEach((col: unknown) => {
-        const colKey =
-          col.key || col.name || col.$id || col.attribute || col.attributeId
-        if (colKey && !colKey.startsWith('$')) {
-          // Initialize with default value or empty string
-          if (col.default !== undefined && col.default !== null) {
-            initialData[colKey] = col.default
-          } else if (col.type === 'boolean') {
-            initialData[colKey] = false
-          } else if (col.array) {
-            initialData[colKey] = []
-          } else {
-            initialData[colKey] = ''
-          }
-        }
+        const colKey = getTableColumnKey(col)
+        if (!colKey) return
+        initialData[colKey] = defaultFormValueForColumn(col)
       })
       initialData['$createdAt'] = new Date().toISOString()
       initialData['$updatedAt'] = new Date().toISOString()
@@ -5528,6 +5668,121 @@ function RowEditDrawer({
     handleFieldChange(key, newArray)
   }
 
+  const handlePrettifyDocumentJson = () => {
+    try {
+      const parsed = JSON.parse(documentJsonText.trim() || '{}')
+      setDocumentJsonText(JSON.stringify(parsed, null, 2))
+    } catch {
+      toast.error('Invalid JSON')
+    }
+  }
+
+  const handleCopyDocumentViewLink = () => {
+    if (!row) return
+    const u = new URL(window.location.href)
+    u.hash = `row-${row.$id}`
+    void navigator.clipboard.writeText(u.toString())
+    setDocumentViewLinkCopied(true)
+    setTimeout(() => setDocumentViewLinkCopied(false), 2000)
+    toast.success('Link copied')
+  }
+
+  const handleCopyDocumentJson = async () => {
+    try {
+      await navigator.clipboard.writeText(documentJsonText)
+      setDocumentJsonCopied(true)
+      setTimeout(() => setDocumentJsonCopied(false), 2000)
+      toast.success('JSON copied to clipboard')
+    } catch {
+      toast.error('Failed to copy JSON')
+    }
+  }
+
+  const handleDocumentJsonEditorMount = useCallback(
+    (ed: editor.IStandaloneCodeEditor) => {
+      documentJsonUndoRedoDisposeRef.current?.()
+      documentJsonUndoRedoDisposeRef.current = null
+
+      const refresh = () => {
+        queueMicrotask(() => {
+          const model = ed.getModel()
+          setJsonEditorCanUndo(model?.canUndo() ?? false)
+          setJsonEditorCanRedo(model?.canRedo() ?? false)
+        })
+      }
+
+      refresh()
+      const d1 = ed.onDidChangeModelContent(() => refresh())
+      const d2 = ed.onDidChangeModel(() => refresh())
+
+      documentJsonUndoRedoDisposeRef.current = () => {
+        d1.dispose()
+        d2.dispose()
+        documentJsonUndoRedoDisposeRef.current = null
+      }
+    },
+    [],
+  )
+
+  useEffect(() => {
+    return () => documentJsonUndoRedoDisposeRef.current?.()
+  }, [])
+
+  const handleDocumentJsonUndo = useCallback(() => {
+    const ed = documentJsonEditorRef.current?.getEditor()
+    const model = ed?.getModel()
+    if (!model?.canUndo()) return
+    void model.undo()
+  }, [])
+
+  const handleDocumentJsonRedo = useCallback(() => {
+    const ed = documentJsonEditorRef.current?.getEditor()
+    const model = ed?.getModel()
+    if (!model?.canRedo()) return
+    void model.redo()
+  }, [])
+
+  const handleRevertInlineDocumentChanges = useCallback(() => {
+    setDocumentJsonText(documentJsonBaseline)
+    try {
+      const parsed = JSON.parse(documentJsonBaseline.trim() || '{}') as unknown
+      if (
+        parsed !== null &&
+        typeof parsed === 'object' &&
+        !Array.isArray(parsed) &&
+        '$permissions' in parsed
+      ) {
+        const p = (parsed as { $permissions: unknown }).$permissions
+        setRowPermissions(
+          Array.isArray(p)
+            ? (p as unknown[]).filter((x): x is string => typeof x === 'string')
+            : [],
+        )
+      } else {
+        setRowPermissions(row?.$permissions ?? [])
+      }
+    } catch {
+      setRowPermissions(row?.$permissions ?? [])
+    }
+  }, [documentJsonBaseline, row])
+
+  const handlePermissionsChange = (next: string[]) => {
+    setRowPermissions(next)
+    if (presentation === 'inline') {
+      setDocumentJsonText((prev) => {
+        try {
+          const o = JSON.parse(prev.trim() || '{}') as unknown
+          if (o === null || typeof o !== 'object' || Array.isArray(o))
+            return prev
+          ;(o as Record<string, unknown>).$permissions = next
+          return JSON.stringify(o, null, 2)
+        } catch {
+          return prev
+        }
+      })
+    }
+  }
+
   const handleSave = () => {
     // For create mode, pass customRowId if set, otherwise pass null to use auto-generated
     // For update mode, pass the existing row ID
@@ -5540,6 +5795,52 @@ function RowEditDrawer({
         : undefined
       : rowPermissions // Always pass for updates, even if empty
     const now = new Date().toISOString()
+
+    if (presentation === 'inline') {
+      let parsed: unknown
+      try {
+        parsed = JSON.parse(documentJsonText.trim() || '{}')
+      } catch {
+        toast.error('Invalid JSON')
+        return
+      }
+      if (
+        parsed === null ||
+        typeof parsed !== 'object' ||
+        Array.isArray(parsed)
+      ) {
+        toast.error('Document data must be a JSON object')
+        return
+      }
+      const fromJson = parsed as Record<string, unknown>
+      const permsFromJson = Array.isArray(fromJson.$permissions)
+        ? (fromJson.$permissions as string[])
+        : rowPermissions
+      const permissionsInline = isCreateMode
+        ? permsFromJson.length > 0
+          ? permsFromJson
+          : undefined
+        : permsFromJson
+      const customIdFromJson =
+        isCreateMode &&
+        typeof fromJson.$id === 'string' &&
+        fromJson.$id.trim() !== ''
+          ? fromJson.$id.trim()
+          : undefined
+      const idToSaveInline = isCreateMode ? null : row?.$id || null
+      const payload: Record<string, unknown> = { ...fromJson }
+      delete payload.$id
+      delete payload.$permissions
+      delete payload.$sequence
+      onSave(
+        idToSaveInline,
+        payload as Record<string, string | number | boolean | unknown[] | null>,
+        customIdFromJson,
+        permissionsInline,
+      )
+      return
+    }
+
     const payload = { ...formData }
     if (
       payload['$createdAt'] === null ||
@@ -5590,56 +5891,55 @@ function RowEditDrawer({
     return []
   }
 
-  return (
-    <BaseDrawer
-      open={open}
-      onOpenChange={handleOpenChange}
-      title={
-        isCreateMode
-          ? dbLabels.createRecord
-          : `Update ${dbLabels.recordSingularTitle}`
-      }
-      maxWidth="sm:max-w-2xl"
-      headerActions={
-        !isCreateMode ? (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0 cursor-pointer"
-                  onClick={() => {
-                    const currentUrl = window.location.href
-                    navigator.clipboard.writeText(currentUrl)
-                    setLinkCopied(true)
-                    setTimeout(() => setLinkCopied(false), 2000)
-                  }}
-                >
-                  {linkCopied ? (
-                    <Check className="h-4 w-4 text-emerald-500" />
-                  ) : (
-                    <Link2 className="h-4 w-4 text-muted-foreground" />
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{linkCopied ? 'Link copied!' : 'Copy link'}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        ) : undefined
-      }
-    >
-      <>
-        <div className="border-t border-border shrink-0" />
+  const rowEditorTitle =
+    isCreateMode
+      ? dbLabels.createRecord
+      : `Update ${dbLabels.recordSingularTitle}`
 
-        <Tabs
+  const inlineDocumentDirty =
+    presentation === 'inline' && documentJsonText !== documentJsonBaseline
+
+  const rowEditorHeaderActions = !isCreateMode ? (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0 cursor-pointer"
+            onClick={() => {
+              const currentUrl = window.location.href
+              navigator.clipboard.writeText(currentUrl)
+              setLinkCopied(true)
+              setTimeout(() => setLinkCopied(false), 2000)
+            }}
+          >
+            {linkCopied ? (
+              <Check className="h-4 w-4 text-emerald-500" />
+            ) : (
+              <Link2 className="h-4 w-4 text-muted-foreground" />
+            )}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>{linkCopied ? 'Link copied!' : 'Copy link'}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  ) : undefined
+
+  const rowEditorBody = (
+    <>
+      {presentation !== 'inline' ? (
+        <div className="border-t border-border shrink-0" />
+      ) : null}
+
+      <Tabs
           value={activeTab}
           onValueChange={(v) => setActiveTab(v as 'data' | 'permissions')}
-          className="flex flex-col flex-1 min-h-0"
+          className="flex min-h-0 flex-1 flex-col gap-0"
         >
-          <div className="shrink-0 px-6 pt-4">
+          <div className="shrink-0 border-b border-border px-6 pb-4 pt-4">
             <TabsList className="w-full grid grid-cols-2 h-9">
               <TabsTrigger value="data" className="text-[13px]">
                 Data
@@ -5652,12 +5952,162 @@ function RowEditDrawer({
 
           <div
             ref={scrollContainerRef}
-            className="flex-1 overflow-y-auto min-h-0"
+            className={cn(
+              'min-h-0 flex-1',
+              presentation === 'inline' && 'relative',
+              presentation === 'inline' && activeTab === 'data'
+                ? 'flex flex-col overflow-hidden'
+                : 'overflow-y-auto',
+            )}
           >
             <TabsContent
               value="data"
-              className="mt-0 flex-1 outline-none data-[state=inactive]:hidden"
+              className={cn(
+                'mt-0 flex-1 outline-none data-[state=inactive]:hidden',
+                presentation === 'inline' && 'flex min-h-0 flex-col',
+              )}
             >
+              {presentation === 'inline' ? (
+                <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
+                  <div className="pointer-events-none absolute right-6 top-5 z-10 flex flex-col gap-2 p-1">
+                    <TooltipProvider delayDuration={0}>
+                      <div className="pointer-events-auto overflow-hidden rounded-lg border border-border bg-background/90 shadow-sm backdrop-blur-sm">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 cursor-pointer rounded-none p-0"
+                              disabled={isSaving || !jsonEditorCanUndo}
+                              aria-label="Undo"
+                              onMouseDown={(e) => e.preventDefault()}
+                              onClick={handleDocumentJsonUndo}
+                            >
+                              <Undo2 className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="left">
+                            <p>Undo</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                      <div className="pointer-events-auto overflow-hidden rounded-lg border border-border bg-background/90 shadow-sm backdrop-blur-sm">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 cursor-pointer rounded-none p-0"
+                              disabled={isSaving || !jsonEditorCanRedo}
+                              aria-label="Redo"
+                              onMouseDown={(e) => e.preventDefault()}
+                              onClick={handleDocumentJsonRedo}
+                            >
+                              <Redo2 className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="left">
+                            <p>Redo</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                      <div className="pointer-events-auto overflow-hidden rounded-lg border border-border bg-background/90 shadow-sm backdrop-blur-sm">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 cursor-pointer rounded-none p-0"
+                              onClick={handlePrettifyDocumentJson}
+                              disabled={isSaving}
+                              aria-label="Prettify JSON"
+                            >
+                              <Braces className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="left">
+                            <p>Prettify JSON</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                      <div className="pointer-events-auto overflow-hidden rounded-lg border border-border bg-background/90 shadow-sm backdrop-blur-sm">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 cursor-pointer rounded-none p-0"
+                              onClick={() => void handleCopyDocumentJson()}
+                              disabled={isSaving}
+                              aria-label="Copy JSON"
+                            >
+                              {documentJsonCopied ? (
+                                <Check className="h-4 w-4 text-emerald-500" />
+                              ) : (
+                                <Copy className="h-4 w-4 text-muted-foreground" />
+                              )}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="left">
+                            <p>
+                              {documentJsonCopied
+                                ? 'Copied!'
+                                : 'Copy JSON'}
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                      <div className="pointer-events-auto overflow-hidden rounded-lg border border-border bg-background/90 shadow-sm backdrop-blur-sm">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 cursor-pointer rounded-none p-0"
+                              onClick={handleCopyDocumentViewLink}
+                              disabled={isSaving || !row}
+                              aria-label="Copy link to document"
+                            >
+                              {documentViewLinkCopied ? (
+                                <Check className="h-4 w-4 text-emerald-500" />
+                              ) : (
+                                <Link2 className="h-4 w-4 text-muted-foreground" />
+                              )}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="left">
+                            <p>
+                              {documentViewLinkCopied
+                                ? 'Link copied!'
+                                : 'Copy link to document'}
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                    </TooltipProvider>
+                  </div>
+                  <CodeEditor
+                    ref={documentJsonEditorRef}
+                    modelPath={
+                      row
+                        ? `inmemory://console-document-json/${row.$id}`
+                        : 'inmemory://console-document-json/new'
+                    }
+                    value={documentJsonText}
+                    onChange={setDocumentJsonText}
+                    language="json"
+                    lineNumbers="on"
+                    height="100%"
+                    onEditorMount={handleDocumentJsonEditorMount}
+                    className="h-full min-h-0 flex-1 rounded-none border-0 shadow-none"
+                  />
+                </div>
+              ) : (
               <div className="px-6 py-6">
                 <div className="space-y-5">
                   {/* System fields (read-only) - only when updating a row */}
@@ -5672,17 +6122,19 @@ function RowEditDrawer({
                             <CopyableId id={row.$id} size="sm" />
                           </div>
                         </div>
-                        <div>
-                          <Label className="text-[11px] text-muted-foreground">
-                            Row #
-                          </Label>
-                          <div className="mt-1">
-                            <CopyableId
-                              id={String(row.$sequence ?? row.rowNumber ?? '')}
-                              size="sm"
-                            />
+                        {!hideSequenceInEditor ? (
+                          <div>
+                            <Label className="text-[11px] text-muted-foreground">
+                              Row #
+                            </Label>
+                            <div className="mt-1">
+                              <CopyableId
+                                id={String(row.$sequence ?? row.rowNumber ?? '')}
+                                size="sm"
+                              />
+                            </div>
                           </div>
-                        </div>
+                        ) : null}
                       </div>
                     </div>
                   )}
@@ -5694,7 +6146,7 @@ function RowEditDrawer({
                         className="text-[12px] font-medium text-foreground"
                         htmlFor="row-id"
                       >
-                        Row ID
+                        {dbLabels.recordSingularTitle} ID
                       </Label>
                       <IdInput
                         id="row-id"
@@ -5713,31 +6165,26 @@ function RowEditDrawer({
                       Row Data
                     </h4>
                     <div className="space-y-4">
-                      {(isCreateMode
-                        ? [
-                            '$createdAt',
-                            '$updatedAt',
-                            ...Object.keys(formData).filter(
-                              (k) => k !== '$createdAt' && k !== '$updatedAt',
-                            ),
-                          ]
-                        : ['$createdAt', '$updatedAt', ...Object.keys(row.data)]
-                      ).map((key) => {
+                      {dataTabFieldKeys.map((key) => {
                         const value = isCreateMode
                           ? formData[key]
                           : key === '$createdAt' || key === '$updatedAt'
                             ? (row as RowData)[key as keyof RowData]
                             : row.data[key]
                         const columnInfo = getColumnInfo(key)
+                        const currentValue =
+                          key in formData
+                            ? formData[key]
+                            : key === '$createdAt' || key === '$updatedAt'
+                              ? value
+                              : columnInfo !== undefined
+                                ? defaultFormValueForColumn(columnInfo)
+                                : value
                         const fieldType = getFieldType(
                           key,
-                          value as string | number | boolean | unknown[] | null,
+                          currentValue as string | number | boolean | unknown[] | null,
                           columnInfo,
                         )
-                        // Use formData if it exists, otherwise fall back to original value
-                        // But check if key exists in formData to distinguish between undefined and null
-                        const currentValue =
-                          key in formData ? formData[key] : value
                         const shouldFocus = focusedField === key
                         // Check multiple possible properties for required status
                         const isRequired =
@@ -6486,6 +6933,7 @@ function RowEditDrawer({
                   </div>
                 </div>
               </div>
+              )}
             </TabsContent>
 
             <TabsContent
@@ -6507,31 +6955,230 @@ function RowEditDrawer({
                   </div>
                   <PermissionsEditor
                     permissions={rowPermissions}
-                    onPermissionsChange={setRowPermissions}
+                    onPermissionsChange={handlePermissionsChange}
                     withCreate={false}
                     projectId={projectId}
                   />
                 </div>
               </div>
             </TabsContent>
+
+            {presentation === 'inline' &&
+            (inlineDocumentDirty || isCreateMode) ? (
+              <div className="pointer-events-none absolute bottom-4 left-0 right-0 z-20 flex justify-center px-4">
+                <div className="pointer-events-auto flex w-full max-w-[520px] min-w-[min(100%,280px)] items-center justify-between gap-3 rounded-lg border border-border bg-background px-4 py-3 shadow-sm sm:min-w-[400px] sm:px-6">
+                  <Badge variant="secondary" className="h-6 shrink-0 px-2.5">
+                    {isCreateMode
+                      ? inlineDocumentDirty
+                        ? 'Unsaved changes'
+                        : 'New document'
+                      : 'Unsaved changes'}
+                  </Badge>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleRevertInlineDocumentChanges}
+                      disabled={isSaving}
+                      className="h-8 text-xs"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={handleSave}
+                      disabled={isSaving}
+                      className="h-8 text-xs"
+                    >
+                      {isCreateMode ? dbLabels.createRecord : 'Update'}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : null}
           </div>
         </Tabs>
 
-        {/* Footer with actions */}
-        <div className="flex-shrink-0 flex items-center justify-start gap-2 border-t border-border bg-muted/30 px-6 py-4">
-          <Button onClick={handleSave} disabled={isSaving}>
-            {isCreateMode ? dbLabels.createRecord : 'Update'}
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isSaving}
-          >
-            Cancel
-          </Button>
-        </div>
-      </>
+        {presentation !== 'inline' ? (
+          <div className="flex-shrink-0 flex items-center justify-start gap-2 border-t border-border bg-muted/30 px-6 py-4">
+            <Button onClick={handleSave} disabled={isSaving}>
+              {isCreateMode ? dbLabels.createRecord : 'Update'}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isSaving}
+            >
+              Cancel
+            </Button>
+          </div>
+        ) : null}
+    </>
+  )
+
+  if (presentation === 'inline') {
+    if (!open) return null
+    return (
+      <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-background">
+        {rowEditorBody}
+      </div>
+    )
+  }
+
+  return (
+    <BaseDrawer
+      open={open}
+      onOpenChange={handleOpenChange}
+      title={rowEditorTitle}
+      maxWidth="sm:max-w-2xl"
+      headerActions={rowEditorHeaderActions}
+    >
+      {rowEditorBody}
     </BaseDrawer>
+  )
+}
+
+/** Row create/update drawer for document JSON list views (grid has its own drawer). */
+function DocumentsRowCreateBridge({
+  table,
+  onCreateRowReady,
+}: {
+  table: Collection
+  onCreateRowReady?: (openCreateDrawer: () => void) => void
+}) {
+  const params = useParams({ strict: false })
+  const projectId = params.projectId as string
+  const databaseId = params.databaseId as string
+  const queryClient = useQueryClient()
+  const navigate = useNavigate()
+  const routeSearch = useSearch({ strict: false }) as
+    | Record<string, unknown>
+    | undefined
+  const openRowCreateFlag = routeSearch?.openRowCreate === '1'
+  const openRowCreateConsumedRef = useRef(false)
+
+  const [editDrawerOpen, setEditDrawerOpen] = useState(false)
+  const [selectedRowForEdit, setSelectedRowForEdit] = useState<RowData | null>(
+    null,
+  )
+  const [focusedField, setFocusedField] = useState<string | null>(null)
+  const [drawerInitialTab, setDrawerInitialTab] = useState<
+    'data' | 'permissions' | null
+  >(null)
+
+  const { columns: apiColumns } = useProjectTableColumns(
+    projectId,
+    databaseId,
+    table.$id,
+  )
+
+  const saveRowMutation = useMutation({
+    mutationFn: async ({
+      rowId,
+      data,
+      customId,
+      permissions,
+    }: {
+      rowId: string | null
+      data: Record<string, string | number | boolean | unknown[] | null>
+      customId?: string | undefined
+      permissions?: string[]
+    }) => {
+      if (rowId) {
+        return await updateProjectTableRow(
+          projectId,
+          databaseId,
+          table.$id,
+          rowId,
+          data,
+          permissions,
+        )
+      }
+      return await createProjectTableRow(
+        projectId,
+        databaseId,
+        table.$id,
+        data,
+        customId,
+        permissions,
+      )
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['rows', 'project', projectId, databaseId, table.$id],
+      })
+      toast.success(
+        variables.rowId
+          ? 'Row updated successfully'
+          : 'Row created successfully',
+      )
+      setEditDrawerOpen(false)
+      setSelectedRowForEdit(null)
+    },
+    onError: (error: Error, variables) => {
+      toast.error(
+        error.message ||
+          (variables.rowId ? 'Failed to update row' : 'Failed to create row'),
+      )
+    },
+  })
+
+  const handleSaveRow = (
+    rowId: string | null,
+    data: Record<string, string | number | boolean | unknown[] | null>,
+    customId?: string | undefined,
+    permissions?: string[],
+  ) => {
+    saveRowMutation.mutate({ rowId, data, customId, permissions })
+  }
+
+  useEffect(() => {
+    if (!onCreateRowReady) return
+    const openFn = () => {
+      setSelectedRowForEdit(null)
+      setFocusedField(null)
+      setDrawerInitialTab(null)
+      setEditDrawerOpen(true)
+    }
+    onCreateRowReady(openFn)
+  }, [onCreateRowReady])
+
+  useEffect(() => {
+    if (!openRowCreateFlag) {
+      openRowCreateConsumedRef.current = false
+      return
+    }
+    if (openRowCreateConsumedRef.current) return
+    openRowCreateConsumedRef.current = true
+    setSelectedRowForEdit(null)
+    setFocusedField(null)
+    setDrawerInitialTab(null)
+    setEditDrawerOpen(true)
+    navigate({
+      search: (prev: Record<string, unknown>) => {
+        const next = { ...prev }
+        delete next.openRowCreate
+        return next
+      },
+      replace: true,
+    })
+  }, [openRowCreateFlag, navigate])
+
+  return (
+    <RowEditDrawer
+      open={editDrawerOpen}
+      onOpenChange={(open) => {
+        setEditDrawerOpen(open)
+        if (!open) setDrawerInitialTab(null)
+      }}
+      row={selectedRowForEdit}
+      tableName={table.name}
+      focusedField={focusedField}
+      initialTab={drawerInitialTab ?? undefined}
+      columns={apiColumns}
+      onSave={handleSaveRow}
+      isSaving={saveRowMutation.isPending}
+    />
   )
 }
 
@@ -6591,6 +7238,9 @@ function RowsSpreadsheet({
   const routeDbKind =
     (params.dbKind as DatabaseRouteKind | undefined) ?? 'tablesdb'
   const dbLabels = getDatabaseConsoleLabels(routeDbKind)
+  const hideSampleData = routeDbKind === 'documentsdb'
+  const hideSequenceColumn = routeDbKind === 'documentsdb'
+  const useInlineDocumentPane = routeDbKind === 'documentsdb'
   const rsNav = useMemo(() => dbNavLink(routeDbKind), [routeDbKind])
   const tableId = table.$id
 
@@ -6613,6 +7263,14 @@ function RowsSpreadsheet({
     const map = queryParamToMap(displayedFilterQueryString)
     return map.size > 0 ? Array.from(map.values()) : undefined
   }, [displayedFilterQueryString])
+  const documentsPaneHasFilters = useMemo(
+    () =>
+      Boolean(
+        (displayedSearch ?? '').trim() ||
+          (displayedFilterQueryString ?? '').length,
+      ),
+    [displayedSearch, displayedFilterQueryString],
+  )
   const hasInitedDisplayedRef = useRef(false)
   const [displayedSortBy, setDisplayedSortBy] = useState<string>('$createdAt')
   const [displayedSortOrder, setDisplayedSortOrder] = useState<'asc' | 'desc'>(
@@ -6634,7 +7292,90 @@ function RowsSpreadsheet({
   const [selectedRowForEdit, setSelectedRowForEdit] = useState<RowData | null>(
     null,
   )
+  const selectedRowForEditRef = useRef<RowData | null>(null)
+  selectedRowForEditRef.current = selectedRowForEdit
   const [focusedField, setFocusedField] = useState<string | null>(null)
+  const [documentTablePaneWidthPx, setDocumentTablePaneWidthPx] = useState(
+    readStoredDocumentsTablePaneWidthPx,
+  )
+  const [isDocumentsSplitResizing, setIsDocumentsSplitResizing] =
+    useState(false)
+  const documentSplitContainerRef = useRef<HTMLDivElement>(null)
+  const documentTablePaneWidthRef = useRef(documentTablePaneWidthPx)
+  documentTablePaneWidthRef.current = documentTablePaneWidthPx
+
+  const handleDocumentsSplitPointerDown = useCallback(
+    (e: React.PointerEvent<HTMLButtonElement>) => {
+      e.preventDefault()
+      setIsDocumentsSplitResizing(true)
+      const btn = e.currentTarget
+      btn.setPointerCapture(e.pointerId)
+      const startX = e.clientX
+      const startW = documentTablePaneWidthRef.current
+      const splitEl = documentSplitContainerRef.current
+      const onMove = (ev: PointerEvent) => {
+        if (!splitEl) return
+        const maxTable = Math.max(
+          DOCUMENTS_TABLE_PANE_MIN_PX,
+          splitEl.clientWidth - DOCUMENTS_PREVIEW_PANE_MIN_PX,
+        )
+        const delta = ev.clientX - startX
+        const next = Math.min(
+          maxTable,
+          Math.max(DOCUMENTS_TABLE_PANE_MIN_PX, startW + delta),
+        )
+        setDocumentTablePaneWidthPx(next)
+        documentTablePaneWidthRef.current = next
+      }
+      const onUp = () => {
+        setIsDocumentsSplitResizing(false)
+        try {
+          btn.releasePointerCapture(e.pointerId)
+        } catch {
+          /* already released */
+        }
+        window.removeEventListener('pointermove', onMove)
+        window.removeEventListener('pointerup', onUp)
+        window.removeEventListener('pointercancel', onUp)
+        localStorage.setItem(
+          DOCUMENTS_TABLE_PANE_WIDTH_STORAGE_KEY,
+          String(documentTablePaneWidthRef.current),
+        )
+      }
+      window.addEventListener('pointermove', onMove)
+      window.addEventListener('pointerup', onUp)
+      window.addEventListener('pointercancel', onUp)
+    },
+    [],
+  )
+
+  useEffect(() => {
+    if (!isDocumentsSplitResizing) return
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+    return () => {
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+    }
+  }, [isDocumentsSplitResizing])
+
+  useEffect(() => {
+    if (!useInlineDocumentPane) return
+    const el = documentSplitContainerRef.current
+    if (!el) return
+    const clamp = () => {
+      const maxTable = Math.max(
+        DOCUMENTS_TABLE_PANE_MIN_PX,
+        el.clientWidth - DOCUMENTS_PREVIEW_PANE_MIN_PX,
+      )
+      setDocumentTablePaneWidthPx((w) => Math.min(w, maxTable))
+    }
+    const ro = new ResizeObserver(clamp)
+    ro.observe(el)
+    clamp()
+    return () => ro.disconnect()
+  }, [useInlineDocumentPane])
+
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [sampleDataModalOpen, setSampleDataModalOpen] = useState(false)
   const [columnDialogOpen, setColumnDialogOpen] = useState(false)
@@ -6951,9 +7692,10 @@ function RowsSpreadsheet({
     }
   })
 
-  // Get column names from API columns or from first row
-  const columns =
-    apiColumns.length > 0
+  // Get column names from API columns or from first row (documents list: attributes only in JSON editor)
+  const columns = useInlineDocumentPane
+    ? []
+    : apiColumns.length > 0
       ? apiColumns.map((col: unknown) => col.key || col.name || col.$id)
       : rows[0]
         ? Object.keys(rows[0].data)
@@ -7056,7 +7798,31 @@ function RowsSpreadsheet({
 
   // Open row drawer when URL has #row-<id> or #row-<id>-permissions (e.g. from copied link).
   // Use window.location.hash and hashchange so it works on new-tab load and when hash is set after load.
+  const prevTableIdForPreviewRef = useRef<string | null>(null)
   const lastProcessedHashRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    const prev = prevTableIdForPreviewRef.current
+    prevTableIdForPreviewRef.current = tableId
+    if (prev !== null && prev !== tableId) {
+      setSelectedRowForEdit(null)
+      setEditDrawerOpen(false)
+      setDrawerInitialTab(null)
+      setFocusedField(null)
+      setSelectedRows(new Set())
+      lastProcessedHashRef.current = null
+      if (typeof window !== 'undefined') {
+        const { hash, pathname, search } = window.location
+        if (hash && /^#row-/.test(hash)) {
+          window.history.replaceState(
+            window.history.state,
+            '',
+            `${pathname}${search}`,
+          )
+        }
+      }
+    }
+  }, [tableId])
   const openRowDrawerFromHash = useCallback(
     (
       hash: string,
@@ -7181,23 +7947,66 @@ function RowsSpreadsheet({
         )
       }
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (result, variables) => {
       // Invalidate and refetch rows
       queryClient.invalidateQueries({
         queryKey: ['rows', 'project', projectId, databaseId, tableId],
       })
       toast.success(
         variables.rowId
-          ? 'Row updated successfully'
-          : 'Row created successfully',
+          ? `${dbLabels.recordSingularTitle} updated successfully`
+          : `${dbLabels.recordSingularTitle} created successfully`,
       )
+      if (useInlineDocumentPane && result && typeof result === 'object') {
+        const rowObj = result as Record<string, unknown>
+        setSelectedRowForEdit((prev) => {
+          const data: Record<
+            string,
+            string | number | boolean | unknown[] | null
+          > = {}
+          Object.keys(rowObj).forEach((key) => {
+            if (!key.startsWith('$')) {
+              const value = rowObj[key]
+              const col = apiColumns.find(
+                (c: Record<string, unknown>) =>
+                  c.key === key ||
+                  c.name === key ||
+                  c.$id === key ||
+                  c.attribute === key,
+              )
+              data[key] = normalizeValueForColumn(value, col) as
+                | string
+                | number
+                | boolean
+                | unknown[]
+                | null
+            }
+          })
+          return {
+            $id:
+              (rowObj.$id as string) ||
+              (variables.rowId as string | null) ||
+              '',
+            $sequence: rowObj.$sequence as number | undefined,
+            rowNumber: prev?.rowNumber ?? 0,
+            data,
+            $createdAt: rowObj.$createdAt as string | undefined,
+            $updatedAt: rowObj.$updatedAt as string | undefined,
+            $permissions: (rowObj.$permissions as string[]) || [],
+          }
+        })
+        setEditDrawerOpen(true)
+        return
+      }
       setEditDrawerOpen(false)
       setSelectedRowForEdit(null)
     },
     onError: (error: Error, variables) => {
       toast.error(
         error.message ||
-          (variables.rowId ? 'Failed to update row' : 'Failed to create row'),
+          (variables.rowId
+            ? `Failed to update ${dbLabels.recordSingular}`
+            : `Failed to create ${dbLabels.recordSingular}`),
       )
     },
   })
@@ -7221,7 +8030,7 @@ function RowsSpreadsheet({
         ),
       )
     },
-    onSuccess: async () => {
+    onSuccess: async (_data, rowIds) => {
       // Refetch rows list so the UI updates (list uses refetchOnMount: false)
       await queryClient.refetchQueries({
         queryKey: ['rows', 'project', projectId, databaseId, tableId],
@@ -7233,6 +8042,14 @@ function RowsSpreadsheet({
             : dbLabels.recordPlural
         }`,
       )
+      if (useInlineDocumentPane) {
+        const sid = selectedRowForEditRef.current?.$id
+        if (sid && rowIds.includes(sid)) {
+          setSelectedRowForEdit(null)
+          setEditDrawerOpen(false)
+          setDrawerInitialTab(null)
+        }
+      }
       setSelectedRows(new Set())
       setDeleteDialogOpen(false)
     },
@@ -7355,6 +8172,12 @@ function RowsSpreadsheet({
   // Rows are already paginated by the API
   const paginatedRows = rows
 
+  const documentsListFullyEmpty =
+    useInlineDocumentPane &&
+    paginatedRows.length === 0 &&
+    !editDrawerOpen &&
+    selectedRowForEdit === null
+
   const formatCellValue = (
     value:
       | string
@@ -7426,8 +8249,9 @@ function RowsSpreadsheet({
     )
   })
 
-  // Show empty state outside the table when there are no rows
-  if (paginatedRows.length === 0) {
+  // Show empty state outside the table when there are no rows (tables / grid).
+  // Documents DB inline view: full-width empty when idle; split when creating/editing.
+  if (paginatedRows.length === 0 && !useInlineDocumentPane) {
     const handleCreateRow = () => {
       if (openCreateRowFnRef.current) {
         openCreateRowFnRef.current()
@@ -7479,7 +8303,9 @@ function RowsSpreadsheet({
               </p>
               <p className="text-xs text-muted-foreground max-w-sm">
                 {hasColumns
-                  ? `This ${dbLabels.containerSingular} is empty. Get started by creating a ${dbLabels.recordSingular}, adding ${dbLabels.schemaPlural}, or generating sample data.`
+                  ? hideSampleData
+                    ? `This ${dbLabels.containerSingular} is empty. Get started by creating a ${dbLabels.recordSingular} or adding ${dbLabels.schemaPlural}.`
+                    : `This ${dbLabels.containerSingular} is empty. Get started by creating a ${dbLabels.recordSingular}, adding ${dbLabels.schemaPlural}, or generating sample data.`
                   : `This ${dbLabels.containerSingular} has no ${dbLabels.schemaPlural} yet. Create your first ${dbLabels.schemaSingularTitle.toLowerCase()} to get started.`}
               </p>
             </div>
@@ -7618,55 +8444,59 @@ function RowsSpreadsheet({
                 </Card>
               )}
               {/* Row 2 */}
-              {!hasDataProducingColumns ? (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Card className="cursor-not-allowed opacity-60 p-0 gap-0 shadow-none">
-                      <div className="flex items-start gap-3 p-4">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
-                          <BarChart3 className="h-5 w-5 text-muted-foreground" />
+              {!hideSampleData &&
+                (!hasDataProducingColumns ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Card className="cursor-not-allowed opacity-60 p-0 gap-0 shadow-none">
+                        <div className="flex items-start gap-3 p-4">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                            <BarChart3 className="h-5 w-5 text-muted-foreground" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h3 className="text-sm font-medium text-foreground">
+                              Generate sample data
+                            </h3>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              Generate data for testing
+                            </p>
+                          </div>
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <h3 className="text-sm font-medium text-foreground">
-                            Generate sample data
-                          </h3>
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            Generate data for testing
-                          </p>
-                        </div>
+                      </Card>
+                    </TooltipTrigger>
+                    <TooltipContent>Create columns first</TooltipContent>
+                  </Tooltip>
+                ) : (
+                  <Card
+                    onClick={handleOpenSampleDataModal}
+                    className={cn(
+                      'transition-colors p-0 gap-0 shadow-none',
+                      sampleDataMutation.isPending || columnsLoading
+                        ? 'opacity-50 cursor-not-allowed'
+                        : 'cursor-pointer hover:bg-accent/50',
+                    )}
+                  >
+                    <div className="flex items-start gap-3 p-4">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                        <BarChart3 className="h-5 w-5 text-muted-foreground" />
                       </div>
-                    </Card>
-                  </TooltipTrigger>
-                  <TooltipContent>Create columns first</TooltipContent>
-                </Tooltip>
-              ) : (
-                <Card
-                  onClick={handleOpenSampleDataModal}
-                  className={cn(
-                    'transition-colors p-0 gap-0 shadow-none',
-                    sampleDataMutation.isPending || columnsLoading
-                      ? 'opacity-50 cursor-not-allowed'
-                      : 'cursor-pointer hover:bg-accent/50',
-                  )}
-                >
-                  <div className="flex items-start gap-3 p-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
-                      <BarChart3 className="h-5 w-5 text-muted-foreground" />
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-sm font-medium text-foreground">
+                          Generate sample data
+                        </h3>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Generate data for testing
+                        </p>
+                      </div>
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="text-sm font-medium text-foreground">
-                        Generate sample data
-                      </h3>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        Generate data for testing
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-              )}
+                  </Card>
+                ))}
               <Card
                 onClick={handleDocumentation}
-                className="cursor-pointer transition-colors hover:bg-accent/50 p-0 gap-0 shadow-none"
+                className={cn(
+                  'cursor-pointer transition-colors hover:bg-accent/50 p-0 gap-0 shadow-none',
+                  hideSampleData && 'col-span-2',
+                )}
               >
                 <div className="flex items-start gap-3 p-4">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
@@ -7698,13 +8528,14 @@ function RowsSpreadsheet({
           isSaving={saveRowMutation.isPending}
         />
 
-        {/* Sample Data Modal */}
-        <SampleDataModal
-          open={sampleDataModalOpen}
-          onOpenChange={setSampleDataModalOpen}
-          onConfirm={handleGenerateSampleData}
-          isLoading={sampleDataMutation.isPending}
-        />
+        {!hideSampleData && (
+          <SampleDataModal
+            open={sampleDataModalOpen}
+            onOpenChange={setSampleDataModalOpen}
+            onConfirm={handleGenerateSampleData}
+            isLoading={sampleDataMutation.isPending}
+          />
+        )}
 
         {/* Column Form Dialog for empty state */}
         <ColumnDrawer
@@ -7728,48 +8559,162 @@ function RowsSpreadsheet({
   }
 
   return (
-    <div className="flex h-full flex-col min-h-0">
-      {/* Scrollable table area */}
-      <div className="min-h-0 flex-1 overflow-auto overscroll-contain">
-        <table className="w-full border-collapse">
+    <div
+      className={cn(
+        'flex min-h-0 flex-col',
+        useInlineDocumentPane ? 'min-h-0 flex-1' : 'h-full',
+      )}
+    >
+      {documentsListFullyEmpty ? (
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center border-t border-border px-6 py-12">
+          <EmptyState
+            icon={FileText}
+            title={
+              documentsPaneHasFilters
+                ? `No ${dbLabels.recordPlural} match your filters`
+                : `No ${dbLabels.recordPlural} yet`
+            }
+            description={
+              documentsPaneHasFilters
+                ? 'Try adjusting or clearing filters.'
+                : `Use ${dbLabels.createRecord.toLowerCase()} in the header to add your first ${dbLabels.recordSingular}.`
+            }
+            isEmpty={!documentsPaneHasFilters}
+            hasFilters={documentsPaneHasFilters}
+            variant="centered"
+            iconSize="md"
+          />
+        </div>
+      ) : (
+      <div
+        ref={documentSplitContainerRef}
+        className={cn(
+          'flex min-h-0 flex-1 flex-row overflow-hidden',
+          useInlineDocumentPane && 'relative',
+        )}
+      >
+        <div
+          style={
+            useInlineDocumentPane
+              ? { width: documentTablePaneWidthPx }
+              : undefined
+          }
+          className={cn(
+            'min-h-0 min-w-0 overflow-auto overscroll-contain',
+            useInlineDocumentPane
+              ? cn(
+                  'shrink-0 border-r border-border',
+                  paginatedRows.length === 0 && 'border-t border-border',
+                )
+              : 'min-w-0 flex-1',
+          )}
+        >
+          {useInlineDocumentPane && paginatedRows.length === 0 ? (
+            <div className="flex min-h-[min(240px,40vh)] flex-col items-stretch justify-center px-4 py-8">
+              <EmptyState
+                icon={FileText}
+                title={
+                  documentsPaneHasFilters
+                    ? `No ${dbLabels.recordPlural} match your filters`
+                    : `No ${dbLabels.recordPlural} yet`
+                }
+                description={
+                  documentsPaneHasFilters
+                    ? 'Try adjusting or clearing filters.'
+                    : `Use ${dbLabels.createRecord.toLowerCase()} in the header to add your first ${dbLabels.recordSingular}.`
+                }
+                isEmpty={!documentsPaneHasFilters}
+                hasFilters={documentsPaneHasFilters}
+                variant="centered"
+                iconSize="md"
+              />
+            </div>
+          ) : (
+          <table
+            className={cn(
+              'w-full border-collapse',
+              useInlineDocumentPane && 'table-fixed',
+            )}
+          >
           <colgroup>
-            <col style={{ width: '40px' }} />
-            <col style={{ width: '64px' }} />
-            <col style={{ width: '180px' }} />
+            <col
+              style={
+                useInlineDocumentPane
+                  ? {
+                      width: ROWS_TABLE_EDGE_COL_PX,
+                      minWidth: ROWS_TABLE_EDGE_COL_PX,
+                      maxWidth: ROWS_TABLE_EDGE_COL_PX,
+                    }
+                  : { width: '40px' }
+              }
+            />
+            {!hideSequenceColumn ? (
+              <col style={{ width: '64px' }} />
+            ) : null}
+            <col
+              style={
+                useInlineDocumentPane
+                  ? { minWidth: 180 }
+                  : { width: '180px' }
+              }
+            />
             {columns.map((col: string, index: number) => (
               <col key={`col-${col}-${index}`} style={{ minWidth: '150px' }} />
             ))}
             <col style={{ width: '180px' }} />
             <col style={{ width: '180px' }} />
             <col
-              style={{ width: '40px', minWidth: '40px', maxWidth: '40px' }}
+              style={
+                useInlineDocumentPane
+                  ? {
+                      width: ROWS_TABLE_EDGE_COL_PX,
+                      minWidth: ROWS_TABLE_EDGE_COL_PX,
+                      maxWidth: ROWS_TABLE_EDGE_COL_PX,
+                    }
+                  : { width: '40px', minWidth: '40px', maxWidth: '40px' }
+              }
             />
           </colgroup>
           <thead className={stickyTheadClass}>
             <tr>
               <th
                 className={cn(
-                  'sticky left-0 z-40 w-10 bg-background px-2 py-2 text-left',
+                  'sticky left-0 z-40 w-10 bg-background px-2 py-2 text-center',
+                  useInlineDocumentPane &&
+                    'min-w-[40px] max-w-[40px] shrink-0 box-border',
                   'shadow-[inset_0_1px_0_0_#d1d5db,inset_0_-1px_0_0_#d1d5db,inset_-1px_0_0_0_#d1d5db]',
                   'dark:shadow-[inset_0_1px_0_0_rgb(255_255_255_/_0.1),inset_0_-1px_0_0_rgb(255_255_255_/_0.1),inset_-1px_0_0_0_rgb(255_255_255_/_0.1)]',
                 )}
+                style={
+                  useInlineDocumentPane
+                    ? {
+                        width: ROWS_TABLE_EDGE_COL_PX,
+                        minWidth: ROWS_TABLE_EDGE_COL_PX,
+                        maxWidth: ROWS_TABLE_EDGE_COL_PX,
+                      }
+                    : undefined
+                }
               >
-                <Checkbox
-                  checked={
-                    selectedRows.size === paginatedRows.length &&
-                    paginatedRows.length > 0
-                  }
-                  onCheckedChange={toggleAll}
-                />
+                <div className="flex justify-center">
+                  <Checkbox
+                    checked={
+                      selectedRows.size === paginatedRows.length &&
+                      paginatedRows.length > 0
+                    }
+                    onCheckedChange={toggleAll}
+                  />
+                </div>
               </th>
-              <th
-                className={cn(
-                  'w-16 px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground',
-                  headerCellBorderClass,
-                )}
-              >
-                #
-              </th>
+              {!hideSequenceColumn ? (
+                <th
+                  className={cn(
+                    'w-16 px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground',
+                    headerCellBorderClass,
+                  )}
+                >
+                  #
+                </th>
+              ) : null}
               <th className={cn('w-[180px] px-3 py-2', headerCellBorderClass)}>
                 <div className="flex items-center gap-2">
                   <Fingerprint className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
@@ -7883,10 +8828,15 @@ function RowsSpreadsheet({
               <th
                 className={cn(
                   'relative sticky right-0 z-30 bg-background p-0',
+                  useInlineDocumentPane && 'shrink-0 box-border',
                   'shadow-[inset_0_1px_0_0_#d1d5db,inset_0_-1px_0_0_#d1d5db,inset_1px_0_0_0_#d1d5db]',
                   'dark:shadow-[inset_0_1px_0_0_rgb(255_255_255_/_0.1),inset_0_-1px_0_0_rgb(255_255_255_/_0.1),inset_1px_0_0_0_rgb(255_255_255_/_0.1)]',
                 )}
-                style={{ width: '40px', minWidth: '40px', maxWidth: '40px' }}
+                style={{
+                  width: ROWS_TABLE_EDGE_COL_PX,
+                  minWidth: ROWS_TABLE_EDGE_COL_PX,
+                  maxWidth: ROWS_TABLE_EDGE_COL_PX,
+                }}
               >
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -7911,7 +8861,7 @@ function RowsSpreadsheet({
                   </TooltipTrigger>
                   <TooltipContent side="bottom">
                     {canWriteTables
-                      ? 'Create column'
+                      ? dbLabels.createSchema
                       : "You don't have permission to perform this action."}
                   </TooltipContent>
                 </Tooltip>
@@ -7919,7 +8869,12 @@ function RowsSpreadsheet({
             </tr>
           </thead>
           <tbody>
-            {paginatedRows.map((row) => (
+            {paginatedRows.map((row) => {
+              const isInlinePreviewRow =
+                useInlineDocumentPane &&
+                selectedRowForEdit !== null &&
+                selectedRowForEdit.$id === row.$id
+              return (
               <RowContextMenu
                 key={row.$id}
                 projectId={projectId}
@@ -7928,13 +8883,28 @@ function RowsSpreadsheet({
                 row={row}
                 contextColumnKey={contextCellColumnKey}
                 queryKey={['rows', 'project', projectId, databaseId, tableId]}
+                onRowDeleted={
+                  useInlineDocumentPane
+                    ? (deletedId) => {
+                        if (
+                          selectedRowForEditRef.current?.$id === deletedId
+                        ) {
+                          setSelectedRowForEdit(null)
+                          setEditDrawerOpen(false)
+                          setDrawerInitialTab(null)
+                        }
+                      }
+                    : undefined
+                }
               >
                 <tr
                   className={cn(
                     'group cursor-pointer transition-colors',
-                    selectedRows.has(row.$id)
-                      ? 'bg-muted'
-                      : 'hover:bg-muted/50',
+                    isInlinePreviewRow
+                      ? 'bg-muted/25 ring-1 ring-inset ring-border/20 hover:bg-muted/35'
+                      : selectedRows.has(row.$id)
+                        ? 'bg-muted'
+                        : 'hover:bg-muted/50',
                   )}
                   onClick={() => handleRowClick(row)}
                   onContextMenu={(e) => {
@@ -7945,31 +8915,47 @@ function RowsSpreadsheet({
                 >
                   <td
                     className={cn(
-                      'sticky left-0 w-10 border-b border-gray-200 dark:border-border bg-background px-2 py-1.5',
+                      'sticky left-0 w-10 border-b border-gray-200 dark:border-border px-2 py-1.5 text-center',
+                      useInlineDocumentPane &&
+                        'min-w-[40px] max-w-[40px] shrink-0 box-border',
                       'shadow-[inset_-1px_0_0_0_#d1d5db] dark:shadow-[inset_-1px_0_0_0_rgb(255_255_255_/_0.1)]',
-                      selectedRows.has(row.$id) && 'bg-muted',
+                      !isInlinePreviewRow
+                        ? 'bg-background'
+                        : 'bg-muted/25 group-hover:bg-muted/35',
+                      !isInlinePreviewRow && selectedRows.has(row.$id) && 'bg-muted',
                     )}
+                    style={
+                      useInlineDocumentPane
+                        ? {
+                            width: ROWS_TABLE_EDGE_COL_PX,
+                            minWidth: ROWS_TABLE_EDGE_COL_PX,
+                            maxWidth: ROWS_TABLE_EDGE_COL_PX,
+                          }
+                        : undefined
+                    }
                   >
-                    <Checkbox
-                      checked={selectedRows.has(row.$id)}
-                      onCheckedChange={() => toggleRow(row.$id)}
-                      onClick={(e) => e.stopPropagation()}
-                    />
+                    <div className="flex justify-center">
+                      <Checkbox
+                        checked={selectedRows.has(row.$id)}
+                        onCheckedChange={() => toggleRow(row.$id)}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </div>
                   </td>
-                  <td
-                    className={cn('px-3 py-1.5', bodyCellBorderClass)}
-                    data-column="$sequence"
-                  >
-                    <span className="text-[12px] text-muted-foreground">
-                      {row.$sequence ?? row.rowNumber}
-                    </span>
-                  </td>
+                  {!hideSequenceColumn ? (
+                    <td
+                      className={cn('px-3 py-1.5', bodyCellBorderClass)}
+                      data-column="$sequence"
+                    >
+                      <span className="text-[12px] text-muted-foreground">
+                        {row.$sequence ?? row.rowNumber}
+                      </span>
+                    </td>
+                  ) : null}
                   <td
                     className={cn(
                       'w-[180px] px-3 py-1.5',
-                      columns.length === 0
-                        ? 'border-b border-gray-200 dark:border-border'
-                        : bodyCellBorderClass,
+                      bodyCellBorderClass,
                     )}
                     data-column="$id"
                   >
@@ -8020,13 +9006,21 @@ function RowsSpreadsheet({
                   <td
                     className={cn('w-[180px] px-3 py-1.5', bodyCellBorderClass)}
                     data-column="$createdAt"
-                    onClick={(e) => e.stopPropagation()}
                   >
                     {row.$createdAt ? (
-                      <DateTooltip
-                        date={new Date(row.$createdAt)}
-                        className="text-[12px] text-muted-foreground"
-                      />
+                      useInlineDocumentPane ? (
+                        <span className="text-[12px] text-muted-foreground">
+                          {new Date(row.$createdAt).toLocaleString(undefined, {
+                            dateStyle: 'short',
+                            timeStyle: 'short',
+                          })}
+                        </span>
+                      ) : (
+                        <DateTooltip
+                          date={new Date(row.$createdAt)}
+                          className="text-[12px] text-muted-foreground"
+                        />
+                      )
                     ) : (
                       <span className="text-[12px] text-foreground/60">
                         N/A
@@ -8036,13 +9030,21 @@ function RowsSpreadsheet({
                   <td
                     className={cn('w-[180px] px-3 py-1.5', bodyCellBorderClass)}
                     data-column="$updatedAt"
-                    onClick={(e) => e.stopPropagation()}
                   >
                     {row.$updatedAt ? (
-                      <DateTooltip
-                        date={new Date(row.$updatedAt)}
-                        className="text-[12px] text-muted-foreground"
-                      />
+                      useInlineDocumentPane ? (
+                        <span className="text-[12px] text-muted-foreground">
+                          {new Date(row.$updatedAt).toLocaleString(undefined, {
+                            dateStyle: 'short',
+                            timeStyle: 'short',
+                          })}
+                        </span>
+                      ) : (
+                        <DateTooltip
+                          date={new Date(row.$updatedAt)}
+                          className="text-[12px] text-muted-foreground"
+                        />
+                      )
                     ) : (
                       <span className="text-[12px] text-foreground/60">
                         N/A
@@ -8051,21 +9053,32 @@ function RowsSpreadsheet({
                   </td>
                   <td
                     className={cn(
-                      'sticky right-0 border-b border-gray-200 dark:border-border bg-background p-0',
+                      'sticky right-0 border-b border-gray-200 dark:border-border p-0',
+                      useInlineDocumentPane && 'shrink-0 box-border',
                       'shadow-[inset_1px_0_0_0_#d1d5db] dark:shadow-[inset_1px_0_0_0_rgb(255_255_255_/_0.1)]',
-                      selectedRows.has(row.$id) && 'bg-muted',
+                      !isInlinePreviewRow
+                        ? 'bg-background'
+                        : 'bg-muted/25 group-hover:bg-muted/35',
+                      !isInlinePreviewRow && selectedRows.has(row.$id) && 'bg-muted',
                     )}
                     style={{
-                      width: '40px',
-                      minWidth: '40px',
-                      maxWidth: '40px',
+                      width: ROWS_TABLE_EDGE_COL_PX,
+                      minWidth: ROWS_TABLE_EDGE_COL_PX,
+                      maxWidth: ROWS_TABLE_EDGE_COL_PX,
                     }}
                   >
-                    <div className="flex h-full w-[40px] items-center justify-center py-1.5">
+                    <div
+                      className="flex h-full items-center justify-center py-1.5"
+                      style={{ width: ROWS_TABLE_EDGE_COL_PX }}
+                    >
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <button
-                            className="rounded p-1 hover:bg-muted"
+                            type="button"
+                            className={cn(
+                              'rounded p-1 hover:bg-muted',
+                              useInlineDocumentPane && 'cursor-pointer',
+                            )}
                             onClick={(e) => e.stopPropagation()}
                           >
                             <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
@@ -8078,7 +9091,7 @@ function RowsSpreadsheet({
                               handleRowClick(row)
                             }}
                           >
-                            Update row
+                            Update {dbLabels.recordSingular}
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={(e) => {
@@ -8105,17 +9118,116 @@ function RowsSpreadsheet({
                   </td>
                 </tr>
               </RowContextMenu>
-            ))}
+              )
+            })}
           </tbody>
         </table>
+          )}
+        </div>
+        {useInlineDocumentPane ? (
+          <div
+            className={cn(
+              'flex min-h-0 min-w-0 min-w-[280px] flex-1 flex-col border-t border-border bg-muted/10',
+            )}
+          >
+            {selectedRowForEdit !== null || editDrawerOpen ? (
+              <RowEditDrawer
+                presentation="inline"
+                open={selectedRowForEdit !== null || editDrawerOpen}
+                onOpenChange={(open) => {
+                  setEditDrawerOpen(open)
+                  if (!open) {
+                    setDrawerInitialTab(null)
+                    setSelectedRowForEdit(null)
+                  }
+                }}
+                row={selectedRowForEdit}
+                tableName={table.name}
+                focusedField={focusedField}
+                initialTab={drawerInitialTab ?? undefined}
+                columns={apiColumns}
+                onSave={handleSaveRow}
+                isSaving={saveRowMutation.isPending}
+              />
+            ) : (
+              <div className="flex h-full min-h-0 flex-col items-center justify-center gap-2 px-6 text-center">
+                <FileText className="h-10 w-10 text-muted-foreground/45" />
+                <p className="text-[14px] font-medium text-foreground">
+                  No {dbLabels.recordSingular} selected
+                </p>
+                <p className="max-w-sm text-[13px] text-muted-foreground">
+                  Select a row in the table to view and edit, or use{' '}
+                  {dbLabels.createRecord.toLowerCase()} in the header.
+                </p>
+              </div>
+            )}
+          </div>
+        ) : null}
+        {useInlineDocumentPane ? (
+          <button
+            type="button"
+            aria-label="Resize table and document preview"
+            aria-orientation="vertical"
+            role="separator"
+            tabIndex={0}
+            style={{ left: documentTablePaneWidthPx }}
+            onKeyDown={(e) => {
+              const splitEl = documentSplitContainerRef.current
+              if (!splitEl) return
+              const maxTable = Math.max(
+                DOCUMENTS_TABLE_PANE_MIN_PX,
+                splitEl.clientWidth - DOCUMENTS_PREVIEW_PANE_MIN_PX,
+              )
+              const step = 24
+              if (e.key === 'ArrowLeft') {
+                e.preventDefault()
+                setDocumentTablePaneWidthPx((w) => {
+                  const next = Math.max(
+                    DOCUMENTS_TABLE_PANE_MIN_PX,
+                    w - step,
+                  )
+                  documentTablePaneWidthRef.current = next
+                  localStorage.setItem(
+                    DOCUMENTS_TABLE_PANE_WIDTH_STORAGE_KEY,
+                    String(next),
+                  )
+                  return next
+                })
+              } else if (e.key === 'ArrowRight') {
+                e.preventDefault()
+                setDocumentTablePaneWidthPx((w) => {
+                  const next = Math.min(maxTable, w + step)
+                  documentTablePaneWidthRef.current = next
+                  localStorage.setItem(
+                    DOCUMENTS_TABLE_PANE_WIDTH_STORAGE_KEY,
+                    String(next),
+                  )
+                  return next
+                })
+              }
+            }}
+            className={cn(
+              'absolute top-0 bottom-0 z-30 w-1.5 -translate-x-1/2 cursor-col-resize border-0 bg-transparent p-0 outline-none transition-colors hover:bg-primary/20 classic:hover:bg-sidebar-accent/60',
+              isDocumentsSplitResizing &&
+                'bg-primary/30 classic:bg-sidebar-accent/70',
+              'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
+            )}
+            onPointerDown={handleDocumentsSplitPointerDown}
+          />
+        ) : null}
       </div>
+      )}
 
       {/* Bulk Delete Action Bar */}
       {selectedRows.size > 0 && (
         <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
           <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
             <Badge variant="secondary" className="h-6 px-2.5">
-              {selectedRows.size} row{selectedRows.size > 1 ? 's' : ''} selected
+              {selectedRows.size}{' '}
+              {selectedRows.size === 1
+                ? dbLabels.recordSingular
+                : dbLabels.recordPlural}{' '}
+              selected
             </Badge>
             <div className="flex items-center gap-2">
               <Button
@@ -8151,72 +9263,81 @@ function RowsSpreadsheet({
               pageSizeOptions={[10, 25, 50, 100]}
               onPageChange={handlePageChange}
               onPageSizeChange={handlePageSizeChange}
-              itemLabel="rows"
+              itemLabel={dbLabels.recordPlural}
               className="h-full min-h-0 border-0 mt-0 py-0"
             />
           </div>
-          <div className="flex-shrink-0">
-            {!hasDataProducingColumns ? (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="inline-block">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled
-                      className="h-8 gap-2 text-[12px] font-medium"
-                    >
-                      <Plus className="h-3.5 w-3.5" />
-                      <span className="hidden @[500px]:inline">
-                        Sample data
-                      </span>
-                      <span className="@[500px]:hidden">Sample</span>
-                    </Button>
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent>Create columns first</TooltipContent>
-              </Tooltip>
-            ) : (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setSampleDataModalOpen(true)}
-                disabled={sampleDataMutation.isPending || columnsLoading}
-                className="h-8 gap-2 text-[12px] font-medium"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                <span className="hidden @[500px]:inline">Sample data</span>
-                <span className="@[500px]:hidden">Sample</span>
-              </Button>
-            )}
-          </div>
+          {!hideSampleData && (
+            <div className="flex-shrink-0">
+              {!hasDataProducingColumns ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-block">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled
+                        className="h-8 gap-2 text-[12px] font-medium"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        <span className="hidden @[500px]:inline">
+                          Sample data
+                        </span>
+                        <span className="@[500px]:hidden">Sample</span>
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>Create columns first</TooltipContent>
+                </Tooltip>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setSampleDataModalOpen(true)}
+                  disabled={sampleDataMutation.isPending || columnsLoading}
+                  className="h-8 gap-2 text-[12px] font-medium"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  <span className="hidden @[500px]:inline">Sample data</span>
+                  <span className="@[500px]:hidden">Sample</span>
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Row Update Drawer */}
-      <RowEditDrawer
-        open={editDrawerOpen}
-        onOpenChange={(open) => {
-          setEditDrawerOpen(open)
-          if (!open) setDrawerInitialTab(null)
-        }}
-        row={selectedRowForEdit}
-        tableName={table.name}
-        focusedField={focusedField}
-        initialTab={drawerInitialTab ?? undefined}
-        columns={apiColumns}
-        onSave={handleSaveRow}
-        isSaving={saveRowMutation.isPending}
-      />
+      {!useInlineDocumentPane ? (
+        <RowEditDrawer
+          open={editDrawerOpen}
+          onOpenChange={(open) => {
+            setEditDrawerOpen(open)
+            if (!open) {
+              setDrawerInitialTab(null)
+              setSelectedRowForEdit(null)
+            }
+          }}
+          row={selectedRowForEdit}
+          tableName={table.name}
+          focusedField={focusedField}
+          initialTab={drawerInitialTab ?? undefined}
+          columns={apiColumns}
+          onSave={handleSaveRow}
+          isSaving={saveRowMutation.isPending}
+        />
+      ) : null}
 
       {/* Bulk Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 text-left">
-            <DialogTitle>Delete Rows</DialogTitle>
+            <DialogTitle>Delete {dbLabels.recordPluralTitle}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete {selectedRows.size} row
-              {selectedRows.size > 1 ? 's' : ''}? This action cannot be undone.
+              Are you sure you want to delete {selectedRows.size}{' '}
+              {selectedRows.size === 1
+                ? dbLabels.recordSingular
+                : dbLabels.recordPlural}
+              ? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
 
@@ -8239,13 +9360,14 @@ function RowsSpreadsheet({
         </DialogContent>
       </Dialog>
 
-      {/* Sample Data Modal */}
-      <SampleDataModal
-        open={sampleDataModalOpen}
-        onOpenChange={setSampleDataModalOpen}
-        onConfirm={handleGenerateSampleData}
-        isLoading={sampleDataMutation.isPending}
-      />
+      {!hideSampleData && (
+        <SampleDataModal
+          open={sampleDataModalOpen}
+          onOpenChange={setSampleDataModalOpen}
+          onConfirm={handleGenerateSampleData}
+          isLoading={sampleDataMutation.isPending}
+        />
+      )}
 
       {/* Column Form Dialog for empty state */}
       <ColumnDrawer

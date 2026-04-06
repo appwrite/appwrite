@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { shouldSuppressGlobalShortcuts } from '@/lib/global-shortcut-suppress'
 
 type KeyCombo = string | string[]
 type ShortcutHandler = (e: KeyboardEvent) => void
@@ -39,17 +40,8 @@ function parseKeyCombo(combo: KeyCombo): string[] {
   return combo.split('+').map((k) => normalizeKey(k.trim()))
 }
 
-// Check if an element is an input
 function isInputElement(element: Element | null): boolean {
-  if (!element) return false
-  const tagName = element.tagName.toLowerCase()
-  if (tagName === 'input' || tagName === 'textarea' || tagName === 'select') {
-    return true
-  }
-  if (element.getAttribute('contenteditable') === 'true') {
-    return true
-  }
-  return false
+  return shouldSuppressGlobalShortcuts(element)
 }
 
 /**

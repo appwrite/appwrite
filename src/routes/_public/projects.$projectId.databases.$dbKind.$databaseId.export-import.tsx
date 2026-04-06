@@ -1,21 +1,29 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
+import { TableView } from '@/components/pages/projects/$projectId/databases/View'
 import {
   projectQueryOptions,
   databaseQueryOptions,
   tablesQueryOptions,
+  databaseCsvMigrationsQueryOptions,
 } from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
 
-const TABLES_PER_PAGE = 100
+const TABLES_PER_PAGE = 500
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/export-import',
 )({
-  head: () => ({ meta: [{ title: pageTitle('Database', 'Databases') }] }),
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: pageTitle(loaderData?.database?.name ?? 'Database', 'Databases'),
+      },
+    ],
+  }),
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return
 
-    const { projectId, dbKind, databaseId } = params
+    const { projectId, databaseId } = params
     const { queryClient } = context
 
     if (!projectId || !databaseId) return
@@ -27,15 +35,34 @@ export const Route = createFileRoute(
     const tablesData = await queryClient.ensureQueryData(
       tablesQueryOptions(projectId, databaseId, 0, TABLES_PER_PAGE, undefined),
     )
-    const sorted = [...(tablesData.tables || [])].sort((a, b) =>
-      (a.name?.toLowerCase() || '').localeCompare(b.name?.toLowerCase() || ''),
-    )
-    const tableId = sorted[0]?.$id ?? '-'
 
-    throw redirect({
-      to: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/export-import',
-      params: { projectId, dbKind, databaseId, tableId },
-      replace: true,
-    })
+    const tableIds = (tablesData.tables || []).map(
+      (t: { $id: string }) => t.$id,
+    )
+    if (tableIds.length > 0) {
+      await queryClient
+        .ensureQueryData(
+          databaseCsvMigrationsQueryOptions(projectId, databaseId, tableIds),
+        )
+        .catch(() => {})
+    }
+
+    const database = queryClient.getQueryData<{ name?: string }>(
+      databaseQueryOptions(projectId, databaseId).queryKey,
+    )
+    return { database }
   },
+  component: ExportImportPage,
 })
+
+function ExportImportPage() {
+  const { databaseId } = Route.useParams()
+  return (
+    <TableView
+      databaseId={databaseId}
+      tableId="-"
+      activeTab="rows"
+      databaseTab="export-import"
+    />
+  )
+}

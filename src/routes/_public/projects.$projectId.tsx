@@ -62,6 +62,29 @@ function getDatabaseTablesRouteTab(pathParts: string[]): string | undefined {
   return undefined
 }
 
+/** Routes like /databases/:dbKind/:databaseId/visualizer (not under tables/collections). */
+const DATABASE_LEVEL_LAYOUT_SEGMENTS = new Set([
+  'visualizer',
+  'backups',
+  'export-import',
+  'insights',
+  'db-security',
+  'browser',
+  'security',
+  'settings',
+])
+
+function getDatabaseLevelLayoutSegment(
+  pathParts: string[],
+): string | undefined {
+  if (pathParts[3] !== 'databases') return undefined
+  if (pathParts.length >= 7 && pathParts[6]) {
+    const seg = pathParts[6]
+    if (DATABASE_LEVEL_LAYOUT_SEGMENTS.has(seg)) return seg
+  }
+  return undefined
+}
+
 /** Loader return: project data for first paint (avoids layout shift for paused curtain). */
 export type ProjectLayoutLoaderData =
   | {
@@ -161,11 +184,15 @@ function ProjectLayout() {
   const activeSection = pathParts[3] || 'overview'
 
   const databaseTablesRouteTab = getDatabaseTablesRouteTab(pathParts)
+  const databaseLevelLayoutSegment = getDatabaseLevelLayoutSegment(pathParts)
 
   const isDatabaseSpreadsheetView =
-    activeSection === 'databases' && databaseTablesRouteTab != null
+    activeSection === 'databases' &&
+    (databaseTablesRouteTab != null || databaseLevelLayoutSegment != null)
 
-  const isDatabaseVisualizerView = databaseTablesRouteTab === 'visualizer'
+  const isDatabaseVisualizerView =
+    databaseTablesRouteTab === 'visualizer' ||
+    databaseLevelLayoutSegment === 'visualizer'
 
   // Functions local code editor (Monaco)
   const isFunctionsEditorView =

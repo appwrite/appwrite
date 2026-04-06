@@ -6,9 +6,7 @@ import {
   deleteProjectTableRow,
   useProjectTableRows,
 } from '@/lib/react-query/hooks'
-import {
-  ROWS_DEFAULT_PAGE_SIZE,
-} from '@/lib/react-query/hooks/constants'
+import { ROWS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { queryParamToMap } from '@/lib/table-filters'
 import type { Collection } from '@/lib/utils/mock-data'
 import { Button } from '@/components/ui/button'
@@ -22,6 +20,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Pagination } from '@/components/global/shared/Pagination'
+import { EmptyState } from '@/components/global/shared/EmptyState'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Badge } from '@/components/ui/badge'
@@ -33,7 +32,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { FileJson } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { getDatabaseConsoleLabels } from '@/lib/database-console-labels'
+import { FileText } from 'lucide-react'
 
 function documentPayloadJson(row: Record<string, unknown>): string {
   const o: Record<string, unknown> = {}
@@ -88,10 +89,13 @@ export function DocumentsJsonSpreadsheet({
   const projectId = params.projectId as string
   const databaseId = params.databaseId as string
   const tableId = table.$id
+  const dbLabels = getDatabaseConsoleLabels('documentsdb')
+  const prevTableIdForPreviewRef = useRef<string | null>(null)
   const location = useLocation()
   const queryClient = useQueryClient()
 
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
+  const [previewRowId, setPreviewRowId] = useState<string | null>(null)
   const [requestedPage, setRequestedPage] = useState(rowsUrlPage)
   const [displayedPage, setDisplayedPage] = useState(rowsUrlPage)
   const [displayedSearch, setDisplayedSearch] = useState(rowsUrlSearch ?? '')
@@ -102,12 +106,22 @@ export function DocumentsJsonSpreadsheet({
     const map = queryParamToMap(displayedFilterQueryString)
     return map.size > 0 ? Array.from(map.values()) : undefined
   }, [displayedFilterQueryString])
+  const documentsPaneHasFilters = useMemo(
+    () =>
+      Boolean(
+        (displayedSearch ?? '').trim() ||
+          (displayedFilterQueryString ?? '').length,
+      ),
+    [displayedSearch, displayedFilterQueryString],
+  )
   const [sortBy, setSortBy] = useState(rowsSortBy)
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(rowsSortOrder)
   const [displayedSortBy, setDisplayedSortBy] = useState(rowsSortBy)
   const [displayedSortOrder, setDisplayedSortOrder] =
     useState<'asc' | 'desc'>(rowsSortOrder)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  /** After deleting the previewed doc, avoid auto-selecting another row on refetch. */
+  const skipNextAutoPreviewRef = useRef(false)
 
   useEffect(() => {
     setRequestedPage(rowsUrlPage)
@@ -126,6 +140,7 @@ export function DocumentsJsonSpreadsheet({
     setDisplayedPage(rowsUrlPage)
     setDisplayedSearch(rowsUrlSearch ?? '')
     setDisplayedFilterQueryString(rowsFilterQueryString ?? '')
+    skipNextAutoPreviewRef.current = false
   }, [
     location.pathname,
     projectId,
@@ -135,6 +150,14 @@ export function DocumentsJsonSpreadsheet({
     rowsUrlSearch,
     rowsFilterQueryString,
   ])
+
+  useEffect(() => {
+    const prev = prevTableIdForPreviewRef.current
+    prevTableIdForPreviewRef.current = tableId
+    if (prev !== null && prev !== tableId) {
+      setPreviewRowId(null)
+    }
+  }, [tableId])
 
   const effectiveSearch = rowsUrlSearch ?? ''
   const effectivePageSize = rowsUrlLimit
@@ -221,6 +244,41 @@ export function DocumentsJsonSpreadsheet({
     if (onRefetchReady) onRefetchReady(refetch)
   }, [refetch, onRefetchReady])
 
+  const rowIdsOnPage = useMemo(
+    () =>
+      apiRows
+        .map((r: unknown) => String((r as { $id?: string }).$id ?? ''))
+        .filter(Boolean),
+    [apiRows],
+  )
+
+  useEffect(() => {
+    if (rowIdsOnPage.length === 0) {
+      setPreviewRowId(null)
+      return
+    }
+    setPreviewRowId((prev) => {
+      if (prev && rowIdsOnPage.includes(prev)) return prev
+      if (prev && !rowIdsOnPage.includes(prev)) return null
+      if (!prev) {
+        if (skipNextAutoPreviewRef.current) {
+          skipNextAutoPreviewRef.current = false
+          return null
+        }
+        return rowIdsOnPage[0] ?? null
+      }
+      return prev
+    })
+  }, [rowIdsOnPage])
+
+  const previewRow = useMemo(() => {
+    if (!previewRowId) return null
+    const raw = apiRows.find(
+      (r: unknown) => String((r as { $id?: string }).$id ?? '') === previewRowId,
+    )
+    return raw ? (raw as Record<string, unknown>) : null
+  }, [apiRows, previewRowId])
+
   const bulkDeleteMutation = useMutation({
     mutationFn: async (rowIds: string[]) => {
       await Promise.all(
@@ -229,13 +287,18 @@ export function DocumentsJsonSpreadsheet({
         ),
       )
     },
-    onSuccess: async () => {
+    onSuccess: async (_data, rowIds) => {
       await queryClient.refetchQueries({
         queryKey: ['rows', 'project', projectId, databaseId, tableId],
       })
       toast.success(
         `Successfully deleted ${selectedRows.size} document${selectedRows.size > 1 ? 's' : ''}`,
       )
+      const pid = previewRowId
+      if (pid && rowIds.includes(pid)) {
+        skipNextAutoPreviewRef.current = true
+        setPreviewRowId(null)
+      }
       setSelectedRows(new Set())
       setDeleteDialogOpen(false)
     },
@@ -255,11 +318,7 @@ export function DocumentsJsonSpreadsheet({
     if (selectedRows.size === apiRows.length) {
       setSelectedRows(new Set())
     } else {
-      setSelectedRows(
-        new Set(
-          apiRows.map((r: unknown) => (r as { $id: string }).$id).filter(Boolean),
-        ),
-      )
+      setSelectedRows(new Set(rowIdsOnPage))
     }
   }
 
@@ -285,82 +344,170 @@ export function DocumentsJsonSpreadsheet({
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
-      <div className="min-h-0 flex-1 overflow-auto">
-        <Table>
-          <TableHeader>
-            <TableRow className="hover:bg-transparent border-b border-border">
-              <TableHead className="w-[40px] px-4">
-                <Checkbox
-                  checked={
-                    apiRows.length > 0 && selectedRows.size === apiRows.length
-                  }
-                  onCheckedChange={toggleAll}
-                />
-              </TableHead>
-              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                Document ID
-              </TableHead>
-              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider min-w-[280px]">
-                <span className="inline-flex items-center gap-1.5">
-                  <FileJson className="h-3.5 w-3.5" />
-                  JSON
-                </span>
-              </TableHead>
-              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                Created
-              </TableHead>
-              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                Updated
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {apiRows.map((raw: unknown) => {
-              const row = raw as Record<string, unknown>
-              const id = String(row.$id ?? '')
-              return (
-                <TableRow key={id}>
-                  <TableCell className="px-4 py-3">
-                    <Checkbox
-                      checked={selectedRows.has(id)}
-                      onCheckedChange={() => toggleRow(id)}
-                    />
-                  </TableCell>
-                  <TableCell className="px-4 py-3">
-                    <CopyableId id={id} size="xs" />
-                  </TableCell>
-                  <TableCell className="px-4 py-3 align-top">
-                    <pre className="max-h-48 overflow-auto rounded-md border border-border bg-muted/40 p-3 text-left font-mono text-[11px] leading-relaxed text-foreground">
-                      {documentPayloadJson(row)}
-                    </pre>
-                  </TableCell>
-                  <TableCell className="px-4 py-3">
-                    {row.$createdAt ? (
-                      <DateTooltip
-                        date={new Date(String(row.$createdAt))}
-                        className="text-[12px] text-muted-foreground"
+    <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+      {apiRows.length === 0 ? (
+        <>
+          <div className="flex min-h-0 flex-1 flex-col items-center justify-center border-t border-border px-6 py-12">
+            <EmptyState
+              icon={FileText}
+              title={
+                documentsPaneHasFilters
+                  ? `No ${dbLabels.recordPlural} match your filters`
+                  : `No ${dbLabels.recordPlural} yet`
+              }
+              description={
+                documentsPaneHasFilters
+                  ? 'Try adjusting or clearing filters.'
+                  : `Use ${dbLabels.createRecord.toLowerCase()} in the header to add your first ${dbLabels.recordSingular}.`
+              }
+              isEmpty={!documentsPaneHasFilters}
+              hasFilters={documentsPaneHasFilters}
+              variant="centered"
+              iconSize="md"
+            />
+          </div>
+          <div className="h-[54px] shrink-0 border-t border-border bg-background">
+            <div className="flex h-full items-center px-4">
+              <Pagination
+                currentPage={displayedPage}
+                totalItems={displayedRowsTotal ?? rowsTotal}
+                pageSize={effectivePageSize}
+                pageSizeOptions={[10, 25, 50, 100]}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
+                itemLabel="documents"
+                className="h-full min-h-0 border-0 mt-0 py-0"
+              />
+            </div>
+          </div>
+        </>
+      ) : (
+        <div className="flex min-h-0 flex-1 flex-row overflow-hidden">
+          <div className="flex min-h-0 w-[min(420px,42%)] min-w-[300px] shrink-0 flex-col border-r border-border">
+            <div className="min-h-0 min-w-0 flex-1 overflow-auto">
+              <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent border-b border-border">
+                  <TableHead className="w-[40px] px-4 text-center">
+                    <div className="flex justify-center">
+                      <Checkbox
+                        checked={
+                          apiRows.length > 0 &&
+                          selectedRows.size === apiRows.length
+                        }
+                        onCheckedChange={toggleAll}
                       />
-                    ) : (
-                      <span className="text-[12px] text-muted-foreground">—</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="px-4 py-3">
-                    {row.$updatedAt ? (
-                      <DateTooltip
-                        date={new Date(String(row.$updatedAt))}
-                        className="text-[12px] text-muted-foreground"
-                      />
-                    ) : (
-                      <span className="text-[12px] text-muted-foreground">—</span>
-                    )}
-                  </TableCell>
+                    </div>
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Document ID
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Created
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Updated
+                  </TableHead>
                 </TableRow>
-              )
-            })}
-          </TableBody>
-        </Table>
-      </div>
+              </TableHeader>
+              <TableBody>
+                {apiRows.map((raw: unknown) => {
+                  const row = raw as Record<string, unknown>
+                  const id = String(row.$id ?? '')
+                  const isPreview = id === previewRowId
+                  return (
+                    <TableRow
+                      key={id}
+                      className={cn(
+                        'cursor-pointer',
+                        isPreview
+                          ? 'bg-muted/25 ring-1 ring-inset ring-border/20 hover:bg-muted/35'
+                          : undefined,
+                      )}
+                      onClick={() => setPreviewRowId(id)}
+                    >
+                      <TableCell
+                        className="px-4 py-3 text-center"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="flex justify-center">
+                          <Checkbox
+                            checked={selectedRows.has(id)}
+                            onCheckedChange={() => toggleRow(id)}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-4 py-3">
+                        <CopyableId id={id} size="xs" />
+                      </TableCell>
+                      <TableCell className="px-4 py-3">
+                        {row.$createdAt ? (
+                          <DateTooltip
+                            date={new Date(String(row.$createdAt))}
+                            className="text-[12px] text-muted-foreground"
+                          />
+                        ) : (
+                          <span className="text-[12px] text-muted-foreground">
+                            —
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="px-4 py-3">
+                        {row.$updatedAt ? (
+                          <DateTooltip
+                            date={new Date(String(row.$updatedAt))}
+                            className="text-[12px] text-muted-foreground"
+                          />
+                        ) : (
+                          <span className="text-[12px] text-muted-foreground">
+                            —
+                          </span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+              </Table>
+            </div>
+
+            <div className="h-[54px] shrink-0 border-t border-border bg-background">
+              <div className="flex h-full items-center px-4">
+                <Pagination
+                  currentPage={displayedPage}
+                  totalItems={displayedRowsTotal ?? rowsTotal}
+                  pageSize={effectivePageSize}
+                  pageSizeOptions={[10, 25, 50, 100]}
+                  onPageChange={handlePageChange}
+                  onPageSizeChange={handlePageSizeChange}
+                  itemLabel="documents"
+                  className="h-full min-h-0 border-0 mt-0 py-0"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-muted/20">
+            {previewRow ? (
+              <pre className="min-h-0 flex-1 overflow-auto p-4 font-mono text-[12px] leading-relaxed text-foreground">
+                {documentPayloadJson(previewRow)}
+              </pre>
+            ) : (
+              <div className="flex h-full min-h-0 flex-col items-center justify-center gap-2 px-6 text-center">
+                <FileText className="h-10 w-10 text-muted-foreground/45" />
+                <p className="text-[14px] font-medium text-foreground">
+                  No {dbLabels.recordSingular} selected
+                </p>
+                <p className="max-w-sm text-[13px] text-muted-foreground">
+                  Select a row in the table to view and edit, or use{' '}
+                  {dbLabels.createRecord.toLowerCase()} in the header.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {selectedRows.size > 0 && canWriteRows && (
         <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
@@ -390,21 +537,6 @@ export function DocumentsJsonSpreadsheet({
           </div>
         </div>
       )}
-
-      <div className="h-[54px] shrink-0 border-t border-border bg-background">
-        <div className="flex h-full items-center px-4">
-          <Pagination
-            currentPage={displayedPage}
-            totalItems={displayedRowsTotal ?? rowsTotal}
-            pageSize={effectivePageSize}
-            pageSizeOptions={[10, 25, 50, 100]}
-            onPageChange={handlePageChange}
-            onPageSizeChange={handlePageSizeChange}
-            itemLabel="documents"
-            className="h-full min-h-0 border-0 mt-0 py-0"
-          />
-        </div>
-      </div>
 
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">

@@ -65,7 +65,7 @@ export function DatabaseContextMenu({
     path:
       | '/projects/$projectId/databases/$dbKind/$databaseId/'
       | '/projects/$projectId/databases/$dbKind/$databaseId/visualizer'
-      | '/projects/$projectId/databases/$dbKind/$databaseId/security'
+      | '/projects/$projectId/databases/$dbKind/$databaseId/db-security'
       | '/projects/$projectId/databases/$dbKind/$databaseId/insights'
       | '/projects/$projectId/databases/$dbKind/$databaseId/backups'
       | '/projects/$projectId/databases/$dbKind/$databaseId/export-import'
@@ -103,7 +103,7 @@ export function DatabaseContextMenu({
           <ContextMenuItem
             onSelect={() =>
               navigateToTab(
-                '/projects/$projectId/databases/$dbKind/$databaseId/security',
+                '/projects/$projectId/databases/$dbKind/$databaseId/db-security',
               )
             }
           >

@@ -1,13 +1,7 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import {
-  projectQueryOptions,
-  databaseQueryOptions,
-  tablesQueryOptions,
-} from '@/lib/react-query/hooks'
+import { projectQueryOptions, databaseQueryOptions } from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
 import { canAccessDatabaseSecuritySettings } from '@/lib/console-rbac-loader'
-
-const TABLES_PER_PAGE = 100
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/security',
@@ -37,17 +31,9 @@ export const Route = createFileRoute(
     await queryClient.ensureQueryData(
       databaseQueryOptions(projectId, databaseId),
     )
-    const tablesData = await queryClient.ensureQueryData(
-      tablesQueryOptions(projectId, databaseId, 0, TABLES_PER_PAGE, undefined),
-    )
-    const sorted = [...(tablesData.tables || [])].sort((a, b) =>
-      (a.name?.toLowerCase() || '').localeCompare(b.name?.toLowerCase() || ''),
-    )
-    const tableId = sorted[0]?.$id ?? '-'
-
     throw redirect({
-      to: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/db-security',
-      params: { projectId, dbKind, databaseId, tableId },
+      to: '/projects/$projectId/databases/$dbKind/$databaseId/db-security',
+      params: { projectId, dbKind, databaseId },
       replace: true,
     })
   },

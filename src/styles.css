@@ -25,12 +25,14 @@ code {
 ::selection {
   color: hsl(0 0% 0%);
   -webkit-text-fill-color: hsl(0 0% 0%);
-  background-color: hsl(178 54% 69%);
+  background-color: var(--selection-background);
   background-clip: revert;
   -webkit-background-clip: revert;
 }
 
 :root {
+  /* Text ::selection highlight */
+  --selection-background: hsl(178 54% 69%);
   --background: oklch(1 0 0);
   --foreground: oklch(0.141 0.005 285.823);
   --card: oklch(1 0 0);

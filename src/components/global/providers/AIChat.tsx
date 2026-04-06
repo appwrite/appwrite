@@ -1599,8 +1599,6 @@ export function AIChatPanel() {
     }
   }, [isResizing])
 
-  if (!showPanel || isAssistantBlocked) return null
-
   const resolveConversationProjectId = async (): Promise<string | null> => {
     const directContextProjectId =
       params.projectId ??
@@ -1944,8 +1942,7 @@ export function AIChatPanel() {
     }
   }
 
-  // Don't render anything if not open
-  if (!isOpen) return null
+  if (!showPanel || isAssistantBlocked || !isOpen) return null
 
   return (
     <div

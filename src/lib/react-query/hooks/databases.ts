@@ -1054,6 +1054,60 @@ export async function deleteProjectTableRow(
 }
 
 /**
+ * Appwrite returns "The document data is missing..." when `data` is an empty object.
+ * Fill attribute keys from the collection schema (null / defaults / type empties) so
+ * duplicate, create-with-empty-JSON, etc. still succeed. Skips relationship attributes.
+ */
+async function ensureDocumentOrVectorCreateDataPopulated(
+  projectId: string,
+  databaseId: string,
+  tableId: string,
+  payloadWithoutId: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  if (Object.keys(payloadWithoutId).length > 0) return payloadWithoutId
+
+  const { columns } = await fetchProjectTableColumns(
+    projectId,
+    databaseId,
+    tableId,
+  )
+  const filled: Record<string, unknown> = {}
+  for (const col of columns) {
+    const c = col as Record<string, unknown>
+    const key = String(c.key || c.name || c.$id || c.attribute || '')
+    if (!key || key.startsWith('$')) continue
+    const type = String(c.type ?? 'string').toLowerCase()
+    if (type === 'relationship') continue
+
+    const isArray = Boolean(c.array)
+    const required = Boolean(c.required)
+    const def = c.default
+
+    if (def !== undefined && def !== null) {
+      filled[key] = def
+    } else if (required) {
+      if (type === 'boolean' || type === 'bool') filled[key] = false
+      else if (
+        type === 'integer' ||
+        type === 'int' ||
+        type === 'double' ||
+        type === 'float' ||
+        type === 'number'
+      ) {
+        filled[key] = 0
+      } else if (isArray) {
+        filled[key] = []
+      } else {
+        filled[key] = ''
+      }
+    } else {
+      filled[key] = null
+    }
+  }
+  return Object.keys(filled).length > 0 ? filled : payloadWithoutId
+}
+
+/**
  * Create a single row in a table
  *
  * @param projectId - The project ID
@@ -1080,10 +1134,16 @@ export async function createProjectTableRow(
   const { ID } = await import('@appwrite.io/console')
   const id = rowId || (data.$id as string) || ID.unique()
 
-  const payload = { ...data } as Record<string, unknown>
+  let payload = { ...data } as Record<string, unknown>
   if (payload.$id) delete payload.$id
 
   if (kind === DatabaseType.Documentsdb) {
+    payload = await ensureDocumentOrVectorCreateDataPopulated(
+      projectId,
+      databaseId,
+      tableId,
+      payload,
+    )
     const createParams: {
       databaseId: string
       collectionId: string
@@ -1106,6 +1166,12 @@ export async function createProjectTableRow(
   }
 
   if (kind === DatabaseType.Vectorsdb) {
+    payload = await ensureDocumentOrVectorCreateDataPopulated(
+      projectId,
+      databaseId,
+      tableId,
+      payload,
+    )
     const createParams: {
       databaseId: string
       collectionId: string
@@ -2207,7 +2273,10 @@ export function tableColumnsQueryOptions(
     enabled: !!projectId && !!databaseId && !!tableId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
-    refetchOnMount: false,
+    // When columns are invalidated while this observer is inactive (e.g. user on schema tab),
+    // remounting the rows view must refetch stale cache; false would keep outdated columns
+    // until a full reload.
+    refetchOnMount: true,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     placeholderData: keepPreviousData, // Keep showing previous list until new data is ready (page size/page change)

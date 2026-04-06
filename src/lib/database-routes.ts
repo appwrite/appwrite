@@ -62,6 +62,13 @@ export function dbNavLink(kind: DatabaseRouteKind) {
     ...resource(p.resourceId),
   })
 
+  /** Params for routes scoped to the database only (no table/collection segment). */
+  const baseDatabaseOnly = (p: DbNavLinkParams) => ({
+    projectId: p.projectId,
+    dbKind: p.dbKind,
+    databaseId: p.databaseId,
+  })
+
   return {
     dataGrid(p: DbNavLinkParams) {
       return {
@@ -113,50 +120,38 @@ export function dbNavLink(kind: DatabaseRouteKind) {
     },
     visualizer(p: DbNavLinkParams) {
       return {
-        to: coll
-          ? '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/visualizer'
-          : '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/visualizer',
-        params: base(p),
+        to: '/projects/$projectId/databases/$dbKind/$databaseId/visualizer',
+        params: baseDatabaseOnly(p),
       }
     },
     backups(p: DbNavLinkParams) {
       return {
-        to: coll
-          ? '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/backups'
-          : '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/backups',
-        params: base(p),
+        to: '/projects/$projectId/databases/$dbKind/$databaseId/backups',
+        params: baseDatabaseOnly(p),
       }
     },
     exportImport(p: DbNavLinkParams) {
       return {
-        to: coll
-          ? '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/export-import'
-          : '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/export-import',
-        params: base(p),
+        to: '/projects/$projectId/databases/$dbKind/$databaseId/export-import',
+        params: baseDatabaseOnly(p),
       }
     },
     insights(p: DbNavLinkParams) {
       return {
-        to: coll
-          ? '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/insights'
-          : '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/insights',
-        params: base(p),
+        to: '/projects/$projectId/databases/$dbKind/$databaseId/insights',
+        params: baseDatabaseOnly(p),
       }
     },
     dbSecurity(p: DbNavLinkParams) {
       return {
-        to: coll
-          ? '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/db-security'
-          : '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/db-security',
-        params: base(p),
+        to: '/projects/$projectId/databases/$dbKind/$databaseId/db-security',
+        params: baseDatabaseOnly(p),
       }
     },
     dbSettings(p: DbNavLinkParams) {
       return {
-        to: coll
-          ? '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/db-settings'
-          : '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/db-settings',
-        params: base(p),
+        to: '/projects/$projectId/databases/$dbKind/$databaseId/settings',
+        params: baseDatabaseOnly(p),
       }
     },
   }
