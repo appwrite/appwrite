@@ -880,9 +880,11 @@ Http::post('/v1/migrations/json/exports')
         // Schemaless databases (DocumentsDB, VectorsDB) allow queries on dynamic fields
         $isSchemaless = in_array($databaseType, [DATABASE_TYPE_DOCUMENTSDB, DATABASE_TYPE_VECTORSDB]);
 
-        $validator = new Documents(
-            attributes: $collection->getAttribute('attributes', []),
-            indexes: $collection->getAttribute('indexes', []),
+        $context = new QueryContext();
+        $context->add($collection);
+
+        $validator = new DocumentsValidator(
+            $context,
             idAttributeType: $dbForProject->getAdapter()->getIdAttributeType(),
             supportForAttributes: !$isSchemaless,
         );
