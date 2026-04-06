@@ -868,7 +868,7 @@ Http::init()
         * Request format
         */
         $route = $utopia->getRoute();
-        Request::setRoute($route);
+        $request->setRoute($route);
 
         if ($route === null) {
             $response->setStatusCode(404);
@@ -1019,7 +1019,7 @@ Http::init()
             return;
         }
         $route = $request->getRoute();
-        if ($route->getLabel('origin', false) === '*') {
+        if ($route?->getLabel('origin', false) === '*') {
             return;
         }
         if (!$originValidator->isValid($origin)) {
@@ -1492,6 +1492,19 @@ Http::error()
             'version' => APP_VERSION_STABLE,
             'type' => $type,
         ];
+
+        // Add CORS headers to error responses so browsers can read the error.
+        // Wrapped in try-catch: if the error itself is a DB failure, resolving
+        // the cors resource (which depends on rule -> DB) would cascade.
+        // Uses override:true to avoid duplicate headers if init() already set them.
+        try {
+            $cors = $utopia->getResource('cors');
+            foreach ($cors->headers($request->getOrigin()) as $name => $value) {
+                $response->addHeader($name, $value, override: true);
+            }
+        } catch (Throwable) {
+            // Degrade gracefully - error response without CORS is no worse than before.
+        }
 
         $response
             ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
