@@ -246,7 +246,8 @@ $register->set('pools', function () {
     $instanceConnections = $maxConnections / (int) System::getEnv('_APP_POOL_CLIENTS', 14);
 
     $workerCount = intval(System::getEnv('_APP_CPU_NUM', swoole_cpu_num())) * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
-    $poolSize = max(1, (int)($instanceConnections / $workerCount));
+    $processCount = max(1, (int) System::getEnv('_APP_POOL_PROCESS_COUNT', (string) $workerCount));
+    $poolSize = max(1, (int)($instanceConnections / $processCount));
 
     foreach ($connections as $key => $connection) {
         $type = $connection['type'] ?? '';

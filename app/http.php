@@ -1,5 +1,10 @@
 <?php
 
+// Coroutine HTTP serves requests in a single long-lived process.
+putenv('_APP_POOL_PROCESS_COUNT=1');
+$_ENV['_APP_POOL_PROCESS_COUNT'] = '1';
+$_SERVER['_APP_POOL_PROCESS_COUNT'] = '1';
+
 require_once __DIR__ . '/init.php';
 require_once __DIR__ . '/init/span.php';
 
