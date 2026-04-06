@@ -63,7 +63,7 @@ function getDatabaseResourceType(string $databaseType): string
     };
 }
 
-function throwMigrationReportProviderException(\Throwable $e): void
+function throwMigrationReportProviderException(\Throwable $e): never
 {
     $defaultConnectivity = 'Unable to connect to the migration source. Please verify your credentials and ensure the source is reachable from this server. Check for network restrictions such as firewalls, IP allowlists, or outbound connectivity limits.';
 
@@ -72,9 +72,9 @@ function throwMigrationReportProviderException(\Throwable $e): void
             continue;
         }
 
-        if ((int) $cur->getCode() === 401 && $cur->getType() === Exception::GENERAL_UNAUTHORIZED_SCOPE) {
+        if ((int) $cur->getCode() >= 400 && (int) $cur->getCode() < 500) {
             throw new Exception(
-                Exception::GENERAL_UNAUTHORIZED_SCOPE,
+                Exception::MIGRATION_PROVIDER_ERROR,
                 $cur->getMessage() !== '' ? $cur->getMessage() : null
             );
         }
