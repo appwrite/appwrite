@@ -259,7 +259,7 @@ Server::setResource('getDatabasesDB', function (Cache $cache, Registry $register
         if (\in_array($dsn->getHost(), $sharedTables, true)) {
             $database
                 ->setSharedTables(true)
-                ->setTenant((int) $projectDocument->getSequence())
+                ->setTenant($projectDocument->getSequence())
                 ->setNamespace($dsn->getParam('namespace'));
         } else {
             $database
