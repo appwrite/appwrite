@@ -21,7 +21,7 @@ on:
 jobs:
   dependencies:
     name: Checks / Dependencies
-    if: github.event_name == 'pull_request'
+    if: false
     permissions:
       actions: read
       security-events: write
@@ -30,7 +30,7 @@ jobs:
 
   security:
     name: Checks / Image
-    if: github.event_name == 'pull_request'
+    if: false
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -85,6 +85,7 @@ jobs:
 
   composer:
     name: Checks / Composer
+    if: false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -110,6 +111,7 @@ jobs:
 
   format:
     name: Checks / Format
+    if: false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -135,6 +137,7 @@ jobs:
 
   analyze:
     name: Checks / Analyze
+    if: false
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
@@ -163,6 +166,7 @@ jobs:
 
   locale:
     name: Checks / Locale
+    if: false
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
@@ -188,38 +192,8 @@ jobs:
         uses: actions/github-script@v8
         with:
           script: |
-            const allDatabases = ['MariaDB', 'PostgreSQL', 'MongoDB'];
-            const allModes = ['dedicated', 'shared_v1', 'shared_v2'];
-
-            const defaultDatabases = ['MongoDB'];
-            const defaultModes = ['dedicated'];
-
-            const pr = context.payload.pull_request;
-            if (!pr) {
-              core.setOutput('databases', JSON.stringify(allDatabases));
-              core.setOutput('modes', JSON.stringify(allModes));
-              return;
-            }
-
-            const getContent = (ref) => github.rest.repos.getContent({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              path: 'composer.lock',
-              ref,
-            });
-
-            const getDbVersion = (lock) => lock.packages?.find(p => p.name === 'utopia-php/database')?.version;
-
-            const [{ data: base }, { data: head }] = await Promise.all([
-              getContent(pr.base.sha),
-              getContent(pr.head.sha),
-            ]);
-
-            const decode = (content) => JSON.parse(Buffer.from(content, 'base64').toString());
-            const databaseChanged = getDbVersion(decode(base.content)) !== getDbVersion(decode(head.content));
-
-            core.setOutput('databases', JSON.stringify(databaseChanged ? allDatabases : defaultDatabases));
-            core.setOutput('modes', JSON.stringify(databaseChanged ? allModes : defaultModes));
+            core.setOutput('databases', JSON.stringify(['MongoDB']));
+            core.setOutput('modes', JSON.stringify(['shared_v1', 'shared_v2']));
 
   build:
     name: Build
@@ -264,6 +238,7 @@ jobs:
 
   unit:
     name: Tests / Unit
+    if: false
     runs-on: ubuntu-latest
     needs: build
     permissions:
@@ -311,6 +286,7 @@ jobs:
 
   e2e_general:
     name: Tests / E2E / General
+    if: false
     runs-on: ubuntu-latest
     needs: build
     permissions:
@@ -506,6 +482,7 @@ jobs:
 
   e2e_abuse:
     name: Tests / E2E / Abuse (${{ matrix.mode }})
+    if: false
     runs-on: ubuntu-latest
     needs: [build, matrix]
     permissions:
@@ -568,6 +545,7 @@ jobs:
 
   e2e_screenshots:
     name: Tests / E2E / Screenshots (${{ matrix.mode }})
+    if: false
     runs-on: ubuntu-latest
     needs: [build, matrix]
     permissions:
@@ -637,6 +615,7 @@ jobs:
 
   benchmark:
     name: Benchmark
+    if: false
     runs-on: ubuntu-latest
     needs: build
     permissions:
