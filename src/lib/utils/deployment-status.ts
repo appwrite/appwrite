@@ -142,7 +142,11 @@ export function getDeploymentStatusBadge(
  * Used to show live elapsed duration instead of final buildDuration.
  */
 export function isDeploymentInProgress(status: string): boolean {
-  return status === 'building' || status === 'processing'
+  return (
+    status === 'building' ||
+    status === 'processing' ||
+    status === 'waiting'
+  )
 }
 
 /**

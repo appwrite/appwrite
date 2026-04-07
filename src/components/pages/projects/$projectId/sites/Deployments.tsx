@@ -487,17 +487,20 @@ export function View() {
     setDeleteDialogOpen(false)
   }, [displayedPage])
 
-  // Building state from resolved deployment so we don't show "still building" after realtime says ready
+  // Building / waiting: use resolved status (deployments list often updates before single-deployment query)
   const isBuilding =
-    activeDeploymentResolved?.status === 'building' ||
-    activeDeploymentResolved?.status === 'processing'
+    activeDeploymentResolved != null &&
+    isDeploymentInProgress(activeDeploymentResolved.status)
 
-  // For card content use full deployment from hook when same id (screenshots etc.), else resolved.
-  // When in card/dialogs we only render when activeDeploymentResolved exists, so this is always defined there.
-  const activeDeploymentForCard =
-    (activeDeployment?.$id === activeDeploymentResolved?.$id
-      ? activeDeployment
-      : activeDeploymentResolved) ?? activeDeploymentResolved
+  // Merge list/hook so status/buildDuration update from realtime list while hook keeps fields
+  // omitted from DEPLOYMENTS_SELECT (e.g. screenshots).
+  const activeDeploymentForCard = useMemo((): Models.Deployment | undefined => {
+    const resolved = activeDeploymentResolved
+    if (!resolved) return undefined
+    const fromHook = activeDeployment
+    if (fromHook?.$id !== resolved.$id) return resolved
+    return { ...fromHook, ...resolved }
+  }, [activeDeployment, activeDeploymentResolved])
 
   const handleDownloadSource = () => {
     if (!projectId || !siteId || !activeDeploymentResolved) return
@@ -736,18 +739,6 @@ export function View() {
     setRequestedPage(0)
     setDisplayedPage(0)
     setSelectedDeployments(new Set()) // Clear selection on page size change
-  }
-
-  const clearAllDeploymentsFilters = () => {
-    navigate({
-      to: location.pathname,
-      search: (prev) => ({
-        ...prev,
-        query: undefined,
-      }),
-      replace: true,
-    })
-    setSelectedDeployments(new Set())
   }
 
   const createDeployment = useCreateDeployment()

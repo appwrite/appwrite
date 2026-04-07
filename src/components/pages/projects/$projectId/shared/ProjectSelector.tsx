@@ -34,12 +34,17 @@ import { getPlanBadgeColor, getPlanDisplayName } from '@/lib/utils/plan-badge'
 import { truncateMiddle } from '@/lib/utils'
 import { CreateProjectDialog } from '@/components/pages/organizations/$orgId/overview/CreateProjectDialog'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useNavigate } from '@tanstack/react-router'
+import { useAuth } from '@/components/global/auth/RequireAuth'
+import { openCreateOrganizationFlow } from '@/lib/open-create-organization-flow'
 
 interface ProjectSelectorProps {
   className?: string
   collapsed?: boolean
   projectId?: string
   isMobile?: boolean
+  /** When set (e.g. org overview layout), matches header create-org behavior */
+  onCreateOrganization?: () => void
 }
 
 export function ProjectSelector({
@@ -47,8 +52,11 @@ export function ProjectSelector({
   collapsed,
   projectId,
   isMobile,
+  onCreateOrganization,
 }: ProjectSelectorProps) {
   const { isCloud } = useConsoleProfile()
+  const navigate = useNavigate()
+  const { account } = useAuth()
   const [open, setOpen] = useState(false)
   const [createProjectDialogOpen, setCreateProjectDialogOpen] = useState(false)
 
@@ -219,12 +227,6 @@ export function ProjectSelector({
     )
   }, [currentProjectTeam, organizations])
 
-  // Organization for selected team (for display); plan is fetched in CreateProjectDialog when open
-  const selectedTeamOrg = useMemo(() => {
-    if (!resolvedTeam) return null
-    return organizations.find((org) => org.$id === resolvedTeam.orgId) || null
-  }, [resolvedTeam, organizations])
-
   // Total project count = pinned + unpinned (from infinite query); no separate list call
   const projectsCount = pinnedIds.length + (infiniteTotal ?? 0)
 
@@ -317,6 +319,19 @@ export function ProjectSelector({
     setOpen(false)
   }
 
+  const handleCreateOrganization = useCallback(() => {
+    const prefs = (account as { prefs?: Record<string, unknown> } | undefined)
+      ?.prefs
+    const orgId =
+      currentProject?.teamId ||
+      (prefs?.organization as string | undefined)
+    openCreateOrganizationFlow(navigate, {
+      onCreateOrganization,
+      orgId,
+    })
+    setOpen(false)
+  }, [account, currentProject?.teamId, navigate, onCreateOrganization])
+
   // Show loading state if data is not ready
   if (
     orgsLoading ||
@@ -376,6 +391,7 @@ export function ProjectSelector({
               isCloud={isCloud}
               currentProjectId={projectId}
               onCreateProject={() => setCreateProjectDialogOpen(true)}
+              onCreateOrganization={handleCreateOrganization}
             />
           </PopoverContent>
         </Popover>
@@ -464,12 +480,15 @@ export function ProjectSelector({
               setProjectSearch={setProjectSearch}
               filteredTeams={filteredTeams}
               displayProjects={stableDisplayProjects}
+              pinnedProjectIds={stablePinnedIds}
               isFetchingNextPage={isFetchingNextPage}
               hasNextPage={hasNextPage}
               fetchNextPage={fetchNextPage}
               organizations={organizations}
+              isCloud={isCloud}
               currentProjectId={projectId}
               onCreateProject={() => setCreateProjectDialogOpen(true)}
+              onCreateOrganization={handleCreateOrganization}
             />
           </DialogContent>
         </Dialog>
@@ -545,6 +564,7 @@ export function ProjectSelector({
             isCloud={isCloud}
             currentProjectId={projectId}
             onCreateProject={() => setCreateProjectDialogOpen(true)}
+            onCreateOrganization={handleCreateOrganization}
           />
         </PopoverContent>
       </Popover>
@@ -564,7 +584,7 @@ interface ProjectSelectorContentProps {
   selectedTeam: Team | null
   onSelectTeam: (team: Team) => Promise<void>
   selectedProject: Project | null
-  handleSelectProject: (project: Project) => void
+  handleSelectProject: (project: Project, event?: React.MouseEvent) => void
   teamSearch: string
   setTeamSearch: (search: string) => void
   projectSearch: string
@@ -579,6 +599,7 @@ interface ProjectSelectorContentProps {
   isCloud: boolean
   currentProjectId?: string
   onCreateProject: () => void
+  onCreateOrganization: () => void
 }
 
 function ProjectSelectorContent({
@@ -600,6 +621,7 @@ function ProjectSelectorContent({
   isCloud,
   currentProjectId,
   onCreateProject,
+  onCreateOrganization,
 }: ProjectSelectorContentProps) {
   const pinnedSet = useMemo(() => new Set(pinnedProjectIds), [pinnedProjectIds])
   // Ref for the scrollable container
@@ -712,7 +734,11 @@ function ProjectSelectorContent({
 
         {/* Create Organization - fixed at bottom */}
         <div className="border-t border-border p-1.5">
-          <button className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
+          <button
+            type="button"
+            onClick={onCreateOrganization}
+            className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          >
             <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/50">
               <Plus className="h-3.5 w-3.5" />
             </div>
@@ -845,6 +871,7 @@ function MobileProjectSelectorContent({
   isCloud,
   currentProjectId,
   onCreateProject,
+  onCreateOrganization,
 }: ProjectSelectorContentProps) {
   const [activeTab, setActiveTab] = useState<'teams' | 'projects'>('projects')
   const pinnedSet = useMemo(() => new Set(pinnedProjectIds), [pinnedProjectIds])
@@ -992,7 +1019,11 @@ function MobileProjectSelectorContent({
 
           {/* Create Organization */}
           <div className="border-t border-border p-2">
-            <button className="flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
+            <button
+              type="button"
+              onClick={onCreateOrganization}
+              className="flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
               <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/50">
                 <Plus className="h-4 w-4" />
               </div>

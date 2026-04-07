@@ -66,6 +66,7 @@ import { useOrganizationPlan } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { ImpersonateConsoleUserPopover } from '@/components/global/shared/ImpersonateConsoleUserPopover'
+import { openCreateOrganizationFlow } from '@/lib/open-create-organization-flow'
 
 interface ConsoleHeaderProps {
   onMenuClick?: () => void
@@ -258,6 +259,7 @@ export function ConsoleHeader({
                 <ProjectSelector
                   projectId={projectId}
                   className="max-w-full min-w-0"
+                  onCreateOrganization={onCreateOrganization}
                 />
               </div>
 
@@ -346,30 +348,13 @@ export function ConsoleHeader({
                       )}
                       <DropdownMenuItem
                         onClick={() => {
-                          if (onCreateOrganization) {
-                            // If callback is provided (we're on org page), use it
-                            onCreateOrganization()
-                          } else {
-                            // Otherwise, navigate to org overview with createOrg param
-                            const orgId =
-                              project?.teamId ||
-                              (account?.prefs?.organization as
-                                | string
-                                | undefined)
-                            if (orgId) {
-                              navigate({
-                                to: '/organizations/$orgId',
-                                params: { orgId },
-                                search: { createOrg: true },
-                              })
-                            } else {
-                              // No org yet, navigate to root which will handle it
-                              navigate({
-                                to: '/',
-                                search: { createOrg: true },
-                              })
-                            }
-                          }
+                          const orgId =
+                            project?.teamId ||
+                            (account?.prefs?.organization as string | undefined)
+                          openCreateOrganizationFlow(navigate, {
+                            onCreateOrganization,
+                            orgId,
+                          })
                         }}
                         className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
                       >
