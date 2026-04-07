@@ -192,7 +192,7 @@ jobs:
         uses: actions/github-script@v8
         with:
           script: |
-            core.setOutput('databases', JSON.stringify(['MongoDB']));
+            core.setOutput('databases', JSON.stringify(['MariaDB', 'PostgreSQL']));
             core.setOutput('modes', JSON.stringify(['shared_v1', 'shared_v2']));
 
   build:
@@ -353,45 +353,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        database: ${{ fromJSON(needs.matrix.outputs.databases) }}
-        mode: ${{ fromJSON(needs.matrix.outputs.modes) }}
-        service: [
-          Account,
-          Avatars,
-          Console,
-          Databases,
-          TablesDB,
-          Functions,
-          FunctionsSchedule,
-          GraphQL,
-          Health,
-          Locale,
-          Projects,
-          Realtime,
-          Sites,
-          Proxy,
-          Storage,
-          Tokens,
-          Teams,
-          Users,
-          ProjectWebhooks,
-          Webhooks,
-          VCS,
-          Messaging,
-          Migrations,
-          Project
-        ]
         include:
-          - service: Databases
+          - database: MariaDB
+            mode: shared_v1
+            service: Databases
             runner: blacksmith-4vcpu-ubuntu-2404
-          - service: Sites
-            runner: blacksmith-4vcpu-ubuntu-2404
-          - service: Functions
-            runner: blacksmith-4vcpu-ubuntu-2404
-          - service: Avatars
-            runner: blacksmith-4vcpu-ubuntu-2404
-          - service: Realtime
-            runner: blacksmith-4vcpu-ubuntu-2404
+          - database: PostgreSQL
+            mode: shared_v2
+            service: TablesDB
           - service: TablesDB
             runner: blacksmith-4vcpu-ubuntu-2404
     steps:
