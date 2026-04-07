@@ -3039,8 +3039,21 @@ class RealtimeCustomClientTest extends Scope
 
         $this->assertEquals(200, $update['headers']['status-code']);
 
-        $event = json_decode($client->receive(), true);
+        // Drain WebSocket messages until the .update event arrives.
+        // Earlier events (e.g. a late-arriving .create from the row seed above) are skipped.
+        $updateEvent = "tablesdb.{$databaseId}.tables.{$tableId}.rows.{$rowId}.update";
+        $event = null;
+        $deadline = \time() + 10;
+        while (\time() < $deadline) {
+            $raw = $client->receive();
+            $msg = json_decode($raw, true);
+            if (($msg['type'] ?? '') === 'event' && \in_array($updateEvent, $msg['data']['events'] ?? [])) {
+                $event = $msg;
+                break;
+            }
+        }
 
+        $this->assertNotNull($event, 'Timed out waiting for the row update event');
         $this->assertArrayHasKey('type', $event);
         $this->assertArrayHasKey('data', $event);
         $this->assertEquals('event', $event['type']);

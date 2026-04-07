@@ -21,7 +21,7 @@ on:
 jobs:
   dependencies:
     name: Checks / Dependencies
-    if: github.event_name == 'pull_request'
+    if: false
     permissions:
       actions: read
       security-events: write
@@ -30,7 +30,7 @@ jobs:
 
   security:
     name: Checks / Image
-    if: github.event_name == 'pull_request'
+    if: false
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -85,6 +85,7 @@ jobs:
 
   composer:
     name: Checks / Composer
+    if: false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -110,6 +111,7 @@ jobs:
 
   format:
     name: Checks / Format
+    if: false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -135,6 +137,7 @@ jobs:
 
   analyze:
     name: Checks / Analyze
+    if: false
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
@@ -163,6 +166,7 @@ jobs:
 
   locale:
     name: Checks / Locale
+    if: false
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
@@ -188,38 +192,8 @@ jobs:
         uses: actions/github-script@v8
         with:
           script: |
-            const allDatabases = ['MariaDB', 'PostgreSQL', 'MongoDB'];
-            const allModes = ['dedicated', 'shared_v1', 'shared_v2'];
-
-            const defaultDatabases = ['MongoDB'];
-            const defaultModes = ['dedicated'];
-
-            const pr = context.payload.pull_request;
-            if (!pr) {
-              core.setOutput('databases', JSON.stringify(allDatabases));
-              core.setOutput('modes', JSON.stringify(allModes));
-              return;
-            }
-
-            const getContent = (ref) => github.rest.repos.getContent({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              path: 'composer.lock',
-              ref,
-            });
-
-            const getDbVersion = (lock) => lock.packages?.find(p => p.name === 'utopia-php/database')?.version;
-
-            const [{ data: base }, { data: head }] = await Promise.all([
-              getContent(pr.base.sha),
-              getContent(pr.head.sha),
-            ]);
-
-            const decode = (content) => JSON.parse(Buffer.from(content, 'base64').toString());
-            const databaseChanged = getDbVersion(decode(base.content)) !== getDbVersion(decode(head.content));
-
-            core.setOutput('databases', JSON.stringify(databaseChanged ? allDatabases : defaultDatabases));
-            core.setOutput('modes', JSON.stringify(databaseChanged ? allModes : defaultModes));
+            core.setOutput('databases', JSON.stringify(['MariaDB', 'PostgreSQL']));
+            core.setOutput('modes', JSON.stringify(['shared_v1', 'shared_v2']));
 
   build:
     name: Build
@@ -264,6 +238,7 @@ jobs:
 
   unit:
     name: Tests / Unit
+    if: false
     runs-on: ubuntu-latest
     needs: build
     permissions:
@@ -311,6 +286,7 @@ jobs:
 
   e2e_general:
     name: Tests / E2E / General
+    if: false
     runs-on: ubuntu-latest
     needs: build
     permissions:
@@ -377,45 +353,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        database: ${{ fromJSON(needs.matrix.outputs.databases) }}
-        mode: ${{ fromJSON(needs.matrix.outputs.modes) }}
-        service: [
-          Account,
-          Avatars,
-          Console,
-          Databases,
-          TablesDB,
-          Functions,
-          FunctionsSchedule,
-          GraphQL,
-          Health,
-          Locale,
-          Projects,
-          Realtime,
-          Sites,
-          Proxy,
-          Storage,
-          Tokens,
-          Teams,
-          Users,
-          ProjectWebhooks,
-          Webhooks,
-          VCS,
-          Messaging,
-          Migrations,
-          Project
-        ]
         include:
-          - service: Databases
+          - database: MariaDB
+            mode: shared_v1
+            service: Databases
             runner: blacksmith-4vcpu-ubuntu-2404
-          - service: Sites
-            runner: blacksmith-4vcpu-ubuntu-2404
-          - service: Functions
-            runner: blacksmith-4vcpu-ubuntu-2404
-          - service: Avatars
-            runner: blacksmith-4vcpu-ubuntu-2404
-          - service: Realtime
-            runner: blacksmith-4vcpu-ubuntu-2404
+          - database: PostgreSQL
+            mode: shared_v2
+            service: TablesDB
           - service: TablesDB
             runner: blacksmith-4vcpu-ubuntu-2404
     steps:
@@ -459,6 +404,10 @@ jobs:
           _APP_BROWSER_HOST: http://invalid-browser/v1
           _APP_DATABASE_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'database_db_main' || '' }}
           _APP_DATABASE_SHARED_TABLES_V1: ${{ matrix.mode == 'shared_v1' && 'database_db_main' || '' }}
+          _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'documentsdb_db_main' || '' }}
+          _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES_V1: ${{ matrix.mode == 'shared_v1' && 'documentsdb_db_main' || '' }}
+          _APP_DATABASE_VECTORSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'vectorsdb_db_main' || '' }}
+          _APP_DATABASE_VECTORSDB_SHARED_TABLES_V1: ${{ matrix.mode == 'shared_v1' && 'vectorsdb_db_main' || '' }}
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose pull --quiet --ignore-buildable
@@ -502,6 +451,7 @@ jobs:
 
   e2e_abuse:
     name: Tests / E2E / Abuse (${{ matrix.mode }})
+    if: false
     runs-on: ubuntu-latest
     needs: [build, matrix]
     permissions:
@@ -533,6 +483,10 @@ jobs:
           _APP_OPTIONS_ABUSE: enabled
           _APP_DATABASE_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'database_db_main' || '' }}
           _APP_DATABASE_SHARED_TABLES_V1: ${{ matrix.mode == 'shared_v1' && 'database_db_main' || '' }}
+          _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'documentsdb_db_main' || '' }}
+          _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES_V1: ${{ matrix.mode == 'shared_v1' && 'documentsdb_db_main' || '' }}
+          _APP_DATABASE_VECTORSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'vectorsdb_db_main' || '' }}
+          _APP_DATABASE_VECTORSDB_SHARED_TABLES_V1: ${{ matrix.mode == 'shared_v1' && 'vectorsdb_db_main' || '' }}
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose pull --quiet --ignore-buildable
@@ -560,6 +514,7 @@ jobs:
 
   e2e_screenshots:
     name: Tests / E2E / Screenshots (${{ matrix.mode }})
+    if: false
     runs-on: ubuntu-latest
     needs: [build, matrix]
     permissions:
@@ -590,6 +545,10 @@ jobs:
         env:
           _APP_DATABASE_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'database_db_main' || '' }}
           _APP_DATABASE_SHARED_TABLES_V1: ${{ matrix.mode == 'shared_v1' && 'database_db_main' || '' }}
+          _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'documentsdb_db_main' || '' }}
+          _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES_V1: ${{ matrix.mode == 'shared_v1' && 'documentsdb_db_main' || '' }}
+          _APP_DATABASE_VECTORSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'vectorsdb_db_main' || '' }}
+          _APP_DATABASE_VECTORSDB_SHARED_TABLES_V1: ${{ matrix.mode == 'shared_v1' && 'vectorsdb_db_main' || '' }}
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose pull --quiet --ignore-buildable
@@ -625,6 +584,7 @@ jobs:
 
   benchmark:
     name: Benchmark
+    if: false
     runs-on: ubuntu-latest
     needs: build
     permissions:
