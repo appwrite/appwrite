@@ -301,6 +301,24 @@ export async function fetchPaymentMethod(paymentMethodId: string) {
 }
 
 /**
+ * Fetch a payment method linked to an organization (org-scoped).
+ * Use this for org billing UI so all team members see the org's card, not only
+ * the member who added it (account.getPaymentMethod is user-scoped).
+ */
+export async function fetchOrganizationPaymentMethod(
+  organizationId: string,
+  paymentMethodId: string,
+) {
+  if (!organizationId || !paymentMethodId) {
+    return null
+  }
+  return await sdk.forConsole.organizations.getPaymentMethod({
+    organizationId,
+    paymentMethodId,
+  })
+}
+
+/**
  * Query function to fetch billing addresses for the current account
  *
  * @returns Billing addresses list response from the API
@@ -1513,6 +1531,28 @@ export function paymentMethodQueryOptions(
 }
 
 /**
+ * Query options for an organization's primary/backup payment method (org API).
+ */
+export function organizationPaymentMethodQueryOptions(
+  organizationId: string | null | undefined,
+  paymentMethodId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['payment-method', 'organization', organizationId, paymentMethodId],
+    queryFn: () =>
+      fetchOrganizationPaymentMethod(organizationId!, paymentMethodId!),
+    enabled: !!organizationId && !!paymentMethodId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime:
+      organizationId && paymentMethodId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
  * Query options for fetching a specific billing address
  *
  * This can be used in both route loaders and hooks to ensure consistent query configuration.
@@ -1662,6 +1702,25 @@ export function usePaymentMethod(paymentMethodId: string | null | undefined) {
 }
 
 /**
+ * Hook to fetch a payment method as linked to an organization (all members can load it).
+ */
+export function useOrganizationPaymentMethod(
+  organizationId: string | null | undefined,
+  paymentMethodId: string | null | undefined,
+) {
+  const { data, isLoading, error, refetch } = useQuery(
+    organizationPaymentMethodQueryOptions(organizationId, paymentMethodId),
+  )
+
+  return {
+    paymentMethod: data,
+    isLoading,
+    error,
+    refetch,
+  }
+}
+
+/**
  * Hook to fetch billing addresses for the current account
  *
  * @returns Billing addresses list with loading state
@@ -1758,6 +1817,9 @@ export function useUpdateOrganizationPaymentMethod() {
       // Invalidate organization query
       queryClient.invalidateQueries({
         queryKey: ['organization', variables.organizationId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['payment-method', 'organization', variables.organizationId],
       })
     },
   })
@@ -1932,6 +1994,9 @@ export function useSetOrganizationDefaultPaymentMethod() {
       queryClient.invalidateQueries({
         queryKey: ['payment-methods', 'account'],
       })
+      queryClient.invalidateQueries({
+        queryKey: ['payment-method', 'organization', variables.organizationId],
+      })
     },
   })
 }
@@ -1954,6 +2019,9 @@ export function useSetOrganizationBackupPaymentMethod() {
       // Invalidate payment methods query
       queryClient.invalidateQueries({
         queryKey: ['payment-methods', 'account'],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['payment-method', 'organization', variables.organizationId],
       })
     },
   })

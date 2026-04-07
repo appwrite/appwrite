@@ -151,6 +151,7 @@ import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdVisualizerRout
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.settings'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdSecurityRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.security'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdMonitorRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.monitor'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdInsightsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.insights'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdExportImportRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.export-import'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdDbSecurityRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.db-security'
@@ -179,6 +180,7 @@ import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdV
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdSettingsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId.settings'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdSecurityRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId.security'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRowsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId.rows'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdMonitorRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId.monitor'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdInsightsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId.insights'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdIndexesRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId.indexes'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdExportImportRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId.export-import'
@@ -190,6 +192,7 @@ import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdB
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdVisualizerRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.visualizer'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdSettingsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.settings'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdSecurityRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.security'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdMonitorRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.monitor'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdJsonRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.json'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdInsightsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.insights'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdIndexesRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.indexes'
@@ -1034,6 +1037,12 @@ const PublicProjectsProjectIdDatabasesDbKindDatabaseIdSecurityRoute =
     path: '/security',
     getParentRoute: () => PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute,
   } as any)
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdMonitorRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdMonitorRouteImport.update({
+    id: '/monitor',
+    path: '/monitor',
+    getParentRoute: () => PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute,
+  } as any)
 const PublicProjectsProjectIdDatabasesDbKindDatabaseIdInsightsRoute =
   PublicProjectsProjectIdDatabasesDbKindDatabaseIdInsightsRouteImport.update({
     id: '/insights',
@@ -1244,6 +1253,15 @@ const PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRowsRoute =
         PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute,
     } as any,
   )
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdMonitorRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdMonitorRouteImport.update(
+    {
+      id: '/monitor',
+      path: '/monitor',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute,
+    } as any,
+  )
 const PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdInsightsRoute =
   PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdInsightsRouteImport.update(
     {
@@ -1339,6 +1357,15 @@ const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdSec
     {
       id: '/security',
       path: '/security',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute,
+    } as any,
+  )
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdMonitorRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdMonitorRouteImport.update(
+    {
+      id: '/monitor',
+      path: '/monitor',
       getParentRoute: () =>
         PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute,
     } as any,
@@ -1561,6 +1588,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/databases/$dbKind/$databaseId/db-security': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdDbSecurityRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/export-import': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdExportImportRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/insights': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdInsightsRoute
+  '/projects/$projectId/databases/$dbKind/$databaseId/monitor': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdMonitorRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/security': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSecurityRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/settings': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/tables': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesRouteWithChildren
@@ -1596,6 +1624,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/indexes': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdIndexesRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/insights': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdInsightsRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/json': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdJsonRoute
+  '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/monitor': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdMonitorRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/security': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdSecurityRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/settings': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdSettingsRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/visualizer': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdVisualizerRoute
@@ -1607,6 +1636,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/export-import': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdExportImportRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/indexes': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdIndexesRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/insights': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdInsightsRoute
+  '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/monitor': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdMonitorRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/rows': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRowsRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/security': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdSecurityRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/settings': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdSettingsRoute
@@ -1725,6 +1755,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/databases/$dbKind/$databaseId/db-security': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdDbSecurityRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/export-import': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdExportImportRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/insights': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdInsightsRoute
+  '/projects/$projectId/databases/$dbKind/$databaseId/monitor': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdMonitorRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/security': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSecurityRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/settings': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/tables': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesRouteWithChildren
@@ -1757,6 +1788,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/indexes': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdIndexesRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/insights': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdInsightsRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/json': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdJsonRoute
+  '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/monitor': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdMonitorRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/security': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdSecurityRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/settings': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdSettingsRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/visualizer': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdVisualizerRoute
@@ -1768,6 +1800,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/export-import': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdExportImportRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/indexes': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdIndexesRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/insights': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdInsightsRoute
+  '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/monitor': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdMonitorRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/rows': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRowsRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/security': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdSecurityRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/settings': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdSettingsRoute
@@ -1915,6 +1948,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/db-security': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdDbSecurityRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/export-import': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdExportImportRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/insights': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdInsightsRoute
+  '/_public/projects/$projectId/databases/$dbKind/$databaseId/monitor': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdMonitorRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/security': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSecurityRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesRouteWithChildren
@@ -1950,6 +1984,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/indexes': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdIndexesRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/insights': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdInsightsRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/json': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdJsonRoute
+  '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/monitor': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdMonitorRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/security': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdSecurityRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/settings': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdSettingsRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/visualizer': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdVisualizerRoute
@@ -1961,6 +1996,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/export-import': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdExportImportRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/indexes': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdIndexesRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/insights': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdInsightsRoute
+  '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/monitor': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdMonitorRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/rows': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRowsRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/security': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdSecurityRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/settings': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdSettingsRoute
@@ -2106,6 +2142,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/$dbKind/$databaseId/db-security'
     | '/projects/$projectId/databases/$dbKind/$databaseId/export-import'
     | '/projects/$projectId/databases/$dbKind/$databaseId/insights'
+    | '/projects/$projectId/databases/$dbKind/$databaseId/monitor'
     | '/projects/$projectId/databases/$dbKind/$databaseId/security'
     | '/projects/$projectId/databases/$dbKind/$databaseId/settings'
     | '/projects/$projectId/databases/$dbKind/$databaseId/tables'
@@ -2141,6 +2178,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/indexes'
     | '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/insights'
     | '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/json'
+    | '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/monitor'
     | '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/security'
     | '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/settings'
     | '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/visualizer'
@@ -2152,6 +2190,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/export-import'
     | '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/indexes'
     | '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/insights'
+    | '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/monitor'
     | '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/rows'
     | '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/security'
     | '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/settings'
@@ -2270,6 +2309,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/$dbKind/$databaseId/db-security'
     | '/projects/$projectId/databases/$dbKind/$databaseId/export-import'
     | '/projects/$projectId/databases/$dbKind/$databaseId/insights'
+    | '/projects/$projectId/databases/$dbKind/$databaseId/monitor'
     | '/projects/$projectId/databases/$dbKind/$databaseId/security'
     | '/projects/$projectId/databases/$dbKind/$databaseId/settings'
     | '/projects/$projectId/databases/$dbKind/$databaseId/tables'
@@ -2302,6 +2342,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/indexes'
     | '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/insights'
     | '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/json'
+    | '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/monitor'
     | '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/security'
     | '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/settings'
     | '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/visualizer'
@@ -2313,6 +2354,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/export-import'
     | '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/indexes'
     | '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/insights'
+    | '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/monitor'
     | '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/rows'
     | '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/security'
     | '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/settings'
@@ -2459,6 +2501,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/db-security'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/export-import'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/insights'
+    | '/_public/projects/$projectId/databases/$dbKind/$databaseId/monitor'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/security'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables'
@@ -2494,6 +2537,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/indexes'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/insights'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/json'
+    | '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/monitor'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/security'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/settings'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/visualizer'
@@ -2505,6 +2549,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/export-import'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/indexes'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/insights'
+    | '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/monitor'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/rows'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/security'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/settings'
@@ -3516,6 +3561,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSecurityRouteImport
       parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute
     }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/monitor': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/monitor'
+      path: '/monitor'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/monitor'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdMonitorRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute
+    }
     '/_public/projects/$projectId/databases/$dbKind/$databaseId/insights': {
       id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/insights'
       path: '/insights'
@@ -3712,6 +3764,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRowsRouteImport
       parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute
     }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/monitor': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/monitor'
+      path: '/monitor'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/monitor'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdMonitorRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRoute
+    }
     '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/insights': {
       id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/insights'
       path: '/insights'
@@ -3787,6 +3846,13 @@ declare module '@tanstack/react-router' {
       path: '/security'
       fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/security'
       preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdSecurityRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute
+    }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/monitor': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/monitor'
+      path: '/monitor'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/monitor'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdMonitorRouteImport
       parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute
     }
     '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/json': {
@@ -4117,6 +4183,7 @@ interface PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionI
   PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdIndexesRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdIndexesRoute
   PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdInsightsRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdInsightsRoute
   PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdJsonRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdJsonRoute
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdMonitorRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdMonitorRoute
   PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdSecurityRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdSecurityRoute
   PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdSettingsRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdSettingsRoute
   PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdVisualizerRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdVisualizerRoute
@@ -4143,6 +4210,8 @@ const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRou
       PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdInsightsRoute,
     PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdJsonRoute:
       PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdJsonRoute,
+    PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdMonitorRoute:
+      PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdMonitorRoute,
     PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdSecurityRoute:
       PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdSecurityRoute,
     PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdSettingsRoute:
@@ -4182,6 +4251,7 @@ interface PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRouteChil
   PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdExportImportRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdExportImportRoute
   PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdIndexesRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdIndexesRoute
   PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdInsightsRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdInsightsRoute
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdMonitorRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdMonitorRoute
   PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRowsRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRowsRoute
   PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdSecurityRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdSecurityRoute
   PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdSettingsRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdSettingsRoute
@@ -4207,6 +4277,8 @@ const PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRouteChildren
       PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdIndexesRoute,
     PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdInsightsRoute:
       PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdInsightsRoute,
+    PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdMonitorRoute:
+      PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdMonitorRoute,
     PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRowsRoute:
       PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRowsRoute,
     PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdSecurityRoute:
@@ -4247,6 +4319,7 @@ interface PublicProjectsProjectIdDatabasesDbKindDatabaseIdRouteChildren {
   PublicProjectsProjectIdDatabasesDbKindDatabaseIdDbSecurityRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdDbSecurityRoute
   PublicProjectsProjectIdDatabasesDbKindDatabaseIdExportImportRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdExportImportRoute
   PublicProjectsProjectIdDatabasesDbKindDatabaseIdInsightsRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdInsightsRoute
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdMonitorRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdMonitorRoute
   PublicProjectsProjectIdDatabasesDbKindDatabaseIdSecurityRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSecurityRoute
   PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRoute
   PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesRouteWithChildren
@@ -4271,6 +4344,8 @@ const PublicProjectsProjectIdDatabasesDbKindDatabaseIdRouteChildren: PublicProje
       PublicProjectsProjectIdDatabasesDbKindDatabaseIdExportImportRoute,
     PublicProjectsProjectIdDatabasesDbKindDatabaseIdInsightsRoute:
       PublicProjectsProjectIdDatabasesDbKindDatabaseIdInsightsRoute,
+    PublicProjectsProjectIdDatabasesDbKindDatabaseIdMonitorRoute:
+      PublicProjectsProjectIdDatabasesDbKindDatabaseIdMonitorRoute,
     PublicProjectsProjectIdDatabasesDbKindDatabaseIdSecurityRoute:
       PublicProjectsProjectIdDatabasesDbKindDatabaseIdSecurityRoute,
     PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRoute:

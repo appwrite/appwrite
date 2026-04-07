@@ -21,8 +21,8 @@ import { formatCardExpiry, maskCardNumber } from './utils'
 import { cn } from '@/lib/utils'
 import {
   useOrganizationById,
+  useOrganizationPaymentMethod,
   usePaymentMethods,
-  usePaymentMethod,
   useUpdateOrganizationPaymentMethod,
 } from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
@@ -59,8 +59,12 @@ export function PaymentMethods({
   const { organization } = useOrganizationById(orgId)
   const { paymentMethods: allPaymentMethods, isLoading: methodsLoading } =
     usePaymentMethods()
-  const primaryPaymentMethod = usePaymentMethod(organization?.paymentMethodId)
-  const backupPaymentMethod = usePaymentMethod(
+  const primaryPaymentMethod = useOrganizationPaymentMethod(
+    orgId,
+    organization?.paymentMethodId,
+  )
+  const backupPaymentMethod = useOrganizationPaymentMethod(
+    orgId,
     organization?.backupPaymentMethodId,
   )
   const updatePaymentMethodMutation = useUpdateOrganizationPaymentMethod()

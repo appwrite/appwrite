@@ -382,8 +382,8 @@ export function DocumentsJsonSpreadsheet({
           </div>
         </>
       ) : (
-        <div className="flex min-h-0 flex-1 flex-row overflow-hidden">
-          <div className="flex min-h-0 w-[min(420px,42%)] min-w-[300px] shrink-0 flex-col border-r border-border">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row">
+          <div className="flex max-h-[min(40vh,300px)] min-h-0 w-full shrink-0 flex-col border-b border-border md:max-h-none md:w-[min(420px,42%)] md:min-w-[260px] md:border-b-0 md:border-r">
             <div className="min-h-0 min-w-0 flex-1 overflow-auto">
               <Table>
               <TableHeader>
@@ -488,9 +488,9 @@ export function DocumentsJsonSpreadsheet({
             </div>
           </div>
 
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-muted/20">
+          <div className="flex min-h-[min(36vh,240px)] min-w-0 flex-1 flex-col overflow-hidden bg-muted/20 md:min-h-0">
             {previewRow ? (
-              <pre className="min-h-0 flex-1 overflow-auto p-4 font-mono text-[12px] leading-relaxed text-foreground">
+              <pre className="min-h-0 flex-1 overflow-auto overflow-x-auto p-3 font-mono text-[11px] leading-relaxed text-foreground sm:p-4 sm:text-[12px]">
                 {documentPayloadJson(previewRow)}
               </pre>
             ) : (
@@ -510,8 +510,8 @@ export function DocumentsJsonSpreadsheet({
       )}
 
       {selectedRows.size > 0 && canWriteRows && (
-        <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
-          <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3 shadow-lg">
+        <div className="fixed bottom-4 left-1/2 z-50 w-[min(100%,calc(100vw-2rem))] max-w-md -translate-x-1/2 px-2 sm:w-auto sm:max-w-none sm:px-0">
+          <div className="mx-auto flex min-w-0 items-center justify-between gap-2 rounded-lg border border-border bg-background px-4 py-3 shadow-lg sm:min-w-[400px] sm:gap-3 sm:px-6">
             <Badge variant="info" className="h-6 px-2.5">
               {selectedRows.size} document{selectedRows.size > 1 ? 's' : ''}{' '}
               selected

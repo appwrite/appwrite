@@ -80,6 +80,8 @@ import {
   canInviteOrgMember,
   canCreateProject,
   canPinProjects,
+  canAccessOrgOverviewTab,
+  getFirstAllowedOrgOverviewPath,
 } from '@/lib/console-access-checks'
 import { ProjectContextMenu } from './_components/ProjectContextMenu'
 
@@ -205,6 +207,18 @@ const ROLE_OPTIONS = [
   },
 ] as const
 
+function orgMembershipRoleDisplay(role: string): {
+  Icon: (typeof ROLE_OPTIONS)[number]['icon']
+  label: string
+} {
+  const opt = ROLE_OPTIONS.find((r) => r.value === role)
+  if (opt) return { Icon: opt.icon, label: opt.label }
+  return {
+    Icon: Users,
+    label: role.charAt(0).toUpperCase() + role.slice(1),
+  }
+}
+
 // Component to display project platforms and API keys
 function ProjectCardFooter({
   platformsCount,
@@ -270,7 +284,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const { features, isCloud } = useConsoleProfile()
   const supportsMultiRegion = features.multiRegion
-  const { access } = useOrganizationScopes(orgId)
+  const { access, isLoading: orgScopesLoading } = useOrganizationScopes(orgId)
   const { showSuccessTeamCard: debugShowSuccessTeamCard } = useDebugOverrides()
 
   // Check if we're on a domain detail route using route matches and pathname (for navigation transitions)
@@ -383,6 +397,38 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     }
     return 'overview'
   }, [location.pathname])
+
+  // Top-level tab vs role: default index is "projects" in the URL, but hidden tabs (e.g. billing-only) must land on first allowed tab
+  useEffect(() => {
+    if (!features.orgRoles || !orgId || activeTab === null || orgScopesLoading) {
+      return
+    }
+
+    const hasAnyTab =
+      canSeeProjects(access, features) ||
+      canShowOrgDomainsTab(access, features) ||
+      canShowOrgSettingsTab(access)
+
+    if (!hasAnyTab) return
+
+    if (!canAccessOrgOverviewTab(access, features, activeTab)) {
+      const target = getFirstAllowedOrgOverviewPath(access, features)
+      navigate({
+        to: target as '/organizations/$orgId',
+        params: { orgId },
+        replace: true,
+      })
+    }
+  }, [
+    features.orgRoles,
+    features,
+    orgId,
+    activeTab,
+    orgScopesLoading,
+    access,
+    navigate,
+  ])
+
   const [commandCenterOpen, setCommandCenterOpen] = useState(false)
   const [orgSwitcherOpen, setOrgSwitcherOpen] = useState(false)
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
@@ -2471,8 +2517,12 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                         </TableRow>
                                       </TableHeader>
                                       <TableBody>
-                                        {memberships.map(
-                                          (member: TeamMember) => (
+                                        {memberships.map((member: TeamMember) => {
+                                          const {
+                                            Icon: RoleIcon,
+                                            label: roleLabel,
+                                          } = orgMembershipRoleDisplay(member.role)
+                                          return (
                                             <TableRow
                                               key={member.$id}
                                               className="border-b border-border/50 hover:bg-muted/30 transition-colors"
@@ -2520,14 +2570,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                         'inline-flex items-center gap-1 text-[11px] font-medium border px-2 py-0.5',
                                                       )}
                                                     >
-                                                      {member.role ===
-                                                        'owner' && (
-                                                        <Shield className="h-3 w-3" />
-                                                      )}
-                                                      {member.role
-                                                        .charAt(0)
-                                                        .toUpperCase() +
-                                                        member.role.slice(1)}
+                                                      <RoleIcon
+                                                        className="h-3 w-3 shrink-0"
+                                                        aria-hidden
+                                                      />
+                                                      {roleLabel}
                                                     </Badge>
                                                   </div>
                                                 </TableCell>
@@ -2735,8 +2782,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                 </div>
                                               </TableCell>
                                             </TableRow>
-                                          ),
-                                        )}
+                                          )
+                                        })}
                                       </TableBody>
                                     </Table>
                                   </div>

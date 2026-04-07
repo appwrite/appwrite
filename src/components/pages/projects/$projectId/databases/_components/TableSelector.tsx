@@ -7,6 +7,7 @@
  */
 
 import { useState, useEffect, useMemo } from 'react'
+import type { LucideIcon } from 'lucide-react'
 import { ChevronDown, Table2, Loader2, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -40,9 +41,17 @@ export interface TableSelectorProps {
   onSelect: (tableId: string) => void
   onCreateClick: () => void
   placeholder?: string
+  /** Shown when the database has no containers (e.g. "No tables", "No collections") */
+  emptyLabel?: string
+  /** Shown in the popover when search returns nothing */
+  noResultsLabel?: string
+  /** Tooltip on the create button when enabled (e.g. "Create table") */
+  createTooltip?: string
+  /** Icon for trigger and list rows; default Table2 */
+  itemIcon?: LucideIcon
   limit?: number
   triggerClassName?: string
-  /** When true, show "No tables" and disable the selector, only show create button */
+  /** When true, show emptyLabel and disable the selector, only show create button */
   empty?: boolean
   /** When true, the create (plus) button is disabled with tooltip */
   createDisabled?: boolean
@@ -57,6 +66,10 @@ export function TableSelector({
   onSelect,
   onCreateClick,
   placeholder = 'Select table',
+  emptyLabel = 'No tables',
+  noResultsLabel = 'No tables found',
+  createTooltip = 'Create table',
+  itemIcon: ItemIcon = Table2,
   limit = DEFAULT_LIMIT,
   triggerClassName,
   empty = false,
@@ -100,7 +113,7 @@ export function TableSelector({
   if (empty) {
     return (
       <div className="flex min-w-0 flex-1 items-center gap-2">
-        <span className="text-[13px] text-muted-foreground">No tables</span>
+        <span className="text-[13px] text-muted-foreground">{emptyLabel}</span>
         <Tooltip>
           <TooltipTrigger asChild>
             <span className="inline-flex">
@@ -116,7 +129,7 @@ export function TableSelector({
             </span>
           </TooltipTrigger>
           <TooltipContent side="bottom">
-            {createDisabled ? createDisabledTooltip : 'Create table'}
+            {createDisabled ? createDisabledTooltip : createTooltip}
           </TooltipContent>
         </Tooltip>
       </div>
@@ -136,7 +149,7 @@ export function TableSelector({
             )}
           >
             <span className="flex min-w-0 items-center gap-1.5">
-              <Table2 className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <ItemIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
               <span className="truncate">{displayValue}</span>
             </span>
             <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
@@ -167,7 +180,7 @@ export function TableSelector({
             <CommandList className="max-h-[240px]">
               {tables.length === 0 && (
                 <CommandEmpty>
-                  {isFetching ? '' : 'No tables found'}
+                  {isFetching ? '' : noResultsLabel}
                 </CommandEmpty>
               )}
               <CommandGroup>
@@ -181,7 +194,7 @@ export function TableSelector({
                     }}
                     className="flex w-full cursor-pointer items-center gap-1.5 rounded-sm px-2 py-1.5 text-left text-[13px] outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
                   >
-                    <Table2 className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    <ItemIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
                     <span className="truncate">{table.name}</span>
                   </button>
                 ))}
@@ -205,7 +218,7 @@ export function TableSelector({
           </span>
         </TooltipTrigger>
         <TooltipContent side="bottom">
-          {createDisabled ? createDisabledTooltip : 'Create table'}
+          {createDisabled ? createDisabledTooltip : createTooltip}
         </TooltipContent>
       </Tooltip>
     </div>

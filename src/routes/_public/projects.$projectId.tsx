@@ -32,6 +32,7 @@ const DATABASE_TABLE_VIEW_TABS = new Set([
   'security',
   'settings',
   'visualizer',
+  'monitor',
   'insights',
   'backups',
   'export-import',
@@ -65,6 +66,7 @@ function getDatabaseTablesRouteTab(pathParts: string[]): string | undefined {
 /** Routes like /databases/:dbKind/:databaseId/visualizer (not under tables/collections). */
 const DATABASE_LEVEL_LAYOUT_SEGMENTS = new Set([
   'visualizer',
+  'monitor',
   'backups',
   'export-import',
   'insights',
@@ -219,7 +221,7 @@ function ProjectLayout() {
     pathParts.length >= 6 &&
     pathParts[5] === 'logs'
 
-  // Hide footer for usage view, database spreadsheet view, visualizer, function executions tab, site logs tab, and functions editor
+  // Hide footer for usage view, database spreadsheet / level tabs (incl. monitor, visualizer), function executions tab, site logs tab, and functions editor
   const hideFooter =
     isDatabaseSpreadsheetView ||
     isDatabaseVisualizerView ||

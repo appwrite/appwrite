@@ -142,6 +142,12 @@ export function dbNavLink(kind: DatabaseRouteKind) {
         params: baseDatabaseOnly(p),
       }
     },
+    monitor(p: DbNavLinkParams) {
+      return {
+        to: '/projects/$projectId/databases/$dbKind/$databaseId/monitor',
+        params: baseDatabaseOnly(p),
+      }
+    },
     dbSecurity(p: DbNavLinkParams) {
       return {
         to: '/projects/$projectId/databases/$dbKind/$databaseId/db-security',

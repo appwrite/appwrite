@@ -45,6 +45,7 @@ import {
   Braces,
   Redo2,
   Undo2,
+  Activity,
 } from 'lucide-react'
 import {
   databases,
@@ -109,6 +110,13 @@ import { DatabaseSelector } from './_components/DatabaseSelector'
 import { TableSelector } from './_components/TableSelector'
 import { RowContextMenu } from './_components/RowContextMenu'
 import { DatabaseContextMenu } from './_components/DatabaseContextMenu'
+import { DatabaseMonitorView } from './_components/DatabaseMonitorView'
+import {
+  DatabaseMonitorHeaderActions,
+  getDefaultMonitorDateRange,
+} from './_components/DatabaseMonitorHeaderActions'
+import { DatabaseMonitorMobileNav } from './_components/DatabaseMonitorMobileNav'
+import type { DateRange } from 'react-day-picker'
 import { ImportCsv } from './_components/ImportCsv'
 import { ExportCsv } from './_components/ExportCsv'
 import { ComingSoonCurtain } from '@/components/ui/coming-soon-curtain'
@@ -133,6 +141,7 @@ import {
   canShowDatabaseSecuritySettings,
 } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { TABLE_DB_SPEC_OPTIONS } from '@/lib/database-specs'
 import type { Models } from '@appwrite.io/console'
 import type { editor } from 'monaco-editor'
@@ -1628,6 +1637,7 @@ export function DatabaseDetailLayout({
 // Database-level tab when embedded in TableView (under tables/$tableId/...)
 export type DatabaseTabId =
   | 'visualizer'
+  | 'monitor'
   | 'insights'
   | 'backups'
   | 'export-import'
@@ -1655,6 +1665,7 @@ const DATABASE_TAB_TO_OVERVIEW: Record<
   DatabaseOverviewProps['activeTab']
 > = {
   visualizer: 'visualizer',
+  monitor: 'monitor',
   insights: 'insights',
   backups: 'backups',
   'export-import': 'export-import',
@@ -1665,6 +1676,7 @@ const DATABASE_TAB_TO_OVERVIEW: Record<
 
 const DATABASE_TAB_LABELS: Record<DatabaseTabId, string> = {
   visualizer: 'Visualizer',
+  monitor: 'Monitor',
   insights: 'Insights',
   backups: 'Backups',
   'export-import': 'Export / Import',
@@ -1818,6 +1830,10 @@ export function TableView({
   const [createTableDialogOpen, setCreateTableDialogOpen] = useState(false)
   const [createDatabaseDialogOpen, setCreateDatabaseDialogOpen] =
     useState(false)
+  const [monitorDateRange, setMonitorDateRange] = useState<DateRange>(() =>
+    getDefaultMonitorDateRange(),
+  )
+  const [monitorChartTick, setMonitorChartTick] = useState(0)
   const queryClient = useQueryClient()
 
   // Debug: create 50 random containers (only when debug mode is open and on tables list)
@@ -1857,6 +1873,10 @@ export function TableView({
   )
   const noCreateDbPermission = !canCreateDatabase(access, features)
   const noCreateRowPermission = !canCreateRow(access, features)
+  const showDbSecuritySettings = canShowDatabaseSecuritySettings(
+    access,
+    features,
+  )
   const createPermissionTooltip =
     "You don't have permission to perform this action."
 
@@ -1906,6 +1926,11 @@ export function TableView({
     dbNav,
     tableNavParams,
   ])
+
+  useEffect(() => {
+    setMonitorDateRange(getDefaultMonitorDateRange())
+    setMonitorChartTick(0)
+  }, [databaseId])
 
   // Reset rows total when switching tables
   useEffect(() => {
@@ -2757,6 +2782,18 @@ export function TableView({
             <Network className="h-3.5 w-3.5 shrink-0" />
             <span>Visualizer</span>
           </Link>
+          <Link
+            {...dbNav.monitor(tableNavParams)}
+            className={cn(
+              'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
+              databaseTab === 'monitor'
+                ? 'bg-accent text-foreground'
+                : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+            )}
+          >
+            <Activity className="h-3.5 w-3.5 shrink-0" />
+            <span>Monitor</span>
+          </Link>
           {!noCreateDbPermission && (
             <Link
               {...dbNav.dbSecurity(tableNavParams)}
@@ -3079,9 +3116,48 @@ export function TableView({
           }
           collapsible={!isDatabaseLevelView}
           fullWidthBorder
-          fullWidth={!isDatabaseLevelView || databaseTab === 'visualizer'}
+          fullWidth={
+            !isDatabaseLevelView ||
+            databaseTab === 'visualizer' ||
+            databaseTab === 'monitor'
+          }
+          titleRightContent={
+            databaseTab === 'monitor' ? (
+              <>
+                <DatabaseMonitorHeaderActions
+                  projectId={projectId}
+                  databaseId={databaseId}
+                  routeDbKind={routeDbKind}
+                  dateRange={monitorDateRange}
+                  onDateRangeChange={(r) =>
+                    setMonitorDateRange(r ?? getDefaultMonitorDateRange())
+                  }
+                  onRefresh={() => setMonitorChartTick((n) => n + 1)}
+                  showSpecActions={showDbSecuritySettings}
+                />
+                {isDatabaseLevelView &&
+                isDebugModeOpen &&
+                !isDocumentsDb ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9"
+                    onClick={() => createFiftyTablesMutation.mutate()}
+                    disabled={createFiftyTablesMutation.isPending}
+                  >
+                    {createFiftyTablesMutation.isPending
+                      ? 'Creating…'
+                      : dbLabels.debugCreateManyContainers}
+                  </Button>
+                ) : null}
+              </>
+            ) : undefined
+          }
           rightContent={
-            isDatabaseLevelView && isDebugModeOpen && !isDocumentsDb ? (
+            isDatabaseLevelView &&
+            isDebugModeOpen &&
+            !isDocumentsDb &&
+            databaseTab !== 'monitor' ? (
               <Button
                 variant="outline"
                 size="sm"
@@ -3097,6 +3173,14 @@ export function TableView({
           }
           contentAfterBorder={
             <>
+              {databaseTab === 'monitor' ? (
+                <div className="border-b border-border px-4 py-3 sm:px-6 lg:hidden">
+                  <DatabaseMonitorMobileNav
+                    projectId={projectId}
+                    databaseId={databaseId}
+                  />
+                </div>
+              ) : null}
               {/* Mobile DB + table selector - above toolbar, shows when sidebar is hidden */}
               <div className="flex flex-col gap-2 border-b border-border px-4 py-3 lg:hidden">
                 <DatabaseSelector
@@ -3176,6 +3260,11 @@ export function TableView({
                   databaseId={databaseId}
                   value={tableId}
                   selectedName={selectedTable?.name}
+                  placeholder={`Select ${dbLabels.containerSingular}`}
+                  emptyLabel={`No ${dbLabels.containerPlural}`}
+                  noResultsLabel={`No ${dbLabels.containerPlural} found`}
+                  createTooltip={dbLabels.createContainer}
+                  itemIcon={ContainerListIcon}
                   createDisabled={noCreateTablePermission}
                   createDisabledTooltip={createPermissionTooltip}
                   onSelect={(newTableId) => {
@@ -3276,6 +3365,14 @@ export function TableView({
                 databaseTab ? DATABASE_TAB_TO_OVERVIEW[databaseTab] : 'tables'
               }
               contentOnly
+              monitorEmbed={
+                databaseTab === 'monitor'
+                  ? {
+                      dateRange: monitorDateRange,
+                      chartTick: monitorChartTick,
+                    }
+                  : undefined
+              }
             />
           ) : (
             <>
@@ -3663,9 +3760,15 @@ interface DatabaseOverviewProps {
     | 'insights'
     | 'settings'
     | 'visualizer'
+    | 'monitor'
     | 'browser'
   /** When true, only the tab content is rendered (no header). Used when embedded in TableView. */
   contentOnly?: boolean
+  /** Chart state when Monitor is embedded in TableView (header/actions live in TableView). */
+  monitorEmbed?: {
+    dateRange: DateRange
+    chartTick: number
+  }
 }
 
 const CURRENT_TIER_ID = 'shared'
@@ -3674,6 +3777,7 @@ export function DatabaseOverview({
   databaseId,
   activeTab,
   contentOnly = false,
+  monitorEmbed,
 }: DatabaseOverviewProps) {
   const params = useParams({
     strict: false,
@@ -3695,6 +3799,13 @@ export function DatabaseOverview({
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false)
   const [exportDialogOpen, setExportDialogOpen] = useState(false)
   const [createTableDialogOpen, setCreateTableDialogOpen] = useState(false)
+  const [localMonitorDateRange, setLocalMonitorDateRange] = useState<DateRange>(
+    () => getDefaultMonitorDateRange(),
+  )
+  const [localMonitorChartTick, setLocalMonitorChartTick] = useState(0)
+
+  const monitorDateRange = monitorEmbed?.dateRange ?? localMonitorDateRange
+  const monitorChartTick = monitorEmbed?.chartTick ?? localMonitorChartTick
 
   // Fetch database
   const { database, isLoading: databaseLoading } = useProjectDatabase(
@@ -4068,6 +4179,11 @@ export function DatabaseOverview({
     navigate,
   ])
 
+  useEffect(() => {
+    setLocalMonitorDateRange(getDefaultMonitorDateRange())
+    setLocalMonitorChartTick(0)
+  }, [databaseId])
+
   const databaseTabs: Tab[] = useMemo(
     () =>
       [
@@ -4081,6 +4197,12 @@ export function DatabaseOverview({
           id: 'visualizer',
           label: 'Visualizer',
           to: '/projects/$projectId/databases/$dbKind/$databaseId/visualizer',
+          params: { projectId, dbKind: routeDbKind, databaseId },
+        },
+        {
+          id: 'monitor',
+          label: 'Monitor',
+          to: '/projects/$projectId/databases/$dbKind/$databaseId/monitor',
           params: { projectId, dbKind: routeDbKind, databaseId },
         },
         ...(showDbSecuritySettings
@@ -4433,45 +4555,77 @@ export function DatabaseOverview({
           }
           showFilters={false}
           fullWidthBorder
-          contentAfterBorder={
-            database && (database as Models.Database).enabled === false ? (
-              <div className="border-b border-border bg-amber-500/5">
-                <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6">
-                  <Alert
-                    variant="default"
-                    className="border-amber-500/30 bg-transparent"
-                  >
-                    <AlertCircle className="h-4 w-4 text-amber-500" />
-                    <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
-                      Database is disabled
-                    </AlertTitle>
-                    <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
-                      <span className="inline">
-                        This database is disabled and not accessible to end
-                        users through the API. Console actions remain available.{' '}
-                        <Link
-                          to="/projects/$projectId/databases/$dbKind/$databaseId/settings"
-                          params={{
-                            projectId: projectId!,
-                            dbKind: routeDbKind,
-                            databaseId: databaseId,
-                          }}
-                          className="font-medium underline hover:no-underline inline"
-                        >
-                          Enable it in the Settings tab
-                        </Link>{' '}
-                        to make it available to end users.
-                      </span>
-                    </AlertDescription>
-                  </Alert>
-                </div>
-              </div>
+          fullWidth={activeTab === 'monitor'}
+          titleRightContent={
+            activeTab === 'monitor' ? (
+              <DatabaseMonitorHeaderActions
+                projectId={projectId}
+                databaseId={databaseId}
+                routeDbKind={routeDbKind}
+                dateRange={localMonitorDateRange}
+                onDateRangeChange={(r) =>
+                  setLocalMonitorDateRange(r ?? getDefaultMonitorDateRange())
+                }
+                onRefresh={() => setLocalMonitorChartTick((n) => n + 1)}
+                showSpecActions={showDbSecuritySettings}
+              />
             ) : undefined
+          }
+          contentAfterBorder={
+            <>
+              {activeTab === 'monitor' ? (
+                <div className="border-b border-border px-4 py-3 sm:px-6 lg:hidden">
+                  <DatabaseMonitorMobileNav
+                    projectId={projectId}
+                    databaseId={databaseId}
+                  />
+                </div>
+              ) : null}
+              {database && (database as Models.Database).enabled === false ? (
+                <div className="border-b border-border bg-amber-500/5">
+                  <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6">
+                    <Alert
+                      variant="default"
+                      className="border-amber-500/30 bg-transparent"
+                    >
+                      <AlertCircle className="h-4 w-4 text-amber-500" />
+                      <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
+                        Database is disabled
+                      </AlertTitle>
+                      <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
+                        <span className="inline">
+                          This database is disabled and not accessible to end
+                          users through the API. Console actions remain
+                          available.{' '}
+                          <Link
+                            to="/projects/$projectId/databases/$dbKind/$databaseId/settings"
+                            params={{
+                              projectId: projectId!,
+                              dbKind: routeDbKind,
+                              databaseId: databaseId,
+                            }}
+                            className="font-medium underline hover:no-underline inline"
+                          >
+                            Enable it in the Settings tab
+                          </Link>{' '}
+                          to make it available to end users.
+                        </span>
+                      </AlertDescription>
+                    </Alert>
+                  </div>
+                </div>
+              ) : null}
+            </>
           }
         />
       )}
 
-      <div className="flex-1 min-h-0 flex flex-col overflow-y-auto">
+      <div
+        className={cn(
+          'flex-1 min-h-0 flex flex-col',
+          activeTab === 'monitor' ? 'min-h-0 overflow-hidden' : 'overflow-y-auto',
+        )}
+      >
         {activeTab === 'tables' && (
           <div className="mx-auto w-full max-w-7xl px-4 pt-4 pb-4 sm:px-6 sm:pt-6 sm:pb-6">
             {showTablesLoading ? (
@@ -4777,6 +4931,16 @@ export function DatabaseOverview({
         {activeTab === 'visualizer' && (
           <div className="flex-1 min-h-0">
             <SchemaVisualizer databaseId={databaseId} />
+          </div>
+        )}
+
+        {activeTab === 'monitor' && (
+          <div className="flex min-h-0 flex-1 flex-col">
+            <DatabaseMonitorView
+              databaseId={databaseId}
+              dateRange={monitorDateRange}
+              chartTick={monitorChartTick}
+            />
           </div>
         )}
 
@@ -5412,6 +5576,12 @@ function RowEditDrawer({
   isSaving = false,
   presentation = 'drawer',
 }: RowEditDrawerProps) {
+  const isMobileViewport = useIsMobile()
+  const useCompactInlineJsonToolbar =
+    presentation === 'inline' && isMobileViewport
+  const jsonToolbarTooltipSide = useCompactInlineJsonToolbar
+    ? ('bottom' as const)
+    : ('left' as const)
   const params = useParams({ strict: false })
   const projectId = params.projectId as string | undefined
   const routeDbKind =
@@ -5498,6 +5668,8 @@ function RowEditDrawer({
 
   useEffect(() => {
     if (presentation !== 'inline' || !open) return
+    setJsonEditorCanUndo(false)
+    setJsonEditorCanRedo(false)
     const next = row
       ? JSON.stringify(buildInlineDocumentJsonObjectFromRow(row), null, 2)
       : JSON.stringify(buildInlineDocumentJsonObjectForCreate(columns), null, 2)
@@ -5939,7 +6111,7 @@ function RowEditDrawer({
           onValueChange={(v) => setActiveTab(v as 'data' | 'permissions')}
           className="flex min-h-0 flex-1 flex-col gap-0"
         >
-          <div className="shrink-0 border-b border-border px-6 pb-4 pt-4">
+          <div className="shrink-0 border-b border-border px-3 pb-3 pt-3 sm:px-6 sm:pb-4 sm:pt-4">
             <TabsList className="w-full grid grid-cols-2 h-9">
               <TabsTrigger value="data" className="text-[13px]">
                 Data
@@ -5968,8 +6140,22 @@ function RowEditDrawer({
               )}
             >
               {presentation === 'inline' ? (
-                <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
-                  <div className="pointer-events-none absolute right-6 top-5 z-10 flex flex-col gap-2 p-1">
+                <div
+                  className={cn(
+                    'relative flex min-h-0 min-w-0 flex-1 flex-col',
+                    (inlineDocumentDirty || isCreateMode) &&
+                      useCompactInlineJsonToolbar &&
+                      'pb-[4.5rem]',
+                  )}
+                >
+                  <div
+                    className={cn(
+                      'z-10 flex gap-1.5 sm:gap-2',
+                      useCompactInlineJsonToolbar
+                        ? 'pointer-events-auto relative shrink-0 flex-row flex-wrap justify-end border-b border-border bg-background/95 px-2 py-2 backdrop-blur-sm'
+                        : 'pointer-events-none absolute right-3 top-4 flex-col p-1 sm:right-6 sm:top-5',
+                    )}
+                  >
                     <TooltipProvider delayDuration={0}>
                       <div className="pointer-events-auto overflow-hidden rounded-lg border border-border bg-background/90 shadow-sm backdrop-blur-sm">
                         <Tooltip>
@@ -5987,7 +6173,7 @@ function RowEditDrawer({
                               <Undo2 className="h-4 w-4 text-muted-foreground" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent side="left">
+                          <TooltipContent side={jsonToolbarTooltipSide}>
                             <p>Undo</p>
                           </TooltipContent>
                         </Tooltip>
@@ -6008,7 +6194,7 @@ function RowEditDrawer({
                               <Redo2 className="h-4 w-4 text-muted-foreground" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent side="left">
+                          <TooltipContent side={jsonToolbarTooltipSide}>
                             <p>Redo</p>
                           </TooltipContent>
                         </Tooltip>
@@ -6028,7 +6214,7 @@ function RowEditDrawer({
                               <Braces className="h-4 w-4 text-muted-foreground" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent side="left">
+                          <TooltipContent side={jsonToolbarTooltipSide}>
                             <p>Prettify JSON</p>
                           </TooltipContent>
                         </Tooltip>
@@ -6052,7 +6238,7 @@ function RowEditDrawer({
                               )}
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent side="left">
+                          <TooltipContent side={jsonToolbarTooltipSide}>
                             <p>
                               {documentJsonCopied
                                 ? 'Copied!'
@@ -6080,7 +6266,7 @@ function RowEditDrawer({
                               )}
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent side="left">
+                          <TooltipContent side={jsonToolbarTooltipSide}>
                             <p>
                               {documentViewLinkCopied
                                 ? 'Link copied!'
@@ -6092,6 +6278,7 @@ function RowEditDrawer({
                     </TooltipProvider>
                   </div>
                   <CodeEditor
+                    key={row?.$id ?? 'new'}
                     ref={documentJsonEditorRef}
                     modelPath={
                       row
@@ -6101,7 +6288,7 @@ function RowEditDrawer({
                     value={documentJsonText}
                     onChange={setDocumentJsonText}
                     language="json"
-                    lineNumbers="on"
+                    lineNumbers={useCompactInlineJsonToolbar ? 'off' : 'on'}
                     height="100%"
                     onEditorMount={handleDocumentJsonEditorMount}
                     className="h-full min-h-0 flex-1 rounded-none border-0 shadow-none"
@@ -6965,16 +7152,16 @@ function RowEditDrawer({
 
             {presentation === 'inline' &&
             (inlineDocumentDirty || isCreateMode) ? (
-              <div className="pointer-events-none absolute bottom-4 left-0 right-0 z-20 flex justify-center px-4">
-                <div className="pointer-events-auto flex w-full max-w-[520px] min-w-[min(100%,280px)] items-center justify-between gap-3 rounded-lg border border-border bg-background px-4 py-3 shadow-sm sm:min-w-[400px] sm:px-6">
-                  <Badge variant="secondary" className="h-6 shrink-0 px-2.5">
+              <div className="pointer-events-none absolute bottom-3 left-0 right-0 z-20 flex justify-center px-2 sm:bottom-4 sm:px-4">
+                <div className="pointer-events-auto flex w-full max-w-[520px] min-w-0 flex-col gap-2 rounded-lg border border-border bg-background px-3 py-2.5 shadow-sm sm:min-w-[min(100%,400px)] sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-6 sm:py-3">
+                  <Badge variant="secondary" className="h-6 w-fit shrink-0 px-2.5">
                     {isCreateMode
                       ? inlineDocumentDirty
                         ? 'Unsaved changes'
                         : 'New document'
                       : 'Unsaved changes'}
                   </Badge>
-                  <div className="flex shrink-0 items-center gap-2">
+                  <div className="flex shrink-0 items-center justify-end gap-2">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -7241,6 +7428,8 @@ function RowsSpreadsheet({
   const hideSampleData = routeDbKind === 'documentsdb'
   const hideSequenceColumn = routeDbKind === 'documentsdb'
   const useInlineDocumentPane = routeDbKind === 'documentsdb'
+  const isMobileViewport = useIsMobile()
+  const isDocumentsStackedLayout = useInlineDocumentPane && isMobileViewport
   const rsNav = useMemo(() => dbNavLink(routeDbKind), [routeDbKind])
   const tableId = table.$id
 
@@ -7360,7 +7549,7 @@ function RowsSpreadsheet({
   }, [isDocumentsSplitResizing])
 
   useEffect(() => {
-    if (!useInlineDocumentPane) return
+    if (!useInlineDocumentPane || isDocumentsStackedLayout) return
     const el = documentSplitContainerRef.current
     if (!el) return
     const clamp = () => {
@@ -7374,7 +7563,7 @@ function RowsSpreadsheet({
     ro.observe(el)
     clamp()
     return () => ro.disconnect()
-  }, [useInlineDocumentPane])
+  }, [useInlineDocumentPane, isDocumentsStackedLayout])
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [sampleDataModalOpen, setSampleDataModalOpen] = useState(false)
@@ -8589,13 +8778,18 @@ function RowsSpreadsheet({
       <div
         ref={documentSplitContainerRef}
         className={cn(
-          'flex min-h-0 flex-1 flex-row overflow-hidden',
+          'flex min-h-0 flex-1 overflow-hidden',
+          useInlineDocumentPane
+            ? isDocumentsStackedLayout
+              ? 'flex-col'
+              : 'flex-row'
+            : 'flex-row',
           useInlineDocumentPane && 'relative',
         )}
       >
         <div
           style={
-            useInlineDocumentPane
+            useInlineDocumentPane && !isDocumentsStackedLayout
               ? { width: documentTablePaneWidthPx }
               : undefined
           }
@@ -8603,7 +8797,10 @@ function RowsSpreadsheet({
             'min-h-0 min-w-0 overflow-auto overscroll-contain',
             useInlineDocumentPane
               ? cn(
-                  'shrink-0 border-r border-border',
+                  'shrink-0 border-border',
+                  isDocumentsStackedLayout
+                    ? 'max-h-[min(42vh,320px)] w-full border-b'
+                    : 'border-r',
                   paginatedRows.length === 0 && 'border-t border-border',
                 )
               : 'min-w-0 flex-1',
@@ -9127,7 +9324,10 @@ function RowsSpreadsheet({
         {useInlineDocumentPane ? (
           <div
             className={cn(
-              'flex min-h-0 min-w-0 min-w-[280px] flex-1 flex-col border-t border-border bg-muted/10',
+              'flex min-h-0 min-w-0 flex-1 flex-col bg-muted/10',
+              isDocumentsStackedLayout
+                ? 'min-h-[min(46vh,360px)] border-t-0'
+                : 'min-w-[280px] border-t border-border',
             )}
           >
             {selectedRowForEdit !== null || editDrawerOpen ? (
@@ -9163,7 +9363,7 @@ function RowsSpreadsheet({
             )}
           </div>
         ) : null}
-        {useInlineDocumentPane ? (
+        {useInlineDocumentPane && !isDocumentsStackedLayout ? (
           <button
             type="button"
             aria-label="Resize table and document preview"
@@ -9220,8 +9420,8 @@ function RowsSpreadsheet({
 
       {/* Bulk Delete Action Bar */}
       {selectedRows.size > 0 && (
-        <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
-          <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
+        <div className="fixed bottom-4 left-1/2 z-50 w-[min(100%,calc(100vw-2rem))] max-w-md -translate-x-1/2 px-2 sm:px-0 sm:w-auto sm:max-w-none">
+          <div className="mx-auto flex min-w-0 items-center justify-between gap-2 rounded-lg border border-border bg-background px-4 py-3 sm:min-w-[400px] sm:gap-3 sm:px-6">
             <Badge variant="secondary" className="h-6 px-2.5">
               {selectedRows.size}{' '}
               {selectedRows.size === 1

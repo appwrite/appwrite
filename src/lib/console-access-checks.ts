@@ -378,3 +378,38 @@ export function getFirstAllowedOrgSettingsPath(
     return `${basePath}/api-keys`
   return basePath
 }
+
+/**
+ * First org overview route when opening an organization: Projects → Domains → Settings
+ * (settings resolves to the first allowed settings sub-path, same order as the tab bar).
+ */
+export function getFirstAllowedOrgOverviewPath(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+): string {
+  if (canSeeProjects(access, features)) {
+    return '/organizations/$orgId'
+  }
+  if (canShowOrgDomainsTab(access, features)) {
+    return '/organizations/$orgId/domains/'
+  }
+  if (canShowOrgSettingsTab(access)) {
+    return getFirstAllowedOrgSettingsPath(
+      access,
+      features,
+      '/organizations/$orgId/settings',
+    )
+  }
+  return '/organizations/$orgId'
+}
+
+/** Whether the user may use the current org overview top-level tab (projects / domains / settings). */
+export function canAccessOrgOverviewTab(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+  tab: 'projects' | 'domains' | 'settings',
+): boolean {
+  if (tab === 'projects') return canSeeProjects(access, features)
+  if (tab === 'domains') return canShowOrgDomainsTab(access, features)
+  return canShowOrgSettingsTab(access)
+}

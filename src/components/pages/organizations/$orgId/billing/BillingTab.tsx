@@ -15,7 +15,7 @@ import { BillingAlertsSection } from './BillingAlertsSection'
 import { AvailableCreditsSection } from './AvailableCreditsSection'
 import {
   useOrganizationById,
-  usePaymentMethod,
+  useOrganizationPaymentMethod,
   useRetryInvoicePayment,
 } from '@/lib/react-query/hooks'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -49,9 +49,12 @@ export function BillingTab() {
   // Fetch organization data for alerts
   const { organization, isLoading: orgLoading } = useOrganizationById(orgId)
 
-  // Fetch payment methods for alert checking
-  const primaryPaymentMethod = usePaymentMethod(organization?.paymentMethodId)
-  usePaymentMethod(organization?.backupPaymentMethodId)
+  // Fetch payment methods for alert checking (org-scoped so all members see org cards)
+  const primaryPaymentMethod = useOrganizationPaymentMethod(
+    orgId,
+    organization?.paymentMethodId,
+  )
+  useOrganizationPaymentMethod(orgId, organization?.backupPaymentMethodId)
 
   const retryPaymentMutation = useRetryInvoicePayment()
 

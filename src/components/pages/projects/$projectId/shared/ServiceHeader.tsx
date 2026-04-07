@@ -89,6 +89,8 @@ interface ServiceHeaderProps {
   breadcrumbs?: Breadcrumb[]
   /** Hide the title row entirely */
   hideTitle?: boolean
+  /** Renders on the same row as the title (typically end-aligned); use for secondary actions next to the page title */
+  titleRightContent?: React.ReactNode
   /** Content to render after the border separator, before the toolbar */
   contentAfterBorder?: React.ReactNode
   /** Show a bottom border under the toolbar row (search/filters/actions) */
@@ -132,6 +134,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
       collapsible = false,
       breadcrumbs,
       hideTitle = false,
+      titleRightContent,
       contentAfterBorder,
       showToolbarBottomBorder = false,
     },
@@ -278,9 +281,16 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                 ))}
               </nav>
             )}
-            <h1 className="text-[17px] font-semibold text-foreground">
-              {title}
-            </h1>
+            <div className="flex min-w-0 flex-row flex-wrap items-center justify-between gap-x-4 gap-y-3">
+              <h1 className="min-w-0 text-[17px] font-semibold text-foreground">
+                {title}
+              </h1>
+              {titleRightContent ? (
+                <div className="flex min-w-0 flex-wrap items-center justify-end gap-2 sm:gap-3">
+                  {titleRightContent}
+                </div>
+              ) : null}
+            </div>
           </div>
         )}
 

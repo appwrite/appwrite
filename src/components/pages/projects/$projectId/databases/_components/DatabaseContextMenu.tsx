@@ -21,6 +21,7 @@ import {
   Archive,
   ArrowRightLeft,
   Settings,
+  Activity,
 } from 'lucide-react'
 import { useNavigate } from '@tanstack/react-router'
 import {
@@ -65,6 +66,7 @@ export function DatabaseContextMenu({
     path:
       | '/projects/$projectId/databases/$dbKind/$databaseId/'
       | '/projects/$projectId/databases/$dbKind/$databaseId/visualizer'
+      | '/projects/$projectId/databases/$dbKind/$databaseId/monitor'
       | '/projects/$projectId/databases/$dbKind/$databaseId/db-security'
       | '/projects/$projectId/databases/$dbKind/$databaseId/insights'
       | '/projects/$projectId/databases/$dbKind/$databaseId/backups'
@@ -98,6 +100,16 @@ export function DatabaseContextMenu({
         >
           <ContextMenuIcon icon={Workflow} />
           Visualizer
+        </ContextMenuItem>
+        <ContextMenuItem
+          onSelect={() =>
+            navigateToTab(
+              '/projects/$projectId/databases/$dbKind/$databaseId/monitor',
+            )
+          }
+        >
+          <ContextMenuIcon icon={Activity} />
+          Monitor
         </ContextMenuItem>
         {showSecuritySettings && (
           <ContextMenuItem
