@@ -98,6 +98,9 @@ Http::init()
     ->inject('authorization')
     ->action(function (Http $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, Audit $queueForAudits, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization) {
         $route = $utopia->getRoute();
+        if ($route === null) {
+            throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
+        }
 
         /**
          * Handle user authentication and session validation.
@@ -489,6 +492,10 @@ Http::init()
         $request->setUser($user);
 
         $route = $utopia->getRoute();
+        if ($route === null) {
+            throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
+        }
+
         $path = $route->getMatchedPath();
         $databaseType = match (true) {
             str_contains($path, '/documentsdb') => DATABASE_TYPE_DOCUMENTSDB,
