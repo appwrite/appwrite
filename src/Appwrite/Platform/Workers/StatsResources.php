@@ -79,7 +79,46 @@ class StatsResources extends Action
         // Reset documents for each job
         $this->documents = [];
 
+        $gauges = $payload['gauges'] ?? [];
+        if (!empty($gauges)) {
+            $this->writeGauges($getLogsDB, $project, $gauges);
+            return;
+        }
+
         $this->countForProject($dbForPlatform, $getLogsDB, $getProjectDB, $getDatabasesDB, $project);
+    }
+
+    /**
+     * Write a batch of pre-computed gauge metrics to the logs database for one project.
+     *
+     * Builds (1h, 1d, inf) period documents for each metric using the existing
+     * createStatsDocuments helper, then commits via writeDocuments — same code path the
+     * standard counting flow uses, just with externally-supplied values.
+     *
+     * @param callable $getLogsDB
+     * @param Document $project
+     * @param array<int, array{metric: string, value: int}> $gauges
+     */
+    protected function writeGauges(callable $getLogsDB, Document $project, array $gauges): void
+    {
+        $region = $project->getAttribute('region', '');
+
+        foreach ($gauges as $gauge) {
+            $metric = $gauge['metric'] ?? '';
+            if ($metric === '') {
+                continue;
+            }
+            $value = (int) ($gauge['value'] ?? 0);
+            $this->createStatsDocuments($region, $metric, $value);
+        }
+
+        if ($this->documents === []) {
+            return;
+        }
+
+        /** @var \Utopia\Database\Database $dbForLogs */
+        $dbForLogs = call_user_func($getLogsDB, $project);
+        $this->writeDocuments($dbForLogs, $project);
     }
 
     protected function countForProject(Database $dbForPlatform, callable $getLogsDB, callable $getProjectDB, callable $getDatabasesDB, Document $project): void
