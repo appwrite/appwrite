@@ -237,7 +237,7 @@ return function (Container $container): void {
             } elseif (\in_array($dsn->getHost(), $sharedTables, true)) {
                 $database
                     ->setSharedTables(true)
-                    ->setTenant((int) $projectDocument->getSequence())
+                    ->setTenant($projectDocument->getSequence())
                     ->setNamespace($dsn->getParam('namespace'));
             } else {
                 $database
