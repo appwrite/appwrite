@@ -95,7 +95,7 @@ import {
   Dependencies,
   DEFAULT_PAGE_SIZE,
 } from '@/lib/react-query/hooks'
-import { sdk } from '@/lib/appwrite/sdk'
+import { sdk, getSiteScreenshotFilePreviewUrl } from '@/lib/appwrite/sdk'
 import { DeploymentDownloadType } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { Query } from '@appwrite.io/console'
@@ -817,9 +817,9 @@ export function View() {
                                 ? (cardDeployment as unknown).screenshotDark
                                 : (cardDeployment as unknown).screenshotLight
 
-                            if (screenshotId) {
+                            if (screenshotId && projectId) {
                               const screenshotUrl =
-                                sdk.forConsole.storage.getFilePreview({
+                                getSiteScreenshotFilePreviewUrl(projectId, {
                                   bucketId: SCREENSHOTS_BUCKET_ID,
                                   fileId: screenshotId,
                                   width: SCREENSHOT_PREVIEW_WIDTH,

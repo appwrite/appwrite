@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { CopyableId } from '@/components/global/shared/CopyableId'
-import { sdk } from '@/lib/appwrite/sdk'
+import { sdk, getSiteScreenshotFilePreviewUrl } from '@/lib/appwrite/sdk'
 import {
   ArrowRight,
   CheckCircle2,
@@ -86,14 +86,14 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
     const screenshotId = isDark
       ? (deployment as { screenshotDark?: string }).screenshotDark
       : (deployment as { screenshotLight?: string }).screenshotLight
-    if (!screenshotId) return null
-    return sdk.forConsole.storage.getFilePreview({
+    if (!screenshotId || !projectId) return null
+    return getSiteScreenshotFilePreviewUrl(projectId, {
       bucketId: SCREENSHOTS_BUCKET_ID,
       fileId: screenshotId,
       width: 1280,
       height: 720,
     })
-  }, [deployment, isDark])
+  }, [deployment, isDark, projectId])
 
   // Get primary domain
   const primaryDomain = useMemo(() => {

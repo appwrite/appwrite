@@ -26,7 +26,7 @@ import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { DeploymentInfo } from '@/components/global/shared/DeploymentInfo'
 import { getDeploymentStatusBadge } from '@/lib/utils/deployment-status'
-import { sdk } from '@/lib/appwrite/sdk'
+import { sdk, getSiteScreenshotFilePreviewUrl } from '@/lib/appwrite/sdk'
 import {
   ExternalLink,
   GitBranch,
@@ -182,14 +182,14 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
     const screenshotId = isDark
       ? (deployment as unknown).screenshotDark
       : (deployment as unknown).screenshotLight
-    if (!screenshotId) return null
-    return sdk.forConsole.storage.getFilePreview({
+    if (!screenshotId || !projectId) return null
+    return getSiteScreenshotFilePreviewUrl(projectId, {
       bucketId: SCREENSHOTS_BUCKET_ID,
       fileId: screenshotId,
       width: 1280,
       height: 720,
     })
-  }, [deployment, isDark])
+  }, [deployment, isDark, projectId])
 
   const primaryDomain = useMemo(() => {
     if (domains.length > 0) return domains[0].domain

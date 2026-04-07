@@ -1,16 +1,19 @@
 /**
  * Unified project-level realtime subscriptions.
  *
- * Subscribes to the console channel only (project=console), filters events by
- * current project where needed, and invalidates React Query cache so the UI updates.
- * For migration update events we merge the payload into the cache instead of
- * invalidating, to avoid many refetches during export/import progress.
+ * Subscribes twice to the console channel (project=console): the main cloud endpoint
+ * via the shared console hub, and the project's regional API host via
+ * {@link ./regional-console-hub.ts} when that URL differs from the base. Events from
+ * either socket are handled the same way. Filters by current project where needed and
+ * invalidates React Query cache. For migration updates we merge into cache instead of
+ * invalidating on every tick.
  */
 
 import type { QueryClient } from '@tanstack/react-query'
 import type { RealtimeResponseEvent } from '@appwrite.io/console'
 import { PROJECT_CHANNELS, REALTIME_EVENTS } from './constants'
 import { registerConsoleRealtimeListener } from './console-hub'
+import { registerRegionalConsoleRealtimeListener } from './regional-console-hub'
 
 /** Realtime payload may have statusCounters as JSON string; normalize to object */
 function normalizeMigrationPayload(
@@ -315,8 +318,8 @@ export interface SubscribeProjectRealtimeOptions {
 
 /**
  * Subscribe to realtime events for the given project.
- * Uses the shared console realtime hub (project=console) with channel ['console'] only.
- * Events are filtered by projectId in the handler.
+ * Uses the shared console hub on the main endpoint plus a regional console socket when
+ * the project's API host differs (multi-region cloud).
  *
  * Call the returned cleanup when the component unmounts or projectId changes.
  */
@@ -330,5 +333,12 @@ export async function subscribeProjectRealtime(
     handleRealtimeEvent(queryClient, projectId, response, onMigrationEvent)
   }
 
-  return registerConsoleRealtimeListener([...PROJECT_CHANNELS], handler)
+  const channels = [...PROJECT_CHANNELS]
+  const unregisterMain = await registerConsoleRealtimeListener(channels, handler)
+  const unregisterRegional =
+    await registerRegionalConsoleRealtimeListener(projectId, channels, handler)
+
+  return async () => {
+    await Promise.all([unregisterRegional(), unregisterMain()])
+  }
 }

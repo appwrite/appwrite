@@ -294,6 +294,39 @@ if (typeof window !== 'undefined') {
   restoreConsoleImpersonationFromSession()
 }
 
+/**
+ * Site deployment screenshots are stored in console-owned storage. Preview URLs must use
+ * project id `console` while targeting the project's regional API host (see
+ * `getProjectApiEndpoint`), not the user's project id in the query string.
+ */
+export function getSiteScreenshotFilePreviewUrl(
+  projectId: string,
+  params: {
+    bucketId: string
+    fileId: string
+    width?: number
+    height?: number
+  },
+): string {
+  const c = new Client()
+  Object.assign(c.config, clientConsole.config)
+  Object.assign(c.headers, clientConsole.headers)
+  c.setEndpoint(getProjectApiEndpoint(projectId)).setProject('console')
+  return new Storage(c).getFilePreview(params)
+}
+
+/**
+ * Realtime for console-scoped channels on the project's regional API host
+ * (project id `console`, same session as the main console client).
+ */
+export function createRegionalConsoleRealtime(projectId: string): Realtime {
+  const c = new Client()
+  Object.assign(c.config, clientConsole.config)
+  Object.assign(c.headers, clientConsole.headers)
+  c.setEndpoint(getProjectApiEndpoint(projectId)).setProject('console')
+  return new Realtime(c)
+}
+
 // Create Project SDK instance (raw), then wrap for slow-call reporting
 const sdkForProjectRaw = {
   client: clientProject,

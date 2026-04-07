@@ -72,7 +72,7 @@ import {
   useDeploymentProxyRules,
   useFunctionDeploymentProxyRules,
 } from '@/lib/react-query/hooks'
-import { sdk } from '@/lib/appwrite/sdk'
+import { getSiteScreenshotFilePreviewUrl } from '@/lib/appwrite/sdk'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { cn } from '@/lib/utils'
 
@@ -677,8 +677,8 @@ export function DeploymentDetailView({
         ? deployment.screenshotDark
         : deployment.screenshotLight
     const screenshotUrl =
-      isSiteDeployment && screenshotId
-        ? sdk.forConsole.storage.getFilePreview({
+      isSiteDeployment && screenshotId && projectId
+        ? getSiteScreenshotFilePreviewUrl(projectId, {
             bucketId: SCREENSHOTS_BUCKET_ID,
             fileId: screenshotId,
             width: SCREENSHOT_PREVIEW_WIDTH,
@@ -1022,6 +1022,7 @@ export function DeploymentDetailView({
     deployment,
     isSiteDeployment,
     isActiveDeployment,
+    projectId,
     parentResource?.framework,
     parentResource?.runtime,
     visitEntries,

@@ -45,7 +45,7 @@ import {
 import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { canCreateSite } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { sdk } from '@/lib/appwrite/sdk'
+import { sdk, getSiteScreenshotFilePreviewUrl } from '@/lib/appwrite/sdk'
 import { formatDistanceToNow } from 'date-fns'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -355,8 +355,8 @@ export function View() {
     const screenshotId = isDark
       ? (site as unknown).deploymentScreenshotDark
       : (site as unknown).deploymentScreenshotLight
-    if (!screenshotId) return null
-    return sdk.forConsole.storage.getFilePreview({
+    if (!screenshotId || !projectId) return null
+    return getSiteScreenshotFilePreviewUrl(projectId, {
       bucketId: SCREENSHOTS_BUCKET_ID,
       fileId: screenshotId,
       width: 1280,

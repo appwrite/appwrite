@@ -83,7 +83,7 @@ import {
   deleteSiteDeployment,
   Dependencies,
 } from '@/lib/react-query/hooks'
-import { sdk } from '@/lib/appwrite/sdk'
+import { sdk, getSiteScreenshotFilePreviewUrl } from '@/lib/appwrite/sdk'
 import { DeploymentDownloadType } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { Query } from '@appwrite.io/console'
@@ -649,14 +649,16 @@ export function SiteDeploymentsView() {
                         ? (activeDeployment as unknown).screenshotDark
                         : (activeDeployment as unknown).screenshotLight
 
-                    if (screenshotId) {
-                      const screenshotUrl =
-                        sdk.forConsole.storage.getFilePreview({
+                    if (screenshotId && projectId) {
+                      const screenshotUrl = getSiteScreenshotFilePreviewUrl(
+                        projectId,
+                        {
                           bucketId: SCREENSHOTS_BUCKET_ID,
                           fileId: screenshotId,
                           width: SCREENSHOT_PREVIEW_WIDTH,
                           height: SCREENSHOT_PREVIEW_HEIGHT,
-                        })
+                        },
+                      )
 
                       return (
                         <div className="w-full lg:w-1/2 relative group">

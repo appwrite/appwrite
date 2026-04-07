@@ -37,19 +37,48 @@ function reportSlowSdkCall(
   }
 }
 
+function isPromiseLike(
+  value: unknown,
+): value is PromiseLike<unknown> {
+  return (
+    value !== null &&
+    typeof value === 'object' &&
+    typeof (value as PromiseLike<unknown>).then === 'function'
+  )
+}
+
 /**
- * Wraps an async function to measure duration and report to Sentry when >= SLOW_CALL_THRESHOLD_MS.
- * Does not throw; only reports. Errors from the original call are still propagated.
+ * Wraps SDK methods to measure duration and report to Sentry when >= SLOW_CALL_THRESHOLD_MS.
+ * Sync methods (e.g. URL builders like `avatars.getQR`) keep their return type; async methods
+ * are timed until the promise settles.
  */
 function wrapWithTiming<T extends (...args: unknown[]) => unknown>(
   fn: T,
   scope: string,
   method: string,
 ): T {
-  return (async (...args: Parameters<T>) => {
+  return ((...args: Parameters<T>) => {
     const start = Date.now()
     try {
-      const result = await Promise.resolve(fn(...args))
+      const result = fn(...args)
+      if (isPromiseLike(result)) {
+        return result.then(
+          (resolved) => {
+            const duration = Date.now() - start
+            if (duration >= SLOW_CALL_THRESHOLD_MS) {
+              reportSlowSdkCall(scope, method, duration)
+            }
+            return resolved
+          },
+          (err: unknown) => {
+            const duration = Date.now() - start
+            if (duration >= SLOW_CALL_THRESHOLD_MS) {
+              reportSlowSdkCall(scope, method, duration)
+            }
+            throw err
+          },
+        )
+      }
       const duration = Date.now() - start
       if (duration >= SLOW_CALL_THRESHOLD_MS) {
         reportSlowSdkCall(scope, method, duration)

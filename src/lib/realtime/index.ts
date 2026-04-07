@@ -5,6 +5,10 @@ export {
   type ConsoleRealtimeHubUnregister,
 } from './console-hub'
 export {
+  registerRegionalConsoleRealtimeListener,
+  type RegionalConsoleRealtimeHubUnregister,
+} from './regional-console-hub'
+export {
   CONSOLE_CHANNELS,
   PROJECT_CHANNELS,
   REALTIME_EVENTS,
