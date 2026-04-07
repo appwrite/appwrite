@@ -61,16 +61,16 @@ class Create extends Action
                 $databaseKeys = System::getEnv('_APP_DATABASE_DOCUMENTSDB_KEYS', '');
                 $databaseOverride = System::getEnv('_APP_DATABASE_DOCUMENTSDB_OVERRIDE');
                 $dbScheme = System::getEnv('_APP_DB_HOST_DOCUMENTSDB', 'mongodb');
-                $databaseSharedTables = \explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES', ''));
-                $databaseSharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES_V1', ''));
+                $databaseSharedTables = \array_filter(\explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES', '')));
+                $databaseSharedTablesV1 = \array_filter(\explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES_V1', '')));
                 break;
             case VECTORSDB:
                 $databases = Config::getParam('pools-vectorsdb', []);
                 $databaseKeys = System::getEnv('_APP_DATABASE_VECTORSDB_KEYS', '');
                 $databaseOverride = System::getEnv('_APP_DATABASE_VECTORSDB_OVERRIDE');
                 $dbScheme = System::getEnv('_APP_DB_HOST_VECTORSDB', 'postgresql');
-                $databaseSharedTables = \explode(',', System::getEnv('_APP_DATABASE_VECTORSDB_SHARED_TABLES', ''));
-                $databaseSharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_VECTORSDB_SHARED_TABLES_V1', ''));
+                $databaseSharedTables = \array_filter(\explode(',', System::getEnv('_APP_DATABASE_VECTORSDB_SHARED_TABLES', '')));
+                $databaseSharedTablesV1 = \array_filter(\explode(',', System::getEnv('_APP_DATABASE_VECTORSDB_SHARED_TABLES_V1', '')));
                 break;
             default:
                 // legacy/tablesdb
@@ -108,7 +108,7 @@ class Create extends Action
         if ($index !== false) {
             $selectedDsn = $databases[$index];
         } else {
-            if (!empty($dsn)) {
+            if (!empty($dsn) && !empty($databaseSharedTables)) {
                 $beforeFilter = \array_values($databases);
                 if ($isSharedTablesV1) {
                     $databases = array_filter($databases, fn ($value) => \in_array($value, $databaseSharedTablesV1));
@@ -118,7 +118,10 @@ class Create extends Action
                     $databases = array_filter($databases, fn ($value) => !\in_array($value, $databaseSharedTables));
                 }
             }
-            $selectedDsn = !empty($databases) ? $databases[array_rand($databases)] : '';
+            if (empty($databases)) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, "No {$databasetype} database pool available for the current shared-tables mode");
+            }
+            $selectedDsn = $databases[array_rand($databases)];
         }
 
         if (\in_array($selectedDsn, $databaseSharedTables)) {
