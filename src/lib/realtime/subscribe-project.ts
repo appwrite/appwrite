@@ -9,8 +9,8 @@
 
 import type { QueryClient } from '@tanstack/react-query'
 import type { RealtimeResponseEvent } from '@appwrite.io/console'
-import { sdk } from '@/lib/appwrite/sdk'
 import { PROJECT_CHANNELS, REALTIME_EVENTS } from './constants'
+import { registerConsoleRealtimeListener } from './console-hub'
 
 /** Realtime payload may have statusCounters as JSON string; normalize to object */
 function normalizeMigrationPayload(
@@ -309,23 +309,16 @@ function handleRealtimeEvent(
 
 export type RealtimeSubscriptionCleanup = () => Promise<void>
 
-// Module-level lock: next subscriber waits on tail until we call resolveNext()
-// (in cleanup), so only one subscription is ever active and we never open
-// duplicate WebSockets.
-let tail: Promise<void> = Promise.resolve()
-
 export interface SubscribeProjectRealtimeOptions {
   onMigrationEvent?: OnMigrationEvent
 }
 
 /**
  * Subscribe to realtime events for the given project.
- * Uses the console client (project=console) with channel ['console'] only.
+ * Uses the shared console realtime hub (project=console) with channel ['console'] only.
  * Events are filtered by projectId in the handler.
  *
  * Call the returned cleanup when the component unmounts or projectId changes.
- * Only one subscription is active at a time; overlapping calls wait for the
- * previous subscription to close first.
  */
 export async function subscribeProjectRealtime(
   projectId: string,
@@ -337,28 +330,5 @@ export async function subscribeProjectRealtime(
     handleRealtimeEvent(queryClient, projectId, response, onMigrationEvent)
   }
 
-  // Acquire lock: next caller will wait on our release (resolveNext in cleanup)
-  const previousTail = tail
-  let resolveNext!: () => void
-  const releasePromise = new Promise<void>((r) => {
-    resolveNext = r
-  })
-  tail = previousTail.then(() => releasePromise)
-  await previousTail
-
-  // Single connection: console client (project=console) with ['console'] only
-  const consoleRealtime = sdk.getConsoleRealtime()
-  const sub = await consoleRealtime.subscribe(
-    [...PROJECT_CHANNELS],
-    handler as (event: {
-      events: string[]
-      channels: string[]
-      payload: unknown
-    }) => void,
-  )
-
-  return async function cleanup() {
-    await sub.close()
-    resolveNext()
-  }
+  return registerConsoleRealtimeListener([...PROJECT_CHANNELS], handler)
 }

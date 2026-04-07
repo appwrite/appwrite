@@ -66,6 +66,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { getApiEndpoint, sdk } from '@/lib/appwrite/sdk'
+import { registerConsoleRealtimeListener } from '@/lib/realtime'
 
 interface AIChatContextValue {
   isOpen: boolean
@@ -1271,12 +1272,18 @@ export function AIChatPanel() {
     [activeConversationId, conversations],
   )
   const contextProjectId = params.projectId ?? activeConversation?.projectId
-  const { project } = useProject(contextProjectId)
+  const { project, isLoading: projectLoading } = useProject(contextProjectId)
   const { account } = useAuth()
   const queryClient = useQueryClient()
   const accountId = (account as { $id?: string } | undefined)?.$id ?? null
   const organizationId =
     params.orgId ?? params.teamId ?? project?.teamId ?? null
+  /** On project routes, team channel comes from project fetch — wait so we do not reconnect per layer. */
+  const waitingForProjectTeam =
+    Boolean(contextProjectId) &&
+    !params.orgId &&
+    !params.teamId &&
+    projectLoading
   const assistantRealtimeChannels = useMemo(
     () =>
       buildAssistantRealtimeChannels({
@@ -1286,10 +1293,14 @@ export function AIChatPanel() {
       }),
     [accountId, contextProjectId, organizationId],
   )
+  const canSubscribeAssistantRealtime =
+    accountId != null && !waitingForProjectTeam
 
   useEffect(() => {
+    if (!canSubscribeAssistantRealtime) return
+
     let cancelled = false
-    let closeSubscription: (() => Promise<void>) | null = null
+    let unregister: (() => Promise<void>) | null = null
 
     const handleRealtimeEvent = (response: RealtimeResponseEvent<unknown>) => {
       const hasAssistantEvent =
@@ -1320,36 +1331,29 @@ export function AIChatPanel() {
       }
     }
 
-    async function subscribe() {
-      const realtime = sdk.getConsoleRealtime()
-      const subscription = await realtime.subscribe(
-        assistantRealtimeChannels,
-        handleRealtimeEvent as (event: {
-          events: string[]
-          channels: string[]
-          payload: unknown
-        }) => void,
-      )
-
-      if (cancelled) {
-        await subscription.close()
-        return
-      }
-
-      closeSubscription = () => subscription.close()
-    }
-
-    subscribe().catch(() => {
-      // Keep chat usable even if realtime fails.
-    })
+    registerConsoleRealtimeListener(assistantRealtimeChannels, handleRealtimeEvent)
+      .then((unreg) => {
+        if (cancelled) {
+          void unreg()
+          return
+        }
+        unregister = unreg
+      })
+      .catch(() => {
+        // Keep chat usable even if realtime fails.
+      })
 
     return () => {
       cancelled = true
-      if (closeSubscription) {
-        void closeSubscription()
+      if (unregister) {
+        void unregister()
       }
     }
-  }, [assistantRealtimeChannels, queryClient])
+  }, [
+    assistantRealtimeChannels,
+    canSubscribeAssistantRealtime,
+    queryClient,
+  ])
 
   const placeholderCandidates = useMemo(() => {
     const region =

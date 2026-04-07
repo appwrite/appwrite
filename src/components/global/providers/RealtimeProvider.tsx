@@ -7,9 +7,9 @@
  * export/import can be shown (unless the user already dismissed that migration).
  * Unsubscribes on unmount or when projectId changes.
  *
- * Ensures only one subscription is active: awaits previous cleanup before
- * opening new connections so we never have duplicate WebSockets (e.g. from
- * Strict Mode or fast dependency changes).
+ * Uses the shared console realtime hub so one WebSocket serves project
+ * invalidation, assistant, and any other console listeners; reconnects only
+ * when the merged channel set changes.
  */
 
 import { useCallback, useEffect, useRef, type ReactNode } from 'react'

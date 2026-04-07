@@ -365,6 +365,9 @@ export const sdk = {
   /**
    * Realtime for console-level subscriptions (sites, functions, deployments,
    * executions, migrations, platform ping, rules). Uses project = 'console'.
+   * Prefer `registerConsoleRealtimeListener` from `@/lib/realtime` so the app
+   * keeps a single WebSocket; direct subscribe() here forces reconnects when
+   * combined with other features.
    */
   getConsoleRealtime(): Realtime {
     return realtimeConsole

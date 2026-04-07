@@ -12,12 +12,6 @@ import { useParams, useNavigate, Link } from '@tanstack/react-router'
 import { useTheme } from 'next-themes'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import * as TooltipPrimitive from '@radix-ui/react-tooltip'
-import {
-  TooltipProvider,
-  TooltipTrigger,
-  TooltipContent,
-} from '@/components/ui/tooltip'
 import {
   Dialog,
   DialogContent,
@@ -35,11 +29,11 @@ import { getDeploymentStatusBadge } from '@/lib/utils/deployment-status'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
   ExternalLink,
-  Globe,
   GitBranch,
+  Globe,
+  Loader2,
   Share2,
   Smartphone,
-  Loader2,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -262,40 +256,6 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
   const sidebarContent =
     site || deployment ? (
       <div className="space-y-4">
-        {/* QR code dialog (used when status === 'ready') */}
-        {status === 'ready' && (
-          <Dialog open={qrDialogOpen} onOpenChange={setQrDialogOpen}>
-            <DialogContent className="sm:max-w-md p-0">
-              <DialogHeader className="px-6 pt-6 text-left">
-                <DialogTitle>View on mobile</DialogTitle>
-                <DialogDescription className="text-[13px] mt-2">
-                  Scan this QR code to open your site on a mobile device
-                </DialogDescription>
-              </DialogHeader>
-              <div className="border-t border-border" />
-              <div className="px-6 py-6 flex items-center justify-center">
-                {qrImageUrl && (
-                  <div className="p-4 bg-white rounded-lg">
-                    <img
-                      src={qrImageUrl}
-                      alt="QR code to open site on mobile"
-                      className="h-48 w-48 rounded"
-                    />
-                  </div>
-                )}
-              </div>
-              <div className="px-6 py-4 border-t border-border bg-muted/30 flex justify-end">
-                <Button
-                  variant="outline"
-                  onClick={() => setQrDialogOpen(false)}
-                >
-                  Close
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-        )}
-
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           {/* Header: icon + site name + status */}
           <div className="px-5 py-4">
@@ -499,10 +459,16 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
                             href={siteUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="mt-2 flex items-center gap-1 text-[12px] text-primary hover:underline"
+                            className="mt-2 flex items-center gap-1.5 text-[12px] text-primary hover:underline"
                           >
-                            <Globe className="h-3.5 w-3.5" />
-                            {primaryDomain}
+                            <Globe className="h-3.5 w-3.5 shrink-0" />
+                            <span className="min-w-0 truncate">
+                              {primaryDomain}
+                            </span>
+                            <ExternalLink
+                              className="h-3.5 w-3.5 shrink-0 opacity-80"
+                              aria-hidden
+                            />
                           </a>
                         )}
                       </div>
@@ -595,7 +561,13 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setQrDialogOpen(true)}
+                    onClick={() => {
+                      if (!siteUrl) {
+                        toast.error('Site URL is not available yet')
+                        return
+                      }
+                      setQrDialogOpen(true)
+                    }}
                     className="flex items-center gap-4 px-6 py-4 hover:bg-muted/20 transition-colors cursor-pointer text-left w-full"
                   >
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
@@ -617,12 +589,51 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
         </div>
       </WizardLayout>
 
+      {/* Above fullscreen wizard (z-[9998]); default dialog z-index would sit behind it */}
+      <Dialog open={qrDialogOpen} onOpenChange={setQrDialogOpen}>
+        <DialogContent
+          className="z-[10000] sm:max-w-md p-0"
+          overlayClassName="z-[9999]"
+        >
+          <DialogHeader className="px-6 pt-6 text-left">
+            <DialogTitle>View on mobile</DialogTitle>
+            <DialogDescription className="text-[13px] mt-2">
+              Scan this QR code to open your site on a mobile device
+            </DialogDescription>
+          </DialogHeader>
+          <div className="border-t border-border" />
+          <div className="px-6 py-6 flex items-center justify-center">
+            {qrImageUrl ? (
+              <div className="p-4 bg-white rounded-lg">
+                <img
+                  src={qrImageUrl}
+                  alt="QR code to open site on mobile"
+                  className="h-48 w-48 rounded"
+                />
+              </div>
+            ) : (
+              <p className="text-[13px] text-muted-foreground text-center px-4">
+                QR code could not be generated. Try again in a moment.
+              </p>
+            )}
+          </div>
+          <div className="px-6 py-4 border-t border-border bg-muted/30 flex justify-end">
+            <Button variant="outline" onClick={() => setQrDialogOpen(false)}>
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Cancel build confirmation */}
       <Dialog
         open={cancelBuildDialogOpen}
         onOpenChange={setCancelBuildDialogOpen}
       >
-        <DialogContent className="sm:max-w-md p-0">
+        <DialogContent
+          className="z-[10000] sm:max-w-md p-0"
+          overlayClassName="z-[9999]"
+        >
           <DialogHeader className="px-6 pt-6 pb-4 text-left">
             <DialogTitle>Cancel build</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
