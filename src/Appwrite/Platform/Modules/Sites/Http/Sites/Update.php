@@ -172,8 +172,6 @@ class Update extends Base
             $framework = $site->getAttribute('framework');
         }
 
-        $enabled ??= $site->getAttribute('enabled', true);
-
         $repositoryId = $site->getAttribute('repositoryId', '');
         $repositoryInternalId = $site->getAttribute('repositoryInternalId', '');
 

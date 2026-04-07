@@ -24,7 +24,7 @@ abstract class Action extends DatabasesAction
      */
     abstract protected function getResponseModel(): string;
 
-    public function setHttpPath(string $path): DatabasesAction
+    public function setHttpPath(string $path): self
     {
         if (str_contains($path, '/tablesdb/')) {
             $this->context = ROWS;
@@ -47,7 +47,8 @@ abstract class Action extends DatabasesAction
             ],
         ];
 
-        return parent::setHttpPath($path);
+        parent::setHttpPath($path);
+        return $this;
     }
 
     protected function getDatabasesOperationReadMetric(): string
@@ -406,8 +407,6 @@ abstract class Action extends DatabasesAction
 
             if (\is_array($related)) {
                 $document->setAttribute($relationship->getAttribute('key'), \array_values($relations));
-            } elseif (empty($relations)) {
-                $document->setAttribute($relationship->getAttribute('key'), null);
             }
         }
 

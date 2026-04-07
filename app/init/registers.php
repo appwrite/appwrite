@@ -6,7 +6,6 @@ use Appwrite\Hooks\Hooks;
 use Appwrite\PubSub\Adapter\Redis as PubSub;
 use Appwrite\URL\URL as AppwriteURL;
 use MaxMind\Db\Reader;
-use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Config\Config;
@@ -25,6 +24,7 @@ use Utopia\Logger\Adapter\LogOwl;
 use Utopia\Logger\Adapter\Raygun;
 use Utopia\Logger\Adapter\Sentry;
 use Utopia\Logger\Logger;
+use Utopia\Messaging\Adapter\Email\SMTP;
 use Utopia\Mongo\Client as MongoClient;
 use Utopia\Pools\Adapter\Stack as StackPool;
 use Utopia\Pools\Adapter\Swoole as SwoolePool;
@@ -56,7 +56,7 @@ $register->set('logger', function () {
     }
 
     try {
-        $loggingProvider = new DSN($providerConfig ?? '');
+        $loggingProvider = new DSN($providerConfig);
 
         $providerName = $loggingProvider->getScheme();
         $providerConfig = match ($providerName) {
@@ -76,7 +76,7 @@ $register->set('logger', function () {
         };
     }
 
-    if (empty($providerName) || empty($providerConfig)) {
+    if (empty($providerName)) {
         return;
     }
 
@@ -121,7 +121,7 @@ $register->set('realtimeLogger', function () {
         default => ['key' => $loggingProvider->getHost()],
     };
 
-    if (empty($providerName) || empty($providerConfig)) {
+    if (empty($providerName)) {
         return;
     }
 
@@ -242,22 +242,11 @@ $register->set('pools', function () {
         ],
     ];
 
-    $maxConnections = System::getEnv('_APP_CONNECTIONS_MAX', 151);
-    $instanceConnections = $maxConnections / System::getEnv('_APP_POOL_CLIENTS', 14);
+    $maxConnections = (int) System::getEnv('_APP_CONNECTIONS_MAX', 151);
+    $instanceConnections = $maxConnections / (int) System::getEnv('_APP_POOL_CLIENTS', 14);
 
-    $multiprocessing = System::getEnv('_APP_SERVER_MULTIPROCESS', 'disabled') === 'enabled';
-
-    if ($multiprocessing) {
-        $workerCount = intval(System::getEnv('_APP_CPU_NUM', swoole_cpu_num())) * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
-    } else {
-        $workerCount = 1;
-    }
-
-    if ($workerCount > $instanceConnections) {
-        throw new \Exception('Pool size is too small. Increase the number of allowed database connections or decrease the number of workers.', 500);
-    }
-
-    $poolSize = (int)($instanceConnections / $workerCount);
+    $workerCount = intval(System::getEnv('_APP_CPU_NUM', swoole_cpu_num())) * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
+    $poolSize = max(1, (int)($instanceConnections / $workerCount));
 
     foreach ($connections as $key => $connection) {
         $type = $connection['type'] ?? '';
@@ -308,7 +297,7 @@ $register->set('pools', function () {
                         ]);
                     });
                 },
-                'mongodb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase, $dsn) {
+                'mongodb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
                     try {
                         $mongo = new MongoClient($dsnDatabase, $dsnHost, (int)$dsnPort, $dsnUser, $dsnPass, false);
                         @$mongo->connect();
@@ -433,35 +422,20 @@ $register->set('db', function () {
 });
 
 $register->set('smtp', function () {
-    $mail = new PHPMailer(true);
-
-    $mail->isSMTP();
-
-    $username = System::getEnv('_APP_SMTP_USERNAME');
-    $password = System::getEnv('_APP_SMTP_PASSWORD');
-
-    $mail->XMailer = 'Appwrite Mailer';
-    $mail->Host = System::getEnv('_APP_SMTP_HOST', 'smtp');
-    $mail->Port = System::getEnv('_APP_SMTP_PORT', 25);
-    $mail->SMTPAuth = !empty($username) && !empty($password);
-    $mail->Username = $username;
-    $mail->Password = $password;
-    $mail->SMTPSecure = System::getEnv('_APP_SMTP_SECURE', '');
-    $mail->SMTPAutoTLS = false;
-    $mail->SMTPKeepAlive = true;
-    $mail->CharSet = 'UTF-8';
-    $mail->Timeout = 10; /* Connection timeout */
-    $mail->getSMTPInstance()->Timelimit = 30; /* Timeout for each individual SMTP command (e.g. HELO, EHLO, etc.) */
-
-    $from = \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
-    $email = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
-
-    $mail->setFrom($email, $from);
-    $mail->addReplyTo($email, $from);
-
-    $mail->isHTML(true);
-
-    return $mail;
+    $username = System::getEnv('_APP_SMTP_USERNAME', '');
+    $password = System::getEnv('_APP_SMTP_PASSWORD', '');
+    return new SMTP(
+        host: System::getEnv('_APP_SMTP_HOST', 'smtp'),
+        port: (int) System::getEnv('_APP_SMTP_PORT', 25),
+        username: $username,
+        password: $password,
+        smtpSecure: System::getEnv('_APP_SMTP_SECURE', ''),
+        smtpAutoTLS: false,
+        xMailer: 'Appwrite Mailer',
+        timeout: 10,
+        keepAlive: true,
+        timelimit: 30,
+    );
 });
 $register->set('geodb', function () {
     return new Reader(__DIR__ . '/../assets/dbip/dbip-country-lite-2025-12.mmdb');

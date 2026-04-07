@@ -147,6 +147,21 @@ class RequestTest extends TestCase
         $this->assertSame('unexpected', $params['extra']);
     }
 
+    public function testRouteIsScopedToRequestInstance(): void
+    {
+        $firstRequest = new Request(new SwooleRequest());
+        $secondRequest = new Request(new SwooleRequest());
+
+        $firstRoute = new Route(Request::METHOD_GET, '/first');
+        $secondRoute = new Route(Request::METHOD_GET, '/second');
+
+        $firstRequest->setRoute($firstRoute);
+        $secondRequest->setRoute($secondRoute);
+
+        $this->assertSame($firstRoute, $firstRequest->getRoute());
+        $this->assertSame($secondRoute, $secondRequest->getRoute());
+    }
+
     /**
      * Helper to attach a route with multiple SDK methods to the request.
      */

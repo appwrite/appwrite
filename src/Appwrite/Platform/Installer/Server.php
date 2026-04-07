@@ -6,6 +6,7 @@ use Appwrite\Platform\Installer\Http\Installer\Error;
 use Appwrite\Platform\Installer\Runtime\Config;
 use Appwrite\Platform\Installer\Runtime\State;
 use Swoole\Http\Server as SwooleServer;
+use Swoole\Runtime;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Http\Adapter\Swoole\Response;
 use Utopia\Http\Adapter\Swoole\Server as SwooleAdapter;
@@ -28,6 +29,7 @@ class Server
     public const string STEP_DOCKER_COMPOSE = 'docker-compose';
     public const string STEP_DOCKER_CONTAINERS = 'docker-containers';
     public const string STEP_ACCOUNT_SETUP = 'account-setup';
+    public const string STEP_MIGRATION = 'migration';
     public const string STEP_SSL_CERTIFICATE = 'ssl-certificate';
 
     public const string STATUS_IN_PROGRESS = 'in-progress';
@@ -129,6 +131,8 @@ class Server
 
     private function startSwooleServer(string $host, int $port, ?string $readyFile = null): void
     {
+        Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
+
         $this->state->clearStaleLock();
 
         // Preload static files into memory
@@ -141,9 +145,20 @@ class Server
         $paths = $this->paths;
         $state = $this->state;
 
-        Http::setResource('installerState', fn () => $state);
-        Http::setResource('installerConfig', fn () => $config);
-        Http::setResource('installerPaths', fn () => $paths);
+        $adapter = new class ($host, $port, ['worker_num' => 1]) extends SwooleAdapter {
+            public function getNativeServer(): SwooleServer
+            {
+                return $this->server;
+            }
+        };
+
+        $nativeServer = $adapter->getNativeServer();
+
+        $container = $adapter->getContainer();
+        $container->set('installerState', fn () => $state);
+        $container->set('installerConfig', fn () => $config);
+        $container->set('installerPaths', fn () => $paths);
+        $container->set('swooleServer', fn () => $nativeServer);
 
         // Register routes via Utopia Platform
         $platform = new Installer();
@@ -156,17 +171,6 @@ class Server
             ->inject('response')
             ->action($errorHandler->action(...));
 
-        $adapter = new class ($host, $port, ['worker_num' => 1]) extends SwooleAdapter {
-            public function getNativeServer(): SwooleServer
-            {
-                return $this->server;
-            }
-        };
-
-        $nativeServer = $adapter->getNativeServer();
-
-        Http::setResource('swooleServer', fn () => $nativeServer);
-
         $nativeServer->on('start', function () use ($nativeServer, $port, $readyFile) {
             \Swoole\Process::signal(SIGTERM, fn () => $nativeServer->shutdown());
             \Swoole\Process::signal(SIGINT, fn () => $nativeServer->shutdown());
@@ -176,7 +180,7 @@ class Server
             }
         });
 
-        $adapter->onRequest(function (Request $request, Response $response) use ($files) {
+        $adapter->onRequest(function (Request $request, Response $response) use ($adapter, $files) {
             // Serve static files from memory
             $uri = $request->getURI();
             if ($files->isFileLoaded($uri)) {
@@ -186,7 +190,7 @@ class Server
                 return;
             }
 
-            $app = new Http('UTC');
+            $app = new Http($adapter, 'UTC');
             $app->run($request, $response);
         });
 

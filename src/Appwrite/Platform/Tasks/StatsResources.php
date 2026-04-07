@@ -60,7 +60,7 @@ class StatsResources extends Action
 
         $interval = (int) System::getEnv('_APP_STATS_RESOURCES_INTERVAL', '3600');
 
-        Console::loop(function () use ($queueForStatsResources, $dbForPlatform) {
+        Console::loop(function () use ($queueForStatsResources) {
 
             $last24Hours = (new \DateTime())->sub(\DateInterval::createFromDateString('24 hours'));
             /**

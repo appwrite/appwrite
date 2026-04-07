@@ -25,7 +25,7 @@ class KeyTest extends TestCase
         $roleScopes = Config::getParam('roles', [])[User::ROLE_APPS]['scopes'];
         $guestRoleScopes = Config::getParam('roles', [])[User::ROLE_GUESTS]['scopes'];
 
-        $key = static::generateKey($projectId, $usage, $scopes);
+        $key = self::generateKey($projectId, $usage, $scopes);
         $decoded = Key::decode(
             project: new Document(['$id' => $projectId]),
             team: new Document(),
@@ -50,7 +50,7 @@ class KeyTest extends TestCase
             'previewAuthDisabled' => true,
             'deploymentStatusIgnored' => true,
         ];
-        $key = static::generateKey($projectId, $usage, $scopes, extra: $extra);
+        $key = self::generateKey($projectId, $usage, $scopes, extra: $extra);
         $decoded = Key::decode(
             project: new Document(['$id' => $projectId]),
             team: new Document(),
@@ -88,7 +88,7 @@ class KeyTest extends TestCase
         $this->assertEquals('UNKNOWN', $decoded->getName());
 
         // Decode expired dynamic key
-        $expiredKey = static::generateKey($projectId, $usage, $scopes, maxAge: 1, timestamp: time() - 60);
+        $expiredKey = self::generateKey($projectId, $usage, $scopes, maxAge: 1, timestamp: time() - 60);
         \sleep(2);
         $decoded = Key::decode(
             project: new Document(['$id' => $projectId]),

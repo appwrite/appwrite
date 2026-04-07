@@ -157,9 +157,9 @@ class User extends Model
     }
 
     /**
-     * Get Collection
+     * Filter user document attributes for response output.
      *
-     * @return string
+     * @return Document
      */
     public function filter(Document $document): Document
     {
