@@ -802,6 +802,16 @@ class AccountCustomClientTest extends Scope
         $sessionId = $response['body']['$id'];
         $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
 
+        $accountResponse = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]));
+
+        $this->assertEquals(200, $accountResponse['headers']['status-code']);
+        $this->assertEquals($email, $accountResponse['body']['email']);
+
         // apiKey is only available in custom client test
         $apiKey = $this->getProject()['apiKey'];
         if (!empty($apiKey)) {

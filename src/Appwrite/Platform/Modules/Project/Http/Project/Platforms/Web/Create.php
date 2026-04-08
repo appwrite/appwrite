@@ -43,7 +43,7 @@ class Create extends Action
             ->httpAlias('/v1/projects/:projectId/platforms')
             ->desc('Create project web platform')
             ->groups(['api', 'project'])
-            ->label('scope', 'project.write')
+            ->label('scope', 'platforms.write')
             ->label('event', 'platforms.[platformId].create')
             ->label('audits.event', 'project.platform.create')
             ->label('audits.resource', 'project.platform/{response.$id}')

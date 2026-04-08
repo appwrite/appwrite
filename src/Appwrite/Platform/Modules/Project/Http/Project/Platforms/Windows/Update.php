@@ -33,7 +33,7 @@ class Update extends Action
             ->setHttpPath('/v1/project/platforms/windows/:platformId')
             ->desc('Update project Windows platform')
             ->groups(['api', 'project'])
-            ->label('scope', 'project.write')
+            ->label('scope', 'platforms.write')
             ->label('event', 'platforms.[platformId].update')
             ->label('audits.event', 'project.platform.update')
             ->label('audits.resource', 'project.platform/{response.$id}')

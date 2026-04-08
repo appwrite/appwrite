@@ -1,9 +1,10 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Project\Http\Project\Platforms;
+namespace Appwrite\Platform\Modules\Project\Http\Project\Keys;
 
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -16,33 +17,33 @@ use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 
-class Delete extends Action
+class Delete extends Base
 {
     use HTTP;
 
     public static function getName()
     {
-        return 'deleteProjectPlatform';
+        return 'deleteProjectKey';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_DELETE)
-            ->setHttpPath('/v1/project/platforms/:platformId')
-            ->httpAlias('/v1/projects/:projectId/platforms/:platformId')
-            ->desc('Delete project platform')
+            ->setHttpPath('/v1/project/keys/:keyId')
+            ->httpAlias('/v1/projects/:projectId/keys/:keyId')
+            ->desc('Delete project key')
             ->groups(['api', 'project'])
-            ->label('scope', 'platforms.write')
-            ->label('event', 'platforms.[platformId].delete')
-            ->label('audits.event', 'project.platform.delete')
-            ->label('audits.resource', 'project.platform/{response.$id}')
+            ->label('scope', 'keys.write')
+            ->label('event', 'keys.[keyId].delete')
+            ->label('audits.event', 'project.key.delete')
+            ->label('audits.resource', 'project.key/{request.keyId}')
             ->label('sdk', new Method(
                 namespace: 'project',
-                group: 'platforms',
-                name: 'deletePlatform',
+                group: 'keys',
+                name: 'deleteKey',
                 description: <<<EOT
-                Delete a platform by its unique ID. This endpoint removes the platform and all its configurations from the project.
+                Delete a key by its unique ID. Once deleted, the key can no longer be used to authenticate API calls.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
@@ -53,36 +54,36 @@ class Delete extends Action
                 ],
                 contentType: ContentType::NONE
             ))
-            ->param('platformId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Platform ID.', false, ['dbForPlatform'])
+            ->param('keyId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Key ID.', false, ['dbForPlatform'])
             ->inject('response')
             ->inject('dbForPlatform')
-            ->inject('authorization')
-            ->inject('project')
             ->inject('queueForEvents')
+            ->inject('project')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
     public function action(
-        string $platformId,
+        string $keyId,
         Response $response,
         Database $dbForPlatform,
-        Authorization $authorization,
-        Document $project,
         Event $queueForEvents,
+        Document $project,
+        Authorization $authorization,
     ) {
-        $platform = $authorization->skip(fn () => $dbForPlatform->getDocument('platforms', $platformId));
+        $key = $authorization->skip(fn () => $dbForPlatform->getDocument('keys', $keyId));
 
-        if ($platform->isEmpty() || $platform->getAttribute('projectInternalId', '') !== $project->getSequence()) {
-            throw new Exception(Exception::PLATFORM_NOT_FOUND);
+        if ($key->isEmpty() || $key->getAttribute('resourceType', '') !== 'projects' || $key->getAttribute('resourceInternalId', '') !== $project->getSequence()) {
+            throw new Exception(Exception::KEY_NOT_FOUND);
         }
 
-        if (!$authorization->skip(fn () => $dbForPlatform->deleteDocument('platforms', $platform->getId()))) {
+        if (!$authorization->skip(fn () => $dbForPlatform->deleteDocument('keys', $key->getId()))) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove document from DB');
         };
 
         $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
 
-        $queueForEvents->setParam('platformId', $platform->getId());
+        $queueForEvents->setParam('keyId', $key->getId());
 
         $response->noContent();
     }

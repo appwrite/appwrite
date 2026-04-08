@@ -35,7 +35,7 @@ class Update extends Action
             ->httpAlias('/v1/projects/:projectId/platforms/:platformId')
             ->desc('Update project web platform')
             ->groups(['api', 'project'])
-            ->label('scope', 'project.write')
+            ->label('scope', 'platforms.write')
             ->label('event', 'platforms.[platformId].update')
             ->label('audits.event', 'project.platform.update')
             ->label('audits.resource', 'project.platform/{response.$id}')

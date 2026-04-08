@@ -5305,7 +5305,7 @@ class RealtimeCustomClientTest extends Scope
         $actorsId = $actors['body']['$id'];
 
         //Test Attribute Create
-        
+
         $scoreAttr = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $actorsId . '/attributes/integer', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -5350,7 +5350,7 @@ class RealtimeCustomClientTest extends Scope
         ], $this->getHeaders()), [
             'value' => 5
         ]);
-        
+
         $this->assertEquals(200, $increment['headers']['status-code']);
 
         $response = json_decode($client->receive(), true);
@@ -5361,7 +5361,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertCount(8, $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$documentId}.update", $response['data']['events']);
-        
+
         $this->assertNotEmpty($response['data']['payload']);
         $this->assertIsArray($response['data']['payload']);
         $this->assertArrayHasKey('$id', $response['data']['payload']);
@@ -5394,7 +5394,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertCount(8, $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$documentId}.update", $response['data']['events']);
-        
+
         $this->assertNotEmpty($response['data']['payload']);
         $this->assertIsArray($response['data']['payload']);
         $this->assertArrayHasKey('$id', $response['data']['payload']);

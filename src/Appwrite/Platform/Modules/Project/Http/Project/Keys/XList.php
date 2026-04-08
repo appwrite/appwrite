@@ -1,12 +1,13 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Project\Http\Project\Platforms;
+namespace Appwrite\Platform\Modules\Project\Http\Project\Keys;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\Utopia\Database\Validator\Queries\Platforms;
+use Appwrite\Utopia\Database\Validator\Queries\Keys;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -19,40 +20,40 @@ use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
 
-class XList extends Action
+class XList extends Base
 {
     use HTTP;
 
     public static function getName()
     {
-        return 'listProjectPlatforms';
+        return 'listProjectKeys';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/project/platforms')
-            ->httpAlias('/v1/projects/:projectId/platforms')
-            ->desc('List project platforms')
+            ->setHttpPath('/v1/project/keys')
+            ->httpAlias('/v1/projects/:projectId/keys')
+            ->desc('List project keys')
             ->groups(['api', 'project'])
-            ->label('scope', 'platforms.read')
+            ->label('scope', 'keys.read')
             ->label('sdk', new Method(
                 namespace: 'project',
-                group: 'platforms',
-                name: 'listPlatforms',
+                group: 'keys',
+                name: 'listKeys',
                 description: <<<EOT
-                Get a list of all platforms in the project. This endpoint returns an array of all platforms and their configurations.
+                Get a list of all API keys from the current project.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_PLATFORM_LIST,
+                        model: Response::MODEL_KEY_LIST,
                     )
                 ]
             ))
-            ->param('queries', [], new Platforms(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Platforms::ALLOWED_ATTRIBUTES), true)
+            ->param('queries', [], new Keys(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Keys::ALLOWED_ATTRIBUTES), true)
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('project')
             ->inject('response')
@@ -78,13 +79,13 @@ class XList extends Action
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        foreach ($queries as $query) {
-            if (\in_array($query->getAttribute(), ['bundleIdentifier', 'applicationId', 'packageIdentifierName', 'packageName'])) {
-                $query->setAttribute('key');
-            }
+        // Backwards compatibility
+        if (\count(Query::getByType($queries, [Query::TYPE_LIMIT])) === 0) {
+            $queries[] = Query::limit(5000);
         }
 
-        $queries[] = Query::equal('projectInternalId', [$project->getSequence()]);
+        $queries[] = Query::equal('resourceType', ['projects']);
+        $queries[] = Query::equal('resourceInternalId', [$project->getSequence()]);
 
         $cursor = Query::getCursorQueries($queries, false);
         $cursor = \reset($cursor);
@@ -95,14 +96,15 @@ class XList extends Action
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
             }
 
-            $platformId = $cursor->getValue();
-            $cursorDocument = $authorization->skip(fn () => $dbForPlatform->findOne('platforms', [
-                Query::equal('$id', [$platformId]),
-                Query::equal('projectInternalId', [$project->getSequence()]),
+            $keyId = $cursor->getValue();
+            $cursorDocument = $authorization->skip(fn () => $dbForPlatform->findOne('keys', [
+                Query::equal('$id', [$keyId]),
+                Query::equal('resourceType', ['projects']),
+                Query::equal('resourceInternalId', [$project->getSequence()]),
             ]));
 
             if ($cursorDocument->isEmpty()) {
-                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Platform '{$platformId}' for the 'cursor' value not found.");
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Key '{$keyId}' for the 'cursor' value not found.");
             }
 
             $cursor->setValue($cursorDocument);
@@ -111,15 +113,15 @@ class XList extends Action
         $filterQueries = Query::groupByType($queries)['filters'];
 
         try {
-            $platforms = $authorization->skip(fn () => $dbForPlatform->find('platforms', $queries));
-            $total = $includeTotal ? $authorization->skip(fn () => $dbForPlatform->count('platforms', $filterQueries, APP_LIMIT_COUNT)) : 0;
+            $keys = $authorization->skip(fn () => $dbForPlatform->find('keys', $queries));
+            $total = $includeTotal ? $authorization->skip(fn () => $dbForPlatform->count('keys', $filterQueries, APP_LIMIT_COUNT)) : 0;
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
 
         $response->dynamic(new Document([
-            'platforms' => $platforms,
+            'keys' => $keys,
             'total' => $total,
-        ]), Response::MODEL_PLATFORM_LIST);
+        ]), Response::MODEL_KEY_LIST);
     }
 }

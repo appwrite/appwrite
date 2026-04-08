@@ -219,18 +219,13 @@ class Client
         curl_setopt($ch, CURLOPT_HTTPHEADER, $formattedHeaders);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 0);
         curl_setopt($ch, CURLOPT_TIMEOUT, 120);
-        curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, $header) use (&$responseHeaders, &$cookies) {
+        curl_setopt($ch, CURLOPT_COOKIEFILE, ''); // enable in-memory RFC 6265 cookie engine
+        curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, $header) use (&$responseHeaders) {
             $len = strlen($header);
             $header = explode(':', $header, 2);
 
             if (count($header) < 2) { // ignore invalid headers
                 return $len;
-            }
-
-            if (strtolower(trim($header[0])) == 'set-cookie') {
-                $parsed = $this->parseCookie((string)trim($header[1]));
-                $name = array_key_first($parsed);
-                $cookies[$name] = $parsed[$name];
             }
 
             $responseHeaders[strtolower(trim($header[0]))] = trim($header[1]);
@@ -258,6 +253,11 @@ class Client
         $responseBody   = curl_exec($ch);
         $responseType   = $responseHeaders['content-type'] ?? '';
         $responseStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+        foreach (curl_getinfo($ch, CURLINFO_COOKIELIST) as $line) {
+            $parts = explode("\t", $line);
+            $cookies[$parts[5]] = $parts[6] ?? '';
+        }
 
         if ($decode && $method !== self::METHOD_HEAD) {
             $strpos = strpos($responseType, ';');
@@ -307,21 +307,6 @@ class Client
             'cookies' => $cookies,
             'body' => $responseBody
         ];
-    }
-
-    /**
-     * Parse Cookie String
-     *
-     * @param string $cookie
-     * @return array
-     */
-    public function parseCookie(string $cookie): array
-    {
-        $cookies = [];
-
-        parse_str(strtr($cookie, ['&' => '%26', '+' => '%2B', ';' => '&']), $cookies);
-
-        return $cookies;
     }
 
     /**

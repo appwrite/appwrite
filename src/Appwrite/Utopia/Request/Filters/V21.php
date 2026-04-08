@@ -71,6 +71,9 @@ class V21 extends Filter
             case 'webhooks.create':
                 $content = $this->fillWebhookid($content);
                 break;
+            case 'project.createKey':
+                $content = $this->fillKeyId($content);
+                break;
             case 'project.createVariable':
                 $content = $this->fillVariableId($content);
                 break;
@@ -119,6 +122,12 @@ class V21 extends Filter
     protected function fillWebhookid(array $content): array
     {
         $content['webhookId'] = $content['webhookId'] ?? 'unique()';
+        return $content;
+    }
+
+    protected function fillKeyId(array $content): array
+    {
+        $content['keyId'] = $content['keyId'] ?? 'unique()';
         return $content;
     }
 

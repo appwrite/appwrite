@@ -3,6 +3,11 @@
 namespace Appwrite\Platform\Modules\Project\Services;
 
 use Appwrite\Platform\Modules\Project\Http\Init;
+use Appwrite\Platform\Modules\Project\Http\Project\Keys\Create as CreateKey;
+use Appwrite\Platform\Modules\Project\Http\Project\Keys\Delete as DeleteKey;
+use Appwrite\Platform\Modules\Project\Http\Project\Keys\Get as GetKey;
+use Appwrite\Platform\Modules\Project\Http\Project\Keys\Update as UpdateKey;
+use Appwrite\Platform\Modules\Project\Http\Project\Keys\XList as ListKeys;
 use Appwrite\Platform\Modules\Project\Http\Project\Labels\Update as UpdateProjectLabels;
 use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Android\Create as CreateAndroidPlatform;
 use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Android\Update as UpdateAndroidPlatform;
@@ -42,6 +47,13 @@ class Http extends Service
         $this->addAction(GetVariable::getName(), new GetVariable());
         $this->addAction(DeleteVariable::getName(), new DeleteVariable());
         $this->addAction(UpdateVariable::getName(), new UpdateVariable());
+
+        // Keys
+        $this->addAction(CreateKey::getName(), new CreateKey());
+        $this->addAction(ListKeys::getName(), new ListKeys());
+        $this->addAction(GetKey::getName(), new GetKey());
+        $this->addAction(DeleteKey::getName(), new DeleteKey());
+        $this->addAction(UpdateKey::getName(), new UpdateKey());
 
         // Platforms
         $this->addAction(DeletePlatform::getName(), new DeletePlatform());

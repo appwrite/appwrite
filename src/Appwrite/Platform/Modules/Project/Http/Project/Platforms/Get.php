@@ -32,7 +32,7 @@ class Get extends Action
             ->httpAlias('/v1/projects/:projectId/platforms/:platformId')
             ->desc('Get project platform')
             ->groups(['api', 'project'])
-            ->label('scope', 'project.read')
+            ->label('scope', 'platforms.read')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'platforms',

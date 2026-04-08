@@ -3216,6 +3216,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/keys', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'name' => 'Key Custom',
             'scopes' => ['teams.read', 'teams.write'],
@@ -3301,6 +3302,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/keys', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'name' => 'Key Test 2',
             'scopes' => ['users.read'],
@@ -3676,6 +3678,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/keys', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'name' => 'Key For Deletion',
             'scopes' => ['teams.read', 'teams.write'],
