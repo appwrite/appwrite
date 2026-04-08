@@ -752,11 +752,8 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             }
 
             if (\is_array($values)) {
-                $count = 0;
                 foreach ($values as $value) {
-                    $override = $count === 0;
-                    $response->addHeader($name, $value, override: $override);
-                    $count++;
+                    $response->addHeader($name, $value);
                 }
             } else {
                 $response->addHeader($name, $values);
@@ -1474,7 +1471,9 @@ Http::error()
         try {
             $cors = $utopia->getResource('cors');
             foreach ($cors->headers($request->getOrigin()) as $name => $value) {
-                $response->addHeader($name, $value, override: true);
+                $response
+                    ->removeHeader($name)
+                    ->addHeader($name, $value);
             }
         } catch (Throwable) {
             // Degrade gracefully - error response without CORS is no worse than before.

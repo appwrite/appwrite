@@ -12,7 +12,7 @@ class Project extends Model
     /**
      * @var bool
      */
-    protected bool $public = false;
+    protected bool $public = true;
 
     public function __construct()
     {
