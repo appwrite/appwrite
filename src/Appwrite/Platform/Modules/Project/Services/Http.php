@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Project\Services;
 
 use Appwrite\Platform\Modules\Project\Http\Init;
+use Appwrite\Platform\Modules\Project\Http\Project\Labels\Update as UpdateProjectLabels;
 use Appwrite\Platform\Modules\Project\Http\Project\Variables\Create as CreateVariable;
 use Appwrite\Platform\Modules\Project\Http\Project\Variables\Delete as DeleteVariable;
 use Appwrite\Platform\Modules\Project\Http\Project\Variables\Get as GetVariable;
@@ -25,5 +26,7 @@ class Http extends Service
         $this->addAction(GetVariable::getName(), new GetVariable());
         $this->addAction(DeleteVariable::getName(), new DeleteVariable());
         $this->addAction(UpdateVariable::getName(), new UpdateVariable());
+
+        $this->addAction(UpdateProjectLabels::getName(), new UpdateProjectLabels());
     }
 }

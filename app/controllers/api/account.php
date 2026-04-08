@@ -1103,13 +1103,13 @@ Http::post('/v1/account/sessions/email')
             ]));
         }
 
-        $dbForProject->purgeCachedDocument('users', $user->getId());
-
         $session = $dbForProject->createDocument('sessions', $session->setAttribute('$permissions', [
             Permission::read(Role::user($user->getId())),
             Permission::update(Role::user($user->getId())),
             Permission::delete(Role::user($user->getId())),
         ]));
+
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $encoded = $store
             ->setProperty('id', $user->getId())

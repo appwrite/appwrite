@@ -482,7 +482,12 @@ class Specs extends Action
                     ? $specsDir . '/' . $format . '-mocks-' . $platform . '.json'
                     : $specsDir . '/' . $format . '-' . $version . '-' . $platform . '.json';
 
-                $parsedSpecs = $specs->parse();
+                try {
+                    $parsedSpecs = $specs->parse();
+                } catch (\RuntimeException $e) {
+                    throw new \RuntimeException("Spec generation failed for {$platform} ({$format}): " . $e->getMessage(), 0, $e);
+                }
+
                 $encodedSpecs = \json_encode($parsedSpecs, JSON_PRETTY_PRINT);
 
                 unset($parsedSpecs);
