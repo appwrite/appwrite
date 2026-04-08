@@ -201,7 +201,6 @@ flowchart TD
     classDef gateway  fill:#d5e8d4,stroke:#82b366,color:#000
     classDef api      fill:#e1d5e7,stroke:#9673a6,color:#000
     classDef service  fill:#f5f5f5,stroke:#bbb,color:#000
-    classDef security fill:#d5e8d4,stroke:#82b366,color:#000
     classDef hot      fill:#f8cecc,stroke:#b85450,color:#000
     classDef store    fill:#fff2cc,stroke:#d6b656,color:#000
     classDef compute  fill:#dae8fc,stroke:#6c8ebf,color:#000
@@ -231,8 +230,8 @@ flowchart TD
     Clients --> LB{{Loadbalancer}}:::gateway
     LB --> Console(Console):::api & GQL(GraphQL API):::api & REST(REST API):::api & RT(Realtime API):::api & SSL{{SSL Gateway}}:::gateway
     REST --> APIServices
-    REST & GQL & RT --> SecLayer[Security Layer]:::security
-    SecLayer --> Cache & Queue & AV
+    REST & GQL & RT --> Cache & Queue
+    Storage --> AV
     Cache --> DB
     Queue --> Workers
     Workers --> DB
