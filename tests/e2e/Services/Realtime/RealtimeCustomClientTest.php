@@ -5261,4 +5261,154 @@ class RealtimeCustomClientTest extends Scope
 
         $client->close();
     }
+
+    public function testChannelDatabaseAtomicOperations()
+    {
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+
+        $client = $this->getWebsocket(['documents', 'collections'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ], null);
+
+        $response = json_decode($client->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+
+        // Test Database Create
+
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'Atomic DB',
+        ]);
+        $databaseId = $database['body']['$id'];
+
+        //Test Collection Create
+
+        $actors = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Atomic Actors',
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            'documentSecurity' => true,
+        ]);
+        $actorsId = $actors['body']['$id'];
+
+        //Test Attribute Create
+        
+        $scoreAttr = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $actorsId . '/attributes/integer', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'score',
+            'required' => true,
+        ]);
+
+        $this->assertEventually(function () use ($databaseId, $actorsId) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $actorsId . '/attributes/score', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
+
+        //Test Document Create
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $actorsId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => ID::unique(),
+            'data' => [
+                'score' => 10
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $documentId = $document['body']['$id'];
+
+        $client->receive();
+
+        // Test Document Increment
+        $increment = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $actorsId . '/documents/' . $documentId . '/score/increment', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'value' => 5
+        ]);
+        
+        $this->assertEquals(200, $increment['headers']['status-code']);
+
+        $response = json_decode($client->receive(), true);
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('event', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertArrayHasKey('timestamp', $response['data']);
+        $this->assertCount(8, $response['data']['channels']);
+        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$documentId}.update", $response['data']['events']);
+        
+        $this->assertNotEmpty($response['data']['payload']);
+        $this->assertIsArray($response['data']['payload']);
+        $this->assertArrayHasKey('$id', $response['data']['payload']);
+        $this->assertEquals(15, $response['data']['payload']['score']);
+
+        sleep(1);
+
+        try {
+            $client->receive();
+            $this->fail('Should not receive duplicate event');
+        } catch (TimeoutException $e) {
+            $this->assertTrue(true);
+        }
+
+        // Test Document Decrement
+        $decrement = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $actorsId . '/documents/' . $documentId . '/score/decrement', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'value' => 3
+        ]);
+
+        $this->assertEquals(200, $decrement['headers']['status-code']);
+
+        $response = json_decode($client->receive(), true);
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('event', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertArrayHasKey('timestamp', $response['data']);
+        $this->assertCount(8, $response['data']['channels']);
+        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$documentId}.update", $response['data']['events']);
+        
+        $this->assertNotEmpty($response['data']['payload']);
+        $this->assertIsArray($response['data']['payload']);
+        $this->assertArrayHasKey('$id', $response['data']['payload']);
+        $this->assertEquals(12, $response['data']['payload']['score']);
+
+        sleep(1);
+
+        try {
+            $client->receive();
+            $this->fail('Should not receive duplicate event');
+        } catch (TimeoutException $e) {
+            $this->assertTrue(true);
+        }
+
+        $client->close();
+    }
 }

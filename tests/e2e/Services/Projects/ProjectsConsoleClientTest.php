@@ -3809,6 +3809,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'type' => 'web',
             'name' => 'Web App',
@@ -3828,6 +3829,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'type' => 'flutter-ios',
             'name' => 'Flutter App (iOS)',
@@ -3836,7 +3838,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals('flutter-ios', $response['body']['type']);
+        $this->assertEquals('apple', $response['body']['type']); // Origianlly flutter-ios, but new version renames
         $this->assertEquals('Flutter App (iOS)', $response['body']['name']);
         $this->assertEquals('com.example.ios', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
@@ -3847,6 +3849,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'type' => 'flutter-android',
             'name' => 'Flutter App (Android)',
@@ -3855,7 +3858,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals('flutter-android', $response['body']['type']);
+        $this->assertEquals('android', $response['body']['type']); // Origianlly flutter-android, but new version renames
         $this->assertEquals('Flutter App (Android)', $response['body']['name']);
         $this->assertEquals('com.example.android', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
@@ -3866,6 +3869,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'type' => 'flutter-web',
             'name' => 'Flutter App (Web)',
@@ -3874,7 +3878,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals('flutter-web', $response['body']['type']);
+        $this->assertEquals('web', $response['body']['type']); // Origianlly flutter-web, but new version renames
         $this->assertEquals('Flutter App (Web)', $response['body']['name']);
         $this->assertEquals('', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
@@ -3885,6 +3889,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'type' => 'apple-ios',
             'name' => 'iOS App',
@@ -3893,7 +3898,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals('apple-ios', $response['body']['type']);
+        $this->assertEquals('apple', $response['body']['type']); // Origianlly apple-ios, but new version renames
         $this->assertEquals('iOS App', $response['body']['name']);
         $this->assertEquals('com.example.ios', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
@@ -3904,6 +3909,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'type' => 'apple-macos',
             'name' => 'macOS App',
@@ -3912,7 +3918,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals('apple-macos', $response['body']['type']);
+        $this->assertEquals('apple', $response['body']['type']); // Origianlly apple-macos, but new version renames
         $this->assertEquals('macOS App', $response['body']['name']);
         $this->assertEquals('com.example.macos', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
@@ -3923,6 +3929,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'type' => 'apple-watchos',
             'name' => 'watchOS App',
@@ -3931,7 +3938,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals('apple-watchos', $response['body']['type']);
+        $this->assertEquals('apple', $response['body']['type']); // Origianlly apple-watchos, but new version renames
         $this->assertEquals('watchOS App', $response['body']['name']);
         $this->assertEquals('com.example.watchos', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
@@ -3942,6 +3949,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'type' => 'apple-tvos',
             'name' => 'tvOS App',
@@ -3950,7 +3958,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals('apple-tvos', $response['body']['type']);
+        $this->assertEquals('apple', $response['body']['type']); // Origianlly apple-tvos, but new version renames
         $this->assertEquals('tvOS App', $response['body']['name']);
         $this->assertEquals('com.example.tvos', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
@@ -3964,6 +3972,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'type' => 'unknown',
             'name' => 'Web App',
@@ -3982,6 +3991,7 @@ class ProjectsConsoleClientTest extends Scope
             $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-response-format' => '1.8.0',
             ], $this->getHeaders()), []);
 
             $this->assertEquals(200, $response['headers']['status-code']);
@@ -4005,6 +4015,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformWebId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -4021,12 +4032,13 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformFultteriOSId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals($platformFultteriOSId, $response['body']['$id']);
-        $this->assertEquals('flutter-ios', $response['body']['type']);
+        $this->assertEquals('apple', $response['body']['type']);
         $this->assertEquals('Flutter App (iOS)', $response['body']['name']);
         $this->assertEquals('com.example.ios', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
@@ -4037,12 +4049,13 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformFultterAndroidId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals($platformFultterAndroidId, $response['body']['$id']);
-        $this->assertEquals('flutter-android', $response['body']['type']);
+        $this->assertEquals('android', $response['body']['type']);
         $this->assertEquals('Flutter App (Android)', $response['body']['name']);
         $this->assertEquals('com.example.android', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
@@ -4053,12 +4066,13 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformFultterWebId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals($platformFultterWebId, $response['body']['$id']);
-        $this->assertEquals('flutter-web', $response['body']['type']);
+        $this->assertEquals('web', $response['body']['type']);
         $this->assertEquals('Flutter App (Web)', $response['body']['name']);
         $this->assertEquals('', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
@@ -4069,12 +4083,13 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformAppleIosId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals($platformAppleIosId, $response['body']['$id']);
-        $this->assertEquals('apple-ios', $response['body']['type']);
+        $this->assertEquals('apple', $response['body']['type']);
         $this->assertEquals('iOS App', $response['body']['name']);
         $this->assertEquals('com.example.ios', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
@@ -4085,12 +4100,13 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformAppleMacOsId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals($platformAppleMacOsId, $response['body']['$id']);
-        $this->assertEquals('apple-macos', $response['body']['type']);
+        $this->assertEquals('apple', $response['body']['type']);
         $this->assertEquals('macOS App', $response['body']['name']);
         $this->assertEquals('com.example.macos', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
@@ -4101,12 +4117,13 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformAppleWatchOsId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals($platformAppleWatchOsId, $response['body']['$id']);
-        $this->assertEquals('apple-watchos', $response['body']['type']);
+        $this->assertEquals('apple', $response['body']['type']);
         $this->assertEquals('watchOS App', $response['body']['name']);
         $this->assertEquals('com.example.watchos', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
@@ -4117,12 +4134,13 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformAppleTvOsId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals($platformAppleTvOsId, $response['body']['$id']);
-        $this->assertEquals('apple-tvos', $response['body']['type']);
+        $this->assertEquals('apple', $response['body']['type']);
         $this->assertEquals('tvOS App', $response['body']['name']);
         $this->assertEquals('com.example.tvos', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
@@ -4134,6 +4152,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/error', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(404, $response['headers']['status-code']);
@@ -4149,6 +4168,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/platforms/' . $platformWebId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'name' => 'Web App 2',
             'hostname' => 'localhost-new',
@@ -4168,6 +4188,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/platforms/' . $platformFultteriOSId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'name' => 'Flutter App (iOS) 2',
             'key' => 'com.example.ios2',
@@ -4176,7 +4197,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals($platformFultteriOSId, $response['body']['$id']);
-        $this->assertEquals('flutter-ios', $response['body']['type']);
+        $this->assertEquals('apple', $response['body']['type']); // Origianlly flutter-ios, but new version renames
         $this->assertEquals('Flutter App (iOS) 2', $response['body']['name']);
         $this->assertEquals('com.example.ios2', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
@@ -4187,6 +4208,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/platforms/' . $platformFultterAndroidId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'name' => 'Flutter App (Android) 2',
             'key' => 'com.example.android2',
@@ -4195,7 +4217,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals($platformFultterAndroidId, $response['body']['$id']);
-        $this->assertEquals('flutter-android', $response['body']['type']);
+        $this->assertEquals('android', $response['body']['type']); // Origianlly flutter-android, but new version renames
         $this->assertEquals('Flutter App (Android) 2', $response['body']['name']);
         $this->assertEquals('com.example.android2', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
@@ -4206,6 +4228,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/platforms/' . $platformFultterWebId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'name' => 'Flutter App (Web) 2',
             'hostname' => 'flutter2.appwrite.io',
@@ -4214,7 +4237,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals($platformFultterWebId, $response['body']['$id']);
-        $this->assertEquals('flutter-web', $response['body']['type']);
+        $this->assertEquals('web', $response['body']['type']); // Originally flutter-web, but new version renames
         $this->assertEquals('Flutter App (Web) 2', $response['body']['name']);
         $this->assertEquals('', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
@@ -4225,6 +4248,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/platforms/' . $platformAppleIosId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'name' => 'iOS App 2',
             'key' => 'com.example.ios2',
@@ -4233,7 +4257,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals($platformAppleIosId, $response['body']['$id']);
-        $this->assertEquals('apple-ios', $response['body']['type']);
+        $this->assertEquals('apple', $response['body']['type']); // Originally apple-ios, but new version renames
         $this->assertEquals('iOS App 2', $response['body']['name']);
         $this->assertEquals('com.example.ios2', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
@@ -4244,6 +4268,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/platforms/' . $platformAppleMacOsId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'name' => 'macOS App 2',
             'key' => 'com.example.macos2',
@@ -4252,7 +4277,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals($platformAppleMacOsId, $response['body']['$id']);
-        $this->assertEquals('apple-macos', $response['body']['type']);
+        $this->assertEquals('apple', $response['body']['type']); // Originally apple-macos, but new version renames
         $this->assertEquals('macOS App 2', $response['body']['name']);
         $this->assertEquals('com.example.macos2', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
@@ -4263,6 +4288,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/platforms/' . $platformAppleWatchOsId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'name' => 'watchOS App 2',
             'key' => 'com.example.watchos2',
@@ -4271,7 +4297,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals($platformAppleWatchOsId, $response['body']['$id']);
-        $this->assertEquals('apple-watchos', $response['body']['type']);
+        $this->assertEquals('apple', $response['body']['type']); // Originally apple-watchos, but new version renames
         $this->assertEquals('watchOS App 2', $response['body']['name']);
         $this->assertEquals('com.example.watchos2', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
@@ -4282,6 +4308,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/platforms/' . $platformAppleTvOsId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'name' => 'tvOS App 2',
             'key' => 'com.example.tvos2',
@@ -4290,7 +4317,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals($platformAppleTvOsId, $response['body']['$id']);
-        $this->assertEquals('apple-tvos', $response['body']['type']);
+        $this->assertEquals('apple', $response['body']['type']); // Originally apple-tvos, but new version renames
         $this->assertEquals('tvOS App 2', $response['body']['name']);
         $this->assertEquals('com.example.tvos2', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
@@ -4302,6 +4329,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/platforms/error', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'name' => 'Flutter App (Android) 2',
             'key' => 'com.example.android2',
@@ -4320,6 +4348,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'type' => 'web',
             'name' => 'Web App',
@@ -4332,6 +4361,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'type' => 'flutter-ios',
             'name' => 'Flutter App (iOS)',
@@ -4344,6 +4374,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'type' => 'flutter-android',
             'name' => 'Flutter App (Android)',
@@ -4356,6 +4387,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'type' => 'flutter-web',
             'name' => 'Flutter App (Web)',
@@ -4368,6 +4400,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'type' => 'apple-ios',
             'name' => 'iOS App',
@@ -4380,6 +4413,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'type' => 'apple-macos',
             'name' => 'macOS App',
@@ -4392,6 +4426,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'type' => 'apple-watchos',
             'name' => 'watchOS App',
@@ -4404,6 +4439,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'type' => 'apple-tvos',
             'name' => 'tvOS App',
@@ -4415,6 +4451,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/platforms/' . $platformWebId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(204, $response['headers']['status-code']);
@@ -4423,6 +4460,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformWebId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(404, $response['headers']['status-code']);
@@ -4430,6 +4468,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/platforms/' . $platformFultteriOSId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(204, $response['headers']['status-code']);
@@ -4438,6 +4477,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformFultteriOSId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(404, $response['headers']['status-code']);
@@ -4445,6 +4485,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/platforms/' . $platformFultterAndroidId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(204, $response['headers']['status-code']);
@@ -4453,6 +4494,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformFultterAndroidId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(404, $response['headers']['status-code']);
@@ -4460,6 +4502,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/platforms/' . $platformFultterWebId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(204, $response['headers']['status-code']);
@@ -4468,6 +4511,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformFultterWebId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(404, $response['headers']['status-code']);
@@ -4475,6 +4519,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/platforms/' . $platformAppleIosId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(204, $response['headers']['status-code']);
@@ -4483,6 +4528,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformAppleIosId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(404, $response['headers']['status-code']);
@@ -4490,6 +4536,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/platforms/' . $platformAppleMacOsId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(204, $response['headers']['status-code']);
@@ -4498,6 +4545,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformAppleMacOsId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(404, $response['headers']['status-code']);
@@ -4505,6 +4553,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/platforms/' . $platformAppleWatchOsId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(204, $response['headers']['status-code']);
@@ -4513,6 +4562,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformAppleWatchOsId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(404, $response['headers']['status-code']);
@@ -4520,6 +4570,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/platforms/' . $platformAppleTvOsId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(204, $response['headers']['status-code']);
@@ -4528,6 +4579,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformAppleTvOsId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(404, $response['headers']['status-code']);

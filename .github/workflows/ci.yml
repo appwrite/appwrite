@@ -161,6 +161,27 @@ jobs:
       - name: Run PHPStan
         run: composer analyze -- --no-progress
 
+  specs:
+    name: Checks / Specs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: swoole
+          tools: composer:v2
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --ignore-platform-reqs
+
+      - name: Generate specs
+        run: _APP_STORAGE_LIMIT=5368709120 php app/cli.php specs --version=latest --git=no
+
   locale:
     name: Checks / Locale
     runs-on: ubuntu-latest
