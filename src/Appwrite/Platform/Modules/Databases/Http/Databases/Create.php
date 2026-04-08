@@ -60,7 +60,7 @@ class Create extends Action
                 $databases = Config::getParam('pools-documentsdb', []);
                 $databaseKeys = System::getEnv('_APP_DATABASE_DOCUMENTSDB_KEYS', '');
                 $databaseOverride = System::getEnv('_APP_DATABASE_DOCUMENTSDB_OVERRIDE');
-                $dbScheme = System::getEnv('_APP_DB_HOST_DOCUMENTSDB', 'mongodb');
+                $dbScheme = System::getEnv('_APP_DB_ADAPTER_DOCUMENTSDB', 'mongodb');
                 $databaseSharedTables = \explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES', ''));
                 $databaseSharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES_V1', ''));
                 break;
@@ -68,7 +68,7 @@ class Create extends Action
                 $databases = Config::getParam('pools-vectorsdb', []);
                 $databaseKeys = System::getEnv('_APP_DATABASE_VECTORSDB_KEYS', '');
                 $databaseOverride = System::getEnv('_APP_DATABASE_VECTORSDB_OVERRIDE');
-                $dbScheme = System::getEnv('_APP_DB_HOST_VECTORSDB', 'postgresql');
+                $dbScheme = System::getEnv('_APP_DB_ADAPTER_VECTORSDB', 'postgresql');
                 $databaseSharedTables = \explode(',', System::getEnv('_APP_DATABASE_VECTORSDB_SHARED_TABLES', ''));
                 $databaseSharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_VECTORSDB_SHARED_TABLES_V1', ''));
                 break;

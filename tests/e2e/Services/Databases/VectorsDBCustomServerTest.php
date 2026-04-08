@@ -5,6 +5,7 @@ namespace Tests\E2E\Services\Databases;
 use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
+use Tests\E2E\Scopes\RequiresVectorsDB;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Tests\E2E\Services\Databases\VectorsDB\DatabasesBase;
@@ -17,6 +18,7 @@ class VectorsDBCustomServerTest extends Scope
 {
     use DatabasesBase;
     use ProjectCustom;
+    use RequiresVectorsDB;
     use SideServer;
 
     public function testListDatabases(): array

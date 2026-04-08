@@ -5,6 +5,7 @@ namespace Tests\E2E\Services\Databases;
 use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
+use Tests\E2E\Scopes\RequiresVectorsDB;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
 use Utopia\Database\Helpers\ID;
@@ -15,6 +16,7 @@ use Utopia\Database\Query;
 class VectorsDBConsoleClientTest extends Scope
 {
     use ProjectCustom;
+    use RequiresVectorsDB;
     use SideConsole;
 
     public function testCreateCollection(): array
