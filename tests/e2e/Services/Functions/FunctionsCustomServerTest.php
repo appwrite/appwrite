@@ -2078,6 +2078,69 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(204, $user['headers']['status-code']);
     }
 
+    public function testEventTriggerUserUpdateNameEventName(): void
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test user.update.name event name',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'events' => [
+                'users.*.update.name',
+            ],
+            'timeout' => 15,
+        ]);
+
+        $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('basic'),
+            'activate' => true,
+        ]);
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => 'unique()',
+            'name' => 'Event Name User',
+        ]);
+
+        $this->assertEquals(201, $user['headers']['status-code']);
+        $userId = $user['body']['$id'] ?? '';
+
+        $update = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/name', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Event Name User Updated',
+        ]);
+
+        $this->assertEquals(200, $update['headers']['status-code']);
+
+        $this->assertEventually(function () use ($functionId, $userId) {
+            $executions = $this->listExecutions($functionId);
+            $this->assertEquals(200, $executions['headers']['status-code']);
+
+            $executionsList = $executions['body']['executions'] ?? [];
+            $this->assertNotEmpty($executionsList);
+            $lastExecution = $executionsList[0];
+            $this->assertEquals('completed', $lastExecution['status']);
+
+            $output = \json_decode($lastExecution['responseBody'] ?? '', true);
+            $this->assertIsArray($output);
+            $this->assertEquals("users.{$userId}.update.name", $output['APPWRITE_FUNCTION_EVENT'] ?? '');
+        }, 20_000, 500);
+
+        $this->cleanupFunction($functionId);
+
+        $user = $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], []);
+
+        $this->assertEquals(204, $user['headers']['status-code']);
+    }
+
     public function testScopes()
     {
         $functionId = $this->setupFunction([
