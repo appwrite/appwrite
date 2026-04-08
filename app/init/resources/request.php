@@ -21,6 +21,7 @@ use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\GraphQL\Schema;
+use Appwrite\Locale\GeoRecord;
 use Appwrite\Network\Cors;
 use Appwrite\Network\Platform;
 use Appwrite\Network\Validator\Origin;
@@ -41,6 +42,7 @@ use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime as DatabaseDateTime;
@@ -50,6 +52,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
+use Utopia\Fetch\Client;
 use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
@@ -1452,4 +1455,92 @@ return function (Container $container): void {
         $adapter->setTimeout((int) System::getEnv('_APP_EMBEDDING_TIMEOUT', '30000'));
         return new Agent($adapter);
     }, ['register']);
+
+    $container->set('geoRecord', function ($request, callable $getGeoForIp) {
+        $ip = $request->getIp();
+
+        if (!filter_var($ip, FILTER_VALIDATE_IP)) {
+            Console::warning("Invalid IP address: {$ip}");
+            $ip = '0.0.0.0';
+        }
+
+        return $getGeoForIp($ip);
+    }, ['request', 'getGeoForIp']);
+
+    $container->set('getGeoForIp', function (Locale $locale, $geodb) {
+        $cache = [];
+
+        return function (string $ip) use ($locale, $geodb, &$cache): GeoRecord {
+            if (isset($cache[$ip])) {
+                return $cache[$ip];
+            }
+
+            $record = null;
+            $geoEndpoint = System::getEnv('_APP_GEO_ENDPOINT', '');
+            $geoSecret = System::getEnv('_APP_GEO_SECRET', '');
+
+            // Try the geo service first (used in Docker/Cloud deployments)
+            if (!empty($geoEndpoint) && !empty($geoSecret) && filter_var($ip, FILTER_VALIDATE_IP)) {
+                try {
+                    $client = new Client();
+                    $client->addHeader('Authorization', 'Bearer ' . $geoSecret);
+                    $client->setTimeout(3000);
+
+                    $response = $client->fetch(\rtrim($geoEndpoint, '/') . "/ips/{$ip}", Client::METHOD_GET);
+                    if ($response->getStatusCode() === 200) {
+                        $body = $response->json();
+                        if (\is_array($body)) {
+                            $record = $body;
+                        }
+                    }
+                } catch (\Throwable $th) {
+                    Console::warning('Geo service unavailable: ' . $th->getMessage());
+                }
+            }
+
+            // Fallback to local MaxMind DB for self-hosted deployments
+            if (empty($record) && $geodb !== null) {
+                try {
+                    $dbRecord = $geodb->get($ip);
+                    if ($dbRecord) {
+                        $record = [
+                            'countryCode' => $dbRecord['country']['iso_code'] ?? '--',
+                            'continentCode' => $dbRecord['continent']['code'] ?? '--',
+                        ];
+                    }
+                } catch (\Throwable $th) {
+                    Console::warning('Local geodb lookup failed: ' . $th->getMessage());
+                }
+            }
+
+            $countryCode = $record['countryCode'] ?? '--';
+            $continentCode = $record['continentCode'] ?? '--';
+            $unknownCountry = $locale->getText('locale.country.unknown');
+
+            $eu = Config::getParam('locale-eu');
+            $currencies = Config::getParam('locale-currencies');
+            $currency = null;
+
+            foreach ($currencies as $element) {
+                if (isset($element['locations'], $element['code']) && \in_array($countryCode, $element['locations'])) {
+                    $currency = $element['code'];
+                    break;
+                }
+            }
+
+            $geoRecord = new GeoRecord([
+                'ip' => $ip,
+                'countryCode' => $locale->getText('countries.' . strtolower($countryCode), false) ? strtolower($countryCode) : '--',
+                'countryName' => $locale->getText('countries.' . strtolower($countryCode), $unknownCountry),
+                'continent' => $locale->getText('continents.' . strtolower($continentCode), $unknownCountry),
+                'continentCode' => $continentCode,
+                'eu' => \in_array($countryCode, $eu),
+                'currency' => $currency,
+            ]);
+
+            $cache[$ip] = $geoRecord;
+
+            return $geoRecord;
+        };
+    }, ['locale', 'geodb']);
 };
