@@ -555,6 +555,206 @@ Http::patch('/v1/projects/:projectId/auth/password-history')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
+Http::patch('/v1/projects/:projectId/auth/password-policy/min-length')
+    ->desc('Update the minimum password length requirement.')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        group: 'auth',
+        name: 'updateAuthPasswordPolicyMinLength',
+        description: '/docs/references/projects/update-auth-password-policy-min-length.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROJECT,
+            )
+        ]
+    ))
+    ->param('projectId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForPlatform'])
+    ->param('minLength', 8, new Range(8, 256), 'Set the minimum password length. Value must be between 8 and 256. Default is 8.')
+    ->inject('response')
+    ->inject('dbForPlatform')
+    ->action(function (string $projectId, int $minLength, Response $response, Database $dbForPlatform) {
+
+        $project = $dbForPlatform->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $auths = $project->getAttribute('auths', []);
+        $auths['passwordPolicy'] = \array_merge($auths['passwordPolicy'] ?? [], [
+            'minLength' => $minLength,
+        ]);
+
+        $dbForPlatform->updateDocument('projects', $project->getId(), $project
+            ->setAttribute('auths', $auths));
+
+        $response->dynamic($project, Response::MODEL_PROJECT);
+    });
+
+Http::patch('/v1/projects/:projectId/auth/password-policy/uppercase')
+    ->desc('Update the uppercase password requirement.')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        group: 'auth',
+        name: 'updateAuthPasswordPolicyUppercase',
+        description: '/docs/references/projects/update-auth-password-policy-uppercase.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROJECT,
+            )
+        ]
+    ))
+    ->param('projectId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForPlatform'])
+    ->param('enabled', false, new Boolean(false), 'Set whether or not passwords must include at least one uppercase letter. Default is false.')
+    ->inject('response')
+    ->inject('dbForPlatform')
+    ->action(function (string $projectId, bool $enabled, Response $response, Database $dbForPlatform) {
+
+        $project = $dbForPlatform->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $auths = $project->getAttribute('auths', []);
+        $auths['passwordPolicy'] = \array_merge($auths['passwordPolicy'] ?? [], [
+            'requireUppercase' => $enabled,
+        ]);
+
+        $dbForPlatform->updateDocument('projects', $project->getId(), $project
+            ->setAttribute('auths', $auths));
+
+        $response->dynamic($project, Response::MODEL_PROJECT);
+    });
+
+Http::patch('/v1/projects/:projectId/auth/password-policy/lowercase')
+    ->desc('Update the lowercase password requirement.')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        group: 'auth',
+        name: 'updateAuthPasswordPolicyLowercase',
+        description: '/docs/references/projects/update-auth-password-policy-lowercase.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROJECT,
+            )
+        ]
+    ))
+    ->param('projectId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForPlatform'])
+    ->param('enabled', false, new Boolean(false), 'Set whether or not passwords must include at least one lowercase letter. Default is false.')
+    ->inject('response')
+    ->inject('dbForPlatform')
+    ->action(function (string $projectId, bool $enabled, Response $response, Database $dbForPlatform) {
+
+        $project = $dbForPlatform->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $auths = $project->getAttribute('auths', []);
+        $auths['passwordPolicy'] = \array_merge($auths['passwordPolicy'] ?? [], [
+            'requireLowercase' => $enabled,
+        ]);
+
+        $dbForPlatform->updateDocument('projects', $project->getId(), $project
+            ->setAttribute('auths', $auths));
+
+        $response->dynamic($project, Response::MODEL_PROJECT);
+    });
+
+Http::patch('/v1/projects/:projectId/auth/password-policy/number')
+    ->desc('Update the numeric password requirement.')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        group: 'auth',
+        name: 'updateAuthPasswordPolicyNumber',
+        description: '/docs/references/projects/update-auth-password-policy-number.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROJECT,
+            )
+        ]
+    ))
+    ->param('projectId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForPlatform'])
+    ->param('enabled', false, new Boolean(false), 'Set whether or not passwords must include at least one number. Default is false.')
+    ->inject('response')
+    ->inject('dbForPlatform')
+    ->action(function (string $projectId, bool $enabled, Response $response, Database $dbForPlatform) {
+
+        $project = $dbForPlatform->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $auths = $project->getAttribute('auths', []);
+        $auths['passwordPolicy'] = \array_merge($auths['passwordPolicy'] ?? [], [
+            'requireNumber' => $enabled,
+        ]);
+
+        $dbForPlatform->updateDocument('projects', $project->getId(), $project
+            ->setAttribute('auths', $auths));
+
+        $response->dynamic($project, Response::MODEL_PROJECT);
+    });
+
+Http::patch('/v1/projects/:projectId/auth/password-policy/special-char')
+    ->desc('Update the special character password requirement.')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        group: 'auth',
+        name: 'updateAuthPasswordPolicySpecialChar',
+        description: '/docs/references/projects/update-auth-password-policy-special-char.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROJECT,
+            )
+        ]
+    ))
+    ->param('projectId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForPlatform'])
+    ->param('enabled', false, new Boolean(false), 'Set whether or not passwords must include at least one special character. Default is false.')
+    ->inject('response')
+    ->inject('dbForPlatform')
+    ->action(function (string $projectId, bool $enabled, Response $response, Database $dbForPlatform) {
+
+        $project = $dbForPlatform->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $auths = $project->getAttribute('auths', []);
+        $auths['passwordPolicy'] = \array_merge($auths['passwordPolicy'] ?? [], [
+            'requireSpecialChar' => $enabled,
+        ]);
+
+        $dbForPlatform->updateDocument('projects', $project->getId(), $project
+            ->setAttribute('auths', $auths));
+
+        $response->dynamic($project, Response::MODEL_PROJECT);
+    });
+
 Http::patch('/v1/projects/:projectId/auth/password-dictionary')
     ->desc('Update authentication password dictionary status. Use this endpoint to enable or disable the dicitonary check for user password')
     ->groups(['api', 'projects'])

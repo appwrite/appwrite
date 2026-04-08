@@ -110,6 +110,13 @@ class Create extends Action
         $auths = [
             'limit' => 0,
             'maxSessions' => APP_LIMIT_USER_SESSIONS_DEFAULT,
+            'passwordPolicy' => [
+                'minLength' => 8,
+                'requireUppercase' => false,
+                'requireLowercase' => false,
+                'requireNumber' => false,
+                'requireSpecialChar' => false,
+            ],
             'passwordHistory' => 0,
             'passwordDictionary' => false,
             'duration' => TOKEN_EXPIRATION_LOGIN_LONG,

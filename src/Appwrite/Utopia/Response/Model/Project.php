@@ -120,6 +120,36 @@ class Project extends Model
                 'default' => 0,
                 'example' => 5,
             ])
+            ->addRule('authPasswordPolicyMinLength', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Minimum password length required for user passwords.',
+                'default' => 8,
+                'example' => 12,
+            ])
+            ->addRule('authPasswordPolicyRequireUppercase', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether or not passwords must include at least one uppercase letter.',
+                'default' => false,
+                'example' => true,
+            ])
+            ->addRule('authPasswordPolicyRequireLowercase', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether or not passwords must include at least one lowercase letter.',
+                'default' => false,
+                'example' => true,
+            ])
+            ->addRule('authPasswordPolicyRequireNumber', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether or not passwords must include at least one number.',
+                'default' => false,
+                'example' => true,
+            ])
+            ->addRule('authPasswordPolicyRequireSpecialChar', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether or not passwords must include at least one special character.',
+                'default' => false,
+                'example' => true,
+            ])
             ->addRule('authPasswordDictionary', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Whether or not to check user\'s password against most commonly used passwords.',
@@ -426,12 +456,18 @@ class Project extends Model
         }
 
         $authValues = $document->getAttribute('auths', []);
+        $passwordPolicy = $authValues['passwordPolicy'] ?? [];
         $auth = Config::getParam('auth', []);
 
         $document->setAttribute('authLimit', $authValues['limit'] ?? 0);
         $document->setAttribute('authDuration', $authValues['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG);
         $document->setAttribute('authSessionsLimit', $authValues['maxSessions'] ?? APP_LIMIT_USER_SESSIONS_DEFAULT);
         $document->setAttribute('authPasswordHistory', $authValues['passwordHistory'] ?? 0);
+        $document->setAttribute('authPasswordPolicyMinLength', $passwordPolicy['minLength'] ?? 8);
+        $document->setAttribute('authPasswordPolicyRequireUppercase', $passwordPolicy['requireUppercase'] ?? false);
+        $document->setAttribute('authPasswordPolicyRequireLowercase', $passwordPolicy['requireLowercase'] ?? false);
+        $document->setAttribute('authPasswordPolicyRequireNumber', $passwordPolicy['requireNumber'] ?? false);
+        $document->setAttribute('authPasswordPolicyRequireSpecialChar', $passwordPolicy['requireSpecialChar'] ?? false);
         $document->setAttribute('authPasswordDictionary', $authValues['passwordDictionary'] ?? false);
         $document->setAttribute('authPersonalDataCheck', $authValues['personalDataCheck'] ?? false);
         $document->setAttribute('authDisposableEmails', $authValues['disposableEmails'] ?? false);
