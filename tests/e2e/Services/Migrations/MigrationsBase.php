@@ -1505,18 +1505,20 @@ trait MigrationsBase
         $this->assertEquals(201, $table['headers']['status-code']);
         $tableId = $table['body']['$id'];
 
-        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/string', $headers, [
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/string', $headers, [
             'key' => 'name',
             'size' => 256,
             'required' => true,
         ]);
+        $this->assertEquals(202, $response['headers']['status-code']);
 
-        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/integer', $headers, [
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/integer', $headers, [
             'key' => 'age',
             'min' => 18,
             'max' => 65,
             'required' => true,
         ]);
+        $this->assertEquals(202, $response['headers']['status-code']);
 
         // Create bucket
         $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', $headers, [
@@ -1678,18 +1680,20 @@ trait MigrationsBase
         $this->assertEquals(201, $table['headers']['status-code']);
         $tableId = $table['body']['$id'];
 
-        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/string', $headers, [
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/string', $headers, [
             'key' => 'name',
             'size' => 256,
             'required' => true,
         ]);
+        $this->assertEquals(202, $response['headers']['status-code']);
 
-        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/integer', $headers, [
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/integer', $headers, [
             'key' => 'age',
             'min' => 18,
             'max' => 65,
             'required' => true,
         ]);
+        $this->assertEquals(202, $response['headers']['status-code']);
 
         // Create bucket
         $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', $headers, [
