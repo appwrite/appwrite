@@ -5,7 +5,7 @@
 /**
  * Reusable code block with syntax highlighting for all Appwrite SDK and runtime languages.
  * Supports: JavaScript, TypeScript, Node/Deno/Bun, Python, PHP, Ruby, Dart, Swift, Kotlin, Java,
- * Go, C#/.NET, JSON, Bash, PowerShell, markup, plaintext, and .env (dotenv).
+ * Go, C#/.NET, JSON, Bash, PowerShell, HCL (Terraform), markup, plaintext, and .env (dotenv).
  * Uses prism-react-renderer; extra languages are loaded on demand. Built-in Prism themes;
  * background matches page (--background).
  */
@@ -60,6 +60,7 @@ export type CodeBlockLanguage =
   | 'markup'
   | 'plaintext'
   | 'env'
+  | 'hcl'
   // Appwrite runtime keys (map to Prism languages below)
   | 'node'
   | 'deno'
@@ -97,6 +98,7 @@ function getLanguageLabel(lang: CodeBlockLanguage): string {
     markup: 'Markup',
     plaintext: 'Plain text',
     env: '.env',
+    hcl: 'Terraform',
     node: 'Node.js',
     deno: 'Deno',
     bun: 'Bun',
@@ -120,6 +122,7 @@ const EXTRA_LANGUAGES: string[] = [
   'go',
   'csharp',
   'markup',
+  'hcl',
 ]
 
 const PRISM_LOADERS: Record<string, () => Promise<unknown>> = {
@@ -143,6 +146,7 @@ const PRISM_LOADERS: Record<string, () => Promise<unknown>> = {
   ruby: () => import('prismjs/components/prism-ruby'),
   go: () => import('prismjs/components/prism-go'),
   csharp: () => import('prismjs/components/prism-csharp'),
+  hcl: () => import('prismjs/components/prism-hcl'),
 }
 
 const loadedLanguages = new Set<string>()

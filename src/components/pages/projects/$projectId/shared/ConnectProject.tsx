@@ -31,6 +31,7 @@ import { PlatformIcon } from '@/components/global/shared/Icon'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { PackageManagerIcon } from '@/components/global/shared/PackageManagerIcon'
 import { MCPSection } from '@/components/pages/projects/$projectId/shared/MCPSection'
+import { TerraformConnectSection } from '@/components/pages/projects/$projectId/shared/TerraformConnectSection'
 import {
   CodeBlock,
   type CodeBlockLanguage,
@@ -1334,7 +1335,7 @@ export function ConnectProject({
     [sdkId, frameworkId, usingId, runtime, endpoint, projectId],
   )
   const [connectTab, setConnectTab] = useState<
-    'app' | 'cli' | 'mcp' | 'skills'
+    'app' | 'cli' | 'mcp' | 'skills' | 'terraform'
   >('app')
   const [cliInstallOs, setCliInstallOs] = useState<
     'macos' | 'windows' | 'linux'
@@ -1378,6 +1379,7 @@ export function ConnectProject({
   const userEmail = (account as { email?: string } | null)?.email ?? ''
   const cliLoginCommand = `appwrite login --email ${userEmail || 'your@email.com'} --password yourpassword`
   const [cliLoginCopied, setCliLoginCopied] = useState(false)
+
   const handleCopyCliLogin = () => {
     navigator.clipboard.writeText(cliLoginCommand)
     setCliLoginCopied(true)
@@ -1396,7 +1398,7 @@ export function ConnectProject({
         <Tabs
           value={connectTab}
           onValueChange={(v) =>
-            setConnectTab(v as 'app' | 'cli' | 'mcp' | 'skills')
+            setConnectTab(v as 'app' | 'cli' | 'mcp' | 'skills' | 'terraform')
           }
           className="min-h-0 flex-1 flex flex-col overflow-hidden"
         >
@@ -1404,7 +1406,8 @@ export function ConnectProject({
             className="shrink-0 flex gap-0 overflow-x-auto border-b border-border px-6"
             role="tablist"
           >
-            {(['app', 'cli', 'mcp', 'skills'] as const).map((tabId) => {
+            {(['app', 'cli', 'mcp', 'skills', 'terraform'] as const).map(
+              (tabId) => {
               const isActive = connectTab === tabId
               const label =
                 tabId === 'app'
@@ -1413,7 +1416,9 @@ export function ConnectProject({
                     ? 'CLI'
                     : tabId === 'mcp'
                       ? 'MCP'
-                      : 'Skills'
+                      : tabId === 'skills'
+                        ? 'Skills'
+                        : 'Terraform'
               return (
                 <button
                   key={tabId}
@@ -1991,6 +1996,16 @@ export function ConnectProject({
                 </div>
               </div>
             </div>
+          </TabsContent>
+          <TabsContent
+            value="terraform"
+            className="min-h-0 flex-1 overflow-hidden px-6 pb-4 pt-0 data-[state=inactive]:hidden flex flex-col"
+          >
+            <TerraformConnectSection
+              endpoint={endpoint ?? getBaseEndpoint()}
+              projectId={projectId ?? ''}
+              onViewApiKeys={handleViewApiKeys}
+            />
           </TabsContent>
         </Tabs>
         <div className="shrink-0 px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">

@@ -189,6 +189,12 @@ export async function fetchApiKeys(projectId: string) {
   return response
 }
 
+function apiKeyLastUsedFromRaw(accessedAt: unknown): string | null {
+  if (accessedAt == null || typeof accessedAt !== 'string') return null
+  const trimmed = accessedAt.trim()
+  return trimmed.length > 0 ? trimmed : null
+}
+
 /** Map raw API keys response to display format (for route initialData) */
 export function mapApiKeysFromResponse(
   apiKeysData: { keys?: unknown[] } | null,
@@ -202,7 +208,7 @@ export function mapApiKeysFromResponse(
       key: (k.secret ?? '') as string,
       scopes: (k.scopes ?? []) as string[],
       createdAt: (k.$createdAt ?? new Date().toISOString()) as string,
-      lastUsed: (k.accessedAt ?? null) as string | null,
+      lastUsed: apiKeyLastUsedFromRaw(k.accessedAt),
       expire: (k.expire ?? null) as string | null,
     }
   })
@@ -701,15 +707,18 @@ export function useApiKeys(
     // Use the keys array from KeyList response
     const keys = apiKeysData.keys || []
 
-    return keys.map((key: unknown) => ({
-      id: key.$id || key.id || '',
-      name: key.name || 'Unnamed Key',
-      key: key.secret || '',
-      scopes: key.scopes || [],
-      createdAt: key.$createdAt || new Date().toISOString(),
-      lastUsed: key.accessedAt || null,
-      expire: key.expire || null,
-    }))
+    return keys.map((key: unknown) => {
+      const k = key as Record<string, unknown>
+      return {
+        id: (k.$id ?? k.id ?? '') as string,
+        name: (k.name as string) || 'Unnamed Key',
+        key: (k.secret as string) || '',
+        scopes: (k.scopes as string[]) || [],
+        createdAt: (k.$createdAt as string) || new Date().toISOString(),
+        lastUsed: apiKeyLastUsedFromRaw(k.accessedAt),
+        expire: (k.expire as string | null | undefined) ?? null,
+      }
+    })
   }, [apiKeysData])
 
   return {

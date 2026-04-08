@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
+import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import {
   ScopeEditor,
   getAllAvailableScopes,
@@ -286,6 +287,21 @@ export function ApiKeyDrawer({
                       </p>
                     )}
                   </div>
+
+                  {isEditing && apiKey && (
+                    <div className="space-y-1">
+                      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                        Last used
+                      </p>
+                      <p className="text-[13px] text-foreground">
+                        {apiKey.accessedAt?.trim() ? (
+                          <DateTooltip date={apiKey.accessedAt} />
+                        ) : (
+                          'Never'
+                        )}
+                      </p>
+                    </div>
+                  )}
 
                   {/* View/copy key in edit mode when secret is available */}
                   {isEditing && (
