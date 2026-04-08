@@ -86,6 +86,8 @@ Http::post('/v1/migrations/appwrite')
     ->param('endpoint', '', new URL(), 'Source Appwrite endpoint')
     ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Source Project ID', false, ['dbForProject'])
     ->param('apiKey', '', new Text(512), 'Source API Key')
+    ->param('overwrite', false, new Boolean(), 'If true, existing documents with the same ID will be overwritten with the imported data. Cannot be used together with skip.', true)
+    ->param('skip', false, new Boolean(), 'If true, documents with duplicate IDs will be silently skipped instead of causing an error. Cannot be used together with overwrite.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
@@ -93,7 +95,11 @@ Http::post('/v1/migrations/appwrite')
     ->inject('user')
     ->inject('queueForEvents')
     ->inject('queueForMigrations')
-    ->action(function (array $resources, string $endpoint, string $projectId, string $apiKey, Response $response, Database $dbForProject, Document $project, array $platform, Document $user, Event $queueForEvents, Migration $queueForMigrations) {
+    ->action(function (array $resources, string $endpoint, string $projectId, string $apiKey, bool $overwrite, bool $skip, Response $response, Database $dbForProject, Document $project, array $platform, Document $user, Event $queueForEvents, Migration $queueForMigrations) {
+        if ($overwrite && $skip) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Cannot use both overwrite and skip at the same time.');
+        }
+
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => ID::unique(),
             'status' => 'pending',
@@ -109,6 +115,10 @@ Http::post('/v1/migrations/appwrite')
             'statusCounters' => '{}',
             'resourceData' => '{}',
             'errors' => [],
+            'options' => [
+                'overwrite' => $overwrite,
+                'skip' => $skip,
+            ],
         ]));
 
         $queueForEvents->setParam('migrationId', $migration->getId());
@@ -147,6 +157,8 @@ Http::post('/v1/migrations/firebase')
     ))
     ->param('resources', [], new ArrayList(new WhiteList(Firebase::getSupportedResources())), 'List of resources to migrate')
     ->param('serviceAccount', '', new Text(65536), 'JSON of the Firebase service account credentials')
+    ->param('overwrite', false, new Boolean(), 'If true, existing documents with the same ID will be overwritten with the imported data. Cannot be used together with skip.', true)
+    ->param('skip', false, new Boolean(), 'If true, documents with duplicate IDs will be silently skipped instead of causing an error. Cannot be used together with overwrite.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
@@ -154,7 +166,11 @@ Http::post('/v1/migrations/firebase')
     ->inject('user')
     ->inject('queueForEvents')
     ->inject('queueForMigrations')
-    ->action(function (array $resources, string $serviceAccount, Response $response, Database $dbForProject, Document $project, array $platform, Document $user, Event $queueForEvents, Migration $queueForMigrations) {
+    ->action(function (array $resources, string $serviceAccount, bool $overwrite, bool $skip, Response $response, Database $dbForProject, Document $project, array $platform, Document $user, Event $queueForEvents, Migration $queueForMigrations) {
+        if ($overwrite && $skip) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Cannot use both overwrite and skip at the same time.');
+        }
+
         $serviceAccountData = json_decode($serviceAccount, true);
 
         if (empty($serviceAccountData)) {
@@ -178,6 +194,10 @@ Http::post('/v1/migrations/firebase')
             'statusCounters' => '{}',
             'resourceData' => '{}',
             'errors' => [],
+            'options' => [
+                'overwrite' => $overwrite,
+                'skip' => $skip,
+            ],
         ]));
 
         $queueForEvents->setParam('migrationId', $migration->getId());
@@ -221,6 +241,8 @@ Http::post('/v1/migrations/supabase')
     ->param('username', '', new Text(512), 'Source\'s Database Username')
     ->param('password', '', new Text(512), 'Source\'s Database Password')
     ->param('port', 5432, new Integer(true), 'Source\'s Database Port', true)
+    ->param('overwrite', false, new Boolean(), 'If true, existing documents with the same ID will be overwritten with the imported data. Cannot be used together with skip.', true)
+    ->param('skip', false, new Boolean(), 'If true, documents with duplicate IDs will be silently skipped instead of causing an error. Cannot be used together with overwrite.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
@@ -228,7 +250,11 @@ Http::post('/v1/migrations/supabase')
     ->inject('user')
     ->inject('queueForEvents')
     ->inject('queueForMigrations')
-    ->action(function (array $resources, string $endpoint, string $apiKey, string $databaseHost, string $username, string $password, int $port, Response $response, Database $dbForProject, Document $project, array $platform, Document $user, Event $queueForEvents, Migration $queueForMigrations) {
+    ->action(function (array $resources, string $endpoint, string $apiKey, string $databaseHost, string $username, string $password, int $port, bool $overwrite, bool $skip, Response $response, Database $dbForProject, Document $project, array $platform, Document $user, Event $queueForEvents, Migration $queueForMigrations) {
+        if ($overwrite && $skip) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Cannot use both overwrite and skip at the same time.');
+        }
+
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => ID::unique(),
             'status' => 'pending',
@@ -247,6 +273,10 @@ Http::post('/v1/migrations/supabase')
             'statusCounters' => '{}',
             'resourceData' => '{}',
             'errors' => [],
+            'options' => [
+                'overwrite' => $overwrite,
+                'skip' => $skip,
+            ],
         ]));
 
         $queueForEvents->setParam('migrationId', $migration->getId());
@@ -291,6 +321,8 @@ Http::post('/v1/migrations/nhost')
     ->param('username', '', new Text(512), 'Source\'s Database Username')
     ->param('password', '', new Text(512), 'Source\'s Database Password')
     ->param('port', 5432, new Integer(true), 'Source\'s Database Port', true)
+    ->param('overwrite', false, new Boolean(), 'If true, existing documents with the same ID will be overwritten with the imported data. Cannot be used together with skip.', true)
+    ->param('skip', false, new Boolean(), 'If true, documents with duplicate IDs will be silently skipped instead of causing an error. Cannot be used together with overwrite.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
@@ -298,7 +330,11 @@ Http::post('/v1/migrations/nhost')
     ->inject('user')
     ->inject('queueForEvents')
     ->inject('queueForMigrations')
-    ->action(function (array $resources, string $subdomain, string $region, string $adminSecret, string $database, string $username, string $password, int $port, Response $response, Database $dbForProject, Document $project, array $platform, Document $user, Event $queueForEvents, Migration $queueForMigrations) {
+    ->action(function (array $resources, string $subdomain, string $region, string $adminSecret, string $database, string $username, string $password, int $port, bool $overwrite, bool $skip, Response $response, Database $dbForProject, Document $project, array $platform, Document $user, Event $queueForEvents, Migration $queueForMigrations) {
+        if ($overwrite && $skip) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Cannot use both overwrite and skip at the same time.');
+        }
+
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => ID::unique(),
             'status' => 'pending',
@@ -318,6 +354,10 @@ Http::post('/v1/migrations/nhost')
             'statusCounters' => '{}',
             'resourceData' => '{}',
             'errors' => [],
+            'options' => [
+                'overwrite' => $overwrite,
+                'skip' => $skip,
+            ],
         ]));
 
         $queueForEvents->setParam('migrationId', $migration->getId());
@@ -359,6 +399,8 @@ Http::post('/v1/migrations/csv/imports')
     ->param('fileId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'File ID.', false, ['dbForProject'])
     ->param('resourceId', null, new CompoundUID(), 'Composite ID in the format {databaseId:collectionId}, identifying a collection within a database.')
     ->param('internalFile', false, new Boolean(), 'Is the file stored in an internal bucket?', true)
+    ->param('overwrite', false, new Boolean(), 'If true, existing documents with the same ID will be overwritten with the imported data. Cannot be used together with skip.', true)
+    ->param('skip', false, new Boolean(), 'If true, documents with duplicate IDs will be silently skipped instead of causing an error. Cannot be used together with overwrite.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('dbForPlatform')
@@ -374,6 +416,8 @@ Http::post('/v1/migrations/csv/imports')
         string $fileId,
         string $resourceId,
         bool $internalFile,
+        bool $overwrite,
+        bool $skip,
         Response $response,
         Database $dbForProject,
         Database $dbForPlatform,
@@ -385,6 +429,9 @@ Http::post('/v1/migrations/csv/imports')
         Event $queueForEvents,
         Migration $queueForMigrations
     ) {
+        if ($overwrite && $skip) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Cannot use both overwrite and skip at the same time.');
+        }
         $bucket = $authorization->skip(function () use ($internalFile, $dbForPlatform, $dbForProject, $bucketId) {
             if ($internalFile) {
                 return $dbForPlatform->getDocument('buckets', 'default');
@@ -474,6 +521,8 @@ Http::post('/v1/migrations/csv/imports')
             'options' => [
                 'path' => $newPath,
                 'size' => $fileSize,
+                'overwrite' => $overwrite,
+                'skip' => $skip,
             ],
         ]));
 
@@ -664,6 +713,8 @@ Http::post('/v1/migrations/json/imports')
     ->param('fileId', '', new UID(), 'File ID.')
     ->param('resourceId', null, new CompoundUID(), 'Composite ID in the format {databaseId:collectionId}, identifying a collection within a database.')
     ->param('internalFile', false, new Boolean(), 'Is the file stored in an internal bucket?', true)
+    ->param('overwrite', false, new Boolean(), 'If true, existing documents with the same ID will be overwritten with the imported data. Cannot be used together with skip.', true)
+    ->param('skip', false, new Boolean(), 'If true, documents with duplicate IDs will be silently skipped instead of causing an error. Cannot be used together with overwrite.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('dbForPlatform')
@@ -679,6 +730,8 @@ Http::post('/v1/migrations/json/imports')
         string $fileId,
         string $resourceId,
         bool $internalFile,
+        bool $overwrite,
+        bool $skip,
         Response $response,
         Database $dbForProject,
         Database $dbForPlatform,
@@ -690,6 +743,10 @@ Http::post('/v1/migrations/json/imports')
         Event $queueForEvents,
         Migration $queueForMigrations
     ) {
+        if ($overwrite && $skip) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Cannot use both overwrite and skip at the same time.');
+        }
+
         $bucket = $authorization->skip(function () use ($internalFile, $dbForPlatform, $dbForProject, $bucketId) {
             if ($internalFile) {
                 return $dbForPlatform->getDocument('buckets', 'default');
@@ -778,6 +835,8 @@ Http::post('/v1/migrations/json/imports')
             'options' => [
                 'path' => $newPath,
                 'size' => $fileSize,
+                'overwrite' => $overwrite,
+                'skip' => $skip,
             ],
         ]));
 
