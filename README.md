@@ -207,6 +207,11 @@ flowchart TD
         Users ~~~ Account ~~~ Teams ~~~ Databases ~~~ Storage ~~~ Locale ~~~ Avatars ~~~ Health ~~~ Functions ~~~ Sites ~~~ Messaging ~~~ VCS ~~~ Tokens ~~~ Proxy
     end
 
+    subgraph Infra["Infrastructure"]
+        direction LR
+        Cache["Cache (Redis)"] ~~~ Queue["Queue (Redis)"] ~~~ AV["AntiVirus (ClamAV)"] ~~~ DB[(Database)] ~~~ Executor["Executor (Open-Runtimes)"] ~~~ Docker[Docker / K8S]
+    end
+
     subgraph Workers["Background Workers"]
         direction LR
         Schedulers ~~~ StatsUsage[Usage] ~~~ Maintenance ~~~ Audits ~~~ Mails ~~~ DBw[Databases] ~~~ Webhooks ~~~ FnW[Functions] ~~~ Certificates ~~~ Deletes ~~~ Builds ~~~ MessagingW[Messaging] ~~~ Migrations ~~~ Executions
@@ -214,20 +219,13 @@ flowchart TD
 
     Clients --> LB[Loadbalancer]
     LB --> Console & GQL[GraphQL API] & REST[REST API] & RT[Realtime API] & SSL[SSL Gateway]
-
     REST --> APIServices
     REST & GQL & RT --> SecLayer[Security Layer]
-
-    SecLayer --> Cache["Cache (Redis)"] & Queue["Queue (Redis)"] & AV["AntiVirus (ClamAV)"]
-    Cache --> DB[(Database)]
-
+    SecLayer --> Cache & Queue & AV
+    Cache --> DB
     Queue --> Workers
-    StatsUsage & Maintenance & Audits & DBw & Webhooks & FnW & Certificates --> DB
-
-    FnW --> Executor["Executor (Open-Runtimes)"]
-    Executor -.- Docker[Docker / K8S]
-    Executor --> Builds
-
+    Workers --> DB
+    FnW --> Executor
     Mails & MessagingW --> SMTP
     Certificates --> LE[Letsencrypt] --> LB
 ```
