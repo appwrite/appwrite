@@ -207,6 +207,8 @@ class Decrement extends Action
             ->addMetric($this->getDatabasesOperationWriteMetric(), 1)
             ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), $this->getDatabasesIdOperationWriteMetric()), 1);
 
+        $response->dynamic($document, $this->getResponseModel());
+
         $queueForEvents
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collectionId)
@@ -216,7 +218,5 @@ class Decrement extends Action
             ->setContext('database', $database)
             ->setContext($this->getCollectionsEventsContext(), $collection)
             ->setPayload($response->getPayload(), sensitive: $relationships);
-
-        $response->dynamic($document, $this->getResponseModel());
     }
 }
