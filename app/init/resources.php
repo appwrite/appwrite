@@ -312,10 +312,10 @@ $container->set('geoRecord', function ($request, callable $getGeoForIp) {
     return $getGeoForIp($ip);
 }, ['request', 'getGeoForIp']);
 
-$container->set('getGeoForIp', function (Locale $locale) {
+$container->set('getGeoForIp', function (Locale $locale, $geodb) {
     $cache = [];
 
-    return function (string $ip) use ($locale, &$cache): GeoRecord {
+    return function (string $ip) use ($locale, $geodb, &$cache): GeoRecord {
         if (isset($cache[$ip])) {
             return $cache[$ip];
         }
@@ -324,6 +324,7 @@ $container->set('getGeoForIp', function (Locale $locale) {
         $geoEndpoint = System::getEnv('_APP_GEO_ENDPOINT', '');
         $geoSecret = System::getEnv('_APP_GEO_SECRET', '');
 
+        // Try the geo service first (used in Docker/Cloud deployments)
         if (!empty($geoEndpoint) && !empty($geoSecret) && filter_var($ip, FILTER_VALIDATE_IP)) {
             try {
                 $client = new Client();
@@ -339,6 +340,21 @@ $container->set('getGeoForIp', function (Locale $locale) {
                 }
             } catch (Throwable $th) {
                 Console::warning('Geo service unavailable: ' . $th->getMessage());
+            }
+        }
+
+        // Fallback to local MaxMind DB for self-hosted deployments
+        if (empty($record) && $geodb !== null) {
+            try {
+                $dbRecord = $geodb->get($ip);
+                if ($dbRecord) {
+                    $record = [
+                        'countryCode' => $dbRecord['country']['iso_code'] ?? '--',
+                        'continentCode' => $dbRecord['continent']['code'] ?? '--',
+                    ];
+                }
+            } catch (Throwable $th) {
+                Console::warning('Local geodb lookup failed: ' . $th->getMessage());
             }
         }
 
@@ -371,7 +387,7 @@ $container->set('getGeoForIp', function (Locale $locale) {
 
         return $geoRecord;
     };
-}, ['locale']);
+}, ['locale', 'geodb']);
 
 $container->set('passwordsDictionary', function ($register) {
     /** @var Utopia\Registry\Registry $register */
