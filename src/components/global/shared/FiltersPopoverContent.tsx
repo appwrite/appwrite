@@ -1400,7 +1400,7 @@ export function FiltersPopoverContent({
               <TabsTrigger value="filters" className="text-[13px]">
                 Filters
                 {filterMap.size > 0 && (
-                  <span className="ml-1.5 flex size-4 items-center justify-center rounded-full bg-primary/20 text-[10px] font-medium tabular-nums text-primary">
+                  <span className="ml-1.5 flex size-4 items-center justify-center rounded-full bg-[#FD366E] text-[10px] font-medium tabular-nums text-white">
                     {filterMap.size}
                   </span>
                 )}
