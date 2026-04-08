@@ -1,0 +1,36 @@
+x-logging: &x-logging
+  logging:
+    driver: "json-file"
+    options:
+      max-file: "5"
+      max-size: "10m"
+
+services:
+  mongodb:
+    scale: 0
+
+  mariadb:
+    image: mariadb:10.11 # fix issues when upgrading using: mysql_upgrade -u root -p
+    container_name: appwrite-mariadb
+    <<: *x-logging
+    networks:
+      - appwrite
+    volumes:
+      - appwrite-mariadb:/var/lib/mysql:rw
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
+      - MYSQL_DATABASE=${_APP_DB_SCHEMA}
+      - MYSQL_USER=${_APP_DB_USER}
+      - MYSQL_PASSWORD=${_APP_DB_PASS}
+      - MARIADB_AUTO_UPGRADE=1
+    command: "mysqld --innodb-flush-method=fsync"
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+volumes:
+  appwrite-mariadb:

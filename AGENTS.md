@@ -20,7 +20,7 @@ Self-hosted Backend-as-a-Service platform. Hybrid monolithic-microservice archit
 
 - PHP 8.3+, Swoole 6.x (async runtime, replaces PHP-FPM)
 - Utopia PHP framework (HTTP routing, CLI, DI, queue)
-- MongoDB (default), MariaDB, MySQL, PostgreSQL (adapters via utopia-php/database)
+- MongoDB (default), MariaDB, PostgreSQL (adapters via utopia-php/database; use `compose/mariadb.yml` or `compose/postgresql.yml` overlays to switch)
 - Redis (cache, queue, pub/sub)
 - Docker + Traefik (reverse proxy)
 - PHPUnit 12, Pint (PSR-12), PHPStan level 3

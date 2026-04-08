@@ -16,28 +16,123 @@
         <testsuite name="unit">
             <directory>./tests/unit</directory>
         </testsuite>
-        <testsuite name="e2e">
-            <file>./tests/e2e/Client.php</file>
+        <testsuite name="General">
             <directory>./tests/e2e/General</directory>
             <directory>./tests/e2e/Scopes</directory>
-            <directory>./tests/e2e/Services/Teams</directory>
-            <directory>./tests/e2e/Services/Realtime</directory>
-            <directory>./tests/e2e/Services/Account</directory>
-            <directory>./tests/e2e/Services/Users</directory>
+        </testsuite>
+        <testsuite name="Console">
             <directory>./tests/e2e/Services/Console</directory>
+        </testsuite>
+        <testsuite name="Health">
+            <directory>./tests/e2e/Services/Health</directory>
+        </testsuite>
+        <testsuite name="Locale">
+            <directory>./tests/e2e/Services/Locale</directory>
+        </testsuite>
+        <testsuite name="Tokens">
+            <directory>./tests/e2e/Services/Tokens</directory>
+        </testsuite>
+        <testsuite name="VCS">
+            <directory>./tests/e2e/Services/VCS</directory>
+        </testsuite>
+        <testsuite name="Webhooks">
+            <directory>./tests/e2e/Services/Webhooks</directory>
+        </testsuite>
+        <testsuite name="GeneralGroup">
+            <directory>./tests/e2e/General</directory>
+            <directory>./tests/e2e/Scopes</directory>
+            <directory>./tests/e2e/Services/Console</directory>
+            <directory>./tests/e2e/Services/Health</directory>
+            <directory>./tests/e2e/Services/Locale</directory>
+            <directory>./tests/e2e/Services/Messaging</directory>
+            <directory>./tests/e2e/Services/Proxy</directory>
+            <directory>./tests/e2e/Services/Storage</directory>
+            <directory>./tests/e2e/Services/Tokens</directory>
+            <directory>./tests/e2e/Services/VCS</directory>
+            <directory>./tests/e2e/Services/Webhooks</directory>
+        </testsuite>
+        <testsuite name="Account">
+            <directory>./tests/e2e/Services/Account</directory>
+        </testsuite>
+        <testsuite name="Avatars">
             <directory>./tests/e2e/Services/Avatars</directory>
+        </testsuite>
+        <testsuite name="Databases">
             <directory>./tests/e2e/Services/Databases</directory>
+        </testsuite>
+        <testsuite name="Functions">
+            <file>./tests/e2e/Services/Functions/FunctionsBase.php</file>
+            <file>./tests/e2e/Services/Functions/FunctionsCustomServerTest.php</file>
+            <file>./tests/e2e/Services/Functions/FunctionsCustomClientTest.php</file>
+        </testsuite>
+        <testsuite name="FunctionsSchedule">
+            <directory>./tests/e2e/Services/FunctionsSchedule</directory>
+        </testsuite>
+        <testsuite name="GraphQL">
+            <directory>./tests/e2e/Services/GraphQL</directory>
+        </testsuite>
+        <testsuite name="Messaging">
+            <directory>./tests/e2e/Services/Messaging</directory>
+        </testsuite>
+        <testsuite name="Migrations">
+            <directory>./tests/e2e/Services/Migrations</directory>
+        </testsuite>
+        <testsuite name="Project">
+            <directory>./tests/e2e/Services/Project</directory>
+        </testsuite>
+        <testsuite name="ProjectWebhooks">
+            <directory>./tests/e2e/Services/ProjectWebhooks</directory>
+        </testsuite>
+        <testsuite name="Projects">
+            <directory>./tests/e2e/Services/Projects</directory>
+        </testsuite>
+        <testsuite name="Proxy">
+            <directory>./tests/e2e/Services/Proxy</directory>
+        </testsuite>
+        <testsuite name="Realtime">
+            <directory>./tests/e2e/Services/Realtime</directory>
+        </testsuite>
+        <testsuite name="Sites">
+            <directory>./tests/e2e/Services/Sites</directory>
+        </testsuite>
+        <testsuite name="Storage">
+            <directory>./tests/e2e/Services/Storage</directory>
+        </testsuite>
+        <testsuite name="TablesDB">
+            <directory>./tests/e2e/Services/TablesDB</directory>
+        </testsuite>
+        <testsuite name="Teams">
+            <directory>./tests/e2e/Services/Teams</directory>
+        </testsuite>
+        <testsuite name="Users">
+            <directory>./tests/e2e/Services/Users</directory>
+        </testsuite>
+        <testsuite name="e2e">
+            <directory>./tests/e2e/General</directory>
+            <directory>./tests/e2e/Scopes</directory>
+            <directory>./tests/e2e/Services/Account</directory>
+            <directory>./tests/e2e/Services/Avatars</directory>
+            <directory>./tests/e2e/Services/Console</directory>
+            <directory>./tests/e2e/Services/Databases</directory>
+            <directory>./tests/e2e/Services/FunctionsSchedule</directory>
             <directory>./tests/e2e/Services/GraphQL</directory>
             <directory>./tests/e2e/Services/Health</directory>
             <directory>./tests/e2e/Services/Locale</directory>
-            <directory>./tests/e2e/Services/Projects</directory>
-            <directory>./tests/e2e/Services/Storage</directory>
-            <directory>./tests/e2e/Services/Tokens</directory>
-            <directory>./tests/e2e/Services/Webhooks</directory>
-            <directory>./tests/e2e/Services/ProjectWebhooks</directory>
             <directory>./tests/e2e/Services/Messaging</directory>
             <directory>./tests/e2e/Services/Migrations</directory>
             <directory>./tests/e2e/Services/Project</directory>
+            <directory>./tests/e2e/Services/ProjectWebhooks</directory>
+            <directory>./tests/e2e/Services/Projects</directory>
+            <directory>./tests/e2e/Services/Proxy</directory>
+            <directory>./tests/e2e/Services/Realtime</directory>
+            <directory>./tests/e2e/Services/Sites</directory>
+            <directory>./tests/e2e/Services/Storage</directory>
+            <directory>./tests/e2e/Services/TablesDB</directory>
+            <directory>./tests/e2e/Services/Teams</directory>
+            <directory>./tests/e2e/Services/Tokens</directory>
+            <directory>./tests/e2e/Services/Users</directory>
+            <directory>./tests/e2e/Services/VCS</directory>
+            <directory>./tests/e2e/Services/Webhooks</directory>
             <file>./tests/e2e/Services/Functions/FunctionsBase.php</file>
             <file>./tests/e2e/Services/Functions/FunctionsCustomServerTest.php</file>
             <file>./tests/e2e/Services/Functions/FunctionsCustomClientTest.php</file>
