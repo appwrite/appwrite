@@ -18,13 +18,15 @@ use Swoole\Timer;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
+use Utopia\CLI\Adapters\Generic;
+use Utopia\CLI\CLI;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\DI\Dependency;
+use Utopia\DI\Container;
 use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Platform\Service;
@@ -47,7 +49,7 @@ require_once __DIR__ . '/controllers/general.php';
 global $register;
 
 $platform = new Appwrite();
-$args = $platform->getEnv('argv');
+$args = $_SERVER['argv'] ?? [];
 
 \array_shift($args);
 if (! isset($args[0])) {
@@ -56,21 +58,15 @@ if (! isset($args[0])) {
 }
 
 $taskName = $args[0];
+$container = new Container();
+$cli = new CLI(new Generic(), $_SERVER['argv'] ?? [], $container);
+
+$platform->setCli($cli);
 $platform->init(Service::TYPE_TASK);
-$cli = $platform->getCli();
 
-$setResource = function (string $name, callable $callback, array $injections = []) use ($cli) {
-    $dependency = new Dependency();
-    $dependency->setName($name)->setCallback($callback);
-    foreach ($injections as $injection) {
-        $dependency->inject($injection);
-    }
-    $cli->setResource($dependency);
-};
+$container->set('register', fn () => $register, []);
 
-$setResource('register', fn () => $register, []);
-
-$setResource('cache', function ($pools) {
+$container->set('cache', function ($pools) {
     $list = Config::getParam('pools-cache', []);
     $adapters = [];
 
@@ -81,18 +77,18 @@ $setResource('cache', function ($pools) {
     return new Cache(new Sharding($adapters));
 }, ['pools']);
 
-$setResource('pools', function (Registry $register) {
+$container->set('pools', function (Registry $register) {
     return $register->get('pools');
 }, ['register']);
 
-$setResource('authorization', function () {
+$container->set('authorization', function () {
     $authorization = new Authorization();
     $authorization->disable();
 
     return $authorization;
 }, []);
 
-$setResource('dbForPlatform', function ($pools, $cache, $authorization) {
+$container->set('dbForPlatform', function ($pools, $cache, $authorization) {
     $sleep = 3;
     $maxAttempts = 5;
     $attempts = 0;
@@ -135,17 +131,17 @@ $setResource('dbForPlatform', function ($pools, $cache, $authorization) {
     return $dbForPlatform;
 }, ['pools', 'cache', 'authorization']);
 
-$setResource('console', function () {
+$container->set('console', function () {
     return new Document(Config::getParam('console'));
 }, []);
 
-$setResource(
+$container->set(
     'isResourceBlocked',
     fn () => fn (Document $project, string $resourceType, ?string $resourceId) => false,
     []
 );
 
-$setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache, $authorization) {
+$container->set('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache, $authorization) {
     $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
 
     return function (Document $project) use ($pools, $dbForPlatform, $cache, $authorization, &$databases) {
@@ -207,10 +203,10 @@ $setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $c
     };
 }, ['pools', 'dbForPlatform', 'cache', 'authorization']);
 
-$setResource('getLogsDB', function (Group $pools, Cache $cache, Authorization $authorization) {
+$container->set('getLogsDB', function (Group $pools, Cache $cache, Authorization $authorization) {
     $database = null;
 
-    return function (?Document $project = null) use ($pools, $cache, $database, $authorization) {
+    return function (?Document $project = null) use ($pools, $cache, &$database, $authorization) {
         if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
             $database->setTenant($project->getSequence());
             return $database;
@@ -235,41 +231,41 @@ $setResource('getLogsDB', function (Group $pools, Cache $cache, Authorization $a
         return $database;
     };
 }, ['pools', 'cache', 'authorization']);
-$setResource('publisher', function (Group $pools) {
+$container->set('publisher', function (Group $pools) {
     return new BrokerPool(publisher: $pools->get('publisher'));
 }, ['pools']);
-$setResource('publisherDatabases', function (BrokerPool $publisher) {
+$container->set('publisherDatabases', function (BrokerPool $publisher) {
     return $publisher;
 }, ['publisher']);
-$setResource('publisherFunctions', function (BrokerPool $publisher) {
+$container->set('publisherFunctions', function (BrokerPool $publisher) {
     return $publisher;
 }, ['publisher']);
-$setResource('publisherMigrations', function (BrokerPool $publisher) {
+$container->set('publisherMigrations', function (BrokerPool $publisher) {
     return $publisher;
 }, ['publisher']);
-$setResource('publisherMessaging', function (BrokerPool $publisher) {
+$container->set('publisherMessaging', function (BrokerPool $publisher) {
     return $publisher;
 }, ['publisher']);
-$setResource('usage', function () {
+$container->set('usage', function () {
     return new UsageContext();
 }, []);
-$setResource('publisherForUsage', fn (Publisher $publisher) => new UsagePublisher(
+$container->set('publisherForUsage', fn (Publisher $publisher) => new UsagePublisher(
     $publisher,
     new Queue(System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', Event::STATS_USAGE_QUEUE_NAME))
 ), ['publisher']);
-$setResource('queueForStatsResources', function (Publisher $publisher) {
+$container->set('queueForStatsResources', function (Publisher $publisher) {
     return new StatsResources($publisher);
 }, ['publisher']);
-$setResource('queueForFunctions', function (Publisher $publisher) {
+$container->set('queueForFunctions', function (Publisher $publisher) {
     return new Func($publisher);
 }, ['publisher']);
-$setResource('queueForDeletes', function (Publisher $publisher) {
+$container->set('queueForDeletes', function (Publisher $publisher) {
     return new Delete($publisher);
 }, ['publisher']);
-$setResource('queueForCertificates', function (Publisher $publisher) {
+$container->set('queueForCertificates', function (Publisher $publisher) {
     return new Certificate($publisher);
 }, ['publisher']);
-$setResource('logError', function (Registry $register) {
+$container->set('logError', function (Registry $register) {
     return function (Throwable $error, string $namespace, string $action) use ($register) {
         Console::error('[Error] Timestamp: ' . date('c', time()));
         Console::error('[Error] Type: ' . get_class($error));
@@ -321,25 +317,28 @@ $setResource('logError', function (Registry $register) {
     };
 }, ['register']);
 
-$setResource('executor', fn () => new Executor(), []);
+$container->set('executor', fn () => new Executor(), []);
 
-$setResource('bus', function (Registry $register) use ($cli) {
-    return $register->get('bus')->setResolver(fn (string $name) => $cli->getResource($name));
+$container->set('bus', function (Registry $register) use ($container) {
+    return $register->get('bus')->setResolver(fn (string $name) => $container->get($name));
 }, ['register']);
 
-$setResource('telemetry', fn () => new NoTelemetry(), []);
+$container->set('telemetry', fn () => new NoTelemetry(), []);
+
+$exitCode = 0;
 
 $cli
     ->error()
     ->inject('error')
     ->inject('logError')
-    ->action(function (Throwable $error, callable $logError) use ($taskName) {
+    ->action(function (Throwable $error, callable $logError) use ($taskName, &$exitCode) {
         call_user_func_array($logError, [
             $error,
             'Task',
             $taskName,
         ]);
 
+        $exitCode = 1;
         Timer::clearAll();
     });
 
@@ -348,3 +347,4 @@ $cli->shutdown()->action(fn () => Timer::clearAll());
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 require_once __DIR__ . '/init/span.php';
 run($cli->run(...));
+Console::exit($exitCode);
