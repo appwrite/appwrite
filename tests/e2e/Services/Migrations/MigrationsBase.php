@@ -1482,6 +1482,351 @@ trait MigrationsBase
         }, 10_000, 500);
     }
 
+    public function testCSVImportOverwriteAndSkip(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        // Create database and table
+        $database = $this->client->call(Client::METHOD_POST, '/databases', $headers, [
+            'databaseId' => ID::unique(),
+            'name' => 'Overwrite Skip DB',
+        ]);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', $headers, [
+            'tableId' => ID::unique(),
+            'name' => 'Test Table',
+        ]);
+        $this->assertEquals(201, $table['headers']['status-code']);
+        $tableId = $table['body']['$id'];
+
+        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/string', $headers, [
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/integer', $headers, [
+            'key' => 'age',
+            'min' => 18,
+            'max' => 65,
+            'required' => true,
+        ]);
+
+        // Create bucket
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', $headers, [
+            'bucketId' => ID::unique(),
+            'name' => 'CSV Overwrite Skip Bucket',
+            'maximumFileSize' => 2000000,
+            'allowedFileExtensions' => ['csv'],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        // Upload initial CSV
+        $initialFile = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/csv/documents.csv'), 'text/csv', 'documents.csv'),
+        ]);
+        $this->assertEquals(201, $initialFile['headers']['status-code']);
+
+        // Upload duplicates CSV (2 existing IDs with new data + 2 new IDs)
+        $dupFile = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/csv/documents-duplicates.csv'), 'text/csv', 'documents-duplicates.csv'),
+        ]);
+        $this->assertEquals(201, $dupFile['headers']['status-code']);
+
+        $resourceId = $databaseId . ':' . $tableId;
+
+        // 1. Import initial 100 rows
+        $migration = $this->performCsvMigration([
+            'fileId' => $initialFile['body']['$id'],
+            'bucketId' => $bucketId,
+            'resourceId' => $resourceId,
+        ]);
+
+        $this->assertEventually(function () use ($migration) {
+            $m = $this->client->call(Client::METHOD_GET, '/migrations/' . $migration['body']['$id'], array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+            $this->assertEquals('finished', $m['body']['stage']);
+            $this->assertEquals('completed', $m['body']['status']);
+            $this->assertEquals(100, $m['body']['statusCounters'][Resource::TYPE_ROW]['success']);
+        }, 30_000, 500);
+
+        // 2. Test overwrite+skip mutual exclusion
+        $invalid = $this->performCsvMigration([
+            'fileId' => $dupFile['body']['$id'],
+            'bucketId' => $bucketId,
+            'resourceId' => $resourceId,
+            'overwrite' => true,
+            'skip' => true,
+        ]);
+        $this->assertEquals(400, $invalid['headers']['status-code']);
+
+        // 3. Import duplicates with skip=true — duplicates skipped, new rows added
+        $skipMigration = $this->performCsvMigration([
+            'fileId' => $dupFile['body']['$id'],
+            'bucketId' => $bucketId,
+            'resourceId' => $resourceId,
+            'skip' => true,
+        ]);
+
+        $this->assertEventually(function () use ($skipMigration) {
+            $m = $this->client->call(Client::METHOD_GET, '/migrations/' . $skipMigration['body']['$id'], array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+            $this->assertEquals('finished', $m['body']['stage']);
+            $this->assertEquals('completed', $m['body']['status']);
+        }, 30_000, 500);
+
+        // Verify total is 102 (100 original + 2 new), not 104
+        $rows = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [Query::limit(150)->toString()]
+        ]);
+        $this->assertEquals(102, $rows['body']['total']);
+
+        // Verify original row was NOT overwritten
+        $row = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/hxfcwpcas5xokpwe', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals('Diamond Mendez', $row['body']['name']);
+
+        // 4. Import duplicates with overwrite=true — existing rows updated
+        // Re-upload file since migration consumes it
+        $dupFile2 = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/csv/documents-duplicates.csv'), 'text/csv', 'documents-duplicates.csv'),
+        ]);
+        $this->assertEquals(201, $dupFile2['headers']['status-code']);
+
+        $overwriteMigration = $this->performCsvMigration([
+            'fileId' => $dupFile2['body']['$id'],
+            'bucketId' => $bucketId,
+            'resourceId' => $resourceId,
+            'overwrite' => true,
+        ]);
+
+        $this->assertEventually(function () use ($overwriteMigration) {
+            $m = $this->client->call(Client::METHOD_GET, '/migrations/' . $overwriteMigration['body']['$id'], array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+            $this->assertEquals('finished', $m['body']['stage']);
+            $this->assertEquals('completed', $m['body']['status']);
+        }, 30_000, 500);
+
+        // Total should still be 102 (no new rows added)
+        $rows = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [Query::limit(150)->toString()]
+        ]);
+        $this->assertEquals(102, $rows['body']['total']);
+
+        // Verify row was overwritten
+        $row = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/hxfcwpcas5xokpwe', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals('Updated Diamond', $row['body']['name']);
+        $this->assertEquals(30, $row['body']['age']);
+    }
+
+    public function testJSONImportOverwriteAndSkip(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        // Create database and table
+        $database = $this->client->call(Client::METHOD_POST, '/databases', $headers, [
+            'databaseId' => ID::unique(),
+            'name' => 'JSON Overwrite Skip DB',
+        ]);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', $headers, [
+            'tableId' => ID::unique(),
+            'name' => 'Test Table',
+        ]);
+        $this->assertEquals(201, $table['headers']['status-code']);
+        $tableId = $table['body']['$id'];
+
+        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/string', $headers, [
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/integer', $headers, [
+            'key' => 'age',
+            'min' => 18,
+            'max' => 65,
+            'required' => true,
+        ]);
+
+        // Create bucket
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', $headers, [
+            'bucketId' => ID::unique(),
+            'name' => 'JSON Overwrite Skip Bucket',
+            'maximumFileSize' => 2000000,
+            'allowedFileExtensions' => ['json'],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        // Upload initial JSON
+        $initialFile = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/json/documents.json'), 'application/json', 'documents.json'),
+        ]);
+        $this->assertEquals(201, $initialFile['headers']['status-code']);
+
+        // Upload duplicates JSON
+        $dupFile = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/json/documents-duplicates.json'), 'application/json', 'documents-duplicates.json'),
+        ]);
+        $this->assertEquals(201, $dupFile['headers']['status-code']);
+
+        $resourceId = $databaseId . ':' . $tableId;
+
+        // 1. Import initial 100 rows
+        $migration = $this->performJsonMigration([
+            'fileId' => $initialFile['body']['$id'],
+            'bucketId' => $bucketId,
+            'resourceId' => $resourceId,
+        ]);
+
+        $this->assertEventually(function () use ($migration) {
+            $m = $this->client->call(Client::METHOD_GET, '/migrations/' . $migration['body']['$id'], array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+            $this->assertEquals('finished', $m['body']['stage']);
+            $this->assertEquals('completed', $m['body']['status']);
+            $this->assertEquals(100, $m['body']['statusCounters'][Resource::TYPE_ROW]['success']);
+        }, 30_000, 500);
+
+        // 2. Test overwrite+skip mutual exclusion
+        $invalid = $this->performJsonMigration([
+            'fileId' => $dupFile['body']['$id'],
+            'bucketId' => $bucketId,
+            'resourceId' => $resourceId,
+            'overwrite' => true,
+            'skip' => true,
+        ]);
+        $this->assertEquals(400, $invalid['headers']['status-code']);
+
+        // 3. Import duplicates with skip=true
+        $skipMigration = $this->performJsonMigration([
+            'fileId' => $dupFile['body']['$id'],
+            'bucketId' => $bucketId,
+            'resourceId' => $resourceId,
+            'skip' => true,
+        ]);
+
+        $this->assertEventually(function () use ($skipMigration) {
+            $m = $this->client->call(Client::METHOD_GET, '/migrations/' . $skipMigration['body']['$id'], array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+            $this->assertEquals('finished', $m['body']['stage']);
+            $this->assertEquals('completed', $m['body']['status']);
+        }, 30_000, 500);
+
+        // Verify total is 102 (100 original + 2 new)
+        $rows = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [Query::limit(150)->toString()]
+        ]);
+        $this->assertEquals(102, $rows['body']['total']);
+
+        // Verify original row was NOT overwritten
+        $row = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/hxfcwpcas5xokpwe', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals('Diamond Mendez', $row['body']['name']);
+
+        // 4. Import duplicates with overwrite=true
+        $dupFile2 = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/json/documents-duplicates.json'), 'application/json', 'documents-duplicates.json'),
+        ]);
+        $this->assertEquals(201, $dupFile2['headers']['status-code']);
+
+        $overwriteMigration = $this->performJsonMigration([
+            'fileId' => $dupFile2['body']['$id'],
+            'bucketId' => $bucketId,
+            'resourceId' => $resourceId,
+            'overwrite' => true,
+        ]);
+
+        $this->assertEventually(function () use ($overwriteMigration) {
+            $m = $this->client->call(Client::METHOD_GET, '/migrations/' . $overwriteMigration['body']['$id'], array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+            $this->assertEquals('finished', $m['body']['stage']);
+            $this->assertEquals('completed', $m['body']['status']);
+        }, 30_000, 500);
+
+        // Total should still be 102
+        $rows = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [Query::limit(150)->toString()]
+        ]);
+        $this->assertEquals(102, $rows['body']['total']);
+
+        // Verify row was overwritten
+        $row = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/hxfcwpcas5xokpwe', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals('Updated Diamond', $row['body']['name']);
+        $this->assertEquals(30, $row['body']['age']);
+    }
+
     private function performCsvMigration(array $body): array
     {
         return $this->client->call(Client::METHOD_POST, '/migrations/csv', [
