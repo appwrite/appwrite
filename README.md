@@ -195,7 +195,42 @@ Looking for more SDKs? - Help us by contributing a pull request to our [SDK Gene
 
 ## Architecture
 
-![Appwrite Architecture showing how Appwrite is built and the services and tools it uses](docs/specs/overview.drawio.svg)
+```mermaid
+flowchart TD
+    subgraph Clients
+        direction LR
+        Web ~~~ Flutter ~~~ iOS ~~~ Android ~~~ Servers
+    end
+
+    subgraph APIServices["API Services"]
+        direction LR
+        Users ~~~ Account ~~~ Teams ~~~ Databases ~~~ Storage ~~~ Locale ~~~ Avatars ~~~ Health ~~~ Functions ~~~ Sites ~~~ Messaging ~~~ VCS ~~~ Tokens ~~~ Proxy
+    end
+
+    subgraph Workers["Background Workers"]
+        direction LR
+        Schedulers ~~~ StatsUsage[Usage] ~~~ Maintenance ~~~ Audits ~~~ Mails ~~~ DBw[Databases] ~~~ Webhooks ~~~ FnW[Functions] ~~~ Certificates ~~~ Deletes ~~~ Builds ~~~ MessagingW[Messaging] ~~~ Migrations ~~~ Executions
+    end
+
+    Clients --> LB[Loadbalancer]
+    LB --> Console & GQL[GraphQL API] & REST[REST API] & RT[Realtime API] & SSL[SSL Gateway]
+
+    REST --> APIServices
+    REST & GQL & RT --> SecLayer[Security Layer]
+
+    SecLayer --> Cache["Cache (Redis)"] & Queue["Queue (Redis)"] & AV["AntiVirus (ClamAV)"]
+    Cache --> DB[(Database)]
+
+    Queue --> Workers
+    StatsUsage & Maintenance & Audits & DBw & Webhooks & FnW & Certificates --> DB
+
+    FnW --> Executor["Executor (Open-Runtimes)"]
+    Executor -.- Docker[Docker / K8S]
+    Executor --> Builds
+
+    Mails & MessagingW --> SMTP
+    Certificates --> LE[Letsencrypt] --> LB
+```
 
 Appwrite uses a microservices architecture that was designed for easy scaling and delegation of responsibilities. In addition, Appwrite supports multiple APIs, such as REST, WebSocket, and GraphQL to allow you to interact with your resources by leveraging your existing knowledge and protocols of choice.
 
