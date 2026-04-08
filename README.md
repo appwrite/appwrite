@@ -219,7 +219,7 @@ flowchart TD
 
     subgraph Infra["Infrastructure"]
         direction LR
-        Cache["Cache (Redis)"]:::hot ~~~ Queue["Queue (Redis)"]:::hot ~~~ AV["AntiVirus (ClamAV)"]:::external ~~~ DB[(Database)]:::store ~~~ Executor[["Executor (Open-Runtimes)"]]:::compute ~~~ Docker(Docker / K8S):::service
+        Cache[("Cache (Redis)")]:::hot ~~~ Queue[("Queue (Redis)")]:::hot ~~~ AV["AntiVirus (ClamAV)"]:::external ~~~ DB[(Database)]:::store ~~~ Executor[["Executor (Open-Runtimes)"]]:::compute ~~~ Docker(Docker / K8S):::service
     end
 
     subgraph Workers["Background Workers"]
