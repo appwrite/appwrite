@@ -202,7 +202,8 @@ return function (Container $container): void {
             }
 
             $pools = $register->get('pools');
-            $pool = $pools->get($databaseDSN->getHost());
+            $databaseHost = $databaseDSN->getHost();
+            $pool = $pools->get($databaseHost);
 
             $adapter = new DatabasePool($pool);
             $database = new Database($adapter, $cache);
@@ -211,12 +212,32 @@ return function (Container $container): void {
                 ->setAuthorization($authorization);
             $database->getAdapter()->setSupportForAttributes($databaseType !== DOCUMENTSDB);
 
-            $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+            $sharedTables = \array_filter(\explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', '')));
 
-            if (\in_array($dsn->getHost(), $sharedTables, true)) {
+            // For separate pools (documentsdb/vectorsdb), check their own shared tables config.
+            // If not configured, use dedicated mode to avoid cross-engine tenant type mismatches.
+            if ($databaseHost !== $dsn->getHost()) {
+                $dbTypeSharedTables = match ($databaseType) {
+                    DOCUMENTSDB => \array_filter(\explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES', ''))),
+                    VECTORSDB => \array_filter(\explode(',', System::getEnv('_APP_DATABASE_VECTORSDB_SHARED_TABLES', ''))),
+                    default => [],
+                };
+
+                if (\in_array($databaseHost, $dbTypeSharedTables)) {
+                    $database
+                        ->setSharedTables(true)
+                        ->setTenant($projectDocument->getSequence())
+                        ->setNamespace($databaseDSN->getParam('namespace'));
+                } else {
+                    $database
+                        ->setSharedTables(false)
+                        ->setTenant(null)
+                        ->setNamespace('_' . $projectDocument->getSequence());
+                }
+            } elseif (\in_array($dsn->getHost(), $sharedTables, true)) {
                 $database
                     ->setSharedTables(true)
-                    ->setTenant((int) $projectDocument->getSequence())
+                    ->setTenant($projectDocument->getSequence())
                     ->setNamespace($dsn->getParam('namespace'));
             } else {
                 $database

@@ -120,6 +120,7 @@ trait ProjectsBase
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/keys', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'name' => 'Key Test',
             'scopes' => ['teams.read', 'teams.write'],
@@ -151,6 +152,7 @@ trait ProjectsBase
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'type' => 'web',
             'name' => 'Web App',
@@ -163,6 +165,7 @@ trait ProjectsBase
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'type' => 'flutter-ios',
             'name' => 'Flutter App (iOS)',
@@ -175,6 +178,7 @@ trait ProjectsBase
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'type' => 'flutter-android',
             'name' => 'Flutter App (Android)',
@@ -187,6 +191,7 @@ trait ProjectsBase
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'type' => 'flutter-web',
             'name' => 'Flutter App (Web)',
@@ -199,6 +204,7 @@ trait ProjectsBase
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'type' => 'apple-ios',
             'name' => 'iOS App',
@@ -211,6 +217,7 @@ trait ProjectsBase
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'type' => 'apple-macos',
             'name' => 'macOS App',
@@ -223,6 +230,7 @@ trait ProjectsBase
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'type' => 'apple-watchos',
             'name' => 'watchOS App',
@@ -235,6 +243,7 @@ trait ProjectsBase
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
         ], $this->getHeaders()), [
             'type' => 'apple-tvos',
             'name' => 'tvOS App',
