@@ -840,7 +840,7 @@ function ProjectSelectorContent({
             onClick={onCreateProject}
             className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
-            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-dashed border-muted-foreground/50">
+            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/50">
               <Plus className="h-3.5 w-3.5" />
             </div>
             <span className="text-[13px]">Create Project</span>
@@ -1142,7 +1142,7 @@ function MobileProjectSelectorContent({
               onClick={onCreateProject}
               className="flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
-              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-dashed border-muted-foreground/50">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/50">
                 <Plus className="h-4 w-4" />
               </div>
               <span className="text-[14px]">Create Project</span>
