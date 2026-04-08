@@ -237,33 +237,32 @@ class Webhooks extends Action
         $template->setParam('{{path}}', "/console/project-$region-$projectId/settings/webhooks/$webhookId");
         $template->setParam('{{attempts}}', $attempts);
 
-        $template->setParam('{{logoUrl}}', $plan['logoUrl'] ?? APP_EMAIL_LOGO_URL);
-        $template->setParam('{{accentColor}}', $plan['accentColor'] ?? APP_EMAIL_ACCENT_COLOR);
-        $template->setParam('{{twitterUrl}}', $plan['twitterUrl'] ?? APP_SOCIAL_TWITTER);
-        $template->setParam('{{discordUrl}}', $plan['discordUrl'] ?? APP_SOCIAL_DISCORD);
-        $template->setParam('{{githubUrl}}', $plan['githubUrl'] ?? APP_SOCIAL_GITHUB_APPWRITE);
-        $template->setParam('{{termsUrl}}', $plan['termsUrl'] ?? APP_EMAIL_TERMS_URL);
-        $template->setParam('{{privacyUrl}}', $plan['privacyUrl'] ?? APP_EMAIL_PRIVACY_URL);
-
-        // TODO: Use setbodyTemplate once #7307 is merged
         $subject = 'Webhook deliveries have been paused';
         $preview = 'Webhook deliveries to your endpoint have been paused.';
-        $body = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl');
 
-        $body
-            ->setParam('{{subject}}', $subject)
-            ->setParam('{{message}}', $template->render())
-            ->setParam('{{year}}', date("Y"));
+        $emailVariables = [
+            'logoUrl' => $plan['logoUrl'] ?? APP_EMAIL_LOGO_URL,
+            'accentColor' => $plan['accentColor'] ?? APP_EMAIL_ACCENT_COLOR,
+            'twitter' => $plan['twitterUrl'] ?? APP_SOCIAL_TWITTER,
+            'discord' => $plan['discordUrl'] ?? APP_SOCIAL_DISCORD,
+            'github' => $plan['githubUrl'] ?? APP_SOCIAL_GITHUB_APPWRITE,
+            'terms' => $plan['termsUrl'] ?? APP_EMAIL_TERMS_URL,
+            'privacy' => $plan['privacyUrl'] ?? APP_EMAIL_PRIVACY_URL,
+            'platform' => $plan['platformName'] ?? APP_NAME,
+        ];
 
         $queueForMails
             ->setProject($project)
             ->setSubject($subject)
             ->setPreview($preview)
-            ->setBody($body->render());
+            ->setBodyTemplate(__DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl');
 
         foreach ($users as $user) {
+            $template->setParam('{{user}}', $user->getAttribute('name', ''));
+
             $queueForMails
-                ->setVariables(['user' => $user->getAttribute('name', '')])
+                ->setBody($template->render())
+                ->setVariables($emailVariables)
                 ->setName($user->getAttribute('name', ''))
                 ->setRecipient($user->getAttribute('email'))
                 ->trigger();
