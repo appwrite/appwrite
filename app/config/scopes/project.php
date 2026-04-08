@@ -188,4 +188,20 @@ return [ // List of publicly visible scopes
         "description" =>
             "Access to update project\'s information",
     ],
+    "keys.read" => [
+        "description" =>
+            "Access to read project\'s keys",
+    ],
+    "keys.write" => [
+        "description" =>
+            "Access to create, update, and delete project\'s keys",
+    ],
+    "platforms.read" => [
+        "description" =>
+            "Access to read project\'s platforms",
+    ],
+    "platforms.write" => [
+        "description" =>
+            "Access to create, update, and delete project\'s platforms",
+    ],
 ];
