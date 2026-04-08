@@ -772,7 +772,7 @@ export function View() {
                       </h3>
                       {isBuilding && (
                         <Badge
-                          variant="warning"
+                          variant="deploymentBuilding"
                           className="text-[10px] shrink-0"
                         >
                           Building
