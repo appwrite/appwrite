@@ -298,7 +298,7 @@ $container->set('geodb', function ($register) {
     try {
         return $register->get('geodb');
     } catch (\Throwable) {
-        return null;
+        return;
     }
 }, ['register']);
 
