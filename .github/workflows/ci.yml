@@ -28,8 +28,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
-        with:
-          fetch-depth: 2
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -71,9 +69,6 @@ jobs:
 
       - name: Run Locale check
         run: node .github/workflows/static-analysis/locale/index.js
-
-      - run: git checkout HEAD^2
-        if: github.event_name == 'pull_request'
 
       - name: Run Pint
         run: composer format:check
