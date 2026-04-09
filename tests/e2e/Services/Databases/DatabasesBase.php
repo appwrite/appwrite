@@ -3599,7 +3599,9 @@ trait DatabasesBase
         // Use different select queries from other cache tests to avoid cache key collision.
         $queries = [
             Query::equal('$id', $docIds)->toString(),
-            Query::select(['title', 'tagline', '$id'])->toString(),
+            Query::select('title')->toString(),
+            Query::select('tagline')->toString(),
+            Query::select('$id')->toString(),
             Query::orderAsc('$createdAt')->toString(),
         ];
 
