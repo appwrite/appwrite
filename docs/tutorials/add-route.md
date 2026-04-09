@@ -75,7 +75,7 @@ App::post('/v1/account/create')
 #### SDK
 * sdk.auth - Array of authentication types is passed in order to impose different authentication methods in different situations.
 * sdk.namespace - Refers to the route namespace.
-* sdk.method - Refers to the sdk method that needs to called.
+* sdk.method - Refers to the sdk method that needs to be called.
 * sdk.description - Description of the route, using markdown format.
 * sdk.response.code - Refers to the route http response status code expected.
 * sdk.auth.response.model - Refers the route http response expected.
@@ -172,7 +172,7 @@ some code...
 });
 ```
 
-### 6. Action
+### 7. Action
 Action populates the actual route code and has to be very clear and understandable. A good route stays simple and doesn't contain complex logic. An action is where we describe our business needs in code, and combine different libraries to work together and tell our story.
 
 ```php
