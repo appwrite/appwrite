@@ -539,7 +539,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $project = $list['body']['projects'][0];
 
-        $this->assertEquals('Original Project', $project['name']);
+        $this->assertEquals('Project Test', $project['name']);
         $this->assertArrayHasKey('$id', $project);
         $this->assertArrayHasKey('$createdAt', $project);
         $this->assertArrayHasKey('$updatedAt', $project);
