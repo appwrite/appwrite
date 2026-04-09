@@ -2185,7 +2185,7 @@ Http::get('/v1/account/tokens/oauth2/:provider')
         }
 
         $host = $platform['consoleHostname'] ?? '';
-        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
         $redirectBase = $protocol . '://' . $host;
         if ($protocol === 'https' && $port !== '443') {
@@ -2208,10 +2208,12 @@ Http::get('/v1/account/tokens/oauth2/:provider')
             'token' => true,
         ], $scopes);
 
+        $loginURL = $oauth2->getLoginURL();
+
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
-            ->redirect($oauth2->getLoginURL());
+            ->redirect($loginURL);
     });
 
 Http::post('/v1/account/tokens/magic-url')

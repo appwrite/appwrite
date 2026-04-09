@@ -376,6 +376,17 @@ return [
         'mock' => false,
         'class' => 'Appwrite\\Auth\\OAuth2\\Wordpress',
     ],
+    'x' => [
+        'name' => 'X',
+        'developers' => 'https://docs.x.com/fundamentals/authentication/oauth-2-0/authorization-code',
+        'icon' => 'icon-twitter',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\X',
+    ],
     'yahoo' => [
         'name' => 'Yahoo',
         'developers' => 'https://developer.yahoo.com/oauth2/guide/flows_authcode/',

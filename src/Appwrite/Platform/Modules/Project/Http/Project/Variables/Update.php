@@ -4,7 +4,6 @@ namespace Appwrite\Platform\Modules\Project\Http\Project\Variables;
 
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -19,7 +18,7 @@ use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 
-class Update extends Base
+class Update extends Action
 {
     use HTTP;
 

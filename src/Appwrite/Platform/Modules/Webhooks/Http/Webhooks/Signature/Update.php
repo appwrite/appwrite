@@ -4,7 +4,6 @@ namespace Appwrite\Platform\Modules\Webhooks\Http\Webhooks\Signature;
 
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -17,7 +16,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 
-class Update extends Base
+class Update extends Action
 {
     use HTTP;
 
