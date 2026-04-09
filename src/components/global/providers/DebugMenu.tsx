@@ -15,6 +15,7 @@ import {
   Globe,
   FlaskConical,
   AlertTriangle,
+  Loader2,
 } from 'lucide-react'
 import {
   Popover,
@@ -127,6 +128,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
       { label: 'System', themeValue: 'system' },
       { label: '🎨 Crazy', themeValue: 'crazy' },
       { label: '🥷 Stealth', themeValue: 'stealth' },
+      { label: 'Classic console', themeValue: 'classic' },
     ].map((opt) => ({
       label: opt.label,
       onClick: () => {
@@ -210,51 +212,120 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             icon: <Image className="h-3 w-3" />,
             submenu: faviconOptions,
           },
-        ],
-      },
-      {
-        title: 'Experimental features',
-        icon: <FlaskConical className="h-3.5 w-3.5" />,
-        items: [
           {
-            label: 'AI assistant',
-            description: 'In-app AI assistant chat panel and header button.',
-            variant: 'switch' as const,
-            switchValue: overrides.showAIAssistant,
-            switchOnChange: (checked: boolean) => {
-              setOverrides((prev) => ({
-                ...prev,
-                showAIAssistant: checked,
-              }))
-              setDebugOverride('showAIAssistant', checked)
-            },
-          },
-          {
-            label: 'Show native app bar',
-            description: 'App bar above header (native OS).',
-            variant: 'switch' as const,
-            switchValue: overrides.showNativeAppBar,
-            switchOnChange: (checked: boolean) => {
-              setOverrides((prev) => ({
-                ...prev,
-                showNativeAppBar: checked,
-              }))
-              setDebugOverride('showNativeAppBar', checked)
-            },
-          },
-          {
-            label: 'Success team card',
+            label: 'Cloud status alert',
             description:
-              'Show the success team card on organization overview (custom plans).',
-            variant: 'switch' as const,
-            switchValue: overrides.showSuccessTeamCard,
-            switchOnChange: (checked: boolean) => {
-              setOverrides((prev) => ({
-                ...prev,
-                showSuccessTeamCard: checked,
-              }))
-              setDebugOverride('showSuccessTeamCard', checked)
+              overrides.mockCloudStatusAlert === 'live'
+                ? 'Use live Appwrite Cloud status'
+                : overrides.mockCloudStatusAlert === 'operational'
+                  ? 'Preview the normal state with no alert'
+                  : `Mock ${overrides.mockCloudStatusAlert} alert`,
+            icon: <Cloud className="h-3 w-3" />,
+            submenu: [
+              {
+                label: 'Live status',
+                description: 'Use the public Appwrite Cloud status page.',
+                onClick: () => {
+                  setDebugOverride('mockCloudStatusAlert', 'live')
+                  setIsOpen(false)
+                },
+                active: overrides.mockCloudStatusAlert === 'live',
+                icon: <Cloud className="h-3 w-3" />,
+              },
+              ...(
+                [
+                  {
+                    label: 'No alert',
+                    value: 'operational',
+                    description:
+                      'Preview the normal operational state with no banner.',
+                  },
+                  {
+                    label: 'Degraded',
+                    value: 'degraded',
+                    description: 'Preview the degraded-service alert.',
+                  },
+                  {
+                    label: 'Downtime',
+                    value: 'downtime',
+                    description: 'Preview the outage alert.',
+                  },
+                  {
+                    label: 'Maintenance',
+                    value: 'maintenance',
+                    description: 'Preview the maintenance alert.',
+                  },
+                ] as const
+              ).map((option) => ({
+                label: option.label,
+                description: option.description,
+                onClick: () => {
+                  setDebugOverride(
+                    'mockCloudStatusAlert',
+                    option.value as MockCloudStatusAlert,
+                  )
+                  setIsOpen(false)
+                },
+                active: overrides.mockCloudStatusAlert === option.value,
+                icon: <AlertTriangle className="h-3 w-3" />,
+              })),
+            ],
+          },
+          {
+            label: 'Add promo banner',
+            onClick: () => {
+              addMockBanner()
+              setIsOpen(false)
             },
+            icon: <Megaphone className="h-3 w-3" />,
+            badge: banners.length > 0 ? banners.length : undefined,
+          },
+          {
+            label: 'Fullscreen loader',
+            description: overrides.showFullscreenLoader
+              ? 'Enabled'
+              : 'Disabled',
+            icon: <Loader2 className="h-3 w-3" />,
+            submenu: [
+              {
+                label: 'Show fullscreen loader',
+                description:
+                  'Keep the initial loader visible to preview it (e.g. with status banner).',
+                onClick: () => {
+                  setOverrides((prev) => ({
+                    ...prev,
+                    showFullscreenLoader: true,
+                  }))
+                  setDebugOverride('showFullscreenLoader', true)
+                  setIsOpen(false)
+                },
+                active: overrides.showFullscreenLoader,
+                icon: <Loader2 className="h-3 w-3" />,
+              },
+              {
+                label: 'Hide fullscreen loader',
+                description: 'Return to normal loading behavior.',
+                onClick: () => {
+                  setOverrides((prev) => ({
+                    ...prev,
+                    showFullscreenLoader: false,
+                  }))
+                  setDebugOverride('showFullscreenLoader', false)
+                  setIsOpen(false)
+                },
+                active: !overrides.showFullscreenLoader,
+                icon: <RotateCcw className="h-3 w-3" />,
+              },
+            ],
+          },
+          {
+            label: 'Error page',
+            description: 'Preview the error page as users see it.',
+            onClick: () => {
+              navigate({ to: '/debug/error-preview' })
+              setIsOpen(false)
+            },
+            icon: <Bug className="h-3 w-3" />,
           },
         ],
       },
@@ -361,6 +432,47 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                   )
                 },
               },
+              {
+                label: 'AI assistant',
+                description:
+                  'In-app AI assistant chat panel and header button.',
+                variant: 'switch' as const,
+                switchValue: overrides.showAIAssistant,
+                switchOnChange: (checked: boolean) => {
+                  setOverrides((prev) => ({
+                    ...prev,
+                    showAIAssistant: checked,
+                  }))
+                  setDebugOverride('showAIAssistant', checked)
+                },
+              },
+              {
+                label: 'Show native app bar',
+                description: 'App bar above header (native OS).',
+                variant: 'switch' as const,
+                switchValue: overrides.showNativeAppBar,
+                switchOnChange: (checked: boolean) => {
+                  setOverrides((prev) => ({
+                    ...prev,
+                    showNativeAppBar: checked,
+                  }))
+                  setDebugOverride('showNativeAppBar', checked)
+                },
+              },
+              {
+                label: 'Success team card',
+                description:
+                  'Show the success team card on organization overview (custom plans).',
+                variant: 'switch' as const,
+                switchValue: overrides.showSuccessTeamCard,
+                switchOnChange: (checked: boolean) => {
+                  setOverrides((prev) => ({
+                    ...prev,
+                    showSuccessTeamCard: checked,
+                  }))
+                  setDebugOverride('showSuccessTeamCard', checked)
+                },
+              },
             ],
           },
           (() => {
@@ -433,95 +545,12 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           })(),
         ],
       },
-      {
-        title: 'Preview',
-        icon: <AlertTriangle className="h-3.5 w-3.5" />,
-        items: [
-          {
-            label: 'Cloud status alert',
-            description:
-              overrides.mockCloudStatusAlert === 'live'
-                ? 'Use live Appwrite Cloud status'
-                : overrides.mockCloudStatusAlert === 'operational'
-                  ? 'Preview the normal state with no alert'
-                : `Mock ${overrides.mockCloudStatusAlert} alert`,
-            icon: <AlertTriangle className="h-3 w-3" />,
-            submenu: [
-              {
-                label: 'Live status',
-                description: 'Use the public Appwrite Cloud status page.',
-                onClick: () => {
-                  setDebugOverride('mockCloudStatusAlert', 'live')
-                  setIsOpen(false)
-                },
-                active: overrides.mockCloudStatusAlert === 'live',
-                icon: <RotateCcw className="h-3 w-3" />,
-              },
-              ...(
-                [
-                  {
-                    label: 'No alert',
-                    value: 'operational',
-                    description:
-                      'Preview the normal operational state with no banner.',
-                  },
-                  {
-                    label: 'Degraded',
-                    value: 'degraded',
-                    description: 'Preview the degraded-service alert.',
-                  },
-                  {
-                    label: 'Downtime',
-                    value: 'downtime',
-                    description: 'Preview the outage alert.',
-                  },
-                  {
-                    label: 'Maintenance',
-                    value: 'maintenance',
-                    description: 'Preview the maintenance alert.',
-                  },
-                ] as const
-              ).map((option) => ({
-                label: option.label,
-                description: option.description,
-                onClick: () => {
-                  setDebugOverride(
-                    'mockCloudStatusAlert',
-                    option.value as MockCloudStatusAlert,
-                  )
-                  setIsOpen(false)
-                },
-                active: overrides.mockCloudStatusAlert === option.value,
-                icon: <AlertTriangle className="h-3 w-3" />,
-              })),
-            ],
-          },
-          {
-            label: 'Error page',
-            description: 'Preview the error page as users see it.',
-            onClick: () => {
-              navigate({ to: '/debug/error-preview' })
-              setIsOpen(false)
-            },
-            icon: <AlertTriangle className="h-3 w-3" />,
-          },
-        ],
-      },
-      {
-        title: 'Promos',
-        icon: <Sparkles className="h-3.5 w-3.5" />,
-        items: [
-          {
-            label: 'Add promo banner',
-            onClick: () => {
-              addMockBanner()
-              setIsOpen(false)
-            },
-            icon: <Megaphone className="h-3 w-3" />,
-            badge: banners.length > 0 ? banners.length : undefined,
-          },
-          ...(banners.length > 0
-            ? [
+      ...(banners.length > 0
+        ? [
+            {
+              title: 'Promos',
+              icon: <Sparkles className="h-3.5 w-3.5" />,
+              items: [
                 {
                   label: 'Clear all banners',
                   onClick: () => {
@@ -530,10 +559,10 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                   },
                   icon: <Trash2 className="h-3 w-3" />,
                 },
-              ]
-            : []),
-        ],
-      },
+              ],
+            } as MenuSection,
+          ]
+        : []),
       ...(actions.length > 0
         ? [
             {
@@ -563,6 +592,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     overrides.showNativeAppBar,
     overrides.showAIAssistant,
     overrides.showSuccessTeamCard,
+    overrides.showFullscreenLoader,
     overrides.mockCloudStatusAlert,
     banners.length,
     actions,
@@ -601,10 +631,15 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           <TooltipTrigger asChild>
             <PopoverTrigger asChild>
               <button
-                className="flex h-11 w-11 items-center justify-center rounded-xl border border-violet-500/30 bg-violet-600 text-white shadow-md transition-colors hover:bg-violet-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl border border-violet-500/30 bg-violet-600 text-white shadow-md transition-colors hover:bg-violet-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 aria-label="Debug menu"
               >
-                <Bug className="h-5 w-5" />
+                <img
+                  src="/icons/appwrite-white.svg"
+                  alt=""
+                  aria-hidden="true"
+                  className="h-6 w-6"
+                />
               </button>
             </PopoverTrigger>
           </TooltipTrigger>

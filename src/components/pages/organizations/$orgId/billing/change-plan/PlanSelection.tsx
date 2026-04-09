@@ -10,7 +10,10 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { Info, ExternalLink } from '@/lib/icons'
-import { getPlanNameFromTier } from '@/lib/utils/plan-filter'
+import {
+  getPlanNameFromTier,
+  resolveOrganizationPlanDisplayLabel,
+} from '@/lib/utils/plan-filter'
 import { cn } from '@/lib/utils'
 
 interface PlanSelectionProps {
@@ -34,13 +37,6 @@ export function PlanSelection({
 }: PlanSelectionProps) {
   const availablePlans =
     plans && typeof plans === 'object' ? Object.entries(plans) : []
-
-  const getPlanDisplayName = (planTier: string) => {
-    const planName = getPlanNameFromTier(planTier)
-    if (planName === 'free') return 'Free'
-    if (planName === 'pro') return 'Pro'
-    return 'Custom'
-  }
 
   const isCurrentPlan = (planTier: string) => {
     return (
@@ -81,7 +77,11 @@ export function PlanSelection({
       >
         {availablePlans.map(([planTier, planData]) => {
           // Use plan name from API response, fallback to derived name
-          const planName = planData?.name || getPlanDisplayName(planTier)
+          const planName = resolveOrganizationPlanDisplayLabel({
+            billingPlan: planTier,
+            planName: (planData as { name?: string } | undefined)?.name ?? null,
+            planId: (planData as { $id?: string } | undefined)?.$id,
+          })
           const disabled = isDisabled(planTier)
           const isCurrent = isCurrentPlan(planTier)
           const price = planData?.price || 0

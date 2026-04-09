@@ -37,6 +37,11 @@ const badgeVariants = cva(
           'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20',
         verified:
           'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+        /** Deployment status rows only (see getDeploymentStatusBadge). Ready = blue; building = grey. */
+        deploymentReady:
+          'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+        deploymentBuilding:
+          'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20',
         unverified:
           'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20',
       },

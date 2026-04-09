@@ -74,9 +74,10 @@ export function View({ initialData }: ViewProps = {}) {
   const { apiKeys: apiKeysFromHook, isLoading } = useApiKeys(projectId, {
     initialData: initialData?.apiKeysRaw,
   })
-  const apiKeys = apiKeysFromHook?.length
-    ? apiKeysFromHook
-    : (initialData?.apiKeys ?? [])
+  const apiKeys =
+    apiKeysFromHook?.length || initialData?.apiKeysRaw
+      ? apiKeysFromHook
+      : (initialData?.apiKeys ?? [])
   const showLoading = isLoading && apiKeys.length === 0 && !initialData
 
   // Filter API keys based on search

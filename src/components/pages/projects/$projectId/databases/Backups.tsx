@@ -117,7 +117,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
   const projectId = params.projectId as string
   const queryClient = useQueryClient()
   const [backupsPage, setBackupsPage] = useState(1)
-  const [backupsPageSize, setBackupsPageSize] = useState(10)
+  const [backupsPageSize, setBackupsPageSize] = useState(12)
   const [createPolicyDialogOpen, setCreatePolicyDialogOpen] = useState(false)
   const [createManualBackupDialogOpen, setCreateManualBackupDialogOpen] =
     useState(false)
@@ -868,7 +868,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                       currentPage={backupsPage}
                       totalItems={archivesTotal}
                       pageSize={backupsPageSize}
-                      pageSizeOptions={[10, 25, 50, 100]}
+                      pageSizeOptions={[12, 18, 36, 72]}
                       onPageChange={handlePageChange}
                       onPageSizeChange={handlePageSizeChange}
                       showTotal={true}

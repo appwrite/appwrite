@@ -1,5 +1,9 @@
+import { ExternalLink } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import { useEffect, useState } from 'react'
+
+import { getStatusIcon, getStatusPresentation } from '@/lib/cloud-status-copy'
+import { cn } from '@/lib/utils'
 
 // Logo dimensions from SVG viewBox (132×24)
 const LOGO_WIDTH = 132
@@ -43,21 +47,36 @@ export function StaticFullscreenLoader() {
   )
 }
 
+export type FullscreenLoaderStatusBanner = {
+  /** Main title (inherits container text color). */
+  title: string
+  /** Optional report title (styled with text-foreground). */
+  reportTitle?: string
+  /** Optional maintenance window (styled with text-foreground/70). */
+  maintenanceWindow?: string
+  href: string
+  /** Used for banner color (matches CloudStatusBanner). */
+  state: 'degraded' | 'downtime' | 'maintenance'
+}
+
 interface FullscreenLoaderProps {
   isVisible: boolean
   onComplete?: () => void
+  /** When set, shows a compact notice under the logo that we're experiencing issues (e.g. from status API). */
+  statusBanner?: FullscreenLoaderStatusBanner
 }
 
 export function FullscreenLoader({
   isVisible,
   onComplete,
+  statusBanner,
 }: FullscreenLoaderProps) {
   const [shouldRender, setShouldRender] = useState(isVisible)
   const [showSpinner, setShowSpinner] = useState(false)
 
-  // Show spinner only after 3 seconds of loading
+  // Show spinner only after 3 seconds of loading, and only when status is not indicating an issue
   useEffect(() => {
-    if (isVisible) {
+    if (isVisible && !statusBanner) {
       setShowSpinner(false)
       const timer = setTimeout(() => {
         setShowSpinner(true)
@@ -66,7 +85,7 @@ export function FullscreenLoader({
     } else {
       setShowSpinner(false)
     }
-  }, [isVisible])
+  }, [isVisible, statusBanner])
 
   useEffect(() => {
     if (isVisible) {
@@ -90,6 +109,56 @@ export function FullscreenLoader({
           transition={{ duration: 0.5, ease: 'easeInOut' }}
           className="fixed inset-0 z-[9999] bg-background"
         >
+          {statusBanner &&
+            (() => {
+              const presentation = getStatusPresentation(statusBanner.state)
+              const Icon = getStatusIcon(statusBanner.state)
+              return (
+                <a
+                  href={statusBanner.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cn(
+                    'absolute top-0 left-0 right-0 z-10 min-h-14 transition-all duration-200 hover:opacity-95',
+                    'flex min-h-14 flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:gap-4',
+                    presentation.containerClassName,
+                  )}
+                >
+                  <div className="flex min-w-0 flex-1 items-start gap-3 sm:items-center">
+                    <Icon className="mt-0.5 h-4 w-4 shrink-0 sm:mt-0" />
+                    <p className="text-[13px] font-medium leading-snug">
+                      {statusBanner.title}
+                      {statusBanner.reportTitle ? (
+                        <>
+                          {' '}
+                          <span className="text-foreground">
+                            {statusBanner.reportTitle}
+                          </span>
+                        </>
+                      ) : null}
+                      {statusBanner.maintenanceWindow ? (
+                        <>
+                          {' '}
+                          <span className="text-foreground/70">
+                            {statusBanner.maintenanceWindow}
+                          </span>
+                        </>
+                      ) : null}
+                    </p>
+                  </div>
+                  <span
+                    className={cn(
+                      'flex h-8 w-fit shrink-0 items-center gap-2 rounded-md px-3 text-[13px] font-medium sm:ml-auto',
+                      presentation.buttonClassName,
+                    )}
+                  >
+                    <span className="hidden sm:inline">View Status</span>
+                    <span className="sm:hidden">Status</span>
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </span>
+                </a>
+              )
+            })()}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <motion.div
               className="flex items-center gap-1.5 min-h-6"
@@ -118,7 +187,7 @@ export function FullscreenLoader({
               </span>
             </motion.div>
           </div>
-          {showSpinner && (
+          {showSpinner && !statusBanner && (
             <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
               <div className="w-4 h-4 border-2 rounded-full animate-spin border-muted border-t-muted-foreground" />
             </div>

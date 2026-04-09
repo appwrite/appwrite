@@ -16,7 +16,10 @@ import { useMemo } from 'react'
 import { Query, ID, Status } from '@appwrite.io/console'
 import type { Project } from '@/lib/utils/mock-data'
 import { sdk, setProjectRegion } from '@/lib/appwrite/sdk'
-import { generateFingerprintToken } from '@/lib/fingerprint'
+import {
+  ensureFingerprintServerTimeSynced,
+  generateFingerprintToken,
+} from '@/lib/fingerprint'
 import {
   DEFAULT_STALE_TIME,
   LONG_STALE_TIME,
@@ -186,6 +189,12 @@ export async function fetchApiKeys(projectId: string) {
   return response
 }
 
+function apiKeyLastUsedFromRaw(accessedAt: unknown): string | null {
+  if (accessedAt == null || typeof accessedAt !== 'string') return null
+  const trimmed = accessedAt.trim()
+  return trimmed.length > 0 ? trimmed : null
+}
+
 /** Map raw API keys response to display format (for route initialData) */
 export function mapApiKeysFromResponse(
   apiKeysData: { keys?: unknown[] } | null,
@@ -199,7 +208,7 @@ export function mapApiKeysFromResponse(
       key: (k.secret ?? '') as string,
       scopes: (k.scopes ?? []) as string[],
       createdAt: (k.$createdAt ?? new Date().toISOString()) as string,
-      lastUsed: (k.accessedAt ?? null) as string | null,
+      lastUsed: apiKeyLastUsedFromRaw(k.accessedAt),
       expire: (k.expire ?? null) as string | null,
     }
   })
@@ -299,7 +308,7 @@ export function activeProjectsQueryOptions(
       ? excludeProjectIds!.slice().sort().join(',')
       : ''
   return queryOptions({
-    queryKey: ['projects', 'active', page, search, orgId, excludeKey],
+    queryKey: ['projects', 'active', orgId, page, limit, search, excludeKey],
     queryFn: () =>
       fetchActiveProjects(orgId!, page, limit, search, excludeProjectIds),
     enabled: !!orgId,
@@ -308,6 +317,7 @@ export function activeProjectsQueryOptions(
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
+    placeholderData: keepPreviousData, // Keep showing previous list until new data is ready (page size/page change)
     gcTime: orgId ? 5 * 60 * 1000 : 0,
   })
 }
@@ -442,9 +452,17 @@ export function useResumeProject(projectId: string | undefined) {
   return useMutation({
     mutationFn: async () => {
       if (!projectId) throw new Error('Project ID is required')
+      const client = sdk.forConsole.client as {
+        headers?: Record<string, string>
+        config?: { endpoint?: string; project?: string }
+      }
+      await ensureFingerprintServerTimeSynced(
+        client.config?.endpoint ?? '',
+        client.config?.project ?? 'console',
+      )
       const fingerprint = await generateFingerprintToken()
-      const client = sdk.forConsole.client as { headers?: Record<string, string> }
-      if (client.headers) client.headers[CONSOLE_FINGERPRINT_HEADER] = fingerprint
+      if (client.headers)
+        client.headers[CONSOLE_FINGERPRINT_HEADER] = fingerprint
       try {
         await sdk.forConsole.projects.updateStatus({
           projectId,
@@ -454,17 +472,32 @@ export function useResumeProject(projectId: string | undefined) {
         if (client.headers) delete client.headers[CONSOLE_FINGERPRINT_HEADER]
       }
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       if (!projectId) return
-      queryClient.invalidateQueries({ queryKey: ['project', projectId] })
-      // Invalidate all project-scoped queries so the next page load refetches fresh data
-      // and we avoid HTTP errors from stale project-scoped API state after resume
-      queryClient.invalidateQueries({
+      // Refetch the current project immediately so paused-state UI updates without reload.
+      await queryClient.refetchQueries({
+        queryKey: ['project', projectId],
+        exact: true,
+      })
+
+      // Refetch all project-scoped queries that include this project id.
+      await queryClient.refetchQueries({
         predicate: (query) => {
           const k = query.queryKey
           return (
             (k[0] === 'project' && k[1] === projectId) ||
             (k[1] === 'project' && k[2] === projectId)
+          )
+        },
+      })
+
+      // Project lists/pickers can exclude paused projects; refresh them too.
+      await queryClient.refetchQueries({
+        predicate: (query) => {
+          const k = query.queryKey
+          return (
+            k[0] === 'projects' ||
+            (k[0] === 'organization' && k[1] === 'projects')
           )
         },
       })
@@ -674,15 +707,18 @@ export function useApiKeys(
     // Use the keys array from KeyList response
     const keys = apiKeysData.keys || []
 
-    return keys.map((key: unknown) => ({
-      id: key.$id || key.id || '',
-      name: key.name || 'Unnamed Key',
-      key: key.secret || '',
-      scopes: key.scopes || [],
-      createdAt: key.$createdAt || new Date().toISOString(),
-      lastUsed: key.accessedAt || null,
-      expire: key.expire || null,
-    }))
+    return keys.map((key: unknown) => {
+      const k = key as Record<string, unknown>
+      return {
+        id: (k.$id ?? k.id ?? '') as string,
+        name: (k.name as string) || 'Unnamed Key',
+        key: (k.secret as string) || '',
+        scopes: (k.scopes as string[]) || [],
+        createdAt: (k.$createdAt as string) || new Date().toISOString(),
+        lastUsed: apiKeyLastUsedFromRaw(k.accessedAt),
+        expire: (k.expire as string | null | undefined) ?? null,
+      }
+    })
   }, [apiKeysData])
 
   return {
@@ -806,13 +842,15 @@ export function useDeleteApiKey(projectId: string | null | undefined) {
         keyId,
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
         queryKey: ['apiKeys', projectId],
+        type: 'all',
       })
       // Also invalidate project query since keys are part of project data
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ['project', projectId],
+        refetchType: 'all',
       })
     },
   })
@@ -937,12 +975,20 @@ export function useUpdatePlatform(projectId: string | null | undefined) {
         hostname: data.hostname,
       })
     },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      // refetchType: 'all' so list cache refreshes even when no observer is mounted
+      // (e.g. user edits from Overview — Apps query is inactive, default 'active' skips refetch).
+      await queryClient.invalidateQueries({
         queryKey: ['platforms', projectId],
+        refetchType: 'all',
+      })
+      await queryClient.invalidateQueries({
+        queryKey: ['project', projectId],
+        refetchType: 'all',
       })
       queryClient.invalidateQueries({
         queryKey: ['platform', 'project', projectId, variables.platformId],
+        refetchType: 'all',
       })
     },
   })
@@ -966,9 +1012,14 @@ export function useDeletePlatform(projectId: string | null | undefined) {
         platformId,
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
         queryKey: ['platforms', projectId],
+        refetchType: 'all',
+      })
+      await queryClient.invalidateQueries({
+        queryKey: ['project', projectId],
+        refetchType: 'all',
       })
     },
   })
@@ -1032,6 +1083,7 @@ export function useCreateProjectVariable(projectId: string | null | undefined) {
 
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.projectApi.createVariable({
+        variableId: ID.unique(),
         key: key.trim(),
         value,
         secret,

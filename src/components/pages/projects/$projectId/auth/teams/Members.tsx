@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
-import { useParams } from '@tanstack/react-router'
+import { Link, useParams } from '@tanstack/react-router'
 import {
   useTeamMemberships,
   useCreateTeamMembership,
   useDeleteTeamMembership,
+  useProjectUsers,
 } from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -31,6 +32,8 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
+import { MembershipContextMenu } from '../_components/MembershipContextMenu'
 import { MembershipUpdateDrawer } from '../_components/MembershipUpdateDrawer'
 import { Plus, Trash2, X, Info, Loader2, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -89,6 +92,7 @@ export function TeamMembers({
 
   const createMembershipMutation = useCreateTeamMembership(projectId, teamId)
   const deleteMembershipMutation = useDeleteTeamMembership(projectId, teamId)
+  const { users } = useProjectUsers(projectId, 0, 100)
 
   const memberships = membershipsData?.memberships || []
   const total = membershipsData?.total || 0
@@ -101,29 +105,20 @@ export function TeamMembers({
     setPage(1)
   }, [search])
 
-  const handleCreateMembership = async (data: {
-    email: string
-    name?: string
-    roles: string[]
-  }) => {
+  const handleCreateMembership = async (data: { userId: string; roles: string[] }) => {
     if (!teamId) return
-
-    const url = `${window.location.origin}/invite`
 
     try {
       await createMembershipMutation.mutateAsync({
-        email: data.email,
-        name: data.name,
+        userId: data.userId,
         roles: data.roles,
-        url,
       })
 
-      const successName = data.name || data.email
-      toast.success(`${successName} created successfully`)
+      toast.success('Member added successfully')
       setCreateDialogOpen(false)
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to create membership',
+        error instanceof Error ? error.message : 'Failed to add member',
       )
     }
   }
@@ -187,7 +182,7 @@ export function TeamMembers({
           </div>
           <Button onClick={() => setCreateDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-1.5" />
-            Invite member
+            Add member
           </Button>
         </div>
       )}
@@ -222,7 +217,7 @@ export function TeamMembers({
                 onClick={() => setCreateDialogOpen(true)}
               >
                 <Plus className="mr-1.5 h-4 w-4" />
-                Invite member
+                Add member
               </Button>
             </div>
           )}
@@ -263,101 +258,107 @@ export function TeamMembers({
                   const roles = membership.roles || []
 
                   return (
-                    <TableRow
+                    <MembershipContextMenu
                       key={membership.$id}
-                      className={cn(
-                        'cursor-pointer transition-colors border-b border-border/50',
-                        selectedMemberships.has(membership.$id)
-                          ? 'bg-muted'
-                          : 'hover:bg-muted/30',
-                      )}
-                      onClick={() => openDrawer(membership)}
+                      projectId={projectId!}
+                      membership={membership}
+                      onOpenMembership={() => openDrawer(membership)}
                     >
-                      <TableCell
-                        className="w-[40px] px-4 py-3"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Checkbox
-                          checked={selectedMemberships.has(membership.$id)}
-                          onCheckedChange={() =>
-                            toggleMembership(membership.$id)
-                          }
-                        />
-                      </TableCell>
-                      <TableCell
-                        className="px-4 py-3"
+                      <TableRow
+                        className={cn(
+                          'cursor-pointer transition-colors border-b border-border/50',
+                          selectedMemberships.has(membership.$id)
+                            ? 'bg-muted'
+                            : 'hover:bg-muted/30',
+                        )}
                         onClick={() => openDrawer(membership)}
                       >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <InitialsAvatar
-                            name={userName !== '-' ? userName : userEmail}
-                            size="md"
+                        <TableCell
+                          className="w-[40px] px-4 py-3"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Checkbox
+                            checked={selectedMemberships.has(membership.$id)}
+                            onCheckedChange={() =>
+                              toggleMembership(membership.$id)
+                            }
                           />
-                          <div className="flex-1 min-w-0">
-                            <p className="truncate text-[13px] font-medium text-foreground">
-                              {userName}
-                            </p>
-                            {userEmail && (
-                              <p className="mt-0.5 truncate text-[12px] text-muted-foreground">
-                                {userEmail}
+                        </TableCell>
+                        <TableCell
+                          className="px-4 py-3"
+                          onClick={() => openDrawer(membership)}
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <InitialsAvatar
+                              name={userName !== '-' ? userName : userEmail}
+                              size="md"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className="truncate text-[13px] font-medium text-foreground">
+                                {userName}
                               </p>
+                              {userEmail && (
+                                <p className="mt-0.5 truncate text-[12px] text-muted-foreground">
+                                  {userEmail}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell
+                          className="px-4 py-3"
+                          onClick={() => openDrawer(membership)}
+                        >
+                          <Badge
+                            variant={membership.confirm ? 'active' : 'pending'}
+                            className="text-[10px] shrink-0"
+                          >
+                            {membership.confirm ? 'Active' : 'Pending'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell
+                          className="px-4 py-3"
+                          onClick={() => openDrawer(membership)}
+                        >
+                          <div className="flex flex-wrap gap-1.5 items-center">
+                            {roles.length > 0 ? (
+                              <>
+                                {roles.slice(0, 2).map((role, idx) => (
+                                  <Badge
+                                    key={idx}
+                                    variant="info"
+                                    className="text-[10px] shrink-0"
+                                  >
+                                    {role}
+                                  </Badge>
+                                ))}
+                                {roles.length > 2 && (
+                                  <Badge
+                                    variant="info"
+                                    className="text-[10px] shrink-0"
+                                  >
+                                    +{roles.length - 2}
+                                  </Badge>
+                                )}
+                              </>
+                            ) : (
+                              <span className="text-[12px] text-muted-foreground">
+                                -
+                              </span>
                             )}
                           </div>
-                        </div>
-                      </TableCell>
-                      <TableCell
-                        className="px-4 py-3"
-                        onClick={() => openDrawer(membership)}
-                      >
-                        <Badge
-                          variant={membership.confirm ? 'active' : 'pending'}
-                          className="text-[10px] shrink-0"
+                        </TableCell>
+                        <TableCell
+                          className="px-4 py-3"
+                          onClick={() => openDrawer(membership)}
                         >
-                          {membership.confirm ? 'Active' : 'Pending'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell
-                        className="px-4 py-3"
-                        onClick={() => openDrawer(membership)}
-                      >
-                        <div className="flex flex-wrap gap-1.5 items-center">
-                          {roles.length > 0 ? (
-                            <>
-                              {roles.slice(0, 2).map((role, idx) => (
-                                <Badge
-                                  key={idx}
-                                  variant="info"
-                                  className="text-[10px] shrink-0"
-                                >
-                                  {role}
-                                </Badge>
-                              ))}
-                              {roles.length > 2 && (
-                                <Badge
-                                  variant="info"
-                                  className="text-[10px] shrink-0"
-                                >
-                                  +{roles.length - 2}
-                                </Badge>
-                              )}
-                            </>
-                          ) : (
-                            <span className="text-[12px] text-muted-foreground">
-                              -
-                            </span>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell
-                        className="px-4 py-3"
-                        onClick={() => openDrawer(membership)}
-                      >
-                        <DateTooltip
-                          date={membership.$createdAt}
-                          className="text-[12px] text-muted-foreground"
-                        />
-                      </TableCell>
-                    </TableRow>
+                          <DateTooltip
+                            date={membership.$createdAt}
+                            className="text-[12px] text-muted-foreground"
+                          />
+                        </TableCell>
+                      </TableRow>
+                    </MembershipContextMenu>
                   )
                 })}
               </TableBody>
@@ -417,6 +418,9 @@ export function TeamMembers({
         onOpenChange={setCreateDialogOpen}
         onSubmit={handleCreateMembership}
         isLoading={createMembershipMutation.isPending}
+        projectId={projectId ?? ''}
+        users={users}
+        memberships={memberships}
       />
 
       {/* Update membership drawer */}
@@ -435,8 +439,11 @@ export function TeamMembers({
 interface CreateMembershipDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSubmit: (data: { email: string; name?: string; roles: string[] }) => void
+  onSubmit: (data: { userId: string; roles: string[] }) => void
   isLoading: boolean
+  projectId: string
+  users: Array<{ $id: string; name?: string; email?: string; phone?: string }>
+  memberships: Models.Membership[]
 }
 
 function CreateMembershipDialog({
@@ -444,16 +451,25 @@ function CreateMembershipDialog({
   onOpenChange,
   onSubmit,
   isLoading,
+  projectId,
+  users,
+  memberships,
 }: CreateMembershipDialogProps) {
-  const [email, setEmail] = useState('')
-  const [name, setName] = useState('')
+  const [selectedUserId, setSelectedUserId] = useState('')
   const [roles, setRoles] = useState<string[]>([])
   const [roleInput, setRoleInput] = useState('')
+  const existingMemberUserIds = new Set(
+    memberships.map((membership) => membership.userId).filter(Boolean),
+  )
+  const availableUsers = users.filter((user) => !existingMemberUserIds.has(user.$id))
+  const userItems = availableUsers.map((user) => ({
+    value: user.$id,
+    label: user.name || user.email || user.phone || user.$id,
+  }))
 
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) {
-      setEmail('')
-      setName('')
+      setSelectedUserId('')
       setRoles([])
       setRoleInput('')
     }
@@ -472,45 +488,36 @@ function CreateMembershipDialog({
   }
 
   const handleSubmit = () => {
-    if (!email.trim()) {
+    if (!selectedUserId || roles.length === 0) {
       return
     }
-    onSubmit({ email: email.trim(), name: name.trim() || undefined, roles })
+    onSubmit({ userId: selectedUserId, roles })
   }
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
-        <DialogHeader className="px-6 pt-6 text-left">
-          <DialogTitle>Create membership</DialogTitle>
+        <DialogHeader className="px-6 pt-6 pb-4 text-left">
+          <DialogTitle>Add member</DialogTitle>
+          <DialogDescription className="text-[13px] mt-2">
+            Select an existing user and assign team roles.
+          </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
 
         <div className="px-6 pb-4 pt-0">
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">
-                Email <span className="text-destructive">*</span>
+              <Label htmlFor="member-user">
+                User <span className="text-destructive">*</span>
               </Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter email"
-                autoFocus
-                autoComplete="off"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Enter name"
-                autoComplete="off"
+              <SearchableSelect
+                value={selectedUserId}
+                onValueChange={setSelectedUserId}
+                items={userItems}
+                placeholder="Select a user"
+                searchPlaceholder="Search users..."
+                emptyMessage="No available users"
               />
             </div>
 
@@ -564,8 +571,7 @@ function CreateMembershipDialog({
               <Alert>
                 <Info className="h-4 w-4" />
                 <AlertDescription className="text-[12px]">
-                  Roles are used to manage access permissions. You can create
-                  any role you want.{' '}
+                  Roles are used to manage access permissions.{' '}
                   <a
                     href="https://appwrite.io/docs/advanced/platform/permissions"
                     target="_blank"
@@ -576,6 +582,31 @@ function CreateMembershipDialog({
                   </a>
                 </AlertDescription>
               </Alert>
+            </div>
+
+            <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+              <div className="px-6 py-3">
+                <h3 className="text-[14px] font-semibold text-foreground">
+                  Need a new user?
+                </h3>
+              </div>
+              <div className="border-t border-border" />
+              <div className="px-6 py-3">
+                <p className="text-[13px] text-muted-foreground">
+                  Create the user in Users first, then add them to this team.
+                </p>
+              </div>
+              <div className="px-6 py-3 border-t border-border bg-muted/30">
+                <Link
+                  to="/projects/$projectId/auth/users"
+                  params={{ projectId }}
+                  onClick={() => handleOpenChange(false)}
+                >
+                  <Button variant="outline" size="sm" className="h-9 text-[13px]">
+                    Go to users
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -588,8 +619,11 @@ function CreateMembershipDialog({
           >
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={!email.trim() || isLoading}>
-            Create
+          <Button
+            onClick={handleSubmit}
+            disabled={!selectedUserId || roles.length === 0 || isLoading}
+          >
+            Add member
           </Button>
         </div>
       </DialogContent>

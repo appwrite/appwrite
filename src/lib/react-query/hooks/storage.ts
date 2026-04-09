@@ -4,7 +4,7 @@
  * Handles buckets, files, and file tokens.
  */
 
-import { useQuery, queryOptions } from '@tanstack/react-query'
+import { useQuery, queryOptions, keepPreviousData } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
@@ -243,6 +243,7 @@ export function bucketFilesQueryOptions(
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
+    placeholderData: keepPreviousData, // Keep showing previous list until new data is ready (page size/page/search change)
     gcTime: projectId && bucketId ? 5 * 60 * 1000 : 0,
   })
 }
@@ -289,6 +290,7 @@ export function bucketsQueryOptions(
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
+    placeholderData: keepPreviousData, // Keep showing previous list until new data is ready (page size/page/search change)
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
 }

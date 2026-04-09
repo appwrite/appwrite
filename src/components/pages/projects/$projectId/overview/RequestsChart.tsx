@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Area,
   AreaChart,
@@ -14,6 +14,8 @@ import {
 import { Link, useParams } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { ArrowRight } from 'lucide-react'
+import { endOfDay, isWithinInterval, startOfDay, subDays } from 'date-fns'
+import type { DateRange } from 'react-day-picker'
 
 type MetricType =
   | 'bandwidth'
@@ -22,34 +24,50 @@ type MetricType =
   | 'executions'
   | 'gbhours'
 
+interface ChartPoint {
+  date: string
+  day: Date
+  successful: number
+  errors: number
+  total: number
+}
+
 interface RequestsChartProps {
   className?: string
   variant?: 'line' | 'bar'
   title?: string
   metric?: MetricType
+  /** When omitted, the chart shows the last 30 days of the generated series */
+  dateRange?: DateRange
 }
 
-// Generate mock data for the requests chart
-const generateChartData = () => {
-  const data = []
-  const startDate = new Date('2024-09-26')
+const CHART_HISTORY_DAYS = 366
 
-  for (let i = 0; i < 30; i++) {
-    const date = new Date(startDate)
-    date.setDate(startDate.getDate() + i)
-    const dateStr = date.toLocaleDateString('en-US', {
+// Deterministic pseudo-random so the series is stable across navigations (same day index → same values)
+function seededNoise(seed: number) {
+  const x = Math.sin(seed * 12.9898) * 43758.5453
+  return x - Math.floor(x)
+}
+
+function generateFullChartData(): ChartPoint[] {
+  const data: ChartPoint[] = []
+  const end = startOfDay(new Date())
+
+  for (let i = CHART_HISTORY_DAYS - 1; i >= 0; i--) {
+    const day = subDays(end, i)
+    const dateStr = day.toLocaleDateString('en-US', {
       day: 'numeric',
       month: 'short',
     })
-
-    // Generate realistic looking data with some variation
-    const baseRequests = 5000 + Math.random() * 4000
-    const errorRate = 0.08 + Math.random() * 0.15
+    const s = day.getTime()
+    const baseRequests = 5000 + seededNoise(s) * 4000
+    const errorRate = 0.08 + seededNoise(s + 1) * 0.15
     const successful = Math.floor(baseRequests * (1 - errorRate))
     const errors = Math.floor(baseRequests * errorRate)
 
     data.push({
       date: dateStr,
+      day,
       successful,
       errors,
       total: successful + errors,
@@ -58,26 +76,37 @@ const generateChartData = () => {
   return data
 }
 
-const chartData = generateChartData()
+const FULL_CHART_DATA = generateFullChartData()
 
-// Calculate totals for the legend
-const totalSuccessful = chartData.reduce((sum, d) => sum + d.successful, 0)
-const totalErrors = chartData.reduce((sum, d) => sum + d.errors, 0)
-const totalRequests = totalSuccessful + totalErrors
-const successRate = Math.round((totalSuccessful / totalRequests) * 100)
-const errorRate = 100 - successRate
+function filterChartDataByRange(
+  data: ChartPoint[],
+  dateRange: DateRange | undefined,
+): ChartPoint[] {
+  const to = endOfDay(new Date())
+  const fromDefault = startOfDay(subDays(to, 29))
+
+  if (!dateRange?.from) {
+    return data.filter((d) =>
+      isWithinInterval(d.day, { start: fromDefault, end: to }),
+    )
+  }
+
+  const from = startOfDay(dateRange.from)
+  const toBound = dateRange.to
+    ? endOfDay(dateRange.to)
+    : endOfDay(dateRange.from)
+
+  return data.filter((d) =>
+    isWithinInterval(d.day, { start: from, end: toBound }),
+  )
+}
 
 interface CustomTooltipProps {
   active?: boolean
   payload?: Array<{
     value: number
     dataKey: string
-    payload: {
-      date: string
-      successful: number
-      errors: number
-      total: number
-    }
+    payload: ChartPoint
   }>
   label?: string
 }
@@ -129,9 +158,26 @@ export function RequestsChart({
   variant = 'line',
   title,
   metric = 'requests',
+  dateRange,
 }: RequestsChartProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
   const { projectId } = useParams({ strict: false })
+
+  const chartData = useMemo(
+    () => filterChartDataByRange(FULL_CHART_DATA, dateRange),
+    [dateRange],
+  )
+
+  const { successRate, errorRate } = useMemo(() => {
+    const totalSuccessful = chartData.reduce((sum, d) => sum + d.successful, 0)
+    const totalErrors = chartData.reduce((sum, d) => sum + d.errors, 0)
+    const totalRequests = totalSuccessful + totalErrors
+    if (totalRequests === 0) {
+      return { successRate: 0, errorRate: 0 }
+    }
+    const sr = Math.round((totalSuccessful / totalRequests) * 100)
+    return { successRate: sr, errorRate: 100 - sr }
+  }, [chartData])
 
   const getMetricLabel = () => {
     switch (metric) {
@@ -208,7 +254,11 @@ export function RequestsChart({
 
       {/* Chart */}
       <div className="flex-1 text-muted-foreground">
-        {variant === 'line' ? (
+        {chartData.length === 0 ? (
+          <div className="flex h-[240px] items-center justify-center rounded-lg border border-dashed border-border bg-muted/20 text-[13px] text-muted-foreground">
+            No data for this date range
+          </div>
+        ) : variant === 'line' ? (
           <ResponsiveContainer width="100%" height={240}>
             <AreaChart
               data={chartData}

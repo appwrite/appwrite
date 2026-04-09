@@ -452,7 +452,9 @@ export function CommandCenter({
         items.push({
           id: `project-${project.$id}`,
           label: project.name,
-          description: `Project · ${project.region || 'unknown'}`,
+          description: features.multiRegion
+            ? `Project · ${project.region || 'unknown'}`
+            : 'Project',
           icon: FolderOpen,
           type: 'search',
           keywords: ['project'],
@@ -465,7 +467,7 @@ export function CommandCenter({
     }
 
     return items
-  }, [orgProjects, orgProjectsLoading])
+  }, [orgProjects, orgProjectsLoading, features.multiRegion])
 
   // Project navigation commands (order matches left sidebar)
   const navigationCommands: CommandItemType[] = useMemo(
@@ -1130,7 +1132,9 @@ export function CommandCenter({
         items.push({
           id: `project-${project.$id}`,
           label: project.name,
-          description: `Project · ${project.region || 'unknown'}`,
+          description: features.multiRegion
+            ? `Project · ${project.region || 'unknown'}`
+            : 'Project',
           icon: FolderOpen,
           type: 'search',
           keywords: ['project'],
@@ -1158,6 +1162,7 @@ export function CommandCenter({
     sitesLoading,
     orgProjects,
     orgProjectsLoading,
+    features.multiRegion,
     onNavigate,
     onNavigateToResource,
     onOpenChange,

@@ -25,15 +25,11 @@ describe('EmptyState', () => {
   it('shows "No items found" when isEmpty=false and hasFilters=false', () => {
     render(<EmptyState isEmpty={false} />)
     expect(screen.getByText('No items found')).toBeDefined()
-    expect(
-      screen.getByText('No items match your criteria.'),
-    ).toBeDefined()
+    expect(screen.getByText('No items match your criteria.')).toBeDefined()
   })
 
   it('uses custom title and description', () => {
-    render(
-      <EmptyState title="Custom Title" description="Custom desc" />,
-    )
+    render(<EmptyState title="Custom Title" description="Custom desc" />)
     expect(screen.getByText('Custom Title')).toBeDefined()
     expect(screen.getByText('Custom desc')).toBeDefined()
   })

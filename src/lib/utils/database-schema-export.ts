@@ -5,6 +5,7 @@
  */
 
 import { sdk } from '@/lib/appwrite/sdk'
+import { isHtmlDarkChrome } from '@/lib/html-theme'
 import {
   fetchProjectTableColumns,
   fetchProjectTableIndexes,
@@ -309,7 +310,7 @@ function getTypeScriptType(col: ColumnSchema): string {
 export function formatSchemaAsSVG(schema: DatabaseSchema): string {
   const isDark =
     typeof window !== 'undefined' &&
-    (document.documentElement.classList.contains('dark') ||
+    (isHtmlDarkChrome() ||
       window.matchMedia('(prefers-color-scheme: dark)').matches)
 
   const cardColor = isDark ? '#242424' : '#ffffff'

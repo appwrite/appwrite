@@ -54,7 +54,7 @@ export function View() {
       },
       {
         id: 'members',
-        label: 'Members',
+        label: 'Memberships',
         to: '/projects/$projectId/auth/teams/$teamId/members',
         params: {
           projectId: projectId as string,
@@ -165,7 +165,7 @@ export function View() {
         onSearchChange={
           activeTab === 'members' ? setMembersSearchValue : undefined
         }
-        createLabel={activeTab === 'members' ? 'Invite member' : undefined}
+        createLabel={activeTab === 'members' ? 'Add member' : undefined}
         onCreate={
           activeTab === 'members'
             ? () => setCreateMembershipDialogOpen(true)

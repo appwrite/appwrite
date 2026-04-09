@@ -7,7 +7,15 @@ export const DEBUG_OVERRIDE_KEYS = {
   showAIAssistant: 'debug:showAIAssistant',
   showSuccessTeamCard: 'debug:showSuccessTeamCard',
   mockCloudStatusAlert: 'debug:mockCloudStatusAlert',
+  showFullscreenLoader: 'debug:showFullscreenLoader',
 } as const
+
+/** Overrides that are not persisted to localStorage (reset on reload). */
+const EPHEMERAL_OVERRIDE_KEYS = new Set<keyof DebugOverrides>([
+  'showFullscreenLoader',
+])
+
+const ephemeralOverrides: Partial<DebugOverrides> = {}
 
 export type MockCloudStatusAlert =
   | 'live'
@@ -24,6 +32,8 @@ export type DebugOverrides = {
   showSuccessTeamCard: boolean
   /** Mock Appwrite Cloud status alert state for design review in debug mode. */
   mockCloudStatusAlert: MockCloudStatusAlert
+  /** When true, the fullscreen loader is always shown (for preview). Default false. */
+  showFullscreenLoader: boolean
 }
 
 const isBrowser = typeof window !== 'undefined'
@@ -64,6 +74,7 @@ export function loadDebugOverrides(): DebugOverrides {
       ['live', 'operational', 'degraded', 'downtime', 'maintenance'] as const,
       'live',
     ),
+    showFullscreenLoader: ephemeralOverrides.showFullscreenLoader ?? false,
   }
 }
 
@@ -72,6 +83,11 @@ export function setDebugOverride<K extends keyof DebugOverrides>(
   value: DebugOverrides[K],
 ) {
   if (!isBrowser) return
+  if (EPHEMERAL_OVERRIDE_KEYS.has(key)) {
+    ;(ephemeralOverrides as Record<K, DebugOverrides[K]>)[key] = value
+    window.dispatchEvent(new CustomEvent(DEBUG_OVERRIDE_EVENT))
+    return
+  }
   const storageKey = DEBUG_OVERRIDE_KEYS[key]
   if (typeof value === 'boolean') {
     localStorage.setItem(storageKey, value ? 'true' : 'false')
@@ -87,6 +103,9 @@ export function setDebugOverride<K extends keyof DebugOverrides>(
 
 export function resetDebugOverrides() {
   if (!isBrowser) return
+  EPHEMERAL_OVERRIDE_KEYS.forEach((key) => {
+    delete ephemeralOverrides[key]
+  })
   Object.values(DEBUG_OVERRIDE_KEYS).forEach((key) => {
     localStorage.removeItem(key)
   })

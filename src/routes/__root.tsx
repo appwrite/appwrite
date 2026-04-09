@@ -9,7 +9,7 @@ import appCss from '../styles.css?url'
 import type { QueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { Toaster } from '@/components/ui/sonner'
-import { ThemeProvider } from 'next-themes'
+import { ThemeProvider, useTheme } from 'next-themes'
 import {
   AIChatProvider,
   AIChatPanel,
@@ -24,6 +24,10 @@ import {
   StaticFullscreenLoader,
 } from '@/components/ui/loader'
 import { useInitialLoader } from '@/hooks/use-initial-loader'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { getStatusBannerParts } from '@/lib/cloud-status-copy'
+import { useDebugOverrides } from '@/lib/debug-overrides'
+import { useAppwriteCloudStatus } from '@/lib/react-query/hooks'
 import { DynamicFavicon } from '@/components/global/shared/DynamicFavicon'
 import { UploadWarning } from '@/components/global/providers/UploadWarning'
 import { GlobalUploadProgress } from '@/components/global/shared/GlobalUploadProgress'
@@ -43,7 +47,7 @@ const THEME_SCRIPT = `(function(){
     var t = localStorage.getItem('theme') || 'system';
     var r = t === 'system' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : t;
     var e = document.documentElement;
-    ['light','dark','system','crazy','stealth'].forEach(function(c){e.classList.remove(c);});
+    ['light','dark','system','crazy','stealth','classic'].forEach(function(c){e.classList.remove(c);});
     e.classList.add(r);
   } catch (e) {}
 })()`
@@ -104,6 +108,29 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
   shellComponent: RootDocument,
 })
 
+const CLASSIC_CONSOLE_FONTS_ID = 'classic-console-fonts'
+const CLASSIC_CONSOLE_FONTS_HREF =
+  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap'
+
+/** Loads Inter + Poppins only while the debug-only classic theme is active. */
+function ClassicConsoleFonts() {
+  const { theme } = useTheme()
+  useEffect(() => {
+    if (theme === 'classic') {
+      if (!document.getElementById(CLASSIC_CONSOLE_FONTS_ID)) {
+        const link = document.createElement('link')
+        link.id = CLASSIC_CONSOLE_FONTS_ID
+        link.rel = 'stylesheet'
+        link.href = CLASSIC_CONSOLE_FONTS_HREF
+        document.head.appendChild(link)
+      }
+    } else {
+      document.getElementById(CLASSIC_CONSOLE_FONTS_ID)?.remove()
+    }
+  }, [theme])
+  return null
+}
+
 /**
  * Renders ThemeProvider only after client mount. next-themes uses React context
  * in a way that can fail during SSR (renderToPipeableStream) with "Cannot read
@@ -123,8 +150,9 @@ function ClientThemeProvider({ children }: { children: React.ReactNode }) {
       defaultTheme="system"
       enableSystem
       disableTransitionOnChange
-      themes={['light', 'dark', 'system', 'crazy', 'stealth']}
+      themes={['light', 'dark', 'system', 'crazy', 'stealth', 'classic']}
     >
+      <ClassicConsoleFonts />
       {children}
     </ThemeProvider>
   )
@@ -149,13 +177,38 @@ function isProjectRoute(pathname: string) {
   return parts[0] === 'projects' && parts.length >= 2
 }
 
+const STATUS_PAGE_URL = 'https://status.appwrite.online'
+
 function RootDocument({ children }: { children: React.ReactNode }) {
   const { isLoading, isAuthRoute } = useInitialLoader()
   const [clientMounted, setClientMounted] = useState(false)
   const location = useLocation()
+  const { features } = useConsoleProfile()
+  const { data: statusData, isSuccess: isStatusSuccess } =
+    useAppwriteCloudStatus(features.systemStatus)
+  const { showFullscreenLoader } = useDebugOverrides()
+
   useEffect(() => {
     setClientMounted(true)
   }, [])
+
+  const isLoaderVisible = isLoading || showFullscreenLoader
+
+  const statusBanner =
+    isLoaderVisible &&
+    isStatusSuccess &&
+    statusData?.aggregateState &&
+    statusData.aggregateState !== 'operational'
+      ? {
+          ...getStatusBannerParts(statusData.aggregateState, {
+            reportTitle: statusData.activeReport?.title,
+            startsAt: statusData.activeReport?.startsAt,
+            endsAt: statusData.activeReport?.endsAt,
+          }),
+          href: STATUS_PAGE_URL,
+          state: statusData.aggregateState,
+        }
+      : undefined
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -173,7 +226,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                 so the very first HTML paint shows the logo instead of route-level "Loading...".
                 When clientMounted, use FullscreenLoader so it can run fade-out before unmount. */}
             {clientMounted ? (
-              <FullscreenLoader isVisible={isLoading} />
+              <FullscreenLoader
+                isVisible={isLoaderVisible}
+                statusBanner={statusBanner}
+              />
             ) : !isAuthRoute ? (
               <StaticFullscreenLoader />
             ) : null}

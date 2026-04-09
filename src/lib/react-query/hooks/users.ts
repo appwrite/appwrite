@@ -820,6 +820,22 @@ export async function updateUserStatus(
 }
 
 /**
+ * Enable or disable whether the user may impersonate other project users.
+ */
+export async function updateUserImpersonator(
+  projectId: string,
+  userId: string,
+  impersonator: boolean,
+) {
+  if (!projectId || !userId) {
+    throw new Error('Project ID and User ID are required')
+  }
+
+  const projectSdk = sdk.forProject(projectId)
+  return await projectSdk.users.updateImpersonator({ userId, impersonator })
+}
+
+/**
  * Mutation function to update user email verification
  */
 export async function updateUserEmailVerification(
@@ -1291,6 +1307,33 @@ export function useUpdateUserStatus(
 }
 
 /**
+ * Hook to update whether the user may impersonate other project users.
+ */
+export function useUpdateUserImpersonator(
+  projectId: string | null | undefined,
+  userId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (impersonator: boolean) => {
+      if (!projectId || !userId) {
+        throw new Error('Project ID and User ID are required')
+      }
+      return updateUserImpersonator(projectId, userId, impersonator)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['user', 'project', projectId, userId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['users', 'project', projectId],
+      })
+    },
+  })
+}
+
+/**
  * Hook to update user email verification
  */
 export function useUpdateUserEmailVerification(
@@ -1650,21 +1693,32 @@ export async function createTeamMembership(
   projectId: string,
   teamId: string,
   membershipData: {
-    email: string
     roles: string[]
-    url: string
+    email?: string
+    userId?: string
+    phone?: string
+    url?: string
     name?: string
   },
 ) {
   if (!projectId || !teamId) {
     throw new Error('Project ID and Team ID are required')
   }
+  if (
+    !membershipData.userId &&
+    !membershipData.email &&
+    !membershipData.phone
+  ) {
+    throw new Error('User ID, email, or phone is required')
+  }
 
   const projectSdk = sdk.forProject(projectId)
   return await projectSdk.teams.createMembership({
     teamId,
-    email: membershipData.email,
     roles: membershipData.roles,
+    email: membershipData.email,
+    userId: membershipData.userId,
+    phone: membershipData.phone,
     url: membershipData.url,
     name: membershipData.name,
   })
@@ -1819,23 +1873,31 @@ export function useCreateTeamMembership(
 
   return useMutation({
     mutationFn: (membershipData: {
-      email: string
       roles: string[]
-      url: string
+      email?: string
+      userId?: string
+      phone?: string
+      url?: string
       name?: string
+      teamId?: string
     }) => {
-      if (!projectId || !teamId) {
-        throw new Error('Project ID and Team ID are required')
+      if (!projectId) {
+        throw new Error('Project ID is required')
       }
-      return createTeamMembership(projectId, teamId, membershipData)
+      const resolvedTeamId = teamId || membershipData.teamId
+      if (!resolvedTeamId) {
+        throw new Error('Team ID is required')
+      }
+      return createTeamMembership(projectId, resolvedTeamId, membershipData)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['team', 'memberships', 'project', projectId, teamId],
+        queryKey: ['team', 'memberships', 'project', projectId],
       })
       queryClient.invalidateQueries({
-        queryKey: ['team', 'project', projectId, teamId],
+        queryKey: ['team', 'project', projectId],
       })
+      queryClient.invalidateQueries({ queryKey: ['user', 'memberships'] })
     },
   })
 }

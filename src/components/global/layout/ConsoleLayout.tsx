@@ -2,11 +2,10 @@ import { ReactNode, useState, useEffect } from 'react'
 import { ConsoleHeader } from './Header'
 import { ConsoleSidebar } from './Sidebar'
 import { ConsoleFooter } from './Footer'
-import { ConsoleBanner } from './ConsoleBanner'
 import { CloudStatusBanner } from './CloudStatusBanner'
+import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
 import { SkipToContent } from './SkipToContent'
 import { NativeAppBar } from './NativeAppBar'
-import { PaymentAlert } from '@/components/pages/projects/$projectId/shared/PaymentAlert'
 import { cn } from '@/lib/utils'
 import {
   loadDebugOverrides,
@@ -47,7 +46,7 @@ interface ConsoleLayoutProps {
  * ConsoleLayout - Reusable layout component for all console pages
  *
  * Provides consistent layout structure with:
- * - Sticky header (PaymentAlert + ConsoleHeader)
+ * - Sticky header (ConsoleHeader)
  * - Optional sidebar
  * - Scrollable main content area
  * - Optional footer
@@ -107,10 +106,11 @@ export function ConsoleLayout({
     >
       <SkipToContent />
       {/* Sticky header section - takes space in flex layout */}
-      <div className="flex-shrink-0 sticky top-0 z-30 flex flex-col bg-background">
+      {/* z-[110]: above PausedProjectCurtain (z-100) so alerts / exit impersonation stay reachable */}
+      <div className="sticky top-0 z-[110] flex shrink-0 flex-col bg-background">
         {showNativeAppBar && <NativeAppBar />}
         <CloudStatusBanner />
-        <PaymentAlert />
+        <ConsoleImpersonationBanner />
         <ConsoleHeader
           onMenuClick={sidebar?.onMenuClick}
           projectId={header?.projectId}
@@ -123,13 +123,13 @@ export function ConsoleLayout({
       {/* Mobile sidebar overlay */}
       {sidebar?.mobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/60"
+          className="fixed inset-0 z-[120] bg-black/60"
           onClick={sidebar.onMobileClose}
         />
       )}
 
       {/* Sidebar + Content below header - overflow-x-visible so sidebar collapse toggle isn't clipped */}
-      <div className="flex flex-1 min-h-0 overflow-x-visible overflow-y-hidden">
+      <div className="@container flex flex-1 min-h-0 overflow-x-visible overflow-y-hidden">
         {/* Sidebar - only render if sidebar config provided */}
         {sidebar && (
           <ConsoleSidebar
@@ -156,7 +156,6 @@ export function ConsoleLayout({
               {children}
             </div>
           </div>
-          <ConsoleBanner />
           {showFooter && <ConsoleFooter />}
         </main>
       </div>

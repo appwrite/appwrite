@@ -51,6 +51,8 @@ interface RowContextMenuProps {
   contextColumnKey?: string | null
   children: React.ReactNode
   queryKey: readonly unknown[]
+  /** Called after this row is deleted successfully (e.g. clear inline preview). */
+  onRowDeleted?: (rowId: string) => void
 }
 
 const rowsPath = (
@@ -93,6 +95,7 @@ export function RowContextMenu({
   contextColumnKey,
   children,
   queryKey,
+  onRowDeleted,
 }: RowContextMenuProps) {
   const queryClient = useQueryClient()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -104,6 +107,7 @@ export function RowContextMenu({
       setDeleteDialogOpen(false)
       await queryClient.refetchQueries({ queryKey: [...queryKey] })
       toast.success('Row deleted')
+      onRowDeleted?.(row.$id)
     },
     onError: (error: Error) => {
       toast.error(getErrorMessage(error) ?? 'Failed to delete row')

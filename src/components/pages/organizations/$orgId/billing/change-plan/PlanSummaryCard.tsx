@@ -10,7 +10,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { getPlanNameFromTier } from '@/lib/utils/plan-filter'
+import { getBillingPlanDisplayLabel } from '@/lib/utils/plan-filter'
 
 interface PlanSummaryCardProps {
   selectedPlan: BillingPlan | null
@@ -29,13 +29,6 @@ export function PlanSummaryCard({
   budgetEnabled,
   onBudgetToggle,
 }: PlanSummaryCardProps) {
-  const getPlanDisplayName = (planTier: string) => {
-    const planName = getPlanNameFromTier(planTier)
-    if (planName === 'free') return 'Free'
-    if (planName === 'pro') return 'Pro'
-    return 'Custom'
-  }
-
   // Calculate billing cycle days (default to 30)
   const billingCycleDays = 30
 
@@ -94,7 +87,7 @@ export function PlanSummaryCard({
     )
   }
 
-  const planName = getPlanDisplayName(selectedPlan)
+  const planName = getBillingPlanDisplayLabel(selectedPlan)
   const currency = estimation?.currency || 'USD'
 
   return (

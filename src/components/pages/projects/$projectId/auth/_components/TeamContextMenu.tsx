@@ -8,7 +8,6 @@ import {
   Link2,
   FileJson,
   LayoutList,
-  Activity,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -105,11 +104,7 @@ export function TeamContextMenu({
           </ContextMenuItem>
           <ContextMenuItem onSelect={() => navigateToTab('members')}>
             <ContextMenuIcon icon={Users} />
-            Members
-          </ContextMenuItem>
-          <ContextMenuItem onSelect={() => navigateToTab('activity')}>
-            <ContextMenuIcon icon={Activity} />
-            Activity
+            Memberships
           </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuSub>

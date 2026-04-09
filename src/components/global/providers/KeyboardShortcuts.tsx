@@ -164,7 +164,7 @@ export function KeyboardShortcutsProvider({
     // The command center will show shortcuts when ? is pressed
   })
 
-  // Escape to close
+  // Escape to close (ignore when typing so editors e.g. Monaco keep Escape)
   useKeyboardShortcut(
     'escape',
     () => {
@@ -172,7 +172,7 @@ export function KeyboardShortcutsProvider({
         setCommandCenterOpen(false)
       }
     },
-    { ignoreInputs: false },
+    { ignoreInputs: true },
   )
 
   // Sequential shortcuts for navigation (vim-style)

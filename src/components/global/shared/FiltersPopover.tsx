@@ -75,7 +75,7 @@ export function FiltersPopover({
           <Filter className="h-3.5 w-3.5 shrink-0" />
           Filters
           {filterMap.size > 0 && (
-            <span className="flex size-5 items-center justify-center rounded-full bg-primary/15 text-[11px] font-semibold tabular-nums text-primary">
+            <span className="flex size-5 items-center justify-center rounded-full bg-[#FD366E] text-[11px] font-semibold tabular-nums text-white">
               {filterMap.size}
             </span>
           )}

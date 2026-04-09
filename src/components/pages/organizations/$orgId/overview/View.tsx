@@ -47,9 +47,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import {
-  useOrganizationMemberships,
   organizationsQueryOptions,
   activeProjectsQueryOptions,
+  organizationMembershipsQueryOptions,
+  mapOrganizationMembershipsToTeamMembers,
   useConsoleTeam,
   useUpdateConsoleTeamPrefs,
   pinnedProjectsQueryOptions,
@@ -64,9 +65,10 @@ import {
   buildPinnedProjectIdsPrefs,
   MAX_PINNED_PROJECTS,
 } from '@/lib/team-prefs-keys'
-import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import {
   canSeeProjects,
+  canShowProjectSettings,
   canShowOrgDomainsTab,
   canShowOrgSettingsTab,
   canAccessOrgSettingsOverview,
@@ -78,7 +80,10 @@ import {
   canInviteOrgMember,
   canCreateProject,
   canPinProjects,
+  canAccessOrgOverviewTab,
+  getFirstAllowedOrgOverviewPath,
 } from '@/lib/console-access-checks'
+import { ProjectContextMenu } from './_components/ProjectContextMenu'
 
 import {
   Popover,
@@ -130,8 +135,12 @@ import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import { cn } from '@/lib/utils'
-import { getPlanBadgeColor } from '@/lib/utils/plan-badge'
-import { getPlanNameFromTier } from '@/lib/utils/plan-filter'
+import { getPlanBadgeColor, getPlanDisplayName } from '@/lib/utils/plan-badge'
+import {
+  getPlanNameFromTier,
+  resolveOrganizationPlanDisplayLabel,
+  type CanonicalPlanId,
+} from '@/lib/utils/plan-filter'
 import { BillingTab } from '../billing/BillingTab'
 import { ComplianceTab } from '../settings/ComplianceTab'
 import { View as DomainsView } from '../domains/View'
@@ -198,6 +207,18 @@ const ROLE_OPTIONS = [
   },
 ] as const
 
+function orgMembershipRoleDisplay(role: string): {
+  Icon: (typeof ROLE_OPTIONS)[number]['icon']
+  label: string
+} {
+  const opt = ROLE_OPTIONS.find((r) => r.value === role)
+  if (opt) return { Icon: opt.icon, label: opt.label }
+  return {
+    Icon: Users,
+    label: role.charAt(0).toUpperCase() + role.slice(1),
+  }
+}
+
 // Component to display project platforms and API keys
 function ProjectCardFooter({
   platformsCount,
@@ -247,26 +268,12 @@ function ProjectCardFooter({
 
 import { ProjectSelector } from '@/components/global/shared/ProjectSelector'
 
-/** Data from org layout loader to avoid layout shift on first paint */
-export type OrgOverviewInitialData = {
-  organizationsData?: { teams?: unknown[] }
-  organizationPlan?: unknown
-  membershipsData?: { memberships: unknown[]; total: number }
-  scopesData?: { roles: string[]; scopes: string[] }
-}
-
 interface OrgOverviewProps {
   tab?: 'projects' | 'domains' | 'settings'
   children?: React.ReactNode
-  /** Prefetched data from route loader so org selector, tabs, and avatars render without layout shift */
-  initialData?: OrgOverviewInitialData
 }
 
-export function OrgOverview({
-  tab: tabProp,
-  children,
-  initialData,
-}: OrgOverviewProps) {
+export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const { account } = useAuth()
   const queryClient = useQueryClient()
   const { orgId } = useParams({ from: '/_public/organizations/$orgId' })
@@ -276,7 +283,8 @@ export function OrgOverview({
   const matches = useMatches()
   const [searchQuery, setSearchQuery] = useState('')
   const { features, isCloud } = useConsoleProfile()
-  const { access } = useOrganizationScopes(orgId, initialData?.scopesData)
+  const supportsMultiRegion = features.multiRegion
+  const { access, isLoading: orgScopesLoading } = useOrganizationScopes(orgId)
   const { showSuccessTeamCard: debugShowSuccessTeamCard } = useDebugOverrides()
 
   // Check if we're on a domain detail route using route matches and pathname (for navigation transitions)
@@ -389,6 +397,38 @@ export function OrgOverview({
     }
     return 'overview'
   }, [location.pathname])
+
+  // Top-level tab vs role: default index is "projects" in the URL, but hidden tabs (e.g. billing-only) must land on first allowed tab
+  useEffect(() => {
+    if (!features.orgRoles || !orgId || activeTab === null || orgScopesLoading) {
+      return
+    }
+
+    const hasAnyTab =
+      canSeeProjects(access, features) ||
+      canShowOrgDomainsTab(access, features) ||
+      canShowOrgSettingsTab(access)
+
+    if (!hasAnyTab) return
+
+    if (!canAccessOrgOverviewTab(access, features, activeTab)) {
+      const target = getFirstAllowedOrgOverviewPath(access, features)
+      navigate({
+        to: target as '/organizations/$orgId',
+        params: { orgId },
+        replace: true,
+      })
+    }
+  }, [
+    features.orgRoles,
+    features,
+    orgId,
+    activeTab,
+    orgScopesLoading,
+    access,
+    navigate,
+  ])
+
   const [commandCenterOpen, setCommandCenterOpen] = useState(false)
   const [orgSwitcherOpen, setOrgSwitcherOpen] = useState(false)
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
@@ -467,24 +507,48 @@ export function OrgOverview({
     setCommandCenterOpen(true)
   })
 
+  // Projects list: prefer URL search so page size change and page are shareable
+  const projectsPageFromSearch =
+    typeof search === 'object' && search != null && 'projectsPage' in search
+      ? typeof (search as { projectsPage?: number }).projectsPage === 'number'
+        ? (search as { projectsPage: number }).projectsPage
+        : Number((search as { projectsPage?: unknown }).projectsPage)
+      : undefined
+  const projectsLimitFromSearch =
+    typeof search === 'object' && search != null && 'projectsLimit' in search
+      ? typeof (search as { projectsLimit?: number }).projectsLimit === 'number'
+        ? (search as { projectsLimit: number }).projectsLimit
+        : Number((search as { projectsLimit?: unknown }).projectsLimit)
+      : undefined
+  const urlProjectsPage =
+    Number.isInteger(projectsPageFromSearch) &&
+    (projectsPageFromSearch ?? 0) >= 1
+      ? projectsPageFromSearch!
+      : 1
+  const urlProjectsLimit =
+    Number.isInteger(projectsLimitFromSearch) &&
+    (projectsLimitFromSearch ?? 0) >= 1
+      ? projectsLimitFromSearch!
+      : GRID_DEFAULT_PAGE_SIZE
+
   // Pagination state (1-indexed for projects, like storage view)
-  const [requestedPage, setRequestedPage] = useState(1)
-  const [displayedPage, setDisplayedPage] = useState(1)
+  const [requestedPage, setRequestedPage] = useState(urlProjectsPage)
+  const [displayedPage, setDisplayedPage] = useState(urlProjectsPage)
   // Alias for projects current page (used in pagination UI; matches memberships pattern)
   const activeProjectsPage = displayedPage
   const [requestedMembershipsPage, setRequestedMembershipsPage] = useState(1)
   const [displayedMembershipsPage, setDisplayedMembershipsPage] = useState(1)
-  const [membershipsPageSize, setMembershipsPageSize] =
-    useState(DEFAULT_PAGE_SIZE)
+  const [membershipsPageSize, setMembershipsPageSize] = useState(
+    GRID_DEFAULT_PAGE_SIZE,
+  )
   const [membershipsSearchQuery, setMembershipsSearchQuery] = useState('')
   const [settingsNavSearch, setSettingsNavSearch] = useState('')
 
-  // Fetch organizations from Console SDK (prefetched by route loader)
+  // Same pattern as projects list: cache filled by org layout loader; keepPreviousData on org switch
   const { data: organizationsData, isLoading: organizationsLoading } = useQuery(
     {
       ...organizationsQueryOptions(),
-      initialData: initialData?.organizationsData,
-      initialDataUpdatedAt: initialData?.organizationsData ? 1 : 0,
+      placeholderData: keepPreviousData,
     },
   )
 
@@ -505,7 +569,7 @@ export function OrgOverview({
         const planName = getPlanNameFromTier(
           org.billingPlan ?? (org.prefs as { tier?: string })?.tier ?? 'free',
         )
-        const plan = planName as Organization['plan']
+        const plan = planName as CanonicalPlanId
 
         return {
           $id: org.$id,
@@ -710,6 +774,12 @@ export function OrgOverview({
     placeholderData: keepPreviousData,
   })
 
+  // Sync page state from URL when it changes (e.g. browser back or initial load)
+  useEffect(() => {
+    setRequestedPage((p) => (p === urlProjectsPage ? p : urlProjectsPage))
+    setDisplayedPage((p) => (p === urlProjectsPage ? p : urlProjectsPage))
+  }, [urlProjectsPage])
+
   // Fetch data for the requested page (triggers load when user changes page); exclude pinned
   const {
     data: requestedProjectsData,
@@ -720,7 +790,7 @@ export function OrgOverview({
     ...activeProjectsQueryOptions(
       orgTeamId,
       requestedPage - 1,
-      DEFAULT_PAGE_SIZE,
+      urlProjectsLimit,
       searchQuery,
       pinnedIds,
     ),
@@ -733,7 +803,7 @@ export function OrgOverview({
       ...activeProjectsQueryOptions(
         orgTeamId,
         displayedPage - 1,
-        DEFAULT_PAGE_SIZE,
+        urlProjectsLimit,
         searchQuery,
         pinnedIds,
       ),
@@ -763,7 +833,7 @@ export function OrgOverview({
 
   // Total count without search, without exclude - for plan limit checking (all org projects)
   const { data: totalProjectsData } = useQuery(
-    activeProjectsQueryOptions(orgTeamId, 0, DEFAULT_PAGE_SIZE, ''),
+    activeProjectsQueryOptions(orgTeamId, 0, urlProjectsLimit, ''),
   )
 
   // Reset pagination when search query changes
@@ -861,6 +931,8 @@ export function OrgOverview({
   }, [pinnedProjects, searchQuery])
 
   const canPinProjectsResult = canPinProjects(access, features)
+  const canManageProjects = canCreateProject(access, features)
+  const showProjectSettingsTab = canShowProjectSettings(access, features)
 
   const handlePinProject = (projectId: string) => {
     if (!canPinProjectsResult) return
@@ -887,6 +959,21 @@ export function OrgOverview({
       },
       onError: () => toast.error('Failed to update pinned projects'),
     })
+  }
+
+  const handleProjectDeleted = async (projectId: string) => {
+    if (!pinnedIds.includes(projectId)) return
+    const prefs = {
+      ...(teamPrefs || {}),
+      ...buildPinnedProjectIdsPrefs(pinnedIds.filter((id) => id !== projectId)),
+    }
+    try {
+      await updateTeamPrefsMutation.mutateAsync(
+        prefs as Record<string, unknown>,
+      )
+    } catch {
+      // Keep project deletion successful even if pin cleanup fails.
+    }
   }
 
   // Get active projects from API (already filtered by team server-side, excludes pinned)
@@ -944,16 +1031,17 @@ export function OrgOverview({
   const totalProjectsCount = totalProjectsData?.total || 0
 
   // Fetch organization plan to check if additional members are supported
-  const { plan: organizationPlan } = useOrganizationPlan(
-    orgId,
-    initialData?.organizationPlan,
-  )
+  const { plan: organizationPlan } = useOrganizationPlan(orgId)
 
   // Check if the plan supports additional members
   // Only disable if seats addon is explicitly disabled with supported = false
   const supportsAdditionalMembers = useMemo(() => {
     return organizationPlan?.addons?.seats?.supported !== false
   }, [organizationPlan])
+
+  const canInviteMembers = canInviteOrgMember(access, features)
+  const inviteDisabled =
+    !supportsAdditionalMembers || !canInviteMembers || !orgId
 
   // Calculate member limit
   // Check both addons.seats and plan.members field
@@ -994,39 +1082,50 @@ export function OrgOverview({
     return planName === 'custom' || selectedOrg?.plan === 'custom'
   }, [organizationPlan, selectedOrg])
 
-  // Fetch requested memberships page (drives load when user changes page)
-  const { isFetching: membershipsRequestedFetching } =
-    useOrganizationMemberships(
+  // Memberships table + header avatars: mirror projects list (two queries, keepPreviousData, loader fills cache)
+  const {
+    data: requestedMembershipsRaw,
+    isFetching: membershipsRequestedFetching,
+  } = useQuery({
+    ...organizationMembershipsQueryOptions(
       orgId,
       requestedMembershipsPage - 1,
       membershipsPageSize,
       membershipsSearchQuery,
-      undefined,
-      { placeholderData: keepPreviousData },
-    )
+    ),
+    placeholderData: keepPreviousData,
+  })
 
-  // Fetch displayed memberships page (what we show - stays until new page is ready)
   const {
-    memberships,
-    total: membershipsTotal,
-    isLoading: membershipsLoading,
+    data: displayedMembershipsRaw,
+    isLoading: displayedMembershipsLoading,
     error: membershipsError,
-  } = useOrganizationMemberships(
-    orgId,
-    displayedMembershipsPage - 1,
-    membershipsPageSize,
-    membershipsSearchQuery,
-    displayedMembershipsPage === 1 && !membershipsSearchQuery
-      ? initialData?.membershipsData
-      : undefined,
-    { placeholderData: keepPreviousData },
+  } = useQuery({
+    ...organizationMembershipsQueryOptions(
+      orgId,
+      displayedMembershipsPage - 1,
+      membershipsPageSize,
+      membershipsSearchQuery,
+    ),
+    placeholderData: keepPreviousData,
+  })
+
+  const memberships = useMemo(
+    () =>
+      mapOrganizationMembershipsToTeamMembers(displayedMembershipsRaw, orgId),
+    [displayedMembershipsRaw, orgId],
   )
+  const membershipsTotal = displayedMembershipsRaw?.total ?? 0
+
+  const membershipsLoading =
+    displayedMembershipsLoading && displayedMembershipsRaw === undefined
 
   // Update displayed memberships page only when requested page data is ready (no flash)
   useEffect(() => {
     if (
+      requestedMembershipsPage !== displayedMembershipsPage &&
       !membershipsRequestedFetching &&
-      requestedMembershipsPage !== displayedMembershipsPage
+      requestedMembershipsRaw != null
     ) {
       setDisplayedMembershipsPage(requestedMembershipsPage)
     }
@@ -1034,6 +1133,7 @@ export function OrgOverview({
     membershipsRequestedFetching,
     requestedMembershipsPage,
     displayedMembershipsPage,
+    requestedMembershipsRaw,
   ])
 
   // Resend invitation mutation
@@ -1165,29 +1265,32 @@ export function OrgOverview({
       >
         {/* Org Header with Switcher */}
         <div>
-          {/* Title Row with Org Switcher */}
-          <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
-            {/* Left: Org Switcher */}
-            <div className="flex items-center gap-2">
-              {selectedOrg && (
+          {/* Title Row: fixed h-16 so padding + toolbar never grows (h1 margins, badges, etc.) */}
+          <div className="mx-auto flex h-16 min-h-16 w-full max-w-7xl shrink-0 items-center justify-between gap-3 px-4 sm:px-6">
+            {/* Left: Org Switcher — h-8 control; overflow-hidden contains h1 (no UA margin shift) */}
+            <div className="flex h-8 min-h-8 max-h-8 shrink-0 items-center gap-2">
+              {selectedOrg ? (
                 <Popover
                   open={orgSwitcherOpen}
                   onOpenChange={setOrgSwitcherOpen}
                 >
                   <PopoverTrigger asChild>
-                    <button className="group flex min-w-0 h-8 cursor-pointer items-center gap-2 rounded-lg px-2 -ml-2 transition-colors hover:bg-accent">
+                    <button
+                      type="button"
+                      className="group flex h-8 max-h-8 min-h-8 min-w-0 cursor-pointer items-center gap-2 overflow-hidden rounded-lg px-2 -ml-2 transition-colors hover:bg-accent"
+                    >
                       <InitialsAvatar name={selectedOrg.name} size="sm" />
-                      <h1 className="truncate text-[13px] font-semibold text-foreground">
+                      <h1 className="m-0 truncate text-[13px] font-semibold leading-none text-foreground">
                         {selectedOrg.name}
                       </h1>
                       {isCloud && (
                         <Badge
                           className={cn(
-                            'rounded px-1.5 py-0.5 text-[10px] font-medium capitalize shrink-0',
+                            'shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium leading-none',
                             getPlanBadgeColor(selectedOrg.plan),
                           )}
                         >
-                          {selectedOrg.plan}
+                          {getPlanDisplayName(selectedOrg.plan)}
                         </Badge>
                       )}
                       <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
@@ -1221,11 +1324,11 @@ export function OrgOverview({
                               {isCloud && (
                                 <span
                                   className={cn(
-                                    'rounded px-1.5 py-0.5 text-[10px] font-medium capitalize',
+                                    'rounded px-1.5 py-0.5 text-[10px] font-medium',
                                     getPlanBadgeColor(org.plan),
                                   )}
                                 >
-                                  {org.plan}
+                                  {getPlanDisplayName(org.plan)}
                                 </span>
                               )}
                               <span className="text-[11px] text-muted-foreground">
@@ -1254,7 +1357,19 @@ export function OrgOverview({
                     </div>
                   </PopoverContent>
                 </Popover>
-              )}
+              ) : orgId ? (
+                <div
+                  className="flex h-8 max-h-8 min-h-8 min-w-[200px] items-center gap-2 overflow-hidden px-2 -ml-2"
+                  aria-hidden
+                >
+                  <div className="h-6 w-6 shrink-0 animate-pulse rounded-full bg-muted" />
+                  <div className="h-4 min-h-4 min-w-0 flex-1 max-w-[160px] animate-pulse rounded bg-muted" />
+                  {isCloud && (
+                    <div className="h-5 max-h-5 min-h-5 w-14 shrink-0 animate-pulse rounded bg-muted" />
+                  )}
+                  <div className="h-3.5 w-3.5 shrink-0 animate-pulse rounded bg-muted" />
+                </div>
+              ) : null}
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
@@ -1272,25 +1387,32 @@ export function OrgOverview({
               </Tooltip>
             </div>
 
-            {/* Right: Organization Member Avatars + Invite Button */}
-            <div className="flex shrink-0 items-center gap-3">
-              {/* Stacked Organization Member Avatars - Reserve space even when loading */}
-              {selectedOrg && (
-                <div className="flex items-center">
-                  {membershipsLoading ? (
-                    // Placeholder skeleton to reserve space while loading - match exact structure of actual avatars
-                    <div className="flex -space-x-2">
+            {/* Right: same fixed h-8 band as left */}
+            <div className="flex h-8 min-h-8 max-h-8 shrink-0 items-center gap-3">
+              {orgId && (
+                <div
+                  className={cn(
+                    'flex h-8 min-h-8 w-[5.5rem] shrink-0 items-center',
+                    !selectedOrg || membershipsLoading
+                      ? 'justify-start'
+                      : memberships.length === 1
+                        ? 'justify-center'
+                        : 'justify-start',
+                  )}
+                >
+                  {!selectedOrg || membershipsLoading ? (
+                    <div className="flex -space-x-2" aria-hidden>
                       <div
                         className="relative rounded-full border-2 border-background"
                         style={{ zIndex: 2 }}
                       >
-                        <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
+                        <div className="h-8 w-8 shrink-0 rounded-full bg-muted animate-pulse" />
                       </div>
                       <div
                         className="relative rounded-full border-2 border-background"
                         style={{ zIndex: 1 }}
                       >
-                        <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
+                        <div className="h-8 w-8 shrink-0 rounded-full bg-muted animate-pulse" />
                       </div>
                     </div>
                   ) : memberships.length > 0 ? (
@@ -1302,7 +1424,10 @@ export function OrgOverview({
                         <Link
                           to="/organizations/$orgId/settings/members"
                           params={{ orgId: orgId! }}
-                          className="flex -space-x-2 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer hover:opacity-90 transition-opacity"
+                          className={cn(
+                            'flex h-8 min-h-8 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer hover:opacity-90 transition-opacity',
+                            displayMembers.length > 1 && '-space-x-2',
+                          )}
                           title="View members"
                         >
                           {displayMembers.map(
@@ -1334,58 +1459,66 @@ export function OrgOverview({
                       )
                     })()
                   ) : (
-                    // Empty state - still reserve space with invisible placeholder
-                    <div className="flex -space-x-2">
-                      <div className="relative h-8 w-8 rounded-full border-2 border-transparent" />
+                    <div className="flex -space-x-2" aria-hidden>
+                      <div className="relative h-8 w-8 shrink-0 rounded-full border-2 border-transparent" />
+                      <div className="relative h-8 w-8 shrink-0 rounded-full border-2 border-transparent" />
                     </div>
                   )}
                 </div>
               )}
 
-              {/* Invite: only owners when roles enabled; hidden for non-owners */}
-              {supportsAdditionalMembers &&
-                canInviteOrgMember(access, features) && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-8 gap-2 border-border text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground"
-                    onClick={() => setInviteDialogOpen(true)}
-                  >
-                    <UserPlus className="h-3.5 w-3.5" />
-                    Invite
-                  </Button>
-                )}
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8 gap-2 border-border text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground"
+                onClick={() => setInviteDialogOpen(true)}
+                disabled={inviteDisabled}
+              >
+                <UserPlus className="h-3.5 w-3.5" />
+                Invite
+              </Button>
             </div>
           </div>
 
-          {/* Tabs Row */}
+          {/* Tabs row: min height matches tab links (py-2.5 + text) so it doesn’t collapse before orgTabs render */}
           <div className="border-b border-border">
             <div
-              className="mx-auto flex w-full max-w-7xl gap-0 overflow-x-auto px-4 sm:px-6"
+              className="mx-auto flex min-h-[2.75rem] w-full max-w-7xl items-end gap-0 overflow-x-auto px-4 sm:px-6"
               role="tablist"
             >
-              {orgTabs.map((tab) => (
-                <Link
-                  key={tab.id}
-                  to={tab.to as unknown}
-                  params={{ orgId: orgId! } as unknown}
-                  replace
-                  role="tab"
-                  aria-selected={activeTab === tab.id}
-                  className={cn(
-                    'relative flex shrink-0 items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors rounded-sm',
-                    'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
-                    activeTab === tab.id
-                      ? 'text-foreground'
-                      : 'text-muted-foreground hover:text-foreground/80',
-                  )}
+              {orgTabs.length > 0 ? (
+                orgTabs.map((tab) => (
+                  <Link
+                    key={tab.id}
+                    to={tab.to as unknown}
+                    params={{ orgId: orgId! } as unknown}
+                    replace
+                    role="tab"
+                    aria-selected={activeTab === tab.id}
+                    className={cn(
+                      'relative flex h-[2.75rem] shrink-0 items-center gap-1.5 px-3 text-[13px] font-medium leading-none transition-colors rounded-sm',
+                      'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+                      activeTab === tab.id
+                        ? 'text-foreground'
+                        : 'text-muted-foreground hover:text-foreground/80',
+                    )}
+                  >
+                    {tab.label}
+                    {activeTab === tab.id && (
+                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground" />
+                    )}
+                  </Link>
+                ))
+              ) : orgId ? (
+                <div
+                  className="flex h-[2.75rem] w-full items-center gap-6 px-3"
+                  aria-hidden
                 >
-                  {tab.label}
-                  {activeTab === tab.id && (
-                    <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-foreground" />
-                  )}
-                </Link>
-              ))}
+                  <div className="h-4 w-16 animate-pulse rounded bg-muted" />
+                  <div className="h-4 w-14 animate-pulse rounded bg-muted" />
+                  <div className="h-4 w-16 animate-pulse rounded bg-muted" />
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
@@ -1400,7 +1533,11 @@ export function OrgOverview({
             const planIncluded = organizationPlan?.addons?.seats?.planIncluded
             const limitNum = Number(seatsLimit ?? planIncluded)
             const limit = isNaN(limitNum) ? null : limitNum
-            const planName = organizationPlan?.name || 'plan'
+            const planName =
+              resolveOrganizationPlanDisplayLabel({
+                planName: organizationPlan?.name ?? null,
+                planId: organizationPlan?.$id,
+              }) || 'plan'
 
             // Only show if limit exists and is greater than 0
             if (limit !== null && limit > 0) {
@@ -1493,7 +1630,11 @@ export function OrgOverview({
               organizationPlan?.addons?.projects?.planIncluded
             const limitNum = Number(projectLimit ?? planIncluded)
             const limit = isNaN(limitNum) ? null : limitNum
-            const planName = organizationPlan?.name || 'plan'
+            const planName =
+              resolveOrganizationPlanDisplayLabel({
+                planName: organizationPlan?.name ?? null,
+                planId: organizationPlan?.$id,
+              }) || 'plan'
 
             // Only show if limit exists, is greater than 0, and user has reached it
             if (limit !== null && limit > 0) {
@@ -1699,65 +1840,75 @@ export function OrgOverview({
                                 </h2>
                                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                                   {pinnedFiltered.map((project) => (
-                                    <div
+                                    <ProjectContextMenu
                                       key={project.$id}
-                                      className="group relative rounded-xl border border-border bg-card/50 p-4 transition-all hover:border-border hover:bg-card"
-                                      data-project-card
+                                      project={project}
+                                      showSettingsTab={showProjectSettingsTab}
+                                      canDeleteProject={canManageProjects}
+                                      onProjectDeleted={handleProjectDeleted}
                                     >
-                                      <Link
-                                        to="/projects/$projectId"
-                                        params={{ projectId: project.$id }}
-                                        className="block"
+                                      <div
+                                        className="group relative rounded-xl border border-border bg-card/50 p-4 transition-all hover:border-border hover:bg-card"
+                                        data-project-card
                                       >
-                                        <div>
-                                          <h3 className="text-[14px] font-medium text-foreground group-hover:text-foreground">
-                                            {project.name}
-                                          </h3>
-                                          {project.region && (
-                                            <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-muted-foreground">
-                                              <RegionFlag
-                                                region={project.region}
-                                              />
-                                              {project.region}
-                                            </div>
-                                          )}
-                                        </div>
-                                        <ProjectCardFooter
-                                          platformsCount={
-                                            project.platformsCount || 0
-                                          }
-                                          apiKeysCount={
-                                            project.apiKeysCount || 0
-                                          }
-                                          paused={project.paused}
-                                        />
-                                      </Link>
-                                      {canPinProjectsResult && (
-                                        <TooltipProvider delayDuration={0}>
-                                          <Tooltip>
-                                            <TooltipTrigger asChild>
-                                              <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="absolute right-2 top-2 h-8 w-8 rounded-md opacity-0 transition-opacity group-hover:opacity-100"
-                                                onClick={(e) => {
-                                                  e.preventDefault()
-                                                  handlePinProject(project.$id)
-                                                }}
-                                                disabled={
-                                                  updateTeamPrefsMutation.isPending
-                                                }
-                                              >
-                                                <PinOff className="h-4 w-4" />
-                                              </Button>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                              <p>Unpin project</p>
-                                            </TooltipContent>
-                                          </Tooltip>
-                                        </TooltipProvider>
-                                      )}
-                                    </div>
+                                        <Link
+                                          to="/projects/$projectId"
+                                          params={{ projectId: project.$id }}
+                                          className="block"
+                                        >
+                                          <div>
+                                            <h3 className="text-[14px] font-medium text-foreground group-hover:text-foreground">
+                                              {project.name}
+                                            </h3>
+                                            {supportsMultiRegion &&
+                                              project.region && (
+                                                <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-muted-foreground">
+                                                  <RegionFlag
+                                                    region={project.region}
+                                                  />
+                                                  {project.region}
+                                                </div>
+                                              )}
+                                          </div>
+                                          <ProjectCardFooter
+                                            platformsCount={
+                                              project.platformsCount || 0
+                                            }
+                                            apiKeysCount={
+                                              project.apiKeysCount || 0
+                                            }
+                                            paused={project.paused}
+                                          />
+                                        </Link>
+                                        {canPinProjectsResult && (
+                                          <TooltipProvider delayDuration={0}>
+                                            <Tooltip>
+                                              <TooltipTrigger asChild>
+                                                <Button
+                                                  variant="ghost"
+                                                  size="icon"
+                                                  className="absolute right-2 top-2 h-8 w-8 rounded-md opacity-0 transition-opacity group-hover:opacity-100"
+                                                  onClick={(e) => {
+                                                    e.preventDefault()
+                                                    handlePinProject(
+                                                      project.$id,
+                                                    )
+                                                  }}
+                                                  disabled={
+                                                    updateTeamPrefsMutation.isPending
+                                                  }
+                                                >
+                                                  <PinOff className="h-4 w-4" />
+                                                </Button>
+                                              </TooltipTrigger>
+                                              <TooltipContent>
+                                                <p>Unpin project</p>
+                                              </TooltipContent>
+                                            </Tooltip>
+                                          </TooltipProvider>
+                                        )}
+                                      </div>
+                                    </ProjectContextMenu>
                                   ))}
                                 </div>
                               </div>
@@ -1781,71 +1932,86 @@ export function OrgOverview({
                                         const canPin =
                                           pinnedIds.length < MAX_PINNED_PROJECTS
                                         return (
-                                          <div
+                                          <ProjectContextMenu
                                             key={project.$id}
-                                            className="group relative rounded-xl border border-border bg-card/50 p-4 transition-all hover:border-border hover:bg-card"
-                                            data-project-card
+                                            project={project}
+                                            showSettingsTab={
+                                              showProjectSettingsTab
+                                            }
+                                            canDeleteProject={canManageProjects}
+                                            onProjectDeleted={
+                                              handleProjectDeleted
+                                            }
                                           >
-                                            <Link
-                                              to="/projects/$projectId"
-                                              params={{
-                                                projectId: project.$id,
-                                              }}
-                                              className="block"
+                                            <div
+                                              className="group relative rounded-xl border border-border bg-card/50 p-4 transition-all hover:border-border hover:bg-card"
+                                              data-project-card
                                             >
-                                              <div>
-                                                <h3 className="text-[14px] font-medium text-foreground group-hover:text-foreground">
-                                                  {project.name}
-                                                </h3>
-                                                {project.region && (
-                                                  <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-muted-foreground">
-                                                    <RegionFlag
-                                                      region={project.region}
-                                                    />
-                                                    {project.region}
-                                                  </div>
-                                                )}
-                                              </div>
-                                              <ProjectCardFooter
-                                                platformsCount={
-                                                  project.platformsCount || 0
-                                                }
-                                                apiKeysCount={
-                                                  project.apiKeysCount || 0
-                                                }
-                                                paused={project.paused}
-                                              />
-                                            </Link>
-                                            {canPin && canPinProjectsResult && (
-                                              <TooltipProvider
-                                                delayDuration={0}
+                                              <Link
+                                                to="/projects/$projectId"
+                                                params={{
+                                                  projectId: project.$id,
+                                                }}
+                                                className="block"
                                               >
-                                                <Tooltip>
-                                                  <TooltipTrigger asChild>
-                                                    <Button
-                                                      variant="ghost"
-                                                      size="icon"
-                                                      className="absolute right-2 top-2 h-8 w-8 rounded-md opacity-0 transition-opacity group-hover:opacity-100"
-                                                      onClick={(e) => {
-                                                        e.preventDefault()
-                                                        handlePinProject(
-                                                          project.$id,
-                                                        )
-                                                      }}
-                                                      disabled={
-                                                        updateTeamPrefsMutation.isPending
-                                                      }
-                                                    >
-                                                      <Pin className="h-4 w-4" />
-                                                    </Button>
-                                                  </TooltipTrigger>
-                                                  <TooltipContent>
-                                                    <p>Pin project</p>
-                                                  </TooltipContent>
-                                                </Tooltip>
-                                              </TooltipProvider>
-                                            )}
-                                          </div>
+                                                <div>
+                                                  <h3 className="text-[14px] font-medium text-foreground group-hover:text-foreground">
+                                                    {project.name}
+                                                  </h3>
+                                                  {supportsMultiRegion &&
+                                                    project.region && (
+                                                      <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-muted-foreground">
+                                                        <RegionFlag
+                                                          region={
+                                                            project.region
+                                                          }
+                                                        />
+                                                        {project.region}
+                                                      </div>
+                                                    )}
+                                                </div>
+                                                <ProjectCardFooter
+                                                  platformsCount={
+                                                    project.platformsCount || 0
+                                                  }
+                                                  apiKeysCount={
+                                                    project.apiKeysCount || 0
+                                                  }
+                                                  paused={project.paused}
+                                                />
+                                              </Link>
+                                              {canPin &&
+                                                canPinProjectsResult && (
+                                                  <TooltipProvider
+                                                    delayDuration={0}
+                                                  >
+                                                    <Tooltip>
+                                                      <TooltipTrigger asChild>
+                                                        <Button
+                                                          variant="ghost"
+                                                          size="icon"
+                                                          className="absolute right-2 top-2 h-8 w-8 rounded-md opacity-0 transition-opacity group-hover:opacity-100"
+                                                          onClick={(e) => {
+                                                            e.preventDefault()
+                                                            handlePinProject(
+                                                              project.$id,
+                                                            )
+                                                          }}
+                                                          disabled={
+                                                            updateTeamPrefsMutation.isPending
+                                                          }
+                                                        >
+                                                          <Pin className="h-4 w-4" />
+                                                        </Button>
+                                                      </TooltipTrigger>
+                                                      <TooltipContent>
+                                                        <p>Pin project</p>
+                                                      </TooltipContent>
+                                                    </Tooltip>
+                                                  </TooltipProvider>
+                                                )}
+                                            </div>
+                                          </ProjectContextMenu>
                                         )
                                       })}
                                     </div>
@@ -1873,15 +2039,45 @@ export function OrgOverview({
                               )}
 
                             {/* Pagination for Active Projects */}
-                            {activeProjectsTotal > DEFAULT_PAGE_SIZE && (
+                            {activeProjectsTotal > urlProjectsLimit && (
                               <Pagination
                                 currentPage={activeProjectsPage}
                                 totalItems={activeProjectsTotal}
-                                pageSize={DEFAULT_PAGE_SIZE}
-                                onPageChange={(page: number) =>
+                                pageSize={urlProjectsLimit}
+                                pageSizeOptions={[12, 18, 36, 72]}
+                                onPageChange={(page: number) => {
                                   setRequestedPage(page)
-                                }
-                                onPageSizeChange={() => {}} // Page size is fixed
+                                  navigate({
+                                    to: location.pathname,
+                                    search: (
+                                      prev: Record<string, unknown>,
+                                    ) => ({
+                                      ...(typeof prev === 'object' && prev
+                                        ? prev
+                                        : {}),
+                                      projectsPage: page,
+                                      projectsLimit: urlProjectsLimit,
+                                    }),
+                                    replace: true,
+                                  })
+                                }}
+                                onPageSizeChange={(size: number) => {
+                                  setRequestedPage(1)
+                                  setDisplayedPage(1)
+                                  navigate({
+                                    to: location.pathname,
+                                    search: (
+                                      prev: Record<string, unknown>,
+                                    ) => ({
+                                      ...(typeof prev === 'object' && prev
+                                        ? prev
+                                        : {}),
+                                      projectsPage: 1,
+                                      projectsLimit: size,
+                                    }),
+                                    replace: true,
+                                  })
+                                }}
                                 itemLabel="projects"
                               />
                             )}
@@ -2260,7 +2456,7 @@ export function OrgOverview({
                           {/* Members Content */}
                           {!membershipsError && (
                             <>
-                              {/* Toolbar: Search + Invite (Invite only for owners when roles enabled) */}
+                              {/* Toolbar: Search + Invite */}
                               <div className="mb-4 flex items-center gap-3">
                                 <div className="relative w-64">
                                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -2274,38 +2470,15 @@ export function OrgOverview({
                                   />
                                 </div>
 
-                                {supportsAdditionalMembers &&
-                                canInviteOrgMember(access, features) ? (
-                                  <Button
-                                    className="ml-auto h-9 gap-2 text-[13px] font-medium text-white hover:opacity-90"
-                                    style={{ backgroundColor: '#f02e65' }}
-                                    onClick={() => setInviteDialogOpen(true)}
-                                  >
-                                    <Plus className="h-4 w-4" />
-                                    Invite
-                                  </Button>
-                                ) : supportsAdditionalMembers ? null : (
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <span>
-                                        <Button
-                                          className="ml-auto h-9 gap-2 text-[13px] font-medium text-white cursor-not-allowed opacity-50"
-                                          style={{ backgroundColor: '#f02e65' }}
-                                          disabled
-                                        >
-                                          <UserPlus className="h-4 w-4" />
-                                          Invite member
-                                        </Button>
-                                      </span>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p className="text-xs">
-                                        Upgrade your plan to invite team
-                                        members.
-                                      </p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                )}
+                                <Button
+                                  className="ml-auto h-9 gap-2 text-[13px] font-medium text-white hover:opacity-90"
+                                  style={{ backgroundColor: '#f02e65' }}
+                                  onClick={() => setInviteDialogOpen(true)}
+                                  disabled={inviteDisabled}
+                                >
+                                  <Plus className="h-4 w-4" />
+                                  Invite
+                                </Button>
                               </div>
 
                               {/* Members List or Empty State */}
@@ -2344,8 +2517,12 @@ export function OrgOverview({
                                         </TableRow>
                                       </TableHeader>
                                       <TableBody>
-                                        {memberships.map(
-                                          (member: TeamMember) => (
+                                        {memberships.map((member: TeamMember) => {
+                                          const {
+                                            Icon: RoleIcon,
+                                            label: roleLabel,
+                                          } = orgMembershipRoleDisplay(member.role)
+                                          return (
                                             <TableRow
                                               key={member.$id}
                                               className="border-b border-border/50 hover:bg-muted/30 transition-colors"
@@ -2393,14 +2570,11 @@ export function OrgOverview({
                                                         'inline-flex items-center gap-1 text-[11px] font-medium border px-2 py-0.5',
                                                       )}
                                                     >
-                                                      {member.role ===
-                                                        'owner' && (
-                                                        <Shield className="h-3 w-3" />
-                                                      )}
-                                                      {member.role
-                                                        .charAt(0)
-                                                        .toUpperCase() +
-                                                        member.role.slice(1)}
+                                                      <RoleIcon
+                                                        className="h-3 w-3 shrink-0"
+                                                        aria-hidden
+                                                      />
+                                                      {roleLabel}
                                                     </Badge>
                                                   </div>
                                                 </TableCell>
@@ -2608,8 +2782,8 @@ export function OrgOverview({
                                                 </div>
                                               </TableCell>
                                             </TableRow>
-                                          ),
-                                        )}
+                                          )
+                                        })}
                                       </TableBody>
                                     </Table>
                                   </div>
@@ -2619,7 +2793,7 @@ export function OrgOverview({
                                       currentPage={displayedMembershipsPage}
                                       totalItems={membershipsTotal}
                                       pageSize={membershipsPageSize}
-                                      pageSizeOptions={[10, 25, 50, 100]}
+                                      pageSizeOptions={[12, 18, 36, 72]}
                                       onPageChange={(page: number) =>
                                         setRequestedMembershipsPage(page)
                                       }

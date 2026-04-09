@@ -8,13 +8,15 @@ import {
 } from '@/components/ui/select'
 import { Plus, Ticket } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
+import { formatPaymentMethodSummary } from '../utils'
 
 interface PaymentMethodDropdownProps {
   paymentMethods: Models.PaymentMethod[]
   selectedPaymentMethodId?: string
   onPaymentMethodSelect: (paymentMethodId: string) => void
   onAddPaymentMethod: () => void
-  onAddCredits: () => void
+  /** Omit when credits cannot be used (e.g. domain checkout). */
+  onAddCredits?: () => void
 }
 
 export function PaymentMethodDropdown({
@@ -27,14 +29,8 @@ export function PaymentMethodDropdown({
   // Filter to only show completed cards (with last4)
   const completedPaymentMethods = paymentMethods.filter((pm) => pm.last4)
 
-  const selectedMethod = completedPaymentMethods.find(
-    (pm) => pm.$id === selectedPaymentMethodId,
-  )
-
-  const getDisplayText = (method: Models.PaymentMethod) => {
-    if (!method.last4) return method.name || 'Card'
-    return `${method.name || 'Card'} ending in ${method.last4}`
-  }
+  const getDisplayText = (method: Models.PaymentMethod) =>
+    formatPaymentMethodSummary(method)
 
   return (
     <div className="space-y-3">
@@ -48,12 +44,8 @@ export function PaymentMethodDropdown({
             value={selectedPaymentMethodId || undefined}
             onValueChange={onPaymentMethodSelect}
           >
-            <SelectTrigger className="h-9 text-[13px]">
-              <SelectValue placeholder="Select payment method">
-                {selectedMethod
-                  ? getDisplayText(selectedMethod)
-                  : 'Select payment method'}
-              </SelectValue>
+            <SelectTrigger className="h-9 w-full min-w-0 text-[13px]">
+              <SelectValue placeholder="Select payment method" />
             </SelectTrigger>
             <SelectContent>
               {completedPaymentMethods.map((method) => (
@@ -81,15 +73,17 @@ export function PaymentMethodDropdown({
           <Plus className="mr-1.5 h-4 w-4" />
           Add payment method
         </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-8 text-[13px]"
-          onClick={onAddCredits}
-        >
-          <Ticket className="mr-1.5 h-4 w-4" />
-          Add credits
-        </Button>
+        {onAddCredits ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 text-[13px]"
+            onClick={onAddCredits}
+          >
+            <Ticket className="mr-1.5 h-4 w-4" />
+            Add credits
+          </Button>
+        ) : null}
       </div>
     </div>
   )

@@ -89,8 +89,12 @@ interface ServiceHeaderProps {
   breadcrumbs?: Breadcrumb[]
   /** Hide the title row entirely */
   hideTitle?: boolean
+  /** Renders on the same row as the title (typically end-aligned); use for secondary actions next to the page title */
+  titleRightContent?: React.ReactNode
   /** Content to render after the border separator, before the toolbar */
   contentAfterBorder?: React.ReactNode
+  /** Show a bottom border under the toolbar row (search/filters/actions) */
+  showToolbarBottomBorder?: boolean
 }
 
 export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
@@ -130,7 +134,9 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
       collapsible = false,
       breadcrumbs,
       hideTitle = false,
+      titleRightContent,
       contentAfterBorder,
+      showToolbarBottomBorder = false,
     },
     ref,
   ) {
@@ -201,6 +207,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                 to={tab.to as unknown}
                 params={tab.params}
                 replace
+                onMouseDown={(e) => e.preventDefault()}
                 role="tab"
                 aria-selected={isActive}
                 className={cn(
@@ -219,8 +226,10 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
           return (
             <button
               key={tab.id}
+              type="button"
               role="tab"
               aria-selected={isActive}
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => onTabChange?.(tab.id)}
               className={cn(
                 'relative flex shrink-0 cursor-pointer focus:cursor-pointer focus-visible:cursor-pointer items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors rounded-sm',
@@ -272,9 +281,16 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                 ))}
               </nav>
             )}
-            <h1 className="text-[17px] font-semibold text-foreground">
-              {title}
-            </h1>
+            <div className="flex min-w-0 flex-row flex-wrap items-center justify-between gap-x-4 gap-y-3">
+              <h1 className="min-w-0 text-[17px] font-semibold text-foreground">
+                {title}
+              </h1>
+              {titleRightContent ? (
+                <div className="flex min-w-0 flex-wrap items-center justify-end gap-2 sm:gap-3">
+                  {titleRightContent}
+                </div>
+              ) : null}
+            </div>
           </div>
         )}
 
@@ -307,6 +323,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                         to={tab.to as unknown}
                         params={tab.params}
                         replace
+                        onMouseDown={(e) => e.preventDefault()}
                         role="tab"
                         aria-selected={isActive}
                         className={cn(
@@ -325,8 +342,10 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                   return (
                     <button
                       key={tab.id}
+                      type="button"
                       role="tab"
                       aria-selected={isActive}
+                      onMouseDown={(e) => e.preventDefault()}
                       onClick={() => onTabChange?.(tab.id)}
                       className={cn(
                         'relative flex shrink-0 cursor-pointer items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors rounded-sm',
@@ -356,7 +375,8 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
             className={cn(
               'flex min-w-0 flex-nowrap items-center gap-3 px-4 py-4 sm:px-6',
               fullWidthBorder && !fullWidth && 'mx-auto w-full max-w-7xl',
-              isCollapsed && 'border-b border-border',
+              (isCollapsed || showToolbarBottomBorder) &&
+                'border-b border-border',
             )}
           >
             {/* Search */}

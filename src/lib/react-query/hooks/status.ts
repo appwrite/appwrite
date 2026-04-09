@@ -170,6 +170,12 @@ function normalizeReportAggregateState(
   }
 }
 
+function parseTimestamp(value?: string | null): number | null {
+  if (!value) return null
+  const timestamp = Date.parse(value)
+  return Number.isNaN(timestamp) ? null : timestamp
+}
+
 export async function fetchAppwriteCloudStatus(): Promise<AppwriteCloudStatusSummary> {
   const response = await fetch(APPWRITE_CLOUD_STATUS_URL)
   if (!response.ok) {
@@ -187,7 +193,8 @@ export async function fetchAppwriteCloudStatus(): Promise<AppwriteCloudStatusSum
         (item): item is StatusReportItem => item.type === 'status_report',
       )
       .map((report) => ({
-        title: report.attributes?.title?.trim() || 'Ongoing Appwrite Cloud issue',
+        title:
+          report.attributes?.title?.trim() || 'Ongoing Appwrite Cloud issue',
         reportType: normalizeReportType(report.attributes?.report_type),
         aggregateState: normalizeReportAggregateState(
           report.attributes?.aggregate_state,
@@ -203,7 +210,8 @@ export async function fetchAppwriteCloudStatus(): Promise<AppwriteCloudStatusSum
   const servicesMap = new Map<string, AppwriteCloudServiceState>()
   payload.included
     ?.filter(
-      (item): item is StatusResourceItem => item.type === 'status_page_resource',
+      (item): item is StatusResourceItem =>
+        item.type === 'status_page_resource',
     )
     .forEach((resource) => {
       const serviceName = resource.attributes?.public_name?.trim()
@@ -224,11 +232,29 @@ export async function fetchAppwriteCloudStatus(): Promise<AppwriteCloudStatusSum
     .map(([name, status]) => ({ name, status }))
     .sort((left, right) => compareServiceNames(left.name, right.name))
 
+  const now = Date.now()
+  const activeReports = reports.filter((report) => {
+    if (report.aggregateState === 'resolved') return false
+
+    const startsAt = parseTimestamp(report.startsAt)
+    const endsAt = parseTimestamp(report.endsAt)
+
+    if (startsAt !== null && startsAt > now) return false
+    if (endsAt !== null && endsAt <= now) return false
+
+    return true
+  })
+
   const activeReport =
     aggregateState === 'operational'
       ? undefined
-      : reports.find((report) => report.aggregateState !== 'resolved') ??
-        reports[0]
+      : (activeReports.find(
+          (report) => report.aggregateState === aggregateState,
+        ) ??
+        activeReports.find(
+          (report) => report.aggregateState !== 'maintenance',
+        ) ??
+        activeReports[0])
 
   return {
     aggregateState,

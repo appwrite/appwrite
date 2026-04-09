@@ -2,7 +2,11 @@
 
 @import 'tw-animate-css';
 
-@custom-variant dark (&:is(.dark *));
+/* Match default dark + debug-only themes that omit .dark but use dark surfaces (see html-theme.ts). */
+@custom-variant dark (&:is(.dark *, .classic *, .crazy *, .stealth *));
+
+/** Debug-only classic theme (html.classic); use for heading weight etc. without affecting default UI. */
+@custom-variant classic (&:is(.classic *));
 
 body {
   @apply m-0;
@@ -18,7 +22,17 @@ code {
     source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }
 
+::selection {
+  color: hsl(0 0% 0%);
+  -webkit-text-fill-color: hsl(0 0% 0%);
+  background-color: var(--selection-background);
+  background-clip: revert;
+  -webkit-background-clip: revert;
+}
+
 :root {
+  /* Text ::selection highlight */
+  --selection-background: hsl(178 54% 69%);
   --background: oklch(1 0 0);
   --foreground: oklch(0.141 0.005 285.823);
   --card: oklch(1 0 0);
@@ -92,26 +106,26 @@ code {
 
   /* OLD VERSION - Strong black (original) - Uncomment to revert */
 
-  --background: oklch(0.141 0.005 285.823);
-  /* Hex for Monaco editor (--vscode-editor-background); use #09090b to match desired editor look */
-  --editor-bg: #09090b;
+  --background: #19191c;
+  /* Monaco editor background aligned with the dark palette */
+  --editor-bg: #141416;
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.141 0.005 285.823);
+  --card: #1d1d21;
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.141 0.005 285.823);
+  --popover: #1d1d21;
   --popover-foreground: oklch(0.985 0 0);
   --primary: oklch(0.985 0 0);
   --primary-foreground: oklch(0.21 0.006 285.885);
-  --secondary: oklch(0.274 0.006 286.033);
+  --secondary: #2d2d31;
   --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.274 0.006 286.033);
+  --muted: #2d2d31;
   --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.274 0.006 286.033);
+  --accent: #2d2d31;
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.396 0.141 25.723);
   --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.274 0.006 286.033);
-  --input: oklch(0.274 0.006 286.033);
+  --border: #2d2d31;
+  --input: #2d2d31;
   --ring: oklch(0.442 0.017 285.786);
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
@@ -119,13 +133,13 @@ code {
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
   --chart-brand: oklch(0.6 0.26 358);
-  --sidebar: oklch(0.21 0.006 285.885);
+  --sidebar: #141416;
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.274 0.006 286.033);
+  --sidebar-accent: #2d2d31;
   --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.274 0.006 286.033);
+  --sidebar-border: #2d2d31;
   --sidebar-ring: oklch(0.442 0.017 285.786);
 }
 
@@ -164,6 +178,68 @@ code {
   --sidebar-accent-foreground: oklch(0.95 0.25 240);
   --sidebar-border: oklch(0.55 0.4 280);
   --sidebar-ring: oklch(0.75 0.4 200);
+}
+
+/*
+ * Classic — legacy Appwrite cloud console palette: neutral surfaces + pink only for CTA
+ * and purple secondary; Inter body / Poppins headings. Debug menu only.
+ * Tokens aligned with console/src/themes/dark-cloud.json
+ */
+.classic {
+  color-scheme: dark;
+  --editor-bg: #141416;
+  --background: rgb(25 25 28);
+  --foreground: rgb(237 237 240);
+  --card: rgb(29 29 33);
+  --card-foreground: rgb(237 237 240);
+  --popover: rgb(29 29 33);
+  --popover-foreground: rgb(237 237 240);
+  --primary: rgb(253 54 110);
+  --primary-foreground: rgb(255 255 255);
+  --secondary: rgb(45 45 49);
+  --secondary-foreground: rgb(237 237 240);
+  --muted: rgb(45 45 49);
+  --muted-foreground: rgb(129 129 134);
+  --accent: rgb(45 45 49);
+  --accent-foreground: rgb(237 237 240);
+  --destructive: rgb(255 69 58);
+  --destructive-foreground: rgb(255 255 255);
+  --border: rgb(45 45 49);
+  --input: rgb(45 45 49);
+  --ring: rgb(129 129 134);
+  --chart-1: rgb(124 103 254);
+  --chart-2: rgb(133 219 216);
+  --chart-3: rgb(104 163 254);
+  --chart-4: rgb(254 149 103);
+  --chart-5: rgb(254 211 103);
+  --chart-brand: rgb(45 45 49);
+  --radius: 0.5rem;
+  --sidebar: rgb(20 20 22);
+  --sidebar-foreground: rgb(237 237 240);
+  --sidebar-primary: rgb(237 237 240);
+  --sidebar-primary-foreground: rgb(255 255 255);
+  --sidebar-accent: rgb(45 45 49);
+  --sidebar-accent-foreground: rgb(237 237 240);
+  --sidebar-border: rgb(45 45 49);
+  --sidebar-ring: rgb(129 129 134);
+}
+
+/*
+ * Keep debug dark-chrome themes on the same readable text/icon baseline as dark.
+ * This prevents dark-on-dark combinations from custom palette experiments.
+ */
+.classic,
+.crazy,
+.stealth {
+  --foreground: oklch(0.985 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --muted-foreground: oklch(0.705 0.015 286.067);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
 }
 
 .stealth {
@@ -249,6 +325,37 @@ code {
   }
   body {
     @apply bg-background text-foreground;
+  }
+
+  html.classic body {
+    font-family:
+      'Inter',
+      -apple-system,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      'Roboto',
+      'Oxygen',
+      'Ubuntu',
+      sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    letter-spacing: -0.01em;
+  }
+
+  html.classic :where(h1, h2, h3) {
+    font-family: 'Poppins', 'Inter', sans-serif;
+    letter-spacing: -0.02em;
+    font-weight: 400;
+  }
+
+  /*
+   * Classic: Tailwind font-semibold maps to --font-weight-semibold and wins over base alone.
+   * Force page <h1> titles (account name, service headers, etc.) to body weight + Inter.
+   */
+  html.classic h1 {
+    font-weight: 400 !important;
+    font-family: inherit !important;
+    letter-spacing: -0.02em;
   }
 
   /* Mobile touch scrolling improvements.

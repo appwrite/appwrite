@@ -9,7 +9,7 @@ import {
   organizationCreditsQueryOptions,
   paymentMethodsQueryOptions,
   billingAddressesQueryOptions,
-  paymentMethodQueryOptions,
+  organizationPaymentMethodQueryOptions,
   billingAddressQueryOptions,
 } from '@/lib/react-query/hooks'
 import {
@@ -85,7 +85,12 @@ export const Route = createFileRoute(
     if (orgData?.paymentMethodId) {
       optionalPrefetches.push(
         queryClient
-          .ensureQueryData(paymentMethodQueryOptions(orgData.paymentMethodId))
+          .ensureQueryData(
+            organizationPaymentMethodQueryOptions(
+              orgId,
+              orgData.paymentMethodId,
+            ),
+          )
           .catch(() => {}),
       )
     }
@@ -93,7 +98,10 @@ export const Route = createFileRoute(
       optionalPrefetches.push(
         queryClient
           .ensureQueryData(
-            paymentMethodQueryOptions(orgData.backupPaymentMethodId),
+            organizationPaymentMethodQueryOptions(
+              orgId,
+              orgData.backupPaymentMethodId,
+            ),
           )
           .catch(() => {}),
       )

@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { View } from '@/components/pages/projects/$projectId/auth/View'
 import { projectQueryOptions, teamsQueryOptions } from '@/lib/react-query/hooks'
 import { listSearchSchema, queryParamToMap } from '@/lib/table-filters'
-import { TEAMS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { pageTitle } from '@/lib/utils/page-title'
 
 const DEFAULT_PAGE = 1
@@ -46,9 +46,9 @@ export const Route = createFileRoute('/_public/projects/$projectId/auth/teams')(
       })()
       const teamsLimit = (() => {
         const p = url.searchParams.get('teamsLimit')
-        if (p == null || p === '') return TEAMS_DEFAULT_PAGE_SIZE
+        if (p == null || p === '') return GRID_DEFAULT_PAGE_SIZE
         const n = Number(p)
-        return Number.isInteger(n) && n >= 1 ? n : TEAMS_DEFAULT_PAGE_SIZE
+        return Number.isInteger(n) && n >= 1 ? n : GRID_DEFAULT_PAGE_SIZE
       })()
       const teamsQueryParam = url.searchParams.get('teamsQuery')
       const teamsFilterMap = queryParamToMap(teamsQueryParam)

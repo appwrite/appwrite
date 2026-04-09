@@ -342,10 +342,13 @@ export function buildFilterTagFromCompactKey(
 ): FilterTagValue {
   const col = columns.find((c) => c.id === key.c)
   if (!col) {
-    const val = key.v
-    const value: string | number | string[] =
-      typeof val === 'boolean' ? String(val) : (val ?? '')
-    return { tag: `**${key.c}** ${key.o}`, value }
+    const opDef = FILTER_OPERATORS.find((o) => o.key === key.o)
+    const opLabel = opDef?.label ?? key.o
+    let tagDisplayVal = ''
+    if (key.v !== undefined && key.v !== '') {
+      tagDisplayVal = Array.isArray(key.v) ? key.v.join(', ') : String(key.v)
+    }
+    return buildFilterTag(String(key.c), opLabel, tagDisplayVal || undefined)
   }
   const ops = getOperatorsForType(col.type)
   const op = ops.find((o) => o.key === key.o)

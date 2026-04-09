@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet, useLocation } from '@tanstack/react-router'
 import { useState, useEffect, useRef } from 'react'
+import { CloudStatusBanner } from '@/components/global/layout/CloudStatusBanner'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { PausedProjectCurtain } from '@/components/global/layout/PausedProjectCurtain'
 import { KeyboardShortcutsProvider } from '@/components/global/providers/KeyboardShortcuts'
@@ -12,18 +13,86 @@ import {
   fetchProject,
   organizationPlanQueryOptions,
   organizationScopesQueryOptions,
+  organizationsQueryOptions,
   useProject,
 } from '@/lib/react-query/hooks'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { consoleVariablesQueryOptions } from '@/lib/react-query/hooks/console-variables'
 import { ErrorComponent } from '@/components/error/Component'
+import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
 import { reportConsoleAccess } from '@/lib/appwrite/console-access'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 
+/** Tab segment for routes under `.../tables/:tableId/<tab>` or `.../collections/:id/<tab>` */
+const DATABASE_TABLE_VIEW_TABS = new Set([
+  'rows',
+  'documents',
+  'columns',
+  'indexes',
+  'security',
+  'settings',
+  'visualizer',
+  'monitor',
+  'insights',
+  'backups',
+  'export-import',
+  'db-security',
+  'db-settings',
+  'json',
+])
+
+/**
+ * Resolves the `<tab>` segment for database table routes.
+ * - Current: /projects/:p/databases/:dbKind/:databaseId/tables/:tableId/:tab
+ * - Legacy: /projects/:p/databases/:databaseId/tables/:tableId/:tab
+ */
+function getDatabaseTablesRouteTab(pathParts: string[]): string | undefined {
+  if (pathParts[3] !== 'databases') return undefined
+  if (pathParts.length >= 8 && pathParts[5] === 'tables') {
+    const tab = pathParts[7]
+    if (tab && DATABASE_TABLE_VIEW_TABS.has(tab)) return tab
+  }
+  if (pathParts.length >= 9 && pathParts[6] === 'tables') {
+    const tab = pathParts[8]
+    if (tab && DATABASE_TABLE_VIEW_TABS.has(tab)) return tab
+  }
+  if (pathParts.length >= 9 && pathParts[6] === 'collections') {
+    const tab = pathParts[8]
+    if (tab && DATABASE_TABLE_VIEW_TABS.has(tab)) return tab
+  }
+  return undefined
+}
+
+/** Routes like /databases/:dbKind/:databaseId/visualizer (not under tables/collections). */
+const DATABASE_LEVEL_LAYOUT_SEGMENTS = new Set([
+  'visualizer',
+  'monitor',
+  'backups',
+  'export-import',
+  'insights',
+  'db-security',
+  'browser',
+  'security',
+  'settings',
+])
+
+function getDatabaseLevelLayoutSegment(
+  pathParts: string[],
+): string | undefined {
+  if (pathParts[3] !== 'databases') return undefined
+  if (pathParts.length >= 7 && pathParts[6]) {
+    const seg = pathParts[6]
+    if (DATABASE_LEVEL_LAYOUT_SEGMENTS.has(seg)) return seg
+  }
+  return undefined
+}
+
 /** Loader return: project data for first paint (avoids layout shift for paused curtain). */
-export type ProjectLayoutLoaderData = {
-  project: { $id: string; teamId: string; status?: string }
-} | undefined
+export type ProjectLayoutLoaderData =
+  | {
+      project: { $id: string; teamId: string; status?: string }
+    }
+  | undefined
 
 export const Route = createFileRoute('/_public/projects/$projectId')({
   loader: async ({ params, context }): Promise<ProjectLayoutLoaderData> => {
@@ -40,11 +109,17 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
     // Fetch project data (needed for header/sidebar and paused curtain) - CRITICAL: blocks navigation until ready
     // Use ensureQueryData to avoid duplicate calls and handle auth errors gracefully
     try {
-      const projectData = await queryClient.ensureQueryData({
-        queryKey: ['project', projectId],
-        queryFn: () => fetchProject(projectId),
-        staleTime: 5 * 60 * 1000, // 5 minutes
-      })
+      const [projectData] = await Promise.all([
+        queryClient.ensureQueryData({
+          queryKey: ['project', projectId],
+          queryFn: () => fetchProject(projectId),
+          staleTime: 5 * 60 * 1000, // 5 minutes
+        }),
+        // Header ProjectSelector uses useOrganizations; prefetch so navigation does not flash skeleton
+        queryClient
+          .ensureQueryData(organizationsQueryOptions())
+          .catch(() => {}),
+      ])
 
       // Fetch organization plan if we have a teamId (critical for header/limit checking)
       if (projectData?.teamId) {
@@ -53,9 +128,7 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
           .catch(() => {})
         if (getActiveProfileFeatures().orgRoles) {
           await queryClient
-            .ensureQueryData(
-              organizationScopesQueryOptions(projectData.teamId),
-            )
+            .ensureQueryData(organizationScopesQueryOptions(projectData.teamId))
             .catch(() => {})
         }
       }
@@ -87,45 +160,41 @@ function ProjectLayout() {
   const { projectId } = Route.useParams()
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [hidePausedCurtain, setHidePausedCurtain] = useState(false)
   const loaderData = Route.useLoaderData() as ProjectLayoutLoaderData
-  const { project, isLoading: isProjectLoading, error: projectError } =
-    useProject(projectId)
+  const {
+    project,
+    isLoading: isProjectLoading,
+    error: projectError,
+  } = useProject(projectId)
   const { features } = useConsoleProfile()
 
   // Use loader data for first paint so paused curtain shows immediately (no layout shift)
   const projectForPaused =
-    loaderData?.project ?? (project ? { $id: project.$id, teamId: project.teamId, status: project.status } : null)
+    loaderData?.project ??
+    (project
+      ? { $id: project.$id, teamId: project.teamId, status: project.status }
+      : null)
+  const isPausedFromProject = project?.status === 'paused'
+  const isPausedFromLoader =
+    !project && loaderData?.project?.status === 'paused'
   const isPaused =
-    (loaderData?.project?.status === 'paused') ||
-    (!isProjectLoading && project?.status === 'paused')
+    (isPausedFromProject || isPausedFromLoader) && !hidePausedCurtain
 
-  // Extract active section from pathname
+  // Extract active section from pathname (leading empty segment from split)
   const pathParts = location.pathname.split('/')
   const activeSection = pathParts[3] || 'overview'
 
-  // Check if we're in a database table view (rows, columns, indexes, security, settings, visualizer, insights, backups, export-import, db-security, db-settings)
-  // Pattern: /projects/:projectId/databases/:databaseId/tables/:tableId/<tab>
+  const databaseTablesRouteTab = getDatabaseTablesRouteTab(pathParts)
+  const databaseLevelLayoutSegment = getDatabaseLevelLayoutSegment(pathParts)
+
   const isDatabaseSpreadsheetView =
     activeSection === 'databases' &&
-    pathParts.length >= 8 &&
-    pathParts[5] === 'tables' &&
-    [
-      'rows',
-      'columns',
-      'indexes',
-      'security',
-      'settings',
-      'visualizer',
-      'insights',
-      'backups',
-      'export-import',
-      'db-security',
-      'db-settings',
-    ].includes(pathParts[7])
+    (databaseTablesRouteTab != null || databaseLevelLayoutSegment != null)
 
-  // Visualizer is now under tables/:tableId/visualizer; keep for backwards compatibility with redirect
   const isDatabaseVisualizerView =
-    isDatabaseSpreadsheetView && pathParts[7] === 'visualizer'
+    databaseTablesRouteTab === 'visualizer' ||
+    databaseLevelLayoutSegment === 'visualizer'
 
   // Functions local code editor (Monaco)
   const isFunctionsEditorView =
@@ -152,7 +221,7 @@ function ProjectLayout() {
     pathParts.length >= 6 &&
     pathParts[5] === 'logs'
 
-  // Hide footer for usage view, database spreadsheet view, visualizer, function executions tab, site logs tab, and functions editor
+  // Hide footer for usage view, database spreadsheet / level tabs (incl. monitor, visualizer), function executions tab, site logs tab, and functions editor
   const hideFooter =
     isDatabaseSpreadsheetView ||
     isDatabaseVisualizerView ||
@@ -167,11 +236,24 @@ function ProjectLayout() {
     setSidebarOpen(false)
   }, [location.pathname])
 
+  // If project state is paused again, allow the curtain to show.
+  useEffect(() => {
+    if (project?.status === 'paused') {
+      setHidePausedCurtain(false)
+    }
+  }, [project?.status])
+
   // Keep project active: report console access when layout loads (cloud, non-paused). Fire-and-forget; backend has 6-day cooldown.
   // Dedupe: only one call per projectId per mount (avoids double call from Strict Mode or dependency updates).
   const reportedConsoleAccessForRef = useRef<string | null>(null)
   useEffect(() => {
-    if (typeof window === 'undefined' || !projectId || isPaused || !features.billing) return
+    if (
+      typeof window === 'undefined' ||
+      !projectId ||
+      isPaused ||
+      !features.billing
+    )
+      return
     if (reportedConsoleAccessForRef.current === projectId) return
     reportedConsoleAccessForRef.current = projectId
     reportConsoleAccess(projectId)
@@ -215,14 +297,21 @@ function ProjectLayout() {
         : new Error(errorMessage || 'Project error occurred')
 
     return (
-      <ErrorComponent
-        error={errorObj}
-        info={undefined}
-        reset={() => {
-          // Refetch project on reset
-          window.location.reload()
-        }}
-      />
+      <div className="org-layout-container flex h-full flex-col bg-background">
+        <div className="sticky top-0 z-[110] flex shrink-0 flex-col bg-background">
+          <CloudStatusBanner />
+          <ConsoleImpersonationBanner />
+        </div>
+        <main className="min-h-0 flex-1 overflow-y-auto">
+          <ErrorComponent
+            error={errorObj}
+            info={undefined}
+            reset={() => {
+              window.location.reload()
+            }}
+          />
+        </main>
+      </div>
     )
   }
 
@@ -232,6 +321,7 @@ function ProjectLayout() {
         <PausedProjectCurtain
           projectId={projectForPaused.$id}
           teamId={projectForPaused.teamId}
+          onRestoreSuccess={() => setHidePausedCurtain(true)}
         />
       )}
       <SessionMigrationsProvider>

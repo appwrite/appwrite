@@ -1,0 +1,201 @@
+import { redirect } from '@tanstack/react-router'
+import {
+  type DatabaseRouteKind,
+  usesCollectionsPath,
+} from '@/lib/database-routes'
+
+type RedirectOptions = {
+  to: string
+  params: Record<string, string>
+  search?: Record<string, unknown> | true
+}
+
+/**
+ * Canonical paths for database-wide tabs (same URL for tablesdb, documentsdb, vectorsdb).
+ * Not nested under /tables/:id or /collections/:id.
+ */
+export const DATABASE_LEVEL_TAB_PATH = {
+  visualizer: '/projects/$projectId/databases/$dbKind/$databaseId/visualizer',
+  backups: '/projects/$projectId/databases/$dbKind/$databaseId/backups',
+  'export-import':
+    '/projects/$projectId/databases/$dbKind/$databaseId/export-import',
+  insights: '/projects/$projectId/databases/$dbKind/$databaseId/insights',
+  monitor: '/projects/$projectId/databases/$dbKind/$databaseId/monitor',
+  'db-security': '/projects/$projectId/databases/$dbKind/$databaseId/db-security',
+  'db-settings': '/projects/$projectId/databases/$dbKind/$databaseId/settings',
+} as const
+
+export type DatabaseLevelTab = keyof typeof DATABASE_LEVEL_TAB_PATH
+
+function isDatabaseLevelTab(tab: string): tab is DatabaseLevelTab {
+  return Object.prototype.hasOwnProperty.call(DATABASE_LEVEL_TAB_PATH, tab)
+}
+
+/**
+ * In `tables/...` route loaders: send Documents DB / Vectors DB traffic to the
+ * native `collections/...` URLs.
+ */
+export function throwRedirectIfCollectionsLayout(
+  dbKind: string,
+  options: RedirectOptions,
+): void {
+  if (!usesCollectionsPath(dbKind as DatabaseRouteKind)) return
+  throw redirect({
+    to: options.to,
+    params: options.params,
+    ...(options.search !== undefined ? { search: options.search } : {}),
+    replace: true,
+  })
+}
+
+/**
+ * In `collections/...` route loaders: Tables DB must keep `tables/...` URLs.
+ */
+export function throwRedirectIfTablesLayout(
+  dbKind: string,
+  options: RedirectOptions,
+): void {
+  if (dbKind !== 'tablesdb') return
+  throw redirect({
+    to: options.to,
+    params: options.params,
+    ...(options.search !== undefined ? { search: options.search } : {}),
+    replace: true,
+  })
+}
+
+const COLLECTIONS_TO_TABLES_ROUTE: Record<
+  | 'dataGrid'
+  | 'dataJson'
+  | 'indexes'
+  | 'security'
+  | 'settings'
+  | 'columns',
+  string
+> = {
+  dataGrid:
+    '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/rows',
+  dataJson:
+    '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/documents',
+  indexes:
+    '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/indexes',
+  security:
+    '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/security',
+  settings:
+    '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/settings',
+  columns:
+    '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/columns',
+}
+
+type DbIdParams = {
+  projectId: string
+  dbKind: string
+  databaseId: string
+  collectionId: string
+}
+
+export type CrossLayoutRedirectTab =
+  | keyof typeof COLLECTIONS_TO_TABLES_ROUTE
+  | DatabaseLevelTab
+
+/** Call at the start of `collections/...` route loaders when the URL must be tables-only. */
+export function throwRedirectTablesDbFromCollectionsChild(
+  dbKind: string,
+  tab: CrossLayoutRedirectTab,
+  p: DbIdParams,
+): void {
+  if (isDatabaseLevelTab(tab)) {
+    throw redirect({
+      to: DATABASE_LEVEL_TAB_PATH[tab],
+      params: {
+        projectId: p.projectId,
+        dbKind: p.dbKind,
+        databaseId: p.databaseId,
+      },
+      replace: true,
+    })
+  }
+  if (dbKind !== 'tablesdb') return
+  throw redirect({
+    to: COLLECTIONS_TO_TABLES_ROUTE[tab],
+    params: {
+      projectId: p.projectId,
+      dbKind: p.dbKind,
+      databaseId: p.databaseId,
+      tableId: p.collectionId,
+    },
+    replace: true,
+  })
+}
+
+const TABLES_TO_COLLECTIONS_ROUTE: Record<
+  | 'dataGrid'
+  | 'dataJson'
+  | 'indexes'
+  | 'security'
+  | 'settings'
+  | 'columns',
+  string
+> = {
+  dataGrid:
+    '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/documents',
+  dataJson:
+    '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/documents',
+  indexes:
+    '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/indexes',
+  security:
+    '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/security',
+  settings:
+    '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/settings',
+  columns:
+    '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/columns',
+}
+
+type TableIdParams = {
+  projectId: string
+  dbKind: string
+  databaseId: string
+  tableId: string
+}
+
+/** Call at the start of `tables/...` route loaders for Documents / Vectors DB. */
+export function throwRedirectCollectionsDbFromTablesChild(
+  dbKind: string,
+  tab: CrossLayoutRedirectTab,
+  p: TableIdParams,
+): void {
+  if (isDatabaseLevelTab(tab)) {
+    throw redirect({
+      to: DATABASE_LEVEL_TAB_PATH[tab],
+      params: {
+        projectId: p.projectId,
+        dbKind: p.dbKind,
+        databaseId: p.databaseId,
+      },
+      replace: true,
+    })
+  }
+  if (tab === 'dataJson' && dbKind === 'vectorsdb') {
+    throw redirect({
+      to: TABLES_TO_COLLECTIONS_ROUTE.dataGrid,
+      params: {
+        projectId: p.projectId,
+        dbKind: p.dbKind,
+        databaseId: p.databaseId,
+        collectionId: p.tableId,
+      },
+      replace: true,
+    })
+  }
+  if (dbKind !== 'documentsdb' && dbKind !== 'vectorsdb') return
+  throw redirect({
+    to: TABLES_TO_COLLECTIONS_ROUTE[tab],
+    params: {
+      projectId: p.projectId,
+      dbKind: p.dbKind,
+      databaseId: p.databaseId,
+      collectionId: p.tableId,
+    },
+    replace: true,
+  })
+}

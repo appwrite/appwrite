@@ -32,7 +32,7 @@ import {
   organizationBillingAggregationQueryOptions,
 } from '@/lib/react-query/hooks'
 import { DEFAULT_BILLING_PROJECTS_LIMIT } from '@/lib/react-query/hooks/constants'
-import { getPlanNameFromTier } from '@/lib/utils/plan-filter'
+import { resolveOrganizationPlanDisplayLabel } from '@/lib/utils/plan-filter'
 import { Link } from '@tanstack/react-router'
 import { Pagination } from '@/components/global/shared/Pagination'
 
@@ -62,6 +62,7 @@ interface ResourceItem {
   limit: number | null
   cost: number
   formatType: 'bytes' | 'number' | 'sms'
+  showLimit?: boolean
 }
 
 export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
@@ -138,11 +139,12 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
 
   // Get plan name from plan object
   const planName = useMemo(() => {
-    if (!plan || !plan.name) {
-      if (!organization) return 'Free'
-      return getPlanNameFromTier(organization.billingPlan)
-    }
-    return plan.name
+    if (!organization) return 'Free'
+    return resolveOrganizationPlanDisplayLabel({
+      billingPlan: organization.billingPlan,
+      planName: plan?.name ?? null,
+      planId: plan?.$id,
+    })
   }, [plan, organization])
 
   // Get next plan if downgrade is scheduled
@@ -321,6 +323,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
           name: string
           format: 'bytes' | 'number' | 'sms'
           planKey: string
+          showLimit?: boolean
         }
       > = {
         bandwidth: {
@@ -365,11 +368,36 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
           format: 'number',
           planKey: 'imageTransformations',
         },
+        screenshotsGenerated: {
+          key: 'screenshotsGenerated',
+          name: 'Screenshots generated',
+          format: 'number',
+          planKey: 'screenshotsGenerated',
+        },
         GBHours: {
           key: 'gbHours',
           name: 'GB-hours',
           format: 'number',
           planKey: 'gbHours',
+        },
+        realtime: {
+          key: 'realtime',
+          name: 'Realtime connections',
+          format: 'number',
+          planKey: 'realtime',
+        },
+        realtimeMessages: {
+          key: 'realtimeMessages',
+          name: 'Realtime messages',
+          format: 'number',
+          planKey: 'realtimeMessages',
+        },
+        realtimeBandwidth: {
+          key: 'realtimeBandwidth',
+          name: 'Realtime bandwidth',
+          format: 'bytes',
+          planKey: 'realtimeBandwidth',
+          showLimit: false,
         },
         authPhone: {
           key: 'authPhone',
@@ -402,7 +430,11 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
           databaseReads: 'databasesReads',
           databaseWrites: 'databasesWrites',
           imageTransformations: 'imageTransformations',
+          screenshotsGenerated: 'screenshotsGenerated',
           authPhone: 'authPhone',
+          realtime: 'realtime',
+          realtimeMessages: 'realtimeMessages',
+          realtimeBandwidth: 'realtimeBandwidth',
         }
 
         const planProperty = planPropertyMap[planKey] || planKey
@@ -427,36 +459,49 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
         return numValue
       }
 
-      // Process each resource type from the aggregation
-      Object.entries(resourceIdMap).forEach(
-        ([resourceId, { name, format, planKey }]) => {
-          const resource = getResourceByResourceId(resourceId)
-
-          // Get usage from resource.value (aggregation format)
-          const usage =
-            resource?.value !== undefined ? Number(resource.value) : 0
-
-          // Get limit from plan
-          const limit = getPlanLimit(planKey)
-
-          // Get cost from resource.amount if available
-          const cost =
-            resource?.amount !== undefined ? Number(resource.amount) : 0
-
-          // Always show the resource if it exists in aggregation or if plan has a limit
-          // This matches the old UI which shows all resources
-          if (resource || limit !== null) {
-            resources.push({
-              name,
-              usage,
-              limit,
-              cost,
-              formatType: format,
-            })
-            projectTotal += cost
-          }
-        },
+      // Keep the API resource order first, then append known resources that are not present.
+      const apiOrderedResourceIds = projectResources
+        .map((resource: unknown) => resource?.resourceId)
+        .filter(
+          (resourceId: unknown): resourceId is string =>
+            typeof resourceId === 'string' && resourceId.length > 0,
+        )
+      const orderedResourceIds = Array.from(
+        new Set([...apiOrderedResourceIds, ...Object.keys(resourceIdMap)]),
       )
+
+      // Process each resource type from the aggregation
+      orderedResourceIds.forEach((resourceId) => {
+        const mappedResource = resourceIdMap[resourceId]
+        if (!mappedResource) return
+
+        const { name, format, planKey, showLimit = true } = mappedResource
+        const resource = getResourceByResourceId(resourceId)
+
+        // Get usage from resource.value (aggregation format)
+        const usage = resource?.value !== undefined ? Number(resource.value) : 0
+
+        // Get limit from plan
+        const limit = getPlanLimit(planKey)
+
+        // Get cost from resource.amount if available
+        const cost =
+          resource?.amount !== undefined ? Number(resource.amount) : 0
+
+        // Always show the resource if it exists in aggregation or if plan has a limit
+        // This matches the old UI which shows all resources
+        if (resource || limit !== null) {
+          resources.push({
+            name,
+            usage,
+            limit,
+            cost,
+            formatType: format,
+            showLimit,
+          })
+          projectTotal += cost
+        }
+      })
 
       return {
         projectId: project.projectId || project.$id || project.id,
@@ -573,8 +618,10 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
 
         <div
           className={cn(
-            'overflow-hidden transition-all duration-200',
-            expanded ? 'max-h-[2000px]' : 'max-h-0',
+            'transition-all duration-200',
+            expanded
+              ? 'max-h-none overflow-visible'
+              : 'max-h-0 overflow-hidden',
           )}
         >
           <div className="border-t border-border px-6 py-4 space-y-4">
@@ -731,9 +778,11 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
 
                                     {/* Usage/limit text - flexible; when plan has 0 included quota, show count only */}
                                     <span className="text-[11px] text-muted-foreground whitespace-nowrap flex-1 min-w-0">
-                                      {resource.limit === 0
+                                      {!resource.showLimit
                                         ? usageFormatted
-                                        : `${usageFormatted} / ${limitFormatted}`}
+                                        : resource.limit === 0
+                                          ? usageFormatted
+                                          : `${usageFormatted} / ${limitFormatted}`}
                                     </span>
 
                                     {/* Cost - right aligned to match parent prices */}
@@ -770,13 +819,14 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                       pageSize={pageLimit}
                       onPageChange={(page) => {
                         navigate({
-                          search: (prev: unknown) => ({
-                            ...(typeof prev === 'object' && prev !== null
-                              ? (prev as Record<string, unknown>)
-                              : {}),
-                            page,
-                            limit: pageLimit,
-                          }) as never,
+                          search: (prev: unknown) =>
+                            ({
+                              ...(typeof prev === 'object' && prev !== null
+                                ? (prev as Record<string, unknown>)
+                                : {}),
+                              page,
+                              limit: pageLimit,
+                            }) as never,
                         })
                       }}
                       onPageSizeChange={() => {}}

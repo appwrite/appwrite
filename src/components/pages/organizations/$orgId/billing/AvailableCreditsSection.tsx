@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Plus, Ticket, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { formatCurrency, formatDate } from './utils'
@@ -14,7 +15,7 @@ import {
 import {
   useOrganizationById,
   useOrganizationPlan,
-  useOrganizationCredits,
+  organizationCreditsQueryOptions,
 } from '@/lib/react-query/hooks'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -49,16 +50,51 @@ export function AvailableCreditsSection({
   onAddCredits,
   orgId,
 }: AvailableCreditsSectionProps) {
-  const [currentPage, setCurrentPage] = useState(0)
+  const [requestedPage, setRequestedPage] = useState(0)
+  const [displayedPage, setDisplayedPage] = useState(0)
   const { isLoading: orgLoading } = useOrganizationById(orgId)
   const { plan, isLoading: planLoading } = useOrganizationPlan(orgId)
-  const {
-    credits,
-    total: creditsTotal,
-    isLoading: creditsLoading,
-  } = useOrganizationCredits(orgId, currentPage, ITEMS_PER_PAGE)
 
-  const isLoading = orgLoading || planLoading || creditsLoading
+  // Fetch requested page (user intent)
+  const {
+    data: requestedCreditsData,
+    isFetching: requestedCreditsFetching,
+    error: requestedCreditsError,
+  } = useQuery(
+    organizationCreditsQueryOptions(orgId, requestedPage, ITEMS_PER_PAGE),
+  )
+
+  // Fetch displayed page (what user currently sees)
+  const {
+    data: displayedCreditsData,
+    isLoading: displayedCreditsLoading,
+    error: displayedCreditsError,
+  } = useQuery(
+    organizationCreditsQueryOptions(orgId, displayedPage, ITEMS_PER_PAGE),
+  )
+
+  // Keep current page visible until requested page data is ready
+  useEffect(() => {
+    if (
+      requestedPage !== displayedPage &&
+      !requestedCreditsFetching &&
+      requestedCreditsData
+    ) {
+      setDisplayedPage(requestedPage)
+    }
+  }, [
+    requestedPage,
+    displayedPage,
+    requestedCreditsFetching,
+    requestedCreditsData,
+  ])
+
+  const credits = displayedCreditsData?.credits || []
+  const creditsTotal = displayedCreditsData?.total || 0
+  const isPageTransitioning =
+    requestedPage !== displayedPage && requestedCreditsFetching
+
+  const isLoading = orgLoading || planLoading || displayedCreditsLoading
 
   // Check if credits are supported
   const areCreditsSupported = plan?.credits !== false
@@ -105,17 +141,19 @@ export function AvailableCreditsSection({
       })
   }, [credits])
 
-  const totalPages = Math.ceil(creditsTotal / ITEMS_PER_PAGE)
+  const totalPages = Math.max(1, Math.ceil(creditsTotal / ITEMS_PER_PAGE))
 
   const goToNextPage = () => {
-    if (currentPage < totalPages - 1) {
-      setCurrentPage(currentPage + 1)
+    if (isPageTransitioning) return
+    if (displayedPage < totalPages - 1) {
+      setRequestedPage((prev) => Math.min(totalPages - 1, prev + 1))
     }
   }
 
   const goToPrevPage = () => {
-    if (currentPage > 0) {
-      setCurrentPage(currentPage - 1)
+    if (isPageTransitioning) return
+    if (displayedPage > 0) {
+      setRequestedPage((prev) => Math.max(0, prev - 1))
     }
   }
 
@@ -156,6 +194,24 @@ export function AvailableCreditsSection({
   }
 
   const hasCredits = totalAvailableCredit > 0
+
+  if (displayedCreditsError || requestedCreditsError) {
+    const error = displayedCreditsError || requestedCreditsError
+    return (
+      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+        <div className="px-6 py-4">
+          <h3 className="text-[15px] font-semibold text-foreground">
+            Available Credits
+          </h3>
+        </div>
+        <div className="border-t border-border px-6 py-12 text-center">
+          <p className="text-[13px] text-muted-foreground">
+            {error instanceof Error ? error.message : 'Failed to load credits'}
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
@@ -316,9 +372,9 @@ export function AvailableCreditsSection({
           {totalPages > 1 && (
             <div className="flex items-center justify-between border-t border-border px-6 py-3">
               <span className="text-[12px] text-muted-foreground">
-                Showing {currentPage * ITEMS_PER_PAGE + 1}–
-                {Math.min((currentPage + 1) * ITEMS_PER_PAGE, creditsTotal)} of{' '}
-                {creditsTotal}
+                Showing {displayedPage * ITEMS_PER_PAGE + 1}–
+                {Math.min((displayedPage + 1) * ITEMS_PER_PAGE, creditsTotal)}{' '}
+                of {creditsTotal}
               </span>
               <div className="flex items-center gap-1">
                 <Button
@@ -326,19 +382,21 @@ export function AvailableCreditsSection({
                   size="sm"
                   className="h-7 w-7 p-0"
                   onClick={goToPrevPage}
-                  disabled={currentPage === 0}
+                  disabled={displayedPage === 0 || isPageTransitioning}
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
                 <span className="text-[12px] text-muted-foreground px-2">
-                  {currentPage + 1} / {totalPages}
+                  {displayedPage + 1} / {totalPages}
                 </span>
                 <Button
                   variant="ghost"
                   size="sm"
                   className="h-7 w-7 p-0"
                   onClick={goToNextPage}
-                  disabled={currentPage === totalPages - 1}
+                  disabled={
+                    displayedPage === totalPages - 1 || isPageTransitioning
+                  }
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>

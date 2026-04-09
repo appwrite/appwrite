@@ -98,7 +98,7 @@ const ICONS = {
 
 const SEARCH_PLACEHOLDERS: Record<ResourceIdType, string> = {
   database: 'Search databases...',
-  table: 'Search tables...',
+    table: 'Search',
   bucket: 'Search buckets...',
   file: 'Search files...',
   row: 'Search rows...',

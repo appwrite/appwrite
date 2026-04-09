@@ -7,6 +7,7 @@ import {
   Search,
   Plus,
   ShoppingCart,
+  ArrowLeftRight,
 } from 'lucide-react'
 import {
   useOrganizationDomains,
@@ -56,13 +57,14 @@ import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { CreateDomainDialog } from './CreateDomain'
 import { RetryVerification } from './RetryVerification'
+import { DomainContextMenu } from './_components/DomainContextMenu'
 import type { Models } from '@appwrite.io/console'
 import {
   useCreateOrganizationDomain,
   useDeleteOrganizationDomain,
   useRetryDomainVerification,
 } from '@/lib/react-query/hooks'
-import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 
 type DomainsListSearch = {
   search?: string
@@ -95,10 +97,31 @@ export function View() {
       parseSort(search.sort as string | undefined) ??
       getSort(url) ??
       defaultDomainsSort
+    // Prefer router search state (updated by navigate()) over URL so page size change takes effect even if URL lags
+    const pageFromSearch =
+      search.page != null
+        ? typeof search.page === 'number'
+          ? search.page
+          : Number(search.page)
+        : undefined
+    const limitFromSearch =
+      search.limit != null
+        ? typeof search.limit === 'number'
+          ? search.limit
+          : Number(search.limit)
+        : undefined
+    const page =
+      Number.isInteger(pageFromSearch) && (pageFromSearch ?? 0) >= 1
+        ? pageFromSearch!
+        : getPage(url, 1)
+    const limit =
+      Number.isInteger(limitFromSearch) && (limitFromSearch ?? 0) >= 1
+        ? limitFromSearch!
+        : getLimit(url, GRID_DEFAULT_PAGE_SIZE)
     return {
       search: getSearch(url) ?? (search.search as string | undefined),
-      page: getPage(url, 1),
-      limit: getLimit(url, DEFAULT_PAGE_SIZE),
+      page,
+      limit,
       filterMap: queryParamToMap(
         getQueryParam(url) ?? (search.query as string | undefined) ?? null,
       ),
@@ -108,7 +131,7 @@ export function View() {
   }, [isDomainsIndex, search, location.pathname, location.search, orgId])
 
   const urlPage = domainsListParams?.page ?? 1
-  const urlLimit = domainsListParams?.limit ?? DEFAULT_PAGE_SIZE
+  const urlLimit = domainsListParams?.limit ?? GRID_DEFAULT_PAGE_SIZE
   const urlSearch = domainsListParams?.search
   const urlSortBy = domainsListParams?.sortBy ?? DOMAINS_DEFAULT_SORT_BY
   const urlSortOrder =
@@ -232,6 +255,7 @@ export function View() {
               : undefined,
         })
         const next = { ...prev, ...built }
+        if (params.page === 1) delete next.page
         if (hasQueryKey && params.query === undefined) delete next.query
         if (
           hasSearchKey &&
@@ -597,6 +621,19 @@ export function View() {
             className="h-9 gap-1.5 text-[13px] font-medium"
           >
             <Link
+              to="/organizations/$orgId/domains/transfer-in"
+              params={{ orgId: orgId! }}
+            >
+              <ArrowLeftRight className="h-4 w-4" />
+              Transfer in
+            </Link>
+          </Button>
+          <Button
+            variant="outline"
+            asChild
+            className="h-9 gap-1.5 text-[13px] font-medium"
+          >
+            <Link
               to="/organizations/$orgId/domains/buy"
               params={{ orgId: orgId! }}
             >
@@ -628,43 +665,48 @@ export function View() {
               {paginatedDomains.map((domain) => {
                 const verification = getVerificationStatus(domain)
                 return (
-                  <Link
+                  <DomainContextMenu
                     key={domain.$id}
-                    to="/organizations/$orgId/domains/$domainId"
-                    params={{ orgId, domainId: domain.$id }}
+                    orgId={orgId!}
+                    domain={domain}
                   >
-                    <ResourceCard
-                      title={domain.domain}
-                      resourceId={domain.$id}
-                      icon={Globe}
-                      iconColor="bg-muted text-muted-foreground"
-                      status={
-                        verification.status === 'verified'
-                          ? 'success'
-                          : 'warning'
-                      }
-                      statusLabel={verification.label}
-                      metadata={[
-                        {
-                          label: 'Nameservers',
-                          value: (
-                            <span className="text-[11px] font-medium text-muted-foreground">
-                              {domain.nameservers || '—'}
-                            </span>
-                          ),
-                        },
-                        {
-                          label: 'Created',
-                          value: (
-                            <DateTooltip
-                              date={domain.$createdAt}
-                              className="text-[11px] font-medium text-muted-foreground"
-                            />
-                          ),
-                        },
-                      ]}
-                    />
-                  </Link>
+                    <Link
+                      to="/organizations/$orgId/domains/$domainId"
+                      params={{ orgId, domainId: domain.$id }}
+                    >
+                      <ResourceCard
+                        title={domain.domain}
+                        resourceId={domain.$id}
+                        icon={Globe}
+                        iconColor="bg-muted text-muted-foreground"
+                        status={
+                          verification.status === 'verified'
+                            ? 'success'
+                            : 'warning'
+                        }
+                        statusLabel={verification.label}
+                        metadata={[
+                          {
+                            label: 'Nameservers',
+                            value: (
+                              <span className="text-[11px] font-medium text-muted-foreground">
+                                {domain.nameservers || '—'}
+                              </span>
+                            ),
+                          },
+                          {
+                            label: 'Created',
+                            value: (
+                              <DateTooltip
+                                date={domain.$createdAt}
+                                className="text-[11px] font-medium text-muted-foreground"
+                              />
+                            ),
+                          },
+                        ]}
+                      />
+                    </Link>
+                  </DomainContextMenu>
                 )
               })}
             </div>
@@ -673,7 +715,7 @@ export function View() {
                 currentPage={displayedPage}
                 totalItems={paginationTotal}
                 pageSize={urlLimit}
-                pageSizeOptions={[10, 25, 50, 100]}
+                pageSizeOptions={[12, 18, 36, 72]}
                 onPageChange={handlePageChange}
                 onPageSizeChange={handlePageSizeChange}
                 itemLabel="domains"

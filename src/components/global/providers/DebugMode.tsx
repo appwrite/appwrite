@@ -5,6 +5,7 @@ import {
   useEffect,
   ReactNode,
 } from 'react'
+import { shouldSuppressGlobalShortcuts } from '@/lib/global-shortcut-suppress'
 
 interface DebugModeContextValue {
   isDebugModeOpen: boolean
@@ -28,10 +29,7 @@ export function DebugModeProvider({ children }: DebugModeProviderProps) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Toggle visibility when "." is pressed (not in an input field)
-      if (
-        e.key === '.' &&
-        !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)
-      ) {
+      if (e.key === '.' && !shouldSuppressGlobalShortcuts(e.target)) {
         setIsDebugModeOpen((prev) => !prev)
       }
     }

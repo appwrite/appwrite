@@ -3,6 +3,8 @@
  * Aligned with Supabase-style compute add-ons.
  */
 
+import { DatabaseType } from '@appwrite.io/console'
+
 export type SpecOption = {
   id: string
   label: string
@@ -77,3 +79,33 @@ export const TABLE_DB_SPEC_OPTIONS: SpecOption[] = [
     comingSoon: true,
   },
 ]
+
+/** Default tier for Tables DB until the API exposes `spec` on the database model. */
+export const DEFAULT_TABLES_MONITOR_SPEC_ID = 'shared' as const
+
+/**
+ * Effective spec id for monitor / capacity UI. Pass `apiSpecId` when the backend adds it.
+ * Documents and vectors databases are modeled as dedicated compute (no shared tier).
+ */
+export function getEffectiveDatabaseSpecIdForMonitoring(
+  databaseType: DatabaseType,
+  apiSpecId?: string | null,
+): string {
+  if (apiSpecId && apiSpecId.trim() !== '') return apiSpecId.trim()
+  if (databaseType === DatabaseType.Tablesdb) return DEFAULT_TABLES_MONITOR_SPEC_ID
+  return 'micro'
+}
+
+/** Serverless here means Tables DB on the shared tier (pay-per-operation, no fixed CPU/RAM). */
+export function isServerlessDatabaseMonitoring(
+  databaseType: DatabaseType,
+  specId: string,
+): boolean {
+  return (
+    databaseType === DatabaseType.Tablesdb && specId === DEFAULT_TABLES_MONITOR_SPEC_ID
+  )
+}
+
+export function getSpecOptionById(specId: string): SpecOption | undefined {
+  return TABLE_DB_SPEC_OPTIONS.find((s) => s.id === specId)
+}

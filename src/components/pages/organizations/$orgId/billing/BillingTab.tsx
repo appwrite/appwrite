@@ -15,7 +15,7 @@ import { BillingAlertsSection } from './BillingAlertsSection'
 import { AvailableCreditsSection } from './AvailableCreditsSection'
 import {
   useOrganizationById,
-  usePaymentMethod,
+  useOrganizationPaymentMethod,
   useRetryInvoicePayment,
 } from '@/lib/react-query/hooks'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -49,9 +49,12 @@ export function BillingTab() {
   // Fetch organization data for alerts
   const { organization, isLoading: orgLoading } = useOrganizationById(orgId)
 
-  // Fetch payment methods for alert checking
-  const primaryPaymentMethod = usePaymentMethod(organization?.paymentMethodId)
-  usePaymentMethod(organization?.backupPaymentMethodId)
+  // Fetch payment methods for alert checking (org-scoped so all members see org cards)
+  const primaryPaymentMethod = useOrganizationPaymentMethod(
+    orgId,
+    organization?.paymentMethodId,
+  )
+  useOrganizationPaymentMethod(orgId, organization?.backupPaymentMethodId)
 
   const retryPaymentMutation = useRetryInvoicePayment()
 
@@ -143,17 +146,18 @@ export function BillingTab() {
         <>
           {/* Failed Invoice Alert */}
           {hasFailedInvoice && (
-            <Alert variant="destructive">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>Payment Failed</AlertTitle>
-              <AlertDescription className="mt-2">
+            <Alert variant="default" className="border-red-500/30 bg-red-500/5">
+              <AlertTriangle className="h-4 w-4 text-red-500" />
+              <AlertTitle className="text-[13px] font-medium text-red-600 dark:text-red-400">
+                Payment Failed
+              </AlertTitle>
+              <AlertDescription className="mt-2 text-[12px] text-red-600/80 dark:text-red-400/80">
                 {failedInvoice.lastError ||
                   'Your last payment attempt failed. Please update your payment method and try again.'}
                 <div className="mt-3">
                   <Button
                     size="sm"
-                    variant="outline"
-                    className="h-8 text-[13px]"
+                    className="h-8 bg-red-500 px-3 text-[12px] font-medium text-red-50 hover:bg-red-400"
                     onClick={handleRetryPayment}
                     disabled={retryPaymentMutation.isPending}
                   >
@@ -166,10 +170,12 @@ export function BillingTab() {
 
           {/* Expired Payment Method Alert */}
           {hasExpiredPaymentMethod && (
-            <Alert variant="destructive">
-              <CreditCard className="h-4 w-4" />
-              <AlertTitle>Payment Method Failed</AlertTitle>
-              <AlertDescription className="mt-2">
+            <Alert variant="default" className="border-red-500/30 bg-red-500/5">
+              <CreditCard className="h-4 w-4 text-red-500" />
+              <AlertTitle className="text-[13px] font-medium text-red-600 dark:text-red-400">
+                Payment Method Failed
+              </AlertTitle>
+              <AlertDescription className="mt-2 text-[12px] text-red-600/80 dark:text-red-400/80">
                 Your default payment method has failed and you don't have a
                 backup method. Please add a new payment method to continue using
                 our services.

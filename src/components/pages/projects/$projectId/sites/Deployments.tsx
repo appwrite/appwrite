@@ -42,6 +42,7 @@ import {
   isDeploymentInProgress,
   isDeploymentTimeout,
 } from '@/lib/utils/deployment-status'
+import { getDeploymentRepositoryWebUrl } from '@/lib/utils/deployment-repository-url'
 import {
   Tooltip,
   TooltipContent,
@@ -94,7 +95,7 @@ import {
   Dependencies,
   DEFAULT_PAGE_SIZE,
 } from '@/lib/react-query/hooks'
-import { sdk } from '@/lib/appwrite/sdk'
+import { sdk, getSiteScreenshotFilePreviewUrl } from '@/lib/appwrite/sdk'
 import { DeploymentDownloadType } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { Query } from '@appwrite.io/console'
@@ -264,13 +265,14 @@ export function View() {
     }
   }, [isDeploymentsListPage, location.pathname, location.search])
 
+  // Prefer parsed search (TanStack Router object) so page=2 in URL is read correctly after navigate()
   const urlPage = useMemo(() => {
-    if (deploymentsListParams?.page != null) return deploymentsListParams.page
     const search = location.search
     if (search && typeof search === 'object' && 'page' in search) {
       const p = (search as { page?: number }).page
       if (typeof p === 'number' && p >= 1) return p
     }
+    if (deploymentsListParams?.page != null) return deploymentsListParams.page
     const searchParams = new URLSearchParams(
       typeof search === 'string' ? search : '',
     )
@@ -485,17 +487,20 @@ export function View() {
     setDeleteDialogOpen(false)
   }, [displayedPage])
 
-  // Building state from resolved deployment so we don't show "still building" after realtime says ready
+  // Building / waiting: use resolved status (deployments list often updates before single-deployment query)
   const isBuilding =
-    activeDeploymentResolved?.status === 'building' ||
-    activeDeploymentResolved?.status === 'processing'
+    activeDeploymentResolved != null &&
+    isDeploymentInProgress(activeDeploymentResolved.status)
 
-  // For card content use full deployment from hook when same id (screenshots etc.), else resolved.
-  // When in card/dialogs we only render when activeDeploymentResolved exists, so this is always defined there.
-  const activeDeploymentForCard =
-    (activeDeployment?.$id === activeDeploymentResolved?.$id
-      ? activeDeployment
-      : activeDeploymentResolved) ?? activeDeploymentResolved
+  // Merge list/hook so status/buildDuration update from realtime list while hook keeps fields
+  // omitted from DEPLOYMENTS_SELECT (e.g. screenshots).
+  const activeDeploymentForCard = useMemo((): Models.Deployment | undefined => {
+    const resolved = activeDeploymentResolved
+    if (!resolved) return undefined
+    const fromHook = activeDeployment
+    if (fromHook?.$id !== resolved.$id) return resolved
+    return { ...fromHook, ...resolved }
+  }, [activeDeployment, activeDeploymentResolved])
 
   const handleDownloadSource = () => {
     if (!projectId || !siteId || !activeDeploymentResolved) return
@@ -736,18 +741,6 @@ export function View() {
     setSelectedDeployments(new Set()) // Clear selection on page size change
   }
 
-  const clearAllDeploymentsFilters = () => {
-    navigate({
-      to: location.pathname,
-      search: (prev) => ({
-        ...prev,
-        query: undefined,
-      }),
-      replace: true,
-    })
-    setSelectedDeployments(new Set())
-  }
-
   const createDeployment = useCreateDeployment()
 
   // Only show full loading state on initial load when there's no data
@@ -779,7 +772,7 @@ export function View() {
                       </h3>
                       {isBuilding && (
                         <Badge
-                          variant="warning"
+                          variant="deploymentBuilding"
                           className="text-[10px] shrink-0"
                         >
                           Building
@@ -815,9 +808,9 @@ export function View() {
                                 ? (cardDeployment as unknown).screenshotDark
                                 : (cardDeployment as unknown).screenshotLight
 
-                            if (screenshotId) {
+                            if (screenshotId && projectId) {
                               const screenshotUrl =
-                                sdk.forConsole.storage.getFilePreview({
+                                getSiteScreenshotFilePreviewUrl(projectId, {
                                   bucketId: SCREENSHOTS_BUCKET_ID,
                                   fileId: screenshotId,
                                   width: SCREENSHOT_PREVIEW_WIDTH,
@@ -985,12 +978,28 @@ export function View() {
                                 <div className="text-[12px] text-muted-foreground mb-1.5">
                                   Source
                                 </div>
-                                <div className="flex items-center gap-1.5 text-[13px] text-foreground">
+                                <div className="flex items-center gap-1.5 text-[13px] text-foreground min-w-0">
                                   {vcsProvider.icon}
-                                  <span>
-                                    {cardDeployment.providerRepositoryOwner}/
-                                    {cardDeployment.providerRepositoryName}
-                                  </span>
+                                  {(() => {
+                                    const repoUrl =
+                                      getDeploymentRepositoryWebUrl(
+                                        cardDeployment,
+                                      )
+                                    const label = `${cardDeployment.providerRepositoryOwner}/${cardDeployment.providerRepositoryName}`
+                                    return repoUrl ? (
+                                      <a
+                                        href={repoUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="truncate hover:underline text-foreground"
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        {label}
+                                      </a>
+                                    ) : (
+                                      <span className="truncate">{label}</span>
+                                    )
+                                  })()}
                                 </div>
                               </div>
                             )}
@@ -1438,7 +1447,9 @@ export function View() {
                           className={cn(
                             selectedDeployments.has(deploymentData.$id)
                               ? 'bg-muted'
-                              : 'hover:bg-muted/50',
+                              : isActive
+                                ? 'bg-muted/40 dark:bg-muted/35 hover:bg-muted/55 dark:hover:bg-muted/50'
+                                : 'hover:bg-muted/50',
                             'cursor-pointer',
                           )}
                           onClick={() => {
@@ -1507,15 +1518,29 @@ export function View() {
                                   repositoryOwner && repositoryName
 
                                 if (hasRepository) {
+                                  const repoUrl = getDeploymentRepositoryWebUrl(
+                                    deploymentData,
+                                  )
+                                  const label = `${repositoryOwner}/${repositoryName}`
                                   return (
                                     <Badge
                                       variant="outline"
-                                      className="text-[11px] h-6 px-2.5 gap-1.5"
+                                      className="text-[11px] h-6 px-2.5 gap-1.5 max-w-full"
                                     >
                                       {vcsProvider.icon}
-                                      <span>
-                                        {repositoryOwner}/{repositoryName}
-                                      </span>
+                                      {repoUrl ? (
+                                        <a
+                                          href={repoUrl}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="truncate hover:underline"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          {label}
+                                        </a>
+                                      ) : (
+                                        <span className="truncate">{label}</span>
+                                      )}
                                     </Badge>
                                   )
                                 }

@@ -258,84 +258,84 @@ export function BillingAddressSection({
             </div>
           </div>
           <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
-                  disabled={
-                    setOrgAddressMutation.isPending ||
-                    deleteOrgAddressMutation.isPending
-                  }
-                >
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-52">
-                <DropdownMenuItem
-                  className="text-[13px]"
-                  onClick={() => setEditModalOpen(true)}
-                >
-                  <Pencil className="h-4 w-4 mr-2 shrink-0" />
-                  Update address
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger className="text-[13px]">
-                    Replace
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent className="w-52">
-                    {(() => {
-                      const availableAddresses = (allAddresses || []).filter(
-                        (addr) => addr.$id !== organization?.billingAddressId,
-                      )
-                      return (
-                        <>
-                          {availableAddresses.length > 0 && (
-                            <>
-                              <div className="px-2 py-1.5">
-                                <p className="text-[11px] font-medium text-muted-foreground">
-                                  Choose existing address
-                                </p>
-                              </div>
-                              {availableAddresses.map((addr) => (
-                                <DropdownMenuItem
-                                  key={addr.$id}
-                                  className="text-[13px]"
-                                  onClick={() => handleLinkAddress(addr.$id)}
-                                >
-                                  <MapPin className="h-4 w-4 mr-2 text-muted-foreground shrink-0" />
-                                  <span className="truncate">
-                                    {addr.streetAddress || 'Address'}
-                                    {addr.city ? `, ${addr.city}` : ''}
-                                  </span>
-                                </DropdownMenuItem>
-                              ))}
-                              <DropdownMenuSeparator />
-                            </>
-                          )}
-                          <DropdownMenuItem
-                            className="text-[13px]"
-                            onClick={() => setCreateModalOpen(true)}
-                          >
-                            <Plus className="h-4 w-4 mr-2 shrink-0" />
-                            Add new address
-                          </DropdownMenuItem>
-                        </>
-                      )
-                    })()}
-                  </DropdownMenuSubContent>
-                </DropdownMenuSub>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="text-[13px] text-red-600 dark:text-red-400"
-                  onClick={() => setRemoveConfirmOpen(true)}
-                >
-                  <Trash2 className="h-4 w-4 mr-2 shrink-0" />
-                  Remove
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+                disabled={
+                  setOrgAddressMutation.isPending ||
+                  deleteOrgAddressMutation.isPending
+                }
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuItem
+                className="text-[13px]"
+                onClick={() => setEditModalOpen(true)}
+              >
+                <Pencil className="h-4 w-4 mr-2 shrink-0" />
+                Update address
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger className="text-[13px]">
+                  Replace
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="w-52">
+                  {(() => {
+                    const availableAddresses = (allAddresses || []).filter(
+                      (addr) => addr.$id !== organization?.billingAddressId,
+                    )
+                    return (
+                      <>
+                        {availableAddresses.length > 0 && (
+                          <>
+                            <div className="px-2 py-1.5">
+                              <p className="text-[11px] font-medium text-muted-foreground">
+                                Choose existing address
+                              </p>
+                            </div>
+                            {availableAddresses.map((addr) => (
+                              <DropdownMenuItem
+                                key={addr.$id}
+                                className="text-[13px]"
+                                onClick={() => handleLinkAddress(addr.$id)}
+                              >
+                                <MapPin className="h-4 w-4 mr-2 text-muted-foreground shrink-0" />
+                                <span className="truncate">
+                                  {addr.streetAddress || 'Address'}
+                                  {addr.city ? `, ${addr.city}` : ''}
+                                </span>
+                              </DropdownMenuItem>
+                            ))}
+                            <DropdownMenuSeparator />
+                          </>
+                        )}
+                        <DropdownMenuItem
+                          className="text-[13px]"
+                          onClick={() => setCreateModalOpen(true)}
+                        >
+                          <Plus className="h-4 w-4 mr-2 shrink-0" />
+                          Add new address
+                        </DropdownMenuItem>
+                      </>
+                    )
+                  })()}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-[13px] text-red-600 dark:text-red-400"
+                onClick={() => setRemoveConfirmOpen(true)}
+              >
+                <Trash2 className="h-4 w-4 mr-2 shrink-0" />
+                Remove
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 

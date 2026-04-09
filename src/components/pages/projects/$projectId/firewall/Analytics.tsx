@@ -1,4 +1,6 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
+import { subHours } from 'date-fns'
+import type { DateRange } from 'react-day-picker'
 import {
   ShieldCheck,
   ShieldX,
@@ -25,6 +27,7 @@ import {
   mockFirewallAnalytics,
   type FirewallAnalytics,
 } from '@/lib/utils/mock-data'
+import { DateRangePicker } from '../analytics/DateRangePicker'
 
 interface AnalyticsTabProps {
   projectId: string
@@ -123,47 +126,96 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   return null
 }
 
+function getDefaultFirewallAnalyticsRange(): DateRange {
+  const now = new Date()
+  return { from: subHours(now, 24), to: now }
+}
+
+function buildFirewallChartData(
+  from: Date,
+  to: Date,
+): Array<{
+  time: string
+  fullTime: string
+  requests: number
+  blocked: number
+  allowed: number
+  challenged: number
+}> {
+  const spanMs = Math.max(to.getTime() - from.getTime(), 60 * 60 * 1000)
+  const useHourly = spanMs <= 48 * 60 * 60 * 1000
+  const stepMs = useHourly ? 60 * 60 * 1000 : 24 * 60 * 60 * 1000
+  let count = Math.ceil(spanMs / stepMs) + 1
+  count = Math.min(Math.max(count, 2), 150)
+  const step = spanMs / (count - 1)
+
+  const rows: Array<{
+    time: string
+    fullTime: string
+    requests: number
+    blocked: number
+    allowed: number
+    challenged: number
+  }> = []
+
+  const phase = from.getTime() / 1e12
+  for (let i = 0; i < count; i++) {
+    const ts = new Date(from.getTime() + i * step)
+    const u = (Math.sin(i * 2.9898 + phase) + 1) / 2
+    const baseRequests = 100 + u * 200
+    const blocked = Math.floor(baseRequests * (0.1 + u * 0.2))
+    const challenged = Math.floor(baseRequests * (0.05 + u * 0.1))
+    const allowed = Math.floor(baseRequests - blocked - challenged)
+
+    rows.push({
+      time: useHourly ? format(ts, 'HH:mm') : format(ts, 'MMM d'),
+      fullTime: format(ts, 'MMM d, yyyy HH:mm'),
+      requests: Math.floor(baseRequests),
+      blocked,
+      allowed,
+      challenged,
+    })
+  }
+
+  return rows
+}
+
 export function AnalyticsTab({}: AnalyticsTabProps) {
   const [analytics, setAnalytics] = useState<FirewallAnalytics | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d'>('24h')
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(() =>
+    getDefaultFirewallAnalyticsRange(),
+  )
 
-  useEffect(() => {
-    // Simulate loading
+  const reloadAnalytics = useCallback(() => {
     setIsLoading(true)
     setTimeout(() => {
       setAnalytics(mockFirewallAnalytics)
       setIsLoading(false)
     }, 500)
-  }, [timeRange])
+  }, [])
+
+  useEffect(() => {
+    reloadAnalytics()
+  }, [dateRange, reloadAnalytics])
 
   // Listen for refresh event
   useEffect(() => {
     const handleRefresh = () => {
-      setIsLoading(true)
-      setTimeout(() => {
-        setAnalytics(mockFirewallAnalytics)
-        setIsLoading(false)
-      }, 500)
+      reloadAnalytics()
     }
 
     window.addEventListener('firewall-refresh-analytics', handleRefresh)
     return () => {
       window.removeEventListener('firewall-refresh-analytics', handleRefresh)
     }
-  }, [])
+  }, [reloadAnalytics])
 
   const chartData = useMemo(() => {
-    if (!analytics) return []
-    return analytics.timeSeries.map((point) => ({
-      time: format(new Date(point.timestamp), 'HH:mm'),
-      fullTime: format(new Date(point.timestamp), 'MMM d, HH:mm'),
-      requests: point.requests,
-      blocked: point.blocked,
-      allowed: point.allowed,
-      challenged: point.challenged,
-    }))
-  }, [analytics])
+    if (!analytics || !dateRange?.from) return []
+    const to = dateRange.to ?? dateRange.from
+    return buildFirewallChartData(dateRange.from, to)
+  }, [analytics, dateRange])
 
   const topBlockedIPs = useMemo(() => {
     if (!analytics) return []
@@ -220,28 +272,12 @@ export function AnalyticsTab({}: AnalyticsTabProps) {
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
-      {/* Time Range Selector */}
       <div className="mb-6 flex items-center justify-end gap-2">
-        <div className="flex rounded-lg border border-border bg-card/50 p-1">
-          {(['24h', '7d', '30d'] as const).map((range) => (
-            <button
-              key={range}
-              onClick={() => setTimeRange(range)}
-              className={cn(
-                'px-3 py-1.5 text-[12px] font-medium rounded transition-colors',
-                timeRange === range
-                  ? 'bg-foreground text-background'
-                  : 'text-muted-foreground hover:text-foreground',
-              )}
-            >
-              {range === '24h'
-                ? '24 hours'
-                : range === '7d'
-                  ? '7 days'
-                  : '30 days'}
-            </button>
-          ))}
-        </div>
+        <DateRangePicker
+          dateRange={dateRange}
+          onDateRangeChange={setDateRange}
+          className="h-9"
+        />
       </div>
 
       {/* Stats Grid */}

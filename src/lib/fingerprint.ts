@@ -5,13 +5,83 @@
  *
  * When a secret is set, the token is HMAC-signed so the backend can verify it.
  * Env: VITE_CONSOLE_FINGERPRINT_KEY or PUBLIC_CONSOLE_FINGERPRINT_KEY (same value as backend).
+ *
+ * Timestamps use server time (from /health/version Date header) when synced, same as the
+ * reference console — local clock drift otherwise causes "Invalid console fingerprint".
  */
 
 const SECRET =
-  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_CONSOLE_FINGERPRINT_KEY) ||
-  (typeof import.meta !== 'undefined' && (import.meta.env as Record<string, string>)?.PUBLIC_CONSOLE_FINGERPRINT_KEY) ||
+  (typeof import.meta !== 'undefined' &&
+    import.meta.env?.VITE_CONSOLE_FINGERPRINT_KEY) ||
+  (typeof import.meta !== 'undefined' &&
+    (import.meta.env as Record<string, string>)
+      ?.PUBLIC_CONSOLE_FINGERPRINT_KEY) ||
   ''
 const CACHE_TTL_MS = 60 * 60 * 1000 // 1 hour
+
+/** Cached server timestamp and local time it was observed (for interpolation). */
+let serverTimeCache: { serverSecs: number; fetchedAtMs: number } | null = null
+let serverTimeSyncPromise: Promise<void> | null = null
+
+/**
+ * Record server unix time (seconds). Only the first successful sync is kept, matching
+ * console/src/lib/helpers/fingerprint.ts.
+ */
+export function syncServerTime(serverTimeSecs: number): void {
+  if (serverTimeCache) return
+  serverTimeCache = { serverSecs: serverTimeSecs, fetchedAtMs: Date.now() }
+}
+
+/** Clear cached server clock (e.g. when the API endpoint changes in debug menu). */
+export function resetFingerprintServerTimeCache(): void {
+  serverTimeCache = null
+}
+
+function getServerTimestamp(): number {
+  if (!serverTimeCache) {
+    return Math.floor(Date.now() / 1000)
+  }
+  const elapsedSecs = Math.floor(
+    (Date.now() - serverTimeCache.fetchedAtMs) / 1000,
+  )
+  return serverTimeCache.serverSecs + elapsedSecs
+}
+
+/**
+ * Ensures server time is synced once from the Date header on GET /health/version
+ * (same as console (console)/+layout.ts). Await before generating fingerprints when
+ * the app may not have completed the background sync yet (e.g. Restore project).
+ */
+export function ensureFingerprintServerTimeSynced(
+  endpoint: string,
+  projectId: string,
+): Promise<void> {
+  if (serverTimeCache) return Promise.resolve()
+  if (serverTimeSyncPromise) return serverTimeSyncPromise
+  if (!endpoint?.trim() || !projectId?.trim()) {
+    return Promise.resolve()
+  }
+
+  const url = `${endpoint.replace(/\/$/, '')}/health/version`
+  serverTimeSyncPromise = fetch(url, {
+    headers: { 'X-Appwrite-Project': projectId },
+  })
+    .then((response) => {
+      const dateHeader = response.headers.get('Date')
+      const parsed = dateHeader ? new Date(dateHeader).getTime() : NaN
+      if (Number.isFinite(parsed)) {
+        syncServerTime(Math.floor(parsed / 1000))
+      }
+    })
+    .catch(() => {
+      /* fall back to local clock in getServerTimestamp */
+    })
+    .finally(() => {
+      serverTimeSyncPromise = null
+    })
+
+  return serverTimeSyncPromise
+}
 
 async function sha256(message: string): Promise<string> {
   if (!crypto?.subtle) {
@@ -91,8 +161,11 @@ async function getAudioFingerprint(): Promise<string> {
   try {
     const OfflineCtx =
       window.OfflineAudioContext ||
-      (window as unknown as { webkitOfflineAudioContext: typeof OfflineAudioContext })
-        .webkitOfflineAudioContext
+      (
+        window as unknown as {
+          webkitOfflineAudioContext: typeof OfflineAudioContext
+        }
+      ).webkitOfflineAudioContext
     if (!OfflineCtx) return ''
 
     const sampleRate = 44100
@@ -176,7 +249,8 @@ async function collectStaticSignals(): Promise<StaticSignals> {
     languages: [...(navigator.languages || [])],
     platform: navigator.platform,
     hardwareConcurrency: navigator.hardwareConcurrency || 0,
-    deviceMemory: (navigator as Navigator & { deviceMemory?: number }).deviceMemory,
+    deviceMemory: (navigator as Navigator & { deviceMemory?: number })
+      .deviceMemory,
     maxTouchPoints: navigator.maxTouchPoints || 0,
     screenWidth: screen.width,
     screenHeight: screen.height,
@@ -222,7 +296,7 @@ export async function generateFingerprintToken(): Promise<string> {
 
   const signals: BrowserSignals = {
     ...staticSignals,
-    timestamp: Math.floor(Date.now() / 1000),
+    timestamp: getServerTimestamp(),
   }
 
   const payload = JSON.stringify(signals)

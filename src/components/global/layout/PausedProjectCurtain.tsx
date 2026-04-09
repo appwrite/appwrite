@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 type PausedProjectCurtainProps = {
   projectId: string
   teamId: string
+  onRestoreSuccess?: () => void
 }
 
 /**
@@ -17,6 +18,7 @@ type PausedProjectCurtainProps = {
 export function PausedProjectCurtain({
   projectId,
   teamId,
+  onRestoreSuccess,
 }: PausedProjectCurtainProps) {
   const navigate = useNavigate()
   const resumeMutation = useResumeProject(projectId)
@@ -24,6 +26,7 @@ export function PausedProjectCurtain({
   async function handleRestore() {
     try {
       await resumeMutation.mutateAsync()
+      onRestoreSuccess?.()
       toast.success('Project resumed successfully')
       // Mutation invalidates project and all project-scoped queries. Navigate to overview
       // so the layout and overview load with fresh data and avoid HTTP errors.
@@ -41,7 +44,7 @@ export function PausedProjectCurtain({
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/95 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-background/95 backdrop-blur-sm">
       <div className="mx-4 flex max-w-md flex-col items-center text-center">
         <div className="mb-6 flex size-16 items-center justify-center rounded-full bg-muted text-muted-foreground">
           <PauseCircle className="size-9" />

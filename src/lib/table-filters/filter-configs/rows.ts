@@ -100,3 +100,23 @@ export function rowsFilterColumnsFromAttributes(
 
   return [...ROWS_SYSTEM_COLUMNS, ...fromAttrs]
 }
+
+/** Reserved filter column id: opens “custom attribute” name + value type (Documents DB only). */
+export const DOCUMENTS_DB_CUSTOM_ATTRIBUTE_FILTER_COLUMN_ID =
+  '__documentsDbCustomAttribute' as const
+
+/**
+ * Append the “Custom attribute” filter option for unstructured Documents DB payloads.
+ * Tables DB and Vectors DB should not call this.
+ */
+export function appendDocumentsDbCustomAttributeFilter(
+  columns: FilterColumn[],
+): FilterColumn[] {
+  const slot: FilterColumn = {
+    id: DOCUMENTS_DB_CUSTOM_ATTRIBUTE_FILTER_COLUMN_ID,
+    title: 'Custom attribute',
+    type: 'string',
+    customAttributeSlot: true,
+  }
+  return [...columns, slot]
+}

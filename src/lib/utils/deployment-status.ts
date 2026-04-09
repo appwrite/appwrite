@@ -18,7 +18,11 @@ import {
  */
 export interface DeploymentStatusBadge {
   label: string
-  badgeVariant: 'completed' | 'failed' | 'pending' | 'processing'
+  badgeVariant:
+    | 'deploymentReady'
+    | 'deploymentBuilding'
+    | 'failed'
+    | 'pending'
   icon: LucideIcon
 }
 
@@ -90,19 +94,23 @@ export function getDeploymentStatusBadge(
     string,
     {
       label: string
-      badgeVariant: 'completed' | 'failed' | 'pending' | 'processing'
+      badgeVariant:
+        | 'deploymentReady'
+        | 'deploymentBuilding'
+        | 'failed'
+        | 'pending'
       icon: typeof CheckCircle2
     }
   > = {
-    ready: { label: 'Ready', badgeVariant: 'completed', icon: CheckCircle2 },
+    ready: { label: 'Ready', badgeVariant: 'deploymentReady', icon: CheckCircle2 },
     building: {
       label: 'Building',
-      badgeVariant: 'processing',
+      badgeVariant: 'deploymentBuilding',
       icon: CircleDashed,
     },
     processing: {
       label: 'Processing',
-      badgeVariant: 'processing',
+      badgeVariant: 'deploymentBuilding',
       icon: CircleDashed,
     },
     waiting: { label: 'Waiting', badgeVariant: 'pending', icon: Clock },
@@ -142,7 +150,11 @@ export function getDeploymentStatusBadge(
  * Used to show live elapsed duration instead of final buildDuration.
  */
 export function isDeploymentInProgress(status: string): boolean {
-  return status === 'building' || status === 'processing'
+  return (
+    status === 'building' ||
+    status === 'processing' ||
+    status === 'waiting'
+  )
 }
 
 /**

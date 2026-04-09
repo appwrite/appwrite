@@ -1,16 +1,19 @@
 /**
  * Unified project-level realtime subscriptions.
  *
- * Subscribes to the console channel only (project=console), filters events by
- * current project where needed, and invalidates React Query cache so the UI updates.
- * For migration update events we merge the payload into the cache instead of
- * invalidating, to avoid many refetches during export/import progress.
+ * Subscribes twice to the console channel (project=console): the main cloud endpoint
+ * via the shared console hub, and the project's regional API host via
+ * {@link ./regional-console-hub.ts} when that URL differs from the base. Events from
+ * either socket are handled the same way. Filters by current project where needed and
+ * invalidates React Query cache. For migration updates we merge into cache instead of
+ * invalidating on every tick.
  */
 
 import type { QueryClient } from '@tanstack/react-query'
 import type { RealtimeResponseEvent } from '@appwrite.io/console'
-import { sdk } from '@/lib/appwrite/sdk'
 import { PROJECT_CHANNELS, REALTIME_EVENTS } from './constants'
+import { registerConsoleRealtimeListener } from './console-hub'
+import { registerRegionalConsoleRealtimeListener } from './regional-console-hub'
 
 /** Realtime payload may have statusCounters as JSON string; normalize to object */
 function normalizeMigrationPayload(
@@ -106,6 +109,23 @@ function hasEvent(events: string[], name: string): boolean {
   return false
 }
 
+function invalidateAssistantQueries(
+  queryClient: QueryClient,
+  payload: Record<string, unknown> | null,
+): void {
+  const conversationId = payload?.conversationId as string | undefined
+
+  queryClient.invalidateQueries({ queryKey: ['assistant', 'conversations'] })
+
+  if (conversationId) {
+    queryClient.invalidateQueries({
+      queryKey: ['assistant', 'messages', conversationId],
+    })
+  } else {
+    queryClient.invalidateQueries({ queryKey: ['assistant', 'messages'] })
+  }
+}
+
 export type OnMigrationEvent = (payload: unknown) => void
 
 /**
@@ -119,6 +139,18 @@ function handleRealtimeEvent(
   onMigrationEvent?: OnMigrationEvent,
 ): void {
   const { events, channels } = response
+  const payload =
+    response.payload && typeof response.payload === 'object'
+      ? (response.payload as Record<string, unknown>)
+      : null
+
+  const hasAssistantEvent =
+    events.some((eventName) => eventName.includes('assistant')) ||
+    channels.some((channel) => channel.includes('assistant'))
+
+  if (hasAssistantEvent) {
+    invalidateAssistantQueries(queryClient, payload)
+  }
 
   // Project-scoped filter: only react if this event is for our project
   const projectChannel = `projects.${projectId}`
@@ -175,7 +207,6 @@ function handleRealtimeEvent(
 
   // Migration events: always process (merge by $id only updates if in current project's list)
   if (hasEvent(events, REALTIME_EVENTS.MIGRATIONS_ANY)) {
-    const payload = response.payload
     if (
       payload != null &&
       typeof payload === 'object' &&
@@ -252,7 +283,6 @@ function handleRealtimeEvent(
   }
 
   if (hasEvent(events, REALTIME_EVENTS.RULES_UPDATE)) {
-    const payload = response.payload
     if (
       payload != null &&
       typeof payload === 'object' &&
@@ -282,23 +312,16 @@ function handleRealtimeEvent(
 
 export type RealtimeSubscriptionCleanup = () => Promise<void>
 
-// Module-level lock: next subscriber waits on tail until we call resolveNext()
-// (in cleanup), so only one subscription is ever active and we never open
-// duplicate WebSockets.
-let tail: Promise<void> = Promise.resolve()
-
 export interface SubscribeProjectRealtimeOptions {
   onMigrationEvent?: OnMigrationEvent
 }
 
 /**
  * Subscribe to realtime events for the given project.
- * Uses the console client (project=console) with channel ['console'] only.
- * Events are filtered by projectId in the handler.
+ * Uses the shared console hub on the main endpoint plus a regional console socket when
+ * the project's API host differs (multi-region cloud).
  *
  * Call the returned cleanup when the component unmounts or projectId changes.
- * Only one subscription is active at a time; overlapping calls wait for the
- * previous subscription to close first.
  */
 export async function subscribeProjectRealtime(
   projectId: string,
@@ -310,28 +333,12 @@ export async function subscribeProjectRealtime(
     handleRealtimeEvent(queryClient, projectId, response, onMigrationEvent)
   }
 
-  // Acquire lock: next caller will wait on our release (resolveNext in cleanup)
-  const previousTail = tail
-  let resolveNext!: () => void
-  const releasePromise = new Promise<void>((r) => {
-    resolveNext = r
-  })
-  tail = previousTail.then(() => releasePromise)
-  await previousTail
+  const channels = [...PROJECT_CHANNELS]
+  const unregisterMain = await registerConsoleRealtimeListener(channels, handler)
+  const unregisterRegional =
+    await registerRegionalConsoleRealtimeListener(projectId, channels, handler)
 
-  // Single connection: console client (project=console) with ['console'] only
-  const consoleRealtime = sdk.getConsoleRealtime()
-  const sub = await consoleRealtime.subscribe(
-    [...PROJECT_CHANNELS],
-    handler as (event: {
-      events: string[]
-      channels: string[]
-      payload: unknown
-    }) => void,
-  )
-
-  return async function cleanup() {
-    await sub.close()
-    resolveNext()
+  return async () => {
+    await Promise.all([unregisterRegional(), unregisterMain()])
   }
 }

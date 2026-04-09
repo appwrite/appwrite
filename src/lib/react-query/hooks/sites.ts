@@ -354,7 +354,8 @@ export async function fetchProxyRule(
 }
 
 /**
- * Query function to fetch proxy rules for a deployment
+ * Query function to fetch proxy rules for a site deployment (project Console SDK).
+ * Only rules for this deployment ID — deployment and redirect rows that reference it.
  */
 export async function fetchDeploymentProxyRules(
   projectId: string,
@@ -367,7 +368,7 @@ export async function fetchDeploymentProxyRules(
 
   const projectSdk = sdk.forProject(projectId)
   const queries = [
-    Query.equal('type', 'deployment'),
+    Query.equal('type', ['deployment', 'redirect']),
     Query.equal('deploymentId', deploymentId),
     Query.equal('deploymentResourceType', 'site'),
     Query.equal('deploymentResourceId', siteId),

@@ -59,6 +59,7 @@ import {
   formatSchemaAsJSON,
 } from '@/lib/utils/database-schema-export'
 import { useQuery } from '@tanstack/react-query'
+import { isHtmlDarkChrome } from '@/lib/html-theme'
 
 interface SchemaVisualizerProps {
   databaseId: string
@@ -139,7 +140,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window === 'undefined') return false
     return (
-      document.documentElement.classList.contains('dark') ||
+      isHtmlDarkChrome() ||
       window.matchMedia('(prefers-color-scheme: dark)').matches
     )
   })
@@ -148,8 +149,8 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
   useEffect(() => {
     const checkDarkMode = () => {
       setIsDarkMode(
-        document.documentElement.classList.contains('dark') ||
-        window.matchMedia('(prefers-color-scheme: dark)').matches,
+        isHtmlDarkChrome() ||
+          window.matchMedia('(prefers-color-scheme: dark)').matches,
       )
     }
 
@@ -376,11 +377,17 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
     const tableNameMap = new Map(tables.map((t: unknown) => [t.name, t]))
 
     tables.forEach((table: unknown) => {
-      if (!table.columns) return
+      const t = table as {
+        $id: string
+        name?: string
+        columns?: unknown[]
+      }
+      if (!t.columns) return
 
-      table.columns.forEach((column: unknown) => {
+      t.columns.forEach((column: unknown) => {
+        const col = column as { key?: string; type?: string }
         // Check if column name suggests a foreign key (e.g., "postId", "userId", etc.)
-        const columnKey = column.key.toLowerCase()
+        const columnKey = (col.key ?? '').toLowerCase()
 
         // Pattern: {tableName}Id or {tableName}_id
         const match = columnKey.match(/^(.+?)(id|_id)$/)
@@ -391,7 +398,9 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
           const referencedTable =
             tableNameMap.get(referencedTableName) ||
             Array.from(tableNameMap.values()).find(
-              (t: unknown) => t.name.toLowerCase() === referencedTableName,
+              (tbl: unknown) =>
+                (tbl as { name?: string }).name?.toLowerCase() ===
+                referencedTableName,
             )
 
           if (
@@ -406,9 +415,9 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
 
             if (hasIdColumn) {
               rels.push({
-                from: table.$id,
-                to: (referencedTable as unknown).$id,
-                fromColumn: column.key,
+                from: t.$id,
+                to: (referencedTable as unknown as { $id: string }).$id,
+                fromColumn: col.key ?? '',
                 toColumn: '$id',
               })
             }
@@ -665,7 +674,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
     try {
       // Detect if dark mode for proper color selection
       const isDark =
-        document.documentElement.classList.contains('dark') ||
+        isHtmlDarkChrome() ||
         window.matchMedia('(prefers-color-scheme: dark)').matches
 
       // Get computed color values with fallbacks for better contrast
@@ -1273,14 +1282,14 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
   // Context menu handlers
   const handleNavigateToTable = (tableId: string) => {
     navigate({
-      to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
+      to: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/rows',
       params: { projectId, databaseId, tableId },
     })
   }
 
   const handleNavigateToSettings = (tableId: string) => {
     navigate({
-      to: '/projects/$projectId/databases/$databaseId/tables/$tableId/settings',
+      to: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/settings',
       params: { projectId, databaseId, tableId },
     })
   }

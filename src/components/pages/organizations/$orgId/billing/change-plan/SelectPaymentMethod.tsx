@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Plus, Ticket } from 'lucide-react'
-import { formatCardExpiry } from '../utils'
+import { formatPaymentMethodSummary } from '../utils'
 import { InlinePaymentForm } from './InlinePaymentForm'
 import type { Models } from '@appwrite.io/console'
 
@@ -42,14 +42,8 @@ export function SelectPaymentMethod({
   // Show inline form only when dropdown is empty (no payment methods)
   const showInlineForm = completedPaymentMethods.length === 0
 
-  const getDisplayText = (method: Models.PaymentMethod) => {
-    if (!method.last4) return method.name || 'Card'
-    const expiry =
-      method.expiryMonth && method.expiryYear
-        ? formatCardExpiry(method.expiryMonth, method.expiryYear)
-        : null
-    return `${method.name || 'Card'} ending in ${method.last4}${expiry ? ` • Expires ${expiry}` : ''}`
-  }
+  const getDisplayText = (method: Models.PaymentMethod) =>
+    formatPaymentMethodSummary(method, { includeExpiry: true })
 
   const handlePaymentMethodAdded = () => {
     onPaymentMethodAdded?.()

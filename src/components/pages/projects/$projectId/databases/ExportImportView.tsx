@@ -1,5 +1,5 @@
-import { useMemo } from 'react'
-import { useParams } from '@tanstack/react-router'
+import { useMemo, useEffect } from 'react'
+import { useParams, useLocation, useNavigate } from '@tanstack/react-router'
 import {
   Download,
   Loader2,
@@ -21,6 +21,13 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { Pagination } from '@/components/global/shared/Pagination'
+import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import {
+  getPage,
+  getLimit,
+  buildListSearchParams,
+} from '@/lib/table-filters'
 import {
   useProjectTables,
   useDatabaseCsvMigrations,
@@ -66,6 +73,23 @@ function getMigrationStatusBadge(status: string): {
 export function ExportImportView({ databaseId }: ExportImportViewProps) {
   const params = useParams({ strict: false })
   const projectId = params.projectId as string
+  const dbKind = params.dbKind as string
+  const location = useLocation()
+  const navigate = useNavigate()
+
+  const { page: urlPage, limit: urlLimit } = useMemo(() => {
+    if (typeof window === 'undefined') {
+      return { page: 1, limit: GRID_DEFAULT_PAGE_SIZE }
+    }
+    const url = new URL(
+      location.pathname + location.search,
+      window.location.origin,
+    )
+    return {
+      page: getPage(url, 1),
+      limit: getLimit(url, GRID_DEFAULT_PAGE_SIZE),
+    }
+  }, [location.pathname, location.search])
 
   const { tables, isLoading: tablesLoading } = useProjectTables(
     projectId,
@@ -93,11 +117,88 @@ export function ExportImportView({ databaseId }: ExportImportViewProps) {
     }))
   }, [migrations])
 
+  const totalItems = rows.length
+  const totalPages = Math.max(1, Math.ceil(totalItems / urlLimit))
+  const effectivePage =
+    totalItems === 0 ? urlPage : Math.min(urlPage, totalPages)
+
+  useEffect(() => {
+    if (totalItems === 0 || urlPage === effectivePage) return
+    if (!projectId || !dbKind) return
+    navigate({
+      to: '/projects/$projectId/databases/$dbKind/$databaseId/export-import',
+      params: { projectId, dbKind, databaseId },
+      search: (prev: Record<string, unknown>) => {
+        const next = {
+          ...prev,
+          ...buildListSearchParams({
+            page: effectivePage,
+            limit: urlLimit,
+          }),
+        }
+        if (effectivePage === 1) delete next.page
+        return next
+      },
+      replace: true,
+    })
+  }, [
+    totalItems,
+    urlPage,
+    effectivePage,
+    urlLimit,
+    projectId,
+    dbKind,
+    databaseId,
+    navigate,
+  ])
+
+  const paginatedRows = useMemo(() => {
+    const start = (effectivePage - 1) * urlLimit
+    return rows.slice(start, start + urlLimit)
+  }, [rows, effectivePage, urlLimit])
+
+  const handlePageChange = (page: number) => {
+    if (!projectId || !dbKind) return
+    navigate({
+      to: '/projects/$projectId/databases/$dbKind/$databaseId/export-import',
+      params: { projectId, dbKind, databaseId },
+      search: (prev: Record<string, unknown>) => {
+        const next = {
+          ...prev,
+          ...buildListSearchParams({ page, limit: urlLimit }),
+        }
+        if (page === 1) delete next.page
+        return next
+      },
+      replace: true,
+    })
+  }
+
+  const handlePageSizeChange = (newPageSize: number) => {
+    if (!projectId || !dbKind) return
+    navigate({
+      to: '/projects/$projectId/databases/$dbKind/$databaseId/export-import',
+      params: { projectId, dbKind, databaseId },
+      search: (prev: Record<string, unknown>) => {
+        const next = {
+          ...prev,
+          ...buildListSearchParams({ page: 1, limit: newPageSize }),
+        }
+        delete next.page
+        return next
+      },
+      replace: true,
+    })
+  }
+
   const isLoading = tablesLoading || (tableIds.length > 0 && migrationsLoading)
+
+  const shellClassName =
+    'mx-auto w-full max-w-7xl px-4 pt-4 pb-4 sm:px-6 sm:pt-6 sm:pb-6'
 
   if (isLoading && rows.length === 0) {
     return (
-      <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6">
+      <div className={shellClassName}>
         <div className="rounded-lg border border-border bg-card py-12 text-center">
           <div className="text-muted-foreground">Loading...</div>
         </div>
@@ -107,21 +208,20 @@ export function ExportImportView({ databaseId }: ExportImportViewProps) {
 
   if (rows.length === 0) {
     return (
-      <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6">
-        <div className="rounded-lg border border-border bg-card py-12">
-          <EmptyState
-            icon={FileDown}
-            iconSize="lg"
-            title="No export or import requests yet"
-            description="When you export a table to CSV or import data from a CSV file, those requests will be listed here."
-          />
-        </div>
+      <div className={shellClassName}>
+        <EmptyState
+          icon={FileDown}
+          title="No export or import requests yet"
+          description="When you export a table to CSV or import data from a CSV file, those requests will be listed here."
+          isEmpty={true}
+          variant="card"
+        />
       </div>
     )
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6">
+    <div className={cn(shellClassName, 'flex flex-col gap-2')}>
       <div className="rounded-lg border border-border bg-card overflow-x-auto overflow-y-visible">
         <Table>
           <TableHeader>
@@ -142,7 +242,7 @@ export function ExportImportView({ databaseId }: ExportImportViewProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {rows.map(({ type, migration }) => {
+            {paginatedRows.map(({ type, migration }) => {
               const isExport = type === 'export'
               const isCompleted = migration.status === 'completed'
               const downloadUrl = (
@@ -230,6 +330,15 @@ export function ExportImportView({ databaseId }: ExportImportViewProps) {
           </TableBody>
         </Table>
       </div>
+      <Pagination
+        currentPage={effectivePage}
+        totalItems={totalItems}
+        pageSize={urlLimit}
+        pageSizeOptions={[12, 18, 36, 72]}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
+        itemLabel="requests"
+      />
     </div>
   )
 }

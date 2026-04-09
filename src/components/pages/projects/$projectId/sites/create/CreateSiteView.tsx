@@ -700,7 +700,7 @@ export function CreateSiteView() {
                 </Button>
               </PopoverTrigger>
               <PopoverContent
-                className="w-[200px] p-0 z-[100]"
+                className="w-[200px] p-0"
                 align="start"
                 sideOffset={4}
               >
@@ -759,7 +759,7 @@ export function CreateSiteView() {
                 </Button>
               </PopoverTrigger>
               <PopoverContent
-                className="w-[220px] p-0 z-[100]"
+                className="w-[220px] p-0"
                 align="start"
                 sideOffset={4}
               >
@@ -869,7 +869,7 @@ export function CreateSiteView() {
               currentPage={templateDisplayedPage}
               totalItems={templatesTotal}
               pageSize={templatePageSize}
-              pageSizeOptions={[9, 18, 36]}
+              pageSizeOptions={[12, 18, 36, 72]}
               onPageChange={setTemplateRequestedPage}
               onPageSizeChange={(size) => {
                 setTemplatePageSize(size)

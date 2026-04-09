@@ -5,6 +5,8 @@
  * All status badges should use these utilities for consistency.
  */
 
+import type { CanonicalPlanId } from '@/lib/utils/plan-filter'
+
 /**
  * Status types for general use cases
  */
@@ -101,9 +103,9 @@ export function getInvoiceStatusColor(status: InvoiceStatus): string {
 }
 
 /**
- * Plan types for organizations
+ * Plan types for organizations (alias of canonical billing plan ids)
  */
-export type PlanType = 'free' | 'pro' | 'custom'
+export type PlanType = CanonicalPlanId
 
 /**
  * Get plan badge color classes
@@ -113,6 +115,7 @@ export function getPlanBadgeColor(plan: PlanType): string {
     case 'custom':
       return 'bg-purple-500/10 text-purple-600 dark:text-purple-300 border-purple-500/20'
     case 'pro':
+    case 'education':
       return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border-emerald-500/20'
     case 'free':
     default:

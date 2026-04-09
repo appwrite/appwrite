@@ -45,7 +45,10 @@ type DisplayCloudStatusState =
   | 'downtime'
   | 'maintenance'
 
-function formatMaintenanceWindow(startsAt?: string | null, endsAt?: string | null) {
+function formatMaintenanceWindow(
+  startsAt?: string | null,
+  endsAt?: string | null,
+) {
   if (!startsAt) return undefined
 
   const startDate = new Date(startsAt)
@@ -144,9 +147,7 @@ export function SupportPopover({ orgId }: SupportPopoverProps) {
   const { plan: organizationPlan } = useOrganizationPlan(orgId)
   const { features } = useConsoleProfile()
   const { mockCloudStatusAlert } = useDebugOverrides()
-  const { data: statusData, isLoading: statusLoading } = useAppwriteCloudStatus(
-    features.systemStatus,
-  )
+  const { data: statusData } = useAppwriteCloudStatus(features.systemStatus)
 
   // Check if the plan supports premium support
   const hasPremiumSupport = organizationPlan?.premiumSupport === true
@@ -174,7 +175,7 @@ export function SupportPopover({ orgId }: SupportPopoverProps) {
   const statusState: DisplayCloudStatusState =
     mockCloudStatusAlert !== 'live'
       ? mockCloudStatusAlert
-      : statusData?.aggregateState ?? 'operational'
+      : (statusData?.aggregateState ?? 'operational')
 
   const statusMeta = getStatusMeta(statusState)
 
@@ -384,7 +385,9 @@ export function SupportPopover({ orgId }: SupportPopoverProps) {
                 <div
                   className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${statusMeta.iconBg}`}
                 >
-                  <statusMeta.Icon className={`h-4 w-4 ${statusMeta.iconText}`} />
+                  <statusMeta.Icon
+                    className={`h-4 w-4 ${statusMeta.iconText}`}
+                  />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
@@ -397,11 +400,6 @@ export function SupportPopover({ orgId }: SupportPopoverProps) {
                     >
                       {statusMeta.badgeLabel}
                     </Badge>
-                    {statusLoading && mockCloudStatusAlert === 'live' ? (
-                      <span className="text-[11px] text-muted-foreground">
-                        Updating...
-                      </span>
-                    ) : null}
                   </div>
                   {statusDetail ? (
                     <p className="mt-0.5 line-clamp-2 text-[12px] text-muted-foreground">

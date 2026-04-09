@@ -6,10 +6,7 @@ import {
   useNavigate,
   useSearch,
 } from '@tanstack/react-router'
-import {
-  DEFAULT_PAGE_SIZE,
-  TEAMS_DEFAULT_PAGE_SIZE,
-} from '@/lib/react-query/hooks/constants'
+import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import {
   getSearch,
   getPage,
@@ -150,7 +147,7 @@ export function View({
       return {
         search: usersListSearch.search,
         page: usersListSearch.page ?? 1,
-        limit: usersListSearch.limit ?? DEFAULT_PAGE_SIZE,
+        limit: usersListSearch.limit ?? GRID_DEFAULT_PAGE_SIZE,
         filterMap: queryParamToMap(usersListSearch.query ?? null),
         sortBy: parsed.sortBy,
         sortOrder: parsed.sortOrder,
@@ -164,7 +161,7 @@ export function View({
     return {
       search: getSearch(url),
       page: getPage(url, 1),
-      limit: getLimit(url, DEFAULT_PAGE_SIZE),
+      limit: getLimit(url, GRID_DEFAULT_PAGE_SIZE),
       filterMap: queryParamToMap(getQueryParam(url)),
       sortBy: parsed.sortBy,
       sortOrder: parsed.sortOrder,
@@ -187,7 +184,7 @@ export function View({
     return {
       search: search.teamsSearch ?? undefined,
       page: search.teamsPage ?? 1,
-      limit: search.teamsLimit ?? TEAMS_DEFAULT_PAGE_SIZE,
+      limit: search.teamsLimit ?? GRID_DEFAULT_PAGE_SIZE,
       filterMap: queryParamToMap(search.teamsQuery ?? null),
     }
   }, [
@@ -248,7 +245,7 @@ export function View({
   const showAuthSecuritySettings = canShowAuthSecuritySettings(access, features)
 
   const urlPage = usersListParams?.page ?? 1
-  const urlLimit = usersListParams?.limit ?? DEFAULT_PAGE_SIZE
+  const urlLimit = usersListParams?.limit ?? GRID_DEFAULT_PAGE_SIZE
   const urlSearch = usersListParams?.search
   const urlSortBy = usersListParams?.sortBy ?? USERS_DEFAULT_SORT_BY
   const urlSortOrder = usersListParams?.sortOrder ?? USERS_DEFAULT_SORT_ORDER
@@ -262,7 +259,7 @@ export function View({
       : undefined
 
   const teamsUrlPage = teamsListParams?.page ?? 1
-  const teamsUrlLimit = teamsListParams?.limit ?? TEAMS_DEFAULT_PAGE_SIZE
+  const teamsUrlLimit = teamsListParams?.limit ?? GRID_DEFAULT_PAGE_SIZE
   const teamsUrlSearch = teamsListParams?.search
   const teamsFilterMap = teamsListParams?.filterMap ?? new Map()
   const teamsFilterQueries =
@@ -1028,7 +1025,7 @@ export function View({
         next.teamsLimit = teamsUrlLimit
         if (!next.teamsSearch) delete next.teamsSearch
         if (page === 1) delete next.teamsPage
-        if (next.teamsLimit === TEAMS_DEFAULT_PAGE_SIZE) delete next.teamsLimit
+        if (next.teamsLimit === GRID_DEFAULT_PAGE_SIZE) delete next.teamsLimit
         return next
       },
       replace: true,
@@ -1717,7 +1714,7 @@ export function View({
                     currentPage={usersDisplayedPage}
                     totalItems={displayedUsersTotal ?? usersTotal}
                     pageSize={urlLimit}
-                    pageSizeOptions={[10, 25, 50, 100]}
+                    pageSizeOptions={[12, 18, 36, 72]}
                     onPageChange={handleUsersPageChange}
                     onPageSizeChange={handleUsersPageSizeChange}
                     itemLabel="users"
@@ -1825,7 +1822,7 @@ export function View({
                     currentPage={usersDisplayedPage}
                     totalItems={displayedUsersTotal ?? usersTotal}
                     pageSize={urlLimit}
-                    pageSizeOptions={[10, 25, 50, 100]}
+                    pageSizeOptions={[12, 18, 36, 72]}
                     onPageChange={handleUsersPageChange}
                     onPageSizeChange={handleUsersPageSizeChange}
                     itemLabel="users"
@@ -2021,7 +2018,7 @@ export function View({
                     currentPage={teamsDisplayedPage}
                     totalItems={displayedTeamsTotal ?? teamsTotal}
                     pageSize={teamsUrlLimit}
-                    pageSizeOptions={[10, 25, 50, 100]}
+                    pageSizeOptions={[12, 18, 36, 72]}
                     onPageChange={handleTeamsPageChange}
                     onPageSizeChange={handleTeamsPageSizeChange}
                     itemLabel="teams"
@@ -2104,7 +2101,7 @@ export function View({
                     currentPage={teamsDisplayedPage}
                     totalItems={displayedTeamsTotal ?? teamsTotal}
                     pageSize={teamsUrlLimit}
-                    pageSizeOptions={[10, 25, 50, 100]}
+                    pageSizeOptions={[12, 18, 36, 72]}
                     onPageChange={handleTeamsPageChange}
                     onPageSizeChange={handleTeamsPageSizeChange}
                     itemLabel="teams"

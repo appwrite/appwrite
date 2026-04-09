@@ -7,7 +7,10 @@
  */
 
 import { sdk } from '@/lib/appwrite/sdk'
-import { generateFingerprintToken } from '@/lib/fingerprint'
+import {
+  ensureFingerprintServerTimeSynced,
+  generateFingerprintToken,
+} from '@/lib/fingerprint'
 
 const CONSOLE_FINGERPRINT_HEADER = 'X-Appwrite-Console-Fingerprint'
 
@@ -23,10 +26,19 @@ type ProjectsWithConsoleAccess = {
 export function reportConsoleAccess(projectId: string): void {
   if (!projectId) return
 
-  generateFingerprintToken()
+  const client = sdk.forConsole.client as {
+    headers?: Record<string, string>
+    config?: { endpoint?: string; project?: string }
+  }
+
+  ensureFingerprintServerTimeSynced(
+    client.config?.endpoint ?? '',
+    client.config?.project ?? 'console',
+  )
+    .then(() => generateFingerprintToken())
     .then((fingerprint) => {
-      const client = sdk.forConsole.client as { headers?: Record<string, string> }
-      if (client.headers) client.headers[CONSOLE_FINGERPRINT_HEADER] = fingerprint
+      if (client.headers)
+        client.headers[CONSOLE_FINGERPRINT_HEADER] = fingerprint
       const projects = sdk.forConsole.projects as ProjectsWithConsoleAccess
       if (typeof projects.updateConsoleAccess === 'function') {
         return projects.updateConsoleAccess({ projectId })
@@ -34,7 +46,9 @@ export function reportConsoleAccess(projectId: string): void {
     })
     .catch((e) => console.error('Failed to update console access:', e))
     .finally(() => {
-      const client = sdk.forConsole.client as { headers?: Record<string, string> }
+      const client = sdk.forConsole.client as {
+        headers?: Record<string, string>
+      }
       if (client.headers) delete client.headers[CONSOLE_FINGERPRINT_HEADER]
     })
 }

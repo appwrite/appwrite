@@ -1,4 +1,6 @@
 import { useState, useMemo } from 'react'
+import { endOfDay, startOfDay, subDays } from 'date-fns'
+import type { DateRange } from 'react-day-picker'
 import { cn } from '@/lib/utils'
 import {
   Zap,
@@ -8,7 +10,6 @@ import {
   ArrowUpDown,
   Radio,
   MessageSquare,
-  Calendar,
   RefreshCw,
   Download,
   AlertTriangle,
@@ -19,13 +20,6 @@ import {
 } from '@/lib/icons'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import {
   Sheet,
   SheetContent,
@@ -55,6 +49,7 @@ import {
   getUsagePercentage,
   getUsageStatus,
 } from './data'
+import { DateRangePicker } from '../analytics/DateRangePicker'
 
 // ============================================================================
 // ICON MAPPING
@@ -79,7 +74,12 @@ interface UsageViewProps {
   className?: string
 }
 
-type DateRange = '7d' | '14d' | '30d' | 'cycle'
+function getDefaultUsageDateRange(): DateRange {
+  return {
+    from: startOfDay(subDays(new Date(), 29)),
+    to: endOfDay(new Date()),
+  }
+}
 
 // ============================================================================
 // CATEGORY NAVIGATION ITEM (COLLAPSIBLE)
@@ -384,7 +384,9 @@ export function UsageView({ plan = 'pro', className }: UsageViewProps) {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
     () => new Set([]),
   )
-  const [dateRange, setDateRange] = useState<DateRange>('30d')
+  const [usageDateRange, setUsageDateRange] = useState<DateRange | undefined>(
+    () => getDefaultUsageDateRange(),
+  )
   const [state, setState] = useState<UsageState>('success')
 
   // Generate mock data based on plan
@@ -491,22 +493,11 @@ export function UsageView({ plan = 'pro', className }: UsageViewProps) {
               </div>
 
               <div className="flex items-center gap-3">
-                {/* Date range selector */}
-                <Select
-                  value={dateRange}
-                  onValueChange={(value) => setDateRange(value as DateRange)}
-                >
-                  <SelectTrigger className="h-9 w-[160px] text-[13px]">
-                    <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="7d">Last 7 days</SelectItem>
-                    <SelectItem value="14d">Last 14 days</SelectItem>
-                    <SelectItem value="30d">Last 30 days</SelectItem>
-                    <SelectItem value="cycle">Billing cycle</SelectItem>
-                  </SelectContent>
-                </Select>
+                <DateRangePicker
+                  dateRange={usageDateRange}
+                  onDateRangeChange={setUsageDateRange}
+                  className="h-9"
+                />
 
                 {/* Action buttons */}
                 <TooltipProvider delayDuration={0}>

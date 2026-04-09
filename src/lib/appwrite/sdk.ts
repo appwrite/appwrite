@@ -29,14 +29,22 @@ import {
   Sites,
   Tokens,
   TablesDB,
+  DocumentsDB,
+  VectorsDB,
   Domains,
   Organizations,
+  Webhooks,
 } from '@appwrite.io/console'
 import {
   getDebugEndpointBaseUrl,
   subscribeToDebugEndpointChange,
 } from '@/lib/debug-endpoint'
 import { wrapServiceObject } from '@/lib/appwrite/slow-call-reporting'
+import { CONSOLE_IMPERSONATION_TARGET_KEY } from '@/lib/console-impersonation'
+import {
+  ensureFingerprintServerTimeSynced,
+  resetFingerprintServerTimeCache,
+} from '@/lib/fingerprint'
 
 /**
  * True when the endpoint host is a known multi-region Appwrite cloud host
@@ -164,6 +172,7 @@ function createConsoleSdkRaw(client: Client) {
     domains: new Domains(client),
     storage: new Storage(client),
     organizations: new Organizations(client),
+    webhooks: new Webhooks(client),
   }
 }
 
@@ -179,13 +188,25 @@ clientConsole.setEndpoint(endpoint).setProject('console')
 // Configure Project client (will be set per-project)
 clientProject.setEndpoint(endpoint).setMode('admin')
 
+function scheduleConsoleFingerprintServerTimeSync(): Promise<void> {
+  if (typeof window === 'undefined') return Promise.resolve()
+  const ep = clientConsole.config.endpoint as string | undefined
+  const proj = clientConsole.config.project as string | undefined
+  if (!ep?.trim() || !proj?.trim()) return Promise.resolve()
+  return ensureFingerprintServerTimeSynced(ep, proj)
+}
+
 // When debug endpoint override changes, re-apply base endpoint to both clients
 if (typeof window !== 'undefined') {
   subscribeToDebugEndpointChange(() => {
     const base = getApiEndpoint()
     clientConsole.setEndpoint(base)
     clientProject.setEndpoint(base)
+    resetFingerprintServerTimeCache()
+    void scheduleConsoleFingerprintServerTimeSync()
   })
+
+  void scheduleConsoleFingerprintServerTimeSync()
 }
 
 // Realtime instances: one per client (console vs project).
@@ -193,6 +214,118 @@ if (typeof window !== 'undefined') {
 // so the project client has the correct project ID.
 const realtimeConsole = new Realtime(clientConsole)
 const realtimeProject = new Realtime(clientProject)
+
+const IMPERSONATION_HEADER_KEYS = [
+  'X-Appwrite-Impersonate-User-Id',
+  'X-Appwrite-Impersonate-User-Email',
+  'X-Appwrite-Impersonate-User-Phone',
+] as const
+
+function clearImpersonationHeaders(client: Client) {
+  for (const key of IMPERSONATION_HEADER_KEYS) {
+    delete client.headers[key]
+  }
+  const cfg = client.config as {
+    impersonateuserid?: string
+    impersonateuseremail?: string
+    impersonateuserphone?: string
+  }
+  cfg.impersonateuserid = ''
+  cfg.impersonateuseremail = ''
+  cfg.impersonateuserphone = ''
+}
+
+/**
+ * Some installs resolve an older `dist` build where `Client.prototype.setImpersonateUserId`
+ * is missing even though newer sources include it. Mirror the SDK implementation so
+ * impersonation always works when `headers` / `config` are present.
+ */
+function applyImpersonateUserIdToClient(client: Client, userId: string) {
+  const id = userId.trim()
+  if (!id) return
+
+  const c = client as Client & {
+    setImpersonateUserId?: (value: string) => Client
+  }
+
+  if (typeof c.setImpersonateUserId === 'function') {
+    c.setImpersonateUserId(id)
+    return
+  }
+
+  c.headers['X-Appwrite-Impersonate-User-Id'] = id
+  const cfg = c.config as { impersonateuserid?: string }
+  cfg.impersonateuserid = id
+}
+
+/**
+ * Apply Console user impersonation on the main console client (and mirror on the
+ * shared project client so project-scoped Console API calls use the same effective user).
+ * Callers should persist session via `persistConsoleImpersonationSession` when starting.
+ */
+export function applyConsoleImpersonateUserId(targetUserId: string) {
+  const id = String(targetUserId ?? '').trim()
+  if (!id) return
+  for (const client of [clientConsole, clientProject]) {
+    clearImpersonationHeaders(client)
+    applyImpersonateUserIdToClient(client, id)
+  }
+}
+
+/** Remove impersonation headers from console and project clients. */
+export function clearConsoleImpersonateUser() {
+  for (const client of [clientConsole, clientProject]) {
+    clearImpersonationHeaders(client)
+  }
+}
+
+function restoreConsoleImpersonationFromSession() {
+  try {
+    const id = sessionStorage.getItem(CONSOLE_IMPERSONATION_TARGET_KEY)?.trim()
+    if (id) {
+      applyConsoleImpersonateUserId(id)
+    }
+  } catch {
+    /* private mode / SSR */
+  }
+}
+
+if (typeof window !== 'undefined') {
+  restoreConsoleImpersonationFromSession()
+}
+
+/**
+ * Site deployment screenshots are stored in console-owned storage. Preview URLs must use
+ * project id `console` while targeting the project's regional API host (see
+ * `getProjectApiEndpoint`), not the user's project id in the query string.
+ */
+export function getSiteScreenshotFilePreviewUrl(
+  projectId: string,
+  params: {
+    bucketId: string
+    fileId: string
+    width?: number
+    height?: number
+  },
+): string {
+  const c = new Client()
+  Object.assign(c.config, clientConsole.config)
+  Object.assign(c.headers, clientConsole.headers)
+  c.setEndpoint(getProjectApiEndpoint(projectId)).setProject('console')
+  return new Storage(c).getFilePreview(params)
+}
+
+/**
+ * Realtime for console-scoped channels on the project's regional API host
+ * (project id `console`, same session as the main console client).
+ */
+export function createRegionalConsoleRealtime(projectId: string): Realtime {
+  const c = new Client()
+  Object.assign(c.config, clientConsole.config)
+  Object.assign(c.headers, clientConsole.headers)
+  c.setEndpoint(getProjectApiEndpoint(projectId)).setProject('console')
+  return new Realtime(c)
+}
 
 // Create Project SDK instance (raw), then wrap for slow-call reporting
 const sdkForProjectRaw = {
@@ -215,7 +348,10 @@ const sdkForProjectRaw = {
   migrations: new Migrations(clientProject),
   sites: new Sites(clientProject),
   tablesDB: new TablesDB(clientProject),
+  documentsDB: new DocumentsDB(clientProject),
+  vectorsDB: new VectorsDB(clientProject),
   console: new Console(clientProject), // for suggestions API
+  webhooks: new Webhooks(clientProject),
 }
 
 const sdkForProject = wrapServiceObject(
@@ -262,6 +398,9 @@ export const sdk = {
   /**
    * Realtime for console-level subscriptions (sites, functions, deployments,
    * executions, migrations, platform ping, rules). Uses project = 'console'.
+   * Prefer `registerConsoleRealtimeListener` from `@/lib/realtime` so the app
+   * keeps a single WebSocket; direct subscribe() here forces reconnects when
+   * combined with other features.
    */
   getConsoleRealtime(): Realtime {
     return realtimeConsole

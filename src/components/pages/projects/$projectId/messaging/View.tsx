@@ -323,7 +323,11 @@ export function View() {
       setSelectedItems(new Set())
     } else {
       setSelectedItems(
-        new Set(items.map((item: { $id?: string }) => item?.$id).filter(Boolean) as string[]),
+        new Set(
+          items
+            .map((item: { $id?: string }) => item?.$id)
+            .filter(Boolean) as string[],
+        ),
       )
     }
   }
@@ -504,7 +508,8 @@ export function View() {
                         <Checkbox
                           checked={
                             (currentData.items ?? []).length > 0 &&
-                            selectedItems.size === (currentData.items ?? []).length
+                            selectedItems.size ===
+                              (currentData.items ?? []).length
                           }
                           onCheckedChange={toggleAllItems}
                         />
@@ -568,137 +573,141 @@ export function View() {
                   </TableHeader>
                   <TableBody>
                     {activeTab === 'messages' &&
-                      (currentData.items ?? []).map((message: Models.Message) => {
-                        if (!message?.$id) return null
-                        const TypeIcon = getMessageTypeIcon(
-                          message.providerType,
-                        )
-                        return (
-                          <MessageContextMenu
-                            key={message.$id}
-                            projectId={projectId!}
-                            message={{ $id: message.$id }}
-                          >
-                          <TableRow
-                            className={cn(
-                              'cursor-pointer transition-colors border-b border-border/50',
-                              selectedItems.has(message.$id)
-                                ? 'bg-muted'
-                                : 'hover:bg-muted/30',
-                            )}
-                            onClick={(e) => {
-                              const target = e.target as HTMLElement
-                              if (
-                                target.closest('button') ||
-                                target.closest('[role="checkbox"]') ||
-                                target.closest('a')
-                              ) {
-                                return
-                              }
-                              navigate({
-                                to: '/projects/$projectId/messaging/$messageId',
-                                params: {
-                                  projectId: projectId!,
-                                  messageId: message.$id,
-                                },
-                              })
-                            }}
-                          >
-                            <TableCell
-                              onClick={(e) => e.stopPropagation()}
-                              className="px-4 py-3"
+                      (currentData.items ?? []).map(
+                        (message: Models.Message) => {
+                          if (!message?.$id) return null
+                          const TypeIcon = getMessageTypeIcon(
+                            message.providerType,
+                          )
+                          return (
+                            <MessageContextMenu
+                              key={message.$id}
+                              projectId={projectId!}
+                              message={{ $id: message.$id }}
                             >
-                              <Checkbox
-                                checked={selectedItems.has(message.$id)}
-                                onCheckedChange={() => toggleItem(message.$id)}
-                              />
-                            </TableCell>
-                            <TableCell className="px-4 py-3">
-                              <Link
-                                to="/projects/$projectId/messaging/$messageId"
-                                params={{
-                                  projectId: projectId!,
-                                  messageId: message.$id,
-                                }}
-                                className="block"
-                              >
-                                <CopyableId id={message.$id} size="xs" />
-                              </Link>
-                            </TableCell>
-                            <TableCell className="px-4 py-3">
-                              <Link
-                                to="/projects/$projectId/messaging/$messageId"
-                                params={{
-                                  projectId: projectId!,
-                                  messageId: message.$id,
-                                }}
-                                className="block"
-                              >
-                                <p className="text-[13px] font-medium text-foreground">
-                                  {getMessageContent(message)}
-                                </p>
-                              </Link>
-                            </TableCell>
-                            <TableCell className="px-4 py-3">
-                              <div className="flex items-center gap-2">
-                                <TypeIcon className="h-4 w-4 text-muted-foreground" />
-                                <span className="text-[13px] text-muted-foreground capitalize">
-                                  {message.providerType}
-                                </span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="px-4 py-3">
-                              {getMessageStatusBadge(
-                                message.status,
-                                message.deliveryErrors,
-                              )}
-                            </TableCell>
-                            <TableCell className="px-4 py-3 text-right">
-                              <Link
-                                to="/projects/$projectId/messaging/$messageId"
-                                params={{
-                                  projectId: projectId!,
-                                  messageId: message.$id,
-                                }}
-                                className="block"
-                              >
-                                {message.scheduledAt ? (
-                                  <DateTooltip
-                                    date={message.scheduledAt}
-                                    className="text-[12px] text-muted-foreground font-mono"
-                                  />
-                                ) : (
-                                  <span className="text-[12px] text-muted-foreground/50 italic">
-                                    N/A
-                                  </span>
+                              <TableRow
+                                className={cn(
+                                  'cursor-pointer transition-colors border-b border-border/50',
+                                  selectedItems.has(message.$id)
+                                    ? 'bg-muted'
+                                    : 'hover:bg-muted/30',
                                 )}
-                              </Link>
-                            </TableCell>
-                            <TableCell className="px-4 py-3 text-right">
-                              <Link
-                                to="/projects/$projectId/messaging/$messageId"
-                                params={{
-                                  projectId: projectId!,
-                                  messageId: message.$id,
+                                onClick={(e) => {
+                                  const target = e.target as HTMLElement
+                                  if (
+                                    target.closest('button') ||
+                                    target.closest('[role="checkbox"]') ||
+                                    target.closest('a')
+                                  ) {
+                                    return
+                                  }
+                                  navigate({
+                                    to: '/projects/$projectId/messaging/$messageId',
+                                    params: {
+                                      projectId: projectId!,
+                                      messageId: message.$id,
+                                    },
+                                  })
                                 }}
-                                className="block"
                               >
-                                {message.deliveredAt ? (
-                                  <DateTooltip
-                                    date={message.deliveredAt}
-                                    className="text-[12px] text-muted-foreground font-mono"
+                                <TableCell
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="px-4 py-3"
+                                >
+                                  <Checkbox
+                                    checked={selectedItems.has(message.$id)}
+                                    onCheckedChange={() =>
+                                      toggleItem(message.$id)
+                                    }
                                   />
-                                ) : (
-                                  <span className="text-[12px] text-muted-foreground/50 italic">
-                                    N/A
-                                  </span>
-                                )}
-                              </Link>
-                            </TableCell>
-                          </TableRow>
-                          </MessageContextMenu>
-                        )
-                      })}
+                                </TableCell>
+                                <TableCell className="px-4 py-3">
+                                  <Link
+                                    to="/projects/$projectId/messaging/$messageId"
+                                    params={{
+                                      projectId: projectId!,
+                                      messageId: message.$id,
+                                    }}
+                                    className="block"
+                                  >
+                                    <CopyableId id={message.$id} size="xs" />
+                                  </Link>
+                                </TableCell>
+                                <TableCell className="px-4 py-3">
+                                  <Link
+                                    to="/projects/$projectId/messaging/$messageId"
+                                    params={{
+                                      projectId: projectId!,
+                                      messageId: message.$id,
+                                    }}
+                                    className="block"
+                                  >
+                                    <p className="text-[13px] font-medium text-foreground">
+                                      {getMessageContent(message)}
+                                    </p>
+                                  </Link>
+                                </TableCell>
+                                <TableCell className="px-4 py-3">
+                                  <div className="flex items-center gap-2">
+                                    <TypeIcon className="h-4 w-4 text-muted-foreground" />
+                                    <span className="text-[13px] text-muted-foreground capitalize">
+                                      {message.providerType}
+                                    </span>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="px-4 py-3">
+                                  {getMessageStatusBadge(
+                                    message.status,
+                                    message.deliveryErrors,
+                                  )}
+                                </TableCell>
+                                <TableCell className="px-4 py-3 text-right">
+                                  <Link
+                                    to="/projects/$projectId/messaging/$messageId"
+                                    params={{
+                                      projectId: projectId!,
+                                      messageId: message.$id,
+                                    }}
+                                    className="block"
+                                  >
+                                    {message.scheduledAt ? (
+                                      <DateTooltip
+                                        date={message.scheduledAt}
+                                        className="text-[12px] text-muted-foreground font-mono"
+                                      />
+                                    ) : (
+                                      <span className="text-[12px] text-muted-foreground/50 italic">
+                                        N/A
+                                      </span>
+                                    )}
+                                  </Link>
+                                </TableCell>
+                                <TableCell className="px-4 py-3 text-right">
+                                  <Link
+                                    to="/projects/$projectId/messaging/$messageId"
+                                    params={{
+                                      projectId: projectId!,
+                                      messageId: message.$id,
+                                    }}
+                                    className="block"
+                                  >
+                                    {message.deliveredAt ? (
+                                      <DateTooltip
+                                        date={message.deliveredAt}
+                                        className="text-[12px] text-muted-foreground font-mono"
+                                      />
+                                    ) : (
+                                      <span className="text-[12px] text-muted-foreground/50 italic">
+                                        N/A
+                                      </span>
+                                    )}
+                                  </Link>
+                                </TableCell>
+                              </TableRow>
+                            </MessageContextMenu>
+                          )
+                        },
+                      )}
                     {activeTab === 'topics' &&
                       (currentData.items ?? []).map((topic: Models.Topic) => {
                         if (!topic?.$id) return null
@@ -712,221 +721,231 @@ export function View() {
                             projectId={projectId!}
                             topic={{ $id: topic.$id, name: topic.name }}
                           >
-                          <TableRow
-                            className={cn(
-                              'cursor-pointer transition-colors border-b border-border/50',
-                              selectedItems.has(topic.$id)
-                                ? 'bg-muted'
-                                : 'hover:bg-muted/30',
-                            )}
-                            onClick={(e) => {
-                              const target = e.target as HTMLElement
-                              if (
-                                target.closest('button') ||
-                                target.closest('[role="checkbox"]') ||
-                                target.closest('a')
-                              ) {
-                                return
-                              }
-                              navigate({
-                                to: '/projects/$projectId/messaging/topics/$topicId',
-                                params: {
-                                  projectId: projectId!,
-                                  topicId: topic.$id,
-                                },
-                              })
-                            }}
-                          >
-                            <TableCell
-                              onClick={(e) => e.stopPropagation()}
-                              className="px-4 py-3"
+                            <TableRow
+                              className={cn(
+                                'cursor-pointer transition-colors border-b border-border/50',
+                                selectedItems.has(topic.$id)
+                                  ? 'bg-muted'
+                                  : 'hover:bg-muted/30',
+                              )}
+                              onClick={(e) => {
+                                const target = e.target as HTMLElement
+                                if (
+                                  target.closest('button') ||
+                                  target.closest('[role="checkbox"]') ||
+                                  target.closest('a')
+                                ) {
+                                  return
+                                }
+                                navigate({
+                                  to: '/projects/$projectId/messaging/topics/$topicId',
+                                  params: {
+                                    projectId: projectId!,
+                                    topicId: topic.$id,
+                                  },
+                                })
+                              }}
                             >
-                              <Checkbox
-                                checked={selectedItems.has(topic.$id)}
-                                onCheckedChange={() => toggleItem(topic.$id)}
-                              />
-                            </TableCell>
-                            <TableCell className="px-4 py-3">
-                              <Link
-                                to="/projects/$projectId/messaging/topics/$topicId"
-                                params={{
-                                  projectId: projectId!,
-                                  topicId: topic.$id,
-                                }}
-                                className="block"
+                              <TableCell
+                                onClick={(e) => e.stopPropagation()}
+                                className="px-4 py-3"
                               >
-                                <CopyableId id={topic.$id} size="xs" />
-                              </Link>
-                            </TableCell>
-                            <TableCell className="px-4 py-3">
-                              <Link
-                                to="/projects/$projectId/messaging/topics/$topicId"
-                                params={{
-                                  projectId: projectId!,
-                                  topicId: topic.$id,
-                                }}
-                                className="block"
-                              >
-                                <p className="text-[13px] font-medium text-foreground">
-                                  {topic.name}
-                                </p>
-                              </Link>
-                            </TableCell>
-                            <TableCell className="px-4 py-3 text-right">
-                              <Link
-                                to="/projects/$projectId/messaging/topics/$topicId"
-                                params={{
-                                  projectId: projectId!,
-                                  topicId: topic.$id,
-                                }}
-                                className="block"
-                              >
-                                <span className="text-[13px] text-muted-foreground">
-                                  {totalSubscribers}
-                                </span>
-                              </Link>
-                            </TableCell>
-                            <TableCell className="px-4 py-3 text-right">
-                              <Link
-                                to="/projects/$projectId/messaging/topics/$topicId"
-                                params={{
-                                  projectId: projectId!,
-                                  topicId: topic.$id,
-                                }}
-                                className="block"
-                              >
-                                {topic.$createdAt ? (
-                                  <DateTooltip
-                                    date={topic.$createdAt}
-                                    className="text-[12px] text-muted-foreground font-mono"
-                                  />
-                                ) : (
-                                  <span className="text-[12px] text-muted-foreground/50 italic">
-                                    N/A
+                                <Checkbox
+                                  checked={selectedItems.has(topic.$id)}
+                                  onCheckedChange={() => toggleItem(topic.$id)}
+                                />
+                              </TableCell>
+                              <TableCell className="px-4 py-3">
+                                <Link
+                                  to="/projects/$projectId/messaging/topics/$topicId"
+                                  params={{
+                                    projectId: projectId!,
+                                    topicId: topic.$id,
+                                  }}
+                                  className="block"
+                                >
+                                  <CopyableId id={topic.$id} size="xs" />
+                                </Link>
+                              </TableCell>
+                              <TableCell className="px-4 py-3">
+                                <Link
+                                  to="/projects/$projectId/messaging/topics/$topicId"
+                                  params={{
+                                    projectId: projectId!,
+                                    topicId: topic.$id,
+                                  }}
+                                  className="block"
+                                >
+                                  <p className="text-[13px] font-medium text-foreground">
+                                    {topic.name}
+                                  </p>
+                                </Link>
+                              </TableCell>
+                              <TableCell className="px-4 py-3 text-right">
+                                <Link
+                                  to="/projects/$projectId/messaging/topics/$topicId"
+                                  params={{
+                                    projectId: projectId!,
+                                    topicId: topic.$id,
+                                  }}
+                                  className="block"
+                                >
+                                  <span className="text-[13px] text-muted-foreground">
+                                    {totalSubscribers}
                                   </span>
-                                )}
-                              </Link>
-                            </TableCell>
-                          </TableRow>
+                                </Link>
+                              </TableCell>
+                              <TableCell className="px-4 py-3 text-right">
+                                <Link
+                                  to="/projects/$projectId/messaging/topics/$topicId"
+                                  params={{
+                                    projectId: projectId!,
+                                    topicId: topic.$id,
+                                  }}
+                                  className="block"
+                                >
+                                  {topic.$createdAt ? (
+                                    <DateTooltip
+                                      date={topic.$createdAt}
+                                      className="text-[12px] text-muted-foreground font-mono"
+                                    />
+                                  ) : (
+                                    <span className="text-[12px] text-muted-foreground/50 italic">
+                                      N/A
+                                    </span>
+                                  )}
+                                </Link>
+                              </TableCell>
+                            </TableRow>
                           </TopicContextMenu>
                         )
                       })}
                     {activeTab === 'providers' &&
-                      (currentData.items ?? []).map((provider: Models.Provider) => {
-                        if (!provider?.$id) return null
-                        const TypeIcon = getMessageTypeIcon(provider.type)
-                        return (
-                          <ProviderContextMenu
-                            key={provider.$id}
-                            projectId={projectId!}
-                            provider={{ $id: provider.$id, name: provider.name }}
-                          >
-                          <TableRow
-                            className={cn(
-                              'cursor-pointer transition-colors border-b border-border/50',
-                              selectedItems.has(provider.$id)
-                                ? 'bg-muted'
-                                : 'hover:bg-muted/30',
-                            )}
-                            onClick={(e) => {
-                              const target = e.target as HTMLElement
-                              if (
-                                target.closest('button') ||
-                                target.closest('[role="checkbox"]') ||
-                                target.closest('a')
-                              ) {
-                                return
-                              }
-                              navigate({
-                                to: '/projects/$projectId/messaging/providers/$providerId',
-                                params: {
-                                  projectId: projectId!,
-                                  providerId: provider.$id,
-                                },
-                              })
-                            }}
-                          >
-                            <TableCell
-                              onClick={(e) => e.stopPropagation()}
-                              className="px-4 py-3"
+                      (currentData.items ?? []).map(
+                        (provider: Models.Provider) => {
+                          if (!provider?.$id) return null
+                          const TypeIcon = getMessageTypeIcon(provider.type)
+                          return (
+                            <ProviderContextMenu
+                              key={provider.$id}
+                              projectId={projectId!}
+                              provider={{
+                                $id: provider.$id,
+                                name: provider.name,
+                              }}
                             >
-                              <Checkbox
-                                checked={selectedItems.has(provider.$id)}
-                                onCheckedChange={() => toggleItem(provider.$id)}
-                              />
-                            </TableCell>
-                            <TableCell className="px-4 py-3">
-                              <Link
-                                to="/projects/$projectId/messaging/providers/$providerId"
-                                params={{
-                                  projectId: projectId!,
-                                  providerId: provider.$id,
+                              <TableRow
+                                className={cn(
+                                  'cursor-pointer transition-colors border-b border-border/50',
+                                  selectedItems.has(provider.$id)
+                                    ? 'bg-muted'
+                                    : 'hover:bg-muted/30',
+                                )}
+                                onClick={(e) => {
+                                  const target = e.target as HTMLElement
+                                  if (
+                                    target.closest('button') ||
+                                    target.closest('[role="checkbox"]') ||
+                                    target.closest('a')
+                                  ) {
+                                    return
+                                  }
+                                  navigate({
+                                    to: '/projects/$projectId/messaging/providers/$providerId',
+                                    params: {
+                                      projectId: projectId!,
+                                      providerId: provider.$id,
+                                    },
+                                  })
                                 }}
-                                className="block"
                               >
-                                <CopyableId id={provider.$id} size="xs" />
-                              </Link>
-                            </TableCell>
-                            <TableCell className="px-4 py-3">
-                              <Link
-                                to="/projects/$projectId/messaging/providers/$providerId"
-                                params={{
-                                  projectId: projectId!,
-                                  providerId: provider.$id,
-                                }}
-                                className="block"
-                              >
-                                <div className="flex items-center gap-2">
-                                  <MessagingProviderIcon
-                                    providerName={provider.name}
-                                    providerType={
-                                      provider.type as 'email' | 'sms' | 'push'
+                                <TableCell
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="px-4 py-3"
+                                >
+                                  <Checkbox
+                                    checked={selectedItems.has(provider.$id)}
+                                    onCheckedChange={() =>
+                                      toggleItem(provider.$id)
                                     }
-                                    size="sm"
-                                    className="h-5 w-5"
                                   />
-                                  <span className="text-[13px] font-medium text-foreground">
-                                    {provider.name}
-                                  </span>
-                                </div>
-                              </Link>
-                            </TableCell>
-                            <TableCell className="px-4 py-3">
-                              <div className="flex items-center gap-2">
-                                <TypeIcon className="h-4 w-4 text-muted-foreground" />
-                                <span className="text-[13px] text-muted-foreground capitalize">
-                                  {provider.type}
-                                </span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="px-4 py-3">
-                              {provider.enabled ? (
-                                <Badge variant="success" className="gap-1">
-                                  <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                                  Enabled
-                                </Badge>
-                              ) : (
-                                <Badge variant="secondary">Disabled</Badge>
-                              )}
-                            </TableCell>
-                            <TableCell className="px-4 py-3">
-                              <Link
-                                to="/projects/$projectId/messaging/providers/$providerId"
-                                params={{
-                                  projectId: projectId!,
-                                  providerId: provider.$id,
-                                }}
-                                className="block"
-                              >
-                                <p className="text-[13px] text-foreground">
-                                  {provider.name}
-                                </p>
-                              </Link>
-                            </TableCell>
-                          </TableRow>
-                          </ProviderContextMenu>
-                        )
-                      })}
+                                </TableCell>
+                                <TableCell className="px-4 py-3">
+                                  <Link
+                                    to="/projects/$projectId/messaging/providers/$providerId"
+                                    params={{
+                                      projectId: projectId!,
+                                      providerId: provider.$id,
+                                    }}
+                                    className="block"
+                                  >
+                                    <CopyableId id={provider.$id} size="xs" />
+                                  </Link>
+                                </TableCell>
+                                <TableCell className="px-4 py-3">
+                                  <Link
+                                    to="/projects/$projectId/messaging/providers/$providerId"
+                                    params={{
+                                      projectId: projectId!,
+                                      providerId: provider.$id,
+                                    }}
+                                    className="block"
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <MessagingProviderIcon
+                                        providerName={provider.name}
+                                        providerType={
+                                          provider.type as
+                                            | 'email'
+                                            | 'sms'
+                                            | 'push'
+                                        }
+                                        size="sm"
+                                        className="h-5 w-5"
+                                      />
+                                      <span className="text-[13px] font-medium text-foreground">
+                                        {provider.name}
+                                      </span>
+                                    </div>
+                                  </Link>
+                                </TableCell>
+                                <TableCell className="px-4 py-3">
+                                  <div className="flex items-center gap-2">
+                                    <TypeIcon className="h-4 w-4 text-muted-foreground" />
+                                    <span className="text-[13px] text-muted-foreground capitalize">
+                                      {provider.type}
+                                    </span>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="px-4 py-3">
+                                  {provider.enabled ? (
+                                    <Badge variant="success" className="gap-1">
+                                      <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                                      Enabled
+                                    </Badge>
+                                  ) : (
+                                    <Badge variant="secondary">Disabled</Badge>
+                                  )}
+                                </TableCell>
+                                <TableCell className="px-4 py-3">
+                                  <Link
+                                    to="/projects/$projectId/messaging/providers/$providerId"
+                                    params={{
+                                      projectId: projectId!,
+                                      providerId: provider.$id,
+                                    }}
+                                    className="block"
+                                  >
+                                    <p className="text-[13px] text-foreground">
+                                      {provider.name}
+                                    </p>
+                                  </Link>
+                                </TableCell>
+                              </TableRow>
+                            </ProviderContextMenu>
+                          )
+                        },
+                      )}
                   </TableBody>
                 </Table>
               </div>

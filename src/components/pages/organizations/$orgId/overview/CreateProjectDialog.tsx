@@ -29,6 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 
 interface CreateProjectDialogProps {
   open: boolean
@@ -46,6 +47,8 @@ export function CreateProjectDialog({
   currentProjectsCount = 0,
 }: CreateProjectDialogProps) {
   const navigate = useNavigate()
+  const { features } = useConsoleProfile()
+  const supportsMultiRegion = features.multiRegion
   const [projectId, setProjectId] = useState<string | undefined>(undefined)
   const [name, setName] = useState('')
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null)
@@ -62,7 +65,7 @@ export function CreateProjectDialog({
     regions,
     isLoading: regionsLoading,
     error: regionsError,
-  } = useRegions()
+  } = useRegions(open && supportsMultiRegion)
 
   // Check if a region is coming soon (disabled/inactive)
   const isRegionComingSoon = (region: unknown): boolean => {
@@ -171,7 +174,7 @@ export function CreateProjectDialog({
       return
     }
 
-    if (!selectedRegion) {
+    if (supportsMultiRegion && !selectedRegion) {
       toast.error('Please select a region')
       return
     }
@@ -180,7 +183,7 @@ export function CreateProjectDialog({
       const result = await createProjectMutation.mutateAsync({
         projectId,
         name: name.trim(),
-        region: selectedRegion,
+        region: supportsMultiRegion ? (selectedRegion ?? undefined) : undefined,
       })
 
       toast.success('Project created successfully')
@@ -247,46 +250,102 @@ export function CreateProjectDialog({
               />
             </div>
 
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                <Globe className="h-3.5 w-3.5 text-muted-foreground" />
-                Region
-                <span className="text-destructive">*</span>
-              </Label>
-              {regionsLoading ? (
-                <div className="h-9 w-full animate-pulse rounded-md border border-border bg-muted/50" />
-              ) : regionsError ? (
-                <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-4 text-center">
-                  <p className="text-[13px] text-destructive mb-1">
-                    Failed to load regions
-                  </p>
-                  <p className="text-[12px] text-muted-foreground">
-                    {regionsError instanceof Error
-                      ? regionsError.message
-                      : 'Unknown error'}
-                  </p>
-                </div>
-              ) : regions.length > 0 ? (
-                <Select
-                  value={selectedRegion || undefined}
-                  onValueChange={setSelectedRegion}
-                  disabled={createProjectMutation.isPending}
-                >
-                  <SelectTrigger className="h-9 w-full text-[13px]">
-                    <SelectValue placeholder="Select a region">
-                      {selectedRegion
-                        ? (() => {
-                            const region = regions.find(
-                              (r: unknown) => r.$id === selectedRegion,
-                            )
-                            if (!region) return 'Select a region'
-                            const flagCode = region.flag || ''
-                            const regionName =
-                              region.name || region.$id || 'Unknown'
-                            const flagUrl = flagCode
-                              ? `${sdk.forConsole.client.config.endpoint}/avatars/flags/${flagCode.toLowerCase()}?width=80&height=80&quality=100&project=console`
-                              : null
-                            return (
+            {supportsMultiRegion && (
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Globe className="h-3.5 w-3.5 text-muted-foreground" />
+                  Region
+                  <span className="text-destructive">*</span>
+                </Label>
+                {regionsLoading ? (
+                  <div className="h-9 w-full animate-pulse rounded-md border border-border bg-muted/50" />
+                ) : regionsError ? (
+                  <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-4 text-center">
+                    <p className="text-[13px] text-destructive mb-1">
+                      Failed to load regions
+                    </p>
+                    <p className="text-[12px] text-muted-foreground">
+                      {regionsError instanceof Error
+                        ? regionsError.message
+                        : 'Unknown error'}
+                    </p>
+                  </div>
+                ) : regions.length > 0 ? (
+                  <Select
+                    value={selectedRegion || undefined}
+                    onValueChange={setSelectedRegion}
+                    disabled={createProjectMutation.isPending}
+                  >
+                    <SelectTrigger className="h-9 w-full text-[13px]">
+                      <SelectValue placeholder="Select a region">
+                        {selectedRegion
+                          ? (() => {
+                              const region = regions.find(
+                                (r: unknown) => r.$id === selectedRegion,
+                              )
+                              if (!region) return 'Select a region'
+                              const flagCode = region.flag || ''
+                              const regionName =
+                                region.name || region.$id || 'Unknown'
+                              const flagUrl = flagCode
+                                ? `${sdk.forConsole.client.config.endpoint}/avatars/flags/${flagCode.toLowerCase()}?width=80&height=80&quality=100&project=console`
+                                : null
+                              return (
+                                <div className="flex items-center gap-2 w-full">
+                                  {flagUrl ? (
+                                    <img
+                                      src={flagUrl}
+                                      alt={`${regionName} flag`}
+                                      className="h-4 w-4 shrink-0 rounded border border-border/50 object-cover"
+                                      onError={(e) => {
+                                        const target =
+                                          e.target as HTMLImageElement
+                                        target.style.display = 'none'
+                                      }}
+                                    />
+                                  ) : (
+                                    <Globe className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                  )}
+                                  <span className="flex-1">{regionName}</span>
+                                  <span className="text-[11px] font-mono text-muted-foreground">
+                                    {region.$id}
+                                  </span>
+                                </div>
+                              )
+                            })()
+                          : 'Select a region'}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sortedRegions.map((region: unknown, index: number) => {
+                        const flagCode = region.flag || ''
+                        const regionName =
+                          region.name || region.$id || 'Unknown'
+                        const flagUrl = flagCode
+                          ? `${sdk.forConsole.client.config.endpoint}/avatars/flags/${flagCode.toLowerCase()}?width=80&height=80&quality=100&project=console`
+                          : null
+                        const isComingSoon = isRegionComingSoon(region)
+                        const isFirstInactive =
+                          index > 0 &&
+                          !isRegionComingSoon(sortedRegions[index - 1]) &&
+                          isComingSoon
+
+                        return (
+                          <>
+                            {isFirstInactive && (
+                              <SelectSeparator
+                                key={`separator-${region.$id}`}
+                                className="my-1"
+                              />
+                            )}
+                            <SelectItem
+                              key={region.$id}
+                              value={region.$id}
+                              disabled={isComingSoon}
+                              className={cn(
+                                isComingSoon && 'opacity-50 cursor-not-allowed',
+                              )}
+                            >
                               <div className="flex items-center gap-2 w-full">
                                 {flagUrl ? (
                                   <img
@@ -306,79 +365,27 @@ export function CreateProjectDialog({
                                 <span className="text-[11px] font-mono text-muted-foreground">
                                   {region.$id}
                                 </span>
+                                {isComingSoon && (
+                                  <span className="text-[11px] text-muted-foreground">
+                                    Coming soon
+                                  </span>
+                                )}
                               </div>
-                            )
-                          })()
-                        : 'Select a region'}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {sortedRegions.map((region: unknown, index: number) => {
-                      const flagCode = region.flag || ''
-                      const regionName = region.name || region.$id || 'Unknown'
-                      const flagUrl = flagCode
-                        ? `${sdk.forConsole.client.config.endpoint}/avatars/flags/${flagCode.toLowerCase()}?width=80&height=80&quality=100&project=console`
-                        : null
-                      const isComingSoon = isRegionComingSoon(region)
-                      const isFirstInactive =
-                        index > 0 &&
-                        !isRegionComingSoon(sortedRegions[index - 1]) &&
-                        isComingSoon
-
-                      return (
-                        <>
-                          {isFirstInactive && (
-                            <SelectSeparator
-                              key={`separator-${region.$id}`}
-                              className="my-1"
-                            />
-                          )}
-                          <SelectItem
-                            key={region.$id}
-                            value={region.$id}
-                            disabled={isComingSoon}
-                            className={cn(
-                              isComingSoon && 'opacity-50 cursor-not-allowed',
-                            )}
-                          >
-                            <div className="flex items-center gap-2 w-full">
-                              {flagUrl ? (
-                                <img
-                                  src={flagUrl}
-                                  alt={`${regionName} flag`}
-                                  className="h-4 w-4 shrink-0 rounded border border-border/50 object-cover"
-                                  onError={(e) => {
-                                    const target = e.target as HTMLImageElement
-                                    target.style.display = 'none'
-                                  }}
-                                />
-                              ) : (
-                                <Globe className="h-4 w-4 shrink-0 text-muted-foreground" />
-                              )}
-                              <span className="flex-1">{regionName}</span>
-                              <span className="text-[11px] font-mono text-muted-foreground">
-                                {region.$id}
-                              </span>
-                              {isComingSoon && (
-                                <span className="text-[11px] text-muted-foreground">
-                                  Coming soon
-                                </span>
-                              )}
-                            </div>
-                          </SelectItem>
-                        </>
-                      )
-                    })}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <div className="rounded-lg border border-border bg-muted/50 p-4 text-center">
-                  <p className="text-[13px] text-muted-foreground">
-                    No regions available
-                  </p>
-                </div>
-              )}
-            </div>
+                            </SelectItem>
+                          </>
+                        )
+                      })}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className="rounded-lg border border-border bg-muted/50 p-4 text-center">
+                    <p className="text-[13px] text-muted-foreground">
+                      No regions available
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
 
             {isAdditionalProject && additionalProjectPrice && (
               <Alert>
@@ -408,7 +415,7 @@ export function CreateProjectDialog({
               disabled={
                 createProjectMutation.isPending ||
                 !name.trim() ||
-                !selectedRegion
+                (supportsMultiRegion && !selectedRegion)
               }
               style={{ backgroundColor: '#f02e65' }}
               className="text-white hover:opacity-90"

@@ -24,6 +24,7 @@ import {
 import type {
   CompactFilterKey,
   FilterColumn,
+  FilterColumnType,
   FilterMap,
 } from '@/lib/table-filters'
 import { mapToQueryParam } from '@/lib/table-filters'
@@ -105,7 +106,9 @@ export function FiltersPopoverContent({
 }: FiltersPopoverContentProps) {
   const sortEnabled = sortBy != null && sortOrder != null && !!onSortChange
   const sortOptionsFromColumns = sortEnabled
-    ? columns.map((c) => ({ id: c.id, label: c.title }))
+    ? columns
+        .filter((c) => !c.customAttributeSlot)
+        .map((c) => ({ id: c.id, label: c.title }))
     : []
   const { account } = useAuth()
   const {
@@ -155,6 +158,9 @@ export function FiltersPopoverContent({
   const [filterValue, setFilterValue] = useState<string>('')
   const [filterValueEnd, setFilterValueEnd] = useState<string>('')
   const [filterSizeUnit, setFilterSizeUnit] = useState<string>('mb')
+  const [customDocumentAttrKey, setCustomDocumentAttrKey] = useState('')
+  const [customDocumentAttrType, setCustomDocumentAttrType] =
+    useState<FilterColumnType>('string')
 
   useEffect(() => {
     if (columns.length > 0 && !filterColumnId) {
@@ -168,14 +174,43 @@ export function FiltersPopoverContent({
     }
   }, [columns, filterColumnId])
 
+  useEffect(() => {
+    const column = columns.find((c) => c.id === filterColumnId)
+    if (!column?.customAttributeSlot) return
+    const ops = getOperatorsForType(customDocumentAttrType, {
+      fulltextSearchable: false,
+    })
+    const stillValid = ops.some((o) => o.key === filterOperatorKey)
+    if (!stillValid) {
+      setFilterOperatorKey(ops[0]?.key ?? '')
+    }
+  }, [
+    customDocumentAttrType,
+    filterColumnId,
+    filterOperatorKey,
+    columns,
+  ])
+
   const filterEntries = Array.from(filterMap.entries())
 
   const applyFilter = () => {
     const col = columns.find((c) => c.id === filterColumnId)
     if (!col || !filterOperatorKey) return
-    const op = getOperatorsForType(col.type, {
-      fulltextSearchable: !!col.fulltextSearchable,
-      enumOptional: col.type === 'enum' ? col.optional : undefined,
+
+    const valueType = col.customAttributeSlot
+      ? customDocumentAttrType
+      : col.type
+    const resolvedColumnId = col.customAttributeSlot
+      ? customDocumentAttrKey.trim()
+      : filterColumnId
+
+    if (col.customAttributeSlot) {
+      if (!resolvedColumnId || resolvedColumnId.startsWith('$')) return
+    }
+
+    const op = getOperatorsForType(valueType, {
+      fulltextSearchable: col.customAttributeSlot ? false : !!col.fulltextSearchable,
+      enumOptional: valueType === 'enum' ? col.optional : undefined,
     }).find((o) => o.key === filterOperatorKey)
     if (!op) return
     const isBetweenOp =
@@ -191,13 +226,13 @@ export function FiltersPopoverContent({
         val = Number.isNaN(n)
           ? String(val)
           : sizeFilterToBytes(n, filterSizeUnit)
-      } else if (col.type === 'integer') {
+      } else if (valueType === 'integer') {
         const n = Number(val)
         val = Number.isNaN(n) ? String(val) : n
-      } else if (col.type === 'double') {
+      } else if (valueType === 'double') {
         const n = Number(val)
         val = Number.isNaN(n) ? String(val) : n
-      } else if (col.type === 'boolean') {
+      } else if (valueType === 'boolean') {
         val = val === 'true'
       } else if (
         col.id === 'status' &&
@@ -218,11 +253,11 @@ export function FiltersPopoverContent({
     }
     const queryString = buildFilterQueryString(
       filterOperatorKey,
-      filterColumnId,
+      resolvedColumnId,
       val,
     )
     const compactKey: CompactFilterKey = {
-      c: filterColumnId,
+      c: resolvedColumnId,
       o: filterOperatorKey,
       ...(val !== undefined && val !== '' ? { v: val } : {}),
     }
@@ -238,18 +273,29 @@ export function FiltersPopoverContent({
   }
 
   const col = columns.find((c) => c.id === filterColumnId)
+  const valueColumnType: FilterColumnType =
+    col?.customAttributeSlot === true
+      ? customDocumentAttrType
+      : (col?.type ?? 'string')
   const op = col
-    ? getOperatorsForType(col.type, {
-        fulltextSearchable: !!col.fulltextSearchable,
-        enumOptional: col.type === 'enum' ? col.optional : undefined,
+    ? getOperatorsForType(valueColumnType, {
+        fulltextSearchable:
+          col.customAttributeSlot === true ? false : !!col.fulltextSearchable,
+        enumOptional:
+          valueColumnType === 'enum' ? col.optional : undefined,
       }).find((o) => o.key === filterOperatorKey)
     : null
   const needsValue = col && op && !op.noValue
   const isBetweenOp =
     filterOperatorKey === 'between' || filterOperatorKey === 'notBetween'
+  const customDocAttrInvalid =
+    col?.customAttributeSlot === true &&
+    (!customDocumentAttrKey.trim() ||
+      customDocumentAttrKey.trim().startsWith('$'))
   const isApplyDisabled =
     !filterColumnId ||
     !filterOperatorKey ||
+    customDocAttrInvalid ||
     (needsValue
       ? isBetweenOp
         ? !filterValue.trim() || !filterValueEnd.trim()
@@ -262,9 +308,19 @@ export function FiltersPopoverContent({
 
   const renderValueInput = () => {
     if (!col || !op || op.noValue) return null
+    const vc: FilterColumn =
+      col.customAttributeSlot === true
+        ? {
+            ...col,
+            type: customDocumentAttrType,
+            fulltextSearchable: false,
+            elements: undefined,
+            optional: undefined,
+          }
+        : col
     const label = <label className={labelClass}>Value</label>
     if (isBetweenOp) {
-      if (col.format === 'size') {
+      if (vc.format === 'size') {
         return (
           <div key="value-between-size" className="space-y-2">
             <div className="grid grid-cols-2 gap-2">
@@ -310,7 +366,7 @@ export function FiltersPopoverContent({
           </div>
         )
       }
-      if (col.type === 'datetime') {
+      if (vc.type === 'datetime') {
         return (
           <div key="value-between-datetime" className="space-y-2">
             <div>
@@ -340,14 +396,14 @@ export function FiltersPopoverContent({
           </div>
         )
       }
-      if (col.type === 'integer' || col.type === 'double') {
+      if (vc.type === 'integer' || vc.type === 'double') {
         return (
           <div key="value-between-number" className="space-y-2">
             <div>
               <span className={subLabelClass}>Start</span>
               <Input
                 type="number"
-                step={col.type === 'integer' ? 1 : 'any'}
+                step={vc.type === 'integer' ? 1 : 'any'}
                 className={inputClass}
                 value={filterValue}
                 onChange={(e) => setFilterValue(e.target.value)}
@@ -358,7 +414,7 @@ export function FiltersPopoverContent({
               <span className={subLabelClass}>End</span>
               <Input
                 type="number"
-                step={col.type === 'integer' ? 1 : 'any'}
+                step={vc.type === 'integer' ? 1 : 'any'}
                 className={inputClass}
                 value={filterValueEnd}
                 onChange={(e) => setFilterValueEnd(e.target.value)}
@@ -370,17 +426,24 @@ export function FiltersPopoverContent({
       }
       return null
     }
-    if (col.type === 'boolean') {
+    if (vc.type === 'boolean') {
       return (
         <div key="value-bool">
           {label}
           <SearchableSelect
             value={filterValue}
             onValueChange={setFilterValue}
-            items={[
-              { value: 'true', label: 'Enabled' },
-              { value: 'false', label: 'Disabled' },
-            ]}
+            items={
+              col.customAttributeSlot
+                ? [
+                    { value: 'true', label: 'True' },
+                    { value: 'false', label: 'False' },
+                  ]
+                : [
+                    { value: 'true', label: 'Enabled' },
+                    { value: 'false', label: 'Disabled' },
+                  ]
+            }
             placeholder="Select"
             searchPlaceholder="Search…"
             emptyMessage="No results"
@@ -388,7 +451,7 @@ export function FiltersPopoverContent({
         </div>
       )
     }
-    if (col.type === 'datetime') {
+    if (vc.type === 'datetime') {
       return (
         <div key="value-datetime">
           {label}
@@ -404,7 +467,7 @@ export function FiltersPopoverContent({
         </div>
       )
     }
-    if (col.format === 'size') {
+    if (vc.format === 'size') {
       return (
         <div key="value-size" className="space-y-1.5">
           {label}
@@ -434,7 +497,7 @@ export function FiltersPopoverContent({
         </div>
       )
     }
-    if (col.type === 'integer') {
+    if (vc.type === 'integer') {
       return (
         <div key="value-int">
           {label}
@@ -449,14 +512,14 @@ export function FiltersPopoverContent({
         </div>
       )
     }
-    if (col.type === 'enum' && col.elements?.length) {
+    if (vc.type === 'enum' && vc.elements?.length) {
       return (
         <div key="value-enum">
           {label}
           <SearchableSelect
             value={filterValue}
             onValueChange={setFilterValue}
-            items={col.elements.map((el) => ({
+            items={vc.elements.map((el) => ({
               value: String(el.value),
               label: el.label,
             }))}
@@ -604,12 +667,25 @@ export function FiltersPopoverContent({
                   setFilterValue('')
                   setFilterValueEnd('')
                   const column = columns.find((c) => c.id === v)
+                  if (!column?.customAttributeSlot) {
+                    setCustomDocumentAttrKey('')
+                    setCustomDocumentAttrType('string')
+                  } else {
+                    setCustomDocumentAttrKey('')
+                  }
                   if (column?.format === 'size') setFilterSizeUnit('mb')
+                  const vt =
+                    column?.customAttributeSlot === true
+                      ? customDocumentAttrType
+                      : (column?.type ?? 'string')
                   const firstOp = column
-                    ? getOperatorsForType(column.type, {
-                        fulltextSearchable: !!column.fulltextSearchable,
+                    ? getOperatorsForType(vt, {
+                        fulltextSearchable:
+                          column.customAttributeSlot === true
+                            ? false
+                            : !!column.fulltextSearchable,
                         enumOptional:
-                          column.type === 'enum' ? column.optional : undefined,
+                          vt === 'enum' ? column.optional : undefined,
                       })[0]
                     : null
                   setFilterOperatorKey(firstOp?.key ?? '')
@@ -635,15 +711,19 @@ export function FiltersPopoverContent({
                         const column = columns.find(
                           (c) => c.id === filterColumnId,
                         )
-                        return column
-                          ? getOperatorsForType(column.type, {
-                              fulltextSearchable: !!column.fulltextSearchable,
-                              enumOptional:
-                                column.type === 'enum'
-                                  ? column.optional
-                                  : undefined,
-                            }).map((op) => ({ value: op.key, label: op.label }))
-                          : []
+                        if (!column) return []
+                        const vt =
+                          column.customAttributeSlot === true
+                            ? customDocumentAttrType
+                            : column.type
+                        return getOperatorsForType(vt, {
+                          fulltextSearchable:
+                            column.customAttributeSlot === true
+                              ? false
+                              : !!column.fulltextSearchable,
+                          enumOptional:
+                            vt === 'enum' ? column.optional : undefined,
+                        }).map((op) => ({ value: op.key, label: op.label }))
                       })()
                     : []
                 }
@@ -653,6 +733,44 @@ export function FiltersPopoverContent({
               />
             </div>
           </div>
+          {col?.customAttributeSlot === true && (
+            <div className="space-y-2">
+              <div className="space-y-1">
+                <label className={labelClass}>Attribute name</label>
+                <Input
+                  className={inputClass}
+                  value={customDocumentAttrKey}
+                  onChange={(e) => setCustomDocumentAttrKey(e.target.value)}
+                  placeholder="e.g. email, score, tags"
+                  autoComplete="off"
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  Use preset columns for $id and other system fields. Custom
+                  names must not start with $.
+                </p>
+              </div>
+              <div className="space-y-1">
+                <label className={labelClass}>Value type</label>
+                <SearchableSelect
+                  value={customDocumentAttrType}
+                  onValueChange={(v) =>
+                    setCustomDocumentAttrType(v as FilterColumnType)
+                  }
+                  items={[
+                    { value: 'string', label: 'Text' },
+                    { value: 'integer', label: 'Integer' },
+                    { value: 'double', label: 'Decimal' },
+                    { value: 'boolean', label: 'Boolean' },
+                    { value: 'datetime', label: 'Date / time' },
+                  ]}
+                  placeholder="Type"
+                  searchPlaceholder="Search…"
+                  emptyMessage="No types"
+                  triggerClassName="h-9 w-full text-[13px]"
+                />
+              </div>
+            </div>
+          )}
           {filterColumnId && renderValueInput()}
           <Button
             type="submit"
@@ -988,7 +1106,14 @@ export function FiltersPopoverContent({
         }
       >
         {canEdit ? (
-          <GripVertical className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+          <GripVertical
+            className={cn(
+              'h-3.5 w-3.5 shrink-0 text-muted-foreground transition-opacity',
+              isEditing
+                ? 'opacity-0'
+                : 'opacity-0 group-hover:opacity-100',
+            )}
+          />
         ) : (
           <span className="h-3.5 w-3.5 shrink-0" aria-hidden />
         )}
@@ -1036,7 +1161,7 @@ export function FiltersPopoverContent({
         )}
         <Button
           type="button"
-          variant="ghost"
+          variant="secondary"
           size="sm"
           className="h-7 text-[12px] shrink-0"
           onClick={(e) => {
@@ -1275,7 +1400,7 @@ export function FiltersPopoverContent({
               <TabsTrigger value="filters" className="text-[13px]">
                 Filters
                 {filterMap.size > 0 && (
-                  <span className="ml-1.5 flex size-4 items-center justify-center rounded-full bg-primary/20 text-[10px] font-medium tabular-nums text-primary">
+                  <span className="ml-1.5 flex size-4 items-center justify-center rounded-full bg-[#FD366E] text-[10px] font-medium tabular-nums text-white">
                     {filterMap.size}
                   </span>
                 )}

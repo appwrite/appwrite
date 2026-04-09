@@ -12,14 +12,19 @@ import {
   organizationScopesQueryOptions,
   activeProjectsQueryOptions,
   organizationMembershipsQueryOptions,
+  consoleTeamQueryOptions,
+  pinnedProjectsQueryOptions,
 } from '@/lib/react-query/hooks'
+import { parsePinnedProjectIds } from '@/lib/team-prefs-keys'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
-import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { z } from 'zod'
 
-const searchSchema = z.object({
-  createOrg: z.boolean().optional(),
-})
+const searchSchema = z
+  .object({
+    createOrg: z.boolean().optional(),
+  })
+  .passthrough()
 
 export const Route = createFileRoute('/_public/organizations/$orgId')({
   validateSearch: searchSchema,
@@ -32,65 +37,55 @@ export const Route = createFileRoute('/_public/organizations/$orgId')({
     const { orgId } = params
     const { queryClient } = context
 
-    // Fetch org plan + organizations + projects + memberships so overview has data before first render.
-    // Organizations list is required for selectedOrg so the projects list can render.
-    // When navigating from change-plan/support to the projects tab, only the index loader runs
-    // (parent does not re-run); the index route blocks until projects/memberships are loaded.
+    // Same pattern as projects grid (AGENTS.md): ensureQueryData with exact query keys the View uses.
+    // Order: console team → pinned IDs → active projects list key matches OrgOverview (exclude pinned).
     if (orgId) {
       try {
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(
-            () => reject(new Error('Organization data fetch timeout')),
-            10000,
-          )
-        })
+        await queryClient.ensureQueryData(organizationsQueryOptions())
+        await queryClient.ensureQueryData(organizationPlanQueryOptions(orgId))
 
-        const loaders: Promise<unknown>[] = [
-          queryClient.ensureQueryData(organizationPlanQueryOptions(orgId)),
-          queryClient.ensureQueryData(organizationsQueryOptions()),
-          queryClient.ensureQueryData(
-            activeProjectsQueryOptions(orgId, 0, DEFAULT_PAGE_SIZE, ''),
-          ),
+        await queryClient.ensureQueryData(consoleTeamQueryOptions(orgId))
+        const team = queryClient.getQueryData(
+          consoleTeamQueryOptions(orgId).queryKey,
+        ) as { prefs?: Record<string, unknown> } | null | undefined
+        const pinnedIds = parsePinnedProjectIds(team?.prefs)
+
+        const parallel: Promise<unknown>[] = [
           queryClient.ensureQueryData(
             organizationMembershipsQueryOptions(
               orgId,
               0,
-              DEFAULT_PAGE_SIZE,
+              GRID_DEFAULT_PAGE_SIZE,
               '',
+            ),
+          ),
+          queryClient.ensureQueryData(
+            activeProjectsQueryOptions(
+              orgId,
+              0,
+              GRID_DEFAULT_PAGE_SIZE,
+              '',
+              pinnedIds,
             ),
           ),
         ]
         if (getActiveProfileFeatures().orgRoles) {
-          loaders.push(
+          parallel.push(
             queryClient
               .ensureQueryData(organizationScopesQueryOptions(orgId))
               .catch(() => {}),
           )
         }
-        await Promise.race([Promise.all(loaders), timeoutPromise])
-
-        // Return prefetched data so OrgOverview can use it as initialData and avoid layout shift
-        return {
-          organizationsData: queryClient.getQueryData(
-            organizationsQueryOptions().queryKey,
-          ),
-          organizationPlan: queryClient.getQueryData(
-            organizationPlanQueryOptions(orgId).queryKey,
-          ),
-          membershipsData: queryClient.getQueryData(
-            organizationMembershipsQueryOptions(orgId, 0, DEFAULT_PAGE_SIZE, '')
-              .queryKey,
-          ),
-          scopesData: getActiveProfileFeatures().orgRoles
-            ? queryClient.getQueryData(
-                organizationScopesQueryOptions(orgId).queryKey,
-              )
-            : undefined,
+        if (pinnedIds.length > 0) {
+          parallel.push(
+            queryClient.ensureQueryData(
+              pinnedProjectsQueryOptions(orgId, pinnedIds),
+            ),
+          )
         }
+        await Promise.all(parallel)
       } catch (error) {
-        // Don't block navigation if fetch fails or times out - component will handle
         console.warn('Failed to fetch organization data in loader:', error)
-        return undefined
       }
     }
     return undefined
@@ -101,7 +96,6 @@ export const Route = createFileRoute('/_public/organizations/$orgId')({
 function OrganizationLayout() {
   const matches = useMatches()
   const location = useLocation()
-  const loaderData = Route.useLoaderData()
 
   // Use pathname as well as matches so we switch to wizard immediately on navigation
   // (matches can lag one frame, causing a flash of projects list when clicking Upgrade)
@@ -136,19 +130,16 @@ function OrganizationLayout() {
       match.routeId.startsWith('/_public/organizations/$orgId/support'),
   )
 
-  // Check if we're on the buy domain route (fullscreen wizard)
-  const isBuyDomainRoute = matches.some(
-    (match) =>
-      match.routeId?.includes('/domains/buy') ||
-      match.routeId === '/_public/organizations/$orgId/domains/buy',
-  )
+  // Buy / transfer-in wizards: must bypass OrgOverview — it only mounts <Outlet> on the domains
+  // index, so nested routes like .../domains/buy would never render (blank page).
+  const isOrgDomainsWizardRoute =
+    pathname.includes('/domains/buy') ||
+    pathname.includes('/domains/transfer-in')
 
   return (
     <RequireAuth>
-      {isDomainDetailRoute ||
-      isSupportRoute ||
-      isBuyDomainRoute ? (
-        // For domain detail and support routes, render outlet directly (they have their own layout)
+      {isDomainDetailRoute || isSupportRoute || isOrgDomainsWizardRoute ? (
+        // Domain detail, support, and domain wizards: outlet only (fullscreen / own chrome)
         <Outlet />
       ) : isChangePlanRoute ? (
         // Change-plan: fullscreen wrapper so the wizard looks identical from header upgrade or billing upgrade
@@ -157,7 +148,7 @@ function OrganizationLayout() {
         </div>
       ) : (
         // For other routes, render OrgOverview which provides header/tabs
-        <OrgOverview initialData={loaderData}>
+        <OrgOverview>
           <Outlet />
         </OrgOverview>
       )}

@@ -1,15 +1,10 @@
 /**
  * RealtimeProvider
  *
- * Subscribes to the console realtime channel for the current project
- * and invalidates React Query cache when events are received so the UI updates.
- * When migration events arrive, notifies SessionMigrations so in-progress CSV
- * export/import can be shown (unless the user already dismissed that migration).
- * Unsubscribes on unmount or when projectId changes.
- *
- * Ensures only one subscription is active: awaits previous cleanup before
- * opening new connections so we never have duplicate WebSockets (e.g. from
- * Strict Mode or fast dependency changes).
+ * Subscribes to console realtime for the current project on the main cloud endpoint
+ * (shared hub with assistant, etc.) and, when the project's regional API host differs,
+ * a second socket on that host with project=console—both feed the same invalidation
+ * handler. Unsubscribes on unmount or when projectId changes.
  */
 
 import { useCallback, useEffect, useRef, type ReactNode } from 'react'

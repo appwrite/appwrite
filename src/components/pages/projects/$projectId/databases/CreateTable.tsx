@@ -22,11 +22,18 @@ function validateTableId(id: string): boolean {
   return /^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(id)
 }
 
+export type CreateTableVariant = 'tables' | 'documents' | 'vectors'
+
 interface CreateTableProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onCreate: (data: { tableId?: string; name: string }) => void
+  onCreate: (data: {
+    tableId?: string
+    name: string
+    dimension?: number
+  }) => void
   isLoading?: boolean
+  variant?: CreateTableVariant
 }
 
 export function CreateTable({
@@ -34,10 +41,17 @@ export function CreateTable({
   onOpenChange,
   onCreate,
   isLoading = false,
+  variant = 'tables',
 }: CreateTableProps) {
   const [tableId, setTableId] = useState<string | undefined>(undefined)
   const [name, setName] = useState('')
+  const [dimension, setDimension] = useState<string>('384')
   const [errors, setErrors] = useState<Record<string, string>>({})
+
+  const isCollection = variant === 'documents' || variant === 'vectors'
+  const resourceWord = isCollection ? 'collection' : 'table'
+  const title = isCollection ? 'Create collection' : 'Create table'
+  const idLabel = isCollection ? 'Collection ID' : 'Table ID'
 
   const handleOpenChange = (newOpen: boolean) => {
     if (!isLoading) {
@@ -51,6 +65,7 @@ export function CreateTable({
   const resetForm = () => {
     setTableId(undefined)
     setName('')
+    setDimension('384')
     setErrors({})
   }
 
@@ -68,8 +83,14 @@ export function CreateTable({
     }
 
     if (tableId && tableId.length > 0 && !validateTableId(tableId)) {
-      newErrors.tableId =
-        'Table ID must be 1–36 characters, alphanumeric, underscore, hyphen, or period. Cannot start with a special character.'
+      newErrors.tableId = `${idLabel} must be 1–36 characters, alphanumeric, underscore, hyphen, or period. Cannot start with a special character.`
+    }
+
+    if (variant === 'vectors') {
+      const d = Number(dimension)
+      if (!Number.isFinite(d) || d < 1 || !Number.isInteger(d)) {
+        newErrors.dimension = 'Embedding dimension must be a positive integer'
+      }
     }
 
     setErrors(newErrors)
@@ -83,19 +104,35 @@ export function CreateTable({
       return
     }
 
-    onCreate({
+    const payload: { tableId?: string; name: string; dimension?: number } = {
       tableId,
       name: name.trim(),
-    })
+    }
+    if (variant === 'vectors') {
+      payload.dimension = Number(dimension)
+    }
+
+    onCreate(payload)
   }
+
+  const description =
+    variant === 'vectors'
+      ? 'Create a collection with a fixed embedding dimension for vector similarity search.'
+      : variant === 'documents'
+        ? 'Create a collection to store JSON documents with flexible schemas.'
+        : 'Create a new table to store structured data with columns and rows.'
+
+  const namePlaceholder = isCollection
+    ? `Enter ${resourceWord} name`
+    : 'Enter table name'
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 pb-4 text-left">
-          <DialogTitle>Create table</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Create a new table to store structured data with columns and rows.
+            {description}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -109,7 +146,7 @@ export function CreateTable({
               <Input
                 id="name"
                 type="text"
-                placeholder="Enter table name"
+                placeholder={namePlaceholder}
                 value={name}
                 onChange={(e) => {
                   setName(e.target.value)
@@ -125,8 +162,37 @@ export function CreateTable({
               )}
             </div>
 
+            {variant === 'vectors' && (
+              <div className="space-y-2">
+                <Label htmlFor="dimension">
+                  Embedding dimension{' '}
+                  <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="dimension"
+                  type="number"
+                  min={1}
+                  step={1}
+                  value={dimension}
+                  onChange={(e) => {
+                    setDimension(e.target.value)
+                    if (errors.dimension) {
+                      setErrors((prev) => ({ ...prev, dimension: '' }))
+                    }
+                  }}
+                  disabled={isLoading}
+                  className={errors.dimension ? 'border-destructive' : ''}
+                />
+                {errors.dimension && (
+                  <p className="text-[12px] text-destructive">
+                    {errors.dimension}
+                  </p>
+                )}
+              </div>
+            )}
+
             <div className="space-y-2">
-              <Label htmlFor="table-id">Table ID</Label>
+              <Label htmlFor="table-id">{idLabel}</Label>
               <IdInput
                 id="table-id"
                 value={tableId}

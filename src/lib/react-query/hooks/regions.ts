@@ -35,7 +35,7 @@ export async function fetchRegions() {
  *
  * @returns Regions list with loading state
  */
-export function useRegions() {
+export function useRegions(enabled: boolean = true) {
   const {
     data: regionsData,
     isLoading,
@@ -44,6 +44,7 @@ export function useRegions() {
   } = useQuery({
     queryKey: ['regions'],
     queryFn: fetchRegions,
+    enabled,
     staleTime: LONG_STALE_TIME, // Regions don't change often
     retry: false, // Don't retry on failure - if it fails, let it fail
     refetchOnWindowFocus: false, // Don't refetch when window regains focus

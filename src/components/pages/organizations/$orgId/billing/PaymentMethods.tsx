@@ -21,8 +21,8 @@ import { formatCardExpiry, maskCardNumber } from './utils'
 import { cn } from '@/lib/utils'
 import {
   useOrganizationById,
+  useOrganizationPaymentMethod,
   usePaymentMethods,
-  usePaymentMethod,
   useUpdateOrganizationPaymentMethod,
 } from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
@@ -59,8 +59,12 @@ export function PaymentMethods({
   const { organization } = useOrganizationById(orgId)
   const { paymentMethods: allPaymentMethods, isLoading: methodsLoading } =
     usePaymentMethods()
-  const primaryPaymentMethod = usePaymentMethod(organization?.paymentMethodId)
-  const backupPaymentMethod = usePaymentMethod(
+  const primaryPaymentMethod = useOrganizationPaymentMethod(
+    orgId,
+    organization?.paymentMethodId,
+  )
+  const backupPaymentMethod = useOrganizationPaymentMethod(
+    orgId,
     organization?.backupPaymentMethodId,
   )
   const updatePaymentMethodMutation = useUpdateOrganizationPaymentMethod()
@@ -122,11 +126,7 @@ export function PaymentMethods({
 
     // Can't remove if it's the only method and not on free plan
     const isFreePlan = getPlanNameFromTier(organization?.billingPlan) === 'free'
-    if (
-      isPrimary &&
-      !organization?.backupPaymentMethodId &&
-      !isFreePlan
-    ) {
+    if (isPrimary && !organization?.backupPaymentMethodId && !isFreePlan) {
       toast.error('Cannot remove the only payment method on a paid plan')
       return
     }
@@ -181,6 +181,7 @@ export function PaymentMethods({
             Payment Methods
           </h3>
           <Button
+            variant="outline"
             size="sm"
             className="h-9 gap-2 text-[13px] shrink-0"
             onClick={() => onAddPaymentMethod?.()}
@@ -189,22 +190,27 @@ export function PaymentMethods({
             Add payment method
           </Button>
         </div>
-        <div className="border-t border-border px-6 py-8 text-center">
+        <div className="border-t border-border px-6 py-8">
           <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
             <CreditCard className="h-6 w-6 text-muted-foreground" />
           </div>
-          <p className="text-[13px] text-muted-foreground mb-4">
-            No payment method on file. Add a new credit card to pay for your
-            organization.
+          <p className="text-[13px] text-muted-foreground text-center mb-1">
+            No payment method on file
           </p>
-          <Button
-            size="sm"
-            className="h-9 gap-2 text-[13px]"
-            onClick={() => onAddPaymentMethod?.()}
-          >
-            <Plus className="h-4 w-4" />
-            Add new card
-          </Button>
+          <p className="text-[13px] text-muted-foreground text-center mb-4">
+            Add a new credit card to pay for your organization.
+          </p>
+          <div className="flex justify-center">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 gap-2 text-[13px]"
+              onClick={() => onAddPaymentMethod?.()}
+            >
+              <Plus className="h-4 w-4" />
+              Add payment method
+            </Button>
+          </div>
         </div>
       </div>
     )
@@ -219,6 +225,7 @@ export function PaymentMethods({
         </h3>
         {!primaryMethod && (
           <Button
+            variant="outline"
             size="sm"
             className="h-9 gap-2 text-[13px] shrink-0"
             onClick={() => onAddPaymentMethod?.()}
@@ -231,13 +238,18 @@ export function PaymentMethods({
 
       {/* No primary – use existing or add new */}
       {!primaryMethod && (
-        <div className="border-t border-border px-6 py-6">
-          <p className="text-[13px] text-muted-foreground mb-4">
-            No payment method on file. Use an existing card or add a new one for
-            this organization.
+        <div className="border-t border-border px-6 py-8">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+            <CreditCard className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <p className="text-[13px] text-muted-foreground text-center mb-1">
+            No payment method on file
+          </p>
+          <p className="text-[13px] text-muted-foreground text-center mb-4">
+            Use an existing card or add a new one for this organization.
           </p>
           {availableMethods.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-3 max-w-md mx-auto">
               <p className="text-[12px] font-medium text-foreground">
                 Use existing card
               </p>
@@ -247,16 +259,16 @@ export function PaymentMethods({
                     key={pm.$id}
                     className="flex items-center justify-between rounded-lg border border-border bg-muted/20 px-4 py-3"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted shrink-0">
                         <CreditCard className="h-4 w-4 text-muted-foreground" />
                       </div>
-                      <div>
-                        <p className="text-[13px] font-medium text-foreground">
+                      <div className="min-w-0">
+                        <p className="text-[13px] font-medium text-foreground truncate">
                           {pm.brand} {maskCardNumber(pm.last4 || '')}
                         </p>
                         {pm.expiryMonth && pm.expiryYear && (
-                          <p className="text-[12px] text-muted-foreground">
+                          <p className="text-[12px] text-muted-foreground truncate">
                             Expires{' '}
                             {formatCardExpiry(pm.expiryMonth, pm.expiryYear)}
                           </p>
@@ -274,22 +286,32 @@ export function PaymentMethods({
                   </div>
                 ))}
               </div>
-              <p className="text-[12px] font-medium text-foreground pt-2">
+              <p className="text-[12px] font-medium text-foreground pt-1">
                 Or add a new card
               </p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 gap-2 text-[13px] w-full"
+                onClick={() => onAddPaymentMethod?.()}
+              >
+                <Plus className="h-4 w-4" />
+                Add new card
+              </Button>
             </div>
-          ) : null}
-          <Button
-            size="sm"
-            className={cn(
-              'h-9 gap-2 text-[13px]',
-              availableMethods.length > 0 && 'mt-3',
-            )}
-            onClick={() => onAddPaymentMethod?.()}
-          >
-            <Plus className="h-4 w-4" />
-            {availableMethods.length > 0 ? 'Add new card' : 'Add payment method'}
-          </Button>
+          ) : (
+            <div className="flex justify-center">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 gap-2 text-[13px]"
+                onClick={() => onAddPaymentMethod?.()}
+              >
+                <Plus className="h-4 w-4" />
+                Add payment method
+              </Button>
+            </div>
+          )}
         </div>
       )}
 

@@ -9,3 +9,4 @@ declare module 'prismjs/components/prism-go' {}
 declare module 'prismjs/components/prism-csharp' {}
 declare module 'prismjs/components/prism-markup' {}
 declare module 'prismjs/components/prism-markup-templating' {}
+declare module 'prismjs/components/prism-hcl' {}

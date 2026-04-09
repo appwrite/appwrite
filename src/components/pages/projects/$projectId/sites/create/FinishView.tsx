@@ -11,15 +11,15 @@ import { Button } from '@/components/ui/button'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { CopyableId } from '@/components/global/shared/CopyableId'
-import { sdk } from '@/lib/appwrite/sdk'
+import { sdk, getSiteScreenshotFilePreviewUrl } from '@/lib/appwrite/sdk'
 import {
+  ArrowRight,
   CheckCircle2,
   ExternalLink,
-  Globe,
   GitBranch,
+  Globe,
   Share2,
   Smartphone,
-  ArrowRight,
 } from 'lucide-react'
 import {
   Dialog,
@@ -33,6 +33,7 @@ import {
   useSiteDeployment,
   useSiteDomains,
 } from '@/lib/react-query/hooks'
+import { toast } from 'sonner'
 import { useWizard } from './WizardContext'
 
 const SCREENSHOTS_BUCKET_ID = 'screenshots'
@@ -85,14 +86,14 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
     const screenshotId = isDark
       ? (deployment as { screenshotDark?: string }).screenshotDark
       : (deployment as { screenshotLight?: string }).screenshotLight
-    if (!screenshotId) return null
-    return sdk.forConsole.storage.getFilePreview({
+    if (!screenshotId || !projectId) return null
+    return getSiteScreenshotFilePreviewUrl(projectId, {
       bucketId: SCREENSHOTS_BUCKET_ID,
       fileId: screenshotId,
       width: 1280,
       height: 720,
     })
-  }, [deployment, isDark])
+  }, [deployment, isDark, projectId])
 
   // Get primary domain
   const primaryDomain = useMemo(() => {
@@ -143,39 +144,11 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
           </div>
         </div>
       </div>
-
-      {/* QR code dialog */}
-      <Dialog open={qrDialogOpen} onOpenChange={setQrDialogOpen}>
-        <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 text-left">
-            <DialogTitle>View on mobile</DialogTitle>
-            <DialogDescription className="text-[13px] mt-2">
-              Scan this QR code to open your site on a mobile device
-            </DialogDescription>
-          </DialogHeader>
-          <div className="border-t border-border" />
-          <div className="px-6 py-6 flex items-center justify-center">
-            {qrImageUrl && (
-              <div className="p-4 bg-white rounded-lg">
-                <img
-                  src={qrImageUrl}
-                  alt="QR code to open site on mobile"
-                  className="h-48 w-48 rounded"
-                />
-              </div>
-            )}
-          </div>
-          <div className="px-6 py-4 border-t border-border bg-muted/30 flex justify-end">
-            <Button variant="outline" onClick={() => setQrDialogOpen(false)}>
-              Close
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 
   return (
+    <>
     <WizardLayout
       title="Create site"
       fallbackPath={`/projects/${projectId}/sites`}
@@ -220,10 +193,14 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
                       href={siteUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mt-2 flex items-center gap-1 text-[12px] text-primary hover:underline"
+                      className="mt-2 flex items-center gap-1.5 text-[12px] text-primary hover:underline"
                     >
-                      <Globe className="h-3.5 w-3.5" />
-                      {primaryDomain}
+                      <Globe className="h-3.5 w-3.5 shrink-0" />
+                      <span className="min-w-0 truncate">{primaryDomain}</span>
+                      <ExternalLink
+                        className="h-3.5 w-3.5 shrink-0 opacity-80"
+                        aria-hidden
+                      />
                     </a>
                   )}
                 </div>
@@ -317,7 +294,14 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
 
           {/* Open on mobile */}
           <button
-            onClick={() => setQrDialogOpen(true)}
+            type="button"
+            onClick={() => {
+              if (!siteUrl) {
+                toast.error('Site URL is not available yet')
+                return
+              }
+              setQrDialogOpen(true)
+            }}
             className="flex w-full items-center gap-4 px-6 py-4 hover:bg-accent/50 transition-colors text-left"
           >
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-muted-foreground">
@@ -336,5 +320,41 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
         </div>
       </div>
     </WizardLayout>
+
+    <Dialog open={qrDialogOpen} onOpenChange={setQrDialogOpen}>
+      <DialogContent
+        className="z-[10000] sm:max-w-md p-0"
+        overlayClassName="z-[9999]"
+      >
+        <DialogHeader className="px-6 pt-6 text-left">
+          <DialogTitle>View on mobile</DialogTitle>
+          <DialogDescription className="text-[13px] mt-2">
+            Scan this QR code to open your site on a mobile device
+          </DialogDescription>
+        </DialogHeader>
+        <div className="border-t border-border" />
+        <div className="px-6 py-6 flex items-center justify-center">
+          {qrImageUrl ? (
+            <div className="p-4 bg-white rounded-lg">
+              <img
+                src={qrImageUrl}
+                alt="QR code to open site on mobile"
+                className="h-48 w-48 rounded"
+              />
+            </div>
+          ) : (
+            <p className="text-[13px] text-muted-foreground text-center px-4">
+              QR code could not be generated. Try again in a moment.
+            </p>
+          )}
+        </div>
+        <div className="px-6 py-4 border-t border-border bg-muted/30 flex justify-end">
+          <Button variant="outline" onClick={() => setQrDialogOpen(false)}>
+            Close
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   )
 }

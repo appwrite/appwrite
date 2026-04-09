@@ -59,6 +59,11 @@ export interface FilterColumn {
    * operators are allowed. Only set when index data is available (e.g. database table rows).
    */
   fulltextSearchable?: boolean
+  /**
+   * When true, user enters the document attribute key (and value type) in the filter form.
+   * Used for Documents DB where payload keys are not fixed by schema. Omit on Tables DB.
+   */
+  customAttributeSlot?: boolean
 }
 
 export type FilterColumnType =

@@ -17,6 +17,7 @@ import {
   ExternalLink,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { CopyableId } from '@/components/global/shared/CopyableId'
@@ -50,6 +51,7 @@ import type { Models } from '@appwrite.io/console'
 import {
   getDeploymentStatusBadge,
   isDeploymentCompleted,
+  isDeploymentInProgress,
   isDeploymentTimeout,
 } from '@/lib/utils/deployment-status'
 import { toast } from 'sonner'
@@ -125,6 +127,21 @@ export function View() {
   )
 
   const recentDeployments = recentDeploymentsData?.deployments || []
+
+  const activeDeploymentResolved = useMemo(() => {
+    if (!site?.deploymentId) return activeDeployment ?? undefined
+    const list = recentDeploymentsData?.deployments ?? []
+    const fromList = list.find((d) => d.$id === site.deploymentId)
+    return fromList ?? activeDeployment ?? undefined
+  }, [recentDeploymentsData?.deployments, site?.deploymentId, activeDeployment])
+
+  const activeDeploymentForCard = useMemo((): Models.Deployment | undefined => {
+    const resolved = activeDeploymentResolved
+    if (!resolved) return undefined
+    const fromHook = activeDeployment
+    if (fromHook?.$id !== resolved.$id) return resolved
+    return { ...fromHook, ...resolved }
+  }, [activeDeployment, activeDeploymentResolved])
   const productionDeployment = productionDeploymentsData?.deployments?.[0]
 
   // Use same site domains as Domains tab, then filter to active deployment
@@ -142,32 +159,32 @@ export function View() {
       siteDomainsRules?.filter(
         (rule) =>
           rule.type === 'deployment' &&
-          rule.deploymentId === activeDeployment?.$id,
+          rule.deploymentId === activeDeploymentResolved?.$id,
       ) || []
     return filtered
       .sort((a, b) => a.domain.length - b.domain.length)
       .slice(0, 3)
-  }, [siteDomainsRules, activeDeployment?.$id])
+  }, [siteDomainsRules, activeDeploymentResolved?.$id])
   const totalActiveDomains =
     siteDomainsRules?.filter(
       (rule) =>
         rule.type === 'deployment' &&
-        rule.deploymentId === activeDeployment?.$id,
+        rule.deploymentId === activeDeploymentResolved?.$id,
     ).length ?? 0
   const hasMoreDomains = totalActiveDomains > activeDomains.length
 
   const isBuilding =
-    activeDeployment?.status === 'building' ||
-    activeDeployment?.status === 'processing'
+    activeDeploymentResolved != null &&
+    isDeploymentInProgress(activeDeploymentResolved.status)
 
   // Handlers
   const handleDownloadSource = () => {
-    if (!projectId || !siteId || !activeDeployment) return
+    if (!projectId || !siteId || !activeDeploymentResolved) return
     try {
       const projectSdk = sdk.forProject(projectId)
       const url = projectSdk.sites.getDeploymentDownload({
         siteId,
-        deploymentId: activeDeployment.$id,
+        deploymentId: activeDeploymentResolved.$id,
         type: DeploymentDownloadType.Source,
       })
       const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
@@ -179,12 +196,12 @@ export function View() {
   }
 
   const handleDownloadBuild = () => {
-    if (!projectId || !siteId || !activeDeployment) return
+    if (!projectId || !siteId || !activeDeploymentResolved) return
     try {
       const projectSdk = sdk.forProject(projectId)
       const url = projectSdk.sites.getDeploymentDownload({
         siteId,
-        deploymentId: activeDeployment.$id,
+        deploymentId: activeDeploymentResolved.$id,
         type: DeploymentDownloadType.Output,
       })
       const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
@@ -198,13 +215,13 @@ export function View() {
   // Redeploy mutation
   const redeployMutation = useMutation({
     mutationFn: async () => {
-      if (!projectId || !siteId || !activeDeployment) {
+      if (!projectId || !siteId || !activeDeploymentResolved) {
         throw new Error('Project ID, Site ID, and Deployment ID are required')
       }
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.sites.createDuplicateDeployment({
         siteId,
-        deploymentId: activeDeployment.$id,
+        deploymentId: activeDeploymentResolved.$id,
       })
     },
     onSuccess: async () => {
@@ -225,13 +242,13 @@ export function View() {
   // Activate mutation (disabled for active deployment, but included for consistency)
   const activateMutation = useMutation({
     mutationFn: async () => {
-      if (!projectId || !siteId || !activeDeployment) {
+      if (!projectId || !siteId || !activeDeploymentResolved) {
         throw new Error('Project ID, Site ID, and Deployment ID are required')
       }
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.sites.updateSiteDeployment({
         siteId,
-        deploymentId: activeDeployment.$id,
+        deploymentId: activeDeploymentResolved.$id,
       })
     },
     onSuccess: async () => {
@@ -252,7 +269,7 @@ export function View() {
   // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: async () => {
-      if (!projectId || !siteId || !activeDeployment) {
+      if (!projectId || !siteId || !activeDeploymentResolved) {
         throw new Error('Project ID, Site ID, and Deployment ID are required')
       }
       throw new Error(
@@ -287,14 +304,17 @@ export function View() {
       <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6 pt-4 sm:pt-6">
         <div className="space-y-6">
           {/* Active Deployment Card - show for both ready and building; realtime updates when status becomes ready */}
-          {activeDeployment && (
+          {activeDeploymentResolved && activeDeploymentForCard && (
             <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
               <div className="px-6 py-4 flex items-center gap-2">
                 <h3 className="text-[15px] font-semibold text-foreground">
                   Active deployment
                 </h3>
                 {isBuilding && (
-                  <Badge variant="warning" className="text-[10px] shrink-0">
+                  <Badge
+                    variant="deploymentBuilding"
+                    className="text-[10px] shrink-0"
+                  >
                     Building
                   </Badge>
                 )}
@@ -308,7 +328,9 @@ export function View() {
                       Deployed
                     </div>
                     <div className="text-[13px] text-foreground">
-                      <DateTooltip date={activeDeployment.$createdAt} />
+                      <DateTooltip
+                        date={activeDeploymentForCard.$createdAt}
+                      />
                     </div>
                   </div>
 
@@ -474,10 +496,14 @@ export function View() {
                     <DropdownMenuItem
                       onClick={handleDownloadBuild}
                       disabled={
-                        !isDeploymentCompleted(activeDeployment?.status)
+                        !isDeploymentCompleted(
+                          activeDeploymentForCard?.status,
+                        )
                       }
                       title={
-                        !isDeploymentCompleted(activeDeployment?.status)
+                        !isDeploymentCompleted(
+                          activeDeploymentForCard?.status,
+                        )
                           ? 'Build output is available after the deployment has completed.'
                           : undefined
                       }
@@ -502,7 +528,7 @@ export function View() {
                   params={{
                     projectId: projectId!,
                     siteId: siteId!,
-                    deploymentId: activeDeployment.$id,
+                    deploymentId: activeDeploymentResolved.$id,
                   }}
                 >
                   <Button
@@ -592,7 +618,12 @@ export function View() {
                         siteId: siteId!,
                         deploymentId: deploymentData.$id,
                       }}
-                      className="block px-6 py-4 hover:bg-muted/30 transition-colors"
+                      className={cn(
+                        'block px-6 py-4 transition-colors',
+                        isActive
+                          ? 'bg-muted/40 dark:bg-muted/35 hover:bg-muted/55 dark:hover:bg-muted/50'
+                          : 'hover:bg-muted/30',
+                      )}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -640,7 +671,7 @@ export function View() {
       </div>
 
       {/* Delete Confirmation Dialog */}
-      {activeDeployment && (
+      {activeDeploymentResolved && activeDeploymentForCard && (
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <DialogContent className="sm:max-w-md p-0">
             <DialogHeader className="px-6 pt-6 pb-4 text-left">
@@ -652,7 +683,10 @@ export function View() {
                 Are you sure you want to delete this deployment? This action
                 cannot be undone.
               </DialogDescription>
-              <DeploymentInfo deployment={activeDeployment} showStatus={true} />
+              <DeploymentInfo
+                deployment={activeDeploymentForCard}
+                showStatus={true}
+              />
             </div>
             <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <Button
@@ -676,7 +710,7 @@ export function View() {
       )}
 
       {/* Redeploy Confirmation Dialog */}
-      {activeDeployment && (
+      {activeDeploymentResolved && activeDeploymentForCard && (
         <Dialog open={redeployDialogOpen} onOpenChange={setRedeployDialogOpen}>
           <DialogContent className="sm:max-w-md p-0">
             <DialogHeader className="px-6 pt-6 pb-4 text-left">
@@ -689,7 +723,10 @@ export function View() {
                 current site configuration. The original deployment's code will
                 be preserved and used for the new build.
               </DialogDescription>
-              <DeploymentInfo deployment={activeDeployment} showStatus={true} />
+              <DeploymentInfo
+                deployment={activeDeploymentForCard}
+                showStatus={true}
+              />
             </div>
             <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <Button
@@ -714,7 +751,7 @@ export function View() {
       )}
 
       {/* Activate Confirmation Dialog */}
-      {activeDeployment && (
+      {activeDeploymentResolved && activeDeploymentForCard && (
         <Dialog open={activateDialogOpen} onOpenChange={setActivateDialogOpen}>
           <DialogContent className="sm:max-w-md p-0">
             <DialogHeader className="px-6 pt-6 pb-4 text-left">
@@ -726,7 +763,10 @@ export function View() {
                 This will switch the active deployment to this one. All traffic
                 will be routed to this deployment once activated.
               </DialogDescription>
-              <DeploymentInfo deployment={activeDeployment} showStatus={true} />
+              <DeploymentInfo
+                deployment={activeDeploymentForCard}
+                showStatus={true}
+              />
             </div>
             <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <Button

@@ -60,6 +60,8 @@ export { tableColumnsFilterColumns } from './filter-configs/table-columns'
 export { tableIndexesFilterColumns } from './filter-configs/table-indexes'
 export {
   rowsFilterColumnsFromAttributes,
+  appendDocumentsDbCustomAttributeFilter,
+  DOCUMENTS_DB_CUSTOM_ATTRIBUTE_FILTER_COLUMN_ID,
   type TableIndexForFilters,
 } from './filter-configs/rows'
 

@@ -1,5 +1,5 @@
 import { BillingPlan } from '@appwrite.io/console'
-import { getPlanNameFromTier } from '@/lib/utils/plan-filter'
+import { getBillingPlanDisplayLabel } from '@/lib/utils/plan-filter'
 
 interface PlanComparisonBoxProps {
   currentPlan: BillingPlan | string
@@ -11,16 +11,9 @@ export function PlanComparisonBox({
   currentPlan,
   selectedPlan,
 }: PlanComparisonBoxProps) {
-  const getPlanDisplayName = (planTier: string) => {
-    const planName = getPlanNameFromTier(planTier)
-    if (planName === 'free') return 'Free'
-    if (planName === 'pro') return 'Pro'
-    return 'Custom'
-  }
-
-  const currentPlanName = getPlanDisplayName(currentPlan as string)
+  const currentPlanName = getBillingPlanDisplayLabel(currentPlan as string)
   const selectedPlanName = selectedPlan
-    ? getPlanDisplayName(selectedPlan)
+    ? getBillingPlanDisplayLabel(selectedPlan)
     : null
 
   return (

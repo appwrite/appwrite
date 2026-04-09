@@ -40,6 +40,19 @@ interface ApiKeysListProps {
   showActions?: boolean
 }
 
+function getExpirationStatus(expire: string | null) {
+  if (!expire) return null
+
+  const now = new Date()
+  const expireDate = new Date(expire)
+  const isExpired = expireDate < now
+  const isExpiringSoon =
+    !isExpired &&
+    expireDate.getTime() - now.getTime() <= 7 * 24 * 60 * 60 * 1000 // 7 days
+
+  return { isExpired, isExpiringSoon, expireDate }
+}
+
 export function ApiKeysList({
   apiKeys,
   isLoading = false,
@@ -54,19 +67,6 @@ export function ApiKeysList({
 
   const maskKey = (key: string) => {
     return key.slice(0, 7) + '•'.repeat(24) + key.slice(-4)
-  }
-
-  const getExpirationStatus = (expire: string | null) => {
-    if (!expire) return null
-
-    const now = new Date()
-    const expireDate = new Date(expire)
-    const isExpired = expireDate < now
-    const isExpiringSoon =
-      !isExpired &&
-      expireDate.getTime() - now.getTime() <= 7 * 24 * 60 * 60 * 1000 // 7 days
-
-    return { isExpired, isExpiringSoon, expireDate }
   }
 
   const viewingKey = apiKeys.find((key) => key.id === viewingKeyId)
@@ -156,45 +156,60 @@ export function ApiKeysList({
                         : `${apiKey.scopes.length} scope${apiKey.scopes.length !== 1 ? 's' : ''}`}
                     </Badge>
                   </div>
-                  <div className="mt-1.5 flex items-center gap-2 min-w-0 overflow-hidden">
-                    <code className="rounded bg-muted px-2 py-0.5 font-mono text-[12px] text-muted-foreground truncate max-w-[200px] sm:max-w-none">
-                      {maskKey(apiKey.key)}
-                    </code>
-                    <button
-                      type="button"
-                      data-api-key-action
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleView(apiKey.id)
-                      }}
-                      className="cursor-pointer rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground shrink-0"
-                      title="View key"
-                    >
-                      <Eye className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      data-api-key-action
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleCopy(apiKey.key, `apiKey-${apiKey.id}`)
-                      }}
-                      className="cursor-pointer rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground shrink-0"
-                      title="Copy key"
-                    >
-                      {copiedField === `apiKey-${apiKey.id}` ? (
-                        <Check className="h-3.5 w-3.5 text-emerald-500" />
-                      ) : (
-                        <Copy className="h-3.5 w-3.5" />
-                      )}
-                    </button>
-                    <div className="ml-auto flex items-center gap-2 sm:gap-3 shrink-0">
+                  <div className="mt-1.5 flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+                    <div className="flex min-w-0 items-center gap-2 overflow-hidden">
+                      <code className="rounded bg-muted px-2 py-0.5 font-mono text-[12px] text-muted-foreground truncate max-w-[200px] sm:max-w-none">
+                        {maskKey(apiKey.key)}
+                      </code>
+                      <button
+                        type="button"
+                        data-api-key-action
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleView(apiKey.id)
+                        }}
+                        className="cursor-pointer rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground shrink-0"
+                        title="View key"
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        data-api-key-action
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleCopy(apiKey.key, `apiKey-${apiKey.id}`)
+                        }}
+                        className="cursor-pointer rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground shrink-0"
+                        title="Copy key"
+                      >
+                        {copiedField === `apiKey-${apiKey.id}` ? (
+                          <Check className="h-3.5 w-3.5 text-emerald-500" />
+                        ) : (
+                          <Copy className="h-3.5 w-3.5" />
+                        )}
+                      </button>
+                    </div>
+                    <div className="flex w-full shrink-0 flex-wrap items-center justify-end gap-x-2 sm:w-auto sm:gap-x-3">
                       <span className="text-[12px] text-muted-foreground whitespace-nowrap hidden sm:inline">
                         Created{' '}
                         <DateTooltip
                           date={apiKey.createdAt}
                           className="text-[12px] text-muted-foreground"
                         />
+                      </span>
+                      <span className="text-[12px] text-muted-foreground whitespace-nowrap hidden md:inline">
+                        Last used{' '}
+                        {apiKey.lastUsed ? (
+                          <DateTooltip
+                            date={apiKey.lastUsed}
+                            className="text-[12px] text-muted-foreground"
+                          />
+                        ) : (
+                          <span className="text-[12px] text-muted-foreground">
+                            Never
+                          </span>
+                        )}
                       </span>
                       <span className="text-[12px] text-muted-foreground whitespace-nowrap hidden md:inline">
                         {apiKey.expire ? (
@@ -265,6 +280,45 @@ export function ApiKeysList({
           <div className="border-t border-border" />
 
           <div className="px-6 pb-4 pt-0">
+            {viewingKey && (
+              <div className="mb-4 flex w-full flex-wrap items-center justify-end gap-x-2 sm:gap-x-3 text-[12px] text-muted-foreground">
+                <span className="whitespace-nowrap">
+                  Created{' '}
+                  <DateTooltip
+                    date={viewingKey.createdAt}
+                    className="text-[12px] text-muted-foreground"
+                  />
+                </span>
+                <span className="whitespace-nowrap">
+                  Last used{' '}
+                  {viewingKey.lastUsed ? (
+                    <DateTooltip
+                      date={viewingKey.lastUsed}
+                      className="text-[12px] text-muted-foreground"
+                    />
+                  ) : (
+                    <span className="text-[12px] text-muted-foreground">
+                      Never
+                    </span>
+                  )}
+                </span>
+                <span className="whitespace-nowrap">
+                  {viewingKey.expire ? (
+                    <>
+                      {getExpirationStatus(viewingKey.expire)?.isExpired
+                        ? 'Expired'
+                        : 'Expires'}{' '}
+                      <DateTooltip
+                        date={viewingKey.expire}
+                        className="text-[12px] text-muted-foreground"
+                      />
+                    </>
+                  ) : (
+                    'No expiration'
+                  )}
+                </span>
+              </div>
+            )}
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">
                 API Key

@@ -45,6 +45,8 @@ export type ConsoleProfileFeatures = {
   dedicatedDbsDocumentsDB: boolean
   /** Dedicated DBs support for Vectors DB. */
   dedicatedDbsVectorsDB: boolean
+  /** Multi-region support (region picker/labels in project UX). */
+  multiRegion: boolean
   /** Require console user email verification after signup (cloud: redirect to verify-email page; self-hosted: skip). */
   userVerification: boolean
 }
@@ -80,6 +82,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       dedicatedDbsTablesDB: true,
       dedicatedDbsDocumentsDB: false,
       dedicatedDbsVectorsDB: false,
+      multiRegion: true,
       userVerification: true,
     },
   },
@@ -106,6 +109,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       dedicatedDbsTablesDB: false,
       dedicatedDbsDocumentsDB: false,
       dedicatedDbsVectorsDB: false,
+      multiRegion: false,
       userVerification: false,
     },
   },

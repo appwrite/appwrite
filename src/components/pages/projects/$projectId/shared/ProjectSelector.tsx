@@ -30,15 +30,21 @@ import {
   useQueryClient,
   keepPreviousData,
 } from '@tanstack/react-query'
-import { getPlanBadgeColor } from '@/lib/utils/plan-badge'
+import { getPlanBadgeColor, getPlanDisplayName } from '@/lib/utils/plan-badge'
+import { truncateMiddle } from '@/lib/utils'
 import { CreateProjectDialog } from '@/components/pages/organizations/$orgId/overview/CreateProjectDialog'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useNavigate } from '@tanstack/react-router'
+import { useAuth } from '@/components/global/auth/RequireAuth'
+import { openCreateOrganizationFlow } from '@/lib/open-create-organization-flow'
 
 interface ProjectSelectorProps {
   className?: string
   collapsed?: boolean
   projectId?: string
   isMobile?: boolean
+  /** When set (e.g. org overview layout), matches header create-org behavior */
+  onCreateOrganization?: () => void
 }
 
 export function ProjectSelector({
@@ -46,8 +52,11 @@ export function ProjectSelector({
   collapsed,
   projectId,
   isMobile,
+  onCreateOrganization,
 }: ProjectSelectorProps) {
   const { isCloud } = useConsoleProfile()
+  const navigate = useNavigate()
+  const { account } = useAuth()
   const [open, setOpen] = useState(false)
   const [createProjectDialogOpen, setCreateProjectDialogOpen] = useState(false)
 
@@ -74,6 +83,10 @@ export function ProjectSelector({
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null)
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [teamSearch, setTeamSearch] = useState('')
+
+  // Sync UI with prefetched route data on first paint (state starts null; effects run after paint)
+  const resolvedTeam = selectedTeam ?? initialTeam
+  const resolvedProject = selectedProject ?? currentProject ?? null
 
   // Note: Infinite query automatically resets when team or search changes
 
@@ -105,17 +118,17 @@ export function ProjectSelector({
   // Reset project search when team (organization) changes
   useEffect(() => {
     setProjectSearch('')
-  }, [selectedTeam?.$id])
+  }, [resolvedTeam?.$id])
 
   // Pinned projects for selected team (from team prefs)
-  const { data: consoleTeam } = useConsoleTeam(selectedTeam?.$id)
+  const { data: consoleTeam } = useConsoleTeam(resolvedTeam?.$id)
   const pinnedIds = useMemo(
     () => parsePinnedProjectIds(consoleTeam?.prefs),
     [consoleTeam?.prefs],
   )
   const { data: pinnedProjectsData, isPlaceholderData: isPinnedPlaceholder } =
     useQuery({
-      ...pinnedProjectsQueryOptions(selectedTeam?.$id ?? null, pinnedIds),
+      ...pinnedProjectsQueryOptions(resolvedTeam?.$id ?? null, pinnedIds),
       placeholderData: keepPreviousData,
     })
 
@@ -128,7 +141,7 @@ export function ProjectSelector({
     fetchNextPage,
     isPlaceholderData: isInfinitePlaceholder,
   } = useProjectsForTeamInfinite(
-    selectedTeam?.$id,
+    resolvedTeam?.$id,
     projectsPageSize,
     projectSearch,
     pinnedIds,
@@ -139,7 +152,7 @@ export function ProjectSelector({
   // Handle team selection - ensure data is ready before switching (loads team once, then pinned + unpinned in parallel)
   const handleSelectTeam = useCallback(
     async (team: Team) => {
-      if (team.$id === selectedTeam?.$id) return
+      if (team.$id === resolvedTeam?.$id) return
 
       let excludeIds: string[] = []
       try {
@@ -197,7 +210,7 @@ export function ProjectSelector({
         setSelectedTeam(team)
       }
     },
-    [queryClient, selectedTeam?.$id, projectsPageSize],
+    [queryClient, resolvedTeam?.$id, projectsPageSize],
   )
 
   // Find the team for the current project (for display in trigger)
@@ -214,12 +227,6 @@ export function ProjectSelector({
     )
   }, [currentProjectTeam, organizations])
 
-  // Organization for selected team (for display); plan is fetched in CreateProjectDialog when open
-  const selectedTeamOrg = useMemo(() => {
-    if (!selectedTeam) return null
-    return organizations.find((org) => org.$id === selectedTeam.orgId) || null
-  }, [selectedTeam, organizations])
-
   // Total project count = pinned + unpinned (from infinite query); no separate list call
   const projectsCount = pinnedIds.length + (infiniteTotal ?? 0)
 
@@ -233,7 +240,7 @@ export function ProjectSelector({
 
   // Pinned projects in Project shape (order from pinnedIds), filtered by search
   const pinnedProjects = useMemo(() => {
-    if (!pinnedProjectsData?.projects?.length || !selectedTeam) return []
+    if (!pinnedProjectsData?.projects?.length || !resolvedTeam) return []
     const raw = pinnedProjectsData.projects as Array<{
       $id: string
       name: string
@@ -258,16 +265,16 @@ export function ProjectSelector({
     if (!projectSearch.trim()) return list
     const q = projectSearch.toLowerCase()
     return list.filter((p) => p.name?.toLowerCase().includes(q))
-  }, [pinnedProjectsData, pinnedIds, selectedTeam, projectSearch])
+  }, [pinnedProjectsData, pinnedIds, resolvedTeam, projectSearch])
 
   // Combine: current (if same team), then pinned, then paginated (excluding current and pinned)
   const displayProjects = useMemo(() => {
-    if (!selectedTeam) return []
+    if (!resolvedTeam) return []
 
     const otherProjects = paginatedProjects.filter((p) => p.$id !== projectId)
     const pinnedFiltered = pinnedProjects.filter((p) => p.$id !== projectId)
 
-    if (currentProject && currentProject.teamId === selectedTeam.$id) {
+    if (currentProject && currentProject.teamId === resolvedTeam.$id) {
       return [currentProject, ...pinnedFiltered, ...otherProjects]
     }
     return [...pinnedFiltered, ...otherProjects]
@@ -276,7 +283,7 @@ export function ProjectSelector({
     pinnedProjects,
     paginatedProjects,
     projectId,
-    selectedTeam,
+    resolvedTeam,
   ])
 
   // Show list only when both pinned and unpinned have real data (not placeholder).
@@ -285,7 +292,7 @@ export function ProjectSelector({
   const lastStablePinnedIdsRef = useRef<string[]>([])
   const bothQueriesReady = !isPinnedPlaceholder && !isInfinitePlaceholder
   const stableDisplayProjects =
-    bothQueriesReady && selectedTeam
+    bothQueriesReady && resolvedTeam
       ? (() => {
           lastStableDisplayRef.current = displayProjects
           lastStablePinnedIdsRef.current = pinnedIds
@@ -293,7 +300,7 @@ export function ProjectSelector({
         })()
       : lastStableDisplayRef.current
   const stablePinnedIds =
-    bothQueriesReady && selectedTeam
+    bothQueriesReady && resolvedTeam
       ? pinnedIds
       : lastStablePinnedIdsRef.current
 
@@ -312,12 +319,25 @@ export function ProjectSelector({
     setOpen(false)
   }
 
+  const handleCreateOrganization = useCallback(() => {
+    const prefs = (account as { prefs?: Record<string, unknown> } | undefined)
+      ?.prefs
+    const orgId =
+      currentProject?.teamId ||
+      (prefs?.organization as string | undefined)
+    openCreateOrganizationFlow(navigate, {
+      onCreateOrganization,
+      orgId,
+    })
+    setOpen(false)
+  }, [account, currentProject?.teamId, navigate, onCreateOrganization])
+
   // Show loading state if data is not ready
   if (
     orgsLoading ||
     currentProjectLoading ||
-    !selectedProject ||
-    !selectedTeam
+    !resolvedProject ||
+    !resolvedTeam
   ) {
     return (
       <div
@@ -343,9 +363,7 @@ export function ProjectSelector({
                 className,
               )}
             >
-              {(currentProject?.name || selectedProject.name)
-                .charAt(0)
-                .toUpperCase()}
+              {resolvedProject.name.charAt(0).toUpperCase()}
             </button>
           </PopoverTrigger>
           <PopoverContent
@@ -355,9 +373,9 @@ export function ProjectSelector({
             className="w-[520px] border-border bg-popover p-0"
           >
             <ProjectSelectorContent
-              selectedTeam={selectedTeam}
+              selectedTeam={resolvedTeam}
               onSelectTeam={handleSelectTeam}
-              selectedProject={selectedProject}
+              selectedProject={resolvedProject}
               handleSelectProject={handleSelectProject}
               teamSearch={teamSearch}
               setTeamSearch={setTeamSearch}
@@ -370,9 +388,10 @@ export function ProjectSelector({
               hasNextPage={hasNextPage}
               fetchNextPage={fetchNextPage}
               organizations={organizations}
-            isCloud={isCloud}
+              isCloud={isCloud}
               currentProjectId={projectId}
               onCreateProject={() => setCreateProjectDialogOpen(true)}
+              onCreateOrganization={handleCreateOrganization}
             />
           </PopoverContent>
         </Popover>
@@ -380,7 +399,7 @@ export function ProjectSelector({
         <CreateProjectDialog
           open={createProjectDialogOpen}
           onOpenChange={setCreateProjectDialogOpen}
-          teamId={selectedTeam?.$id}
+          teamId={resolvedTeam.$id}
           currentProjectsCount={projectsCount}
         />
       </>
@@ -398,16 +417,22 @@ export function ProjectSelector({
             className,
           )}
         >
-          <InitialsAvatar
-            name={currentProject?.name || selectedProject.name}
-            size="sm"
-          />
+          <InitialsAvatar name={resolvedProject.name} size="sm" />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[13px] font-medium text-foreground">
-              {currentProject?.name || selectedProject.name}
+            <p
+              className="truncate text-[13px] font-medium text-foreground"
+              title={resolvedProject.name}
+            >
+              {truncateMiddle(resolvedProject.name, 30)}
             </p>
-            <p className="truncate text-[11px] text-muted-foreground">
-              {currentProjectTeam?.name || selectedTeam.name}
+            <p
+              className="truncate text-[11px] text-muted-foreground"
+              title={currentProjectTeam?.name || resolvedTeam.name}
+            >
+              {truncateMiddle(
+                currentProjectTeam?.name || resolvedTeam.name,
+                30,
+              )}
             </p>
           </div>
           {isCloud && currentProjectOrg && (
@@ -417,7 +442,7 @@ export function ProjectSelector({
                 getPlanBadgeColor(currentProjectOrg.plan),
               )}
             >
-              {currentProjectOrg.plan}
+              {getPlanDisplayName(currentProjectOrg.plan)}
             </span>
           )}
           <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
@@ -425,7 +450,8 @@ export function ProjectSelector({
 
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogContent
-            className="flex h-[100dvh] max-h-none w-screen max-w-none flex-col gap-0 rounded-none border-0 p-0 sm:rounded-none"
+            className="fixed inset-0 left-0 top-0 z-[132] flex h-[100dvh] max-h-none w-[100dvw] max-w-none translate-x-0 translate-y-0 flex-col gap-0 rounded-none border-0 p-0 sm:max-w-none sm:rounded-none"
+            overlayClassName="z-[131]"
             showCloseButton={false}
           >
             <DialogTitle className="sr-only">Select Project</DialogTitle>
@@ -444,9 +470,9 @@ export function ProjectSelector({
 
             {/* Content */}
             <MobileProjectSelectorContent
-              selectedTeam={selectedTeam}
+              selectedTeam={resolvedTeam}
               onSelectTeam={handleSelectTeam}
-              selectedProject={selectedProject}
+              selectedProject={resolvedProject}
               handleSelectProject={handleSelectProject}
               teamSearch={teamSearch}
               setTeamSearch={setTeamSearch}
@@ -454,12 +480,15 @@ export function ProjectSelector({
               setProjectSearch={setProjectSearch}
               filteredTeams={filteredTeams}
               displayProjects={stableDisplayProjects}
+              pinnedProjectIds={stablePinnedIds}
               isFetchingNextPage={isFetchingNextPage}
               hasNextPage={hasNextPage}
               fetchNextPage={fetchNextPage}
               organizations={organizations}
+              isCloud={isCloud}
               currentProjectId={projectId}
               onCreateProject={() => setCreateProjectDialogOpen(true)}
+              onCreateOrganization={handleCreateOrganization}
             />
           </DialogContent>
         </Dialog>
@@ -467,7 +496,7 @@ export function ProjectSelector({
         <CreateProjectDialog
           open={createProjectDialogOpen}
           onOpenChange={setCreateProjectDialogOpen}
-          teamId={selectedTeam?.$id}
+          teamId={resolvedTeam.$id}
           currentProjectsCount={projectsCount}
         />
       </>
@@ -480,18 +509,21 @@ export function ProjectSelector({
         <PopoverTrigger asChild>
           <button
             className={cn(
-              'flex h-9 items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent cursor-pointer',
+              'flex h-9 max-w-full min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent cursor-pointer',
               className,
             )}
           >
-            <InitialsAvatar
-              name={currentProject?.name || selectedProject.name}
-              size="sm"
-            />
-            <div className="min-w-0 flex items-center gap-2">
-              <p className="truncate text-[13px] font-medium text-foreground">
-                {currentProjectTeam?.name || selectedTeam.name} /{' '}
-                {currentProject?.name || selectedProject.name}
+            <InitialsAvatar name={resolvedProject.name} size="sm" />
+            <div className="min-w-0 flex flex-1 items-center gap-2 overflow-hidden">
+              <p
+                className="truncate text-[13px] font-medium text-foreground"
+                title={`${currentProjectTeam?.name || resolvedTeam.name} / ${resolvedProject.name}`}
+              >
+                {truncateMiddle(
+                  currentProjectTeam?.name || resolvedTeam.name,
+                  20,
+                )}{' '}
+                / {truncateMiddle(resolvedProject.name, 22)}
               </p>
               {isCloud && currentProjectOrg && (
                 <span
@@ -500,7 +532,7 @@ export function ProjectSelector({
                     getPlanBadgeColor(currentProjectOrg.plan),
                   )}
                 >
-                  {currentProjectOrg.plan}
+                  {getPlanDisplayName(currentProjectOrg.plan)}
                 </span>
               )}
             </div>
@@ -514,9 +546,9 @@ export function ProjectSelector({
           className="w-[520px] border-border bg-popover p-0"
         >
           <ProjectSelectorContent
-            selectedTeam={selectedTeam}
+            selectedTeam={resolvedTeam}
             onSelectTeam={handleSelectTeam}
-            selectedProject={selectedProject}
+            selectedProject={resolvedProject}
             handleSelectProject={handleSelectProject}
             teamSearch={teamSearch}
             setTeamSearch={setTeamSearch}
@@ -532,6 +564,7 @@ export function ProjectSelector({
             isCloud={isCloud}
             currentProjectId={projectId}
             onCreateProject={() => setCreateProjectDialogOpen(true)}
+            onCreateOrganization={handleCreateOrganization}
           />
         </PopoverContent>
       </Popover>
@@ -540,7 +573,7 @@ export function ProjectSelector({
       <CreateProjectDialog
         open={createProjectDialogOpen}
         onOpenChange={setCreateProjectDialogOpen}
-        teamId={selectedTeam?.$id}
+        teamId={resolvedTeam.$id}
         currentProjectsCount={projectsCount}
       />
     </>
@@ -551,7 +584,7 @@ interface ProjectSelectorContentProps {
   selectedTeam: Team | null
   onSelectTeam: (team: Team) => Promise<void>
   selectedProject: Project | null
-  handleSelectProject: (project: Project) => void
+  handleSelectProject: (project: Project, event?: React.MouseEvent) => void
   teamSearch: string
   setTeamSearch: (search: string) => void
   projectSearch: string
@@ -566,6 +599,7 @@ interface ProjectSelectorContentProps {
   isCloud: boolean
   currentProjectId?: string
   onCreateProject: () => void
+  onCreateOrganization: () => void
 }
 
 function ProjectSelectorContent({
@@ -587,6 +621,7 @@ function ProjectSelectorContent({
   isCloud,
   currentProjectId,
   onCreateProject,
+  onCreateOrganization,
 }: ProjectSelectorContentProps) {
   const pinnedSet = useMemo(() => new Set(pinnedProjectIds), [pinnedProjectIds])
   // Ref for the scrollable container
@@ -683,7 +718,7 @@ function ProjectSelectorContent({
                             getPlanBadgeColor(teamOrg.plan),
                           )}
                         >
-                          {teamOrg.plan}
+                          {getPlanDisplayName(teamOrg.plan)}
                         </span>
                       )}
                     </div>
@@ -699,7 +734,11 @@ function ProjectSelectorContent({
 
         {/* Create Organization - fixed at bottom */}
         <div className="border-t border-border p-1.5">
-          <button className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
+          <button
+            type="button"
+            onClick={onCreateOrganization}
+            className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          >
             <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/50">
               <Plus className="h-3.5 w-3.5" />
             </div>
@@ -753,7 +792,7 @@ function ProjectSelectorContent({
                           : 'hover:bg-accent/50',
                         isCurrentProject &&
                           selectedProject?.$id !== project.$id &&
-                          'bg-primary/10 hover:bg-primary/20',
+                          'bg-primary/10 hover:bg-primary/20 classic:bg-sidebar-accent classic:hover:bg-sidebar-accent/80',
                       )}
                     >
                       <InitialsAvatar name={project.name} size="sm" />
@@ -801,7 +840,7 @@ function ProjectSelectorContent({
             onClick={onCreateProject}
             className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
-            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-dashed border-muted-foreground/50">
+            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/50">
               <Plus className="h-3.5 w-3.5" />
             </div>
             <span className="text-[13px]">Create Project</span>
@@ -832,6 +871,7 @@ function MobileProjectSelectorContent({
   isCloud,
   currentProjectId,
   onCreateProject,
+  onCreateOrganization,
 }: ProjectSelectorContentProps) {
   const [activeTab, setActiveTab] = useState<'teams' | 'projects'>('projects')
   const pinnedSet = useMemo(() => new Set(pinnedProjectIds), [pinnedProjectIds])
@@ -964,7 +1004,7 @@ function MobileProjectSelectorContent({
                             getPlanBadgeColor(teamOrg.plan),
                           )}
                         >
-                          {teamOrg.plan}
+                          {getPlanDisplayName(teamOrg.plan)}
                         </span>
                       )}
                       {selectedTeam.$id === team.$id && (
@@ -979,7 +1019,11 @@ function MobileProjectSelectorContent({
 
           {/* Create Organization */}
           <div className="border-t border-border p-2">
-            <button className="flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
+            <button
+              type="button"
+              onClick={onCreateOrganization}
+              className="flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
               <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/50">
                 <Plus className="h-4 w-4" />
               </div>
@@ -999,7 +1043,7 @@ function MobileProjectSelectorContent({
             </span>
             <button
               onClick={() => setActiveTab('teams')}
-              className="ml-auto cursor-pointer text-[12px] text-primary hover:underline"
+              className="ml-auto cursor-pointer text-[12px] text-primary hover:underline classic:text-muted-foreground"
             >
               Change
             </button>
@@ -1047,7 +1091,7 @@ function MobileProjectSelectorContent({
                             : 'hover:bg-accent/50',
                           isCurrentProject &&
                             selectedProject?.$id !== project.$id &&
-                            'bg-primary/10 hover:bg-primary/20',
+                            'bg-primary/10 hover:bg-primary/20 classic:bg-sidebar-accent classic:hover:bg-sidebar-accent/80',
                         )}
                       >
                         <InitialsAvatar name={project.name} size="sm" />
@@ -1098,7 +1142,7 @@ function MobileProjectSelectorContent({
               onClick={onCreateProject}
               className="flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
-              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-dashed border-muted-foreground/50">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/50">
                 <Plus className="h-4 w-4" />
               </div>
               <span className="text-[14px]">Create Project</span>

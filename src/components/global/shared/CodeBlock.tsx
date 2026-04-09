@@ -5,17 +5,19 @@
 /**
  * Reusable code block with syntax highlighting for all Appwrite SDK and runtime languages.
  * Supports: JavaScript, TypeScript, Node/Deno/Bun, Python, PHP, Ruby, Dart, Swift, Kotlin, Java,
- * Go, C#/.NET, JSON, Bash, PowerShell, markup, plaintext, and .env (dotenv).
+ * Go, C#/.NET, JSON, Bash, PowerShell, HCL (Terraform), markup, plaintext, and .env (dotenv).
  * Uses prism-react-renderer; extra languages are loaded on demand. Built-in Prism themes;
  * background matches page (--background).
  */
 
 import { useEffect, useRef, useState } from 'react'
-import { Copy, Check } from 'lucide-react'
+import { Copy, Check, Maximize2 } from 'lucide-react'
 import { Highlight, Prism, themes } from 'prism-react-renderer'
 import { useTheme } from 'next-themes'
 import { cn } from '@/lib/utils'
+import { isResolvedThemeDarkChrome } from '@/lib/html-theme'
 import { Button } from '@/components/ui/button'
+import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { toast } from 'sonner'
 
 // Expose Prism so prismjs language components can register themselves
@@ -58,6 +60,7 @@ export type CodeBlockLanguage =
   | 'markup'
   | 'plaintext'
   | 'env'
+  | 'hcl'
   // Appwrite runtime keys (map to Prism languages below)
   | 'node'
   | 'deno'
@@ -76,6 +79,35 @@ function getPrismLanguage(lang: CodeBlockLanguage): string {
   return RUNTIME_TO_PRISM[lang] ?? lang
 }
 
+function getLanguageLabel(lang: CodeBlockLanguage): string {
+  const labels: Partial<Record<CodeBlockLanguage, string>> = {
+    javascript: 'JavaScript',
+    typescript: 'TypeScript',
+    json: 'JSON',
+    dart: 'Dart',
+    swift: 'Swift',
+    kotlin: 'Kotlin',
+    java: 'Java',
+    bash: 'Bash',
+    powershell: 'PowerShell',
+    php: 'PHP',
+    python: 'Python',
+    ruby: 'Ruby',
+    go: 'Go',
+    csharp: 'C#',
+    markup: 'Markup',
+    plaintext: 'Plain text',
+    env: '.env',
+    hcl: 'Terraform',
+    node: 'Node.js',
+    deno: 'Deno',
+    bun: 'Bun',
+    dotnet: '.NET',
+  }
+
+  return labels[lang] ?? lang
+}
+
 const EXTRA_LANGUAGES: string[] = [
   'json',
   'dart',
@@ -90,6 +122,7 @@ const EXTRA_LANGUAGES: string[] = [
   'go',
   'csharp',
   'markup',
+  'hcl',
 ]
 
 const PRISM_LOADERS: Record<string, () => Promise<unknown>> = {
@@ -113,6 +146,7 @@ const PRISM_LOADERS: Record<string, () => Promise<unknown>> = {
   ruby: () => import('prismjs/components/prism-ruby'),
   go: () => import('prismjs/components/prism-go'),
   csharp: () => import('prismjs/components/prism-csharp'),
+  hcl: () => import('prismjs/components/prism-hcl'),
 }
 
 const loadedLanguages = new Set<string>()
@@ -138,6 +172,10 @@ export interface CodeBlockProps {
   className?: string
   /** Optional label above the block (e.g. "Code") */
   label?: string
+  /** Render with transparent background (keeps border and highlighting) */
+  transparentBackground?: boolean
+  /** Show fullscreen button (default false) */
+  showFullscreen?: boolean
 }
 
 export function CodeBlock({
@@ -148,8 +186,11 @@ export function CodeBlock({
   fixedHeight,
   className,
   label,
+  transparentBackground = false,
+  showFullscreen = false,
 }: CodeBlockProps) {
   const [copied, setCopied] = useState(false)
+  const [isFullscreenOpen, setIsFullscreenOpen] = useState(false)
   const preRef = useRef<HTMLPreElement>(null)
   const prismLanguage = getPrismLanguage(language)
   const needsExtra = EXTRA_LANGUAGES.includes(prismLanguage)
@@ -196,27 +237,47 @@ export function CodeBlock({
   }
 
   const effectiveLanguage = extrasReady ? prismLanguage : 'plaintext'
-  const prismTheme = resolvedTheme === 'dark' ? themes.vsDark : themes.vsLight
+  const prismTheme = isResolvedThemeDarkChrome(resolvedTheme)
+    ? themes.vsDark
+    : themes.vsLight
 
-  const copyButton = showCopy ? (
-    <Button
-      variant="ghost"
-      size="sm"
-      className="h-7 gap-1 text-[12px] text-muted-foreground hover:text-foreground"
-      onClick={handleCopy}
-    >
-      {copied ? (
-        <Check className="h-3.5 w-3.5" />
-      ) : (
-        <Copy className="h-3.5 w-3.5" />
-      )}
-      Copy
-    </Button>
-  ) : null
+  const renderCopyButton = () => {
+    if (!showCopy) return null
+    return (
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+        onClick={handleCopy}
+        aria-label="Copy code"
+      >
+        {copied ? (
+          <Check className="h-3.5 w-3.5" />
+        ) : (
+          <Copy className="h-3.5 w-3.5" />
+        )}
+      </Button>
+    )
+  }
+
+  const renderFullscreenButton = () => {
+    if (!showFullscreen) return null
+    return (
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+        onClick={() => setIsFullscreenOpen(true)}
+      >
+        <Maximize2 className="h-3.5 w-3.5" />
+      </Button>
+    )
+  }
 
   return (
     <div className={cn('space-y-1.5', className)}>
-      {!copyInside && (label || showCopy) && (
+      {!copyInside && (label || showCopy || showFullscreen) && (
         <div
           className={cn(
             'flex items-center',
@@ -228,19 +289,29 @@ export function CodeBlock({
               {label}
             </span>
           )}
-          {copyButton}
+          <div className="flex items-center gap-1">
+            {renderCopyButton()}
+            {renderFullscreenButton()}
+          </div>
         </div>
       )}
       <div
         className={cn(
-          'relative rounded-xl border border-border overflow-hidden bg-background flex flex-col',
+          'relative rounded-xl border border-border overflow-hidden flex flex-col',
+          transparentBackground ? 'bg-transparent' : 'bg-background',
           fixedHeight && 'min-h-0',
         )}
         style={fixedHeight ? { height: fixedHeight } : undefined}
       >
-        {copyInside && copyButton && (
-          <div className="absolute right-2 top-2 z-10 shrink-0">
-            {copyButton}
+        {copyInside && (showCopy || showFullscreen) && (
+          <div className="flex h-10 shrink-0 items-center justify-between border-b border-border px-3">
+            <span className="text-[11px] font-medium text-muted-foreground">
+              {getLanguageLabel(language)}
+            </span>
+            <div className="flex items-center gap-1">
+              {renderCopyButton()}
+              {renderFullscreenButton()}
+            </div>
           </div>
         )}
         <Highlight theme={prismTheme} code={code} language={effectiveLanguage}>
@@ -255,15 +326,17 @@ export function CodeBlock({
               ref={preRef}
               onWheel={handleWheel}
               className={cn(
-                'rounded-none overflow-x-auto overflow-y-auto p-4 text-[12px] font-mono !bg-background',
+                'rounded-none overflow-x-auto overflow-y-auto p-4 text-[12px] font-mono',
+                transparentBackground ? '!bg-transparent' : '!bg-background',
                 fixedHeight && 'min-h-0 flex-1',
-                copyInside && showCopy && 'pt-10',
                 preClassName,
               )}
               style={{
                 ...style,
                 margin: 0,
-                backgroundColor: 'var(--background)',
+                backgroundColor: transparentBackground
+                  ? 'transparent'
+                  : 'var(--background)',
               }}
             >
               <code className="text-left block">
@@ -279,6 +352,57 @@ export function CodeBlock({
           )}
         </Highlight>
       </div>
+      {showFullscreen && isFullscreenOpen && (
+        <WizardLayout
+          title={`${getLanguageLabel(language)} example`}
+          fullscreen
+          useSidebar={false}
+          constrainWidth={false}
+          constrainFooterWidth={false}
+          contentPadding={false}
+          onClose={() => setIsFullscreenOpen(false)}
+          contentClassName="-mx-6"
+          headerActions={renderCopyButton()}
+        >
+          <div>
+            <Highlight
+              theme={prismTheme}
+              code={code}
+              language={effectiveLanguage}
+            >
+              {({
+                className: preClassName,
+                style,
+                tokens,
+                getLineProps,
+                getTokenProps,
+              }) => (
+                <pre
+                  className={cn(
+                    'overflow-x-auto p-6 text-[12px] font-mono',
+                    preClassName,
+                  )}
+                  style={{
+                    ...style,
+                    margin: 0,
+                    backgroundColor: 'var(--background)',
+                  }}
+                >
+                  <code className="text-left block">
+                    {tokens.map((line, i) => (
+                      <div key={i} {...getLineProps({ line })}>
+                        {line.map((token, key) => (
+                          <span key={key} {...getTokenProps({ token })} />
+                        ))}
+                      </div>
+                    ))}
+                  </code>
+                </pre>
+              )}
+            </Highlight>
+          </div>
+        </WizardLayout>
+      )}
     </div>
   )
 }

@@ -23,7 +23,7 @@ import {
   FUNCTIONS_DEFAULT_SORT_BY,
   FUNCTIONS_DEFAULT_SORT_ORDER,
 } from '@/lib/react-query/hooks'
-import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import {
   getSearch,
   getPage,
@@ -52,6 +52,7 @@ import {
 } from '@/components/ui/tooltip'
 import { TemplatesView } from './Templates'
 import { PlanLimitWarning } from '../shared/PlanLimitWarning'
+import { resolveOrganizationPlanDisplayLabel } from '@/lib/utils/plan-filter'
 import { formatCronExpression } from './CronScheduleEditor'
 import { FunctionContextMenu } from './_components/FunctionContextMenu'
 
@@ -120,10 +121,31 @@ export function View() {
       parseSort(search.sort as string | undefined) ??
       getSort(url) ??
       defaultFunctionsSort
+    // Prefer router search state (updated by navigate()) over URL so page size change takes effect even if URL lags
+    const pageFromSearch =
+      search.page != null
+        ? typeof search.page === 'number'
+          ? search.page
+          : Number(search.page)
+        : undefined
+    const limitFromSearch =
+      search.limit != null
+        ? typeof search.limit === 'number'
+          ? search.limit
+          : Number(search.limit)
+        : undefined
+    const page =
+      Number.isInteger(pageFromSearch) && (pageFromSearch ?? 0) >= 1
+        ? pageFromSearch!
+        : getPage(url, 1)
+    const limit =
+      Number.isInteger(limitFromSearch) && (limitFromSearch ?? 0) >= 1
+        ? limitFromSearch!
+        : getLimit(url, GRID_DEFAULT_PAGE_SIZE)
     return {
       search: getSearch(url) ?? (search.search as string | undefined),
-      page: getPage(url, 1),
-      limit: getLimit(url, DEFAULT_PAGE_SIZE),
+      page,
+      limit,
       filterMap: queryParamToMap(
         getQueryParam(url) ?? (search.query as string | undefined) ?? null,
       ),
@@ -133,7 +155,7 @@ export function View() {
   }, [isFunctionsIndex, search, location.pathname, location.search, projectId])
 
   const urlPage = functionsListParams?.page ?? 1
-  const urlLimit = functionsListParams?.limit ?? DEFAULT_PAGE_SIZE
+  const urlLimit = functionsListParams?.limit ?? GRID_DEFAULT_PAGE_SIZE
   const urlSearch = functionsListParams?.search
   const urlSortBy = functionsListParams?.sortBy ?? FUNCTIONS_DEFAULT_SORT_BY
   const urlSortOrder =
@@ -383,6 +405,7 @@ export function View() {
               : undefined,
         })
         const next = { ...prev, ...built }
+        if (params.page === 1) delete next.page
         if (hasQueryKey && params.query === undefined) delete next.query
         if (
           hasSearchKey &&
@@ -718,7 +741,10 @@ export function View() {
             <PlanLimitWarning
               currentCount={totalFunctionsCount}
               limit={functionsLimit}
-              planName={organizationPlan?.name}
+              planName={resolveOrganizationPlanDisplayLabel({
+                planName: organizationPlan?.name ?? null,
+                planId: organizationPlan?.$id,
+              })}
               resourceName="functions"
               orgId={project?.teamId}
             />
@@ -779,61 +805,65 @@ export function View() {
                           }}
                         >
                           <ResourceCard
-                          title={func.name || 'Unnamed Function'}
-                          resourceId={func.$id}
-                          customIcon={
-                            <RuntimeIcon
-                              runtime={func.runtime || ''}
-                              size="md"
-                              className="h-5 w-5"
-                            />
-                          }
-                          iconColor="bg-muted text-muted-foreground"
-                          status={func.enabled === false ? 'error' : undefined}
-                          statusLabel={
-                            func.enabled === false ? 'Disabled' : undefined
-                          }
-                          metadata={[
-                            {
-                              label: 'Runtime',
-                              value: func.runtime || 'unknown',
-                            },
-                            ...(func.schedule
-                              ? [
-                                  {
-                                    label: 'Schedule',
-                                    value: formatCronExpression(func.schedule),
-                                  },
-                                ]
-                              : []),
-                            ...(nextExecution
-                              ? [
-                                  {
-                                    label: 'Next execution',
-                                    value: (
-                                      <TooltipProvider>
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <span className="flex items-center gap-1">
-                                              <Clock className="h-3 w-3" />
-                                              {nextExecution}
-                                            </span>
-                                          </TooltipTrigger>
-                                          <TooltipContent>
-                                            <p>
-                                              Next execution: {nextExecution}
-                                            </p>
-                                          </TooltipContent>
-                                        </Tooltip>
-                                      </TooltipProvider>
-                                    ),
-                                  },
-                                ]
-                              : []),
-                          ]}
-                        />
-                      </Link>
-                    </FunctionContextMenu>
+                            title={func.name || 'Unnamed Function'}
+                            resourceId={func.$id}
+                            customIcon={
+                              <RuntimeIcon
+                                runtime={func.runtime || ''}
+                                size="md"
+                                className="h-5 w-5"
+                              />
+                            }
+                            iconColor="bg-muted text-muted-foreground"
+                            status={
+                              func.enabled === false ? 'error' : undefined
+                            }
+                            statusLabel={
+                              func.enabled === false ? 'Disabled' : undefined
+                            }
+                            metadata={[
+                              {
+                                label: 'Runtime',
+                                value: func.runtime || 'unknown',
+                              },
+                              ...(func.schedule
+                                ? [
+                                    {
+                                      label: 'Schedule',
+                                      value: formatCronExpression(
+                                        func.schedule,
+                                      ),
+                                    },
+                                  ]
+                                : []),
+                              ...(nextExecution
+                                ? [
+                                    {
+                                      label: 'Next execution',
+                                      value: (
+                                        <TooltipProvider>
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <span className="flex items-center gap-1">
+                                                <Clock className="h-3 w-3" />
+                                                {nextExecution}
+                                              </span>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                              <p>
+                                                Next execution: {nextExecution}
+                                              </p>
+                                            </TooltipContent>
+                                          </Tooltip>
+                                        </TooltipProvider>
+                                      ),
+                                    },
+                                  ]
+                                : []),
+                            ]}
+                          />
+                        </Link>
+                      </FunctionContextMenu>
                     )
                   })}
                 </div>
@@ -842,7 +872,7 @@ export function View() {
                   currentPage={displayedPage}
                   totalItems={displayedTotal ?? total}
                   pageSize={urlLimit}
-                  pageSizeOptions={[10, 25, 50, 100]}
+                  pageSizeOptions={[12, 18, 36, 72]}
                   onPageChange={(page) => {
                     setRequestedPage(page)
                     navigateToFunctionsList({

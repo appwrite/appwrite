@@ -282,7 +282,7 @@ export function ErrorComponent({
   }
 
   return (
-    <div className="flex-grow flex flex-col justify-center items-center gap-8 my-20 px-4">
+    <div className="flex min-h-full w-full flex-col items-center justify-center gap-8 px-4 py-8">
       <div className="flex flex-col items-center max-w-md w-full gap-8">
         <div className="rounded-full bg-destructive/10 p-3">
           <AlertTriangle className="h-8 w-8 text-destructive" />

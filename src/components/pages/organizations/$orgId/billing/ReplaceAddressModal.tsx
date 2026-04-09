@@ -105,7 +105,9 @@ export function ReplaceAddressModal({
           organizationId,
           billingAddressId: newAddress.$id,
         })
-        toast.success('Billing address has been created and set for your organization')
+        toast.success(
+          'Billing address has been created and set for your organization',
+        )
       } else if (selectedId && selectedId !== currentAddressId) {
         await setOrgAddressMutation.mutateAsync({
           organizationId,
@@ -118,7 +120,9 @@ export function ReplaceAddressModal({
       onSuccess?.()
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to update billing address',
+        error instanceof Error
+          ? error.message
+          : 'Failed to update billing address',
       )
     }
   }
@@ -176,7 +180,9 @@ export function ReplaceAddressModal({
                       <div className="text-[13px] flex-1">
                         <p className="font-medium">{addr.streetAddress}</p>
                         {addr.addressLine2 && (
-                          <p className="text-muted-foreground">{addr.addressLine2}</p>
+                          <p className="text-muted-foreground">
+                            {addr.addressLine2}
+                          </p>
                         )}
                         <p className="text-muted-foreground">
                           {addr.city}
@@ -220,7 +226,10 @@ export function ReplaceAddressModal({
                     onValueChange={setCountry}
                     disabled={isLoading}
                   >
-                    <SelectTrigger id="replace-country" className="h-9 text-[13px]">
+                    <SelectTrigger
+                      id="replace-country"
+                      className="h-9 text-[13px]"
+                    >
                       <SelectValue placeholder="Select a country" />
                     </SelectTrigger>
                     <SelectContent>

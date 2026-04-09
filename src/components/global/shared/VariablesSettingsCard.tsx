@@ -530,7 +530,6 @@ export function VariablesSettingsCard({
 
   useEffect(() => {
     if (!showUpdateModal) {
-      setSelectedVar(null)
       setUpdateValue('')
       setUpdateSecret(false)
     } else if (selectedVar) {
@@ -886,7 +885,13 @@ export function VariablesSettingsCard({
       </Dialog>
 
       {/* Update Variable Modal */}
-      <Dialog open={showUpdateModal} onOpenChange={setShowUpdateModal}>
+      <Dialog
+        open={showUpdateModal}
+        onOpenChange={(open) => {
+          setShowUpdateModal(open)
+          if (!open) setSelectedVar(null)
+        }}
+      >
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 text-left">
             <DialogTitle>Update variable</DialogTitle>
@@ -941,7 +946,10 @@ export function VariablesSettingsCard({
               variant="outline"
               size="sm"
               className="h-9 text-[13px]"
-              onClick={() => setShowUpdateModal(false)}
+              onClick={() => {
+                setShowUpdateModal(false)
+                setSelectedVar(null)
+              }}
               disabled={updateMutation.isPending}
             >
               Cancel

@@ -13,6 +13,7 @@ import {
   Menu,
   Copy,
   Check,
+  Lightbulb,
   Shield,
   Plus,
   Database,
@@ -24,11 +25,12 @@ import {
   FolderPlus,
   Plug2,
   ArrowUpCircle,
+  ArrowLeft,
 } from 'lucide-react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { ProjectSelector } from '@/components/pages/projects/$projectId/shared/ProjectSelector'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
-import { useNavigate, useParams } from '@tanstack/react-router'
+import { useLocation, useNavigate, useParams } from '@tanstack/react-router'
 import { useProject, useOrganizationScopes } from '@/lib/react-query/hooks'
 import {
   canShowConnectSection,
@@ -63,6 +65,8 @@ import { Button } from '@/components/ui/button'
 import { useOrganizationPlan } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useDebugOverrides } from '@/lib/debug-overrides'
+import { ImpersonateConsoleUserPopover } from '@/components/global/shared/ImpersonateConsoleUserPopover'
+import { openCreateOrganizationFlow } from '@/lib/open-create-organization-flow'
 
 interface ConsoleHeaderProps {
   onMenuClick?: () => void
@@ -86,6 +90,7 @@ export function ConsoleHeader({
     useKeyboardShortcutsContext()
   const { toggleChat } = useAIChat()
   const { account, signOut } = useAuth()
+  const location = useLocation()
   const navigate = useNavigate()
   const params = useParams({ strict: false })
   const [copiedField, setCopiedField] = useState<string | null>(null)
@@ -155,24 +160,25 @@ export function ConsoleHeader({
     account?.mfa === true || account?.twoFactorAuthenticatorEnabled === true
 
   const hasSidebar = !isOrgOverview
+  const isAccountScope = location.pathname.startsWith('/account')
   const logoColumnWidth = 60
 
   return (
     <div className="@container w-full">
       <header
         className={cn(
-          'flex h-14 min-h-14 flex-wrap items-center justify-between gap-1 sm:gap-2 border-b border-border bg-background',
-          'pl-3 pr-3 sm:pl-4 sm:pr-4 @[1000px]:pr-6 lg:pl-0',
+          'flex h-14 min-h-14 flex-wrap items-center justify-between gap-1 @[640px]:gap-2 border-b border-border bg-background',
+          'pl-3 pr-3 @[640px]:pl-4 @[640px]:pr-4 @[1024px]:pl-0 @[1000px]:pr-6',
           className,
         )}
       >
         {/* Left: Menu + Logo (+ nav border when project) + Project Selector */}
-        <div className="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-2">
+        <div className="flex min-w-0 flex-1 items-center gap-1.5 @[640px]:gap-2">
           {/* Mobile menu button - only show when in project context and sidebar is hidden */}
           {!isOrgOverview && (
             <button
               onClick={onMenuClick}
-              className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground lg:hidden"
+              className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[1024px]:hidden"
             >
               <Menu className="h-5 w-5" />
             </button>
@@ -205,13 +211,13 @@ export function ConsoleHeader({
                 <>
                   {/* Desktop: 60px logo column, border continues from nav */}
                   <div
-                    className="hidden h-14 shrink-0 items-center justify-center border-r border-border lg:flex"
+                    className="hidden h-14 shrink-0 items-center justify-center border-r border-border @[1024px]:flex"
                     style={{ width: logoColumnWidth }}
                   >
                     {logoLink()}
                   </div>
                   {/* Mobile */}
-                  {logoLink('lg:hidden')}
+                  {logoLink('@[1024px]:hidden')}
                 </>
               )
             }
@@ -220,22 +226,41 @@ export function ConsoleHeader({
             return (
               <>
                 <div
-                  className="hidden h-14 shrink-0 items-center justify-center lg:flex"
+                  className="hidden h-14 shrink-0 items-center justify-center @[1024px]:flex"
                   style={{ width: logoColumnWidth }}
                 >
                   {logoLink()}
                 </div>
-                {logoLink('lg:hidden')}
+                {logoLink('@[1024px]:hidden')}
               </>
             )
           })()}
+
+          {/* Account scope quick return */}
+          {isAccountScope && orgId && (
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="hidden h-9 shrink-0 gap-1.5 px-2.5 text-[13px] @[850px]:inline-flex"
+            >
+              <Link to="/organizations/$orgId" params={{ orgId }}>
+                <ArrowLeft className="h-4 w-4" />
+                Back to organization
+              </Link>
+            </Button>
+          )}
 
           {/* Project Selector - only show when in project context */}
           {!isOrgOverview && (
             <>
               {/* Project Selector */}
               <div className="hidden min-w-0 @[700px]:block">
-                <ProjectSelector projectId={projectId} />
+                <ProjectSelector
+                  projectId={projectId}
+                  className="max-w-full min-w-0"
+                  onCreateOrganization={onCreateOrganization}
+                />
               </div>
 
               {/* Connect button - only owners/developers; show when project has never received a ping */}
@@ -291,7 +316,9 @@ export function ConsoleHeader({
                             </span>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>You don&apos;t have permission to create projects.</p>
+                            <p>
+                              You don&apos;t have permission to create projects.
+                            </p>
                           </TooltipContent>
                         </Tooltip>
                       ) : (
@@ -299,7 +326,9 @@ export function ConsoleHeader({
                           onClick={() => {
                             const orgId =
                               project?.teamId ||
-                              (account?.prefs?.organization as string | undefined)
+                              (account?.prefs?.organization as
+                                | string
+                                | undefined)
                             if (orgId) {
                               navigate({
                                 to: '/organizations/$orgId',
@@ -319,30 +348,13 @@ export function ConsoleHeader({
                       )}
                       <DropdownMenuItem
                         onClick={() => {
-                          if (onCreateOrganization) {
-                            // If callback is provided (we're on org page), use it
-                            onCreateOrganization()
-                          } else {
-                            // Otherwise, navigate to org overview with createOrg param
-                            const orgId =
-                              project?.teamId ||
-                              (account?.prefs?.organization as
-                                | string
-                                | undefined)
-                            if (orgId) {
-                              navigate({
-                                to: '/organizations/$orgId',
-                                params: { orgId },
-                                search: { createOrg: true },
-                              })
-                            } else {
-                              // No org yet, navigate to root which will handle it
-                              navigate({
-                                to: '/',
-                                search: { createOrg: true },
-                              })
-                            }
-                          }
+                          const orgId =
+                            project?.teamId ||
+                            (account?.prefs?.organization as string | undefined)
+                          openCreateOrganizationFlow(navigate, {
+                            onCreateOrganization,
+                            orgId,
+                          })
                         }}
                         className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
                       >
@@ -371,7 +383,10 @@ export function ConsoleHeader({
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>You don&apos;t have permission to create databases.</p>
+                                <p>
+                                  You don&apos;t have permission to create
+                                  databases.
+                                </p>
                               </TooltipContent>
                             </Tooltip>
                           ) : (
@@ -406,7 +421,10 @@ export function ConsoleHeader({
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>You don&apos;t have permission to create users.</p>
+                                <p>
+                                  You don&apos;t have permission to create
+                                  users.
+                                </p>
                               </TooltipContent>
                             </Tooltip>
                           ) : (
@@ -441,7 +459,10 @@ export function ConsoleHeader({
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>You don&apos;t have permission to create buckets.</p>
+                                <p>
+                                  You don&apos;t have permission to create
+                                  buckets.
+                                </p>
                               </TooltipContent>
                             </Tooltip>
                           ) : (
@@ -476,7 +497,10 @@ export function ConsoleHeader({
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>You don&apos;t have permission to create functions.</p>
+                                <p>
+                                  You don&apos;t have permission to create
+                                  functions.
+                                </p>
                               </TooltipContent>
                             </Tooltip>
                           ) : (
@@ -507,7 +531,10 @@ export function ConsoleHeader({
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>You don&apos;t have permission to create messaging topics.</p>
+                                <p>
+                                  You don&apos;t have permission to create
+                                  messaging topics.
+                                </p>
                               </TooltipContent>
                             </Tooltip>
                           ) : (
@@ -548,7 +575,10 @@ export function ConsoleHeader({
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>You don&apos;t have permission to create sites.</p>
+                                <p>
+                                  You don&apos;t have permission to create
+                                  sites.
+                                </p>
                               </TooltipContent>
                             </Tooltip>
                           ) : (
@@ -576,7 +606,7 @@ export function ConsoleHeader({
         </div>
 
         {/* Right: Actions */}
-        <div className="flex shrink-0 items-center gap-1 sm:gap-2 min-w-0">
+        <div className="flex shrink-0 items-center gap-1 @[640px]:gap-2 min-w-0">
           {/* Search - hidden on small containers or when hideSearch (e.g. native app bar) */}
           {!hideSearch && (
             <>
@@ -616,6 +646,11 @@ export function ConsoleHeader({
             <SupportPopover orgId={orgId} />
           </div>
 
+          {/* Console impersonation (operators) — same control style as Support / Assistant */}
+          <div className="hidden @[900px]:flex shrink-0">
+            <ImpersonateConsoleUserPopover />
+          </div>
+
           {/* Help/Assistant - hidden on small containers; enabled by profile or experimental override */}
           {showAIAssistant && (
             <Tooltip>
@@ -624,7 +659,7 @@ export function ConsoleHeader({
                   onClick={toggleChat}
                   className="hidden h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[1000px]:flex"
                 >
-                  <MessageSquare className="h-4 w-4" />
+                  <Lightbulb className="h-4 w-4" />
                 </button>
               </TooltipTrigger>
               <TooltipContent>
@@ -635,7 +670,7 @@ export function ConsoleHeader({
 
           {/* Divider before Upgrade Button - hidden on small containers */}
           {showUpgradeButton && (
-            <div className="mx-1 sm:mx-2 hidden h-5 w-px shrink-0 bg-border @[850px]:block" />
+            <div className="mx-1 hidden h-5 w-px shrink-0 bg-border @[640px]:mx-2 @[850px]:block" />
           )}
 
           {/* Upgrade Button - hidden on small containers; only when plan cost is 0 */}
@@ -661,7 +696,7 @@ export function ConsoleHeader({
           )}
 
           {/* Divider - hidden on small containers */}
-          <div className="mx-1 sm:mx-2 hidden h-5 w-px shrink-0 bg-border @[700px]:block" />
+          <div className="mx-1 hidden h-5 w-px shrink-0 bg-border @[640px]:mx-2 @[700px]:block" />
 
           {/* User Menu */}
           <DropdownMenu>

@@ -107,7 +107,7 @@ export function BucketDetailView() {
   const [searchValue, setSearchValue] = useState('')
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
   const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(25)
+  const [pageSize, setPageSize] = useState(12)
   const [uploadFileDialogOpen, setUploadFileDialogOpen] = useState(false)
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set())
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -656,7 +656,7 @@ export function BucketDetailView() {
                       currentPage={currentPage}
                       totalItems={filesTotal}
                       pageSize={pageSize}
-                      pageSizeOptions={[10, 25, 50, 100]}
+                      pageSizeOptions={[12, 18, 36, 72]}
                       onPageChange={handlePageChange}
                       onPageSizeChange={handlePageSizeChange}
                       itemLabel="files"
@@ -797,7 +797,7 @@ export function BucketDetailView() {
                       currentPage={currentPage}
                       totalItems={filesTotal}
                       pageSize={pageSize}
-                      pageSizeOptions={[10, 25, 50, 100]}
+                      pageSizeOptions={[12, 18, 36, 72]}
                       onPageChange={handlePageChange}
                       onPageSizeChange={handlePageSizeChange}
                       itemLabel="files"
