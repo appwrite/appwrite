@@ -4826,6 +4826,22 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals('APP_TEST_CREATE_1', $variable['body']['key']);
         $this->assertEmpty($variable['body']['value']);
 
+        // test for variable without variableId (auto-generated)
+        $variable = $this->client->call(Client::METHOD_POST, '/project/variables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectId'],
+            'x-appwrite-mode' => 'admin',
+        ], $this->getHeaders()), [
+            'key' => 'APP_TEST_CREATE_AUTO_ID',
+            'value' => 'AUTOIDVALUE',
+            'secret' => false
+        ]);
+
+        $this->assertEquals(201, $variable['headers']['status-code']);
+        $this->assertNotEmpty($variable['body']['$id']);
+        $this->assertEquals('APP_TEST_CREATE_AUTO_ID', $variable['body']['key']);
+        $this->assertEquals('AUTOIDVALUE', $variable['body']['value']);
+
         /**
          * Test for FAILURE
          */
