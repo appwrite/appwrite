@@ -7,9 +7,14 @@ import {
   type CodeBlockLanguage,
 } from '@/components/global/shared/CodeBlock'
 import { cn } from '@/lib/utils'
+import { TerraformIcon } from '@/components/global/shared/TerraformIcon'
 
 const TERRAFORM_PROVIDER_REPO =
   'https://github.com/appwrite/terraform-provider-appwrite'
+
+/** Provider docs on the public Terraform Registry (pinned line matches published 0.0.x) */
+const TERRAFORM_REGISTRY_PROVIDER_DOCS =
+  'https://registry.terraform.io/providers/appwrite/appwrite/latest/docs'
 
 function GitHubIcon({ className }: { className?: string }) {
   return (
@@ -43,7 +48,7 @@ function buildTerraformExampleFiles(
   required_providers {
     appwrite = {
       source  = "appwrite/appwrite"
-      version = "~> 0.1"
+      version = "~> 0.0.4"
     }
   }
 }
@@ -156,7 +161,7 @@ resource "appwrite_index" "email_unique" {
       language: 'hcl',
       code: providersTf,
       footerHint:
-        'Provider settings for Appwrite on a custom URL instead of Appwrite Cloud. Set self_signed when the API uses a self-signed TLS certificate. Pass API keys through tfvars or environment variables, not committed .tf files.',
+        'Common filename for provider {} blocks. Example: custom endpoint and self_signed when Appwrite is not at cloud.appwrite.io. Secrets stay in tfvars, env, or CI - not in .tf files. One required_providers block per root module (see main.tf).',
     },
     {
       label: 'exports.sh',
@@ -230,23 +235,20 @@ export function TerraformConnectSection({
           <p className="text-[13px] text-muted-foreground leading-relaxed">
             Use it when you want repeatable environments, documented changes in
             Git, or to wire Appwrite into a broader Terraform stack (VPC, DNS,
-            functions, and more) in one workflow. Resources include{' '}
+            functions, and more) in one workflow. The registry documents
+            resources such as{' '}
             <code className="rounded bg-muted px-1 py-0.5 text-[12px]">
               appwrite_database
             </code>
             ,{' '}
             <code className="rounded bg-muted px-1 py-0.5 text-[12px]">
-              appwrite_table
+              appwrite_bucket
             </code>
             ,{' '}
             <code className="rounded bg-muted px-1 py-0.5 text-[12px]">
-              appwrite_column
+              appwrite_messaging_topic
             </code>
-            , and{' '}
-            <code className="rounded bg-muted px-1 py-0.5 text-[12px]">
-              appwrite_index
-            </code>
-            .
+            , and others, with full schemas and imports.
           </p>
         </div>
         <div className="rounded-xl border border-border bg-muted/30 overflow-hidden">
@@ -279,16 +281,28 @@ export function TerraformConnectSection({
             </Button>
           </div>
         </div>
-        <a
-          href={TERRAFORM_PROVIDER_REPO}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 text-[13px] text-primary hover:underline"
-        >
-          <GitHubIcon className="h-4 w-4" />
-          appwrite/terraform-provider-appwrite
-          <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden />
-        </a>
+        <div className="flex flex-col gap-2">
+          <a
+            href={TERRAFORM_REGISTRY_PROVIDER_DOCS}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-[13px] text-primary hover:underline"
+          >
+            <TerraformIcon />
+            Provider docs on Terraform Registry
+            <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden />
+          </a>
+          <a
+            href={TERRAFORM_PROVIDER_REPO}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-[13px] text-primary hover:underline"
+          >
+            <GitHubIcon className="h-4 w-4" />
+            appwrite/terraform-provider-appwrite
+            <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden />
+          </a>
+        </div>
       </div>
 
       <div className="min-w-0 min-h-0 flex flex-col gap-2 flex-1">
