@@ -342,7 +342,7 @@ jobs:
         run: >-
           docker compose exec -T
           -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
-          appwrite vendor/bin/paratest --processes $(nproc) --functional
+          appwrite vendor/bin/paratest --processes $(($(nproc) * 2)) --functional
           --configuration /usr/src/code/phpunit.xml
           --testsuite e2e
           --exclude-group abuseEnabled --exclude-group screenshots
