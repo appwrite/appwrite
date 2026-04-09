@@ -12,14 +12,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { toast } from 'sonner'
-import { Info, X, Plus } from 'lucide-react'
+import { ArrowLeftRight, ArrowRight, Info, X, Plus } from 'lucide-react'
 import { PointEditor, LineEditor, PolygonEditor } from './spatial/index'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Textarea } from '@/components/ui/textarea'
 import { Progress } from '@/components/ui/progress'
@@ -64,13 +58,13 @@ export interface ColumnFormData {
   required?: boolean
   array?: boolean
   xdefault?:
-    | string
-    | number
-    | boolean
-    | [number, number]
-    | number[][]
-    | number[][][]
-    | null
+  | string
+  | number
+  | boolean
+  | [number, number]
+  | number[][]
+  | number[][][]
+  | null
 }
 
 const VARCHAR_SIZE_MIN = 1
@@ -94,6 +88,7 @@ interface ColumnDrawerProps {
   onSubmit: (data: ColumnFormData) => Promise<void>
   column?: unknown // Existing column for edit mode
   availableTables?: Array<{ $id: string; name: string }>
+  currentTableId?: string
   existingColumns?: Array<{ key: string }>
   isLoading?: boolean
   /** Table metadata for row size usage (varchar create only). Optional: bytesUsed, bytesMax. */
@@ -124,23 +119,54 @@ const RELATIONSHIP_TYPES: {
   value: 'oneToOne' | 'oneToMany' | 'manyToOne' | 'manyToMany'
   label: string
 }[] = [
-  { value: 'oneToOne', label: 'One to one' },
-  { value: 'oneToMany', label: 'One to many' },
-  { value: 'manyToOne', label: 'Many to one' },
-  { value: 'manyToMany', label: 'Many to many' },
-]
+    { value: 'oneToOne', label: 'One to one' },
+    { value: 'oneToMany', label: 'One to many' },
+    { value: 'manyToOne', label: 'Many to one' },
+    { value: 'manyToMany', label: 'Many to many' },
+  ]
 
 const ON_DELETE_OPTIONS: {
   value: 'setNull' | 'cascade' | 'restrict'
   label: string
 }[] = [
-  {
-    value: 'setNull',
-    label: 'Set NULL - set row ID as NULL in all related rows',
-  },
-  { value: 'cascade', label: 'Cascade - delete all related rows' },
-  { value: 'restrict', label: 'Restrict - row can not be deleted' },
-]
+    {
+      value: 'setNull',
+      label: 'Set NULL - set row ID as NULL in all related rows',
+    },
+    { value: 'cascade', label: 'Cascade - delete all related rows' },
+    { value: 'restrict', label: 'Restrict - row can not be deleted' },
+  ]
+
+function getRelationshipPreviewText(
+  relationshipType: ColumnFormData['relationshipType'],
+  sourceTableName: string,
+  targetTableName: string,
+) {
+  switch (relationshipType) {
+    case 'oneToOne':
+      return {
+        forward: `${sourceTableName} can contain one ${targetTableName}`,
+        backward: `${targetTableName} can belong to one ${sourceTableName}`,
+      }
+    case 'oneToMany':
+      return {
+        forward: `${sourceTableName} can contain many ${targetTableName}`,
+        backward: `${targetTableName} can belong to one ${sourceTableName}`,
+      }
+    case 'manyToOne':
+      return {
+        forward: `${sourceTableName} can contain one ${targetTableName}`,
+        backward: `${targetTableName} can belong to many ${sourceTableName}`,
+      }
+    case 'manyToMany':
+      return {
+        forward: `${sourceTableName} can contain many ${targetTableName}`,
+        backward: `${targetTableName} can belong to many ${sourceTableName}`,
+      }
+    default:
+      return null
+  }
+}
 
 export function ColumnDrawer({
   open,
@@ -148,11 +174,15 @@ export function ColumnDrawer({
   onSubmit,
   column,
   availableTables = [],
+  currentTableId,
   existingColumns = [],
   isLoading = false,
   table,
 }: ColumnDrawerProps) {
   const isEditMode = !!column
+  const relationshipTables = availableTables.filter(
+    (table) => table.$id !== currentTableId,
+  )
   const [formData, setFormData] = useState<ColumnFormData>({
     key: '',
     type: 'text',
@@ -196,8 +226,9 @@ export function ColumnDrawer({
         data.elements = column.elements || []
         setEnumElements(column.elements || [''])
       } else if (column.type === 'relationship') {
-        data.relatedTableId = column.relatedTableId
-        data.relationshipType = column.relationshipType || column.type
+        data.relatedTableId = column.relatedTableId || column.relatedTable
+        data.relationshipType =
+          column.relationshipType || column.relationType
         data.twoWay = column.twoWay || false
         data.twoWayKey = column.twoWayKey
         data.onDelete = column.onDelete || 'setNull'
@@ -227,7 +258,7 @@ export function ColumnDrawer({
       formData.relatedTableId &&
       !isEditMode
     ) {
-      const relatedTable = availableTables.find(
+      const relatedTable = relationshipTables.find(
         (t) => t.$id === formData.relatedTableId,
       )
       if (relatedTable && !formData.key) {
@@ -241,7 +272,7 @@ export function ColumnDrawer({
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData.type, formData.relatedTableId, availableTables, isEditMode])
+  }, [formData.type, formData.relatedTableId, relationshipTables, isEditMode])
 
   // Auto-generate two-way key from current table name
   useEffect(() => {
@@ -429,6 +460,17 @@ export function ColumnDrawer({
   const showDefaultValue =
     !formData.required && !formData.array && !isSpatialType
   const showDefaultValueCheckbox = isSpatialType && !formData.required
+  const currentTableName =
+    availableTables.find((table) => table.$id === currentTableId)?.name ||
+    'Current table'
+  const relatedTableName =
+    relationshipTables.find((table) => table.$id === formData.relatedTableId)
+      ?.name || 'Related table'
+  const relationshipPreview = getRelationshipPreviewText(
+    formData.relationshipType,
+    currentTableName,
+    relatedTableName,
+  )
 
   return (
     <BaseDrawer
@@ -502,8 +544,8 @@ export function ColumnDrawer({
                       onDelete: undefined,
                       array:
                         newType === 'point' ||
-                        newType === 'linestring' ||
-                        newType === 'polygon'
+                          newType === 'linestring' ||
+                          newType === 'polygon'
                           ? false
                           : prev.array,
                     }
@@ -632,9 +674,9 @@ export function ColumnDrawer({
                         value={
                           table.bytesMax > 0
                             ? Math.min(
-                                100,
-                                (table.bytesUsed / table.bytesMax) * 100,
-                              )
+                              100,
+                              (table.bytesUsed / table.bytesMax) * 100,
+                            )
                             : 0
                         }
                         className="h-2"
@@ -818,13 +860,13 @@ export function ColumnDrawer({
                       }))
                     }}
                     disabled={isLoading || isEditMode}
-                    className="grid grid-cols-2 gap-4"
+                    className="grid grid-cols-1 gap-4 sm:grid-cols-2"
                   >
-                    <div className="flex items-center space-x-2 rounded-lg border border-border p-3">
+                    <div className="flex items-start gap-3 rounded-lg border border-border p-3">
                       <RadioGroupItem value="one" id="one-way" />
                       <Label
                         htmlFor="one-way"
-                        className="cursor-pointer flex-1"
+                        className="flex flex-1 flex-col items-start gap-1 leading-normal cursor-pointer"
                       >
                         <div className="font-medium text-[12px]">
                           One-way relationship
@@ -834,11 +876,11 @@ export function ColumnDrawer({
                         </div>
                       </Label>
                     </div>
-                    <div className="flex items-center space-x-2 rounded-lg border border-border p-3">
+                    <div className="flex items-start gap-3 rounded-lg border border-border p-3">
                       <RadioGroupItem value="two" id="two-way" />
                       <Label
                         htmlFor="two-way"
-                        className="cursor-pointer flex-1"
+                        className="flex flex-1 flex-col items-start gap-1 leading-normal cursor-pointer"
                       >
                         <div className="font-medium text-[12px]">
                           Two-way relationship
@@ -878,7 +920,7 @@ export function ColumnDrawer({
                       <SelectValue placeholder="Select a table" />
                     </SelectTrigger>
                     <SelectContent>
-                      {availableTables.map((table) => (
+                      {relationshipTables.map((table) => (
                         <SelectItem key={table.$id} value={table.$id}>
                           {table.name} ({table.$id})
                         </SelectItem>
@@ -1003,6 +1045,46 @@ export function ColumnDrawer({
                       )}
                     </div>
 
+                    {formData.relationshipType && formData.relatedTableId && (
+                      <div className="space-y-3 rounded-xl border border-border bg-card/50 p-3">
+                        <div className="flex items-center justify-center gap-3 rounded-lg border border-border bg-background/70 px-3 py-4 text-center">
+                          <span className="text-base font-medium text-foreground">
+                            {currentTableName}
+                          </span>
+                          {formData.twoWay ? (
+                            <ArrowLeftRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          ) : (
+                            <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          )}
+                          <span className="text-base font-medium text-foreground">
+                            {relatedTableName}
+                          </span>
+                        </div>
+                        {relationshipPreview && (
+                          <div className="space-y-1 text-center text-[13px] leading-snug text-muted-foreground">
+                            <p>
+                              <span className="font-semibold text-foreground">
+                                {currentTableName}
+                              </span>{' '}
+                              {relationshipPreview.forward.replace(
+                                `${currentTableName} `,
+                                '',
+                              )}
+                            </p>
+                            <p>
+                              <span className="font-semibold text-foreground">
+                                {relatedTableName}
+                              </span>{' '}
+                              {relationshipPreview.backward.replace(
+                                `${relatedTableName} `,
+                                '',
+                              )}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     <div className="space-y-2">
                       <Label
                         htmlFor="on-delete"
@@ -1012,7 +1094,7 @@ export function ColumnDrawer({
                         <span className="text-destructive">*</span>
                       </Label>
                       <Select
-                        value={formData.onDelete || 'setNull'}
+                        value={formData.onDelete || ''}
                         onValueChange={(value) => {
                           setFormData((prev) => ({
                             ...prev,
@@ -1027,7 +1109,7 @@ export function ColumnDrawer({
                             errors.onDelete ? 'border-destructive' : ''
                           }
                         >
-                          <SelectValue />
+                          <SelectValue placeholder="Select a deletion method" />
                         </SelectTrigger>
                         <SelectContent>
                           {ON_DELETE_OPTIONS.map((option) => (
@@ -1088,16 +1170,16 @@ export function ColumnDrawer({
                             ? [0, 0]
                             : formData.type === 'linestring'
                               ? [
-                                  [0, 0],
-                                  [0, 0],
-                                ]
+                                [0, 0],
+                                [0, 0],
+                              ]
                               : [
-                                  [
-                                    [0, 0],
-                                    [0, 0],
-                                    [0, 0],
-                                  ],
-                                ]
+                                [
+                                  [0, 0],
+                                  [0, 0],
+                                  [0, 0],
+                                ],
+                              ]
                           : null,
                         required: checked ? false : prev.required,
                       }))
@@ -1242,8 +1324,8 @@ export function ColumnDrawer({
                     value={
                       formData.xdefault
                         ? new Date(formData.xdefault as string)
-                            .toISOString()
-                            .slice(0, 16)
+                          .toISOString()
+                          .slice(0, 16)
                         : ''
                     }
                     onChange={(e) => {
@@ -1288,7 +1370,7 @@ export function ColumnDrawer({
                     type="number"
                     value={
                       formData.xdefault !== null &&
-                      formData.xdefault !== undefined
+                        formData.xdefault !== undefined
                         ? String(formData.xdefault)
                         : ''
                     }
@@ -1336,8 +1418,8 @@ export function ColumnDrawer({
                     />
                   )
                 ) : ['text', 'mediumtext', 'longtext'].includes(
-                    formData.type,
-                  ) ? (
+                  formData.type,
+                ) ? (
                   <Textarea
                     id="column-default"
                     value={formData.xdefault ? String(formData.xdefault) : ''}
@@ -1398,8 +1480,8 @@ export function ColumnDrawer({
                           encrypt: value,
                           ...((formData.type === 'string' ||
                             formData.type === 'varchar') &&
-                          value &&
-                          (!prev.size || prev.size < 150)
+                            value &&
+                            (!prev.size || prev.size < 150)
                             ? { size: 150 }
                             : {}),
                         }))

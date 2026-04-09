@@ -377,22 +377,30 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
     const tableNameMap = new Map(tables.map((t: unknown) => [t.name, t]))
 
     tables.forEach((table: unknown) => {
-      if (!table.columns) return
+      const t = table as {
+        $id: string
+        name?: string
+        columns?: unknown[]
+      }
+      if (!t.columns) return
 
-      table.columns.forEach((column: unknown) => {
+      t.columns.forEach((column: unknown) => {
+        const col = column as { key?: string; type?: string }
         // Check if column name suggests a foreign key (e.g., "postId", "userId", etc.)
-        const columnKey = column.key.toLowerCase()
+        const columnKey = (col.key ?? '').toLowerCase()
 
         // Pattern: {tableName}Id or {tableName}_id
         const match = columnKey.match(/^(.+?)(id|_id)$/)
-        if (match && column.type === 'string') {
+        if (match && col.type === 'string') {
           const referencedTableName = match[1]
 
           // Try to find the referenced table by name
           const referencedTable =
             tableNameMap.get(referencedTableName) ||
             Array.from(tableNameMap.values()).find(
-              (t: unknown) => t.name.toLowerCase() === referencedTableName,
+              (tbl: unknown) =>
+                (tbl as { name?: string }).name?.toLowerCase() ===
+                referencedTableName,
             )
 
           if (
@@ -407,9 +415,9 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
 
             if (hasIdColumn) {
               rels.push({
-                from: table.$id,
-                to: (referencedTable as unknown).$id,
-                fromColumn: column.key,
+                from: t.$id,
+                to: (referencedTable as unknown as { $id: string }).$id,
+                fromColumn: col.key ?? '',
                 toColumn: '$id',
               })
             }
@@ -1731,7 +1739,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
                                                     Type: {idx.type || 'key'}
                                                     {idx.columns &&
                                                       idx.columns.length >
-                                                        1 && (
+                                                      1 && (
                                                         <span>
                                                           {' '}
                                                           • Columns:{' '}

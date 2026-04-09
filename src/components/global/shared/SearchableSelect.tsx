@@ -81,17 +81,20 @@ export function SearchableSelect({
       </PopoverTrigger>
       <PopoverContent
         className={cn(
-          'z-[200] w-[var(--radix-popover-trigger-width)] p-0',
+          'z-[200] max-h-[min(320px,var(--radix-popover-content-available-height))] w-[var(--radix-popover-trigger-width)] overflow-hidden p-0',
           contentClassName,
         )}
         align="start"
+        onWheelCapture={(event) => {
+          event.stopPropagation()
+        }}
       >
         <Command>
           <CommandInput
             placeholder={searchPlaceholder}
             className="h-9 text-[13px]"
           />
-          <CommandList className="max-h-[240px]">
+          <CommandList className="max-h-[240px] overflow-y-auto overscroll-contain">
             <CommandEmpty className="py-4 text-center text-[13px] text-muted-foreground">
               {emptyMessage}
             </CommandEmpty>

@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -26,7 +27,16 @@ export function LineEditor({
   disabled = false,
   showNullCheckbox = true,
 }: LineEditorProps) {
-  const points = value || []
+  const [points, setPoints] = useState<number[][]>(value || [])
+
+  useEffect(() => {
+    setPoints(value || [])
+  }, [value])
+
+  const emitPoints = (nextPoints: number[][]) => {
+    setPoints(nextPoints)
+    onChange(nextPoints.length === 0 && !isRequired ? null : nextPoints)
+  }
 
   const updatePoint = (index: number, coordIndex: 0 | 1, newValue: string) => {
     const newPoints = [...points]
@@ -35,12 +45,12 @@ export function LineEditor({
     }
     const numValue = newValue === '' ? 0 : parseFloat(newValue)
     newPoints[index][coordIndex] = isNaN(numValue) ? 0 : numValue
-    onChange(newPoints.length >= 2 ? newPoints : null)
+    emitPoints(newPoints)
   }
 
   const addPoint = () => {
     const newPoints = [...points, [0, 0]]
-    onChange(newPoints)
+    emitPoints(newPoints)
   }
 
   const removePoint = (index: number) => {
@@ -49,7 +59,7 @@ export function LineEditor({
       return
     }
     const newPoints = points.filter((_, i) => i !== index)
-    onChange(newPoints.length >= 2 ? newPoints : null)
+    emitPoints(newPoints)
   }
 
   return (
@@ -79,8 +89,11 @@ export function LineEditor({
               key={index}
               className="flex items-center gap-2 rounded-md border border-border bg-background p-2"
             >
-              <div className="flex-1 grid grid-cols-2 gap-2">
-                <div className="space-y-1">
+              <div className="flex flex-1 items-end gap-2 rounded-md border border-border/60 bg-muted/20 px-3 py-2">
+                <span className="pb-2 font-mono text-[12px] text-muted-foreground">
+                  [
+                </span>
+                <div className="flex-1 space-y-1">
                   <Label className="text-[10px] text-muted-foreground">
                     Lon
                   </Label>
@@ -94,7 +107,10 @@ export function LineEditor({
                     className="h-8 text-[12px]"
                   />
                 </div>
-                <div className="space-y-1">
+                <span className="pb-2 font-mono text-[12px] text-muted-foreground">
+                  ,
+                </span>
+                <div className="flex-1 space-y-1">
                   <Label className="text-[10px] text-muted-foreground">
                     Lat
                   </Label>
@@ -108,6 +124,10 @@ export function LineEditor({
                     className="h-8 text-[12px]"
                   />
                 </div>
+                <span className="pb-2 font-mono text-[12px] text-muted-foreground">
+                  ]
+                  {index < points.length - 1 ? ',' : ''}
+                </span>
               </div>
               <Button
                 type="button"
@@ -121,6 +141,11 @@ export function LineEditor({
               </Button>
             </div>
           ))}
+          {points.length < 2 && (
+            <p className="text-[10px] text-amber-600 dark:text-amber-400">
+              Add at least 2 points to form a line
+            </p>
+          )}
         </div>
       )}
       {!isRequired && showNullCheckbox && (
@@ -129,6 +154,13 @@ export function LineEditor({
             id="line-null"
             checked={value === null}
             onCheckedChange={(checked) => {
+              const nextValue = checked
+                ? null
+                : [
+                    [0, 0],
+                    [0, 0],
+                  ]
+              setPoints(nextValue || [])
               onChange(
                 checked
                   ? null

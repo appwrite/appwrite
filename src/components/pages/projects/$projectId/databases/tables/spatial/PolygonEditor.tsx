@@ -163,7 +163,10 @@ export function PolygonEditor({
                   No points. Add at least 3 points to form a ring.
                 </p>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-2 rounded-md border border-border/50 bg-muted/10 p-2">
+                  <div className="font-mono text-[12px] text-muted-foreground">
+                    [
+                  </div>
                   {ring.map((point, pointIndex) => {
                     const isLastPoint = pointIndex === ring.length - 1
                     const isFirstPoint = pointIndex === 0
@@ -172,8 +175,11 @@ export function PolygonEditor({
                         key={pointIndex}
                         className="flex items-center gap-2 rounded border border-border/50 bg-muted/20 p-2"
                       >
-                        <div className="flex-1 grid grid-cols-2 gap-2">
-                          <div className="space-y-1">
+                        <div className="flex flex-1 items-end gap-2">
+                          <span className="pb-2 font-mono text-[12px] text-muted-foreground">
+                            [
+                          </span>
+                          <div className="flex-1 space-y-1">
                             <Label className="text-[10px] text-muted-foreground">
                               Lon
                             </Label>
@@ -196,7 +202,10 @@ export function PolygonEditor({
                               className="h-8 text-[12px]"
                             />
                           </div>
-                          <div className="space-y-1">
+                          <span className="pb-2 font-mono text-[12px] text-muted-foreground">
+                            ,
+                          </span>
+                          <div className="flex-1 space-y-1">
                             <Label className="text-[10px] text-muted-foreground">
                               Lat
                             </Label>
@@ -219,6 +228,10 @@ export function PolygonEditor({
                               className="h-8 text-[12px]"
                             />
                           </div>
+                          <span className="pb-2 font-mono text-[12px] text-muted-foreground">
+                            ]
+                            {pointIndex < ring.length - 1 ? ',' : ''}
+                          </span>
                         </div>
                         {isLastPoint && isFirstPoint ? (
                           <div className="flex items-center px-2">
@@ -243,6 +256,9 @@ export function PolygonEditor({
                       </div>
                     )
                   })}
+                  <div className="font-mono text-[12px] text-muted-foreground">
+                    ]
+                  </div>
                   {ring.length < 3 && (
                     <p className="text-[10px] text-amber-600 dark:text-amber-400">
                       Ring must have at least 3 points

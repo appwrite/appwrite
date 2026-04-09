@@ -199,6 +199,23 @@ const getColumnTypeColor = (type: string) => {
   return colors[type] || 'bg-muted text-muted-foreground border-border'
 }
 
+const getColumnDisplayType = (column: Record<string, unknown>) => {
+  const type = typeof column.type === 'string' ? column.type : 'string'
+  const format = typeof column.format === 'string' ? column.format : null
+
+  if (
+    format &&
+    (type === 'string' ||
+      type === 'varchar' ||
+      type === 'datetime' ||
+      type === 'date')
+  ) {
+    return format
+  }
+
+  return type
+}
+
 // Helper function for index type colors
 const getIndexTypeColor = (type: string) => {
   const colors: Record<string, string> = {
@@ -285,6 +302,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
+import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
@@ -877,9 +895,9 @@ export function View() {
         onCreate={() =>
           useCreateDatabaseWizard
             ? navigate({
-                to: '/projects/$projectId/databases/create',
-                params: { projectId: projectId! },
-              })
+              to: '/projects/$projectId/databases/create',
+              params: { projectId: projectId! },
+            })
             : setCreateDatabaseDialogOpen(true)
         }
         createDisabled={isCreateDisabled}
@@ -925,8 +943,8 @@ export function View() {
           // Data is prefetched in route loader, only render if data exists
           // PlanLimitWarning handles its own visibility logic
           project &&
-          organizationPlan !== undefined &&
-          totalDatabasesData !== undefined ? (
+            organizationPlan !== undefined &&
+            totalDatabasesData !== undefined ? (
             <PlanLimitWarning
               currentCount={totalDatabasesCount}
               limit={databasesLimit}
@@ -1082,7 +1100,7 @@ export function View() {
                                       .backupPolicyCount > 0
                                       ? `${(db as DatabaseWithBackup).backupPolicyCount} ${(db as DatabaseWithBackup).backupPolicyCount === 1 ? 'policy' : 'policies'}`
                                       : (db as DatabaseWithBackup).backupPolicy
-                                          ?.name || 'Enabled'}
+                                        ?.name || 'Enabled'}
                                   </Badge>
                                 ) : (
                                   <Badge
@@ -1109,7 +1127,7 @@ export function View() {
                                 date={
                                   new Date(
                                     (db as DatabaseWithBackup).createdAt ||
-                                      new Date(),
+                                    new Date(),
                                   )
                                 }
                                 className="text-[12px] text-muted-foreground font-mono"
@@ -1129,8 +1147,8 @@ export function View() {
                                 date={
                                   new Date(
                                     (db as DatabaseWithBackup).updatedAt ||
-                                      (db as DatabaseWithBackup).createdAt ||
-                                      new Date(),
+                                    (db as DatabaseWithBackup).createdAt ||
+                                    new Date(),
                                   )
                                 }
                                 className="text-[12px] text-muted-foreground font-mono"
@@ -1820,6 +1838,7 @@ export function TableView({
   const openSuggestColumnsDialogRef = useRef<(() => void) | null>(null)
   const openCreateIndexDialogRef = useRef<(() => void) | null>(null)
   const openSuggestIndexesDialogRef = useRef<(() => void) | null>(null)
+  const [canCreateIndex, setCanCreateIndex] = useState(true)
   const [isRefreshingRows, setIsRefreshingRows] = useState(false)
   const refreshStartTimeRef = useRef<number | null>(null)
   const minAnimationDuration = 1000 // 1 second for at least one full rotation
@@ -2247,7 +2266,7 @@ export function TableView({
           sort: hasSortKey
             ? params.sort
             : rowsSortBy !== ROWS_DEFAULT_SORT_BY ||
-                rowsSortOrder !== ROWS_DEFAULT_SORT_ORDER
+              rowsSortOrder !== ROWS_DEFAULT_SORT_ORDER
               ? encodeSort(rowsSortBy, rowsSortOrder)
               : undefined,
         })
@@ -2284,7 +2303,7 @@ export function TableView({
       limit: rowsUrlLimit,
       sort:
         rowsSortBy !== ROWS_DEFAULT_SORT_BY ||
-        rowsSortOrder !== ROWS_DEFAULT_SORT_ORDER
+          rowsSortOrder !== ROWS_DEFAULT_SORT_ORDER
           ? encodeSort(rowsSortBy, rowsSortOrder)
           : undefined,
     })
@@ -2300,7 +2319,7 @@ export function TableView({
       limit: rowsUrlLimit,
       sort:
         rowsSortBy !== ROWS_DEFAULT_SORT_BY ||
-        rowsSortOrder !== ROWS_DEFAULT_SORT_ORDER
+          rowsSortOrder !== ROWS_DEFAULT_SORT_ORDER
           ? encodeSort(rowsSortBy, rowsSortOrder)
           : undefined,
     })
@@ -2314,7 +2333,7 @@ export function TableView({
       limit: rowsUrlLimit,
       sort:
         rowsSortBy !== ROWS_DEFAULT_SORT_BY ||
-        rowsSortOrder !== ROWS_DEFAULT_SORT_ORDER
+          rowsSortOrder !== ROWS_DEFAULT_SORT_ORDER
           ? encodeSort(rowsSortBy, rowsSortOrder)
           : undefined,
     })
@@ -2516,9 +2535,9 @@ export function TableView({
               onCreateClick={() =>
                 useCreateDatabaseWizard
                   ? navigate({
-                      to: '/projects/$projectId/databases/create',
-                      params: { projectId },
-                    })
+                    to: '/projects/$projectId/databases/create',
+                    params: { projectId },
+                  })
                   : setCreateDatabaseDialogOpen(true)
               }
             />
@@ -2896,12 +2915,18 @@ export function TableView({
             !isDatabaseLevelView &&
             (activeTab === 'rows' || activeTab === 'documents'
               ? noCreateRowPermission
-              : activeTab === 'columns' || activeTab === 'indexes'
+              : activeTab === 'columns'
                 ? noCreateTablePermission
-                : false)
+                : activeTab === 'indexes'
+                  ? noCreateTablePermission || !canCreateIndex
+                  : false)
           }
           createDisabledTooltip={
-            !isDatabaseLevelView ? createPermissionTooltip : undefined
+            !isDatabaseLevelView
+              ? activeTab === 'indexes' && !canCreateIndex
+                ? 'Add at least one non-relationship column to create indexes.'
+                : createPermissionTooltip
+              : undefined
           }
           onCreate={
             isDatabaseLevelView
@@ -3096,21 +3121,28 @@ export function TableView({
             ) : activeTab === 'indexes' ? (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      if (openSuggestIndexesDialogRef.current) {
-                        openSuggestIndexesDialogRef.current()
-                      }
-                    }}
-                    className="h-9"
-                  >
-                    <Lightbulb className="h-3.5 w-3.5 shrink-0 sm:mr-1.5" />
-                    <span className="hidden sm:inline">Suggest indexes</span>
-                  </Button>
+                  <span className="inline-flex">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (openSuggestIndexesDialogRef.current) {
+                          openSuggestIndexesDialogRef.current()
+                        }
+                      }}
+                      disabled={!canCreateIndex}
+                      className="h-9"
+                    >
+                      <Lightbulb className="h-3.5 w-3.5 shrink-0 sm:mr-1.5" />
+                      <span className="hidden sm:inline">Suggest indexes</span>
+                    </Button>
+                  </span>
                 </TooltipTrigger>
-                <TooltipContent side="bottom">Suggest indexes</TooltipContent>
+                <TooltipContent side="bottom">
+                  {!canCreateIndex
+                    ? 'Add at least one non-relationship column to suggest indexes.'
+                    : 'Suggest indexes'}
+                </TooltipContent>
               </Tooltip>
             ) : undefined
           }
@@ -3249,9 +3281,9 @@ export function TableView({
                   onCreateClick={() =>
                     useCreateDatabaseWizard
                       ? navigate({
-                          to: '/projects/$projectId/databases/create',
-                          params: { projectId },
-                        })
+                        to: '/projects/$projectId/databases/create',
+                        params: { projectId },
+                      })
                       : setCreateDatabaseDialogOpen(true)
                   }
                 />
@@ -3459,6 +3491,7 @@ export function TableView({
                   onSuggestReady={(openDialog) => {
                     openSuggestIndexesDialogRef.current = openDialog
                   }}
+                  onIndexesAbilityChange={setCanCreateIndex}
                 />
               )}
               {activeTab === 'security' && (
@@ -5131,7 +5164,7 @@ export function DatabaseOverview({
                     className="h-9 text-[13px]"
                     disabled={
                       enabled ===
-                        ((database as Models.Database).enabled !== false) ||
+                      ((database as Models.Database).enabled !== false) ||
                       updateEnabledMutation.isPending
                     }
                     onClick={() => {
@@ -5551,7 +5584,9 @@ function getTableColumnKey(col: unknown): string | null {
   return String(colKey)
 }
 
-function defaultFormValueForColumn(col: unknown): string | number | boolean | unknown[] | null {
+function defaultFormValueForColumn(
+  col: unknown,
+): string | number | boolean | unknown[] | null {
   const c = col as {
     default?: unknown
     type?: string
@@ -5563,6 +5598,228 @@ function defaultFormValueForColumn(col: unknown): string | number | boolean | un
   if (c.type === 'boolean') return false
   if (c.array) return []
   return ''
+}
+
+function getRelationshipTableId(columnInfo?: unknown): string | undefined {
+  const col = columnInfo as
+    | { relatedTable?: string; relatedTableId?: string }
+    | undefined
+
+  return col?.relatedTableId || col?.relatedTable || undefined
+}
+
+function getRelationshipKind(columnInfo?: unknown): string | undefined {
+  const col = columnInfo as
+    | { relationType?: string; relationshipType?: string }
+    | undefined
+
+  return col?.relationshipType || col?.relationType || undefined
+}
+
+function getRelationshipRowLabel(
+  row: Record<string, unknown>,
+  columns: unknown[],
+): string {
+  const labelColumn = columns.find((column) => {
+    const col = column as { type?: string } | undefined
+    const key = getTableColumnKey(column)
+
+    if (!key || key.startsWith('$')) return false
+
+    return (
+      col?.type === 'string' ||
+      col?.type === 'varchar' ||
+      col?.type === 'text' ||
+      col?.type === 'mediumtext' ||
+      col?.type === 'longtext' ||
+      col?.type === 'email' ||
+      col?.type === 'url'
+    )
+  })
+
+  const labelKey = labelColumn ? getTableColumnKey(labelColumn) : null
+  const labelValue =
+    labelKey && typeof row[labelKey] === 'string' ? row[labelKey] : null
+
+  if (labelValue && labelValue.trim().length > 0) {
+    return `${labelValue} (${row.$id})`
+  }
+
+  return String(row.$id ?? 'Unknown row')
+}
+
+interface RelationshipFieldProps {
+  columnInfo?: unknown
+  currentValue: string | unknown[] | null
+  isRequired: boolean
+  isSaving: boolean
+  onChange: (value: string | unknown[] | null) => void
+}
+
+function RelationshipField({
+  columnInfo,
+  currentValue,
+  isRequired,
+  isSaving,
+  onChange,
+}: RelationshipFieldProps) {
+  const params = useParams({ strict: false })
+  const projectId = params.projectId as string | undefined
+  const databaseId = params.databaseId as string | undefined
+  const relatedTableId = getRelationshipTableId(columnInfo)
+  const relationType = getRelationshipKind(columnInfo)
+  const isMulti =
+    relationType === 'oneToMany' || relationType === 'manyToMany'
+
+  const { rows: relatedRows, isLoading: relatedRowsLoading } =
+    useProjectTableRows(
+      projectId,
+      databaseId,
+      relatedTableId,
+      0,
+      100,
+      undefined,
+      'desc',
+      '$createdAt',
+    )
+  const { columns: relatedColumns } = useProjectTableColumns(
+    projectId,
+    databaseId,
+    relatedTableId,
+    undefined,
+    0,
+    100,
+  )
+
+  const selectedValues = Array.isArray(currentValue)
+    ? currentValue
+        .map((value) => (typeof value === 'string' ? value : null))
+        .filter((value): value is string => Boolean(value))
+    : typeof currentValue === 'string' && currentValue.length > 0
+      ? [currentValue]
+      : []
+
+  const options = relatedRows
+    .map((row) => row as Record<string, unknown>)
+    .filter((row) => typeof row.$id === 'string')
+    .map((row) => ({
+      value: row.$id as string,
+      label: getRelationshipRowLabel(row, relatedColumns),
+    }))
+
+  if (!relatedTableId) {
+    return (
+      <div className="rounded-lg border border-border bg-muted/30 p-3">
+        <p className="text-[12px] text-muted-foreground">
+          This relationship is missing its related table metadata.
+        </p>
+      </div>
+    )
+  }
+
+  if (isMulti) {
+    const availableItems = options.filter(
+      (option) => !selectedValues.includes(option.value),
+    )
+
+    return (
+      <div className="space-y-2">
+        <SearchableSelect
+          value=""
+          onValueChange={(value) => {
+            if (!selectedValues.includes(value)) {
+              onChange([...selectedValues, value])
+            }
+          }}
+          items={availableItems}
+          placeholder={
+            relatedRowsLoading ? 'Loading related rows…' : 'Add related row'
+          }
+          searchPlaceholder="Search related rows…"
+          emptyMessage={
+            relatedRowsLoading ? 'Loading related rows…' : 'No related rows'
+          }
+          disabled={isSaving || relatedRowsLoading || availableItems.length === 0}
+        />
+        {selectedValues.length > 0 ? (
+          <div className="space-y-2">
+            {selectedValues.map((value) => {
+              const option = options.find((item) => item.value === value)
+
+              return (
+                <div
+                  key={value}
+                  className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-3 py-2"
+                >
+                  <span className="truncate text-[12px] text-foreground">
+                    {option?.label || value}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-[12px] text-muted-foreground hover:text-destructive"
+                    disabled={isSaving}
+                    onClick={() =>
+                      onChange(selectedValues.filter((item) => item !== value))
+                    }
+                  >
+                    Remove
+                  </Button>
+                </div>
+              )
+            })}
+          </div>
+        ) : (
+          <p className="text-[12px] text-muted-foreground">
+            No related rows selected.
+          </p>
+        )}
+        {!isRequired && selectedValues.length > 0 && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 text-[12px]"
+            disabled={isSaving}
+            onClick={() => onChange([])}
+          >
+            Clear
+          </Button>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-2">
+      <SearchableSelect
+        value={selectedValues[0] || ''}
+        onValueChange={(value) => onChange(value)}
+        items={options}
+        placeholder={
+          relatedRowsLoading ? 'Loading related rows…' : 'Select related row'
+        }
+        searchPlaceholder="Search related rows…"
+        emptyMessage={
+          relatedRowsLoading ? 'Loading related rows…' : 'No related rows'
+        }
+        disabled={isSaving || relatedRowsLoading}
+      />
+      {!isRequired && selectedValues[0] && (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-8 text-[12px]"
+          disabled={isSaving}
+          onClick={() => onChange(null)}
+        >
+          Clear
+        </Button>
+      )}
+    </div>
+  )
 }
 
 function RowEditDrawer({
@@ -5685,17 +5942,21 @@ function RowEditDrawer({
         string,
         string | number | boolean | unknown[] | null
       > = {}
-      Object.entries(row.data).forEach(([key, value]) => {
+      columns.forEach((column) => {
+        const key = getTableColumnKey(column)
+        if (!key || key.startsWith('$')) return
+
+        const value = row.data[key]
         const columnInfo = getColumnInfo(key)
         initialData[key] =
           value === null || value === undefined
             ? null
             : (normalizeValueForColumn(value, columnInfo) as
-                | string
-                | number
-                | boolean
-                | unknown[]
-                | null)
+              | string
+              | number
+              | boolean
+              | unknown[]
+              | null)
       })
       initialData['$createdAt'] = row.$createdAt ?? null
       initialData['$updatedAt'] = row.$updatedAt ?? null
@@ -5798,10 +6059,22 @@ function RowEditDrawer({
   // Get column info for a field
   const getColumnInfo = (key: string) => {
     return columns.find((col: unknown) => {
-      const colKey =
-        col.key || col.name || col.$id || col.attribute || col.attributeId
+      const colKey = getTableColumnKey(col)
       return colKey === key
     })
+  }
+
+  const isColumnRequired = (
+    columnInfo?: Record<string, unknown> | null,
+  ): boolean => {
+    return (
+      columnInfo?.required === true ||
+      columnInfo?.required === 'true' ||
+      columnInfo?.isRequired === true ||
+      columnInfo?.isRequired === 'true' ||
+      columnInfo?.nullable === false ||
+      columnInfo?.nullable === 'false'
+    )
   }
 
   // Detect RTL content
@@ -6014,6 +6287,60 @@ function RowEditDrawer({
     }
 
     const payload = { ...formData }
+    const allowedFieldKeys = new Set(
+      columns
+        .map((column) => getTableColumnKey(column))
+        .filter((key): key is string => Boolean(key && !key.startsWith('$'))),
+    )
+    const missingRequiredFields: string[] = []
+
+    columns.forEach((col: unknown) => {
+      const columnInfo = col as Record<string, unknown>
+      const colKey =
+        columnInfo.key ||
+        columnInfo.name ||
+        columnInfo.$id ||
+        columnInfo.attribute ||
+        columnInfo.attributeId
+
+      if (!colKey || String(colKey).startsWith('$')) return
+
+      const fieldKey = String(colKey)
+      const currentValue = payload[fieldKey]
+      const fieldType = getFieldType(
+        fieldKey,
+        currentValue as string | number | boolean | unknown[] | null,
+        columnInfo,
+      )
+      const required = isColumnRequired(columnInfo)
+      const isEmptyValue =
+        currentValue === null ||
+        currentValue === undefined ||
+        (typeof currentValue === 'string' && currentValue.trim() === '') ||
+        (Array.isArray(currentValue) && currentValue.length === 0)
+
+      if (required && fieldType !== 'boolean' && isEmptyValue) {
+        missingRequiredFields.push(fieldKey)
+        return
+      }
+
+      if (!required && isEmptyValue) {
+        payload[fieldKey] = null
+      }
+    })
+
+    Object.keys(payload).forEach((key) => {
+      if (key.startsWith('$')) return
+      if (!allowedFieldKeys.has(key)) {
+        delete payload[key]
+      }
+    })
+
+    if (missingRequiredFields.length > 0) {
+      toast.error(`Required: ${missingRequiredFields.join(', ')}`)
+      return
+    }
+
     if (
       payload['$createdAt'] === null ||
       payload['$createdAt'] === undefined ||
@@ -6374,13 +6701,9 @@ function RowEditDrawer({
                         )
                         const shouldFocus = focusedField === key
                         // Check multiple possible properties for required status
-                        const isRequired =
-                          columnInfo?.required === true ||
-                          columnInfo?.required === 'true' ||
-                          columnInfo?.isRequired === true ||
-                          columnInfo?.isRequired === 'true' ||
-                          columnInfo?.nullable === false ||
-                          columnInfo?.nullable === 'false'
+                        const isRequired = isColumnRequired(
+                          columnInfo as Record<string, unknown> | undefined,
+                        )
 
                         const arrayLength =
                           fieldType === 'array'
@@ -6464,7 +6787,7 @@ function RowEditDrawer({
                                   type="number"
                                   value={
                                     currentValue !== null &&
-                                    currentValue !== undefined
+                                      currentValue !== undefined
                                       ? String(currentValue)
                                       : ''
                                   }
@@ -6496,7 +6819,7 @@ function RowEditDrawer({
                             ) : fieldType === 'array' ? (
                               <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
                                 {((currentValue as unknown[]) || []).length >
-                                0 ? (
+                                  0 ? (
                                   <div className="space-y-2">
                                     {((currentValue as unknown[]) || []).map(
                                       (item, index) => {
@@ -6508,13 +6831,11 @@ function RowEditDrawer({
                                         const colType = rawType.endsWith('[]')
                                           ? rawType.slice(0, -2)
                                           : rawType
-                                        const isRequired =
-                                          columnInfo?.required === true ||
-                                          columnInfo?.required === 'true' ||
-                                          columnInfo?.isRequired === true ||
-                                          columnInfo?.isRequired === 'true' ||
-                                          columnInfo?.nullable === false ||
-                                          columnInfo?.nullable === 'false'
+                                        const isRequired = isColumnRequired(
+                                          columnInfo as
+                                            | Record<string, unknown>
+                                            | undefined,
+                                        )
                                         const isNull = item === null
                                         const stringValue = isNull
                                           ? ''
@@ -6605,15 +6926,15 @@ function RowEditDrawer({
                                                       v === ''
                                                         ? null
                                                         : colType ===
-                                                              'integer' ||
-                                                            colType === 'int'
+                                                          'integer' ||
+                                                          colType === 'int'
                                                           ? parseInt(v, 10)
                                                           : parseFloat(v),
                                                     )
                                                   }}
                                                   step={
                                                     colType === 'double' ||
-                                                    colType === 'float'
+                                                      colType === 'float'
                                                       ? 0.1
                                                       : 1
                                                   }
@@ -6694,10 +7015,10 @@ function RowEditDrawer({
                                                     isNull || !item
                                                       ? ''
                                                       : formatDateTimeLocalForInput(
-                                                          new Date(
-                                                            item as string,
-                                                          ),
-                                                        )
+                                                        new Date(
+                                                          item as string,
+                                                        ),
+                                                      )
                                                   }
                                                   ref={(el) => setRef(el)}
                                                   autoFocus={
@@ -6711,8 +7032,8 @@ function RowEditDrawer({
                                                       index,
                                                       e.target.value
                                                         ? new Date(
-                                                            e.target.value,
-                                                          ).toISOString()
+                                                          e.target.value,
+                                                        ).toISOString()
                                                         : null,
                                                     )
                                                   }
@@ -6745,7 +7066,7 @@ function RowEditDrawer({
                                                   className={cn(
                                                     'min-h-[32px] max-h-[600px] text-[13px] flex-1 border-0 bg-transparent px-0 py-1.5 resize-none focus-visible:ring-0 focus-visible:ring-offset-0',
                                                     isNull &&
-                                                      'opacity-50 cursor-not-allowed',
+                                                    'opacity-50 cursor-not-allowed',
                                                     showNullCheckbox
                                                       ? 'pb-7'
                                                       : 'pb-1',
@@ -6846,8 +7167,8 @@ function RowEditDrawer({
                                 value={
                                   currentValue
                                     ? formatDateTimeLocalForInput(
-                                        new Date(currentValue as string),
-                                      )
+                                      new Date(currentValue as string),
+                                    )
                                     : ''
                                 }
                                 ref={(el) => {
@@ -6912,13 +7233,16 @@ function RowEditDrawer({
                                 className="h-9 text-[13px]"
                               />
                             ) : fieldType === 'relationship' ? (
-                              <div className="rounded-lg border border-border bg-muted/30 p-3">
-                                <p className="text-[12px] text-muted-foreground">
-                                  Relationship columns are managed through the
-                                  relationship system. Edit related rows
-                                  directly.
-                                </p>
-                              </div>
+                              <RelationshipField
+                                columnInfo={columnInfo}
+                                currentValue={
+                                  (currentValue as string | unknown[] | null) ??
+                                  null
+                                }
+                                isRequired={isRequired}
+                                isSaving={isSaving}
+                                onChange={(val) => handleFieldChange(key, val)}
+                              />
                             ) : fieldType === 'point' ? (
                               <PointEditor
                                 value={currentValue as [number, number] | null}
@@ -7020,7 +7344,7 @@ function RowEditDrawer({
                                           className={cn(
                                             'min-h-[36px] max-h-[600px] text-[13px] resize-none',
                                             isNull &&
-                                              'opacity-50 cursor-not-allowed',
+                                            'opacity-50 cursor-not-allowed',
                                             showNullCheckbox ? 'pb-8' : 'pb-2',
                                             counterPadding,
                                           )}
@@ -7053,7 +7377,7 @@ function RowEditDrawer({
                                           className={cn(
                                             'h-9 text-[13px]',
                                             isNull &&
-                                              'opacity-50 cursor-not-allowed',
+                                            'opacity-50 cursor-not-allowed',
                                             counterPadding,
                                           )}
                                         />
@@ -7377,6 +7701,8 @@ interface SpreadsheetProps {
   onCreateColumnReady?: (() => void) | null
   onCreateReady?: (openDialog: () => void) => void
   onSuggestReady?: (openDialog: () => void) => void
+  /** When provided (indexes tab), called with whether table has any non-relationship columns so parent can disable create/suggest index buttons */
+  onIndexesAbilityChange?: (canCreate: boolean) => void
   onRowsCountChange?: (count: number) => void
   /** When false, create row/column and suggest actions are disabled (e.g. read-only roles) */
   canWriteRows?: boolean
@@ -8361,6 +8687,17 @@ function RowsSpreadsheet({
   // Rows are already paginated by the API
   const paginatedRows = rows
 
+  const stringifyStructuredValue = (input: unknown): string => {
+    if (input === null || input === undefined) return 'null'
+    if (Array.isArray(input)) {
+      return `[${input.map((item) => stringifyStructuredValue(item)).join(', ')}]`
+    }
+    if (typeof input === 'object') {
+      return JSON.stringify(input)
+    }
+    return String(input)
+  }
+
   const documentsListFullyEmpty =
     useInlineDocumentPane &&
     paginatedRows.length === 0 &&
@@ -8379,11 +8716,7 @@ function RowsSpreadsheet({
   ) => {
     if (value === null || value === undefined)
       return { full: 'null', display: 'null', isNull: true }
-    const stringValue = Array.isArray(value)
-      ? value.map((v) => (v === null ? 'null' : String(v))).join(', ')
-      : typeof value === 'object'
-        ? JSON.stringify(value)
-        : String(value)
+      const stringValue = stringifyStructuredValue(value)
     const trimmed =
       stringValue.length > 80 ? `${stringValue.slice(0, 77)}…` : stringValue
     return { full: stringValue, display: trimmed, isNull: false }
@@ -8732,6 +9065,7 @@ function RowsSpreadsheet({
           onOpenChange={setColumnDialogOpen}
           onSubmit={handleColumnSubmit}
           column={selectedColumn}
+          currentTableId={tableId}
           availableTables={
             availableTablesForColumns?.map((t: unknown) => ({
               $id: t.$id,
@@ -9171,13 +9505,13 @@ function RowsSpreadsheet({
                       {(() => {
                         const { full, display, isNull } = formatCellValue(
                           row.data[col as keyof typeof row.data] as
-                            | string
-                            | number
-                            | boolean
-                            | unknown[]
-                            | Record<string, unknown>
-                            | null
-                            | undefined,
+                          | string
+                          | number
+                          | boolean
+                          | unknown[]
+                          | Record<string, unknown>
+                          | null
+                          | undefined,
                         )
                         // Only apply RTL detection to string values
                         const cellValue = row.data[col as keyof typeof row.data]
@@ -9575,6 +9909,7 @@ function RowsSpreadsheet({
         onOpenChange={setColumnDialogOpen}
         onSubmit={handleColumnSubmit}
         column={selectedColumn}
+        currentTableId={tableId}
         availableTables={
           availableTablesForColumns?.map((t: unknown) => ({
             $id: t.$id,
@@ -9814,8 +10149,8 @@ function ColumnsSpreadsheet({
         // Enum fields
         elements: col.elements,
         // Relationship fields
-        relatedTableId: col.relatedTableId,
-        relationshipType: col.relationshipType,
+        relatedTableId: col.relatedTableId ?? col.relatedTable,
+        relationshipType: col.relationshipType ?? col.relationType,
         twoWay: col.twoWay,
         twoWayKey: col.twoWayKey,
         onDelete: col.onDelete,
@@ -9888,8 +10223,9 @@ function ColumnsSpreadsheet({
         elements: suggestion.elements,
         xdefault: suggestion.xdefault ?? suggestion.default,
         // Relationship fields
-        relatedTableId: suggestion.relatedTableId,
-        relationshipType: suggestion.relationshipType,
+        relatedTableId: suggestion.relatedTableId ?? suggestion.relatedTable,
+        relationshipType:
+          suggestion.relationshipType ?? suggestion.relationType,
         twoWay: suggestion.twoWay,
         twoWayKey: suggestion.twoWayKey,
         onDelete: suggestion.onDelete,
@@ -10003,6 +10339,7 @@ function ColumnsSpreadsheet({
   const columns = apiColumns.map((col: unknown) => ({
     key: col.key || col.name || col.$id,
     type: col.type || 'string',
+    format: col.format || null,
     // String fields
     size: col.size || null,
     encrypt: col.encrypt || false,
@@ -10012,8 +10349,8 @@ function ColumnsSpreadsheet({
     // Enum fields
     elements: col.elements || null,
     // Relationship fields
-    relatedTableId: col.relatedTableId,
-    relationshipType: col.relationshipType,
+    relatedTableId: col.relatedTableId ?? col.relatedTable,
+    relationshipType: col.relationshipType ?? col.relationType,
     twoWay: col.twoWay,
     twoWayKey: col.twoWayKey,
     onDelete: col.onDelete,
@@ -10509,8 +10846,8 @@ function ColumnsSpreadsheet({
   }, [columnsFetching, displayColumns])
   const columnsToShow =
     columnsFilterMap.size > 0 &&
-    columnsFetching &&
-    lastDisplayColumnsRef.current.length > 0
+      columnsFetching &&
+      lastDisplayColumnsRef.current.length > 0
       ? lastDisplayColumnsRef.current
       : displayColumns
 
@@ -10528,8 +10865,8 @@ function ColumnsSpreadsheet({
   return (
     <div className="flex h-full flex-col relative">
       {!columnsFetching &&
-      apiColumns.length === 0 &&
-      columnsFilterMap.size > 0 ? (
+        apiColumns.length === 0 &&
+        columnsFilterMap.size > 0 ? (
         <div className="flex flex-1 items-center justify-center py-12">
           <div className="text-center">
             <p className="text-[14px] font-medium text-foreground">
@@ -10722,10 +11059,14 @@ function ColumnsSpreadsheet({
                           variant="outline"
                           className={cn(
                             'text-[11px] font-medium border',
-                            getColumnTypeColor(col.type),
+                            getColumnTypeColor(
+                              getColumnDisplayType(
+                                col as Record<string, unknown>,
+                              ),
+                            ),
                           )}
                         >
-                          {col.type}
+                          {getColumnDisplayType(col as Record<string, unknown>)}
                         </Badge>
                       </td>
                       <td
@@ -10735,7 +11076,7 @@ function ColumnsSpreadsheet({
                         )}
                       >
                         {col.key !== '$id' &&
-                        (col.type === 'string' || col.type === 'varchar')
+                          (col.type === 'string' || col.type === 'varchar')
                           ? (col.size ?? '—')
                           : '—'}
                       </td>
@@ -10876,6 +11217,7 @@ function ColumnsSpreadsheet({
         }}
         onSubmit={handleColumnSubmit}
         column={selectedColumn}
+        currentTableId={tableId}
         availableTables={availableTables.map((t) => ({
           $id: t.$id,
           name: t.name,
@@ -11017,6 +11359,7 @@ function IndexesSpreadsheet({
   table,
   onCreateReady,
   onSuggestReady,
+  onIndexesAbilityChange,
   canWriteTables = true,
   filterMap: filterMapProp,
 }: SpreadsheetProps) {
@@ -11117,6 +11460,16 @@ function IndexesSpreadsheet({
     databaseId,
     tableId,
   )
+
+  // Notify parent when table has no non-relationship columns (disable create/suggest index buttons)
+  useEffect(() => {
+    if (!onIndexesAbilityChange) return
+    const nonRelationshipColumns =
+      availableColumns?.filter(
+        (c: { type?: string }) => c.type !== 'relationship',
+      ) ?? []
+    onIndexesAbilityChange(nonRelationshipColumns.length > 0)
+  }, [availableColumns, onIndexesAbilityChange])
 
   // Create index mutation
   const createIndexMutation = useMutation({
@@ -11254,6 +11607,10 @@ function IndexesSpreadsheet({
     }
   }
 
+  // Backend limit: 767 bytes = 191 chars (utf8mb4). Key indexes need explicit length for string/varchar to avoid "index full column" exceeding 767.
+  const INDEX_MAX_LENGTH = 767
+  const INDEX_MAX_CHARS = 191
+
   const handleApproveSuggestion = async (suggestionKey: string) => {
     try {
       // Get the current suggestion data from state (in case it was edited)
@@ -11263,28 +11620,41 @@ function IndexesSpreadsheet({
         return
       }
 
-      // Map columns and filter out invalid ones
+      // Build column map: string/varchar key -> attribute size (for key index length capping and safe default)
+      const columnSizeMap = new Map<string, number>()
+      availableColumns?.forEach((c: { key: string; type?: string; size?: number }) => {
+        if ((c.type === 'string' || c.type === 'varchar') && typeof c.size === 'number') {
+          columnSizeMap.set(c.key, c.size)
+        }
+      })
+
+      // Map columns and filter out invalid ones; for key indexes on string/varchar set safe default length when null (avoid lengths: [null,null] → backend indexes full column → 767 error)
       const validColumns = suggestion.columns
         .map((col: string, idx: number) => {
-          // Find the column definition
           const columnDef = availableColumns.find((c) => c.key === col)
 
-          // Skip array columns - they're not supported for indexes
           if (columnDef?.array) {
             return null
           }
 
           const columnType = columnDef?.type
-
-          // Only key indexes on string and varchar columns support length
           const supportsLength =
             suggestion.type === 'key' &&
             (columnType === 'string' || columnType === 'varchar')
 
-          // Cap length at maximum of 767
-          let length = suggestion.lengths?.[idx] || null
-          if (length && length > 767) {
-            length = 767
+          let length: number | null = suggestion.lengths?.[idx] ?? null
+          if (supportsLength) {
+            if (length != null && length > 0) {
+              const maxSize = columnSizeMap.get(col)
+              const cap = maxSize != null ? Math.min(maxSize, INDEX_MAX_LENGTH) : INDEX_MAX_LENGTH
+              if (length > cap) length = cap
+            } else if (length != null && length > INDEX_MAX_LENGTH) {
+              length = INDEX_MAX_LENGTH
+            } else {
+              // Key index on string/varchar with no length: set safe default so backend doesn't index full column (would exceed 767)
+              const colSize = columnSizeMap.get(col) ?? 255
+              length = Math.min(colSize, INDEX_MAX_CHARS)
+            }
           }
 
           return {
@@ -11340,14 +11710,14 @@ function IndexesSpreadsheet({
       prev.map((s) =>
         s.key === key
           ? {
-              ...s,
-              key: data.key,
-              type: data.type,
-              columns: data.columns.map((c) => c.column),
-              orders: data.columns.map((c) => c.order), // Keep nulls to maintain array indices
-              lengths: data.columns.map((c) => c.length), // Keep nulls to maintain array indices
-              isSuggestion: true,
-            }
+            ...s,
+            key: data.key,
+            type: data.type,
+            columns: data.columns.map((c) => c.column),
+            orders: data.columns.map((c) => c.order), // Keep nulls to maintain array indices
+            lengths: data.columns.map((c) => c.length), // Keep nulls to maintain array indices
+            isSuggestion: true,
+          }
           : s,
       ),
     )
@@ -11423,57 +11793,57 @@ function IndexesSpreadsheet({
     },
     ...(table.name === 'users'
       ? [
-          {
-            key: 'email_unique',
-            type: 'unique',
-            columns: ['email'],
-            orders: ['ASC'],
-            status: 'available',
-          },
-          {
-            key: 'status_idx',
-            type: 'key',
-            columns: ['status'],
-            orders: ['ASC'],
-            status: 'available',
-          },
-        ]
+        {
+          key: 'email_unique',
+          type: 'unique',
+          columns: ['email'],
+          orders: ['ASC'],
+          status: 'available',
+        },
+        {
+          key: 'status_idx',
+          type: 'key',
+          columns: ['status'],
+          orders: ['ASC'],
+          status: 'available',
+        },
+      ]
       : []),
     ...(table.name === 'products'
       ? [
-          {
-            key: 'category_idx',
-            type: 'key',
-            columns: ['category'],
-            orders: ['ASC'],
-            status: 'available',
-          },
-          {
-            key: 'price_idx',
-            type: 'key',
-            columns: ['price'],
-            orders: ['DESC'],
-            status: 'available',
-          },
-        ]
+        {
+          key: 'category_idx',
+          type: 'key',
+          columns: ['category'],
+          orders: ['ASC'],
+          status: 'available',
+        },
+        {
+          key: 'price_idx',
+          type: 'key',
+          columns: ['price'],
+          orders: ['DESC'],
+          status: 'available',
+        },
+      ]
       : []),
     ...(table.name === 'orders'
       ? [
-          {
-            key: 'orderId_unique',
-            type: 'unique',
-            columns: ['orderId'],
-            orders: ['ASC'],
-            status: 'available',
-          },
-          {
-            key: 'status_created',
-            type: 'key',
-            columns: ['status', '$createdAt'],
-            orders: ['ASC', 'DESC'],
-            status: 'building',
-          },
-        ]
+        {
+          key: 'orderId_unique',
+          type: 'unique',
+          columns: ['orderId'],
+          orders: ['ASC'],
+          status: 'available',
+        },
+        {
+          key: 'status_created',
+          type: 'key',
+          columns: ['status', '$createdAt'],
+          orders: ['ASC', 'DESC'],
+          status: 'building',
+        },
+      ]
       : []),
   ]
 
@@ -11496,8 +11866,8 @@ function IndexesSpreadsheet({
   }, [indexesFetching, displayIndexes])
   const indexesToShow =
     indexesFilterMap.size > 0 &&
-    indexesFetching &&
-    lastDisplayIndexesRef.current.length > 0
+      indexesFetching &&
+      lastDisplayIndexesRef.current.length > 0
       ? lastDisplayIndexesRef.current
       : displayIndexes
 
@@ -11507,8 +11877,8 @@ function IndexesSpreadsheet({
   return (
     <div className="flex h-full flex-col relative">
       {!indexesFetching &&
-      apiIndexes.length === 0 &&
-      indexesFilterMap.size > 0 ? (
+        apiIndexes.length === 0 &&
+        indexesFilterMap.size > 0 ? (
         <div className="flex flex-1 items-center justify-center py-12">
           <div className="text-center">
             <p className="text-[14px] font-medium text-foreground">
@@ -12590,7 +12960,7 @@ function TableSettings({ table }: SpreadsheetProps) {
             ))}
             {displayNames.length < 5 &&
               validStringColumns.length >
-                displayNames.filter((n) => n && n !== '$id').length && (
+              displayNames.filter((n) => n && n !== '$id').length && (
                 <Button
                   variant="outline"
                   size="sm"
