@@ -248,6 +248,8 @@ class Create extends Base
                 'providerSilentMode' => $providerSilentMode,
                 'buildSpecification' => $buildSpecification,
                 'runtimeSpecification' => $runtimeSpecification,
+                'vars' => null,
+                'varsProject' => null,
             ]));
         } catch (DuplicateException) {
             throw new Exception(Exception::FUNCTION_ALREADY_EXISTS);

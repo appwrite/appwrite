@@ -20,8 +20,9 @@ use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
+use Utopia\Database\QueryContext;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\Queries\Documents;
+use Utopia\Database\Validator\Queries\Queries as DocumentsValidator;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Http;
@@ -588,9 +589,11 @@ Http::post('/v1/migrations/csv/exports')
         // Schemaless databases (DocumentsDB, VectorsDB) allow queries on dynamic fields
         $isSchemaless = in_array($databaseType, [DATABASE_TYPE_DOCUMENTSDB, DATABASE_TYPE_VECTORSDB]);
 
-        $validator = new Documents(
-            attributes: $collection->getAttribute('attributes', []),
-            indexes: $collection->getAttribute('indexes', []),
+        $context = new QueryContext();
+        $context->add($collection);
+
+        $validator = new DocumentsValidator(
+            $context,
             idAttributeType: $dbForProject->getAdapter()->getIdAttributeType(),
             supportForAttributes: !$isSchemaless,
         );
@@ -877,9 +880,11 @@ Http::post('/v1/migrations/json/exports')
         // Schemaless databases (DocumentsDB, VectorsDB) allow queries on dynamic fields
         $isSchemaless = in_array($databaseType, [DATABASE_TYPE_DOCUMENTSDB, DATABASE_TYPE_VECTORSDB]);
 
-        $validator = new Documents(
-            attributes: $collection->getAttribute('attributes', []),
-            indexes: $collection->getAttribute('indexes', []),
+        $context = new QueryContext();
+        $context->add($collection);
+
+        $validator = new DocumentsValidator(
+            $context,
             idAttributeType: $dbForProject->getAdapter()->getIdAttributeType(),
             supportForAttributes: !$isSchemaless,
         );
