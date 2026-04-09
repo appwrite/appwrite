@@ -307,18 +307,13 @@ jobs:
 
       - name: Run Tests
         timeout-minutes: 60
-        run: |
-          docker compose exec -T \
-            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
-            appwrite test /usr/src/code/tests/e2e/General
-
-          for service in Account Avatars Console Health Locale Messaging Project Projects ProjectWebhooks Proxy Storage Teams Tokens Users VCS Webhooks; do
-            docker compose exec -T \
-              -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
-              appwrite vendor/bin/paratest --processes $(nproc) --functional \
-              "/usr/src/code/tests/e2e/Services/$service" \
-              --exclude-group abuseEnabled --exclude-group screenshots
-          done
+        run: >-
+          docker compose exec -T
+          -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
+          appwrite vendor/bin/paratest --processes $(nproc) --functional
+          --configuration /usr/src/code/phpunit.xml
+          --testsuite e2e
+          --exclude-group abuseEnabled --exclude-group screenshots
 
       - name: Failure Logs
         if: failure()
