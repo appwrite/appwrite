@@ -61,7 +61,7 @@
         "utopia-php/compression": "0.1.*",
         "utopia-php/config": "1.*",
         "utopia-php/console": "0.1.*",
-        "utopia-php/database": "dev-csv-import-upsert as 5.0.0",
+        "utopia-php/database": "dev-csv-import-upsert-v2 as 5.0.0",
         "utopia-php/detector": "0.2.*",
         "utopia-php/domains": "1.*",
         "utopia-php/emails": "0.6.*",
