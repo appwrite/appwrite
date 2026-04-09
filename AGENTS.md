@@ -12,7 +12,7 @@ Self-hosted Backend-as-a-Service platform. Hybrid monolithic-microservice archit
 | `docker compose exec appwrite test tests/unit/` | Run unit tests |
 | `composer format` | Auto-format code (Pint, PSR-12) |
 | `composer format <file>` | Format a specific file |
-| `composer lint <file>` | Check formatting of a file |
+| `composer format:check <file>` | Check formatting of a file |
 | `composer analyze` | Static analysis (PHPStan level 3) |
 | `composer check` | Same as `analyze` |
 
