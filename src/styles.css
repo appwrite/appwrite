@@ -2,8 +2,12 @@
 
 @import 'tw-animate-css';
 
+@import './fonts-aeonik-pro.css';
+
+@import './fonts-inter-latin.css';
+
 /* Match default dark + debug-only themes that omit .dark but use dark surfaces (see html-theme.ts). */
-@custom-variant dark (&:is(.dark *, .classic *, .crazy *, .stealth *));
+@custom-variant dark (&:is(.dark *, .classic *, .crazy *, .stealth *, .premium *));
 
 /** Debug-only classic theme (html.classic); use for heading weight etc. without affecting default UI. */
 @custom-variant classic (&:is(.classic *));
@@ -67,6 +71,12 @@ code {
   --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
   --sidebar-border: oklch(0.92 0.004 286.32);
   --sidebar-ring: oklch(0.871 0.006 286.286);
+  /* Cloud profile — matches appwrite/website; files in public/fonts/aeonik-pro */
+  --font-aeonik-pro:
+    'Aeonik Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  /* Self-hosted / non-cloud project overview title; files in public/fonts/inter (from appwrite/console) */
+  --font-inter-overview:
+    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
 }
 
 .dark {
@@ -230,7 +240,8 @@ code {
  */
 .classic,
 .crazy,
-.stealth {
+.stealth,
+.premium {
   --foreground: oklch(0.985 0 0);
   --card-foreground: oklch(0.985 0 0);
   --popover-foreground: oklch(0.985 0 0);
@@ -279,6 +290,48 @@ code {
   --sidebar-ring: oklch(0.5 0.12 100);
 }
 
+/*
+ * Premium — secret gold palette: warm dark surfaces, soft champagne text, muted gold accents.
+ * Lower surface/text/chart contrast than earlier iterations. Debug menu only.
+ */
+.premium {
+  color-scheme: dark;
+  --editor-bg: oklch(0.14 0.024 82);
+  --background: oklch(0.175 0.022 82);
+  --foreground: oklch(0.88 0.01 88);
+  --card: oklch(0.195 0.024 83);
+  --card-foreground: oklch(0.88 0.01 88);
+  --popover: oklch(0.185 0.023 82);
+  --popover-foreground: oklch(0.88 0.01 88);
+  --primary: oklch(0.68 0.11 78);
+  --primary-foreground: oklch(0.17 0.028 76);
+  --secondary: oklch(0.235 0.03 82);
+  --secondary-foreground: oklch(0.88 0.01 88);
+  --muted: oklch(0.215 0.027 83);
+  --muted-foreground: oklch(0.62 0.032 82);
+  --accent: oklch(0.245 0.032 81);
+  --accent-foreground: oklch(0.88 0.01 88);
+  --destructive: oklch(0.52 0.17 25);
+  --destructive-foreground: oklch(0.95 0.01 90);
+  --border: oklch(0.21 0.016 81);
+  --input: oklch(0.198 0.018 82);
+  --ring: oklch(0.48 0.065 78);
+  --chart-1: oklch(0.66 0.1 78);
+  --chart-2: oklch(0.6 0.09 72);
+  --chart-3: oklch(0.57 0.085 85);
+  --chart-4: oklch(0.63 0.095 75);
+  --chart-5: oklch(0.54 0.085 70);
+  --chart-brand: oklch(0.68 0.11 78);
+  --sidebar: oklch(0.16 0.023 83);
+  --sidebar-foreground: oklch(0.88 0.01 88);
+  --sidebar-primary: oklch(0.68 0.11 78);
+  --sidebar-primary-foreground: oklch(0.17 0.028 76);
+  --sidebar-accent: oklch(0.225 0.029 82);
+  --sidebar-accent-foreground: oklch(0.88 0.01 88);
+  --sidebar-border: oklch(0.195 0.015 82);
+  --sidebar-ring: oklch(0.48 0.065 78);
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -319,7 +372,31 @@ code {
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+@layer utilities {
+  .font-aeonik-pro {
+    font-family: var(--font-aeonik-pro);
+  }
+
+  .font-inter-overview {
+    font-family: var(--font-inter-overview);
+  }
+}
+
 @layer base {
+  /*
+   * Main product CTAs: Appwrite brand pink on light & dark (and system).
+   * Debug themes (crazy, stealth, classic, premium) map to theme --primary instead.
+   */
+  html {
+    --brand-cta: #fd366e;
+    --brand-cta-foreground: #ffffff;
+  }
+
+  html:is(.crazy, .stealth, .classic, .premium) {
+    --brand-cta: var(--primary);
+    --brand-cta-foreground: var(--primary-foreground);
+  }
+
   * {
     @apply border-border outline-ring/50;
   }
@@ -355,6 +432,19 @@ code {
   html.classic h1 {
     font-weight: 400 !important;
     font-family: inherit !important;
+    letter-spacing: -0.02em;
+  }
+
+  /* Project overview title — cloud uses Aeonik; keep weight + face in classic theme */
+  html.classic h1.font-aeonik-pro {
+    font-family: var(--font-aeonik-pro) !important;
+    font-weight: 500 !important;
+    letter-spacing: -0.02em;
+  }
+
+  html.classic h1.font-inter-overview {
+    font-family: var(--font-inter-overview) !important;
+    font-weight: 500 !important;
     letter-spacing: -0.02em;
   }
 
@@ -536,7 +626,7 @@ code {
   position: relative;
   padding: 1px;
   border-radius: 0.375rem;
-  background: hsl(var(--primary));
+  background: var(--brand-cta);
   overflow: hidden;
   transition: filter 0.2s ease;
 }
@@ -587,7 +677,7 @@ code {
 }
 
 .dark .upgrade-button-wrapper {
-  background: hsl(var(--primary));
+  background: var(--brand-cta);
 }
 
 .dark .upgrade-button-wrapper:hover {
@@ -615,6 +705,29 @@ code {
     rgba(255, 255, 255, 0.7) 50%,
     transparent 70%
   );
+}
+
+/*
+ * Custom themes (crazy, stealth, classic, premium): CTA ring and hover follow theme --primary
+ * instead of the light/dark luxury chrome. Inner button already uses bg-primary.
+ */
+html:is(.crazy, .stealth, .classic, .premium) .upgrade-button-wrapper {
+  background: var(--brand-cta);
+}
+
+html:is(.crazy, .stealth, .classic, .premium) .upgrade-button-wrapper:hover {
+  background: var(--brand-cta);
+  background-size: 100% 100%;
+  animation: none;
+  filter: brightness(1.1);
+}
+
+html:is(.crazy, .stealth, .classic, .premium) .upgrade-button-wrapper::before {
+  opacity: 0;
+}
+
+html:is(.crazy, .stealth, .classic, .premium) .upgrade-button-wrapper:hover::before {
+  animation: none;
 }
 
 /* Find in file highlight in Monaco editor */

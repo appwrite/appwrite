@@ -47,7 +47,7 @@ const THEME_SCRIPT = `(function(){
     var t = localStorage.getItem('theme') || 'system';
     var r = t === 'system' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : t;
     var e = document.documentElement;
-    ['light','dark','system','crazy','stealth','classic'].forEach(function(c){e.classList.remove(c);});
+    ['light','dark','system','crazy','stealth','classic','premium'].forEach(function(c){e.classList.remove(c);});
     e.classList.add(r);
   } catch (e) {}
 })()`
@@ -62,6 +62,47 @@ if (import.meta.env.VITE_INSTRUMENTATION_SCRIPT_SRC) {
     src: import.meta.env.VITE_INSTRUMENTATION_SCRIPT_SRC,
     type: 'module',
   })
+}
+
+/**
+ * Font preloads aligned with VITE_CONSOLE_PROFILE. Cloud uses Aeonik (appwrite/website);
+ * self-hosted uses Inter from appwrite/console static fonts. Debug menu profile override
+ * is client-only, so preloads follow the build env until the user refreshes after switching.
+ */
+function getHeadFontPreloads() {
+  const raw = (
+    import.meta.env?.VITE_CONSOLE_PROFILE as string | undefined
+  )
+    ?.toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+  if (raw === 'self-hosted') {
+    return [
+      {
+        rel: 'preload' as const,
+        href: '/fonts/inter/inter-v8-latin-regular.woff2',
+        as: 'font' as const,
+        type: 'font/woff2',
+        crossOrigin: 'anonymous' as const,
+      },
+      {
+        rel: 'preload' as const,
+        href: '/fonts/inter/inter-v8-latin-600.woff2',
+        as: 'font' as const,
+        type: 'font/woff2',
+        crossOrigin: 'anonymous' as const,
+      },
+    ]
+  }
+  return [
+    {
+      rel: 'preload' as const,
+      href: '/fonts/aeonik-pro/AeonikPro-Regular.woff2',
+      as: 'font' as const,
+      type: 'font/woff2',
+      crossOrigin: 'anonymous' as const,
+    },
+  ]
 }
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
@@ -101,6 +142,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         href: '/apple-touch-icon.png',
         sizes: '180x180',
       },
+      ...getHeadFontPreloads(),
     ],
     scripts: [...scripts],
   }),
@@ -150,7 +192,7 @@ function ClientThemeProvider({ children }: { children: React.ReactNode }) {
       defaultTheme="system"
       enableSystem
       disableTransitionOnChange
-      themes={['light', 'dark', 'system', 'crazy', 'stealth', 'classic']}
+      themes={['light', 'dark', 'system', 'crazy', 'stealth', 'classic', 'premium']}
     >
       <ClassicConsoleFonts />
       {children}

@@ -11,6 +11,7 @@ import {
   Key,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { RequestsChart } from './RequestsChart'
 import { TopRequests } from './TopRequests'
 import { dashboardStats, formatNumber } from '@/lib/utils/mock-data'
@@ -49,7 +50,6 @@ import {
 import type { Models } from '@appwrite.io/console'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { ConnectProject } from '../shared/ConnectProject'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { DateRangePicker } from '../analytics/DateRangePicker'
 
 interface OverviewTab {
@@ -163,7 +163,7 @@ export function View({ projectId, initialData }: ViewProps) {
   const [platformDrawerOpen, setPlatformDrawerOpen] = useState(false)
   const [selectedPlatform, setSelectedPlatform] =
     useState<Models.Platform | null>(null)
-  const { features } = useConsoleProfile()
+  const { features, isCloud } = useConsoleProfile()
   const handleConnectPlatform = (platform?: string) => {
     const sdkMap: Record<string, string> = {
       web: 'web',
@@ -390,7 +390,12 @@ export function View({ projectId, initialData }: ViewProps) {
           <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
             {/* Left: Title */}
             <div className="flex items-center gap-3">
-              <h1 className="text-[17px] font-semibold text-foreground">
+              <h1
+                className={cn(
+                  'text-[17px] font-medium text-foreground',
+                  isCloud ? 'font-aeonik-pro' : 'font-inter-overview',
+                )}
+              >
                 {currentProject?.name || ''}
               </h1>
             </div>
@@ -669,10 +674,10 @@ export function View({ projectId, initialData }: ViewProps) {
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-[15px] font-semibold text-foreground">Apps</h2>
             <Button
+              variant="brandCta"
               onClick={() => handleConnectPlatform()}
               size="sm"
-              className="h-8 gap-1.5 text-[13px] font-medium text-white hover:opacity-90"
-              style={{ backgroundColor: '#f02e65' }}
+              className="h-8 gap-1.5 text-[13px] font-medium"
             >
               <Plus className="h-3.5 w-3.5" />
               Add app
@@ -751,10 +756,10 @@ export function View({ projectId, initialData }: ViewProps) {
               API Keys
             </h2>
             <Button
+              variant="brandCta"
               onClick={handleCreateApiKey}
               size="sm"
-              className="h-8 gap-1.5 text-[13px] font-medium text-white hover:opacity-90"
-              style={{ backgroundColor: '#f02e65' }}
+              className="h-8 gap-1.5 text-[13px] font-medium"
             >
               <Plus className="h-3.5 w-3.5" />
               Add API key

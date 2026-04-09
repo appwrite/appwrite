@@ -129,6 +129,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
       { label: '🎨 Crazy', themeValue: 'crazy' },
       { label: '🥷 Stealth', themeValue: 'stealth' },
       { label: 'Classic console', themeValue: 'classic' },
+      { label: '✨ Premium (gold)', themeValue: 'premium' },
     ].map((opt) => ({
       label: opt.label,
       onClick: () => {

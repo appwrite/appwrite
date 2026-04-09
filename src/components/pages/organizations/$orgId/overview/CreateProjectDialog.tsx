@@ -412,13 +412,12 @@ export function CreateProjectDialog({
             </Button>
             <Button
               type="submit"
+              variant="brandCta"
               disabled={
                 createProjectMutation.isPending ||
                 !name.trim() ||
                 (supportsMultiRegion && !selectedRegion)
               }
-              style={{ backgroundColor: '#f02e65' }}
-              className="text-white hover:opacity-90"
             >
               Create
             </Button>

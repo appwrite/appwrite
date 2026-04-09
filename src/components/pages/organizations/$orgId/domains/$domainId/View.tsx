@@ -1304,9 +1304,9 @@ export function View({ initialData }: ViewProps = {}) {
                 </DropdownMenu>
                 <div className="ml-auto">
                   <Button
+                    variant="brandCta"
                     onClick={() => setCreateRecordDialogOpen(true)}
-                    className="h-9 gap-1.5 text-[13px] font-medium text-white hover:opacity-90 cursor-pointer"
-                    style={{ backgroundColor: '#f02e65' }}
+                    className="h-9 gap-1.5 text-[13px] font-medium cursor-pointer"
                   >
                     <Plus className="h-4 w-4" />
                     Create Record

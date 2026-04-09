@@ -263,11 +263,11 @@ const topSources: SourceData[] = [
 ]
 
 const channels: ChannelData[] = [
-  { name: 'Organic Search', visitors: 145600, color: '#3b82f6' },
-  { name: 'Social', visitors: 94100, color: '#10b981' },
-  { name: 'Direct', visitors: 47800, color: '#f59e0b' },
-  { name: 'Referral', visitors: 26600, color: '#ef4444' },
-  { name: 'Email', visitors: 11200, color: '#8b5cf6' },
+  { name: 'Organic Search', visitors: 145600, color: 'var(--chart-1)' },
+  { name: 'Social', visitors: 94100, color: 'var(--chart-2)' },
+  { name: 'Direct', visitors: 47800, color: 'var(--chart-3)' },
+  { name: 'Referral', visitors: 26600, color: 'var(--chart-4)' },
+  { name: 'Email', visitors: 11200, color: 'var(--chart-5)' },
 ]
 
 const campaigns: CampaignData[] = [
@@ -361,11 +361,26 @@ const browsers: BrowserData[] = [
 ]
 
 const operatingSystems: OSData[] = [
-  { name: 'Mac', visitors: 94200, color: '#dc2626', fill: '#dc2626' },
-  { name: 'Windows', visitors: 67300, color: '#ea580c', fill: '#ea580c' },
-  { name: 'Linux', visitors: 20900, color: '#f59e0b', fill: '#f59e0b' },
-  { name: 'iOS', visitors: 19200, color: '#ef4444', fill: '#ef4444' },
-  { name: 'Android', visitors: 18900, color: '#f97316', fill: '#f97316' },
+  { name: 'Mac', visitors: 94200, color: 'var(--chart-1)', fill: 'var(--chart-1)' },
+  {
+    name: 'Windows',
+    visitors: 67300,
+    color: 'var(--chart-2)',
+    fill: 'var(--chart-2)',
+  },
+  {
+    name: 'Linux',
+    visitors: 20900,
+    color: 'var(--chart-3)',
+    fill: 'var(--chart-3)',
+  },
+  { name: 'iOS', visitors: 19200, color: 'var(--chart-4)', fill: 'var(--chart-4)' },
+  {
+    name: 'Android',
+    visitors: 18900,
+    color: 'var(--chart-5)',
+    fill: 'var(--chart-5)',
+  },
 ]
 
 const devices: DeviceData[] = [
@@ -373,19 +388,19 @@ const devices: DeviceData[] = [
     type: 'Desktop',
     icon: <Monitor className="h-4 w-4" />,
     visitors: 124800,
-    color: '#3b82f6',
+    color: 'var(--chart-1)',
   },
   {
     type: 'Mobile',
     icon: <Smartphone className="h-4 w-4" />,
     visitors: 89200,
-    color: '#10b981',
+    color: 'var(--chart-2)',
   },
   {
     type: 'Tablet',
     icon: <Tablet className="h-4 w-4" />,
     visitors: 12400,
-    color: '#f59e0b',
+    color: 'var(--chart-3)',
   },
 ]
 
@@ -713,7 +728,7 @@ function MapContent({ data }: { data: LocationData[] }) {
                 style={{
                   width: `${size}px`,
                   height: `${size}px`,
-                  backgroundColor: '#f02e65',
+                  backgroundColor: 'var(--chart-brand)',
                 }}
               />
             </MarkerContent>
@@ -754,7 +769,7 @@ function MapContent({ data }: { data: LocationData[] }) {
               style={{
                 width: `${minSize}px`,
                 height: `${minSize}px`,
-                backgroundColor: '#f02e65',
+                backgroundColor: 'var(--chart-brand)',
               }}
             />
             <span className="text-[10px] font-medium text-muted-foreground tabular-nums">
@@ -768,7 +783,7 @@ function MapContent({ data }: { data: LocationData[] }) {
               style={{
                 width: `${maxSize}px`,
                 height: `${maxSize}px`,
-                backgroundColor: '#f02e65',
+                backgroundColor: 'var(--chart-brand)',
               }}
             />
             <span className="text-[10px] font-medium text-muted-foreground tabular-nums">
@@ -1056,12 +1071,12 @@ export function View({
                             >
                               <stop
                                 offset="0%"
-                                stopColor="#f02e65"
+                                stopColor="var(--chart-brand)"
                                 stopOpacity={0.15}
                               />
                               <stop
                                 offset="100%"
-                                stopColor="#f02e65"
+                                stopColor="var(--chart-brand)"
                                 stopOpacity={0}
                               />
                             </linearGradient>
@@ -1100,13 +1115,13 @@ export function View({
                           <Area
                             type="monotone"
                             dataKey="visitors"
-                            stroke="#f02e65"
+                            stroke="var(--chart-brand)"
                             strokeWidth={2}
                             fill="url(#visitorGradient)"
                             dot={false}
                             activeDot={{
                               r: 5,
-                              fill: '#f02e65',
+                              fill: 'var(--chart-brand)',
                               stroke: '#fff',
                               strokeWidth: 2,
                             }}
@@ -1137,13 +1152,13 @@ export function View({
                           type: 'Human',
                           value: trafficComposition.human,
                           icon: <Users className="h-4 w-4" />,
-                          color: '#3b82f6',
+                          color: 'var(--chart-1)',
                         },
                         {
                           type: 'AI agents',
                           value: trafficComposition.ai,
                           icon: <Bot className="h-4 w-4" />,
-                          color: '#8b5cf6',
+                          color: 'var(--chart-2)',
                         },
                       ].map((item) => {
                         const total =
@@ -1274,7 +1289,7 @@ export function View({
                               className="absolute inset-y-0 left-0 rounded-md transition-all group-hover:opacity-80"
                               style={{
                                 width: `${percentage}%`,
-                                backgroundColor: '#8b5cf6',
+                                backgroundColor: 'var(--chart-2)',
                                 opacity: 0.12,
                               }}
                             />
@@ -2361,7 +2376,7 @@ export function View({
                           config={{
                             visitors: {
                               label: 'Visitors',
-                              color: '#f02e65',
+                              color: 'var(--chart-brand)',
                             },
                           }}
                           className="h-full w-full min-h-0 min-w-0"
@@ -2414,7 +2429,7 @@ export function View({
                             <Bar
                               dataKey="visitors"
                               radius={[2, 2, 0, 0]}
-                              fill="#f02e65"
+                              fill="var(--color-visitors)"
                               fillOpacity={0.85}
                             />
                           </BarChart>
@@ -2438,13 +2453,13 @@ export function View({
                           type: 'New',
                           visitors: visitorTypes.new,
                           icon: <UserPlus className="h-4 w-4" />,
-                          color: '#3b82f6',
+                          color: 'var(--chart-1)',
                         },
                         {
                           type: 'Returning',
                           visitors: visitorTypes.returning,
                           icon: <Users className="h-4 w-4" />,
-                          color: '#10b981',
+                          color: 'var(--chart-2)',
                         },
                       ].map((visitorType) => {
                         const total = visitorTypes.new + visitorTypes.returning

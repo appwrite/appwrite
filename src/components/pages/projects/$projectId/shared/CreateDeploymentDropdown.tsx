@@ -39,10 +39,10 @@ export function CreateDeploymentDropdown({
 }: CreateDeploymentDropdownProps) {
   const trigger = (
     <Button
+      variant="brandCta"
       size="sm"
       disabled={disabled}
-      className={`h-9 gap-2 text-[13px] font-medium text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed ${className ?? ''}`}
-      style={{ backgroundColor: '#f02e65' }}
+      className={`h-9 gap-2 text-[13px] font-medium disabled:opacity-50 disabled:cursor-not-allowed ${className ?? ''}`}
     >
       <Plus className="h-4 w-4" />
       Create deployment

@@ -70,7 +70,7 @@ export function PausedProjectCurtain({
         )}
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:gap-2">
-          <Button asChild variant="default" className="gap-1.5">
+          <Button asChild variant="brandCta" className="gap-1.5">
             <Link
               to="/organizations/$orgId/settings/billing"
               params={{ orgId: teamId }}

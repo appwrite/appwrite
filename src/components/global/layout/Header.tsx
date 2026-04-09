@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ConnectProject } from '@/components/pages/projects/$projectId/shared/ConnectProject'
 import { cn } from '@/lib/utils'
 import { formatDateMonthYear } from '@/lib/date-utils'
@@ -67,6 +67,9 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { ImpersonateConsoleUserPopover } from '@/components/global/shared/ImpersonateConsoleUserPopover'
 import { openCreateOrganizationFlow } from '@/lib/open-create-organization-flow'
+import { useTheme } from 'next-themes'
+import { getConsoleHeaderLogoClass } from '@/lib/html-theme'
+import { ConsoleHeaderLogo } from '@/components/global/shared/ConsoleHeaderLogo'
 
 interface ConsoleHeaderProps {
   onMenuClick?: () => void
@@ -95,6 +98,18 @@ export function ConsoleHeader({
   const params = useParams({ strict: false })
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [connectDialogOpen, setConnectDialogOpen] = useState(false)
+  const [themeMounted, setThemeMounted] = useState(false)
+  const { theme, resolvedTheme } = useTheme()
+
+  useEffect(() => {
+    setThemeMounted(true)
+  }, [])
+
+  const headerLogoClassName = getConsoleHeaderLogoClass(
+    theme,
+    resolvedTheme,
+    themeMounted,
+  )
 
   // Use prop if provided, otherwise fall back to context
   const openCommandCenter = onCommandCenterOpen || contextOpenCommandCenter
@@ -193,15 +208,17 @@ export function ConsoleHeader({
               <Link
                 to={linkOrgId ? '/organizations/$orgId' : '/'}
                 params={linkOrgId ? { orgId: linkOrgId } : undefined}
+                aria-label="Appwrite"
                 className={cn(
                   'group inline-flex size-10 shrink-0 items-center justify-center rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
                   childClassName,
                 )}
               >
-                <img
-                  src="/logo.svg"
-                  alt="Appwrite"
-                  className="h-6 w-6 transition-transform duration-150 ease-out group-hover:scale-[1.04]"
+                <ConsoleHeaderLogo
+                  className={cn(
+                    'transition-transform duration-150 ease-out group-hover:scale-[1.04]',
+                    headerLogoClassName,
+                  )}
                 />
               </Link>
             )
@@ -680,7 +697,7 @@ export function ConsoleHeader({
                 <Button
                   asChild
                   size="sm"
-                  variant="default"
+                  variant="brandCta"
                   className="h-9 shrink-0 cursor-pointer gap-1.5 px-3 text-[12px] font-semibold relative z-10 rounded-[calc(0.375rem-1px)]"
                 >
                   <Link

@@ -3,12 +3,11 @@ import { motion, AnimatePresence } from 'motion/react'
 import { useEffect, useState } from 'react'
 
 import { getStatusIcon, getStatusPresentation } from '@/lib/cloud-status-copy'
+import { AppwriteWordmark } from '@/components/global/shared/AppwriteWordmark'
 import { cn } from '@/lib/utils'
 
-// Logo dimensions from SVG viewBox (132×24)
-const LOGO_WIDTH = 132
-const LOGO_HEIGHT = 24
-const CONTENT_MIN_WIDTH = LOGO_WIDTH + 6 + 32 // logo + gap-1.5 + " / 2.0" text
+// Layout width: wordmark viewBox 132×24 + gap-1.5 + " / 2.0" text
+const CONTENT_MIN_WIDTH = 132 + 6 + 32
 
 /**
  * Static fullscreen loader (logo + " / 2.0") with no theme hooks.
@@ -23,21 +22,7 @@ export function StaticFullscreenLoader() {
           className="flex items-center gap-1.5 min-h-6 animate-in fade-in duration-500"
           style={{ minWidth: CONTENT_MIN_WIDTH }}
         >
-          <img
-            src="/appwrite-light.svg"
-            alt="Appwrite"
-            width={LOGO_WIDTH}
-            height={LOGO_HEIGHT}
-            className="h-6 w-auto dark:hidden"
-          />
-          <img
-            src="/appwrite-dark.svg"
-            alt=""
-            width={LOGO_WIDTH}
-            height={LOGO_HEIGHT}
-            className="h-6 w-auto hidden dark:block"
-            aria-hidden
-          />
+          <AppwriteWordmark />
           <span className="text-xs font-extralight tracking-tight text-muted-foreground">
             / 2.0
           </span>
@@ -167,21 +152,7 @@ export function FullscreenLoader({
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5, ease: 'easeOut' }}
             >
-              <img
-                src="/appwrite-light.svg"
-                alt="Appwrite"
-                width={LOGO_WIDTH}
-                height={LOGO_HEIGHT}
-                className="h-6 w-auto dark:hidden"
-              />
-              <img
-                src="/appwrite-dark.svg"
-                alt=""
-                width={LOGO_WIDTH}
-                height={LOGO_HEIGHT}
-                className="h-6 w-auto hidden dark:block"
-                aria-hidden
-              />
+              <AppwriteWordmark />
               <span className="text-xs font-extralight tracking-tight text-muted-foreground">
                 / 2.0
               </span>

@@ -416,9 +416,9 @@ export function InviteMembersDialog({
             Cancel
           </Button>
           <Button
+            variant="brandCta"
             size="sm"
-            className="h-9 text-[13px] font-medium text-white hover:opacity-90"
-            style={{ backgroundColor: '#f02e65' }}
+            className="h-9 text-[13px] font-medium"
             onClick={handleInvite}
             disabled={!isValid || createMembershipMutation.isPending}
           >

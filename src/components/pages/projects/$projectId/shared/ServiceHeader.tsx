@@ -10,7 +10,7 @@ import {
   ChevronUp,
   ChevronRight,
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import {
   Tooltip,
   TooltipContent,
@@ -493,19 +493,20 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                           <div>
                             {createTo && createParams ? (
                               <span
-                                className="inline-flex h-9 cursor-not-allowed items-center justify-center gap-2 rounded-md px-4 text-[13px] font-medium text-white opacity-50"
-                                style={{ backgroundColor: '#f02e65' }}
+                                className={cn(
+                                  buttonVariants({ variant: 'brandCta' }),
+                                  'inline-flex h-9 cursor-not-allowed items-center justify-center gap-2 px-4 text-[13px] font-medium opacity-50 pointer-events-none',
+                                )}
                               >
                                 <Plus className="h-4 w-4" />
                                 {createLabel}
                               </span>
                             ) : (
                               <Button
-                                size="sm"
+                                variant="brandCta"
                                 onClick={onCreate}
                                 disabled
-                                className="h-9 gap-2 text-[13px] font-medium text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                                style={{ backgroundColor: '#f02e65' }}
+                                className="h-9 gap-2 px-4 text-[13px] font-medium"
                               >
                                 <Plus className="h-4 w-4" />
                                 {createLabel}
@@ -524,21 +525,24 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                   ) : (
                     <>
                       {createTo && createParams ? (
-                        <Link
-                          to={createTo as unknown}
-                          params={createParams}
-                          className="inline-flex h-9 items-center justify-center gap-2 rounded-md px-4 text-[13px] font-medium text-white transition-opacity hover:opacity-90"
-                          style={{ backgroundColor: '#f02e65' }}
+                        <Button
+                          variant="brandCta"
+                          asChild
+                          className="h-9 gap-2 px-4 text-[13px] font-medium"
                         >
-                          <Plus className="h-4 w-4" />
-                          {createLabel}
-                        </Link>
+                          <Link
+                            to={createTo as unknown}
+                            params={createParams}
+                          >
+                            <Plus className="h-4 w-4" />
+                            {createLabel}
+                          </Link>
+                        </Button>
                       ) : (
                         <Button
-                          size="sm"
+                          variant="brandCta"
                           onClick={onCreate}
-                          className="h-9 gap-2 text-[13px] font-medium text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                          style={{ backgroundColor: '#f02e65' }}
+                          className="h-9 gap-2 px-4 text-[13px] font-medium"
                         >
                           <Plus className="h-4 w-4" />
                           {createLabel}

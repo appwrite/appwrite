@@ -498,10 +498,10 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                   <span>
                     <Button
                       onClick={() => setCreatePolicyDialogOpen(true)}
+                      variant="brandCta"
                       disabled
                       size="sm"
-                      className="h-8 gap-1.5 text-[12px] font-medium text-white hover:opacity-90"
-                      style={{ backgroundColor: '#f02e65' }}
+                      className="h-8 gap-1.5 text-[12px] font-medium"
                     >
                       <Plus className="h-3.5 w-3.5" />
                       Create policy
@@ -521,9 +521,9 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                   backupPoliciesLimit > 0 &&
                   policies.length >= backupPoliciesLimit
                 }
+                variant="brandCta"
                 size="sm"
-                className="h-8 gap-1.5 text-[12px] font-medium text-white hover:opacity-90"
-                style={{ backgroundColor: '#f02e65' }}
+                className="h-8 gap-1.5 text-[12px] font-medium"
               >
                 <Plus className="h-3.5 w-3.5" />
                 Create policy
@@ -545,6 +545,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                   iconSize="lg"
                 />
                 <Button
+                  variant="brandCta"
                   onClick={() => setCreatePolicyDialogOpen(true)}
                   size="sm"
                   className="h-9 text-[13px] mt-4"
@@ -659,10 +660,10 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
               </h3>
             </div>
             <Button
+              variant="brandCta"
               onClick={() => setCreateManualBackupDialogOpen(true)}
               size="sm"
-              className="h-8 gap-1.5 text-[12px] font-medium text-white hover:opacity-90"
-              style={{ backgroundColor: '#f02e65' }}
+              className="h-8 gap-1.5 text-[12px] font-medium"
             >
               <Plus className="h-3.5 w-3.5" />
               Manual backup

@@ -1744,8 +1744,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                     <TooltipTrigger asChild>
                                       <span className="ml-auto">
                                         <Button
-                                          className="h-9 gap-2 text-[13px] font-medium text-white opacity-50 cursor-not-allowed"
-                                          style={{ backgroundColor: '#f02e65' }}
+                                          variant="brandCta"
+                                          className="h-9 gap-2 text-[13px] font-medium opacity-50 cursor-not-allowed"
                                           disabled
                                         >
                                           <Plus className="h-4 w-4" />
@@ -1766,8 +1766,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                             if (!organizationPlan) {
                               return (
                                 <Button
-                                  className="ml-auto h-9 gap-2 text-[13px] font-medium text-white hover:opacity-90"
-                                  style={{ backgroundColor: '#f02e65' }}
+                                  variant="brandCta"
+                                  className="ml-auto h-9 gap-2 text-[13px] font-medium"
                                   onClick={() =>
                                     setCreateProjectDialogOpen(true)
                                   }
@@ -1797,8 +1797,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                   <TooltipTrigger asChild>
                                     <div className="ml-auto">
                                       <Button
-                                        className="h-9 gap-2 text-[13px] font-medium text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                                        style={{ backgroundColor: '#f02e65' }}
+                                        variant="brandCta"
+                                        className="h-9 gap-2 text-[13px] font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                                         disabled={isAtLimit}
                                         onClick={() =>
                                           setCreateProjectDialogOpen(true)
@@ -2471,8 +2471,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                 </div>
 
                                 <Button
-                                  className="ml-auto h-9 gap-2 text-[13px] font-medium text-white hover:opacity-90"
-                                  style={{ backgroundColor: '#f02e65' }}
+                                  variant="brandCta"
+                                  className="ml-auto h-9 gap-2 text-[13px] font-medium"
                                   onClick={() => setInviteDialogOpen(true)}
                                   disabled={inviteDisabled}
                                 >

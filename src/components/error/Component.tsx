@@ -351,10 +351,10 @@ export function ErrorComponent({
             Go Home
           </Button>
           <Button
+            variant="brandCta"
             onClick={handleRetry}
             size="sm"
-            className="h-9 min-h-9 w-full shrink-0 gap-2 text-[13px] font-medium text-white hover:opacity-90 sm:flex-1"
-            style={{ backgroundColor: '#f02e65' }}
+            className="h-9 min-h-9 w-full shrink-0 gap-2 text-[13px] font-medium sm:flex-1"
           >
             <RefreshCw className="h-4 w-4" />
             Try Again

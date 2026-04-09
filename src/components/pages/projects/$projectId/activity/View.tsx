@@ -561,9 +561,9 @@ export function View({ plan = 'pro' }: ViewProps) {
               </p>
             </div>
             <Button
+              variant="brandCta"
               size="sm"
               className="h-7 shrink-0 text-[12px]"
-              style={{ backgroundColor: '#f02e65' }}
             >
               Upgrade
             </Button>

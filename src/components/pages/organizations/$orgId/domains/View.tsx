@@ -642,9 +642,9 @@ export function View() {
             </Link>
           </Button>
           <Button
+            variant="brandCta"
             onClick={() => setCreateDialogOpen(true)}
-            className="h-9 gap-1.5 text-[13px] font-medium text-white hover:opacity-90"
-            style={{ backgroundColor: '#f02e65' }}
+            className="h-9 gap-1.5 text-[13px] font-medium"
           >
             <Plus className="h-4 w-4" />
             Add domain

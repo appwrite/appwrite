@@ -35,7 +35,7 @@ export function OnboardingCard({
         <Tooltip delayDuration={0}>
           <TooltipTrigger asChild>
             <div
-              className="flex aspect-square w-full items-center justify-center rounded-md p-2 text-[#FD366E]"
+              className="flex aspect-square w-full items-center justify-center rounded-md p-2 text-[var(--brand-cta)]"
               aria-label={`Get started: ${completedSteps} of ${totalSteps} completed`}
             >
               <svg
@@ -95,7 +95,7 @@ export function OnboardingCard({
           </div>
           <Progress
             value={progress}
-            className="h-1.5 bg-[#FD366E]/20 [&_[data-slot=progress-indicator]]:bg-[#FD366E]"
+            className="h-1.5 bg-[color-mix(in_srgb,var(--brand-cta)_20%,transparent)] [&_[data-slot=progress-indicator]]:bg-[var(--brand-cta)]"
           />
         </div>
       </div>

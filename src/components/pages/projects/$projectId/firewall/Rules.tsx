@@ -386,6 +386,7 @@ export function RulesTab({ searchValue }: RulesTabProps) {
           {!searchValue && (
             <div className="mt-4 flex justify-center">
               <Button
+                variant="brandCta"
                 onClick={() => {
                   if (typeof window !== 'undefined') {
                     const event = new CustomEvent('firewall-create-rule')
@@ -393,8 +394,7 @@ export function RulesTab({ searchValue }: RulesTabProps) {
                   }
                 }}
                 size="sm"
-                className="h-8 gap-1.5 text-[13px] font-medium text-white hover:opacity-90"
-                style={{ backgroundColor: '#f02e65' }}
+                className="h-8 gap-1.5 text-[13px] font-medium"
               >
                 <Plus className="h-3.5 w-3.5" />
                 Create rule
@@ -844,10 +844,10 @@ export function RulesTab({ searchValue }: RulesTabProps) {
               Cancel
             </Button>
             <Button
+              variant="brandCta"
               onClick={handleCreateRule}
               disabled={!formData.name.trim()}
               className="gap-1.5"
-              style={{ backgroundColor: '#f02e65' }}
             >
               <Plus className="h-4 w-4" />
               Create rule
@@ -1108,9 +1108,9 @@ export function RulesTab({ searchValue }: RulesTabProps) {
               Cancel
             </Button>
             <Button
+              variant="brandCta"
               onClick={handleUpdateRule}
               disabled={!formData.name.trim()}
-              style={{ backgroundColor: '#f02e65' }}
             >
               Update rule
             </Button>
