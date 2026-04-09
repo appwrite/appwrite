@@ -312,7 +312,7 @@ jobs:
             -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
             appwrite test /usr/src/code/tests/e2e/General
 
-          for service in Account Avatars Console Health Locale Messaging Project ProjectWebhooks Proxy Storage Teams Tokens Users VCS Webhooks; do
+          for service in Account Avatars Console Health Locale Messaging Project Projects ProjectWebhooks Proxy Storage Teams Tokens Users VCS Webhooks; do
             docker compose exec -T \
               -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
               appwrite vendor/bin/paratest --processes $(nproc) --functional \
@@ -344,7 +344,6 @@ jobs:
           Functions,
           FunctionsSchedule,
           GraphQL,
-          Projects,
           Realtime,
           Sites,
           Migrations,
