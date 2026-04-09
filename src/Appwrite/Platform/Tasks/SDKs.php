@@ -639,27 +639,13 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
             } catch (\Throwable) {
             }
 
-            // Checkout dev branch (or create if it doesn't exist)
+            // Create or checkout dev branch from the base branch
+            // This ensures dev always starts from the latest base branch,
+            // avoiding history divergence caused by squash merges.
             try {
-                $repo->execute('checkout', '-f', $gitBranch);
+                $repo->execute('checkout', '-B', $gitBranch, $repoBranch);
             } catch (\Throwable) {
                 $repo->execute('checkout', '-b', $gitBranch);
-            }
-
-            // Fetch dev branch, or push to create it on remote
-            try {
-                $repo->execute('fetch', 'origin', $gitBranch, '--quiet', '--no-tags', '--depth', '1');
-            } catch (\Throwable) {
-                try {
-                    $repo->execute('push', '-u', 'origin', $gitBranch, '--quiet');
-                } catch (\Throwable) {
-                }
-            }
-
-            // Sync with remote dev branch
-            try {
-                $repo->execute('reset', '--hard', "origin/{$gitBranch}");
-            } catch (\Throwable) {
             }
 
             // Backup .github before cleaning working tree
@@ -699,7 +685,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 return true;
             }
 
-            $repo->execute('push', '-u', 'origin', $gitBranch, '--quiet');
+            $repo->execute('push', '--force-with-lease', '-u', 'origin', $gitBranch, '--quiet');
         } catch (\Throwable $e) {
             Console::warning("  Git push failed: " . $e->getMessage());
             return false;

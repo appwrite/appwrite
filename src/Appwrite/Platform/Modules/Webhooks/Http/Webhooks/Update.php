@@ -5,7 +5,6 @@ namespace Appwrite\Platform\Modules\Webhooks\Http\Webhooks;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Event\Validator\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -24,7 +23,7 @@ use Utopia\Validator\Multiple;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 
-class Update extends Base
+class Update extends Action
 {
     use HTTP;
 

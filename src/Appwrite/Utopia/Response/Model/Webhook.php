@@ -7,11 +7,6 @@ use Appwrite\Utopia\Response\Model;
 
 class Webhook extends Model
 {
-    /**
-     * @var bool
-     */
-    protected bool $public = true;
-
     public function __construct()
     {
         $this
