@@ -19,64 +19,12 @@ on:
         default: ''
 
 jobs:
-  security:
-    name: Checks / Image
-    if: github.event_name == 'pull_request'
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
     permissions:
       contents: read
       security-events: write
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-          submodules: 'recursive'
-
-      - name: Build the Docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: false
-          load: true
-          tags: pr_image:${{ github.sha }}
-          target: production
-
-      - name: Run Trivy vulnerability scanner on image
-        uses: aquasecurity/trivy-action@0.35.0
-        with:
-          image-ref: 'pr_image:${{ github.sha }}'
-          format: 'sarif'
-          output: 'trivy-image-results.sarif'
-          severity: 'CRITICAL,HIGH'
-
-      - name: Run Trivy vulnerability scanner on source code
-        uses: aquasecurity/trivy-action@0.35.0
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'sarif'
-          output: 'trivy-fs-results.sarif'
-          severity: 'CRITICAL,HIGH'
-          skip-setup-trivy: true
-
-      - name: Upload image scan results
-        uses: github/codeql-action/upload-sarif@v4
-        if: always() && hashFiles('trivy-image-results.sarif') != ''
-        with:
-          sarif_file: 'trivy-image-results.sarif'
-          category: 'trivy-image'
-
-      - name: Upload source code scan results
-        uses: github/codeql-action/upload-sarif@v4
-        if: always() && hashFiles('trivy-fs-results.sarif') != ''
-        with:
-          sarif_file: 'trivy-fs-results.sarif'
-          category: 'trivy-source'
-
-  lint:
-    name: Checks / Lint
-    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -130,6 +78,22 @@ jobs:
       - name: Run Pint
         run: composer format:check
 
+      - name: Run Trivy vulnerability scanner on source code
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-fs-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload source code scan results
+        uses: github/codeql-action/upload-sarif@v4
+        if: always() && hashFiles('trivy-fs-results.sarif') != ''
+        with:
+          sarif_file: 'trivy-fs-results.sarif'
+          category: 'trivy-source'
+
   matrix:
     name: Tests / Matrix
     runs-on: ubuntu-latest
@@ -178,6 +142,9 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -215,6 +182,21 @@ jobs:
           name: ${{ env.IMAGE }}
           path: /tmp/${{ env.IMAGE }}.tar
           retention-days: 1
+
+      - name: Run Trivy vulnerability scanner on image
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          image-ref: ${{ env.IMAGE }}
+          format: 'sarif'
+          output: 'trivy-image-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload image scan results
+        uses: github/codeql-action/upload-sarif@v4
+        if: always() && hashFiles('trivy-image-results.sarif') != ''
+        with:
+          sarif_file: 'trivy-image-results.sarif'
+          category: 'trivy-image'
 
   unit:
     name: Tests / Unit
