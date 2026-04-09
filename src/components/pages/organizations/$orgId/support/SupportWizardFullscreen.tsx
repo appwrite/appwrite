@@ -479,49 +479,51 @@ export function SupportWizardFullscreen() {
       }
     >
       <div className="space-y-6">
-        <div ref={submitErrorRef}>
-          {submitError?.kind === 'portal' && (
-            <Alert variant="destructive" className="mb-2">
-              <AlertTriangle aria-hidden />
-              <AlertTitle>
-                We're sorry - we couldn't submit your support request
-              </AlertTitle>
-              <AlertDescription className="text-[13px] [&_a]:font-medium [&_a]:underline [&_a]:underline-offset-2">
-                <p>
-                  We're having a temporary issue with the support portal,
-                  and our engineering team are aware. In the meantime, please
-                  reach out at{' '}
-                  <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>, on{' '}
-                  <a
-                    href={SUPPORT_DISCORD_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Discord
-                  </a>
-                  , or on{' '}
-                  <a
-                    href={SUPPORT_GITHUB_ISSUES_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    GitHub
-                  </a>
-                  .
-                </p>
-              </AlertDescription>
-            </Alert>
-          )}
-          {submitError?.kind === 'attachment' && (
-            <Alert variant="destructive" className="mb-2">
-              <AlertTriangle aria-hidden />
-              <AlertTitle>Couldn't use this attachment</AlertTitle>
-              <AlertDescription className="text-[13px]">
-                {submitError.message}
-              </AlertDescription>
-            </Alert>
-          )}
-        </div>
+        {submitError && (
+          <div ref={submitErrorRef}>
+            {submitError.kind === 'portal' && (
+              <Alert variant="destructive">
+                <AlertTriangle aria-hidden />
+                <AlertTitle>
+                  We're sorry - we couldn't submit your support request
+                </AlertTitle>
+                <AlertDescription className="text-[13px] [&_a]:font-medium [&_a]:underline [&_a]:underline-offset-2">
+                  <p>
+                    We're having a temporary issue with the support portal,
+                    and our engineering team are aware. In the meantime,
+                    please reach out at{' '}
+                    <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>, on{' '}
+                    <a
+                      href={SUPPORT_DISCORD_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Discord
+                    </a>
+                    , or on{' '}
+                    <a
+                      href={SUPPORT_GITHUB_ISSUES_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      GitHub
+                    </a>
+                    .
+                  </p>
+                </AlertDescription>
+              </Alert>
+            )}
+            {submitError.kind === 'attachment' && (
+              <Alert variant="destructive">
+                <AlertTriangle aria-hidden />
+                <AlertTitle>Couldn't use this attachment</AlertTitle>
+                <AlertDescription className="text-[13px]">
+                  {submitError.message}
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
+        )}
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">
