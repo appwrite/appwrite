@@ -83,12 +83,14 @@ jobs:
           sarif_file: 'trivy-fs-results.sarif'
           category: 'trivy-source'
 
-  composer:
-    name: Checks / Composer
+  lint:
+    name: Checks / Lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -108,48 +110,6 @@ jobs:
           COMPOSER_NO_AUDIT: 0
         run: composer audit
 
-  format:
-    name: Checks / Format
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 2
-
-      - run: git checkout HEAD^2
-        if: github.event_name == 'pull_request'
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.3'
-          tools: composer:v2
-          coverage: none
-
-      - name: Install dependencies
-        run: composer install --prefer-dist --no-progress --ignore-platform-reqs
-
-      - name: Run Linter
-        run: composer lint
-
-  analyze:
-    name: Checks / Analyze
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out the repo
-        uses: actions/checkout@v6
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.3'
-          tools: composer:v2
-          coverage: none
-
-      - name: Install dependencies
-        run: composer install --prefer-dist --no-progress --ignore-platform-reqs
-
       - name: Cache PHPStan result cache
         uses: actions/cache@v4
         with:
@@ -160,6 +120,12 @@ jobs:
 
       - name: Run PHPStan
         run: composer analyze -- --no-progress
+
+      - run: git checkout HEAD^2
+        if: github.event_name == 'pull_request'
+
+      - name: Run Pint
+        run: composer format:check
 
   specs:
     name: Checks / Specs
