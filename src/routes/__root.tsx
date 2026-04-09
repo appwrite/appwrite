@@ -45,9 +45,10 @@ interface MyRouterContext {
 const THEME_SCRIPT = `(function(){
   try {
     var t = localStorage.getItem('theme') || 'system';
+    if (t === 'classic') { localStorage.setItem('theme', 'dark'); t = 'dark'; }
     var r = t === 'system' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : t;
     var e = document.documentElement;
-    ['light','dark','system','crazy','stealth','classic','premium'].forEach(function(c){e.classList.remove(c);});
+    ['light','dark','system','crazy','stealth','classic','premium','high-contrast','barbie','nineties'].forEach(function(c){e.classList.remove(c);});
     e.classList.add(r);
   } catch (e) {}
 })()`
@@ -150,26 +151,12 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
   shellComponent: RootDocument,
 })
 
-const CLASSIC_CONSOLE_FONTS_ID = 'classic-console-fonts'
-const CLASSIC_CONSOLE_FONTS_HREF =
-  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap'
-
-/** Loads Inter + Poppins only while the debug-only classic theme is active. */
-function ClassicConsoleFonts() {
-  const { theme } = useTheme()
+/** Remap removed debug theme so old localStorage values do not leave stale classes. */
+function MigrateRemovedThemes() {
+  const { theme, setTheme } = useTheme()
   useEffect(() => {
-    if (theme === 'classic') {
-      if (!document.getElementById(CLASSIC_CONSOLE_FONTS_ID)) {
-        const link = document.createElement('link')
-        link.id = CLASSIC_CONSOLE_FONTS_ID
-        link.rel = 'stylesheet'
-        link.href = CLASSIC_CONSOLE_FONTS_HREF
-        document.head.appendChild(link)
-      }
-    } else {
-      document.getElementById(CLASSIC_CONSOLE_FONTS_ID)?.remove()
-    }
-  }, [theme])
+    if (theme === 'classic') setTheme('dark')
+  }, [theme, setTheme])
   return null
 }
 
@@ -192,9 +179,19 @@ function ClientThemeProvider({ children }: { children: React.ReactNode }) {
       defaultTheme="system"
       enableSystem
       disableTransitionOnChange
-      themes={['light', 'dark', 'system', 'crazy', 'stealth', 'classic', 'premium']}
+      themes={[
+        'light',
+        'dark',
+        'system',
+        'crazy',
+        'stealth',
+        'premium',
+        'high-contrast',
+        'barbie',
+        'nineties',
+      ]}
     >
-      <ClassicConsoleFonts />
+      <MigrateRemovedThemes />
       {children}
     </ThemeProvider>
   )

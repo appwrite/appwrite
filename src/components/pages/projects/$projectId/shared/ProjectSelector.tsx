@@ -792,7 +792,7 @@ function ProjectSelectorContent({
                           : 'hover:bg-accent/50',
                         isCurrentProject &&
                           selectedProject?.$id !== project.$id &&
-                          'bg-primary/10 hover:bg-primary/20 classic:bg-sidebar-accent classic:hover:bg-sidebar-accent/80',
+                          'bg-primary/10 hover:bg-primary/20 dark:bg-sidebar-accent dark:hover:bg-sidebar-accent/80',
                       )}
                     >
                       <InitialsAvatar name={project.name} size="sm" />
@@ -1043,7 +1043,7 @@ function MobileProjectSelectorContent({
             </span>
             <button
               onClick={() => setActiveTab('teams')}
-              className="ml-auto cursor-pointer text-[12px] text-primary hover:underline classic:text-muted-foreground"
+              className="ml-auto cursor-pointer text-[12px] text-primary hover:underline dark:text-muted-foreground"
             >
               Change
             </button>
@@ -1091,7 +1091,7 @@ function MobileProjectSelectorContent({
                             : 'hover:bg-accent/50',
                           isCurrentProject &&
                             selectedProject?.$id !== project.$id &&
-                            'bg-primary/10 hover:bg-primary/20 classic:bg-sidebar-accent classic:hover:bg-sidebar-accent/80',
+                            'bg-primary/10 hover:bg-primary/20 dark:bg-sidebar-accent dark:hover:bg-sidebar-accent/80',
                         )}
                       >
                         <InitialsAvatar name={project.name} size="sm" />

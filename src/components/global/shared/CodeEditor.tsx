@@ -134,7 +134,7 @@ export const CodeEditor = forwardRef<CodeEditorRef, CodeEditorProps>(
       resolvedTheme !== undefined
         ? isResolvedThemeDarkChrome(resolvedTheme)
         : isHtmlDarkChrome()
-    /** Remount when theme changes so beforeMount re-reads CSS vars; include resolved name for dark↔classic. */
+    /** Remount when theme changes so beforeMount re-reads CSS vars; include resolved theme name. */
     const monacoMountKey =
       resolvedTheme ?? (isDarkChrome ? 'dark-chrome' : 'light-chrome')
 

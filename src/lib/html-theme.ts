@@ -1,13 +1,13 @@
 /**
  * Themes that use a dark UI chrome (Monaco, schema export SVG, etc.).
- * next-themes sets a single class on <html> (e.g. dark, classic, crazy).
+ * next-themes sets a single class on <html> (e.g. dark, crazy).
  */
 const DARK_CHROME_CLASSES = [
   'dark',
-  'classic',
   'crazy',
   'stealth',
   'premium',
+  'high-contrast',
 ] as const
 
 export function isHtmlDarkChrome(): boolean {
@@ -23,16 +23,16 @@ export function isResolvedThemeDarkChrome(
   if (!resolvedTheme) return false
   if (resolvedTheme === 'dark') return true
   return (
-    resolvedTheme === 'classic' ||
     resolvedTheme === 'crazy' ||
     resolvedTheme === 'stealth' ||
-    resolvedTheme === 'premium'
+    resolvedTheme === 'premium' ||
+    resolvedTheme === 'high-contrast'
   )
 }
 
 /**
  * Standard light/dark only (including when theme is "system" and resolves to light or dark).
- * Custom console themes (crazy, stealth, classic) return false.
+ * Custom console themes (crazy, stealth, etc.) return false.
  */
 export function isStandardLightOrDarkTheme(
   theme: string | undefined,
@@ -44,7 +44,7 @@ export function isStandardLightOrDarkTheme(
 
 /**
  * Tailwind classes for the header Appwrite mark: brand pink on light/dark (and system→light/dark);
- * theme primary on crazy, stealth, classic so the logo matches each palette.
+ * theme primary on crazy, stealth, premium, etc. so the logo matches each palette.
  */
 export function getConsoleHeaderLogoClass(
   theme: string | undefined,
@@ -61,8 +61,10 @@ export function getConsoleHeaderLogoClass(
   if (
     effective === 'crazy' ||
     effective === 'stealth' ||
-    effective === 'classic' ||
-    effective === 'premium'
+    effective === 'premium' ||
+    effective === 'high-contrast' ||
+    effective === 'barbie' ||
+    effective === 'nineties'
   ) {
     return 'text-primary'
   }

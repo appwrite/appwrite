@@ -65,19 +65,19 @@ export function DatabaseMonitorHeaderActions({
       databaseType !== ApiDatabaseType.Tablesdb)
 
   return (
-    <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
-      <div className="flex flex-wrap items-center gap-2">
+    <div className="flex min-w-0 max-w-full flex-nowrap items-center gap-2 overflow-x-auto sm:gap-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex shrink-0 flex-nowrap items-center gap-2">
         <Badge
           variant={serverless ? 'info' : 'success'}
-          className="h-5 shrink-0 px-1.5 text-[10px]"
+          className="h-[22px] shrink-0 px-1.5 py-0 text-[10px] leading-none"
         >
           {serverless ? 'Serverless' : 'Dedicated'}
         </Badge>
-        <span className="max-w-[140px] truncate text-[12px] text-muted-foreground sm:max-w-[200px]">
+        <span className="max-w-[120px] truncate text-[12px] leading-none text-muted-foreground sm:max-w-[180px]">
           {specLabel}
         </span>
         {showUpgradeCta ? (
-          <Button variant="outline" size="sm" className="h-8 shrink-0 px-2 text-[12px]" asChild>
+          <Button variant="outline" size="sm" className="h-7 shrink-0 px-2 text-[12px]" asChild>
             <Link
               to="/projects/$projectId/databases/$dbKind/$databaseId/settings"
               params={{ projectId, dbKind: routeDbKind, databaseId }}
@@ -88,13 +88,13 @@ export function DatabaseMonitorHeaderActions({
         ) : null}
       </div>
 
-      <div className="hidden h-4 w-px shrink-0 bg-border sm:block" aria-hidden />
+      <div className="hidden h-3 w-px shrink-0 self-center bg-border sm:block" aria-hidden />
 
-      <div className="flex items-center gap-2 sm:gap-3">
+      <div className="flex shrink-0 items-center gap-2 sm:gap-3">
         <DateRangePicker
           dateRange={dateRange}
           onDateRangeChange={onDateRangeChange}
-          className="h-8 min-w-[160px] text-[12px] sm:h-9 sm:min-w-[180px] sm:text-[13px]"
+          className="h-7 min-w-[140px] text-[12px] sm:min-w-[160px]"
         />
         <TooltipProvider delayDuration={0}>
           <Tooltip>
@@ -103,7 +103,7 @@ export function DatabaseMonitorHeaderActions({
                 variant="outline"
                 size="sm"
                 onClick={onRefresh}
-                className="h-8 w-8 shrink-0 p-0 sm:h-9 sm:w-9"
+                className="h-7 w-7 shrink-0 p-0"
                 type="button"
               >
                 <RefreshCw className="h-4 w-4" />

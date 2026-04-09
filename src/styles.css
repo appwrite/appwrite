@@ -7,10 +7,7 @@
 @import './fonts-inter-latin.css';
 
 /* Match default dark + debug-only themes that omit .dark but use dark surfaces (see html-theme.ts). */
-@custom-variant dark (&:is(.dark *, .classic *, .crazy *, .stealth *, .premium *));
-
-/** Debug-only classic theme (html.classic); use for heading weight etc. without affecting default UI. */
-@custom-variant classic (&:is(.classic *));
+@custom-variant dark (&:is(.dark *, .crazy *, .stealth *, .premium *, .high-contrast *));
 
 body {
   @apply m-0;
@@ -191,54 +188,9 @@ code {
 }
 
 /*
- * Classic — legacy Appwrite cloud console palette: neutral surfaces + pink only for CTA
- * and purple secondary; Inter body / Poppins headings. Debug menu only.
- * Tokens aligned with console/src/themes/dark-cloud.json
- */
-.classic {
-  color-scheme: dark;
-  --editor-bg: #141416;
-  --background: rgb(25 25 28);
-  --foreground: rgb(237 237 240);
-  --card: rgb(29 29 33);
-  --card-foreground: rgb(237 237 240);
-  --popover: rgb(29 29 33);
-  --popover-foreground: rgb(237 237 240);
-  --primary: rgb(253 54 110);
-  --primary-foreground: rgb(255 255 255);
-  --secondary: rgb(45 45 49);
-  --secondary-foreground: rgb(237 237 240);
-  --muted: rgb(45 45 49);
-  --muted-foreground: rgb(129 129 134);
-  --accent: rgb(45 45 49);
-  --accent-foreground: rgb(237 237 240);
-  --destructive: rgb(255 69 58);
-  --destructive-foreground: rgb(255 255 255);
-  --border: rgb(45 45 49);
-  --input: rgb(45 45 49);
-  --ring: rgb(129 129 134);
-  --chart-1: rgb(124 103 254);
-  --chart-2: rgb(133 219 216);
-  --chart-3: rgb(104 163 254);
-  --chart-4: rgb(254 149 103);
-  --chart-5: rgb(254 211 103);
-  --chart-brand: rgb(45 45 49);
-  --radius: 0.5rem;
-  --sidebar: rgb(20 20 22);
-  --sidebar-foreground: rgb(237 237 240);
-  --sidebar-primary: rgb(237 237 240);
-  --sidebar-primary-foreground: rgb(255 255 255);
-  --sidebar-accent: rgb(45 45 49);
-  --sidebar-accent-foreground: rgb(237 237 240);
-  --sidebar-border: rgb(45 45 49);
-  --sidebar-ring: rgb(129 129 134);
-}
-
-/*
  * Keep debug dark-chrome themes on the same readable text/icon baseline as dark.
  * This prevents dark-on-dark combinations from custom palette experiments.
  */
-.classic,
 .crazy,
 .stealth,
 .premium {
@@ -314,7 +266,8 @@ code {
   --destructive: oklch(0.52 0.17 25);
   --destructive-foreground: oklch(0.95 0.01 90);
   --border: oklch(0.21 0.016 81);
-  --input: oklch(0.198 0.018 82);
+  /* Stronger than default dark --input: Checkbox uses border-input; premium uses .premium without .dark so unchecked boxes miss dark:bg-input/30 and need a visible edge + fill. */
+  --input: oklch(0.31 0.034 79);
   --ring: oklch(0.48 0.065 78);
   --chart-1: oklch(0.66 0.1 78);
   --chart-2: oklch(0.6 0.09 72);
@@ -330,6 +283,141 @@ code {
   --sidebar-accent-foreground: oklch(0.88 0.01 88);
   --sidebar-border: oklch(0.195 0.015 82);
   --sidebar-ring: oklch(0.48 0.065 78);
+}
+
+/*
+ * Premium theme sets class "premium" on <html> instead of "dark", so Checkbox never gets
+ * Tailwind's dark:bg-input/30. Mirror that fill for unchecked boxes without fighting checked:bg-primary.
+ */
+.premium [data-slot='checkbox']:not([data-state='checked']) {
+  background-color: color-mix(in oklch, var(--input) 30%, transparent);
+}
+
+/*
+ * High contrast — debug-only: near-black surfaces, near-white text, vivid borders,
+ * yellow primary (WCAG-style). Hidden theme; see Debug menu.
+ */
+.high-contrast {
+  color-scheme: dark;
+  --editor-bg: oklch(0 0 0);
+  --background: oklch(0 0 0);
+  --foreground: oklch(1 0 0);
+  --card: oklch(0.12 0 0);
+  --card-foreground: oklch(1 0 0);
+  --popover: oklch(0.1 0 0);
+  --popover-foreground: oklch(1 0 0);
+  --primary: oklch(0.96 0.21 102);
+  --primary-foreground: oklch(0 0 0);
+  --secondary: oklch(0.2 0 0);
+  --secondary-foreground: oklch(1 0 0);
+  --muted: oklch(0.18 0 0);
+  --muted-foreground: oklch(0.88 0 0);
+  --accent: oklch(0.22 0 0);
+  --accent-foreground: oklch(1 0 0);
+  --destructive: oklch(0.62 0.24 25);
+  --destructive-foreground: oklch(0 0 0);
+  --border: oklch(0.92 0 0);
+  --input: oklch(0.16 0 0);
+  --ring: oklch(0.96 0.21 102);
+  --chart-1: oklch(0.96 0.21 102);
+  --chart-2: oklch(0.82 0.15 195);
+  --chart-3: oklch(0.78 0.2 310);
+  --chart-4: oklch(0.85 0.2 145);
+  --chart-5: oklch(0.8 0.18 55);
+  --chart-brand: oklch(0.96 0.21 102);
+  --sidebar: oklch(0 0 0);
+  --sidebar-foreground: oklch(1 0 0);
+  --sidebar-primary: oklch(0.96 0.21 102);
+  --sidebar-primary-foreground: oklch(0 0 0);
+  --sidebar-accent: oklch(0.18 0 0);
+  --sidebar-accent-foreground: oklch(1 0 0);
+  --sidebar-border: oklch(0.92 0 0);
+  --sidebar-ring: oklch(0.96 0.21 102);
+}
+
+/*
+ * Barbie — hidden debug theme: deeper dusty pink surfaces, rose text (AA contrast),
+ * soft borders, light chrome (not dark UI).
+ */
+.barbie {
+  color-scheme: light;
+  --editor-bg: oklch(0.82 0.055 350);
+  --background: oklch(0.86 0.048 350);
+  --foreground: oklch(0.22 0.065 350);
+  --card: oklch(0.9 0.042 350);
+  --card-foreground: oklch(0.22 0.065 350);
+  --popover: oklch(0.91 0.04 350);
+  --popover-foreground: oklch(0.22 0.065 350);
+  --primary: oklch(0.46 0.17 350);
+  --primary-foreground: oklch(0.99 0.012 350);
+  --secondary: oklch(0.8 0.055 350);
+  --secondary-foreground: oklch(0.24 0.07 350);
+  --muted: oklch(0.81 0.05 350);
+  --muted-foreground: oklch(0.38 0.075 350);
+  --accent: oklch(0.78 0.058 350);
+  --accent-foreground: oklch(0.24 0.07 350);
+  --destructive: oklch(0.44 0.2 25);
+  --destructive-foreground: oklch(0.99 0.01 350);
+  --border: oklch(0.74 0.038 350);
+  --input: oklch(0.81 0.048 350);
+  --ring: oklch(0.48 0.16 350);
+  --chart-1: oklch(0.5 0.17 350);
+  --chart-2: oklch(0.46 0.15 200);
+  --chart-3: oklch(0.52 0.13 310);
+  --chart-4: oklch(0.48 0.15 145);
+  --chart-5: oklch(0.5 0.14 285);
+  --chart-brand: oklch(0.48 0.17 350);
+  --sidebar: oklch(0.81 0.058 350);
+  --sidebar-foreground: oklch(0.22 0.065 350);
+  --sidebar-primary: oklch(0.46 0.17 350);
+  --sidebar-primary-foreground: oklch(0.99 0.012 350);
+  --sidebar-accent: oklch(0.76 0.06 350);
+  --sidebar-accent-foreground: oklch(0.24 0.07 350);
+  --sidebar-border: oklch(0.7 0.042 350);
+  --sidebar-ring: oklch(0.48 0.16 350);
+}
+
+/*
+ * 90s web — hidden debug theme: Win-gray, classic blue links, neon accents,
+ * CRT scanlines + grid + faux starfield. Debug menu only.
+ */
+.nineties {
+  color-scheme: light;
+  --radius: 0.25rem;
+  --editor-bg: oklch(0.74 0.04 275);
+  --background: oklch(0.8 0.032 275);
+  --foreground: oklch(0.14 0.03 285);
+  --card: oklch(0.95 0.035 95);
+  --card-foreground: oklch(0.14 0.03 285);
+  --popover: oklch(0.97 0.028 95);
+  --popover-foreground: oklch(0.14 0.03 285);
+  --primary: oklch(0.42 0.29 264);
+  --primary-foreground: oklch(0.99 0.01 95);
+  --secondary: oklch(0.58 0.14 195);
+  --secondary-foreground: oklch(0.99 0.02 195);
+  --muted: oklch(0.72 0.04 275);
+  --muted-foreground: oklch(0.34 0.05 285);
+  --accent: oklch(0.9 0.2 95);
+  --accent-foreground: oklch(0.16 0.04 285);
+  --destructive: oklch(0.5 0.21 25);
+  --destructive-foreground: oklch(0.99 0.01 95);
+  --border: oklch(0.42 0.05 285);
+  --input: oklch(0.88 0.035 275);
+  --ring: oklch(0.42 0.29 264);
+  --chart-1: oklch(0.55 0.26 145);
+  --chart-2: oklch(0.48 0.29 264);
+  --chart-3: oklch(0.62 0.22 330);
+  --chart-4: oklch(0.58 0.2 195);
+  --chart-5: oklch(0.72 0.18 95);
+  --chart-brand: oklch(0.42 0.29 264);
+  --sidebar: oklch(0.72 0.045 275);
+  --sidebar-foreground: oklch(0.14 0.03 285);
+  --sidebar-primary: oklch(0.42 0.29 264);
+  --sidebar-primary-foreground: oklch(0.99 0.01 95);
+  --sidebar-accent: oklch(0.65 0.08 310);
+  --sidebar-accent-foreground: oklch(0.99 0.02 310);
+  --sidebar-border: oklch(0.45 0.05 285);
+  --sidebar-ring: oklch(0.42 0.29 264);
 }
 
 @theme inline {
@@ -385,14 +473,14 @@ code {
 @layer base {
   /*
    * Main product CTAs: Appwrite brand pink on light & dark (and system).
-   * Debug themes (crazy, stealth, classic, premium) map to theme --primary instead.
+   * Debug themes (crazy, stealth, premium, high-contrast, barbie, nineties) map to theme --primary instead.
    */
   html {
     --brand-cta: #fd366e;
     --brand-cta-foreground: #ffffff;
   }
 
-  html:is(.crazy, .stealth, .classic, .premium) {
+  html:is(.crazy, .stealth, .premium, .high-contrast, .barbie, .nineties) {
     --brand-cta: var(--primary);
     --brand-cta-foreground: var(--primary-foreground);
   }
@@ -404,48 +492,71 @@ code {
     @apply bg-background text-foreground;
   }
 
-  html.classic body {
-    font-family:
-      'Inter',
-      -apple-system,
-      BlinkMacSystemFont,
-      'Segoe UI',
-      'Roboto',
-      'Oxygen',
-      'Ubuntu',
-      sans-serif;
-    font-size: 15px;
-    line-height: 1.5;
-    letter-spacing: -0.01em;
-  }
-
-  html.classic :where(h1, h2, h3) {
-    font-family: 'Poppins', 'Inter', sans-serif;
-    letter-spacing: -0.02em;
-    font-weight: 400;
-  }
-
   /*
-   * Classic: Tailwind font-semibold maps to --font-weight-semibold and wins over base alone.
-   * Force page <h1> titles (account name, service headers, etc.) to body weight + Inter.
+   * 90s theme: serif body, layered “early web” motifs on <html>, transparent body so texture shows.
    */
-  html.classic h1 {
-    font-weight: 400 !important;
-    font-family: inherit !important;
-    letter-spacing: -0.02em;
+  html.nineties {
+    min-height: 100%;
+    background-color: var(--background);
+    background-image:
+      repeating-linear-gradient(
+        0deg,
+        oklch(0.35 0.12 280 / 0.07) 0 1px,
+        transparent 1px 4px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        oklch(0.4 0.08 260 / 0.06) 0 1px,
+        transparent 1px 12px
+      ),
+      radial-gradient(
+        circle at 20% 0%,
+        oklch(0.72 0.18 300 / 0.35) 0%,
+        transparent 45%
+      ),
+      radial-gradient(
+        circle at 80% 15%,
+        oklch(0.65 0.2 200 / 0.2) 0%,
+        transparent 40%
+      ),
+      radial-gradient(
+        circle at 1px 1px,
+        oklch(0.45 0.15 270 / 0.11) 1px,
+        transparent 0
+      );
+    background-size:
+      100% 100%,
+      100% 100%,
+      100% 100%,
+      100% 100%,
+      24px 24px;
+    background-attachment: fixed;
   }
 
-  /* Project overview title — cloud uses Aeonik; keep weight + face in classic theme */
-  html.classic h1.font-aeonik-pro {
-    font-family: var(--font-aeonik-pro) !important;
-    font-weight: 500 !important;
-    letter-spacing: -0.02em;
+  html.nineties body {
+    font-family:
+      Georgia,
+      'Times New Roman',
+      Times,
+      serif;
+    letter-spacing: 0.01em;
+    background: transparent;
   }
 
-  html.classic h1.font-inter-overview {
-    font-family: var(--font-inter-overview) !important;
-    font-weight: 500 !important;
-    letter-spacing: -0.02em;
+  html.nineties code,
+  html.nineties kbd,
+  html.nineties pre,
+  html.nineties .font-mono {
+    font-family:
+      ui-monospace,
+      'Courier New',
+      Courier,
+      monospace;
+  }
+
+  html.nineties ::selection {
+    background-color: oklch(0.92 0.18 95);
+    color: oklch(0.14 0.03 285);
   }
 
   /* Mobile touch scrolling improvements.
@@ -708,25 +819,25 @@ code {
 }
 
 /*
- * Custom themes (crazy, stealth, classic, premium): CTA ring and hover follow theme --primary
+ * Custom themes (crazy, stealth, premium, high-contrast, barbie, nineties): CTA ring and hover follow theme --primary
  * instead of the light/dark luxury chrome. Inner button already uses bg-primary.
  */
-html:is(.crazy, .stealth, .classic, .premium) .upgrade-button-wrapper {
+html:is(.crazy, .stealth, .premium, .high-contrast, .barbie, .nineties) .upgrade-button-wrapper {
   background: var(--brand-cta);
 }
 
-html:is(.crazy, .stealth, .classic, .premium) .upgrade-button-wrapper:hover {
+html:is(.crazy, .stealth, .premium, .high-contrast, .barbie, .nineties) .upgrade-button-wrapper:hover {
   background: var(--brand-cta);
   background-size: 100% 100%;
   animation: none;
   filter: brightness(1.1);
 }
 
-html:is(.crazy, .stealth, .classic, .premium) .upgrade-button-wrapper::before {
+html:is(.crazy, .stealth, .premium, .high-contrast, .barbie, .nineties) .upgrade-button-wrapper::before {
   opacity: 0;
 }
 
-html:is(.crazy, .stealth, .classic, .premium) .upgrade-button-wrapper:hover::before {
+html:is(.crazy, .stealth, .premium, .high-contrast, .barbie, .nineties) .upgrade-button-wrapper:hover::before {
   animation: none;
 }
 

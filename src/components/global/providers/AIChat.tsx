@@ -896,8 +896,8 @@ function MessageAttachments({
                       className={cn(
                         'relative aspect-square w-28 shrink-0 cursor-pointer overflow-hidden rounded-md border bg-muted/20 transition-colors sm:w-32',
                         index === fullscreenAttachment
-                          ? 'border-primary ring-1 ring-primary/50 classic:border-sidebar-accent classic:ring-sidebar-accent/70'
-                          : 'border-border hover:border-primary/50 classic:hover:border-sidebar-accent',
+                          ? 'border-primary ring-1 ring-primary/50 dark:border-sidebar-accent dark:ring-sidebar-accent/70'
+                          : 'border-border hover:border-primary/50 dark:hover:border-sidebar-accent',
                       )}
                     >
                       <img
@@ -1003,7 +1003,7 @@ const AssistantMessageRow = memo(
               <div
                 dir={isRtlMessage ? 'rtl' : 'ltr'}
                 className={cn(
-                  'inline-block max-w-full cursor-default rounded-md bg-primary px-2.5 py-1.5 text-[13px] whitespace-pre-wrap text-primary-foreground classic:bg-sidebar-accent classic:text-sidebar-foreground',
+                  'inline-block max-w-full cursor-default rounded-md bg-primary px-2.5 py-1.5 text-[13px] whitespace-pre-wrap text-primary-foreground dark:bg-sidebar-accent dark:text-sidebar-foreground',
                 )}
               >
                 {messageText}
@@ -1960,8 +1960,8 @@ export function AIChatPanel() {
       <div
         onMouseDown={handleMouseDown}
         className={cn(
-          'absolute left-0 top-0 z-10 flex h-full w-1.5 cursor-col-resize items-center justify-center transition-colors hover:bg-primary/20 classic:hover:bg-sidebar-accent/60',
-          isResizing && 'bg-primary/30 classic:bg-sidebar-accent/70',
+          'absolute left-0 top-0 z-10 flex h-full w-1.5 cursor-col-resize items-center justify-center transition-colors hover:bg-primary/20 dark:hover:bg-sidebar-accent/60',
+          isResizing && 'bg-primary/30 dark:bg-sidebar-accent/70',
         )}
       />
 
@@ -2094,8 +2094,8 @@ export function AIChatPanel() {
           >
             {messages.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center">
-                <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 classic:bg-sidebar-accent">
-                  <Lightbulb className="h-8 w-8 text-primary classic:text-sidebar-foreground" />
+                <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 dark:bg-sidebar-accent">
+                  <Lightbulb className="h-8 w-8 text-primary dark:text-sidebar-foreground" />
                 </div>
                 <h3 className="mb-2 text-lg font-semibold text-foreground">
                   How can I help you?

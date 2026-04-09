@@ -122,15 +122,18 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
 
   // Organize sections
   const sections: MenuSection[] = useMemo(() => {
-    const themeOptions: MenuItem[] = [
-      { label: 'Light', themeValue: 'light' },
-      { label: 'Dark', themeValue: 'dark' },
-      { label: 'System', themeValue: 'system' },
+    const themeSource: Array<{ label: string; themeValue: string }> = [
+      { label: '☀️ Light', themeValue: 'light' },
+      { label: '🌙 Dark', themeValue: 'dark' },
+      { label: '💻 System', themeValue: 'system' },
       { label: '🎨 Crazy', themeValue: 'crazy' },
       { label: '🥷 Stealth', themeValue: 'stealth' },
-      { label: 'Classic console', themeValue: 'classic' },
-      { label: '✨ Premium (gold)', themeValue: 'premium' },
-    ].map((opt) => ({
+      { label: '✨ Premium', themeValue: 'premium' },
+      { label: '🔆 High contrast', themeValue: 'high-contrast' },
+      { label: '💖 Barbie', themeValue: 'barbie' },
+      { label: '📟 90s web', themeValue: 'nineties' },
+    ]
+    const themeOptions: MenuItem[] = themeSource.map((opt) => ({
       label: opt.label,
       onClick: () => {
         setTheme(opt.themeValue)

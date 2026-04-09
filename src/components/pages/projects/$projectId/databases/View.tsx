@@ -3173,7 +3173,7 @@ export function TableView({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-9"
+                    className="h-7"
                     onClick={() => createFiftyTablesMutation.mutate()}
                     disabled={createFiftyTablesMutation.isPending}
                   >
@@ -9741,9 +9741,9 @@ function RowsSpreadsheet({
               }
             }}
             className={cn(
-              'absolute top-0 bottom-0 z-30 w-1.5 -translate-x-1/2 cursor-col-resize border-0 bg-transparent p-0 outline-none transition-colors hover:bg-primary/20 classic:hover:bg-sidebar-accent/60',
+              'absolute top-0 bottom-0 z-30 w-1.5 -translate-x-1/2 cursor-col-resize border-0 bg-transparent p-0 outline-none transition-colors hover:bg-primary/20 dark:hover:bg-sidebar-accent/60',
               isDocumentsSplitResizing &&
-                'bg-primary/30 classic:bg-sidebar-accent/70',
+                'bg-primary/30 dark:bg-sidebar-accent/70',
               'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
             )}
             onPointerDown={handleDocumentsSplitPointerDown}

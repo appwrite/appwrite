@@ -281,12 +281,24 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                 ))}
               </nav>
             )}
-            <div className="flex min-w-0 flex-row flex-wrap items-center justify-between gap-x-4 gap-y-3">
-              <h1 className="min-w-0 text-[17px] font-semibold text-foreground">
+            <div
+              className={cn(
+                'flex min-w-0 flex-row items-center justify-between gap-x-4',
+                titleRightContent
+                  ? 'flex-nowrap'
+                  : 'flex-wrap gap-y-3',
+              )}
+            >
+              <h1
+                className={cn(
+                  'min-w-0 text-[17px] font-semibold text-foreground',
+                  titleRightContent && 'min-w-0 flex-1',
+                )}
+              >
                 {title}
               </h1>
               {titleRightContent ? (
-                <div className="flex min-w-0 flex-wrap items-center justify-end gap-2 sm:gap-3">
+                <div className="flex min-w-0 shrink-0 flex-nowrap items-center justify-end gap-2 sm:gap-3">
                   {titleRightContent}
                 </div>
               ) : null}
