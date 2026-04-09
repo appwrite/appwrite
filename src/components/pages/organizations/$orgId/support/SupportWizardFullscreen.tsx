@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import {
   useOrganizationPlan,
@@ -30,6 +31,7 @@ import {
 import { toast } from 'sonner'
 import {
   Activity,
+  AlertTriangle,
   BookOpen,
   ExternalLink,
   CheckCircle2,
@@ -71,11 +73,19 @@ function getMessagePlaceholder(category: SupportCategory | ''): string {
 const CONTACT_SALES_URL =
   import.meta.env.VITE_CONTACT_SALES_URL ||
   'https://appwrite.io/contact-us/enterprise'
+const SUPPORT_EMAIL = 'support@appwrite.io'
+const SUPPORT_DISCORD_URL = 'https://appwrite.io/discord'
+const SUPPORT_GITHUB_ISSUES_URL =
+  'https://github.com/appwrite/appwrite/issues/new/choose'
 const MESSAGE_MAX = 4096
 const ATTACHMENT_MAX_MB = 5
 const ATTACHMENT_MAX_BYTES = ATTACHMENT_MAX_MB * 1024 * 1024
 /** Sentinel for "no project" - Radix Select does not allow value="" */
 const NO_PROJECT_VALUE = '__none__'
+
+type SupportSubmitError =
+  | { kind: 'portal' }
+  | { kind: 'attachment'; message: string }
 
 function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 Bytes'
@@ -108,7 +118,11 @@ export function SupportWizardFullscreen() {
   const [isDraggingAttachment, setIsDraggingAttachment] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [submitError, setSubmitError] = useState<SupportSubmitError | null>(
+    null,
+  )
   const attachmentInputRef = useRef<HTMLInputElement>(null)
+  const submitErrorRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -116,6 +130,11 @@ export function SupportWizardFullscreen() {
     }, 60000)
     return () => clearInterval(interval)
   }, [])
+
+  useEffect(() => {
+    if (!submitError) return
+    submitErrorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [submitError])
 
   const topicOptions = useMemo(() => {
     if (!category || category === '') return []
@@ -145,6 +164,7 @@ export function SupportWizardFullscreen() {
       toast.error(`File must be ${ATTACHMENT_MAX_MB} MB or less`)
       return
     }
+    setSubmitError((e) => (e?.kind === 'attachment' ? null : e))
     setAttachment(file)
   }
 
@@ -177,6 +197,7 @@ export function SupportWizardFullscreen() {
 
   const handleSubmit = async () => {
     if (!canSubmit || !orgId) return
+    setSubmitError(null)
     setIsSubmitting(true)
     try {
       await submitSupportTicket({
@@ -204,7 +225,12 @@ export function SupportWizardFullscreen() {
       if (typeof window !== 'undefined' && (window as unknown).track) {
         ;(window as unknown).track(eventName, { error: String(err) })
       }
-      toast.error('Failed to submit support ticket. Please try again.')
+      const errMessage = err instanceof Error ? err.message : String(err)
+      if (errMessage.includes('Attachment must be')) {
+        setSubmitError({ kind: 'attachment', message: errMessage })
+      } else {
+        setSubmitError({ kind: 'portal' })
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -317,7 +343,7 @@ export function SupportWizardFullscreen() {
               <ExternalLink className="h-3 w-3 ml-auto shrink-0 text-muted-foreground" />
             </a>
             <a
-              href="https://appwrite.io/discord"
+              href={SUPPORT_DISCORD_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 rounded-lg border border-border bg-muted/30 px-3 py-2.5 text-[12px] font-medium text-foreground hover:bg-muted/50 hover:border-border transition-colors"
@@ -334,7 +360,7 @@ export function SupportWizardFullscreen() {
               <ExternalLink className="h-3 w-3 ml-auto shrink-0 text-muted-foreground" />
             </a>
             <a
-              href="https://github.com/appwrite/appwrite/issues/new/choose"
+              href={SUPPORT_GITHUB_ISSUES_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 rounded-lg border border-border bg-muted/30 px-3 py-2.5 text-[12px] font-medium text-foreground hover:bg-muted/50 hover:border-border transition-colors"
@@ -453,6 +479,49 @@ export function SupportWizardFullscreen() {
       }
     >
       <div className="space-y-6">
+        <div ref={submitErrorRef}>
+          {submitError?.kind === 'portal' && (
+            <Alert variant="destructive" className="mb-2">
+              <AlertTriangle aria-hidden />
+              <AlertTitle>
+                We're sorry - we couldn't submit your support request
+              </AlertTitle>
+              <AlertDescription className="text-[13px] [&_a]:font-medium [&_a]:underline [&_a]:underline-offset-2">
+                <p>
+                  We're having a temporary issue with the support portal,
+                  and our engineering team are aware. In the meantime, please
+                  reach out at{' '}
+                  <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>, on{' '}
+                  <a
+                    href={SUPPORT_DISCORD_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Discord
+                  </a>
+                  , or on{' '}
+                  <a
+                    href={SUPPORT_GITHUB_ISSUES_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    GitHub
+                  </a>
+                  .
+                </p>
+              </AlertDescription>
+            </Alert>
+          )}
+          {submitError?.kind === 'attachment' && (
+            <Alert variant="destructive" className="mb-2">
+              <AlertTriangle aria-hidden />
+              <AlertTitle>Couldn't use this attachment</AlertTitle>
+              <AlertDescription className="text-[13px]">
+                {submitError.message}
+              </AlertDescription>
+            </Alert>
+          )}
+        </div>
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">
@@ -670,6 +739,9 @@ export function SupportWizardFullscreen() {
                     className="h-6 w-6 p-0 shrink-0"
                     onClick={() => {
                       setAttachment(null)
+                      setSubmitError((e) =>
+                        e?.kind === 'attachment' ? null : e,
+                      )
                       if (attachmentInputRef.current) {
                         attachmentInputRef.current.value = ''
                       }

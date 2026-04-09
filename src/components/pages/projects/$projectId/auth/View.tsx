@@ -89,8 +89,6 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
-import { LightningCollectorGame } from './LightningCollectorGame'
-import { useDebugMode } from '@/components/global/providers/DebugMode'
 import { CreateUserDrawer } from './CreateUserDrawer'
 import { CreateTeamDrawer } from './CreateTeamDrawer'
 import { Security } from './Security'
@@ -129,7 +127,6 @@ export function View({
     teamsPage?: number
     teamsLimit?: number
   }
-  const { isDebugModeOpen } = useDebugMode()
 
   const isAuthUsersIndex =
     location.pathname.replace(/\/$/, '') === `/projects/${projectId}/auth`
@@ -1381,7 +1378,6 @@ export function View({
       >
         {activeTab === 'users' && (
           <>
-            {isDebugModeOpen && <LightningCollectorGame />}
             {showUsersLoading ? (
               <div className="rounded-lg border border-border bg-card py-12 text-center">
                 <div className="text-muted-foreground">Loading users...</div>

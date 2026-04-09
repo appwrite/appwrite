@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { ExternalLink } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 
@@ -20,17 +21,29 @@ import { cn } from '@/lib/utils'
 const BANNER_EASE: [number, number, number, number] = [0.22, 1, 0.36, 1]
 const BANNER_DURATION_S = 0.55
 
+/** Persists across layout remounts (route changes) while a non-operational incident is showing. */
+let cloudStatusBannerEnterAnimationAlreadyPlayed = false
+
 type CloudStatusBannerInnerProps = {
   aggregateState: Exclude<AppwriteCloudAggregateState, 'operational'>
   data: AppwriteCloudStatusSummary | undefined
   mockCloudStatusAlert: MockCloudStatusAlert
+  skipEnterAnimation: boolean
 }
 
 function CloudStatusBannerInner({
   aggregateState,
   data,
   mockCloudStatusAlert,
+  skipEnterAnimation,
 }: CloudStatusBannerInnerProps) {
+  const enterAnimationRecordedRef = useRef(false)
+
+  const handleAnimationComplete = () => {
+    if (skipEnterAnimation || enterAnimationRecordedRef.current) return
+    enterAnimationRecordedRef.current = true
+    cloudStatusBannerEnterAnimationAlreadyPlayed = true
+  }
   const presentation = getStatusPresentation(aggregateState)
   const Icon = getStatusIcon(aggregateState)
   const activeReportTitle =
@@ -54,12 +67,13 @@ function CloudStatusBannerInner({
 
   return (
     <motion.div
-      initial={{ gridTemplateRows: '0fr' }}
+      initial={skipEnterAnimation ? false : { gridTemplateRows: '0fr' }}
       animate={{ gridTemplateRows: '1fr' }}
       exit={{ gridTemplateRows: '0fr' }}
       transition={{ duration: BANNER_DURATION_S, ease: BANNER_EASE }}
       style={{ display: 'grid' }}
       className="overflow-hidden"
+      onAnimationComplete={handleAnimationComplete}
     >
       <div className="min-h-0 overflow-hidden">
         <a
@@ -110,16 +124,24 @@ export function CloudStatusBanner() {
   const { mockCloudStatusAlert } = useDebugOverrides()
   const { data, isSuccess } = useAppwriteCloudStatus(features.systemStatus)
 
+  const aggregateState: AppwriteCloudAggregateState =
+    !features.systemStatus
+      ? 'operational'
+      : mockCloudStatusAlert !== 'live'
+        ? mockCloudStatusAlert
+        : isSuccess
+          ? (data?.aggregateState ?? 'operational')
+          : 'operational'
+
+  useEffect(() => {
+    if (aggregateState === 'operational') {
+      cloudStatusBannerEnterAnimationAlreadyPlayed = false
+    }
+  }, [aggregateState])
+
   if (!features.systemStatus) {
     return null
   }
-
-  const aggregateState =
-    mockCloudStatusAlert !== 'live'
-      ? mockCloudStatusAlert
-      : isSuccess
-        ? (data?.aggregateState ?? 'operational')
-        : 'operational'
 
   return (
     <AnimatePresence>
@@ -129,6 +151,7 @@ export function CloudStatusBanner() {
           aggregateState={aggregateState}
           data={data}
           mockCloudStatusAlert={mockCloudStatusAlert}
+          skipEnterAnimation={cloudStatusBannerEnterAnimationAlreadyPlayed}
         />
       ) : null}
     </AnimatePresence>

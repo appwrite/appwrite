@@ -18,7 +18,7 @@ export function getStatusPresentation(state: CloudStatusState) {
           'bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-400 border-b border-red-600/12 dark:border-red-400/18',
         buttonClassName:
           'border border-red-500 bg-transparent text-red-600 hover:bg-red-500/10 hover:text-red-700 dark:border-red-400 dark:text-red-400 dark:hover:bg-red-500/20 dark:hover:text-red-300',
-        title: 'We’re currently experiencing an outage.',
+        title: 'Some Appwrite Cloud services are temporarily unavailable.',
       }
     case 'maintenance':
       return {
@@ -48,7 +48,7 @@ export function getMockReportTitle(
 ): string | undefined {
   switch (state) {
     case 'downtime':
-      return 'Major service disruption affecting Appwrite Cloud.'
+      return 'You may have trouble accessing some services. We’re working to restore full access.'
     case 'maintenance':
       return 'Planned maintenance window in progress.'
     case 'operational':

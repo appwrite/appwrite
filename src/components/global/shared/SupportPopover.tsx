@@ -108,8 +108,8 @@ function getStatusMeta(statusState: DisplayCloudStatusState) {
       iconBg: 'bg-red-500/10',
       iconText: 'text-red-500',
       badgeVariant: 'error' as const,
-      badgeLabel: 'Outage',
-      summary: 'Some services are currently unavailable.',
+      badgeLabel: 'Unavailable',
+      summary: 'Some services may be unavailable right now.',
       Icon: AlertTriangle,
     }
   }
@@ -127,7 +127,7 @@ function getStatusMeta(statusState: DisplayCloudStatusState) {
 function getMockReportTitle(state: DisplayCloudStatusState) {
   switch (state) {
     case 'downtime':
-      return 'Major service disruption affecting multiple services.'
+      return 'Several services may be affected while we restore them.'
     case 'maintenance':
       return 'Planned maintenance window in progress.'
     case 'operational':

@@ -84,6 +84,7 @@ import {
   getFirstAllowedOrgOverviewPath,
 } from '@/lib/console-access-checks'
 import { ProjectContextMenu } from './_components/ProjectContextMenu'
+import { LightningCollectorGame } from './_components/LightningCollectorGame'
 
 import {
   Popover,
@@ -152,6 +153,7 @@ import { CreateOrganizationDialog } from './CreateOrganization'
 import { CreateProjectDialog } from './CreateProjectDialog'
 import { useCreateOrganization } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useDebugMode } from '@/components/global/providers/DebugMode'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import {
   Table,
@@ -286,6 +288,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const supportsMultiRegion = features.multiRegion
   const { access, isLoading: orgScopesLoading } = useOrganizationScopes(orgId)
   const { showSuccessTeamCard: debugShowSuccessTeamCard } = useDebugOverrides()
+  const { isDebugModeOpen } = useDebugMode()
 
   // Check if we're on a domain detail route using route matches and pathname (for navigation transitions)
   const isDomainDetailRoute = useMemo(() => {
@@ -1704,6 +1707,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
               <>
                 {activeTab === 'projects' && (
                   <>
+                    {isDebugModeOpen && <LightningCollectorGame />}
                     {/* Error State */}
                     {activeProjectsError && (
                       <div className="flex flex-col items-center justify-center py-16 text-center">
