@@ -9,11 +9,6 @@ use Utopia\Database\Document;
 
 class Project extends Model
 {
-    /**
-     * @var bool
-     */
-    protected bool $public = true;
-
     public function __construct()
     {
         $this
@@ -200,7 +195,13 @@ class Project extends Model
                 'array' => true,
             ])
             ->addRule('platforms', [
-                'type' => Response::MODEL_PLATFORM,
+                'type' => [
+                    Response::MODEL_PLATFORM_WEB,
+                    Response::MODEL_PLATFORM_APPLE,
+                    Response::MODEL_PLATFORM_ANDROID,
+                    Response::MODEL_PLATFORM_WINDOWS,
+                    Response::MODEL_PLATFORM_LINUX,
+                ],
                 'description' => 'List of Platforms.',
                 'default' => [],
                 'example' => new \stdClass(),

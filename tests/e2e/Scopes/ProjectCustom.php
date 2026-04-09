@@ -164,7 +164,11 @@ trait ProjectCustom
                     'webhooks.read',
                     'webhooks.write',
                     'project.read',
-                    'project.write'
+                    'project.write',
+                    'keys.read',
+                    'keys.write',
+                    'platforms.read',
+                    'platforms.write',
                 ],
             ]);
 
