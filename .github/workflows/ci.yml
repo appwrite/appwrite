@@ -267,15 +267,15 @@ jobs:
             -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
             appwrite test /usr/src/code/tests/unit
 
-  e2e_general:
-    name: Tests / E2E / General
+  e2e:
+    name: Tests / E2E
     runs-on: ubuntu-latest
     needs: build_development
     permissions:
       contents: read
       pull-requests: write
     steps:
-      - name: checkout
+      - name: Checkout repository
         uses: actions/checkout@v6
 
       - name: Download Docker Image
@@ -305,19 +305,20 @@ jobs:
             sleep 1
           done
 
-      - name: Run General Tests
-        uses: itznotabug/php-retry@v3
-        with:
-          max_attempts: 2
-          retry_wait_seconds: 60
-          timeout_minutes: 15
-          job_id: ${{ job.check_run_id }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          test_dir: tests/e2e/General
-          command: >-
-            docker compose exec -T
-            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
+      - name: Run Tests
+        timeout-minutes: 60
+        run: |
+          docker compose exec -T \
+            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
             appwrite test /usr/src/code/tests/e2e/General
+
+          for service in Account Avatars Console Health Locale Project ProjectWebhooks Storage Teams Tokens Users VCS; do
+            docker compose exec -T \
+              -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
+              appwrite vendor/bin/paratest --processes $(nproc) --functional \
+              "/usr/src/code/tests/e2e/Services/$service" \
+              --exclude-group abuseEnabled --exclude-group screenshots
+          done
 
       - name: Failure Logs
         if: failure()
@@ -338,30 +339,18 @@ jobs:
         database: ${{ fromJSON(needs.matrix.outputs.databases) }}
         mode: ${{ fromJSON(needs.matrix.outputs.modes) }}
         service: [
-          Account,
-          Avatars,
-          Console,
           Databases,
           TablesDB,
           Functions,
           FunctionsSchedule,
           GraphQL,
-          Health,
-          Locale,
           Projects,
           Realtime,
           Sites,
           Proxy,
-          Storage,
-          Tokens,
-          Teams,
-          Users,
-          ProjectWebhooks,
           Webhooks,
-          VCS,
           Messaging,
           Migrations,
-          Project
         ]
         include:
           - service: Databases
@@ -369,8 +358,6 @@ jobs:
           - service: Sites
             runner: blacksmith-4vcpu-ubuntu-2404
           - service: Functions
-            runner: blacksmith-4vcpu-ubuntu-2404
-          - service: Avatars
             runner: blacksmith-4vcpu-ubuntu-2404
           - service: Realtime
             runner: blacksmith-4vcpu-ubuntu-2404
