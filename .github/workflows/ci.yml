@@ -177,7 +177,7 @@ jobs:
       - name: Run Trivy vulnerability scanner on image
         uses: aquasecurity/trivy-action@0.35.0
         with:
-          image-ref: ${{ env.IMAGE }}
+          input: /tmp/${{ env.IMAGE }}.tar
           format: 'sarif'
           output: 'trivy-image-results.sarif'
           severity: 'CRITICAL,HIGH'
