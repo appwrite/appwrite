@@ -61,6 +61,16 @@ trait Deployment
             $logBase = 'vcs.github.event.repo.unknown';
 
             try {
+                $repositoryId = $repository->getId();
+                $projectId = $repository->getAttribute('projectId');
+                $resourceId = $repository->getAttribute('resourceId');
+                $resourceType = $repository->getAttribute('resourceType');
+
+                $logBase = "vcs.github.event.repo.{$repositoryId}";
+                Span::add("{$logBase}.projectId", $projectId);
+                Span::add("{$logBase}.resourceId", $resourceId);
+                Span::add("{$logBase}.resourceType", $resourceType);
+
                 if ($this->shouldSkipGitDeployment($providerCommitMessage)) {
                     Span::add("{$logBase}.build.skipped", 'commit-message');
                     continue;
