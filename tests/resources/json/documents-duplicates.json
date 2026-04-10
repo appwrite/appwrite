@@ -1,0 +1,22 @@
+[
+    {
+        "$id": "hxfcwpcas5xokpwe",
+        "name": "Updated Diamond",
+        "age": 30
+    },
+    {
+        "$id": "gw8nxwf6esn3tfwf",
+        "name": "Updated Michael",
+        "age": 25
+    },
+    {
+        "$id": "newdoc001abcdefg",
+        "name": "New Person One",
+        "age": 40
+    },
+    {
+        "$id": "newdoc002abcdefg",
+        "name": "New Person Two",
+        "age": 35
+    }
+]

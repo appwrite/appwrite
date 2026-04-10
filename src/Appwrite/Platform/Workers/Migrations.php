@@ -444,6 +444,13 @@ class Migrations extends Action
             $source = $this->processSource($migration);
             $destination = $this->processDestination($migration);
 
+            $options = $migration->getAttribute('options', []);
+
+            if ($destination instanceof DestinationAppwrite) {
+                $destination->setOverwrite($options['overwrite'] ?? false);
+                $destination->setSkip($options['skip'] ?? false);
+            }
+
             $transfer = new Transfer(
                 $source,
                 $destination

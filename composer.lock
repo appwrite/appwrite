@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4fb974e9843f6104e40396e7cad4a833",
+    "content-hash": "4163406e181d863265fc6bbba652476b",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3850,16 +3850,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "5.3.19",
+            "version": "dev-csv-import-upsert-v2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "72ee1614c37e37c7fdd9d4dc87f1f7cdfa1ca691"
+                "reference": "bb419ba6a5da1975373bbd958f9fd4d61fb3ee48"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/72ee1614c37e37c7fdd9d4dc87f1f7cdfa1ca691",
-                "reference": "72ee1614c37e37c7fdd9d4dc87f1f7cdfa1ca691",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/bb419ba6a5da1975373bbd958f9fd4d61fb3ee48",
+                "reference": "bb419ba6a5da1975373bbd958f9fd4d61fb3ee48",
                 "shasum": ""
             },
             "require": {
@@ -3903,9 +3903,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/5.3.19"
+                "source": "https://github.com/utopia-php/database/tree/csv-import-upsert-v2"
             },
-            "time": "2026-03-31T15:52:08+00:00"
+            "time": "2026-04-09T00:55:20+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -4526,16 +4526,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.9.1",
+            "version": "dev-csv-import-upsert",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "7a86aeadf182b63a9f4ceba7e137588b31c5d2e2"
+                "reference": "8c85cbebcb98724c03c5e50af4defeabe020ab9e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/7a86aeadf182b63a9f4ceba7e137588b31c5d2e2",
-                "reference": "7a86aeadf182b63a9f4ceba7e137588b31c5d2e2",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/8c85cbebcb98724c03c5e50af4defeabe020ab9e",
+                "reference": "8c85cbebcb98724c03c5e50af4defeabe020ab9e",
                 "shasum": ""
             },
             "require": {
@@ -4544,7 +4544,7 @@
                 "ext-openssl": "*",
                 "halaxa/json-machine": "^1.2",
                 "php": ">=8.1",
-                "utopia-php/database": "5.*",
+                "utopia-php/database": "dev-csv-import-upsert-v2 as 5.0.0",
                 "utopia-php/dsn": "0.2.*",
                 "utopia-php/storage": "1.0.*"
             },
@@ -4575,9 +4575,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/1.9.1"
+                "source": "https://github.com/utopia-php/migration/tree/csv-import-upsert"
             },
-            "time": "2026-03-25T07:05:27+00:00"
+            "time": "2026-04-09T00:59:50+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -8426,9 +8426,25 @@
             "time": "2024-11-07T12:36:22+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-csv-import-upsert-v2",
+            "alias": "5.0.0",
+            "alias_normalized": "5.0.0.0"
+        },
+        {
+            "package": "utopia-php/migration",
+            "version": "dev-csv-import-upsert",
+            "alias": "1.9.0",
+            "alias_normalized": "1.9.0.0"
+        }
+    ],
     "minimum-stability": "dev",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/database": 20,
+        "utopia-php/migration": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
