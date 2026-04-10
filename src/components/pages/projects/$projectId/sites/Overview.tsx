@@ -17,6 +17,7 @@ import {
   ExternalLink,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME } from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -390,7 +391,12 @@ export function View() {
                               </span>
                             )}
                           </div>
-                          <div className="mt-3 pt-2 border-t border-border/60 flex flex-wrap items-center gap-2">
+                          <div
+                            className={cn(
+                              RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME,
+                              'flex flex-wrap items-center gap-2',
+                            )}
+                          >
                             <Button
                               variant="link"
                               size="sm"
@@ -435,7 +441,12 @@ export function View() {
                           </div>
                         </>
                       ) : (
-                        <div className="mt-2 pt-2 border-t border-border/60 flex flex-wrap items-center gap-2">
+                        <div
+                          className={cn(
+                            RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME,
+                            'flex flex-wrap items-center gap-2',
+                          )}
+                        >
                           <Button
                             variant="link"
                             size="sm"

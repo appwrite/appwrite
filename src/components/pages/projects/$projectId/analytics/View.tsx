@@ -19,6 +19,7 @@ import {
   Tablet,
   Bot,
 } from 'lucide-react'
+import { RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME } from '../shared/ResourceCard'
 import { ServiceHeader } from '../shared/ServiceHeader'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Pagination } from '@/components/global/shared/Pagination'
@@ -466,7 +467,12 @@ export function View() {
                       </div>
 
                       {/* Footer */}
-                      <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
+                      <div
+                        className={cn(
+                          RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME,
+                          'flex items-center justify-between',
+                        )}
+                      >
                         <div className="flex items-center gap-3">
                           <TrafficBreakdown traffic={site.traffic} />
                           <DeviceBreakdown devices={site.devices} />

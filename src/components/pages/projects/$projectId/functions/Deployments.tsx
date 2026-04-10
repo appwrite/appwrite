@@ -79,6 +79,7 @@ import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
+import { RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME } from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import { cn } from '@/lib/utils'
 import {
   useProjectFunction,
@@ -1049,7 +1050,12 @@ export function View() {
                           +{totalActiveDomains - activeDomains.length} more
                         </p>
                       )}
-                      <div className="mt-3 pt-2 border-t border-border/60 flex flex-wrap items-center gap-2">
+                      <div
+                        className={cn(
+                          RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME,
+                          'flex flex-wrap items-center gap-2',
+                        )}
+                      >
                         <Button
                           variant="link"
                           size="sm"
@@ -1094,7 +1100,12 @@ export function View() {
                       </div>
                     </>
                   ) : (
-                    <div className="mt-2 pt-2 border-t border-border/60 flex flex-wrap items-center gap-2">
+                    <div
+                      className={cn(
+                        RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME,
+                        'flex flex-wrap items-center gap-2',
+                      )}
+                    >
                       <Button
                         variant="link"
                         size="sm"

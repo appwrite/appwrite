@@ -164,6 +164,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME } from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
@@ -233,7 +234,12 @@ function ProjectCardFooter({
   paused?: boolean
 }) {
   return (
-    <div className="mt-3.5 flex flex-wrap items-center gap-2 border-t border-border/60 pt-3.5">
+    <div
+      className={cn(
+        RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME,
+        'flex flex-wrap items-center gap-2',
+      )}
+    >
       {paused && (
         <Badge variant="warning" className="gap-1.5 text-[10px] shrink-0">
           <PauseCircle className="h-3 w-3" />

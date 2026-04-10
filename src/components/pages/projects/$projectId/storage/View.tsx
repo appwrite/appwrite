@@ -937,6 +937,7 @@ export function View() {
                       <Link
                         to="/projects/$projectId/storage/$bucketId/"
                         params={{ projectId, bucketId: bucketData.$id }}
+                        className="block min-w-0"
                       >
                         <ResourceCard
                           title={bucketData.name}
@@ -968,15 +969,6 @@ export function View() {
                                     value: formatBytes(
                                       bucketData.maximumFileSize,
                                     ),
-                                  },
-                                ]
-                              : []),
-                            ...(bucketData.allowedFileExtensions &&
-                            bucketData.allowedFileExtensions.length > 0
-                              ? [
-                                  {
-                                    label: 'Extensions',
-                                    value: `${bucketData.allowedFileExtensions.length} ${bucketData.allowedFileExtensions.length === 1 ? 'type' : 'types'}`,
                                   },
                                 ]
                               : []),

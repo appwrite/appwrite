@@ -1,8 +1,13 @@
+import { Fragment } from 'react'
 import { cn } from '@/lib/utils'
 import { MoreHorizontal, type LucideIcon } from 'lucide-react'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { getStatusColor, type StatusType } from '@/lib/utils/status-badge'
+
+/** Divider + spacing for compact grid card metadata/footer rows (use with ResourceCard or matching cards). */
+export const RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME =
+  'mt-2 min-w-0 border-t border-border pt-2'
 
 interface ResourceCardProps {
   title: string
@@ -54,7 +59,7 @@ export function ResourceCard({
     <div
       onClick={onClick}
       className={cn(
-        'group rounded-lg border border-border bg-card p-4 transition-all',
+        'group min-w-0 rounded-lg border border-border bg-card p-4 transition-all',
         onClick && 'cursor-pointer hover:border-border hover:bg-accent/50',
         className,
       )}
@@ -143,19 +148,33 @@ export function ResourceCard({
         )}
       </div>
 
-      {/* Metadata */}
+      {/* Metadata — single row, compact; scroll horizontally only if needed */}
       {metadata && metadata.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-border pt-3">
-          {metadata.map((item, index) => (
-            <div key={index} className="flex items-center gap-1.5">
-              <span className="text-[11px] text-muted-foreground/70">
-                {item.label}
-              </span>
-              <span className="text-[11px] font-medium text-muted-foreground">
-                {item.value}
-              </span>
-            </div>
-          ))}
+        <div className={RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME}>
+          <div className="flex min-w-0 flex-nowrap items-center gap-x-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {metadata.map((item, index) => (
+              <Fragment key={index}>
+                {index > 0 ? (
+                  <span
+                    className="shrink-0 text-[10px] text-muted-foreground/40"
+                    aria-hidden
+                  >
+                    ·
+                  </span>
+                ) : null}
+                <div className="flex shrink-0 items-center gap-0.5">
+                  {item.label ? (
+                    <span className="text-[10px] text-muted-foreground/70">
+                      {item.label}
+                    </span>
+                  ) : null}
+                  <span className="text-[10px] font-medium text-muted-foreground">
+                    {item.value}
+                  </span>
+                </div>
+              </Fragment>
+            ))}
+          </div>
         </div>
       )}
     </div>
