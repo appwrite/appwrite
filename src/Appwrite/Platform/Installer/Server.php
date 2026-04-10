@@ -145,9 +145,20 @@ class Server
         $paths = $this->paths;
         $state = $this->state;
 
-        Http::setResource('installerState', fn () => $state);
-        Http::setResource('installerConfig', fn () => $config);
-        Http::setResource('installerPaths', fn () => $paths);
+        $adapter = new class ($host, $port, ['worker_num' => 1]) extends SwooleAdapter {
+            public function getNativeServer(): SwooleServer
+            {
+                return $this->server;
+            }
+        };
+
+        $nativeServer = $adapter->getNativeServer();
+
+        $container = $adapter->getContainer();
+        $container->set('installerState', fn () => $state);
+        $container->set('installerConfig', fn () => $config);
+        $container->set('installerPaths', fn () => $paths);
+        $container->set('swooleServer', fn () => $nativeServer);
 
         // Register routes via Utopia Platform
         $platform = new Installer();
@@ -160,17 +171,6 @@ class Server
             ->inject('response')
             ->action($errorHandler->action(...));
 
-        $adapter = new class ($host, $port, ['worker_num' => 1]) extends SwooleAdapter {
-            public function getNativeServer(): SwooleServer
-            {
-                return $this->server;
-            }
-        };
-
-        $nativeServer = $adapter->getNativeServer();
-
-        Http::setResource('swooleServer', fn () => $nativeServer);
-
         $nativeServer->on('start', function () use ($nativeServer, $port, $readyFile) {
             \Swoole\Process::signal(SIGTERM, fn () => $nativeServer->shutdown());
             \Swoole\Process::signal(SIGINT, fn () => $nativeServer->shutdown());
@@ -180,7 +180,7 @@ class Server
             }
         });
 
-        $adapter->onRequest(function (Request $request, Response $response) use ($files) {
+        $adapter->onRequest(function (Request $request, Response $response) use ($adapter, $files) {
             // Serve static files from memory
             $uri = $request->getURI();
             if ($files->isFileLoaded($uri)) {
@@ -190,7 +190,7 @@ class Server
                 return;
             }
 
-            $app = new Http('UTC');
+            $app = new Http($adapter, 'UTC');
             $app->run($request, $response);
         });
 

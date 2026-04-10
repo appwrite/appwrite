@@ -37,6 +37,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Roles;
 use Utopia\Http\Http;
+use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Validator\WhiteList;
@@ -98,6 +99,9 @@ Http::init()
     ->inject('authorization')
     ->action(function (Http $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, Audit $queueForAudits, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization) {
         $route = $utopia->getRoute();
+        if ($route === null) {
+            throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
+        }
 
         /**
          * Handle user authentication and session validation.
@@ -183,7 +187,7 @@ Http::init()
                 $user = new User([
                     '$id' => '',
                     'status' => true,
-                    'type' => ACTIVITY_TYPE_APP,
+                    'type' => ACTIVITY_TYPE_KEY_PROJECT,
                     'email' => 'app.' . $project->getId() . '@service.' . $request->getHostname(),
                     'password' => '',
                     'name' => $apiKey->getName(),
@@ -253,7 +257,14 @@ Http::init()
                     }
                 }
 
-                $queueForAudits->setUser($user);
+                $userClone = clone $user;
+                $userClone->setAttribute('type', match ($apiKey->getType()) {
+                    API_KEY_STANDARD => ACTIVITY_TYPE_KEY_PROJECT,
+                    API_KEY_ACCOUNT => ACTIVITY_TYPE_KEY_ACCOUNT,
+                    API_KEY_ORGANIZATION => ACTIVITY_TYPE_KEY_ORGANIZATION,
+                    default => ACTIVITY_TYPE_KEY_PROJECT,
+                });
+                $queueForAudits->setUser($userClone);
             }
 
             // Apply permission
@@ -489,6 +500,10 @@ Http::init()
         $request->setUser($user);
 
         $route = $utopia->getRoute();
+        if ($route === null) {
+            throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
+        }
+
         $path = $route->getMatchedPath();
         $databaseType = match (true) {
             str_contains($path, '/documentsdb') => DATABASE_TYPE_DOCUMENTSDB,
@@ -592,7 +607,9 @@ Http::init()
         if (! $user->isEmpty()) {
             $userClone = clone $user;
             // $user doesn't support `type` and can cause unintended effects.
-            $userClone->setAttribute('type', ACTIVITY_TYPE_USER);
+            if (empty($user->getAttribute('type'))) {
+                $userClone->setAttribute('type', $mode === APP_MODE_ADMIN ? ACTIVITY_TYPE_ADMIN : ACTIVITY_TYPE_USER);
+            }
             $queueForAudits->setUser($userClone);
         }
 
@@ -617,6 +634,7 @@ Http::init()
             $isDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && ! $user->isPrivileged($authorization->getRoles());
 
             $key = $request->cacheIdentifier();
+            Span::add('storage.cache.key', $key);
             $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
             $cache = new Cache(
                 new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
@@ -665,6 +683,8 @@ Http::init()
                     if ($file->isEmpty()) {
                         throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
                     }
+                    Span::add('storage.bucket.id', $bucketId);
+                    Span::add('storage.file.id', $fileId);
                     // Do not update transformedAt if it's a console user
                     if (! $user->isPrivileged($authorization->getRoles())) {
                         $transformedAt = $file->getAttribute('transformedAt', '');
@@ -677,16 +697,27 @@ Http::init()
                     }
                 }
 
+                $accessedAt = $cacheLog->getAttribute('accessedAt', '');
+                if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_CACHE_UPDATE)) > $accessedAt) {
+                    $authorization->skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), new Document([
+                        'accessedAt' => DateTime::now(),
+                    ])));
+                    // Refresh the filesystem file's mtime so TTL-based expiry in cache->load() stays valid
+                    $cache->save($key, $data);
+                }
+
                 $response
                     ->addHeader('Cache-Control', sprintf('private, max-age=%d', $timestamp))
                     ->addHeader('X-Appwrite-Cache', 'hit')
                     ->setContentType($cacheLog->getAttribute('mimeType'));
                 $storageCacheOperationsCounter->add(1, ['result' => 'hit']);
                 if (! $isImageTransformation || ! $isDisabled) {
+                    Span::add('storage.cache.hit', true);
                     $response->send($data);
                 }
             } else {
                 $storageCacheOperationsCounter->add(1, ['result' => 'miss']);
+                Span::add('storage.cache.hit', false);
                 $response
                     ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
                     ->addHeader('Pragma', 'no-cache')
@@ -774,7 +805,8 @@ Http::shutdown()
     ->inject('eventProcessor')
     ->inject('bus')
     ->inject('apiKey')
-    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, Audit $queueForAudits, Context $usage, UsagePublisher $publisherForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor, Bus $bus, ?Key $apiKey) use ($parseLabel) {
+    ->inject('mode')
+    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, Audit $queueForAudits, Context $usage, UsagePublisher $publisherForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor, Bus $bus, ?Key $apiKey, string $mode) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
@@ -876,7 +908,9 @@ Http::shutdown()
         if (! $user->isEmpty()) {
             $userClone = clone $user;
             // $user doesn't support `type` and can cause unintended effects.
-            $userClone->setAttribute('type', ACTIVITY_TYPE_USER);
+            if (empty($user->getAttribute('type'))) {
+                $userClone->setAttribute('type', $mode === APP_MODE_ADMIN ? ACTIVITY_TYPE_ADMIN : ACTIVITY_TYPE_USER);
+            }
             $queueForAudits->setUser($userClone);
         } elseif ($queueForAudits->getUser() === null || $queueForAudits->getUser()->isEmpty()) {
             /**

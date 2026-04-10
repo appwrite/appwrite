@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Health\Http\Health\Queue\Migrations;
 
-use Appwrite\Event\Migration;
+use Appwrite\Event\Publisher\Migration as MigrationPublisher;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -42,16 +42,16 @@ class Get extends Base
                 contentType: ContentType::JSON
             ))
             ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
-            ->inject('queueForMigrations')
+            ->inject('publisherForMigrations')
             ->inject('response')
             ->callback($this->action(...));
     }
 
-    public function action(int|string $threshold, Migration $queueForMigrations, Response $response): void
+    public function action(int|string $threshold, MigrationPublisher $publisherForMigrations, Response $response): void
     {
         $threshold = (int) $threshold;
 
-        $size = $queueForMigrations->getSize();
+        $size = $publisherForMigrations->getSize();
 
         $this->assertQueueThreshold($size, $threshold);
 
