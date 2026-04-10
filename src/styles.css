@@ -50,9 +50,9 @@ code {
   --accent-foreground: oklch(0.21 0.006 285.885);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.577 0.245 27.325);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.871 0.006 286.286);
+  --border: oklch(0.948 0.0025 286.32);
+  --input: oklch(0.948 0.0025 286.32);
+  --ring: oklch(0.898 0.004 286.286);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -66,8 +66,8 @@ code {
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.967 0.001 286.375);
   --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
-  --sidebar-border: oklch(0.92 0.004 286.32);
-  --sidebar-ring: oklch(0.871 0.006 286.286);
+  --sidebar-border: oklch(0.948 0.0025 286.32);
+  --sidebar-ring: oklch(0.898 0.004 286.286);
   /* Cloud profile — matches appwrite/website; files in public/fonts/aeonik-pro */
   --font-aeonik-pro:
     'Aeonik Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
