@@ -25,6 +25,15 @@ use Utopia\VCS\Exception\RepositoryNotFound;
 
 trait Deployment
 {
+    protected function shouldSkipGitDeployment(string $providerCommitMessage): bool
+    {
+        if ($providerCommitMessage === '') {
+            return false;
+        }
+
+        return \preg_match('/\[(skip deploy|skip deployment)\]/i', $providerCommitMessage) === 1;
+    }
+
     protected function createGitDeployments(
         GitHub $github,
         string $providerInstallationId,
@@ -52,6 +61,11 @@ trait Deployment
             $logBase = 'vcs.github.event.repo.unknown';
 
             try {
+                if ($this->shouldSkipGitDeployment($providerCommitMessage)) {
+                    Span::add("{$logBase}.build.skipped", 'commit-message');
+                    continue;
+                }
+
                 $repositoryId = $repository->getId();
                 $projectId = $repository->getAttribute('projectId');
                 $resourceId = $repository->getAttribute('resourceId');
