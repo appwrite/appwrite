@@ -39,6 +39,15 @@ function normalizeUrl(url: string): string {
   }
 }
 
+export function isCloudEndpointUrl(url: string): boolean {
+  try {
+    const host = new URL(url).hostname.toLowerCase()
+    return host === 'cloud.appwrite.io' || host.endsWith('.cloud.appwrite.io')
+  } catch {
+    return false
+  }
+}
+
 function getStoredUrl(): string | null {
   if (typeof window === 'undefined') return null
   const stored = localStorage.getItem(DEBUG_ENDPOINT_URL_KEY)
@@ -84,6 +93,35 @@ export function getDebugEndpointBaseUrl(): string | null {
   } catch {
     return null
   }
+}
+
+/**
+ * Returns the API URL from VITE_APPWRITE_ENDPOINT when present.
+ */
+export function getEnvEndpointBaseUrl(): string | null {
+  const envEndpoint = import.meta.env?.VITE_APPWRITE_ENDPOINT as
+    | string
+    | undefined
+  if (envEndpoint?.trim()) {
+    return normalizeUrl(envEndpoint.trim())
+  }
+
+  if (typeof window !== 'undefined') {
+    return normalizeUrl(`${window.location.protocol}//${window.location.host}/v1`)
+  }
+
+  return null
+}
+
+/**
+ * Returns the effective API URL currently in use, preferring the debug override and
+ * falling back to the env var endpoint.
+ */
+export function getEffectiveEndpointBaseUrl(): string | null {
+  const debugBase = getDebugEndpointBaseUrl()
+  if (debugBase) return debugBase
+
+  return getEnvEndpointBaseUrl()
 }
 
 export const DEBUG_ENDPOINT_CHANGE_EVENT = 'debugEndpointChange'

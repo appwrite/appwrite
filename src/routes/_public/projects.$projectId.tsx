@@ -123,10 +123,13 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
 
       // Fetch organization plan if we have a teamId (critical for header/limit checking)
       if (projectData?.teamId) {
-        await queryClient
-          .ensureQueryData(organizationPlanQueryOptions(projectData.teamId))
-          .catch(() => {})
-        if (getActiveProfileFeatures().orgRoles) {
+        const features = getActiveProfileFeatures()
+        if (features.billing) {
+          await queryClient
+            .ensureQueryData(organizationPlanQueryOptions(projectData.teamId))
+            .catch(() => {})
+        }
+        if (features.orgRoles) {
           await queryClient
             .ensureQueryData(organizationScopesQueryOptions(projectData.teamId))
             .catch(() => {})

@@ -3095,7 +3095,8 @@ export function TableView({
           }
           beforeCreateButtons={
             isDatabaseLevelView ||
-            !showTableSecuritySettings ? undefined : activeTab === 'columns' ? (
+            !showTableSecuritySettings ? undefined : activeTab === 'columns' &&
+              features.aiAssistant ? (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
@@ -3118,7 +3119,7 @@ export function TableView({
                   Suggest {dbLabels.schemaPluralTitle.toLowerCase()}
                 </TooltipContent>
               </Tooltip>
-            ) : activeTab === 'indexes' ? (
+            ) : activeTab === 'indexes' && features.aiAssistant ? (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span className="inline-flex">
@@ -3475,9 +3476,13 @@ export function TableView({
                   onCreateReady={(openDialog) => {
                     openCreateColumnDialogRef.current = openDialog
                   }}
-                  onSuggestReady={(openDialog) => {
-                    openSuggestColumnsDialogRef.current = openDialog
-                  }}
+                  onSuggestReady={
+                    features.aiAssistant
+                      ? (openDialog) => {
+                          openSuggestColumnsDialogRef.current = openDialog
+                        }
+                      : undefined
+                  }
                 />
               )}
               {activeTab === 'indexes' && (
@@ -3488,9 +3493,13 @@ export function TableView({
                   onCreateReady={(openDialog) => {
                     openCreateIndexDialogRef.current = openDialog
                   }}
-                  onSuggestReady={(openDialog) => {
-                    openSuggestIndexesDialogRef.current = openDialog
-                  }}
+                  onSuggestReady={
+                    features.aiAssistant
+                      ? (openDialog) => {
+                          openSuggestIndexesDialogRef.current = openDialog
+                        }
+                      : undefined
+                  }
                   onIndexesAbilityChange={setCanCreateIndex}
                 />
               )}
@@ -7751,6 +7760,7 @@ function RowsSpreadsheet({
   const routeDbKind =
     (params.dbKind as DatabaseRouteKind | undefined) ?? 'tablesdb'
   const dbLabels = getDatabaseConsoleLabels(routeDbKind)
+  const { features } = useConsoleProfile()
   const hideSampleData = routeDbKind === 'documentsdb'
   const hideSequenceColumn = routeDbKind === 'documentsdb'
   const useInlineDocumentPane = routeDbKind === 'documentsdb'
@@ -8833,49 +8843,50 @@ function RowsSpreadsheet({
             </div>
             <div className="grid grid-cols-2 gap-3 w-full max-w-2xl">
               {/* Row 1 */}
-              {!canWriteTables ? (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Card className="cursor-not-allowed opacity-60 p-0 gap-0 shadow-none">
-                      <div className="flex items-start gap-3 p-4">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
-                          <Lightbulb className="h-5 w-5 text-muted-foreground" />
+              {features.aiAssistant &&
+                (!canWriteTables ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Card className="cursor-not-allowed opacity-60 p-0 gap-0 shadow-none">
+                        <div className="flex items-start gap-3 p-4">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                            <Lightbulb className="h-5 w-5 text-muted-foreground" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h3 className="text-sm font-medium text-foreground">
+                              Suggest {dbLabels.schemaPluralTitle.toLowerCase()}
+                            </h3>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              Use AI to generate {dbLabels.schemaPlural}
+                            </p>
+                          </div>
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <h3 className="text-sm font-medium text-foreground">
-                            Suggest {dbLabels.schemaPluralTitle.toLowerCase()}
-                          </h3>
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            Use AI to generate {dbLabels.schemaPlural}
-                          </p>
-                        </div>
+                      </Card>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      You don't have permission to perform this action.
+                    </TooltipContent>
+                  </Tooltip>
+                ) : (
+                  <Card
+                    onClick={handleSuggestColumns}
+                    className="cursor-pointer transition-colors hover:bg-accent/50 p-0 gap-0 shadow-none"
+                  >
+                    <div className="flex items-start gap-3 p-4">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                        <Lightbulb className="h-5 w-5 text-muted-foreground" />
                       </div>
-                    </Card>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    You don't have permission to perform this action.
-                  </TooltipContent>
-                </Tooltip>
-              ) : (
-                <Card
-                  onClick={handleSuggestColumns}
-                  className="cursor-pointer transition-colors hover:bg-accent/50 p-0 gap-0 shadow-none"
-                >
-                  <div className="flex items-start gap-3 p-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
-                      <Lightbulb className="h-5 w-5 text-muted-foreground" />
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-sm font-medium text-foreground">
+                          Suggest {dbLabels.schemaPluralTitle.toLowerCase()}
+                        </h3>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Use AI to generate {dbLabels.schemaPlural}
+                        </p>
+                      </div>
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="text-sm font-medium text-foreground">
-                        Suggest {dbLabels.schemaPluralTitle.toLowerCase()}
-                      </h3>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        Use AI to generate {dbLabels.schemaPlural}
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-              )}
+                  </Card>
+                ))}
               {hasCustomColumns ? (
                 !canWriteRows ? (
                   <Tooltip>

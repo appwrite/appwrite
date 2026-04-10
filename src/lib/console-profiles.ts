@@ -1,3 +1,5 @@
+import { getDebugEndpointBaseUrl } from '@/lib/debug-endpoint'
+
 /**
  * Console profile configuration for different Appwrite deployments.
  * Each profile defines which features are available.
@@ -117,16 +119,49 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
 
 const VALID_PROFILE_IDS: ConsoleProfileId[] = ['cloud', 'self-hosted']
 
+function isCloudEndpoint(url: string): boolean {
+  try {
+    const host = new URL(url).hostname.toLowerCase()
+    return host === 'cloud.appwrite.io' || host.endsWith('.cloud.appwrite.io')
+  } catch {
+    return false
+  }
+}
+
+function detectProfileFromEndpoint(): ConsoleProfileId {
+  if (typeof window !== 'undefined') {
+    const debugBase = getDebugEndpointBaseUrl()
+    if (debugBase) {
+      return isCloudEndpoint(debugBase) ? 'cloud' : 'self-hosted'
+    }
+  }
+
+  const envEndpoint = import.meta.env?.VITE_APPWRITE_ENDPOINT as
+    | string
+    | undefined
+  if (envEndpoint?.trim()) {
+    return isCloudEndpoint(envEndpoint) ? 'cloud' : 'self-hosted'
+  }
+
+  if (typeof window !== 'undefined') {
+    return isCloudEndpoint(`${window.location.protocol}//${window.location.host}/v1`)
+      ? 'cloud'
+      : 'self-hosted'
+  }
+
+  return 'cloud'
+}
+
 function getProfileFromEnv(): ConsoleProfileId {
   if (typeof import.meta === 'undefined' || !import.meta.env) {
-    return 'cloud'
+    return detectProfileFromEndpoint()
   }
-  const env = (import.meta.env?.VITE_CONSOLE_PROFILE as string) || 'cloud'
-  const normalized = env.toLowerCase().trim().replace(/\s+/g, '-')
-  if (VALID_PROFILE_IDS.includes(normalized as ConsoleProfileId)) {
+  const env = (import.meta.env?.VITE_CONSOLE_PROFILE as string | undefined)
+  const normalized = env?.toLowerCase().trim().replace(/\s+/g, '-')
+  if (normalized && VALID_PROFILE_IDS.includes(normalized as ConsoleProfileId)) {
     return normalized as ConsoleProfileId
   }
-  return 'cloud'
+  return detectProfileFromEndpoint()
 }
 
 /** Store the full profile object (actual value), not just the id. */

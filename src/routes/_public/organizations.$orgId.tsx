@@ -41,8 +41,11 @@ export const Route = createFileRoute('/_public/organizations/$orgId')({
     // Order: console team → pinned IDs → active projects list key matches OrgOverview (exclude pinned).
     if (orgId) {
       try {
+        const features = getActiveProfileFeatures()
         await queryClient.ensureQueryData(organizationsQueryOptions())
-        await queryClient.ensureQueryData(organizationPlanQueryOptions(orgId))
+        if (features.billing) {
+          await queryClient.ensureQueryData(organizationPlanQueryOptions(orgId))
+        }
 
         await queryClient.ensureQueryData(consoleTeamQueryOptions(orgId))
         const team = queryClient.getQueryData(
@@ -69,7 +72,7 @@ export const Route = createFileRoute('/_public/organizations/$orgId')({
             ),
           ),
         ]
-        if (getActiveProfileFeatures().orgRoles) {
+        if (features.orgRoles) {
           parallel.push(
             queryClient
               .ensureQueryData(organizationScopesQueryOptions(orgId))
