@@ -16,6 +16,7 @@ import { useMemo } from 'react'
 import { Query, ID, Status } from '@appwrite.io/console'
 import type { Project } from '@/lib/utils/mock-data'
 import { sdk, setProjectRegion } from '@/lib/appwrite/sdk'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import {
   ensureFingerprintServerTimeSynced,
   generateFingerprintToken,
@@ -41,6 +42,12 @@ const PROJECT_LIST_SELECT = [
   'platforms',
   'keys',
 ] as const
+
+function getProjectStatusQueries(): string[] {
+  return getActiveProfileFeatures().billing
+    ? [Query.or([Query.isNull('status'), Query.notEqual('status', 'archived')])]
+    : []
+}
 
 // ============================================================================
 // QUERY FUNCTIONS
@@ -87,10 +94,12 @@ export async function fetchActiveProjects(
     return { projects: [], total: 0 }
   }
 
+  const statusQueries = getProjectStatusQueries()
+
   const baseQueries = [
     Query.select([...PROJECT_LIST_SELECT]),
     Query.equal('teamId', teamId),
-    Query.or([Query.isNull('status'), Query.notEqual('status', 'archived')]),
+    ...statusQueries,
     Query.orderDesc('$createdAt'),
     Query.limit(limit),
     Query.offset(page * limit),
@@ -107,10 +116,7 @@ export async function fetchActiveProjects(
       ? [
           Query.select([...PROJECT_LIST_SELECT]),
           Query.equal('teamId', teamId),
-          Query.or([
-            Query.isNull('status'),
-            Query.notEqual('status', 'archived'),
-          ]),
+          ...statusQueries,
           ...excludeIds.map((id) => Query.notEqual('$id', id)),
           Query.orderDesc('$createdAt'),
           Query.limit(limit),
@@ -157,8 +163,8 @@ export async function fetchProjectsByIds(
     queries: [
       Query.select([...PROJECT_LIST_SELECT]),
       Query.equal('teamId', teamId),
+      ...getProjectStatusQueries(),
       idQuery,
-      Query.or([Query.isNull('status'), Query.notEqual('status', 'archived')]),
       Query.limit(validIds.length),
     ],
     total: false,

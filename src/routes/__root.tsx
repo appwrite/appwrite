@@ -274,19 +274,32 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             ) : null}
             <SentryContextProvider>
               <DebugModeProvider>
-                <AIChatProvider>
+                {features.aiAssistant ? (
+                  <AIChatProvider>
+                    <PromoBannerProvider>
+                      <div className="flex w-full min-w-0 overflow-hidden root-container">
+                        <div className="root-scroll-container flex-1 overflow-hidden min-h-0 h-full">
+                          {children}
+                        </div>
+                        <AIChatPanel />
+                      </div>
+                      <ClientOnly>
+                        <DebugMenu />
+                      </ClientOnly>
+                    </PromoBannerProvider>
+                  </AIChatProvider>
+                ) : (
                   <PromoBannerProvider>
                     <div className="flex w-full min-w-0 overflow-hidden root-container">
                       <div className="root-scroll-container flex-1 overflow-hidden min-h-0 h-full">
                         {children}
                       </div>
-                      <AIChatPanel />
                     </div>
                     <ClientOnly>
                       <DebugMenu />
                     </ClientOnly>
                   </PromoBannerProvider>
-                </AIChatProvider>
+                )}
               </DebugModeProvider>
             </SentryContextProvider>
             <ClientOnly>

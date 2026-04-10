@@ -48,9 +48,13 @@ import {
 import {
   setDebugEndpointOverride,
   ENDPOINT_PRESETS,
+  getEffectiveEndpointBaseUrl,
+  getEnvEndpointBaseUrl,
+  isCloudEndpointUrl,
 } from '@/lib/debug-endpoint'
 import { useDebugEndpoint } from '@/hooks/use-debug-endpoint'
 import { useNavigate } from '@tanstack/react-router'
+import { Branch as DismissableLayerBranch } from '@radix-ui/react-dismissable-layer'
 interface DebugAction {
   label: string
   onClick: () => void
@@ -66,6 +70,7 @@ interface MenuItem {
   onClick?: () => void
   icon?: React.ReactNode
   active?: boolean
+  disabled?: boolean
   badge?: string | number
   variant?: 'button' | 'switch'
   switchValue?: boolean
@@ -93,6 +98,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
   const { preset: endpointPreset, customUrl: endpointCustomUrl } =
     useDebugEndpoint()
   const navigate = useNavigate()
+
+  const applyOverrideAndReload = (action: () => void) => {
+    setIsOpen(false)
+    setTimeout(() => {
+      action()
+      window.location.reload()
+    }, 0)
+  }
 
   useEffect(() => {
     const unsubscribe = subscribeToDebugOverrides(setOverrides)
@@ -149,9 +162,13 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
         description:
           'Full feature set (billing, domains, usage, activity, org roles, system status, account MFA, account identities)',
         onClick: () => {
-          setIsOpen(false)
-          // Defer profile change so popover unmounts before app re-renders (avoids removeChild DOM error)
-          setTimeout(() => setDebugProfileOverride('cloud'), 0)
+          applyOverrideAndReload(() => {
+            const effectiveEndpoint = getEffectiveEndpointBaseUrl()
+            if (!effectiveEndpoint || !isCloudEndpointUrl(effectiveEndpoint)) {
+              setDebugEndpointOverride('production')
+            }
+            setDebugProfileOverride('cloud')
+          })
         },
         active: profileId === 'cloud',
         icon: <Cloud className="h-3 w-3" />,
@@ -160,8 +177,13 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
         label: 'Self-hosted',
         description: 'Cloud-only features disabled',
         onClick: () => {
-          setIsOpen(false)
-          setTimeout(() => setDebugProfileOverride('self-hosted'), 0)
+          applyOverrideAndReload(() => {
+            const effectiveEndpoint = getEffectiveEndpointBaseUrl()
+            if (!effectiveEndpoint || isCloudEndpointUrl(effectiveEndpoint)) {
+              setDebugEndpointOverride('localhost')
+            }
+            setDebugProfileOverride('self-hosted')
+          })
         },
         active: profileId === 'self-hosted',
         icon: <Server className="h-3 w-3" />,
@@ -170,8 +192,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
         label: 'Use env var',
         description: 'Reset to VITE_CONSOLE_PROFILE',
         onClick: () => {
-          setIsOpen(false)
-          setTimeout(() => setDebugProfileOverride(null), 0)
+          applyOverrideAndReload(() => setDebugProfileOverride(null))
         },
         icon: <RotateCcw className="h-3 w-3" />,
       },
@@ -480,6 +501,10 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             ],
           },
           (() => {
+            const envEndpoint = getEnvEndpointBaseUrl()
+            const isCloudEnvEndpoint = envEndpoint
+              ? isCloudEndpointUrl(envEndpoint)
+              : false
             const activeEndpointLabel = !endpointPreset
               ? 'Use env var'
               : endpointPreset === 'custom' && endpointCustomUrl
@@ -498,20 +523,41 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                   keyof typeof ENDPOINT_PRESETS,
                   (typeof ENDPOINT_PRESETS)[keyof typeof ENDPOINT_PRESETS],
                 ][]
-              ).map(([id, { label, description }]) => ({
-                label,
-                description,
-                onClick: () => {
-                  setIsOpen(false)
-                  setTimeout(() => setDebugEndpointOverride(id), 0)
-                },
-                active: endpointPreset === id,
-                icon: <Globe className="h-3 w-3" />,
-              })),
+              ).map(([id, { label, description }]) => {
+                const disabled =
+                  (profileId === 'self-hosted' &&
+                    (id === 'production' || id === 'stage')) ||
+                  (profileId === 'cloud' && id === 'localhost')
+
+                return {
+                  label,
+                  description: disabled
+                    ? profileId === 'cloud'
+                      ? 'Unavailable while cloud profile is active'
+                      : 'Unavailable while self-hosted profile is active'
+                    : description,
+                  onClick: disabled
+                    ? undefined
+                    : () => {
+                        applyOverrideAndReload(() =>
+                          setDebugEndpointOverride(id),
+                        )
+                      },
+                  active: endpointPreset === id,
+                  disabled,
+                  icon: <Globe className="h-3 w-3" />,
+                }
+              }),
               {
                 label: 'Custom...',
-                description: 'Enter a custom API URL',
-                onClick: () => {
+                description:
+                  profileId === 'cloud'
+                    ? 'Unavailable while cloud profile is active'
+                    : 'Enter a custom API URL',
+                onClick:
+                  profileId === 'cloud'
+                    ? undefined
+                    : () => {
                   const url = window.prompt(
                     'Enter API endpoint URL (e.g. https://my-appwrite.example/v1)',
                     endpointPreset === 'custom' && endpointCustomUrl
@@ -519,24 +565,31 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                       : 'https://cloud.appwrite.io/v1',
                   )
                   if (url?.trim()) {
-                    setIsOpen(false)
-                    setTimeout(
-                      () => setDebugEndpointOverride('custom', url.trim()),
-                      0,
+                    applyOverrideAndReload(() =>
+                      setDebugEndpointOverride('custom', url.trim()),
                     )
                   }
                 },
                 active: endpointPreset === 'custom',
+                disabled: profileId === 'cloud',
                 icon: <Globe className="h-3 w-3" />,
               },
               {
                 label: 'Use env var',
-                description: 'Reset to VITE_APPWRITE_ENDPOINT',
-                onClick: () => {
-                  setIsOpen(false)
-                  setTimeout(() => setDebugEndpointOverride(null), 0)
-                },
+                description:
+                  profileId === 'cloud' && !isCloudEnvEndpoint
+                    ? 'Unavailable because the env endpoint is not a cloud endpoint'
+                    : 'Reset to VITE_APPWRITE_ENDPOINT',
+                onClick:
+                  profileId === 'cloud' && !isCloudEnvEndpoint
+                    ? undefined
+                    : () => {
+                        applyOverrideAndReload(() =>
+                          setDebugEndpointOverride(null),
+                        )
+                      },
                 active: !endpointPreset,
+                disabled: profileId === 'cloud' && !isCloudEnvEndpoint,
                 icon: <RotateCcw className="h-3 w-3" />,
               },
             ]
@@ -629,7 +682,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
   if (!isVisible) return null
 
   return (
-    <div className="fixed bottom-4 right-4 z-[9999]">
+    <DismissableLayerBranch className="pointer-events-auto fixed bottom-4 right-4 z-[10060]">
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <Tooltip>
           <TooltipTrigger asChild>
@@ -655,7 +708,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           side="top"
           align="end"
           sideOffset={8}
-          className="w-80 max-h-[85vh] overflow-hidden rounded-xl border border-[#9B87F5]/25 bg-[#1A1F2C] p-0 shadow-xl"
+          className="z-[10060] w-80 max-h-[85vh] overflow-hidden rounded-xl border border-[#9B87F5]/25 bg-[#1A1F2C] p-0 shadow-xl"
         >
           <div className="sticky top-0 z-10 border-b border-[#9B87F5]/20 bg-[#1A1F2C]/95 px-4 py-3 backdrop-blur-sm">
             <div className="flex items-center gap-2">
@@ -706,8 +759,11 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                     <button
                       key={`submenu-${itemIndex}`}
                       onClick={item.onClick}
+                      disabled={item.disabled}
                       className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9B87F5]/50 ${
-                        item.active
+                        item.disabled
+                          ? 'cursor-not-allowed opacity-50'
+                          : item.active
                           ? 'bg-[#9B87F5]/25 text-white'
                           : 'text-[#E5DEFF]/90 hover:bg-[#9B87F5]/15 hover:text-white'
                       }`}
@@ -819,6 +875,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           </div>
         </PopoverContent>
       </Popover>
-    </div>
+    </DismissableLayerBranch>
   )
 }

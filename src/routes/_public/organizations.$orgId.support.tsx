@@ -5,9 +5,19 @@ import {
 } from '@/lib/react-query/hooks'
 import { SupportWizardFullscreen } from '@/components/pages/organizations/$orgId/support/SupportWizardFullscreen'
 import { pageTitle } from '@/lib/utils/page-title'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 
 export const Route = createFileRoute('/_public/organizations/$orgId/support')({
   head: () => ({ meta: [{ title: pageTitle('Support', 'Organization') }] }),
+  beforeLoad: ({ params }) => {
+    if (!getActiveProfileFeatures().billing) {
+      throw redirect({
+        to: '/organizations/$orgId',
+        params: { orgId: params.orgId },
+        replace: true,
+      })
+    }
+  },
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') {
       return

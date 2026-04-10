@@ -49,6 +49,7 @@ import { Badge } from '@/components/ui/badge'
 import {
   organizationsQueryOptions,
   activeProjectsQueryOptions,
+  deleteOrganization,
   organizationMembershipsQueryOptions,
   mapOrganizationMembershipsToTeamMembers,
   useConsoleTeam,
@@ -730,9 +731,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   // Mutation to delete organization
   const deleteOrgMutation = useMutation({
     mutationFn: async (orgIdToDelete: string) => {
-      await sdk.forConsole.organizations.delete({
-        organizationId: orgIdToDelete,
-      })
+      await deleteOrganization(orgIdToDelete)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['organizations', 'console'] })

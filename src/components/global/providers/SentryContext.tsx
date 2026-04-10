@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query'
 import { sdk } from '@/lib/appwrite/sdk'
 import { useProject } from '@/lib/react-query/hooks'
 import { organizationPlanQueryOptions } from '@/lib/react-query/hooks/organizations'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 
 const isSentryEnabled = () => !!import.meta.env.VITE_SENTRY_DSN
 
@@ -72,6 +73,7 @@ export function SentryContextProvider({
   })
 
   const isAuthenticated = !!account
+  const { features } = useConsoleProfile()
 
   // Determine current org ID: URL (org pages) > project's org (project pages only when loaded) > user prefs
   const projectId = extractProjectId(location.pathname)
@@ -84,7 +86,7 @@ export function SentryContextProvider({
   // Use shared plan query so we don't duplicate API calls (loader already fetches on project pages)
   const { data: orgPlan } = useQuery({
     ...organizationPlanQueryOptions(currentOrgId),
-    enabled: !!currentOrgId && typeof window !== 'undefined',
+    enabled: !!currentOrgId && typeof window !== 'undefined' && features.billing,
   })
 
   // Set user context when authenticated (no PII - only IDs and status flags)

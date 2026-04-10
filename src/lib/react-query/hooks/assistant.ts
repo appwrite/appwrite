@@ -8,6 +8,7 @@ import {
 import { ContentType, ID, Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { getProjectRegion, sdk } from '@/lib/appwrite/sdk'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { DEFAULT_STALE_TIME } from './constants'
 
 export const ASSISTANT_MESSAGES_PAGE_SIZE = 25
@@ -58,10 +59,12 @@ export interface AssistantMessageContext {
 export const ASSISTANT_ATTACHMENTS_BUCKET_ID = 'attachements'
 
 export function assistantConversationsQueryOptions() {
+  const enabled = getActiveProfileFeatures().aiAssistant
   return queryOptions({
     queryKey: ['assistant', 'conversations'],
     queryFn: fetchAssistantConversations,
     staleTime: DEFAULT_STALE_TIME,
+    enabled,
   })
 }
 
@@ -69,10 +72,11 @@ export function assistantMessagesQueryOptions(
   conversationId: string | null | undefined,
   limit: number = ASSISTANT_MESSAGES_PAGE_SIZE,
 ) {
+  const enabled = !!conversationId && getActiveProfileFeatures().aiAssistant
   return queryOptions({
     queryKey: ['assistant', 'messages', conversationId, limit],
     queryFn: () => fetchAssistantMessages(conversationId!, limit),
-    enabled: !!conversationId,
+    enabled,
     placeholderData: keepPreviousData,
     staleTime: DEFAULT_STALE_TIME,
   })
@@ -100,10 +104,12 @@ export async function fetchAssistantAttachmentFiles(fileIds: string[]) {
 
 export function assistantAttachmentFilesQueryOptions(fileIds: string[]) {
   const uniqueFileIds = [...new Set(fileIds.filter(Boolean))]
+  const enabled =
+    uniqueFileIds.length > 0 && getActiveProfileFeatures().aiAssistant
   return queryOptions({
     queryKey: ['assistant', 'attachments', ...uniqueFileIds],
     queryFn: () => fetchAssistantAttachmentFiles(uniqueFileIds),
-    enabled: uniqueFileIds.length > 0,
+    enabled,
     staleTime: DEFAULT_STALE_TIME,
   })
 }

@@ -37,25 +37,91 @@ import {
   DEFAULT_PAGE_SIZE,
 } from './constants'
 
-/**
- * Convert a billing plan string to BillingPlanTier value
- * The values are strings like 'tier-0', 'tier-1', etc.
- */
-function getBillingPlanEnum(planString: string): BillingPlanTierType {
-  if (!planString) {
-    throw new Error('Billing plan is required')
+type OrganizationListResponse = Models.TeamList
+type OrganizationRecord = Models.Team
+type OrganizationPlan = Models.BillingPlan
+
+function isBillingEnabled(): boolean {
+  return getActiveProfileFeatures().billing
+}
+
+function createSelfHostedOrganizationPlan(): OrganizationPlan {
+  return {
+    $id: 'self-hosted',
+    name: 'Self-hosted',
+    desc: 'Self-hosted Appwrite installation',
+    order: 0,
+    price: 0,
+    trial: 0,
+    bandwidth: Number.MAX_SAFE_INTEGER,
+    storage: Number.MAX_SAFE_INTEGER,
+    imageTransformations: Number.MAX_SAFE_INTEGER,
+    screenshotsGenerated: Number.MAX_SAFE_INTEGER,
+    members: Number.MAX_SAFE_INTEGER,
+    webhooks: Number.MAX_SAFE_INTEGER,
+    projects: Number.MAX_SAFE_INTEGER,
+    platforms: Number.MAX_SAFE_INTEGER,
+    users: Number.MAX_SAFE_INTEGER,
+    teams: Number.MAX_SAFE_INTEGER,
+    databases: Number.MAX_SAFE_INTEGER,
+    databasesReads: Number.MAX_SAFE_INTEGER,
+    databasesWrites: Number.MAX_SAFE_INTEGER,
+    databasesBatchSize: Number.MAX_SAFE_INTEGER,
+    buckets: Number.MAX_SAFE_INTEGER,
+    fileSize: Number.MAX_SAFE_INTEGER,
+    functions: Number.MAX_SAFE_INTEGER,
+    sites: Number.MAX_SAFE_INTEGER,
+    executions: Number.MAX_SAFE_INTEGER,
+    executionsRetentionCount: Number.MAX_SAFE_INTEGER,
+    GBHours: Number.MAX_SAFE_INTEGER,
+    realtime: Number.MAX_SAFE_INTEGER,
+    realtimeMessages: Number.MAX_SAFE_INTEGER,
+    messages: Number.MAX_SAFE_INTEGER,
+    topics: Number.MAX_SAFE_INTEGER,
+    authPhone: Number.MAX_SAFE_INTEGER,
+    domains: 0,
+    logs: Number.MAX_SAFE_INTEGER,
+    projectInactivityDays: 0,
+    alertLimit: 0,
+    usage: {} as Models.UsageBillingPlan,
+    addons: {
+      seats: {
+        supported: true,
+        planIncluded: Number.MAX_SAFE_INTEGER,
+        limit: Number.MAX_SAFE_INTEGER,
+        type: 'self-hosted',
+        currency: 'USD',
+        price: 0,
+      },
+      projects: {
+        supported: true,
+        planIncluded: Number.MAX_SAFE_INTEGER,
+        limit: Number.MAX_SAFE_INTEGER,
+        type: 'self-hosted',
+        currency: 'USD',
+        price: 0,
+      },
+    },
+    budgetCapEnabled: false,
+    customSmtp: true,
+    emailBranding: true,
+    requiresPaymentMethod: false,
+    requiresBillingAddress: false,
+    isAvailable: true,
+    selfService: false,
+    premiumSupport: false,
+    budgeting: false,
+    supportsMockNumbers: true,
+    supportsOrganizationRoles: false,
+    supportsCredits: false,
+    backupsEnabled: false,
+    usagePerProject: false,
+    backupPolicies: 0,
+    deploymentSize: Number.MAX_SAFE_INTEGER,
+    buildSize: Number.MAX_SAFE_INTEGER,
+    databasesAllowEncrypt: true,
+    group: 'starter' as Models.BillingPlan['group'],
   }
-
-  const enumValues = Object.values(BillingPlanTier) as string[]
-  const normalized = planString.trim()
-
-  if (enumValues.includes(normalized)) {
-    return normalized as BillingPlanTierType
-  }
-
-  throw new Error(
-    `Invalid billing plan: ${planString}. Valid plans: ${enumValues.join(', ')}`,
-  )
 }
 
 // ============================================================================
@@ -70,10 +136,17 @@ function getBillingPlanEnum(planString: string): BillingPlanTierType {
  * @returns Organizations list response from the API
  */
 export async function fetchOrganizations() {
-  const response = await sdk.forConsole.organizations.list({
-    queries: [Query.equal('platform', 'appwrite')],
+  if (isBillingEnabled()) {
+    const response = await sdk.forConsole.organizations.list({
+      queries: [Query.equal('platform', 'appwrite')],
+    })
+    return response as OrganizationListResponse
+  }
+
+  const response = await sdk.forConsole.teams.list({
+    total: true,
   })
-  return response
+  return response as OrganizationListResponse
 }
 
 /**
@@ -88,11 +161,17 @@ export async function fetchOrganizationById(orgId: string) {
   if (!orgId) {
     throw new Error('Organization ID is required')
   }
-  // Use list with filter to get organization by ID
-  const response = await sdk.forConsole.organizations.list({
-    queries: [Query.equal('$id', orgId)],
-  })
-  return response.teams?.[0] || null
+
+  if (isBillingEnabled()) {
+    const response = await sdk.forConsole.organizations.list({
+      queries: [Query.equal('$id', orgId)],
+    })
+    return (response.teams?.[0] || null) as OrganizationRecord | null
+  }
+
+  return (await sdk.forConsole.teams.get({
+    teamId: orgId,
+  })) as OrganizationRecord
 }
 
 /**
@@ -107,8 +186,17 @@ export async function fetchOrganizationPlan(orgId: string) {
   if (!orgId) {
     throw new Error('Organization ID is required')
   }
-  const response = await sdk.forConsole.organizations.getPlan(orgId)
-  return response
+
+  if (!isBillingEnabled()) {
+    return createSelfHostedOrganizationPlan()
+  }
+
+  try {
+    const response = await sdk.forConsole.organizations.getPlan(orgId)
+    return response as OrganizationPlan
+  } catch {
+    return createSelfHostedOrganizationPlan()
+  }
 }
 
 /**
@@ -590,10 +678,38 @@ export async function createOrganization(orgData: {
 
   const organizationId = orgData.organizationId || ID.unique()
 
-  return await sdk.forConsole.organizations.create({
-    organizationId,
+  if (isBillingEnabled()) {
+    return await sdk.forConsole.organizations.create({
+      organizationId,
+      name: orgData.name.trim(),
+      billingPlan: BillingPlanTier.Tier0, // Free tier by default
+    })
+  }
+
+  return await sdk.forConsole.teams.create({
+    teamId: organizationId,
     name: orgData.name.trim(),
-    billingPlan: BillingPlanTier.Tier0, // Free tier by default
+  })
+}
+
+/**
+ * Mutation function to delete an organization.
+ *
+ * In self-hosted mode this deletes the backing team.
+ */
+export async function deleteOrganization(organizationId: string) {
+  if (!organizationId) {
+    throw new Error('Organization ID is required')
+  }
+
+  if (isBillingEnabled()) {
+    return await sdk.forConsole.organizations.delete({
+      organizationId,
+    })
+  }
+
+  return await sdk.forConsole.teams.delete({
+    teamId: organizationId,
   })
 }
 
