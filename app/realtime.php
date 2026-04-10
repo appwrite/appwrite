@@ -35,8 +35,6 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\DSN\DSN;
-use Utopia\Http\Adapter\FPM\Server as HttpServer;
-use Utopia\Http\Http;
 use Utopia\Logger\Log;
 use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
@@ -45,12 +43,12 @@ use Utopia\Telemetry\Adapter\None as NoTelemetry;
 use Utopia\WebSocket\Adapter;
 use Utopia\WebSocket\Server;
 
-/**
- * @var Registry $register
- */
 require_once __DIR__ . '/init.php';
 
-$registerRequestResources ??= require __DIR__ . '/init/resources/request.php';
+/** @var Registry $register */
+$register = $GLOBALS['register'] ?? throw new \RuntimeException('Registry not initialized');
+
+$registerConnectionResources ??= require __DIR__ . '/init/realtime/connection.php';
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
@@ -557,7 +555,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
                 $receivers = $realtime->getSubscribers($event);
 
-                if (Http::isDevelopment() && !empty($receivers)) {
+                if (System::getEnv('_APP_ENV', 'production') === 'development' && !empty($receivers)) {
                     Console::log("[Debug][Worker {$workerId}] Receivers: " . count($receivers));
                     Console::log("[Debug][Worker {$workerId}] Connection IDs: " . json_encode(array_keys($receivers)));
                     Console::log("[Debug][Worker {$workerId}] Matched: " . json_encode(array_values($receivers)));
@@ -623,7 +621,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
     Console::error('Failed to restart pub/sub...');
 });
 
-$server->onOpen(function (int $connection, SwooleRequest $request) use ($server, $register, $stats, &$realtime, $registerRequestResources) {
+$server->onOpen(function (int $connection, SwooleRequest $request) use ($server, $register, $stats, &$realtime, $registerConnectionResources) {
     global $container;
     $request = new Request($request);
     $response = new Response(new SwooleResponse());
@@ -631,14 +629,9 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
     Console::info("Connection open (user: {$connection})");
 
     $connectionContainer = new Container($container);
-
-    $adapter = new HttpServer($connectionContainer);
-    $app = new Http($adapter, 'UTC');
-    $connectionContainer->set('utopia', fn () => $app);
     $connectionContainer->set('request', fn () => $request);
-    $connectionContainer->set('response', fn () => $response);
 
-    $registerRequestResources($connectionContainer);
+    $registerConnectionResources($connectionContainer);
 
     $project = null;
     $logUser = null;
@@ -646,8 +639,8 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
     try {
         /** @var Document $project */
-        $project = $app->getResource('project');
-        $authorization = $app->getResource('authorization');
+        $project = $connectionContainer->get('project');
+        $authorization = $connectionContainer->get('authorization');
 
         /*
          *  Project Check
@@ -656,8 +649,8 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Missing or unknown project ID');
         }
 
-        $timelimit = $app->getResource('timelimit');
-        $user = $app->getResource('user'); /** @var User $user */
+        $timelimit = $connectionContainer->get('timelimit');
+        $user = $connectionContainer->get('user'); /** @var User $user */
         $logUser = $user;
 
         if (
@@ -702,7 +695,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
          * Skip this check for non-web platforms which are not required to send an origin header.
          */
         $origin = $request->getOrigin();
-        $originValidator = $app->getResource('originValidator');
+        $originValidator = $connectionContainer->get('originValidator');
 
         if (!empty($origin) && !$originValidator->isValid($origin) && $project->getId() !== 'console') {
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, $originValidator->getDescription());
@@ -809,7 +802,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
         // sanitize 0 && 5xx errors
         $realtimeViolation = $th instanceof AppwriteException && $th->getType() === AppwriteException::REALTIME_POLICY_VIOLATION;
-        if (($code === 0 || $code >= 500) && !$realtimeViolation && !Http::isDevelopment()) {
+        if (($code === 0 || $code >= 500) && !$realtimeViolation && System::getEnv('_APP_ENV', 'production') !== 'development') {
             $message = 'Error: Server Error';
         }
 
@@ -824,7 +817,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $server->send([$connection], json_encode($response));
         $server->close($connection, $code);
 
-        if (Http::isDevelopment()) {
+        if (System::getEnv('_APP_ENV', 'production') === 'development') {
             Console::error('[Error] Connection Error');
             Console::error('[Error] Code: ' . $response['data']['code']);
             Console::error('[Error] Message: ' . $response['data']['message']);
@@ -1101,7 +1094,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         $message = $th->getMessage();
 
         // sanitize 0 && 5xx errors
-        if (($code === 0 || $code >= 500) && !Http::isDevelopment()) {
+        if (($code === 0 || $code >= 500) && System::getEnv('_APP_ENV', 'production') !== 'development') {
             $message = 'Error: Server Error';
         }
 
