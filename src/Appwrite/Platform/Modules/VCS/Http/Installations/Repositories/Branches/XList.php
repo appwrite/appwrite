@@ -8,12 +8,12 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\VcsFactory;
+use Utopia\Cache\Cache;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\System\System;
 use Utopia\Validator\Text;
-use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
 class XList extends Action
@@ -29,7 +29,8 @@ class XList extends Action
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId/branches')
+            ->setHttpPath('/v1/vcs/installations/:installationId/providerRepositories/:providerRepositoryId/branches')
+            ->httpAlias('/v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId/branches')
             ->desc('List repository branches')
             ->groups(['api', 'vcs'])
             ->label('scope', 'vcs.read')
@@ -49,7 +50,7 @@ class XList extends Action
             ))
             ->param('installationId', '', new Text(256), 'Installation Id')
             ->param('providerRepositoryId', '', new Text(256), 'Repository Id')
-            ->inject('gitHub')
+            ->inject('cache')
             ->inject('response')
             ->inject('dbForPlatform')
             ->callback($this->action(...));
@@ -58,7 +59,7 @@ class XList extends Action
     public function action(
         string $installationId,
         string $providerRepositoryId,
-        GitHub $github,
+        Cache $cache,
         Response $response,
         Database $dbForPlatform
     ) {
@@ -68,14 +69,15 @@ class XList extends Action
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
+        $provider = $installation->getAttribute('provider', 'github');
         $providerInstallationId = $installation->getAttribute('providerInstallationId');
-        $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-        $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
-        $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
+        $accessToken = $installation->getAttribute('personalAccessToken', '');
+        $vcs = VcsFactory::getInitializedAdapter($provider, $installation, $cache);
 
-        $owner = $github->getOwnerName($providerInstallationId) ?? '';
+        $owner = VcsFactory::getOwnerName($vcs, $provider, $providerInstallationId, $providerRepositoryId) ?? '';
+
         try {
-            $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+            $repositoryName = $vcs->getRepositoryName($providerRepositoryId) ?? '';
             if (empty($repositoryName)) {
                 throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
             }
@@ -83,7 +85,7 @@ class XList extends Action
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
 
-        $branches = $github->listBranches($owner, $repositoryName) ?? [];
+        $branches = $vcs->listBranches($owner, $repositoryName) ?? [];
 
         $response->dynamic(new Document([
             'branches' => \array_map(function ($branch) {

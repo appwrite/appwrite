@@ -8,12 +8,14 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\VcsFactory;
+use Utopia\Cache\Cache;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\System\System;
 use Utopia\Validator\Text;
 use Utopia\VCS\Adapter\Git\GitHub;
+use Utopia\VCS\Adapter\Git\Gitea;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
 class Get extends Action
@@ -29,7 +31,8 @@ class Get extends Action
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId/contents')
+            ->setHttpPath('/v1/vcs/installations/:installationId/providerRepositories/:providerRepositoryId/contents')
+            ->httpAlias('/v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId/contents')
             ->desc('Get files and directories of a VCS repository')
             ->groups(['api', 'vcs'])
             ->label('scope', 'vcs.read')
@@ -51,7 +54,7 @@ class Get extends Action
             ->param('providerRepositoryId', '', new Text(256), 'Repository Id')
             ->param('providerRootDirectory', '', new Text(256, 0), 'Path to get contents of nested directory', true)
             ->param('providerReference', '', new Text(256, 0), 'Git reference (branch, tag, commit) to get contents from', true)
-            ->inject('gitHub')
+            ->inject('cache')
             ->inject('response')
             ->inject('dbForPlatform')
             ->callback($this->action(...));
@@ -62,7 +65,7 @@ class Get extends Action
         string $providerRepositoryId,
         string $providerRootDirectory,
         string $providerReference,
-        GitHub $github,
+        Cache $cache,
         Response $response,
         Database $dbForPlatform
     ) {
@@ -72,14 +75,13 @@ class Get extends Action
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
+        $provider = $installation->getAttribute('provider', 'github');
         $providerInstallationId = $installation->getAttribute('providerInstallationId');
-        $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-        $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
-        $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
+        $vcs = VcsFactory::getInitializedAdapter($provider, $installation, $cache);
 
-        $owner = $github->getOwnerName($providerInstallationId);
+        $owner = VcsFactory::getOwnerName($vcs, $provider, $providerInstallationId, $providerRepositoryId);
         try {
-            $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+            $repositoryName = $vcs->getRepositoryName($providerRepositoryId) ?? '';
             if (empty($repositoryName)) {
                 throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
             }
@@ -87,12 +89,13 @@ class Get extends Action
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
 
-        $contents = $github->listRepositoryContents($owner, $repositoryName, $providerRootDirectory, $providerReference);
+        $contents = $vcs->listRepositoryContents($owner, $repositoryName, $providerRootDirectory, $providerReference);
 
+        $contentsDir = ($vcs instanceof GitHub) ? GitHub::CONTENTS_DIRECTORY : Gitea::CONTENTS_DIRECTORY;
         $vcsContents = [];
         foreach ($contents as $content) {
             $isDirectory = false;
-            if ($content['type'] === GitHub::CONTENTS_DIRECTORY) {
+            if ($content['type'] === $contentsDir) {
                 $isDirectory = true;
             }
 

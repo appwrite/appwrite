@@ -19,6 +19,8 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
+use Appwrite\Vcs\VcsFactory;
+use Utopia\Cache\Cache;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
@@ -96,6 +98,7 @@ class Create extends Base
             ->inject('project')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
+            ->inject('cache')
             ->callback($this->action(...));
     }
 
@@ -125,7 +128,8 @@ class Create extends Base
         Database $dbForProject,
         Document $project,
         Event $queueForEvents,
-        Database $dbForPlatform
+        Database $dbForPlatform,
+        Cache $cache
     ) {
         if (!empty($adapter)) {
             $configFramework = Config::getParam('frameworks')[$framework] ?? [];
@@ -201,6 +205,13 @@ class Create extends Base
                 'providerPullRequestIds' => []
             ]);
             $repository = $dbForPlatform->createDocument('repositories', $repository);
+
+            $provider = $installation->getAttribute('provider', 'github');
+            $vcs = VcsFactory::getInitializedAdapter($provider, $installation, $cache);
+            $owner = VcsFactory::getOwnerName($vcs, $provider, $installation->getAttribute('providerInstallationId', ''), $providerRepositoryId);
+            $repoName = $vcs->getRepositoryName($providerRepositoryId);
+            VcsFactory::createRepositoryWebhook($vcs, $provider, $owner, $repoName);
+
             $site->setAttribute('repositoryId', $repository->getId());
             $site->setAttribute('repositoryInternalId', $repository->getSequence());
 

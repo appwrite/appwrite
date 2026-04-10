@@ -21,10 +21,11 @@ use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
+use Appwrite\Vcs\VcsFactory;
+use Utopia\Cache\Cache;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git\GitHub;
 
 class Create extends Base
 {
@@ -78,7 +79,7 @@ class Create extends Base
             ->inject('project')
             ->inject('queueForEvents')
             ->inject('queueForBuilds')
-            ->inject('gitHub')
+            ->inject('cache')
             ->inject('authorization')
             ->inject('platform')
             ->callback($this->action(...));
@@ -99,7 +100,7 @@ class Create extends Base
         Document $project,
         Event $queueForEvents,
         Build $queueForBuilds,
-        GitHub $github,
+        Cache $cache,
         Authorization $authorization,
         array $platform
     ) {
@@ -109,6 +110,7 @@ class Create extends Base
             throw new Exception(Exception::SITE_NOT_FOUND);
         }
 
+        // Templates are always from GitHub
         $branchUrl = "https://github.com/$owner/$repository/blob/$reference";
         $repositoryUrl = "https://github.com/$owner/$repository";
 
@@ -122,6 +124,8 @@ class Create extends Base
 
         if (!empty($site->getAttribute('providerRepositoryId'))) {
             $installation = $dbForPlatform->getDocument('installations', $site->getAttribute('installationId'));
+            $provider = $installation->getAttribute('provider', 'github');
+            $vcs = VcsFactory::getInitializedAdapter($provider, $installation, $cache);
 
             $deployment = $this->redeployVcsSite(
                 request: $request,
@@ -132,7 +136,7 @@ class Create extends Base
                 dbForPlatform: $dbForPlatform,
                 queueForBuilds: $queueForBuilds,
                 template: $template,
-                github: $github,
+                vcs: $vcs,
                 activate: $activate,
                 authorization: $authorization,
                 platform: $platform

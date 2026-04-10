@@ -163,7 +163,7 @@ class Create extends Action
         ]));
 
         // Create new deployment only on push (not committed by us) and not when branch is deleted
-        if ($providerCommitAuthorEmail !== APP_VCS_GITHUB_EMAIL && !$providerBranchDeleted) {
+        if ($providerCommitAuthorEmail !== APP_VCS_COMMIT_EMAIL && !$providerBranchDeleted) {
             $this->createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', false, $dbForPlatform, $authorization, $queueForBuilds, $getProjectDB, $platform);
         }
     }

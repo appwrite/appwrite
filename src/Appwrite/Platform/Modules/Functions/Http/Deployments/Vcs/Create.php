@@ -16,10 +16,11 @@ use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Appwrite\Vcs\VcsFactory;
+use Utopia\Cache\Cache;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git\GitHub;
 
 class Create extends Base
 {
@@ -71,7 +72,7 @@ class Create extends Base
             ->inject('project')
             ->inject('queueForEvents')
             ->inject('queueForBuilds')
-            ->inject('gitHub')
+            ->inject('cache')
             ->callback($this->action(...));
     }
 
@@ -87,7 +88,7 @@ class Create extends Base
         Document $project,
         Event $queueForEvents,
         Build $queueForBuilds,
-        GitHub $github,
+        Cache $cache,
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -98,6 +99,8 @@ class Create extends Base
         $template = new Document();
 
         $installation = $dbForPlatform->getDocument('installations', $function->getAttribute('installationId'));
+        $provider = $installation->getAttribute('provider', 'github');
+        $vcs = VcsFactory::getInitializedAdapter($provider, $installation, $cache);
 
         $deployment = $this->redeployVcsFunction(
             request: $request,
@@ -107,7 +110,7 @@ class Create extends Base
             dbForProject: $dbForProject,
             queueForBuilds: $queueForBuilds,
             template: $template,
-            github: $github,
+            vcs: $vcs,
             activate: $activate,
             reference: $reference,
             referenceType: $type

@@ -20,10 +20,11 @@ use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Appwrite\Vcs\VcsFactory;
+use Utopia\Cache\Cache;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git\GitHub;
 
 class Create extends Base
 {
@@ -77,7 +78,7 @@ class Create extends Base
             ->inject('queueForEvents')
             ->inject('project')
             ->inject('queueForBuilds')
-            ->inject('gitHub')
+            ->inject('cache')
             ->inject('authorization')
             ->callback($this->action(...));
     }
@@ -97,7 +98,7 @@ class Create extends Base
         Event $queueForEvents,
         Document $project,
         Build $queueForBuilds,
-        GitHub $github,
+        Cache $cache,
         Authorization $authorization
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -106,8 +107,8 @@ class Create extends Base
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
+        // Templates are always from GitHub
         $branchUrl = "https://github.com/$owner/$repository/blob/$reference";
-
         $repositoryUrl = "https://github.com/$owner/$repository";
 
         $template = new Document([
@@ -120,6 +121,8 @@ class Create extends Base
 
         if (!empty($function->getAttribute('providerRepositoryId'))) {
             $installation = $dbForPlatform->getDocument('installations', $function->getAttribute('installationId'));
+            $provider = $installation->getAttribute('provider', 'github');
+            $vcs = VcsFactory::getInitializedAdapter($provider, $installation, $cache);
 
             $deployment = $this->redeployVcsFunction(
                 request: $request,
@@ -129,7 +132,7 @@ class Create extends Base
                 dbForProject: $dbForProject,
                 queueForBuilds: $queueForBuilds,
                 template: $template,
-                github: $github,
+                vcs: $vcs,
                 activate: $activate,
                 referenceType: $type,
                 reference: $reference

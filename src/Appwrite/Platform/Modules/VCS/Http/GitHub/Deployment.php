@@ -20,13 +20,13 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
 use Utopia\Span\Span;
 use Utopia\System\System;
-use Utopia\VCS\Adapter\Git\GitHub;
+use Utopia\VCS\Adapter\Git;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
 trait Deployment
 {
     protected function createGitDeployments(
-        GitHub $github,
+        Git $github,
         string $providerInstallationId,
         array $repositories,
         string $providerBranch,
@@ -107,7 +107,7 @@ trait Deployment
                     $activate = true;
                 }
 
-                $owner = $github->getOwnerName($providerInstallationId) ?? '';
+                $owner = $providerRepositoryOwner;
                 try {
                     $repositoryName = $github->getRepositoryName($providerRepositoryId);
                 } catch (RepositoryNotFound $e) {
@@ -290,7 +290,7 @@ trait Deployment
                     } catch (RepositoryNotFound $e) {
                         throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
                     }
-                    $owner = $github->getOwnerName($providerInstallationId);
+                    $owner = $providerRepositoryOwner;
                     $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $authorizeUrl, $name);
                     continue;
                 }
@@ -520,7 +520,7 @@ trait Deployment
                     } catch (RepositoryNotFound $e) {
                         throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
                     }
-                    $owner = $github->getOwnerName($providerInstallationId);
+                    $owner = $providerRepositoryOwner;
 
                     $providerTargetUrl = $protocol . '://' . $hostname . "/console/project-$region-$projectId/$resourceCollection/$resourceType-$resourceId";
                     $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $providerTargetUrl, $name);
