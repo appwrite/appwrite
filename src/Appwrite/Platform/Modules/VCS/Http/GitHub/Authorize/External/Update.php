@@ -10,14 +10,14 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\VcsFactory;
+use Utopia\Cache\Cache;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\System\System;
 use Utopia\Validator\Text;
-use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
 class Update extends Action
@@ -34,7 +34,8 @@ class Update extends Action
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
-            ->setHttpPath('/v1/vcs/github/installations/:installationId/repositories/:repositoryId')
+            ->setHttpPath('/v1/vcs/installations/:installationId/repositories/:repositoryId')
+            ->httpAlias('/v1/vcs/github/installations/:installationId/repositories/:repositoryId')
             ->desc('Update external deployment (authorize)')
             ->groups(['api', 'vcs'])
             ->label('scope', 'vcs.write')
@@ -53,8 +54,8 @@ class Update extends Action
             ))
             ->param('installationId', '', new Text(256), 'Installation Id')
             ->param('repositoryId', '', new Text(256), 'VCS Repository Id')
-            ->param('providerPullRequestId', '', new Text(256), 'GitHub Pull Request Id')
-            ->inject('gitHub')
+            ->param('providerPullRequestId', '', new Text(256), 'Pull Request Id')
+            ->inject('cache')
             ->inject('response')
             ->inject('project')
             ->inject('dbForPlatform')
@@ -69,7 +70,7 @@ class Update extends Action
         string $installationId,
         string $repositoryId,
         string $providerPullRequestId,
-        GitHub $github,
+        Cache $cache,
         Response $response,
         Document $project,
         Database $dbForPlatform,
@@ -101,36 +102,35 @@ class Update extends Action
 
         $repository = $authorization->skip(fn () => $dbForPlatform->updateDocument('repositories', $repository->getId(), new Document(['providerPullRequestIds' => $providerPullRequestIds])));
 
-        $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-        $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
+        $provider = $installation->getAttribute('provider', 'github');
         $providerInstallationId = $installation->getAttribute('providerInstallationId');
-        $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
+        $vcs = VcsFactory::getInitializedAdapter($provider, $installation, $cache);
 
         $repositories = [$repository];
         $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
 
         try {
-            $providerRepositoryName = $github->getRepositoryName($providerRepositoryId);
+            $providerRepositoryName = $vcs->getRepositoryName($providerRepositoryId);
         } catch (RepositoryNotFound $e) {
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
 
-        $owner = $github->getOwnerName($providerInstallationId);
-        $pullRequestResponse = $github->getPullRequest($owner, $providerRepositoryName, $providerPullRequestId);
+        $owner = VcsFactory::getOwnerName($vcs, $provider, $providerInstallationId, $providerRepositoryId);
+        $pullRequestResponse = $vcs->getPullRequest($owner, $providerRepositoryName, $providerPullRequestId);
 
         $providerRepositoryUrl = $pullRequestResponse['head']['repo']['html_url'] ?? '';
         $providerRepositoryOwner = $pullRequestResponse['head']['repo']['owner']['login'] ?? '';
-        $providerBranch = \explode(':', $pullRequestResponse['head']['label'])[1] ?? '';
+        $providerBranch = \explode(':', $pullRequestResponse['head']['label'] ?? '')[1] ?? ($pullRequestResponse['head']['ref'] ?? '');
         $providerBranchUrl = "$providerRepositoryUrl/tree/$providerBranch";
         $providerCommitHash = $pullRequestResponse['head']['sha'] ?? '';
 
-        $commitDetails = $github->getCommit($providerRepositoryOwner, $providerRepositoryName, $providerCommitHash);
-        $providerCommitMessage = $commitDetails["commitMessage"] ?? '';
-        $providerCommitUrl = $commitDetails["commitUrl"] ?? '';
-        $providerCommitAuthor = $commitDetails["commitAuthor"] ?? '';
-        $providerCommitAuthorUrl = $commitDetails["commitAuthorUrl"] ?? '';
+        $commitDetails = $vcs->getCommit($providerRepositoryOwner, $providerRepositoryName, $providerCommitHash);
+        $providerCommitMessage = $commitDetails['commitMessage'] ?? '';
+        $providerCommitUrl = $commitDetails['commitUrl'] ?? '';
+        $providerCommitAuthor = $commitDetails['commitAuthor'] ?? '';
+        $providerCommitAuthorUrl = $commitDetails['commitAuthorUrl'] ?? '';
 
-        $this->createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, true, $dbForPlatform, $authorization, $queueForBuilds, $getProjectDB, $platform);
+        $this->createGitDeployments($vcs, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, true, $dbForPlatform, $authorization, $queueForBuilds, $getProjectDB, $platform);
 
         $response->noContent();
     }

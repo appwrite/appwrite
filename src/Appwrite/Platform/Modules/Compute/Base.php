@@ -17,9 +17,11 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Appwrite\Vcs\VcsFactory;
+use Utopia\Cache\Cache;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\System\System;
-use Utopia\VCS\Adapter\Git\GitHub;
+use Utopia\VCS\Adapter\Git;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
 class Base extends Action
@@ -57,18 +59,16 @@ class Base extends Action
         return $allowedSpecifications[0] ?? APP_COMPUTE_SPECIFICATION_DEFAULT;
     }
 
-    public function redeployVcsFunction(Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, Build $queueForBuilds, Document $template, GitHub $github, bool $activate, string $referenceType = 'branch', string $reference = ''): Document
+    public function redeployVcsFunction(Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, Build $queueForBuilds, Document $template, Git $vcs, bool $activate, string $referenceType = 'branch', string $reference = ''): Document
     {
         $deploymentId = ID::unique();
         $entrypoint = $function->getAttribute('entrypoint', '');
+        $provider = $installation->getAttribute('provider', 'github');
         $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
-        $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-        $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
-        $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
-        $owner = $github->getOwnerName($providerInstallationId);
         $providerRepositoryId = $function->getAttribute('providerRepositoryId', '');
+        $owner = VcsFactory::getOwnerName($vcs, $provider, $providerInstallationId, $providerRepositoryId);
         try {
-            $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+            $repositoryName = $vcs->getRepositoryName($providerRepositoryId) ?? '';
             if (empty($repositoryName)) {
                 throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
             }
@@ -77,33 +77,30 @@ class Base extends Action
         }
 
         $commitDetails = [];
-        $branchUrl = "";
-        $providerBranch = "";
+        $branchUrl = '';
+        $providerBranch = '';
 
         // TODO: Support tag in future
         if ($referenceType === 'branch') {
             $providerBranch = empty($reference) ? $function->getAttribute('providerBranch', 'main') : $reference;
-            $branchUrl = "https://github.com/$owner/$repositoryName/tree/$providerBranch";
+            $branchUrl = VcsFactory::getBranchUrl($provider, $owner, $repositoryName, $providerBranch);
             try {
-                $commitDetails = $github->getLatestCommit($owner, $repositoryName, $providerBranch);
+                $commitDetails = $vcs->getLatestCommit($owner, $repositoryName, $providerBranch);
             } catch (\Throwable $error) {
                 // Ignore; deployment can continue
             }
         } elseif ($referenceType === 'commit') {
             try {
-                $commitDetails = $github->getCommit($owner, $repositoryName, $reference);
+                $commitDetails = $vcs->getCommit($owner, $repositoryName, $reference);
             } catch (\Throwable $error) {
                 // Ignore; deployment can continue
             }
         } else {
-            // Fallback till we have tag support here
-            // Goal is to set providerBranch, so build worker knows what to clone as base
-            // Without this, clone command would be cloning empty branch, and failing
             $providerBranch = $function->getAttribute('providerBranch', 'main');
-            $branchUrl = "https://github.com/$owner/$repositoryName/tree/$providerBranch";
+            $branchUrl = VcsFactory::getBranchUrl($provider, $owner, $repositoryName, $providerBranch);
         }
 
-        $repositoryUrl = "https://github.com/$owner/$repositoryName";
+        $repositoryUrl = VcsFactory::getRepoUrl($provider, $owner, $repositoryName);
 
         $deployment = $dbForProject->createDocument('deployments', new Document([
             '$id' => $deploymentId,
@@ -159,17 +156,15 @@ class Base extends Action
         return $deployment;
     }
 
-    public function redeployVcsSite(Request $request, Document $site, Document $project, Document $installation, Database $dbForProject, Database $dbForPlatform, Build $queueForBuilds, Document $template, GitHub $github, bool $activate, Authorization $authorization, array $platform, string $referenceType = 'branch', string $reference = ''): Document
+    public function redeployVcsSite(Request $request, Document $site, Document $project, Document $installation, Database $dbForProject, Database $dbForPlatform, Build $queueForBuilds, Document $template, Git $vcs, bool $activate, Authorization $authorization, array $platform, string $referenceType = 'branch', string $reference = ''): Document
     {
         $deploymentId = ID::unique();
+        $provider = $installation->getAttribute('provider', 'github');
         $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
-        $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-        $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
-        $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
-        $owner = $github->getOwnerName($providerInstallationId);
         $providerRepositoryId = $site->getAttribute('providerRepositoryId', '');
+        $owner = VcsFactory::getOwnerName($vcs, $provider, $providerInstallationId, $providerRepositoryId);
         try {
-            $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+            $repositoryName = $vcs->getRepositoryName($providerRepositoryId) ?? '';
             if (empty($repositoryName)) {
                 throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
             }
@@ -178,33 +173,30 @@ class Base extends Action
         }
 
         $commitDetails = [];
-        $branchUrl = "";
-        $providerBranch = "";
+        $branchUrl = '';
+        $providerBranch = '';
 
         // TODO: Support tag in future
         if ($referenceType === 'branch') {
             $providerBranch = empty($reference) ? $site->getAttribute('providerBranch', 'main') : $reference;
-            $branchUrl = "https://github.com/$owner/$repositoryName/tree/$providerBranch";
+            $branchUrl = VcsFactory::getBranchUrl($provider, $owner, $repositoryName, $providerBranch);
             try {
-                $commitDetails = $github->getLatestCommit($owner, $repositoryName, $providerBranch);
+                $commitDetails = $vcs->getLatestCommit($owner, $repositoryName, $providerBranch);
             } catch (\Throwable $error) {
                 // Ignore; deployment can continue
             }
         } elseif ($referenceType === 'commit') {
             try {
-                $commitDetails = $github->getCommit($owner, $repositoryName, $reference);
+                $commitDetails = $vcs->getCommit($owner, $repositoryName, $reference);
             } catch (\Throwable $error) {
                 // Ignore; deployment can continue
             }
         } else {
-            // Fallback till we have tag support here
-            // Goal is to set providerBranch, so build worker knows what to clone as base
-            // Without this, clone command would be cloning empty branch, and failing
             $providerBranch = $site->getAttribute('providerBranch', 'main');
-            $branchUrl = "https://github.com/$owner/$repositoryName/tree/$providerBranch";
+            $branchUrl = VcsFactory::getBranchUrl($provider, $owner, $repositoryName, $providerBranch);
         }
 
-        $repositoryUrl = "https://github.com/$owner/$repositoryName";
+        $repositoryUrl = VcsFactory::getRepoUrl($provider, $owner, $repositoryName);
 
         $commands = [];
         if (!empty($site->getAttribute('installCommand', ''))) {

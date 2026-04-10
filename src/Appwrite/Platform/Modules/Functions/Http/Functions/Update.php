@@ -33,7 +33,8 @@ use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git\GitHub;
+use Appwrite\Vcs\VcsFactory;
+use Utopia\Cache\Cache;
 
 class Update extends Base
 {
@@ -107,7 +108,7 @@ class Update extends Base
             ->inject('queueForEvents')
             ->inject('queueForBuilds')
             ->inject('dbForPlatform')
-            ->inject('gitHub')
+            ->inject('cache')
             ->inject('executor')
             ->inject('authorization')
             ->callback($this->action(...));
@@ -141,7 +142,7 @@ class Update extends Base
         Event $queueForEvents,
         Build $queueForBuilds,
         Database $dbForPlatform,
-        GitHub $github,
+        Cache $cache,
         Executor $executor,
         Authorization $authorization
     ) {
@@ -219,6 +220,12 @@ class Update extends Base
                 'providerPullRequestIds' => [],
             ]));
 
+            $provider = $installation->getAttribute('provider', 'github');
+            $vcs = VcsFactory::getInitializedAdapter($provider, $installation, $cache);
+            $owner = VcsFactory::getOwnerName($vcs, $provider, $installation->getAttribute('providerInstallationId', ''), $providerRepositoryId);
+            $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
+            VcsFactory::createRepositoryWebhook($vcs, $provider, $owner, $repositoryName);
+
             $repositoryId = $repository->getId();
             $repositoryInternalId = $repository->getSequence();
         }
@@ -285,7 +292,9 @@ class Update extends Base
 
         // Redeploy logic
         if (!$isConnected && !empty($providerRepositoryId)) {
-            $this->redeployVcsFunction($request, $function, $project, $installation, $dbForProject, $queueForBuilds, new Document(), $github, true);
+            $provider = $installation->getAttribute('provider', 'github');
+            $vcs = VcsFactory::getInitializedAdapter($provider, $installation, $cache);
+            $this->redeployVcsFunction($request, $function, $project, $installation, $dbForProject, $queueForBuilds, new Document(), $vcs, true);
         }
 
         // Inform scheduler if function is still active

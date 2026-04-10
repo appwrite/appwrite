@@ -36,8 +36,9 @@ use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
+use Appwrite\Vcs\VcsFactory;
 use Utopia\System\System;
-use Utopia\VCS\Adapter\Git\GitHub;
+use Utopia\VCS\Adapter;
 
 class Builds extends Action
 {
@@ -121,7 +122,6 @@ class Builds extends Action
             case BUILD_TYPE_DEPLOYMENT:
             case BUILD_TYPE_RETRY:
                 Console::info('Creating build for deployment: ' . $deployment->getId());
-                $github = new GitHub($cache);
                 $this->buildDeployment(
                     $deviceForFunctions,
                     $deviceForSites,
@@ -135,7 +135,7 @@ class Builds extends Action
                     $publisherForUsage,
                     $dbForPlatform,
                     $dbForProject,
-                    $github,
+                    $cache,
                     $project,
                     $resource,
                     $deployment,
@@ -170,7 +170,7 @@ class Builds extends Action
         UsagePublisher $publisherForUsage,
         Database $dbForPlatform,
         Database $dbForProject,
-        GitHub $github,
+        Cache $cache,
         Document $project,
         Document $resource,
         Document $deployment,
@@ -270,13 +270,15 @@ class Builds extends Action
         $owner = '';
         $repositoryName = '';
 
+        Console::log('[DEBUG build] deploymentId=' . $deploymentId . ' installationId=' . $installationId . ' providerRepositoryId=' . $providerRepositoryId . ' isVcsEnabled=' . ($isVcsEnabled ? 'true' : 'false') . ' source=' . $source);
+
+        $provider = 'github';
+        $vcs = null;
         if ($isVcsEnabled) {
             $installation = $dbForPlatform->getDocument('installations', $installationId);
-            $providerInstallationId = $installation->getAttribute('providerInstallationId');
-            $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-            $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
+            $provider = $installation->getAttribute('provider', 'github');
 
-            $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
+            $vcs = VcsFactory::getInitializedAdapter($provider, $installation, $cache);
         }
 
         try {
@@ -299,7 +301,9 @@ class Builds extends Action
                     // Clone template repo
                     $tmpTemplateDirectory = '/tmp/builds/' . $deploymentId . '-template';
 
-                    $gitCloneCommandForTemplate = $github->generateCloneCommand($templateOwnerName, $templateRepositoryName, $templateReferenceValue, $templateReferenceType, $tmpTemplateDirectory, $templateRootDirectory);
+                    // Templates are public GitHub repos — no authentication needed
+                    $templateGitHub = VcsFactory::getAdapter('github', $cache);
+                    $gitCloneCommandForTemplate = $templateGitHub->generateCloneCommand($templateOwnerName, $templateRepositoryName, $templateReferenceValue, $templateReferenceType, $tmpTemplateDirectory, $templateRootDirectory);
 
                     $exit = Console::execute($gitCloneCommandForTemplate, '', $stdout, $stderr);
 
@@ -357,8 +361,9 @@ class Builds extends Action
                 $rootDirectory = \ltrim($rootDirectory, '.');
                 $rootDirectory = \ltrim($rootDirectory, '/');
 
-                $owner = $github->getOwnerName($providerInstallationId);
-                $repositoryName = $github->getRepositoryName($providerRepositoryId);
+                $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
+                $owner = VcsFactory::getOwnerName($vcs, $provider, $providerInstallationId, $providerRepositoryId);
+                $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
 
                 $cloneOwner = $deployment->getAttribute('providerRepositoryOwner', $owner);
                 $cloneRepository = $deployment->getAttribute('providerRepositoryName', $repositoryName);
@@ -367,13 +372,15 @@ class Builds extends Action
                 $commitHash = $deployment->getAttribute('providerCommitHash', '');
 
                 $cloneVersion = $branchName;
-                $cloneType = GitHub::CLONE_TYPE_BRANCH;
+                $cloneType = Adapter::CLONE_TYPE_BRANCH;
                 if (! empty($commitHash)) {
                     $cloneVersion = $commitHash;
-                    $cloneType = GitHub::CLONE_TYPE_COMMIT;
+                    $cloneType = Adapter::CLONE_TYPE_COMMIT;
                 }
 
-                $gitCloneCommand = $github->generateCloneCommand($cloneOwner, $cloneRepository, $cloneVersion, $cloneType, $tmpDirectory, $rootDirectory);
+                Console::log('[DEBUG build-vcs] provider=' . $provider . ' cloneOwner=' . $cloneOwner . ' cloneRepo=' . $cloneRepository . ' cloneVersion=' . $cloneVersion . ' cloneType=' . $cloneType . ' branch=' . $branchName . ' commitHash=' . $commitHash);
+
+                $gitCloneCommand = $vcs->generateCloneCommand($cloneOwner, $cloneRepository, $cloneVersion, $cloneType, $tmpDirectory, $rootDirectory);
                 $stdout = '';
                 $stderr = '';
 
@@ -387,11 +394,19 @@ class Builds extends Action
 
                 $exit = Console::execute($gitCloneCommand, '', $stdout, $stderr);
 
+                Console::log('[DEBUG build-vcs] clone exit=' . $exit . ' stdout=' . $stdout . ' stderr=' . $stderr);
+
                 if ($exit !== 0) {
                     throw new \Exception('Unable to clone code repository: ' . $stderr);
                 }
 
                 Console::log('Git repository cloned');
+
+                // List files to verify clone content
+                $lsOut = '';
+                $lsErr = '';
+                Console::execute('ls -la ' . \escapeshellarg($tmpDirectory), '', $lsOut, $lsErr);
+                Console::log('[DEBUG build-vcs] files in tmpDirectory: ' . $lsOut);
 
                 // Local refactoring for function folder with spaces
                 if (str_contains($rootDirectory, ' ')) {
@@ -421,7 +436,9 @@ class Builds extends Action
                     // Clone template repo
                     $tmpTemplateDirectory = '/tmp/builds/' . $deploymentId . '/template';
 
-                    $gitCloneCommandForTemplate = $github->generateCloneCommand($templateOwnerName, $templateRepositoryName, $templateReferenceValue, $templateReferenceType, $tmpTemplateDirectory, $templateRootDirectory);
+                    // Templates are public GitHub repos — no authentication needed
+                    $templateGitHub = VcsFactory::getAdapter('github', $cache);
+                    $gitCloneCommandForTemplate = $templateGitHub->generateCloneCommand($templateOwnerName, $templateRepositoryName, $templateReferenceValue, $templateReferenceType, $tmpTemplateDirectory, $templateRootDirectory);
                     $exit = Console::execute($gitCloneCommandForTemplate, '', $stdout, $stderr);
 
                     if ($exit !== 0) {
@@ -435,8 +452,8 @@ class Builds extends Action
                     // Merge template into user repo
                     Console::execute('rsync -av --exclude \'.git\' ' . \escapeshellarg($tmpTemplateDirectory . '/' . $templateRootDirectory . '/') . ' ' . \escapeshellarg($tmpDirectory . '/' . $rootDirectory), '', $stdout, $stderr);
 
-                    // Commit and push
-                    $exit = Console::execute('git config --global user.email ' . \escapeshellarg(APP_VCS_GITHUB_EMAIL) . ' && git config --global user.name ' . \escapeshellarg(APP_VCS_GITHUB_USERNAME) . ' && cd ' . \escapeshellarg($tmpDirectory) . ' && git checkout -b ' . \escapeshellarg($branchName) . ' && git add . && git commit -m "Create ' . \escapeshellarg($resource->getAttribute('name', '')) . ' function" && git push origin ' . \escapeshellarg($branchName), '', $stdout, $stderr);
+                    // Disable sparse-checkout so template files can be staged, then commit and push
+                    $exit = Console::execute('git config --global user.email ' . \escapeshellarg(APP_VCS_COMMIT_EMAIL) . ' && git config --global user.name ' . \escapeshellarg(APP_VCS_COMMIT_USERNAME) . ' && cd ' . \escapeshellarg($tmpDirectory) . ' && git sparse-checkout disable && git checkout -b ' . \escapeshellarg($branchName) . ' && git add . && git commit -m "Create ' . \escapeshellarg($resource->getAttribute('name', '')) . ' function" && git push origin ' . \escapeshellarg($branchName), '', $stdout, $stderr);
 
                     if ($exit !== 0) {
                         throw new \Exception('Unable to push code repository: ' . $stderr);
@@ -451,10 +468,10 @@ class Builds extends Action
                     $providerCommitHash = \trim($stdout);
 
                     $deployment->setAttribute('providerCommitHash', $providerCommitHash);
-                    $deployment->setAttribute('providerCommitAuthorUrl', APP_VCS_GITHUB_URL);
-                    $deployment->setAttribute('providerCommitAuthor', APP_VCS_GITHUB_USERNAME);
+                    $deployment->setAttribute('providerCommitAuthorUrl', VcsFactory::getProviderUrl($provider));
+                    $deployment->setAttribute('providerCommitAuthor', APP_VCS_COMMIT_USERNAME);
                     $deployment->setAttribute('providerCommitMessage', "Create '" . $resource->getAttribute('name', '') . "' function");
-                    $deployment->setAttribute('providerCommitUrl', "https://github.com/$cloneOwner/$cloneRepository/commit/$providerCommitHash");
+                    $deployment->setAttribute('providerCommitUrl', VcsFactory::getCommitUrl($provider, $cloneOwner, $cloneRepository, $providerCommitHash));
                     $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
                         'providerCommitHash' => $deployment->getAttribute('providerCommitHash'),
                         'providerCommitAuthorUrl' => $deployment->getAttribute('providerCommitAuthorUrl'),
@@ -521,7 +538,7 @@ class Builds extends Action
 
                 Console::log('Git source uploaded');
 
-                $this->runGitAction('processing', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform);
+                $this->runGitAction('processing', $vcs, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform);
             }
 
             Console::log('Status marked as building');
@@ -541,7 +558,7 @@ class Builds extends Action
                 ->trigger();
 
             if ($isVcsEnabled) {
-                $this->runGitAction('building', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform);
+                $this->runGitAction('building', $vcs, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform);
             }
 
             $deploymentModel = new Deployment();
@@ -931,7 +948,7 @@ class Builds extends Action
             }
 
             if ($isVcsEnabled) {
-                $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform);
+                $this->runGitAction('ready', $vcs, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform);
             }
 
             /** Set auto deploy */
@@ -1183,7 +1200,7 @@ class Builds extends Action
                 ->trigger();
 
             if ($isVcsEnabled) {
-                $this->runGitAction('failed', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform);
+                $this->runGitAction('failed', $vcs, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform);
             }
         } finally {
             $queueForRealtime
@@ -1354,7 +1371,7 @@ class Builds extends Action
      */
     protected function runGitAction(
         string $status,
-        GitHub $github,
+        ?Adapter\Git $vcs,
         string $providerCommitHash,
         string $owner,
         string $repositoryName,
@@ -1369,7 +1386,7 @@ class Builds extends Action
         $deployment = new Document();
 
         try {
-            if ($resource->getAttribute('providerSilentMode', false) === true) {
+            if ($resource->getAttribute('providerSilentMode', false) === true || $vcs === null) {
                 return;
             }
 
@@ -1408,7 +1425,7 @@ class Builds extends Action
                     default => throw new \Exception('Invalid resource type')
                 };
 
-                $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, $state, $message, $providerTargetUrl, $name);
+                $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, $state, $message, $providerTargetUrl, $name);
             }
 
             if (! empty($commentId)) {
@@ -1453,9 +1470,9 @@ class Builds extends Action
                     };
 
                     $comment = new Comment($platform);
-                    $comment->parseComment($github->getComment($owner, $repositoryName, $commentId));
+                    $comment->parseComment($vcs->getComment($owner, $repositoryName, $commentId));
                     $comment->addBuild($project, $resource, $resourceType, $status, $deployment->getId(), ['type' => 'logs'], $previewUrl);
-                    $github->updateComment($owner, $repositoryName, $commentId, $comment->generateComment());
+                    $vcs->updateComment($owner, $repositoryName, $commentId, $comment->generateComment());
                 } finally {
                     $dbForPlatform->deleteDocument('vcsCommentLocks', $commentId);
                 }

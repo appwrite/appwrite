@@ -46,11 +46,11 @@ use Utopia\Detector\Detector\Framework;
 use Utopia\Detector\Detector\Packager;
 use Utopia\Detector\Detector\Runtime;
 use Utopia\Detector\Detector\Strategy;
+use Appwrite\Vcs\VcsFactory;
+use Utopia\Cache\Cache;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\System\System;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Exception\FileNotFound;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
@@ -67,8 +67,10 @@ class Create extends Action
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
-            ->setHttpPath('/v1/vcs/github/installations/:installationId/detections')
+            ->setHttpPath('/v1/vcs/installations/:installationId/detections')
+            ->httpAlias('/v1/vcs/github/installations/:installationId/detections')
             ->httpAlias('/v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId/detection')
+            ->httpAlias('/v1/vcs/installations/:installationId/providerRepositories/:providerRepositoryId/detection')
             ->desc('Create repository detection')
             ->groups(['api', 'vcs'])
             ->label('scope', 'vcs.write')
@@ -93,7 +95,7 @@ class Create extends Action
             ->param('providerRepositoryId', '', new Text(256), 'Repository Id')
             ->param('type', '', new WhiteList(['runtime', 'framework']), 'Detector type. Must be one of the following: runtime, framework')
             ->param('providerRootDirectory', '', new Text(256, 0), 'Path to Root Directory', true)
-            ->inject('gitHub')
+            ->inject('cache')
             ->inject('response')
             ->inject('dbForPlatform')
             ->callback($this->action(...));
@@ -104,7 +106,7 @@ class Create extends Action
         string $providerRepositoryId,
         string $type,
         string $providerRootDirectory,
-        GitHub $github,
+        Cache $cache,
         Response $response,
         Database $dbForPlatform
     ) {
@@ -114,14 +116,13 @@ class Create extends Action
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
+        $provider = $installation->getAttribute('provider', 'github');
         $providerInstallationId = $installation->getAttribute('providerInstallationId');
-        $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-        $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
-        $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
+        $vcs = VcsFactory::getInitializedAdapter($provider, $installation, $cache);
 
-        $owner = $github->getOwnerName($providerInstallationId);
+        $owner = VcsFactory::getOwnerName($vcs, $provider, $providerInstallationId, $providerRepositoryId);
         try {
-            $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+            $repositoryName = $vcs->getRepositoryName($providerRepositoryId) ?? '';
             if (empty($repositoryName)) {
                 throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
             }
@@ -129,9 +130,9 @@ class Create extends Action
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
 
-        $files = $github->listRepositoryContents($owner, $repositoryName, $providerRootDirectory);
+        $files = $vcs->listRepositoryContents($owner, $repositoryName, $providerRootDirectory);
         $files = \array_column($files, 'name');
-        $languages = $github->listRepositoryLanguages($owner, $repositoryName);
+        $languages = $vcs->listRepositoryLanguages($owner, $repositoryName);
 
         $detector = new Packager();
         foreach ($files as $file) {
@@ -148,7 +149,7 @@ class Create extends Action
         if ($type === 'framework') {
             $packages = '';
             try {
-                $contentResponse = $github->getRepositoryContent($owner, $repositoryName, \rtrim($providerRootDirectory, '/') . '/package.json');
+                $contentResponse = $vcs->getRepositoryContent($owner, $repositoryName, \rtrim($providerRootDirectory, '/') . '/package.json');
                 $packages = $contentResponse['content'] ?? '';
             } catch (FileNotFound $e) {
                 // Continue detection without package.json
@@ -280,7 +281,7 @@ class Create extends Action
             $wg->add();
             go(function () use ($github, $owner, $repositoryName, $providerRootDirectory, $file, $wg, &$envs) {
                 try {
-                    $contentResponse = $github->getRepositoryContent($owner, $repositoryName, \rtrim($providerRootDirectory, '/') . '/' . $file);
+                    $contentResponse = $vcs->getRepositoryContent($owner, $repositoryName, \rtrim($providerRootDirectory, '/') . '/' . $file);
                     $envFile = $contentResponse['content'] ?? '';
 
                     $configAdapter = new ConfigDotenv();

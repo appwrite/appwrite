@@ -37,8 +37,9 @@ use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
+use Appwrite\Vcs\VcsFactory;
+use Utopia\Cache\Cache;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git\GitHub;
 
 class Create extends Base
 {
@@ -121,7 +122,7 @@ class Create extends Base
             ->inject('queueForFunctions')
             ->inject('dbForPlatform')
             ->inject('request')
-            ->inject('gitHub')
+            ->inject('cache')
             ->inject('authorization')
             ->inject('platform')
             ->callback($this->action(...));
@@ -163,7 +164,7 @@ class Create extends Base
         Func $queueForFunctions,
         Database $dbForPlatform,
         Request $request,
-        GitHub $github,
+        Cache $cache,
         Authorization $authorization,
         array $platform
     ) {
@@ -287,6 +288,12 @@ class Create extends Base
                 'providerPullRequestIds' => []
             ]));
 
+            $provider = $installation->getAttribute('provider', 'github');
+            $vcs = VcsFactory::getInitializedAdapter($provider, $installation, $cache);
+            $owner = VcsFactory::getOwnerName($vcs, $provider, $installation->getAttribute('providerInstallationId', ''), $providerRepositoryId);
+            $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
+            VcsFactory::createRepositoryWebhook($vcs, $provider, $owner, $repositoryName);
+
             $function->setAttribute('repositoryId', $repository->getId());
             $function->setAttribute('repositoryInternalId', $repository->getSequence());
         }
@@ -320,6 +327,8 @@ class Create extends Base
                 $template = new Document();
 
                 $installation = $dbForPlatform->getDocument('installations', $function->getAttribute('installationId'));
+                $provider = $installation->getAttribute('provider', 'github');
+                $vcs = VcsFactory::getInitializedAdapter($provider, $installation, $cache);
                 $deployment = $this->redeployVcsFunction(
                     request: $request,
                     function: $function,
@@ -328,7 +337,7 @@ class Create extends Base
                     dbForProject: $dbForProject,
                     queueForBuilds: $queueForBuilds,
                     template: $template,
-                    github: $github,
+                    vcs: $vcs,
                     activate: true,
                     reference: $providerBranch,
                     referenceType: 'branch'

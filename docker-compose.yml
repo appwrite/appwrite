@@ -232,6 +232,12 @@ services:
       - _APP_VCS_GITHUB_WEBHOOK_SECRET
       - _APP_VCS_GITHUB_CLIENT_SECRET
       - _APP_VCS_GITHUB_CLIENT_ID
+      - _APP_VCS_GITEA_ENDPOINT
+      - _APP_VCS_GITEA_BROWSER_ENDPOINT
+      - _APP_VCS_GITEA_CLIENT_ID
+      - _APP_VCS_GITEA_CLIENT_SECRET
+      - _APP_VCS_GITEA_WEBHOOK_SECRET
+      - _APP_VCS_WEBHOOK_URL
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
       - _APP_ASSISTANT_OPENAI_API_KEY
@@ -546,6 +552,11 @@ services:
       - _APP_VCS_GITHUB_APP_NAME
       - _APP_VCS_GITHUB_PRIVATE_KEY
       - _APP_VCS_GITHUB_APP_ID
+      - _APP_VCS_GITEA_ENDPOINT
+      - _APP_VCS_GITEA_BROWSER_ENDPOINT
+      - _APP_VCS_GITEA_CLIENT_ID
+      - _APP_VCS_GITEA_CLIENT_SECRET
+      - _APP_VCS_GITEA_WEBHOOK_SECRET
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_SITES_TIMEOUT
       - _APP_COMPUTE_BUILD_TIMEOUT
@@ -1447,6 +1458,75 @@ services:
     networks:
       - appwrite
 
+  gitea:
+    image: gitea/gitea:1.21.5
+    container_name: appwrite-gitea
+    <<: *x-logging
+    ports:
+      - "9510:3000"
+    volumes:
+      - appwrite-gitea:/data
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - GITEA__database__DB_TYPE=sqlite3
+      - GITEA__security__INSTALL_LOCK=true
+      - GITEA__webhook__ALLOWED_HOST_LIST=*
+      - GITEA__webhook__SKIP_TLS_VERIFY=true
+      - GITEA__webhook__DELIVER_TIMEOUT=10
+      - GITEA__server__ROOT_URL=http://gitea:3000/
+      - GITEA__server__LOCAL_ROOT_URL=http://gitea:3000/
+    networks:
+      - appwrite
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  gitea-setup:
+    image: gitea/gitea:1.21.5
+    container_name: appwrite-gitea-setup
+    <<: *x-logging
+    depends_on:
+      gitea:
+        condition: service_healthy
+    volumes:
+      - appwrite-gitea:/data
+    environment:
+      - GITEA_ADMIN_USERNAME=appwrite
+      - GITEA_ADMIN_PASSWORD=password
+      - GITEA_ADMIN_EMAIL=admin@appwrite.local
+      - GITEA_OAUTH2_CLIENT_ID=${_APP_VCS_GITEA_CLIENT_ID:-appwrite-gitea-client-id}
+      - GITEA_OAUTH2_CLIENT_SECRET=${_APP_VCS_GITEA_CLIENT_SECRET:-appwrite-gitea-client-secret}
+      - GITEA_OAUTH2_REDIRECT_URIS=["http://localhost/v1/vcs/gitea/callback","http://localhost:9501/v1/vcs/gitea/callback","http://localhost:80/v1/vcs/gitea/callback"]
+    entrypoint: >
+      sh -c "
+        echo 'Setting up Gitea...' &&
+        su git -c 'gitea admin user create --username $$GITEA_ADMIN_USERNAME --password $$GITEA_ADMIN_PASSWORD --email $$GITEA_ADMIN_EMAIL --admin --must-change-password=false' 2>/dev/null || true &&
+        TOKEN=$$(su git -c 'gitea admin user generate-access-token --username $$GITEA_ADMIN_USERNAME --token-name appwrite-token --scopes all --raw' 2>/dev/null) &&
+        echo $$TOKEN > /data/gitea/token.txt &&
+        echo 'Creating OAuth2 application...' &&
+        apk add --no-cache apache2-utils sqlite > /dev/null 2>&1 &&
+        SECRET_HASH=$$(htpasswd -nbBC 10 '' \"$$GITEA_OAUTH2_CLIENT_SECRET\" | cut -d: -f2) &&
+        USER_ID=$$(sqlite3 /data/gitea/gitea.db \"SELECT id FROM user WHERE lower_name='$$GITEA_ADMIN_USERNAME' LIMIT 1;\") &&
+        TIMESTAMP=$$(date +%s) &&
+        sqlite3 /data/gitea/gitea.db \"DELETE FROM oauth2_application WHERE name='Appwrite';\" &&
+        sqlite3 /data/gitea/gitea.db \"INSERT INTO oauth2_application (uid, name, client_id, client_secret, confidential_client, redirect_uris, created_unix, updated_unix) VALUES ($$USER_ID, 'Appwrite', '$$GITEA_OAUTH2_CLIENT_ID', '$$SECRET_HASH', 1, '$$GITEA_OAUTH2_REDIRECT_URIS', $$TIMESTAMP, $$TIMESTAMP);\" &&
+        echo '' &&
+        echo '========================================' &&
+        echo 'Gitea setup complete!' &&
+        echo '========================================' &&
+        echo \"Gitea URL: http://localhost:9510\" &&
+        echo \"Admin user: $$GITEA_ADMIN_USERNAME\" &&
+        echo \"Admin password: $$GITEA_ADMIN_PASSWORD\" &&
+        echo \"OAuth2 Client ID: $$GITEA_OAUTH2_CLIENT_ID\" &&
+        echo '========================================'
+      "
+    networks:
+      - appwrite
+
   # Dev tools (adminer, redis-insight, mongo-express, graphql-explorer)
   # are defined in docker-compose.override.yml
 
@@ -1478,3 +1558,4 @@ volumes:
   appwrite-builds:
   appwrite-config:
   appwrite-models:
+  appwrite-gitea:
