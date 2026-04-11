@@ -800,15 +800,60 @@ Http::shutdown()
     ->inject('queueForWebhooks')
     ->inject('queueForRealtime')
     ->inject('dbForProject')
+    ->inject('dbForPlatform')
     ->inject('authorization')
     ->inject('timelimit')
     ->inject('eventProcessor')
     ->inject('bus')
     ->inject('apiKey')
     ->inject('mode')
-    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, Audit $queueForAudits, Context $usage, UsagePublisher $publisherForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor, Bus $bus, ?Key $apiKey, string $mode) use ($parseLabel) {
+    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, Audit $queueForAudits, Context $usage, UsagePublisher $publisherForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Database $dbForPlatform, Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor, Bus $bus, ?Key $apiKey, string $mode) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
+
+        /**
+         * Persist completed stage when the route matches a configured SDK method (stored on project as `onboarding`: stageId → row).
+         */
+        if ($response->getStatusCode() >= 200 && $response->getStatusCode() < 300 && $project->getId() !== 'console') {
+            $sdkLabel = $utopia->getRoute()?->getLabel('sdk', false);
+            $stageId = null;
+            if ($sdkLabel !== false && $sdkLabel !== null) {
+                $sdkIndex = Config::getParam('onboarding', [])['sdkIndex'] ?? [];
+                foreach ($sdkLabel instanceof Method ? [$sdkLabel] : (\is_array($sdkLabel) ? $sdkLabel : []) as $sdkMethod) {
+                    if ($sdkMethod instanceof Method && isset($sdkIndex[$k = $sdkMethod->getNamespace() . '.' . $sdkMethod->getMethodName()])) {
+                        $stageId = $sdkIndex[$k];
+                        break;
+                    }
+                }
+            }
+            if ($stageId !== null) {
+                $byStageId = $project->getAttribute('onboarding', []);
+                if (! \is_array($byStageId)) {
+                    $byStageId = [];
+                }
+                $done = \is_array($byStageId[$stageId] ?? null) ? ($byStageId[$stageId]['status'] ?? '') : '';
+                if ($done !== ONBOARDING_STATUS_COMPLETED && $done !== ONBOARDING_STATUS_SKIPPED) {
+                    $actorType = ($apiKey !== null && $apiKey->getRole() === User::ROLE_APPS)
+                        ? match ($apiKey->getType()) {
+                            API_KEY_ACCOUNT => ACTIVITY_TYPE_KEY_ACCOUNT,
+                            API_KEY_ORGANIZATION => ACTIVITY_TYPE_KEY_ORGANIZATION,
+                            API_KEY_STANDARD, API_KEY_DYNAMIC => ACTIVITY_TYPE_KEY_PROJECT,
+                            default => ACTIVITY_TYPE_KEY_PROJECT,
+                        }
+                    : (! $user->isEmpty()
+                        ? ($mode === APP_MODE_ADMIN ? ACTIVITY_TYPE_ADMIN : ACTIVITY_TYPE_USER)
+                        : ACTIVITY_TYPE_GUEST);
+                    $byStageId[$stageId] = [
+                        'status' => ONBOARDING_STATUS_COMPLETED,
+                        'at' => DateTime::now(),
+                        'actorType' => $actorType,
+                    ];
+                    $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                        'onboarding' => $byStageId,
+                    ])));
+                }
+            }
+        }
 
         if (! empty($queueForEvents->getEvent())) {
             if (empty($queueForEvents->getPayload())) {

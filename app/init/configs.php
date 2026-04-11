@@ -26,6 +26,7 @@ Config::load('projectScopes', __DIR__ . '/../config/scopes/project.php', $config
 Config::load('organizationScopes', __DIR__ . '/../config/scopes/organization.php', $configAdapter);
 Config::load('accountScopes', __DIR__ . '/../config/scopes/account.php', $configAdapter);
 Config::load('services', __DIR__ . '/../config/services.php', $configAdapter);  // List of services
+Config::load('onboarding', __DIR__ . '/../config/onboarding.php', $configAdapter);  // Project onboarding stages → routes
 Config::load('variables', __DIR__ . '/../config/variables.php', $configAdapter);  // List of env variables
 Config::load('regions', __DIR__ . '/../config/regions.php', $configAdapter); // List of available regions
 Config::load('avatar-browsers', __DIR__ . '/../config/avatars/browsers.php', $configAdapter);

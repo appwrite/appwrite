@@ -151,6 +151,12 @@ return [ // List of publicly visible scopes
     'schedules.write' => [
         'description' => 'Access to create, update, and delete your project\'s schedules',
     ],
+    'stages.read' => [
+        'description' => 'Access to read your project\'s stages',
+    ],
+    'stages.write' => [
+        'description' => 'Access to update your project\'s stages',
+    ],
     'migrations.read' => [
         'description' => 'Access to read your project\'s migrations',
     ],
