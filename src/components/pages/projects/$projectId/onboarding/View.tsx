@@ -30,6 +30,7 @@ import {
   type OnboardingProductBreakdownRow,
   type OnboardingConnectStepDef,
   type OnboardingSubStepDef,
+  type ProductNavCategoryId,
   type ProjectOnboardingSnapshot,
 } from '@/lib/onboarding/project-onboarding'
 import {
@@ -485,6 +486,11 @@ export function View({ initialData }: ViewProps = {}) {
     [snapshot],
   )
 
+  /** Per-category open accordion item ids (`type="multiple"`). */
+  const [accordionOpenByCategory, setAccordionOpenByCategory] = useState<
+    Partial<Record<ProductNavCategoryId, string[]>>
+  >({})
+
   if (!projectId) {
     return null
   }
@@ -534,17 +540,50 @@ export function View({ initialData }: ViewProps = {}) {
           </ul>
           </div>
 
-          {ONBOARDING_PRODUCT_CATEGORIES.map((category) => (
+          {ONBOARDING_PRODUCT_CATEGORIES.map((category) => {
+            const categoryGroupIds = category.groups.map((g) => g.id)
+            const openForCategory = accordionOpenByCategory[category.id] ?? []
+            const hasAnyOpen = openForCategory.length > 0
+
+            return (
             <section key={category.id} className="mt-10 space-y-3">
-              <div className="px-1">
-                <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+              <div className="flex items-start justify-between gap-3 px-1">
+                <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground min-w-0">
                   {category.label}
                 </h3>
+                {connectComplete && categoryGroupIds.length > 1 ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-auto min-h-0 shrink-0 py-1 -mr-1 px-2 text-[11px] font-medium text-muted-foreground hover:text-foreground"
+                    onClick={() => {
+                      setAccordionOpenByCategory((prev) => ({
+                        ...prev,
+                        [category.id]: hasAnyOpen ? [] : categoryGroupIds,
+                      }))
+                    }}
+                    aria-expanded={hasAnyOpen}
+                    aria-label={
+                      hasAnyOpen
+                        ? `Collapse all ${category.label} sections`
+                        : `Expand all ${category.label} sections`
+                    }
+                  >
+                    {hasAnyOpen ? 'Collapse all' : 'Expand all'}
+                  </Button>
+                ) : null}
               </div>
 
               <Accordion
                 type="multiple"
-                defaultValue={[]}
+                value={openForCategory}
+                onValueChange={(next) => {
+                  setAccordionOpenByCategory((prev) => ({
+                    ...prev,
+                    [category.id]: next,
+                  }))
+                }}
                 className="flex flex-col gap-4"
               >
                 {category.groups.map((group) => {
@@ -659,7 +698,8 @@ export function View({ initialData }: ViewProps = {}) {
                 })}
               </Accordion>
             </section>
-          ))}
+            )
+          })}
         </div>
       </div>
     </div>

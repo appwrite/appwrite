@@ -142,6 +142,7 @@ import {
 } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { useMediaMinWidth } from '@/hooks/use-media-min-width'
 import { TABLE_DB_SPEC_OPTIONS } from '@/lib/database-specs'
 import type { Models } from '@appwrite.io/console'
 import type { editor } from 'monaco-editor'
@@ -153,6 +154,7 @@ import {
 } from '@/lib/database-routes'
 import { getDatabaseConsoleLabels } from '@/lib/database-console-labels'
 import { DocumentsJsonSpreadsheet } from './_components/DocumentsJsonSpreadsheet'
+import { TableViewResizableLayout } from './_components/TableViewResizableLayout'
 
 /** Database list item: API may return extra backup/createdAt fields */
 type DatabaseWithBackup = Models.Database & {
@@ -1720,6 +1722,7 @@ export function TableView({
   const { isDebugModeOpen } = useDebugMode()
   const { features } = useConsoleProfile()
   const useCreateDatabaseWizard = features.dedicatedDbsSupport
+  const showDesktopTableSidebar = useMediaMinWidth(1024)
 
   // Sidebar tables list: search, pagination, order (API-backed)
   const [sidebarTablesSearch, setSidebarTablesSearch] = useState('')
@@ -2452,10 +2455,9 @@ export function TableView({
     )
   }
 
-  return (
-    <div className="@container flex h-full min-h-0 min-w-0">
+  const tableViewSidebar = (
+    <div className="flex h-full min-h-0 min-w-0 flex-col">
       {/* Tables Sidebar - sticky sections: database selector, create table, scrollable list, bottom nav */}
-      <div className="hidden min-h-0 w-56 shrink-0 flex-col border-r border-border lg:flex lg:h-full">
         {/* 1. Sticky top: Database selector */}
         <div className="flex shrink-0 flex-col border-b border-border bg-background">
           <div className="flex items-center gap-2 border-b border-border px-3 py-2.5">
@@ -2883,9 +2885,10 @@ export function TableView({
           )}
         </div>
       </div>
+  )
 
-      {/* Main Content */}
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+  const tableViewMain = (
+      <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <ServiceHeader
           title={
             isDatabaseLevelView ? (
@@ -3513,6 +3516,17 @@ export function TableView({
           )}
         </div>
       </div>
+  )
+
+  return (
+    <div className="@container flex h-full min-h-0 min-w-0">
+      {showDesktopTableSidebar ? (
+        <TableViewResizableLayout sidebar={tableViewSidebar}>
+          {tableViewMain}
+        </TableViewResizableLayout>
+      ) : (
+        tableViewMain
+      )}
 
       {/* Create Database Dialog */}
       <CreateDatabase
