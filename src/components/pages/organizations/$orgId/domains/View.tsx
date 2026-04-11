@@ -690,7 +690,7 @@ export function View() {
                             label: 'Nameservers',
                             value: (
                               <span className="text-[11px] font-medium text-muted-foreground">
-                                {domain.nameservers || '—'}
+                                {domain.nameservers || '-'}
                               </span>
                             ),
                           },

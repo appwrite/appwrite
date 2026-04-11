@@ -449,7 +449,7 @@ export function DocumentsJsonSpreadsheet({
                           />
                         ) : (
                           <span className="text-[12px] text-muted-foreground">
-                            —
+                             - 
                           </span>
                         )}
                       </TableCell>
@@ -461,7 +461,7 @@ export function DocumentsJsonSpreadsheet({
                           />
                         ) : (
                           <span className="text-[12px] text-muted-foreground">
-                            —
+                             - 
                           </span>
                         )}
                       </TableCell>

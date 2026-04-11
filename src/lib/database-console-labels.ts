@@ -2,9 +2,9 @@ import type { DatabaseRouteKind } from '@/lib/database-routes'
 
 /**
  * User-facing copy aligned with Appwrite Console SDK service APIs:
- * - {@link import('@appwrite.io/console').TablesDB} — listTables, tableId, listRows, listColumns
- * - {@link import('@appwrite.io/console').DocumentsDB} — listCollections, collectionId, listDocuments, listIndexes
- * - {@link import('@appwrite.io/console').VectorsDB} — listCollections, collectionId, listDocuments, listIndexes
+ * - {@link import('@appwrite.io/console').TablesDB} - listTables, tableId, listRows, listColumns
+ * - {@link import('@appwrite.io/console').DocumentsDB} - listCollections, collectionId, listDocuments, listIndexes
+ * - {@link import('@appwrite.io/console').VectorsDB} - listCollections, collectionId, listDocuments, listIndexes
  */
 export type DatabaseConsoleLabels = {
   /** SDK class name as in @appwrite.io/console (for subtitles / dev alignment). */

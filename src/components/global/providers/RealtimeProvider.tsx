@@ -3,7 +3,7 @@
  *
  * Subscribes to console realtime for the current project on the main cloud endpoint
  * (shared hub with assistant, etc.) and, when the project's regional API host differs,
- * a second socket on that host with project=console—both feed the same invalidation
+ * a second socket on that host with project=console - both feed the same invalidation
  * handler. Unsubscribes on unmount or when projectId changes.
  */
 

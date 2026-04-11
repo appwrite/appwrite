@@ -23,7 +23,7 @@ interface NavigationHistoryContextType {
    */
   popHistory: () => string | undefined
   /**
-   * Get a copy of the back stack (oldest first). Only "previous" pages — where we can go back to.
+   * Get a copy of the back stack (oldest first). Only "previous" pages - where we can go back to.
    */
   getBackStack: () => { path: string; title: string }[]
   /**
@@ -87,7 +87,7 @@ export function NavigationHistoryProvider({
   const forwardStackRef = useRef<NavigationHistoryEntry[]>([])
 
   const currentPathRef = useRef<string>('')
-  // When true, the next path change is from our "back" or "forward" or "history select" — don't push, and clear forward on normal nav
+  // When true, the next path change is from our "back" or "forward" or "history select" - don't push, and clear forward on normal nav
   const skipNextPushRef = useRef(false)
 
   // Track navigation changes

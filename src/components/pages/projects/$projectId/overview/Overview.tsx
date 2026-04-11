@@ -462,7 +462,7 @@ export function View({ projectId, initialData }: ViewProps) {
         {/* Charts card - usage stats (cloud only) */}
         {features.usageStats && (
           <div className="@container rounded-xl border border-border bg-card/50">
-            {/* Metric tabs + date range — same row */}
+            {/* Metric tabs + date range - same row */}
             <div className="border-b border-border px-5">
               <div className="flex min-w-0 items-center gap-3">
                 <div

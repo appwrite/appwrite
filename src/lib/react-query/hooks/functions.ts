@@ -329,7 +329,7 @@ export async function fetchFunctionDomains(
 
 /**
  * Query function to fetch proxy rules for a function deployment (project Console SDK).
- * Only rules for this deployment ID — deployment and redirect rows that reference it.
+ * Only rules for this deployment ID - deployment and redirect rows that reference it.
  */
 export async function fetchFunctionDeploymentProxyRules(
   projectId: string,

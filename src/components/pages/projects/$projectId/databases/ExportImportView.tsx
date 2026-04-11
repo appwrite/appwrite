@@ -320,7 +320,7 @@ export function ExportImportView({ databaseId }: ExportImportViewProps) {
                       </Button>
                     ) : (
                       <span className="text-[12px] text-muted-foreground">
-                        —
+                         - 
                       </span>
                     )}
                   </TableCell>

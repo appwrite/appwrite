@@ -16,7 +16,7 @@ const VARIANT_CONTAINER: Record<HeaderAlertVariant, string> = {
   info: 'bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 border-b border-blue-600/12 dark:border-blue-400/18',
 }
 
-/** Outline CTA — same treatment as the Cloud status banner link chip. */
+/** Outline CTA - same treatment as the Cloud status banner link chip. */
 const VARIANT_OUTLINE_ACTION: Record<HeaderAlertVariant, string> = {
   warning:
     'border border-amber-500 bg-transparent text-amber-600 hover:bg-amber-500/10 hover:text-amber-700 dark:border-amber-400 dark:text-amber-400 dark:hover:bg-amber-500/20 dark:hover:text-amber-300',

@@ -37,6 +37,7 @@ import { Route as PublicProjectsProjectIdStorageRouteImport } from './routes/_pu
 import { Route as PublicProjectsProjectIdSettingsRouteImport } from './routes/_public/projects.$projectId.settings'
 import { Route as PublicProjectsProjectIdReportsRouteImport } from './routes/_public/projects.$projectId.reports'
 import { Route as PublicProjectsProjectIdRealtimeRouteImport } from './routes/_public/projects.$projectId.realtime'
+import { Route as PublicProjectsProjectIdOnboardingRouteImport } from './routes/_public/projects.$projectId.onboarding'
 import { Route as PublicProjectsProjectIdMessagingRouteImport } from './routes/_public/projects.$projectId.messaging'
 import { Route as PublicProjectsProjectIdImagineRouteImport } from './routes/_public/projects.$projectId.imagine'
 import { Route as PublicProjectsProjectIdFunctionsRouteImport } from './routes/_public/projects.$projectId.functions'
@@ -348,6 +349,12 @@ const PublicProjectsProjectIdRealtimeRoute =
   PublicProjectsProjectIdRealtimeRouteImport.update({
     id: '/realtime',
     path: '/realtime',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
+  } as any)
+const PublicProjectsProjectIdOnboardingRoute =
+  PublicProjectsProjectIdOnboardingRouteImport.update({
+    id: '/onboarding',
+    path: '/onboarding',
     getParentRoute: () => PublicProjectsProjectIdRoute,
   } as any)
 const PublicProjectsProjectIdMessagingRoute =
@@ -1486,6 +1493,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/functions': typeof PublicProjectsProjectIdFunctionsRouteWithChildren
   '/projects/$projectId/imagine': typeof PublicProjectsProjectIdImagineRoute
   '/projects/$projectId/messaging': typeof PublicProjectsProjectIdMessagingRouteWithChildren
+  '/projects/$projectId/onboarding': typeof PublicProjectsProjectIdOnboardingRoute
   '/projects/$projectId/realtime': typeof PublicProjectsProjectIdRealtimeRouteWithChildren
   '/projects/$projectId/reports': typeof PublicProjectsProjectIdReportsRoute
   '/projects/$projectId/settings': typeof PublicProjectsProjectIdSettingsRouteWithChildren
@@ -1671,6 +1679,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/apps': typeof PublicProjectsProjectIdAppsRoute
   '/projects/$projectId/firewall': typeof PublicProjectsProjectIdFirewallRoute
   '/projects/$projectId/imagine': typeof PublicProjectsProjectIdImagineRoute
+  '/projects/$projectId/onboarding': typeof PublicProjectsProjectIdOnboardingRoute
   '/projects/$projectId/reports': typeof PublicProjectsProjectIdReportsRoute
   '/projects/$projectId/stores': typeof PublicProjectsProjectIdStoresRoute
   '/projects/$projectId/usage': typeof PublicProjectsProjectIdUsageRoute
@@ -1846,6 +1855,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/functions': typeof PublicProjectsProjectIdFunctionsRouteWithChildren
   '/_public/projects/$projectId/imagine': typeof PublicProjectsProjectIdImagineRoute
   '/_public/projects/$projectId/messaging': typeof PublicProjectsProjectIdMessagingRouteWithChildren
+  '/_public/projects/$projectId/onboarding': typeof PublicProjectsProjectIdOnboardingRoute
   '/_public/projects/$projectId/realtime': typeof PublicProjectsProjectIdRealtimeRouteWithChildren
   '/_public/projects/$projectId/reports': typeof PublicProjectsProjectIdReportsRoute
   '/_public/projects/$projectId/settings': typeof PublicProjectsProjectIdSettingsRouteWithChildren
@@ -2040,6 +2050,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/functions'
     | '/projects/$projectId/imagine'
     | '/projects/$projectId/messaging'
+    | '/projects/$projectId/onboarding'
     | '/projects/$projectId/realtime'
     | '/projects/$projectId/reports'
     | '/projects/$projectId/settings'
@@ -2225,6 +2236,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/apps'
     | '/projects/$projectId/firewall'
     | '/projects/$projectId/imagine'
+    | '/projects/$projectId/onboarding'
     | '/projects/$projectId/reports'
     | '/projects/$projectId/stores'
     | '/projects/$projectId/usage'
@@ -2399,6 +2411,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/functions'
     | '/_public/projects/$projectId/imagine'
     | '/_public/projects/$projectId/messaging'
+    | '/_public/projects/$projectId/onboarding'
     | '/_public/projects/$projectId/realtime'
     | '/_public/projects/$projectId/reports'
     | '/_public/projects/$projectId/settings'
@@ -2761,6 +2774,13 @@ declare module '@tanstack/react-router' {
       path: '/realtime'
       fullPath: '/projects/$projectId/realtime'
       preLoaderRoute: typeof PublicProjectsProjectIdRealtimeRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
+    }
+    '/_public/projects/$projectId/onboarding': {
+      id: '/_public/projects/$projectId/onboarding'
+      path: '/onboarding'
+      fullPath: '/projects/$projectId/onboarding'
+      preLoaderRoute: typeof PublicProjectsProjectIdOnboardingRouteImport
       parentRoute: typeof PublicProjectsProjectIdRoute
     }
     '/_public/projects/$projectId/messaging': {
@@ -4850,6 +4870,7 @@ interface PublicProjectsProjectIdRouteChildren {
   PublicProjectsProjectIdFunctionsRoute: typeof PublicProjectsProjectIdFunctionsRouteWithChildren
   PublicProjectsProjectIdImagineRoute: typeof PublicProjectsProjectIdImagineRoute
   PublicProjectsProjectIdMessagingRoute: typeof PublicProjectsProjectIdMessagingRouteWithChildren
+  PublicProjectsProjectIdOnboardingRoute: typeof PublicProjectsProjectIdOnboardingRoute
   PublicProjectsProjectIdRealtimeRoute: typeof PublicProjectsProjectIdRealtimeRouteWithChildren
   PublicProjectsProjectIdReportsRoute: typeof PublicProjectsProjectIdReportsRoute
   PublicProjectsProjectIdSettingsRoute: typeof PublicProjectsProjectIdSettingsRouteWithChildren
@@ -4880,6 +4901,8 @@ const PublicProjectsProjectIdRouteChildren: PublicProjectsProjectIdRouteChildren
     PublicProjectsProjectIdImagineRoute: PublicProjectsProjectIdImagineRoute,
     PublicProjectsProjectIdMessagingRoute:
       PublicProjectsProjectIdMessagingRouteWithChildren,
+    PublicProjectsProjectIdOnboardingRoute:
+      PublicProjectsProjectIdOnboardingRoute,
     PublicProjectsProjectIdRealtimeRoute:
       PublicProjectsProjectIdRealtimeRouteWithChildren,
     PublicProjectsProjectIdReportsRoute: PublicProjectsProjectIdReportsRoute,

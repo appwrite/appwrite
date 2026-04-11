@@ -1,5 +1,5 @@
 /**
- * Console operator impersonation (Console Auth users via console SDK — not project Auth users).
+ * Console operator impersonation (Console Auth users via console SDK - not project Auth users).
  * Persists target user id in sessionStorage so impersonation headers can be restored after refresh.
  */
 

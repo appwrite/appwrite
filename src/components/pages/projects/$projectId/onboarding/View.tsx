@@ -1,0 +1,667 @@
+import { useMemo, useState } from 'react'
+import { Link, useParams } from '@tanstack/react-router'
+import { Check, ChevronDown, ChevronRight, Lock } from 'lucide-react'
+import { ServiceHeader } from '../shared/ServiceHeader'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Progress } from '@/components/ui/progress'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { useDebugMode } from '@/components/global/providers/DebugMode'
+import {
+  useOnboardingProgressFromSnapshot,
+  useOnboardingStepStates,
+  useProjectOnboardingSnapshot,
+} from '@/lib/react-query/hooks/onboarding'
+import {
+  computeOnboardingProductBreakdown,
+  ONBOARDING_CONNECT,
+  ONBOARDING_PRODUCT_CATEGORIES,
+  subStepCountsTowardProgress,
+  type OnboardingProductBreakdownRow,
+  type OnboardingConnectStepDef,
+  type OnboardingSubStepDef,
+  type ProjectOnboardingSnapshot,
+} from '@/lib/onboarding/project-onboarding'
+import {
+  getEncouragementBand,
+  pickEncouragementForBand,
+} from '@/lib/onboarding/progress-encouragement'
+import { cn } from '@/lib/utils'
+
+type OnboardingStepRow = OnboardingConnectStepDef | OnboardingSubStepDef
+
+const CONNECT_SECTION = {
+  title: 'Connect',
+  description:
+    'Register where your app runs and add API credentials so your code can call Appwrite.',
+}
+
+const CARD_SHELL =
+  'rounded-xl border border-border bg-card/50 overflow-hidden'
+
+/** viewBox units - SVG scales with container (mobile vs desktop ring size). */
+const RING_VB = 120
+const RING_STROKE = 8
+
+const EMPTY_SNAPSHOT: ProjectOnboardingSnapshot = {
+  platformTotal: 0,
+  apiKeyCount: 0,
+  userTotal: 0,
+  teamTotal: 0,
+  databaseTotal: 0,
+  bucketTotal: 0,
+  functionTotal: 0,
+  topicTotal: 0,
+  providerTotal: 0,
+  siteTotal: 0,
+}
+
+function OnboardingProductBreakdown({
+  rows,
+  showSkeleton,
+  className,
+  connectComplete,
+}: {
+  rows: OnboardingProductBreakdownRow[]
+  showSkeleton: boolean
+  className?: string
+  connectComplete: boolean
+}) {
+  return (
+    <div
+      className={cn(
+        'w-full space-y-3',
+        showSkeleton && 'animate-pulse',
+        className,
+      )}
+      aria-label="Progress by product"
+    >
+      {rows.map((row) => {
+        const pct =
+          row.total === 0 ? 0 : Math.round((row.completed / row.total) * 100)
+        const locked = row.id !== 'connect' && !connectComplete
+
+        const rowInner = (
+          <div
+            className={cn(
+              'space-y-1.5 w-full text-left',
+              locked && 'opacity-[0.65]',
+            )}
+          >
+            <div className="flex items-center justify-between gap-2 min-w-0">
+              <span
+                className={cn(
+                  'text-[11px] font-medium truncate',
+                  locked ? 'text-muted-foreground' : 'text-foreground',
+                )}
+              >
+                {row.label}
+              </span>
+              <span className="flex items-center gap-1.5 shrink-0">
+                <span className="text-[10px] tabular-nums text-muted-foreground">
+                  {row.completed}/{row.total}
+                </span>
+                {locked ? (
+                  <Lock className="size-3 shrink-0 text-muted-foreground" aria-hidden />
+                ) : null}
+              </span>
+            </div>
+            <Progress
+              value={showSkeleton ? 0 : pct}
+              className={cn(
+                'h-1.5 w-full bg-muted/80',
+                locked
+                  ? '[&>div]:!bg-muted-foreground/30'
+                  : '[&>div]:!bg-[var(--brand-cta)]',
+              )}
+            />
+          </div>
+        )
+
+        return locked ? (
+          <Tooltip key={row.id}>
+            <TooltipTrigger asChild>
+              <div className="block w-full">{rowInner}</div>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-xs text-balance">
+              Connect your app first.
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          <div key={row.id}>{rowInner}</div>
+        )
+      })}
+    </div>
+  )
+}
+
+function OnboardingProgressPanel({
+  projectId,
+  progress,
+  completedSteps,
+  totalSteps,
+  showSkeleton,
+  productBreakdown,
+  connectComplete,
+}: {
+  projectId: string
+  progress: number
+  completedSteps: number
+  totalSteps: number
+  showSkeleton: boolean
+  productBreakdown: OnboardingProductBreakdownRow[]
+  connectComplete: boolean
+}) {
+  const [breakdownOpen, setBreakdownOpen] = useState(false)
+  const c = RING_VB / 2
+  const radius = (RING_VB - RING_STROKE) / 2
+  const circumference = 2 * Math.PI * radius
+  const strokeDashoffset = circumference * (1 - progress / 100)
+  const complete = !showSkeleton && progress === 100
+
+  const encouragementBand = getEncouragementBand(progress)
+  const headline = useMemo(
+    () => pickEncouragementForBand(encouragementBand),
+    [encouragementBand, projectId],
+  )
+
+  const ringInline =
+    'relative aspect-square w-[min(92px,25vw)] shrink-0 sm:w-[120px] text-[var(--brand-cta)]'
+  const ringStacked =
+    'relative aspect-square w-[120px] shrink-0 text-[var(--brand-cta)]'
+
+  const progressRing = (layout: 'inline' | 'stacked') => {
+    const wrap = layout === 'inline' ? ringInline : ringStacked
+    if (showSkeleton) {
+      return (
+        <div
+          className={cn(
+            'rounded-full bg-muted animate-pulse shrink-0 aspect-square',
+            layout === 'inline' ? 'w-[min(92px,25vw)] sm:w-[120px]' : 'w-[120px]',
+          )}
+          aria-hidden
+        />
+      )
+    }
+    if (complete) {
+      return (
+        <div
+          className={cn(
+            'flex shrink-0 items-center justify-center rounded-full border border-border bg-card/80',
+            wrap,
+          )}
+        >
+          <span className="flex h-[60%] w-[60%] items-center justify-center rounded-full border border-emerald-500/35 bg-emerald-500/10">
+            <Check className="h-1/2 w-1/2 text-emerald-600 dark:text-emerald-400" />
+          </span>
+        </div>
+      )
+    }
+    return (
+      <div className={cn('relative shrink-0', wrap)}>
+        <svg
+          viewBox={`0 0 ${RING_VB} ${RING_VB}`}
+          className="h-full w-full -rotate-90"
+          aria-hidden
+        >
+          <circle
+            cx={c}
+            cy={c}
+            r={radius}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={RING_STROKE}
+            className="opacity-20"
+          />
+          <circle
+            cx={c}
+            cy={c}
+            r={radius}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={RING_STROKE}
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeDashoffset}
+            className="transition-[stroke-dashoffset] duration-300 ease-out"
+          />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5 px-1.5">
+          <span
+            className={cn(
+              'font-semibold tabular-nums text-foreground leading-none',
+              layout === 'inline'
+                ? 'text-[clamp(1rem,4.5vw,1.375rem)]'
+                : 'text-[22px]',
+            )}
+          >
+            {progress}%
+          </span>
+          <span
+            className={cn(
+              'font-medium text-muted-foreground tabular-nums',
+              layout === 'inline' ? 'text-[10px] sm:text-[11px]' : 'text-[11px]',
+            )}
+          >
+            {completedSteps}/{totalSteps}
+          </span>
+        </div>
+      </div>
+    )
+  }
+
+  const headlineBlock = (
+    <>
+      <h2 className="text-[13px] font-semibold text-foreground leading-snug">
+        {headline}
+      </h2>
+      <p className="text-[11px] text-muted-foreground leading-snug mt-1.5">
+        Connect this project, then complete each product area - one clear action at a time.
+      </p>
+    </>
+  )
+
+  return (
+    <div className={cn(CARD_SHELL, 'w-full')}>
+      {/* Narrow / single column: headline + ring side by side (saves vertical space) */}
+      <div className="px-4 py-4 sm:px-5 sm:py-5 lg:hidden">
+        <div className="flex flex-row items-start gap-3 sm:gap-5">
+          <div className="min-w-0 flex-1 text-left">{headlineBlock}</div>
+          <div
+            className={cn(
+              'flex shrink-0 justify-end pt-0.5',
+              showSkeleton && 'items-center',
+            )}
+          >
+            {progressRing('inline')}
+          </div>
+        </div>
+        <div className="mt-5 w-full space-y-4 pt-1">
+          <button
+            type="button"
+            onClick={() => setBreakdownOpen((o) => !o)}
+            className="flex w-full cursor-pointer items-center justify-center gap-1.5 py-1 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+            aria-expanded={breakdownOpen}
+          >
+            <span>Breakdown</span>
+            <ChevronDown
+              className={cn(
+                'size-3.5 shrink-0 transition-transform',
+                breakdownOpen && 'rotate-180',
+              )}
+              aria-hidden
+            />
+          </button>
+          {breakdownOpen ? (
+            <OnboardingProductBreakdown
+              rows={productBreakdown}
+              showSkeleton={showSkeleton}
+              connectComplete={connectComplete}
+            />
+          ) : null}
+        </div>
+      </div>
+
+      {/* lg+ sidebar: original stacked card - copy, separator, centered ring */}
+      <div className="hidden lg:block">
+        <div className="px-4 py-4 text-left sm:px-5 sm:py-5">{headlineBlock}</div>
+        <div className="border-t border-border" />
+        <div className="flex flex-col items-center px-4 pb-6 pt-5 sm:px-5 sm:pb-7 sm:pt-6">
+          {progressRing('stacked')}
+          <div className="mt-6 w-full max-w-[240px] space-y-4">
+            <button
+              type="button"
+              onClick={() => setBreakdownOpen((o) => !o)}
+              className="flex w-full cursor-pointer items-center justify-center gap-1.5 py-1 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+              aria-expanded={breakdownOpen}
+            >
+              <span>Breakdown</span>
+              <ChevronDown
+                className={cn(
+                  'size-3.5 shrink-0 transition-transform',
+                  breakdownOpen && 'rotate-180',
+                )}
+                aria-hidden
+              />
+            </button>
+            {breakdownOpen ? (
+              <OnboardingProductBreakdown
+                className="w-full"
+                rows={productBreakdown}
+                showSkeleton={showSkeleton}
+                connectComplete={connectComplete}
+              />
+            ) : null}
+          </div>
+        </div>
+      </div>
+
+      <div className="border-t border-border" />
+
+      <div className="px-4 py-4 sm:px-5 sm:py-4 bg-muted/30">
+        <Button variant="outline" size="sm" className="h-9 w-full text-[13px]" asChild>
+          <Link to="/projects/$projectId" params={{ projectId }}>
+            Go to dashboard
+          </Link>
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+type ViewProps = {
+  initialData?: { snapshot: ProjectOnboardingSnapshot }
+}
+
+function StepStatusIcon({ done }: { done: boolean }) {
+  if (done) {
+    return (
+      <span
+        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/10"
+        aria-hidden
+      >
+        <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+      </span>
+    )
+  }
+  return (
+    <span
+      className="h-7 w-7 shrink-0 rounded-full border-2 border-muted-foreground/20 bg-transparent"
+      aria-hidden
+    />
+  )
+}
+
+/** Shown when a row is navigable but not part of the global progress denominator. */
+function StepStatusNotTrackedIcon() {
+  return (
+    <span
+      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/35 bg-muted/25"
+      title="Not counted in overall progress"
+    >
+      <span className="sr-only">Not counted in overall progress</span>
+      <span className="text-[11px] font-medium leading-none text-muted-foreground/80" aria-hidden>
+         - 
+      </span>
+    </span>
+  )
+}
+
+function SubStepRow({
+  step,
+  projectId,
+  done,
+  countsTowardProgress,
+  isDebugModeOpen,
+}: {
+  step: OnboardingStepRow
+  projectId: string
+  done: boolean
+  countsTowardProgress: boolean
+  isDebugModeOpen: boolean
+}) {
+  const ctaLabel = done ? (step.ctaDone ?? 'Open') : step.cta
+
+  return (
+    <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-stretch sm:gap-3">
+      <div className="flex min-w-0 flex-1 gap-3">
+        <div className="flex shrink-0 items-start pt-0.5 sm:items-center sm:self-stretch sm:pt-0">
+          {countsTowardProgress ? (
+            <StepStatusIcon done={done} />
+          ) : (
+            <StepStatusNotTrackedIcon />
+          )}
+        </div>
+        <div className="min-w-0 flex-1 space-y-0.5">
+          <span className="text-[13px] font-medium text-foreground block">
+            {step.label}
+          </span>
+          <p className="text-[12px] text-muted-foreground leading-relaxed">
+            {step.hint}
+          </p>
+          {isDebugModeOpen && (
+            <p className="text-[10px] text-amber-700/90 dark:text-amber-400/90 font-mono leading-snug pt-1">
+              {step.debug}
+            </p>
+          )}
+        </div>
+      </div>
+      <div className="flex w-full shrink-0 sm:w-auto sm:items-center sm:self-center sm:pl-0 pl-10">
+        <Button
+          variant="outline"
+          size="sm"
+          className={cn(
+            'h-9 w-full gap-1.5 px-3 text-[12px] font-medium sm:h-8 sm:w-auto sm:max-w-[11rem]',
+            done
+              ? 'text-muted-foreground'
+              : 'border-[color-mix(in_srgb,var(--brand-cta)_40%,var(--border))] bg-background text-[var(--brand-cta)] hover:bg-[color-mix(in_srgb,var(--brand-cta)_10%,transparent)] hover:text-[var(--brand-cta)]',
+          )}
+          asChild
+        >
+          <Link
+            to={step.to}
+            params={{ projectId }}
+            className="inline-flex min-w-0 items-center justify-center gap-1.5 sm:justify-start"
+            title={ctaLabel}
+          >
+            <span className="truncate">{ctaLabel}</span>
+            <ChevronRight className="size-3.5 shrink-0 opacity-70" />
+          </Link>
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+export function View({ initialData }: ViewProps = {}) {
+  const { projectId } = useParams({ strict: false })
+  const { data: snapshotFromHook, isLoading } =
+    useProjectOnboardingSnapshot(projectId)
+  const snapshot = snapshotFromHook ?? initialData?.snapshot
+  const { isDebugModeOpen } = useDebugMode()
+
+  const { progress, completedSteps, totalSteps } =
+    useOnboardingProgressFromSnapshot(snapshot)
+  const stepStates = useOnboardingStepStates(snapshot)
+
+  const connectComplete =
+    !!snapshot &&
+    ONBOARDING_CONNECT.every((step) => step.isDone(snapshot))
+
+  const showSkeleton = isLoading && !snapshot
+
+  const productBreakdown = useMemo(
+    () => computeOnboardingProductBreakdown(snapshot ?? EMPTY_SNAPSHOT),
+    [snapshot],
+  )
+
+  if (!projectId) {
+    return null
+  }
+
+  return (
+    <div className="flex flex-col">
+      <ServiceHeader title="Get started" fullWidthBorder />
+
+      <div className="mx-auto flex w-full min-w-0 max-w-7xl flex-1 flex-col gap-6 px-4 pt-4 pb-4 sm:px-6 sm:pt-6 sm:pb-6 lg:grid lg:grid-cols-[minmax(0,240px)_minmax(0,1fr)] lg:items-start lg:gap-8">
+        <aside className="w-full min-w-0 lg:sticky lg:top-4 lg:z-10">
+          <OnboardingProgressPanel
+            projectId={projectId}
+            progress={progress}
+            completedSteps={completedSteps}
+            totalSteps={totalSteps}
+            showSkeleton={showSkeleton}
+            productBreakdown={productBreakdown}
+            connectComplete={connectComplete}
+          />
+        </aside>
+
+        <div className="min-w-0 flex flex-col">
+          <div className={CARD_SHELL}>
+          <div className="px-4 py-3 border-b border-border bg-muted/10">
+            <h2 className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+              {CONNECT_SECTION.title}
+            </h2>
+            <p className="text-[13px] text-muted-foreground mt-1.5 leading-snug">
+              {CONNECT_SECTION.description}
+            </p>
+          </div>
+          <ul className="divide-y divide-border">
+            {ONBOARDING_CONNECT.map((step) => {
+              const done = stepStates.get(step.id) ?? false
+              return (
+                <li key={step.id}>
+                  <SubStepRow
+                    step={step}
+                    projectId={projectId}
+                    done={done}
+                    countsTowardProgress
+                    isDebugModeOpen={isDebugModeOpen}
+                  />
+                </li>
+              )
+            })}
+          </ul>
+          </div>
+
+          {ONBOARDING_PRODUCT_CATEGORIES.map((category) => (
+            <section key={category.id} className="mt-10 space-y-3">
+              <div className="px-1">
+                <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                  {category.label}
+                </h3>
+              </div>
+
+              <Accordion
+                type="multiple"
+                defaultValue={[]}
+                className="flex flex-col gap-4"
+              >
+                {category.groups.map((group) => {
+                  const subs = group.subSteps
+                  const trackedSubs = subs.filter((s) =>
+                    subStepCountsTowardProgress(s),
+                  )
+                  const doneInGroup = trackedSubs.filter(
+                    (s) => stepStates.get(s.id) ?? false,
+                  ).length
+                  const trackedTotal = trackedSubs.length
+                  const allDone =
+                    trackedTotal > 0 && doneInGroup === trackedTotal
+                  const locked = !connectComplete
+
+                  const item = (
+                    <AccordionItem
+                      key={group.id}
+                      value={group.id}
+                      disabled={locked}
+                      className={cn(
+                        'rounded-xl border border-border bg-card/50 overflow-hidden',
+                        'last:border-b last:border-border',
+                        locked && 'bg-muted/20 border-muted-foreground/15',
+                      )}
+                    >
+                      <AccordionTrigger
+                        className={cn(
+                          'items-stretch px-4 py-4 sm:px-5 hover:no-underline [&>svg]:shrink-0 [&>svg]:self-center',
+                          locked
+                            ? 'cursor-not-allowed'
+                            : 'cursor-pointer',
+                        )}
+                      >
+                        <div className="flex w-full min-w-0 items-stretch justify-between gap-4 pr-2 text-left">
+                          <div className="min-w-0 flex-1 flex flex-col gap-1.5">
+                            <span className="flex flex-wrap items-baseline gap-2 min-w-0">
+                              <span className="text-[15px] font-semibold tracking-tight text-foreground leading-snug">
+                                {group.label}
+                              </span>
+                              {group.comingSoon ? (
+                                <Badge
+                                  variant="info"
+                                  className="text-[10px] shrink-0"
+                                >
+                                  Soon
+                                </Badge>
+                              ) : null}
+                            </span>
+                            <p className="text-[13px] text-muted-foreground leading-relaxed line-clamp-4 m-0">
+                              {group.description}
+                            </p>
+                          </div>
+                          <div className="flex shrink-0 items-stretch gap-2">
+                            {trackedTotal > 0 ? (
+                              <span className="flex items-center text-[11px] font-medium text-muted-foreground tabular-nums">
+                                {doneInGroup}/{trackedTotal}
+                              </span>
+                            ) : null}
+                            {locked ? (
+                              <span className="flex shrink-0 items-center self-stretch">
+                                <span className="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-muted/40">
+                                  <Lock
+                                    className="h-3 w-3 text-muted-foreground"
+                                    aria-hidden
+                                  />
+                                </span>
+                              </span>
+                            ) : allDone ? (
+                              <span className="flex shrink-0 items-center self-stretch">
+                                <span className="flex h-6 w-6 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/10">
+                                  <Check className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                                </span>
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="border-t border-border bg-muted/5 pb-0">
+                        <ul className="divide-y divide-border">
+                          {subs.map((sub) => {
+                            const done = stepStates.get(sub.id) ?? false
+                            return (
+                              <li key={sub.id}>
+                                <SubStepRow
+                                  step={sub}
+                                  projectId={projectId}
+                                  done={done}
+                                  countsTowardProgress={subStepCountsTowardProgress(
+                                    sub,
+                                  )}
+                                  isDebugModeOpen={isDebugModeOpen}
+                                />
+                              </li>
+                            )
+                          })}
+                        </ul>
+                      </AccordionContent>
+                    </AccordionItem>
+                  )
+
+                  return locked ? (
+                    <Tooltip key={group.id}>
+                      <TooltipTrigger asChild>{item}</TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-xs text-balance">
+                        Connect your app first.
+                      </TooltipContent>
+                    </Tooltip>
+                  ) : (
+                    item
+                  )
+                })}
+              </Accordion>
+            </section>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}

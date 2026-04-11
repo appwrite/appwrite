@@ -67,6 +67,6 @@ function RootRedirect() {
       })
   }, [account, navigate, location.pathname, location.search])
 
-  // Blank screen while redirecting — root shows branded loader; never show "Loading..." here
+  // Blank screen while redirecting - root shows branded loader; never show "Loading..." here
   return <div className="fixed inset-0 bg-background" aria-hidden />
 }

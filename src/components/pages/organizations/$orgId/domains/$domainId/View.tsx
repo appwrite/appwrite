@@ -1046,7 +1046,7 @@ export function View({ initialData }: ViewProps = {}) {
                       </p>
                       <div className="min-h-[1.25rem] flex items-center min-w-0">
                         <code className="text-[12px] font-mono text-foreground truncate">
-                          {domain.nameservers || '—'}
+                          {domain.nameservers || '-'}
                         </code>
                       </div>
                     </div>
@@ -1067,7 +1067,7 @@ export function View({ initialData }: ViewProps = {}) {
                                   day: 'numeric',
                                 },
                               )
-                            : '—'}
+                            : '-'}
                         </code>
                       </div>
                     </div>
@@ -1115,7 +1115,7 @@ export function View({ initialData }: ViewProps = {}) {
                         <code className="text-[12px] font-mono text-foreground">
                           {domain.renewalPrice > 0
                             ? `$${(domain.renewalPrice / 100).toFixed(2)}/yr`
-                            : '—'}
+                            : '-'}
                         </code>
                       </div>
                     </div>
@@ -1491,21 +1491,21 @@ export function View({ initialData }: ViewProps = {}) {
                                 <code className="text-[12px] font-mono text-muted-foreground">
                                   {showPriority && record.priority !== undefined
                                     ? record.priority
-                                    : '—'}
+                                    : '-'}
                                 </code>
                               </TableCell>
                               <TableCell className="px-4 py-3">
                                 <code className="text-[12px] font-mono text-muted-foreground">
                                   {showSRVFields && record.weight !== undefined
                                     ? record.weight
-                                    : '—'}
+                                    : '-'}
                                 </code>
                               </TableCell>
                               <TableCell className="px-4 py-3">
                                 <code className="text-[12px] font-mono text-muted-foreground">
                                   {showSRVFields && record.port !== undefined
                                     ? record.port
-                                    : '—'}
+                                    : '-'}
                                 </code>
                               </TableCell>
                               <TableCell className="px-4 py-3 w-[150px]">
@@ -1529,7 +1529,7 @@ export function View({ initialData }: ViewProps = {}) {
                                   </TooltipProvider>
                                 ) : (
                                   <span className="text-[12px] text-muted-foreground">
-                                    —
+                                     - 
                                   </span>
                                 )}
                               </TableCell>
@@ -1731,7 +1731,7 @@ export function View({ initialData }: ViewProps = {}) {
                       <p className="mt-1 text-[13px] font-medium text-foreground">
                         {domain.renewalPrice > 0
                           ? `$${(domain.renewalPrice / 100).toFixed(2)}/yr`
-                          : '—'}
+                          : '-'}
                       </p>
                     </div>
                     {!canManageAutoRenewal && (

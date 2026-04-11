@@ -68,7 +68,7 @@ code {
   --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
   --sidebar-border: oklch(0.948 0.0025 286.32);
   --sidebar-ring: oklch(0.898 0.004 286.286);
-  /* Cloud profile — matches appwrite/website; files in public/fonts/aeonik-pro */
+  /* Cloud profile - matches appwrite/website; files in public/fonts/aeonik-pro */
   --font-aeonik-pro:
     'Aeonik Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   /* Self-hosted / non-cloud project overview title; files in public/fonts/inter (from appwrite/console) */
@@ -243,7 +243,7 @@ code {
 }
 
 /*
- * Premium — secret gold palette: warm dark surfaces, soft champagne text, muted gold accents.
+ * Premium - secret gold palette: warm dark surfaces, soft champagne text, muted gold accents.
  * Lower surface/text/chart contrast than earlier iterations. Debug menu only.
  */
 .premium {
@@ -294,7 +294,7 @@ code {
 }
 
 /*
- * High contrast — debug-only: near-black surfaces, near-white text, vivid borders,
+ * High contrast - debug-only: near-black surfaces, near-white text, vivid borders,
  * yellow primary (WCAG-style). Hidden theme; see Debug menu.
  */
 .high-contrast {
@@ -336,7 +336,7 @@ code {
 }
 
 /*
- * Barbie — hidden debug theme: deeper dusty pink surfaces, rose text (AA contrast),
+ * Barbie - hidden debug theme: deeper dusty pink surfaces, rose text (AA contrast),
  * soft borders, light chrome (not dark UI).
  */
 .barbie {
@@ -378,7 +378,7 @@ code {
 }
 
 /*
- * 90s web — hidden debug theme: Win-gray, classic blue links, neon accents,
+ * 90s web - hidden debug theme: Win-gray, classic blue links, neon accents,
  * CRT scanlines + grid + faux starfield. Debug menu only.
  */
 .nineties {

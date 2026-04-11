@@ -667,7 +667,7 @@ function DomainCard({
                   </span>
                 ) : (
                   <span className="text-[12px] text-muted-foreground animate-in fade-in-0 slide-in-from-bottom-1 duration-200">
-                    {premium ? 'Contact for price' : '—'}
+                    {premium ? 'Contact for price' : '-'}
                   </span>
                 )}
                 {renewalPrice != null && renewalPrice > 0 ? (

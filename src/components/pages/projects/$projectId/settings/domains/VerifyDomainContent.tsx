@@ -81,9 +81,9 @@ function DnsRecordsTable({
             </TableCell>
             <TableCell
               className="px-4 py-3 font-mono text-[12px] truncate max-w-[180px]"
-              title={r.name || '—'}
+              title={r.name || '-'}
             >
-              {r.name || '—'}
+              {r.name || '-'}
             </TableCell>
             <TableCell
               className="px-4 py-3 font-mono text-[12px] truncate max-w-[200px]"
@@ -93,7 +93,7 @@ function DnsRecordsTable({
             </TableCell>
             {showTtl && (
               <TableCell className="px-4 py-3 text-right text-[12px] text-muted-foreground">
-                {r.ttl ?? '—'}
+                {r.ttl ?? '-'}
               </TableCell>
             )}
             <TableCell className="px-4 py-3 text-right">

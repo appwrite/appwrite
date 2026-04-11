@@ -3,7 +3,7 @@
  *
  * The Appwrite SDK reconnects on every subscribe()/close() when slots or channels
  * change. Multiple features (project cache invalidation, assistant, etc.) must
- * not each call realtime.subscribe() — that stacks slots and forces reconnects.
+ * not each call realtime.subscribe() - that stacks slots and forces reconnects.
  * This hub keeps one SDK subscription with the union of all requested channels
  * and dispatches events to every listener.
  *

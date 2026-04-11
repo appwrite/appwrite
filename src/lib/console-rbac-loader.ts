@@ -17,8 +17,12 @@ import {
   canShowTopicSettingsTab,
   canAccessOrgSettingsOverview,
   canAccessOrgDomains,
+  canShowGetStartedSection,
 } from '@/lib/console-access-checks'
-import { deriveAccessFromRolesScopes } from '@/lib/console-roles'
+import {
+  deriveAccessFromRolesScopes,
+  type ConsoleAccess,
+} from '@/lib/console-roles'
 import { projectQueryOptions } from '@/lib/react-query/hooks/projects'
 import { organizationScopesQueryOptions } from '@/lib/react-query/hooks/organizations'
 
@@ -173,4 +177,15 @@ export async function canAccessOrganizationDomains(
   if (!access) return true
   const features = getActiveProfileFeatures()
   return canAccessOrgDomains(access, features)
+}
+
+/** Onboarding checklist (same audience as sidebar Get started). */
+export async function canAccessProjectOnboarding(
+  queryClient: QueryClient,
+  projectId: string,
+): Promise<boolean> {
+  const access = await getProjectAccess(queryClient, projectId)
+  if (!access) return true
+  const features = getActiveProfileFeatures()
+  return canShowGetStartedSection(access, features)
 }

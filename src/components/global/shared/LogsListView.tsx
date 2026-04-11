@@ -265,7 +265,7 @@ export function LogsListView({
                         </Badge>
                       ) : (
                         <span className="text-[12px] text-muted-foreground">
-                          —
+                           - 
                         </span>
                       )}
                     </TableCell>
@@ -341,7 +341,7 @@ export function LogsListView({
                           </>
                         ) : (
                           <span className="text-[12px] text-muted-foreground">
-                            —
+                             - 
                           </span>
                         )}
                       </div>
@@ -352,7 +352,7 @@ export function LogsListView({
                         <code className="text-[12px] font-mono text-muted-foreground">
                           {executionData.duration
                             ? formatDuration(executionData.duration * 1000)
-                            : '—'}
+                            : '-'}
                         </code>
                       </div>
                     </TableCell>

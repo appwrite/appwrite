@@ -85,10 +85,10 @@ export function buildSavedFiltersPrefs(
 }
 
 // ---------------------------------------------------------------------------
-// Console operator impersonation — recent targets (quick access in picker)
+// Console operator impersonation - recent targets (quick access in picker)
 // ---------------------------------------------------------------------------
 
-/** Full key: `console.impersonation.recentUsers` — JSON RecentImpersonationUser[] */
+/** Full key: `console.impersonation.recentUsers` - JSON RecentImpersonationUser[] */
 export const USER_PREFS_KEY_CONSOLE_IMPERSONATION_RECENT =
   'console.impersonation.recentUsers'
 
@@ -130,7 +130,7 @@ function writeRecentByOperatorMap(
   }
 }
 
-/** While impersonating, prefs belong to the target user — store recents per operator here until exit. */
+/** While impersonating, prefs belong to the target user - store recents per operator here until exit. */
 export function readRecentImpersonationSessionList(
   operatorId: string,
 ): RecentImpersonationUser[] {

@@ -295,7 +295,7 @@ export function AccountPaymentMethods({
                       <TableCell className="px-4 py-3">
                         <p className="text-[13px] text-foreground">
                           {method.name || (
-                            <span className="text-muted-foreground">—</span>
+                            <span className="text-muted-foreground"> - </span>
                           )}
                         </p>
                       </TableCell>
@@ -309,7 +309,7 @@ export function AccountPaymentMethods({
                           </p>
                         ) : (
                           <span className="text-[13px] text-muted-foreground">
-                            —
+                             - 
                           </span>
                         )}
                       </TableCell>

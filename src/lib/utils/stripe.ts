@@ -133,7 +133,7 @@ export async function confirmPayment(config: {
     if (error) throw new Error(error.message ?? 'Payment confirmation failed')
 
     // If the user dismissed the 3DS modal the PI reverts to requires_payment_method
-    // without surfacing an error — detect this and throw an actionable message.
+    // without surfacing an error - detect this and throw an actionable message.
     if (updatedIntent?.status === 'requires_payment_method') {
       throw new Error(
         'Authentication was cancelled. Please try again or use a different payment method.',

@@ -86,7 +86,7 @@ export function ChangePlanWizardFullscreen() {
 
   // Check if user has a free organization.
   // org.plan is derived from billingPlan via getPlanNameFromTier() in useOrganizations(),
-  // so 'free' already covers tier-0 / Tier0 variants — no need for additional checks.
+  // so 'free' already covers tier-0 / Tier0 variants - no need for additional checks.
   const hasFreeOrgs = useMemo(() => {
     return organizations.some((org) => org.plan === 'free')
   }, [organizations])
@@ -464,7 +464,7 @@ export function ChangePlanWizardFullscreen() {
   }
 
   // Show estimated total box conditions
-  // Cast to string for defensive checks — the API may return plan tiers outside the known enum
+  // Cast to string for defensive checks - the API may return plan tiers outside the known enum
   const currentTierStr = currentPlanEnum as string
   const selectedTierStr = selectedPlan as string | null
   const showEstimatedTotal =

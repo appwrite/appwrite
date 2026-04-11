@@ -1,5 +1,5 @@
 /**
- * Whether global console shortcuts should be ignored — user is typing in a field
+ * Whether global console shortcuts should be ignored - user is typing in a field
  * or in Monaco (focus may not be a plain textarea from document.activeElement’s perspective in some cases).
  */
 export function shouldSuppressGlobalShortcuts(

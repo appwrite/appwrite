@@ -7,7 +7,7 @@
  * Env: VITE_CONSOLE_FINGERPRINT_KEY or PUBLIC_CONSOLE_FINGERPRINT_KEY (same value as backend).
  *
  * Timestamps use server time (from /health/version Date header) when synced, same as the
- * reference console — local clock drift otherwise causes "Invalid console fingerprint".
+ * reference console - local clock drift otherwise causes "Invalid console fingerprint".
  */
 
 const SECRET =

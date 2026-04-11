@@ -180,7 +180,7 @@ export function DomainTargetCard({
                   <SelectContent>
                     {STATUS_CODES.map((s) => (
                       <SelectItem key={s.value} value={s.value}>
-                        {s.label} — {s.description}
+                        {s.label} - {s.description}
                       </SelectItem>
                     ))}
                   </SelectContent>

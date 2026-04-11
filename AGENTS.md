@@ -104,7 +104,7 @@ List queries use `refetchOnMount: false` (for prefetch). After a delete, **use `
 
 - **After delete**: Call `await queryClient.refetchQueries({ queryKey: [...] })` in the mutation's `onSuccess`.
 - **When navigating after delete**: Await refetch before navigating so the list view has fresh data when it mounts.
-- **Bulk delete**: Same pattern—refetch the list query so the current view or the next view shows the updated list.
+- **Bulk delete**: Same pattern - refetch the list query so the current view or the next view shows the updated list.
 
 ```typescript
 // Delete mutation (single or bulk)
@@ -230,9 +230,9 @@ All tables must use consistent styling matching the users table pattern for visu
 
 - **Header Row**: Always use `hover:bg-transparent border-b border-border` on `TableRow` in `TableHeader`
 - **TableHead**: Always include `px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider`
-- **Column Names**: Use uppercase/capitalized text (e.g., "User ID", "Created At"). Never use "Actions" as a column title—leave the actions column header empty.
+- **Column Names**: Use uppercase/capitalized text (e.g., "User ID", "Created At"). Never use "Actions" as a column title - leave the actions column header empty.
 - **TableCell**: Always use `px-4 py-3` for consistent padding
-- **Actions column**: Never title it "Actions"—use an empty `TableHead` (e.g. `<TableHead className="... text-right w-[100px]" />`).
+- **Actions column**: Never title it "Actions" - use an empty `TableHead` (e.g. `<TableHead className="... text-right w-[100px]" />`).
 - **Special Cases**:
   - First column with checkbox: Keep `w-[40px] px-4` on `TableHead`, add `py-3` to `TableCell`
   - Columns with `pl-6 sm:pl-8`: Add `py-3` to maintain vertical consistency
@@ -377,7 +377,7 @@ Fetch the **requested** page (to get `isFetching` and trigger load) and the **di
 
 Reference: `src/components/pages/projects/$projectId/storage/View.tsx`, `SiteLogs.tsx`, `Deployments.tsx`.
 
-**Filters (table/list):** Use the global filters component (`FiltersPopover`) with URL-backed state (`query` search param). Do **not** show a loading state when filters (or page) change—keep showing the previous list until the new data is ready. Use `placeholderData: keepPreviousData` on the list query so React Query keeps the previous result while the new request is in flight. Use different empty-state copy when there are no items at all vs when filters return no results.
+**Filters (table/list):** Use the global filters component (`FiltersPopover`) with URL-backed state (`query` search param). Do **not** show a loading state when filters (or page) change - keep showing the previous list until the new data is ready. Use `placeholderData: keepPreviousData` on the list query so React Query keeps the previous result while the new request is in flight. Use different empty-state copy when there are no items at all vs when filters return no results.
 
 **How to add filters to a list:**
 
@@ -981,7 +981,7 @@ Follow the modal structure pattern above. For no-content modals, skip content se
 | Detail page (no flash) | Loader returns data; route passes `initialData` to View; View uses `initialData` for first paint (see "Detail page: no loading flash")                                                                                                    |
 | Models types           | Always `Models.*` from `@appwrite.io/console`                                                                                                                                                                                             |
 | Table header           | `hover:bg-transparent border-b border-border` on row, `px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider` on head                                                                                        |
-| Actions column         | Never use "Actions" as title—use empty `TableHead`                                                                                                                                                                                        |
+| Actions column         | Never use "Actions" as title - use empty `TableHead`                                                                                                                                                                                        |
 | Table cells            | `px-4 py-3` on all cells (preserve special padding like `pl-6 sm:pl-8` where needed)                                                                                                                                                      |
 | Long-running progress  | One panel per scope; flat list of cards (no wrapper per type); same card style + ProgressBarRow; per-card dismiss; auto-action only on status transition to completed                                                                     |
 | RBAC (roles)           | Use **feature check methods** from `@/lib/console-access-checks` only; never check `access.isOwner` or `access.canWrite*` directly. Use `canAccess*` from `console-rbac-loader` in route loaders. See "Role-based access control (RBAC)". |

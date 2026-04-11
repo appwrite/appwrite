@@ -355,7 +355,7 @@ export async function fetchProxyRule(
 
 /**
  * Query function to fetch proxy rules for a site deployment (project Console SDK).
- * Only rules for this deployment ID — deployment and redirect rows that reference it.
+ * Only rules for this deployment ID - deployment and redirect rows that reference it.
  */
 export async function fetchDeploymentProxyRules(
   projectId: string,

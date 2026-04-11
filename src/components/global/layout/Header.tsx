@@ -663,7 +663,7 @@ export function ConsoleHeader({
             <SupportPopover orgId={orgId} />
           </div>
 
-          {/* Console impersonation (operators) — same control style as Support / Assistant */}
+          {/* Console impersonation (operators) - same control style as Support / Assistant */}
           <div className="hidden @[900px]:flex shrink-0">
             <ImpersonateConsoleUserPopover />
           </div>

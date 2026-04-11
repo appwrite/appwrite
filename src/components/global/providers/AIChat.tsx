@@ -1278,7 +1278,7 @@ export function AIChatPanel() {
   const accountId = (account as { $id?: string } | undefined)?.$id ?? null
   const organizationId =
     params.orgId ?? params.teamId ?? project?.teamId ?? null
-  /** On project routes, team channel comes from project fetch — wait so we do not reconnect per layer. */
+  /** On project routes, team channel comes from project fetch - wait so we do not reconnect per layer. */
   const waitingForProjectTeam =
     Boolean(contextProjectId) &&
     !params.orgId &&

@@ -133,7 +133,7 @@ function OrganizationLayout() {
       match.routeId.startsWith('/_public/organizations/$orgId/support'),
   )
 
-  // Buy / transfer-in wizards: must bypass OrgOverview — it only mounts <Outlet> on the domains
+  // Buy / transfer-in wizards: must bypass OrgOverview - it only mounts <Outlet> on the domains
   // index, so nested routes like .../domains/buy would never render (blank page).
   const isOrgDomainsWizardRoute =
     pathname.includes('/domains/buy') ||

@@ -318,10 +318,10 @@ export function ImpersonateConsoleUserPopover() {
                       />
                       <div className="min-w-0 flex-1 text-left">
                         <p className="truncate text-[13px] font-medium text-foreground">
-                          {recent.name || '—'}
+                          {recent.name || '-'}
                         </p>
                         <p className="truncate text-[12px] text-muted-foreground">
-                          {recent.email || '—'}
+                          {recent.email || '-'}
                         </p>
                         <div
                           className="mt-1"
@@ -396,10 +396,10 @@ export function ImpersonateConsoleUserPopover() {
                     />
                     <div className="min-w-0 flex-1 text-left">
                       <p className="truncate text-[13px] font-medium text-foreground">
-                        {user.name || '—'}
+                        {user.name || '-'}
                       </p>
                       <p className="truncate text-[12px] text-muted-foreground">
-                        {user.email || '—'}
+                        {user.email || '-'}
                       </p>
                       <div
                         className="mt-1"

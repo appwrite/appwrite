@@ -983,7 +983,7 @@ export function useUpdatePlatform(projectId: string | null | undefined) {
     },
     onSuccess: async (_, variables) => {
       // refetchType: 'all' so list cache refreshes even when no observer is mounted
-      // (e.g. user edits from Overview — Apps query is inactive, default 'active' skips refetch).
+      // (e.g. user edits from Overview - Apps query is inactive, default 'active' skips refetch).
       await queryClient.invalidateQueries({
         queryKey: ['platforms', projectId],
         refetchType: 'all',

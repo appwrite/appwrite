@@ -849,7 +849,7 @@ export function View() {
                                   </span>
                                 ) : (
                                   <span className="text-[12px] text-muted-foreground/50 italic">
-                                    —
+                                     - 
                                   </span>
                                 )}
                               </Link>

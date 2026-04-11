@@ -461,7 +461,7 @@ export function AccountSessions() {
                         </code>
                       ) : (
                         <span className="text-[12px] text-muted-foreground/50">
-                          —
+                           - 
                         </span>
                       )}
                     </TableCell>

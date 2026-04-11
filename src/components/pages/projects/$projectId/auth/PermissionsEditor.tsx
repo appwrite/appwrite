@@ -1185,7 +1185,7 @@ export function PermissionsEditor({
     )
   }
 
-  // Execute-only: simple list of roles (who can execute) — no table or checkboxes
+  // Execute-only: simple list of roles (who can execute) - no table or checkboxes
   if (executeOnly) {
     const rolesWithExecute = roles.filter(
       (role) => permissionsMap.get(role)?.execute,

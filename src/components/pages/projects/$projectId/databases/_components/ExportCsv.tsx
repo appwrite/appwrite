@@ -258,7 +258,7 @@ export function ExportCsv({
                     className="mt-0.5"
                   />
                   <span className="text-[13px] text-foreground">
-                    Include header row — Column names as the first row.
+                    Include header row - Column names as the first row.
                   </span>
                 </label>
                 <label className="flex items-start gap-2 cursor-pointer">
@@ -269,7 +269,7 @@ export function ExportCsv({
                     className="mt-0.5"
                   />
                   <span className="text-[13px] text-foreground">
-                    Export with filters — Export rows matching current table
+                    Export with filters - Export rows matching current table
                     filters.
                   </span>
                 </label>

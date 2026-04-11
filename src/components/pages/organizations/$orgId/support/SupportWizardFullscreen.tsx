@@ -98,7 +98,7 @@ function formatFileSize(bytes: number): string {
 export function SupportWizardFullscreen() {
   const params = useParams({ strict: false })
   const orgId = params.orgId as string | undefined
-  // Same as change plan wizard: no fallbackPath — use internal console history so we return to the page user was on (billing, members, etc.)
+  // Same as change plan wizard: no fallbackPath - use internal console history so we return to the page user was on (billing, members, etc.)
   const handleCancel = useSmartNavigation()
 
   const { account } = useAuth()
@@ -605,7 +605,7 @@ export function SupportWizardFullscreen() {
                     <SelectItem key={opt.value} value={opt.value}>
                       <span className="font-medium">{opt.label}</span>
                       <span className="text-muted-foreground ml-1.5 text-[12px]">
-                        — {opt.description}
+                        - {opt.description}
                       </span>
                     </SelectItem>
                   ))}

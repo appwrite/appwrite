@@ -177,7 +177,7 @@ export function DateRangePicker({
         sideOffset={4}
       >
         <div className="flex flex-col min-[820px]:flex-row min-[820px]:items-stretch">
-          {/* Quick select — same height as calendar column on wide layouts */}
+          {/* Quick select - same height as calendar column on wide layouts */}
           <div
             className={cn(
               'flex flex-col border-b border-border bg-muted/25',

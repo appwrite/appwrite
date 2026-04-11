@@ -1472,7 +1472,7 @@ export function View() {
                               if (!vcsProvider) {
                                 return (
                                   <span className="text-[12px] text-muted-foreground">
-                                    —
+                                     - 
                                   </span>
                                 )
                               }
@@ -1486,7 +1486,7 @@ export function View() {
                               if (!commitMessage && !branch && !commitHash) {
                                 return (
                                   <span className="text-[12px] text-muted-foreground">
-                                    —
+                                     - 
                                   </span>
                                 )
                               }
@@ -1587,7 +1587,7 @@ export function View() {
                                       deployment.$createdAt,
                                     )
                                   ? formatDuration(deployment.buildDuration)
-                                  : '—'}
+                                  : '-'}
                             </code>
                           </TableCell>
                           <TableCell className="px-4 py-3">

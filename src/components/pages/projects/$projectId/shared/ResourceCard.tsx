@@ -148,7 +148,7 @@ export function ResourceCard({
         )}
       </div>
 
-      {/* Metadata — single row, compact; scroll horizontally only if needed */}
+      {/* Metadata - single row, compact; scroll horizontally only if needed */}
       {metadata && metadata.length > 0 && (
         <div className={RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME}>
           <div className="flex min-w-0 flex-nowrap items-center gap-x-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">

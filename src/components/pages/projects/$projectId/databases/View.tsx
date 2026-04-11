@@ -11088,15 +11088,15 @@ function ColumnsSpreadsheet({
                       >
                         {col.key !== '$id' &&
                           (col.type === 'string' || col.type === 'varchar')
-                          ? (col.size ?? '—')
-                          : '—'}
+                          ? (col.size ?? '-')
+                          : '-'}
                       </td>
                       <td className={cn('px-3 py-2', bodyCellBorderClass)}>
                         {col.required ? (
                           <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                         ) : (
                           <span className="text-[12px] text-muted-foreground">
-                            —
+                             - 
                           </span>
                         )}
                       </td>
@@ -11105,7 +11105,7 @@ function ColumnsSpreadsheet({
                           <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                         ) : (
                           <span className="text-[12px] text-muted-foreground">
-                            —
+                             - 
                           </span>
                         )}
                       </td>
@@ -11114,7 +11114,7 @@ function ColumnsSpreadsheet({
                           <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                         ) : (
                           <span className="text-[12px] text-muted-foreground">
-                            —
+                             - 
                           </span>
                         )}
                       </td>

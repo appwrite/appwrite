@@ -83,7 +83,7 @@ export function TransferDomainInSummary({
           ) : priceError ? (
             <p className="text-[13px] leading-relaxed text-muted-foreground">
               We couldn&apos;t load a quote for this domain. You can still
-              continue—the amount due is confirmed when you complete payment.
+              continue - the amount due is confirmed when you complete payment.
             </p>
           ) : hasTransferPrice ? (
             <>

@@ -1420,7 +1420,7 @@ export function SiteDeploymentsView() {
                               if (!vcsProvider) {
                                 return (
                                   <span className="text-[12px] text-muted-foreground">
-                                    —
+                                     - 
                                   </span>
                                 )
                               }
@@ -1435,7 +1435,7 @@ export function SiteDeploymentsView() {
                               if (!commitMessage && !branch && !commitHash) {
                                 return (
                                   <span className="text-[12px] text-muted-foreground">
-                                    —
+                                     - 
                                   </span>
                                 )
                               }
@@ -1519,7 +1519,7 @@ export function SiteDeploymentsView() {
                                 deploymentData.$createdAt,
                               )
                                 ? formatDuration(deploymentData.buildDuration)
-                                : '—'}
+                                : '-'}
                             </code>
                           </TableCell>
                           <TableCell className="px-4 py-3">

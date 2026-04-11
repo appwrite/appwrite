@@ -179,7 +179,7 @@ export function Migrations({ projectId, initialData }: MigrationsProps) {
                     <TableCell className="px-4 py-3">
                       <span className="text-[13px] text-muted-foreground">
                         {(migration as { destination?: string }).destination ??
-                          '—'}
+                          '-'}
                       </span>
                     </TableCell>
                     <TableCell className="px-4 py-3">
@@ -199,7 +199,7 @@ export function Migrations({ projectId, initialData }: MigrationsProps) {
                         </div>
                       ) : (
                         <span className="text-[12px] text-muted-foreground">
-                          —
+                           - 
                         </span>
                       )}
                     </TableCell>

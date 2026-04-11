@@ -648,7 +648,7 @@ export function ImportCsv({
                                         {f.name}
                                       </p>
                                       <p className="text-[11px] text-muted-foreground">
-                                        {f.mimeType ?? '—'} ·{' '}
+                                        {f.mimeType ?? '-'} ·{' '}
                                         {formatBytes(f.sizeOriginal ?? 0)}
                                       </p>
                                     </div>

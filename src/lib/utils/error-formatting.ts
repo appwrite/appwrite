@@ -66,7 +66,7 @@ export function formatError(
 
     // Check for permission/authorization errors (401)
     // For auth failures (e.g. login with wrong credentials), the API often returns a specific message
-    // like "Invalid credentials" — use it when present and user-friendly; otherwise use generic message.
+    // like "Invalid credentials" - use it when present and user-friendly; otherwise use generic message.
     if (
       error.name === 'UnauthorizedError' ||
       code === 401 ||

@@ -2,7 +2,7 @@
  * Function Template Configuration Route
  *
  * Configure and create a function from a template.
- * Optional search param: runtime — pre-select runtime in the form.
+ * Optional search param: runtime - pre-select runtime in the form.
  */
 
 import { createFileRoute } from '@tanstack/react-router'

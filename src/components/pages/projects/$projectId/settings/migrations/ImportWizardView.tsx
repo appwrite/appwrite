@@ -867,7 +867,7 @@ export function ImportWizardView() {
                 {visibleGroups.map((group) => {
                   const count = getReportCount(group)
                   const countLabel =
-                    count !== null ? count.toLocaleString() : '—'
+                    count !== null ? count.toLocaleString() : '-'
                   if (group === 'storage') {
                     return (
                       <div

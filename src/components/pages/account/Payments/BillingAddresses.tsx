@@ -125,7 +125,7 @@ export function AccountBillingAddresses() {
       const countryName = countryMap.get(address.country) || address.country
       parts.push(countryName)
     }
-    return parts.join(', ') || '—'
+    return parts.join(', ') || '-'
   }
 
   if (addressesLoading) {

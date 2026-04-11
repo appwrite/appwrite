@@ -827,7 +827,7 @@ function UserImpersonationCapabilityCard({
           impersonation support in your app: you designate which other project
           user a session should run as, and the SDK applies that context on
           outgoing requests so the API treats each call like it came from the
-          impersonated user—permissions, data access, and limits follow that
+          impersonated user - permissions, data access, and limits follow that
           identity.{' '}
           <a
             href="https://appwrite.io/docs/products/auth/impersonation"
@@ -3100,7 +3100,7 @@ function SessionsTab({
                       </code>
                     ) : (
                       <span className="text-[12px] text-muted-foreground/50">
-                        —
+                         - 
                       </span>
                     )}
                   </TableCell>

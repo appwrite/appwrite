@@ -135,7 +135,7 @@ export function useInitialLoader() {
     const shouldShowLoadingState = isRouterLoading || currentHasActiveRequests
 
     // Hide loader when React Query is idle (don't wait for router).
-    // Never hide while still on "/" — wait for redirect so we don't flash content before first real page.
+    // Never hide while still on "/" - wait for redirect so we don't flash content before first real page.
     const shouldHideLoader =
       location.pathname !== '/' &&
       !currentHasActiveRequests &&

@@ -1275,7 +1275,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         <div>
           {/* Title Row: fixed h-16 so padding + toolbar never grows (h1 margins, badges, etc.) */}
           <div className="mx-auto flex h-16 min-h-16 w-full max-w-7xl shrink-0 items-center justify-between gap-3 px-4 sm:px-6">
-            {/* Left: Org Switcher — h-8 control; overflow-hidden contains h1 (no UA margin shift) */}
+            {/* Left: Org Switcher - h-8 control; overflow-hidden contains h1 (no UA margin shift) */}
             <div className="flex h-8 min-h-8 max-h-8 shrink-0 items-center gap-2">
               {selectedOrg ? (
                 <Popover
@@ -2594,7 +2594,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                     {member.status ===
                                                     'pending' ? (
                                                       <span className="text-muted-foreground/50 text-[12px]">
-                                                        —
+                                                         - 
                                                       </span>
                                                     ) : member.mfaEnabled ? (
                                                       <Tooltip>
