@@ -4,12 +4,12 @@ namespace Appwrite\SDK\Specification;
 
 use Appwrite\Utopia\Response\Model;
 use Utopia\Config\Config;
-use Utopia\Http\Http;
+use Utopia\DI\Container;
 use Utopia\Http\Route;
 
 abstract class Format
 {
-    protected Http $app;
+    protected Container $container;
 
     /**
      * @var array<Route>
@@ -80,9 +80,9 @@ abstract class Format
 
     protected array $enumBlacklist = [];
 
-    public function __construct(Http $app, array $services, array $routes, array $models, array $keys, int $authCount, string $platform)
+    public function __construct(Container $container, array $services, array $routes, array $models, array $keys, int $authCount, string $platform)
     {
-        $this->app = $app;
+        $this->container = $container;
         $this->services = $services;
         $this->routes = $routes;
         $this->models = $models;
@@ -208,6 +208,28 @@ abstract class Format
     public function getServices(): array
     {
         return $this->services;
+    }
+
+    /**
+     * @param list<string> $injections
+     * @return array<string, mixed>
+     */
+    protected function getResources(array $injections): array
+    {
+        $resources = [];
+
+        foreach ($injections as $name) {
+            $resources[$name] = $this->container->get($name);
+        }
+
+        return $resources;
+    }
+
+    protected function getValidator(array $param): mixed
+    {
+        return \is_callable($param['validator'])
+            ? ($param['validator'])(...$this->getResources($param['injections'] ?? []))
+            : $param['validator'];
     }
 
     protected function getDescriptionContents(?string $description): string

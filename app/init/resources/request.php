@@ -13,10 +13,8 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
-use Appwrite\Event\Migration;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Screenshot;
-use Appwrite\Event\StatsResources;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Functions\EventProcessor;
@@ -163,13 +161,6 @@ return function (Container $container): void {
     $container->set('queueForCertificates', function (Publisher $publisher) {
         return new Certificate($publisher);
     }, ['publisher']);
-    $container->set('queueForMigrations', function (Publisher $publisher) {
-        return new Migration($publisher);
-    }, ['publisher']);
-    $container->set('queueForStatsResources', function (Publisher $publisher) {
-        return new StatsResources($publisher);
-    }, ['publisher']);
-
     $container->set('dbForPlatform', function (Group $pools, Cache $cache, Authorization $authorization) {
         $adapter = new DatabasePool($pools->get('console'));
         $database = new Database($adapter, $cache);

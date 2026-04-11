@@ -40,6 +40,12 @@ class Log extends Model
                 'default' => '',
                 'example' => 'admin',
             ])
+            ->addRule('userType', [
+                'type' => self::TYPE_STRING,
+                'description' => 'User type who triggered the audit log. Possible values: user, admin, guest, keyProject, keyAccount, keyOrganization.',
+                'default' => '',
+                'example' => 'user',
+            ])
             ->addRule('ip', [
                 'type' => self::TYPE_STRING,
                 'description' => 'IP session in use when the session was created.',
