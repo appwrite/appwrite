@@ -851,6 +851,21 @@ Http::shutdown()
                     $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
                         'onboarding' => $byStageId,
                     ])));
+
+                    $queueForRealtime->reset();
+                    $queueForRealtime
+                        ->setProject($project)
+                        ->setSubscribers(['console'])
+                        ->setEvent('projects.[projectId].stages.[stageId].complete')
+                        ->setParam('projectId', $project->getId())
+                        ->setParam('stageId', $stageId)
+                        ->setPayload([
+                            'stageId' => $stageId,
+                            'status' => ONBOARDING_STATUS_COMPLETED,
+                            'at' => $byStageId[$stageId]['at'],
+                            'actorType' => $actorType,
+                        ])
+                        ->trigger();
                 }
             }
         }
