@@ -26,15 +26,23 @@ import {
 import { SimplePagination } from '@/components/global/shared/Pagination'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
-import { Search, Plus, RefreshCw, Lock, ArrowRight } from 'lucide-react'
+import {
+  Search,
+  Plus,
+  RefreshCw,
+  Lock,
+  ArrowRight,
+  LayoutTemplate,
+} from 'lucide-react'
 import { VCSDetectionType } from '@appwrite.io/console'
 import {
   useRepositories,
-  useFunctionTemplates,
+  useAllFunctionTemplates,
   useProject,
 } from '@/lib/react-query/hooks'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
 import { cn } from '@/lib/utils'
+import { EmptyState } from '@/components/global/shared/EmptyState'
 import { useFunctionWizard } from './WizardContext'
 import type { Models } from '@appwrite.io/console'
 
@@ -281,20 +289,21 @@ export function CreateFunctionView() {
   )
   const hasMoreRepos = repositories.length === REPO_PAGE_SIZE
 
-  const { templates: quickStartTemplates } = useFunctionTemplates(
+  const { templates: allFunctionTemplatesList } = useAllFunctionTemplates(
     projectId,
-    0,
-    6,
-    undefined,
-    [QUICK_START_USE_CASE],
   )
 
-  const { templates: allTemplatesForHighlighted } = useFunctionTemplates(
-    projectId,
-    0,
-    20,
-    undefined,
-    undefined,
+  const quickStartTemplates = useMemo(
+    () =>
+      allFunctionTemplatesList
+        .filter((t) => t.useCases?.includes(QUICK_START_USE_CASE))
+        .slice(0, 6),
+    [allFunctionTemplatesList],
+  )
+
+  const allTemplatesForHighlighted = useMemo(
+    () => allFunctionTemplatesList.slice(0, 20),
+    [allFunctionTemplatesList],
   )
 
   const { templateByLanguage, highlighted } = useMemo(() => {
@@ -574,9 +583,16 @@ export function CreateFunctionView() {
 
           {/* Other highlighted templates from API */}
           <div>
-            <p className="text-[12px] text-muted-foreground mb-3">
-              More templates
-            </p>
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <p className="text-[12px] text-muted-foreground">More templates</p>
+              <Link
+                to="/projects/$projectId/functions/templates"
+                params={{ projectId: projectId! }}
+                className="shrink-0 text-[12px] font-medium text-foreground hover:underline"
+              >
+                View all templates
+              </Link>
+            </div>
             {highlighted.length > 0 ? (
               <div className="grid gap-3 sm:grid-cols-2">
                 {highlighted.map((template) => (
@@ -588,20 +604,15 @@ export function CreateFunctionView() {
                 ))}
               </div>
             ) : (
-              <div className="rounded-xl border border-border bg-card/50 p-6 text-center">
-                <p className="text-[12px] text-muted-foreground">
-                  No additional templates
-                </p>
-              </div>
+              <EmptyState
+                icon={LayoutTemplate}
+                title="No additional templates"
+                description="More highlighted templates will show here when the catalog includes them."
+                isEmpty
+                hasFilters={false}
+                variant="card"
+              />
             )}
-            <Link
-              to="/projects/$projectId/functions/templates"
-              params={{ projectId: projectId! }}
-              className="mt-3 inline-flex items-center gap-1.5 text-[12px] font-medium text-primary hover:underline"
-            >
-              Browse all templates
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
           </div>
         </CreateWizardRightColumn>
       </div>

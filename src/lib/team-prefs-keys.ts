@@ -47,3 +47,26 @@ export function buildPinnedProjectIdsPrefs(ids: string[]): TeamPrefs {
     [TEAM_PREFS_KEY_PINNED_PROJECT_IDS]: JSON.stringify(trimmed),
   }
 }
+
+/**
+ * Reorder pinned project IDs (e.g. after drag-and-drop).
+ */
+export function reorderPinnedProjectIds(
+  ids: string[],
+  fromIndex: number,
+  toIndex: number,
+): string[] {
+  if (
+    fromIndex === toIndex ||
+    fromIndex < 0 ||
+    toIndex < 0 ||
+    fromIndex >= ids.length ||
+    toIndex >= ids.length
+  ) {
+    return ids
+  }
+  const next = [...ids]
+  const [removed] = next.splice(fromIndex, 1)
+  next.splice(toIndex, 0, removed)
+  return next.slice(0, MAX_PINNED_PROJECTS)
+}

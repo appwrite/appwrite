@@ -64,6 +64,7 @@ import {
 import {
   parsePinnedProjectIds,
   buildPinnedProjectIdsPrefs,
+  reorderPinnedProjectIds,
   MAX_PINNED_PROJECTS,
 } from '@/lib/team-prefs-keys'
 import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
@@ -122,7 +123,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { useState, useEffect, useMemo, useRef } from 'react'
+import {
+  useState,
+  useEffect,
+  useMemo,
+  useRef,
+  useCallback,
+  type DragEvent,
+} from 'react'
 import {
   useQuery,
   useMutation,
@@ -169,6 +177,7 @@ import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { ComingSoonView } from '@/components/global/shared/ComingSoonView'
+import { GripVertical } from 'lucide-react'
 
 // Environment variables for whitelabeling
 const COMPANY_NAME = import.meta.env.VITE_COMPANY_NAME || 'Appwrite'
@@ -291,6 +300,13 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const search = useSearch({ strict: false })
   const matches = useMatches()
   const [searchQuery, setSearchQuery] = useState('')
+  const [pinnedDragOverIndex, setPinnedDragOverIndex] = useState<number | null>(
+    null,
+  )
+  const [pinnedDraggingIndex, setPinnedDraggingIndex] = useState<number | null>(
+    null,
+  )
+  const pinnedDragPreviewRef = useRef<HTMLDivElement | null>(null)
   const { features, isCloud } = useConsoleProfile()
   const supportsMultiRegion = features.multiRegion
   const { access, isLoading: orgScopesLoading } = useOrganizationScopes(orgId)
@@ -850,6 +866,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     setDisplayedPage(1)
   }, [searchQuery])
 
+  useEffect(() => {
+    setPinnedDragOverIndex(null)
+    setPinnedDraggingIndex(null)
+  }, [searchQuery])
+
   // Track when projects are actually rendered in the DOM (for controlling full-screen loader)
   const [, setProjectsRendered] = useState(false)
   const projectsContainerRef = useRef<HTMLDivElement>(null)
@@ -939,6 +960,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   }, [pinnedProjects, searchQuery])
 
   const canPinProjectsResult = canPinProjects(access, features)
+  const canReorderPinned =
+    canPinProjectsResult &&
+    !searchQuery.trim() &&
+    pinnedProjects.length > 1
   const canManageProjects = canCreateProject(access, features)
   const showProjectSettingsTab = canShowProjectSettings(access, features)
 
@@ -967,6 +992,93 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       },
       onError: () => toast.error('Failed to update pinned projects'),
     })
+  }
+
+  const handlePinnedDragStart = useCallback(
+    (e: DragEvent, index: number, projectName: string) => {
+      if (updateTeamPrefsMutation.isPending) {
+        e.preventDefault()
+        return
+      }
+      e.dataTransfer.setData('application/json', JSON.stringify({ index }))
+      e.dataTransfer.effectAllowed = 'move'
+      setPinnedDraggingIndex(index)
+
+      const preview = document.createElement('div')
+      // Keep off-screen so the preview never flashes at the viewport origin (0,0).
+      preview.style.cssText =
+        'position:fixed;left:-9999px;top:0;z-index:99999;pointer-events:none;'
+      preview.className =
+        'flex min-h-[40px] min-w-[200px] max-w-[min(280px,calc(100vw-2rem))] items-center rounded-lg border border-border/80 bg-card px-3 py-2 shadow-md'
+      const label = document.createElement('span')
+      label.className =
+        'block min-w-0 max-w-[240px] truncate text-[13px] font-medium text-foreground'
+      label.textContent = projectName
+      preview.appendChild(label)
+      document.body.appendChild(preview)
+      pinnedDragPreviewRef.current = preview
+      const rect = preview.getBoundingClientRect()
+      e.dataTransfer.setDragImage(
+        preview,
+        Math.min(rect.width / 2, 80),
+        rect.height / 2,
+      )
+    },
+    [updateTeamPrefsMutation.isPending],
+  )
+
+  const handlePinnedDragEnd = useCallback(() => {
+    setPinnedDraggingIndex(null)
+    setPinnedDragOverIndex(null)
+    pinnedDragPreviewRef.current?.remove()
+    pinnedDragPreviewRef.current = null
+  }, [])
+
+  const handlePinnedDragOver = (e: DragEvent, index: number) => {
+    if (!canReorderPinned || updateTeamPrefsMutation.isPending) return
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setPinnedDragOverIndex(index)
+  }
+
+  const handlePinnedCardDragLeave = useCallback(
+    (e: DragEvent<HTMLDivElement>) => {
+      const next = e.relatedTarget as Node | null
+      if (next && e.currentTarget.contains(next)) return
+      setPinnedDragOverIndex(null)
+    },
+    [],
+  )
+
+  const handlePinnedDrop = (e: DragEvent, dropIndex: number) => {
+    e.preventDefault()
+    setPinnedDragOverIndex(null)
+    setPinnedDraggingIndex(null)
+    if (
+      !canReorderPinned ||
+      !orgTeamId ||
+      updateTeamPrefsMutation.isPending
+    )
+      return
+    const raw = e.dataTransfer.getData('application/json')
+    if (!raw) return
+    try {
+      const { index: dragIndex } = JSON.parse(raw) as { index: number }
+      if (dragIndex === dropIndex) return
+      const next = reorderPinnedProjectIds(pinnedIds, dragIndex, dropIndex)
+      const prefs = {
+        ...(teamPrefs || {}),
+        ...buildPinnedProjectIdsPrefs(next),
+      }
+      updateTeamPrefsMutation.mutate(prefs as Record<string, unknown>, {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ['projects'] })
+        },
+        onError: () => toast.error('Failed to reorder pinned projects'),
+      })
+    } catch {
+      // ignore invalid payload
+    }
   }
 
   const handleProjectDeleted = async (projectId: string) => {
@@ -1848,77 +1960,182 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                   Pinned
                                 </h2>
                                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                                  {pinnedFiltered.map((project) => (
-                                    <ProjectContextMenu
-                                      key={project.$id}
-                                      project={project}
-                                      showSettingsTab={showProjectSettingsTab}
-                                      canDeleteProject={canManageProjects}
-                                      onProjectDeleted={handleProjectDeleted}
-                                    >
-                                      <div
-                                        className="group relative rounded-xl border border-border bg-card/50 p-4 transition-all hover:border-border hover:bg-card"
-                                        data-project-card
+                                  {pinnedFiltered.map((project, index) => {
+                                    const isDragActive =
+                                      canReorderPinned &&
+                                      pinnedDraggingIndex !== null
+                                    const isDragSource =
+                                      isDragActive &&
+                                      pinnedDraggingIndex === index
+                                    const isDropTarget =
+                                      isDragActive &&
+                                      pinnedDragOverIndex === index &&
+                                      pinnedDraggingIndex !== index
+                                    const isDragDimmed =
+                                      isDragActive &&
+                                      pinnedDraggingIndex !== index &&
+                                      pinnedDragOverIndex !== index
+
+                                    return (
+                                      <ProjectContextMenu
+                                        key={project.$id}
+                                        project={project}
+                                        showSettingsTab={
+                                          showProjectSettingsTab
+                                        }
+                                        canDeleteProject={canManageProjects}
+                                        onProjectDeleted={handleProjectDeleted}
                                       >
-                                        <Link
-                                          to="/projects/$projectId"
-                                          params={{ projectId: project.$id }}
-                                          className="block"
+                                        <div
+                                          className={cn(
+                                            'group relative rounded-xl border bg-card/50 p-4 transition-[opacity,transform,box-shadow,border-color] duration-200 ease-out hover:border-border hover:bg-card',
+                                            !isDragActive && 'border-border',
+                                            isDragSource &&
+                                              'z-0 scale-[0.99] opacity-[0.48] ring-2 ring-dashed ring-muted-foreground/45',
+                                            isDropTarget &&
+                                              'z-20 border-border opacity-100 ring-1 ring-inset ring-primary/35',
+                                            isDragDimmed && 'opacity-[0.26]',
+                                          )}
+                                          data-project-card
+                                          onDragOver={
+                                            canReorderPinned
+                                              ? (e) =>
+                                                  handlePinnedDragOver(
+                                                    e,
+                                                    index,
+                                                  )
+                                              : undefined
+                                          }
+                                          onDragLeave={
+                                            canReorderPinned
+                                              ? handlePinnedCardDragLeave
+                                              : undefined
+                                          }
+                                          onDrop={
+                                            canReorderPinned
+                                              ? (e) =>
+                                                  handlePinnedDrop(e, index)
+                                              : undefined
+                                          }
                                         >
-                                          <div>
-                                            <h3 className="text-[14px] font-medium text-foreground group-hover:text-foreground">
-                                              {project.name}
-                                            </h3>
-                                            {supportsMultiRegion &&
-                                              project.region && (
-                                                <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-muted-foreground">
-                                                  <RegionFlag
-                                                    region={project.region}
-                                                  />
-                                                  {project.region}
-                                                </div>
+                                          <Link
+                                            to="/projects/$projectId"
+                                            params={{
+                                              projectId: project.$id,
+                                            }}
+                                            className="block"
+                                          >
+                                            <div>
+                                              <h3 className="text-[14px] font-medium text-foreground group-hover:text-foreground">
+                                                {project.name}
+                                              </h3>
+                                              {supportsMultiRegion &&
+                                                project.region && (
+                                                  <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-muted-foreground">
+                                                    <RegionFlag
+                                                      region={project.region}
+                                                    />
+                                                    {project.region}
+                                                  </div>
+                                                )}
+                                            </div>
+                                            <ProjectCardFooter
+                                              platformsCount={
+                                                project.platformsCount || 0
+                                              }
+                                              apiKeysCount={
+                                                project.apiKeysCount || 0
+                                              }
+                                              paused={project.paused}
+                                            />
+                                          </Link>
+                                          {(canReorderPinned ||
+                                            canPinProjectsResult) && (
+                                            <div
+                                              className={cn(
+                                                'absolute right-2 top-2 z-20 flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100',
+                                                isDragActive && 'opacity-100',
                                               )}
-                                          </div>
-                                          <ProjectCardFooter
-                                            platformsCount={
-                                              project.platformsCount || 0
-                                            }
-                                            apiKeysCount={
-                                              project.apiKeysCount || 0
-                                            }
-                                            paused={project.paused}
-                                          />
-                                        </Link>
-                                        {canPinProjectsResult && (
-                                          <TooltipProvider delayDuration={0}>
-                                            <Tooltip>
-                                              <TooltipTrigger asChild>
-                                                <Button
-                                                  variant="ghost"
-                                                  size="icon"
-                                                  className="absolute right-2 top-2 h-8 w-8 rounded-md opacity-0 transition-opacity group-hover:opacity-100"
-                                                  onClick={(e) => {
-                                                    e.preventDefault()
-                                                    handlePinProject(
-                                                      project.$id,
-                                                    )
-                                                  }}
-                                                  disabled={
-                                                    updateTeamPrefsMutation.isPending
-                                                  }
+                                            >
+                                              {canPinProjectsResult ? (
+                                                <TooltipProvider
+                                                  delayDuration={0}
                                                 >
-                                                  <PinOff className="h-4 w-4" />
-                                                </Button>
-                                              </TooltipTrigger>
-                                              <TooltipContent>
-                                                <p>Unpin project</p>
-                                              </TooltipContent>
-                                            </Tooltip>
-                                          </TooltipProvider>
-                                        )}
-                                      </div>
-                                    </ProjectContextMenu>
-                                  ))}
+                                                  <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                      <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8 rounded-md"
+                                                        onClick={(e) => {
+                                                          e.preventDefault()
+                                                          handlePinProject(
+                                                            project.$id,
+                                                          )
+                                                        }}
+                                                        disabled={
+                                                          updateTeamPrefsMutation.isPending
+                                                        }
+                                                      >
+                                                        <PinOff className="h-4 w-4" />
+                                                      </Button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                      <p>Unpin project</p>
+                                                    </TooltipContent>
+                                                  </Tooltip>
+                                                </TooltipProvider>
+                                              ) : null}
+                                              {canReorderPinned ? (
+                                                <TooltipProvider
+                                                  delayDuration={0}
+                                                >
+                                                  <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                      <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        draggable={
+                                                          !updateTeamPrefsMutation.isPending
+                                                        }
+                                                        onDragStart={(e) =>
+                                                          handlePinnedDragStart(
+                                                            e,
+                                                            index,
+                                                            project.name ??
+                                                              '',
+                                                          )
+                                                        }
+                                                        onDragEnd={
+                                                          handlePinnedDragEnd
+                                                        }
+                                                        className={cn(
+                                                          'h-8 w-8 cursor-grab rounded-md active:cursor-grabbing',
+                                                          updateTeamPrefsMutation.isPending &&
+                                                            'pointer-events-none opacity-40',
+                                                        )}
+                                                        aria-grabbed={
+                                                          pinnedDraggingIndex ===
+                                                          index
+                                                        }
+                                                        aria-label={`Drag to reorder ${project.name}`}
+                                                      >
+                                                        <GripVertical className="h-4 w-4" />
+                                                      </Button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent side="top">
+                                                      <p>Drag to reorder</p>
+                                                    </TooltipContent>
+                                                  </Tooltip>
+                                                </TooltipProvider>
+                                              ) : null}
+                                            </div>
+                                          )}
+                                        </div>
+                                      </ProjectContextMenu>
+                                    )
+                                  })}
                                 </div>
                               </div>
                             )}

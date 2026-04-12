@@ -8,7 +8,7 @@
 import { createFileRoute, Outlet, useParams } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import {
-  fetchFunctionTemplates,
+  allFunctionTemplatesQueryOptions,
   fetchProject,
   vcsInstallationsQueryOptions,
   projectRuntimesQueryOptions,
@@ -52,50 +52,9 @@ export const Route = createFileRoute(
         queryClient.ensureQueryData(
           functionSpecificationsQueryOptions(projectId),
         ),
-        queryClient.ensureQueryData({
-          queryKey: [
-            'function-templates',
-            'project',
-            projectId,
-            0,
-            100,
-            0,
-            null,
-            null,
-          ],
-          queryFn: () =>
-            fetchFunctionTemplates(
-              projectId,
-              undefined,
-              undefined,
-              100,
-              0,
-              true,
-            ),
-          staleTime: 5 * 60 * 1000,
-        }),
-        queryClient.ensureQueryData({
-          queryKey: [
-            'function-templates',
-            'project',
-            projectId,
-            0,
-            6,
-            0,
-            null,
-            'starter',
-          ],
-          queryFn: () =>
-            fetchFunctionTemplates(
-              projectId,
-              undefined,
-              ['starter'],
-              6,
-              0,
-              true,
-            ),
-          staleTime: 5 * 60 * 1000,
-        }),
+        queryClient.ensureQueryData(
+          allFunctionTemplatesQueryOptions(projectId),
+        ),
       ])
 
       return {}

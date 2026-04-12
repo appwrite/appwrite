@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { cn } from '@/lib/utils'
+import { cn, scrollConsoleMainToTop } from '@/lib/utils'
 import {
   ChevronLeft,
   ChevronRight,
@@ -49,24 +49,10 @@ export function SimplePagination({
   const canGoPrevious = currentPage > 1
   const canGoNext = hasMore
 
-  const scrollToTop = () => {
-    setTimeout(() => {
-      if (
-        typeof document !== 'undefined' &&
-        document.documentElement.scrollTop > 0
-      ) {
-        document.documentElement.scrollTo({ top: 0, behavior: 'smooth' })
-      }
-      if (typeof window !== 'undefined' && window.scrollY > 0) {
-        window.scrollTo({ top: 0, behavior: 'smooth' })
-      }
-    }, 150)
-  }
-
   useEffect(() => {
     if (prevPageRef.current !== currentPage) {
       if (!isUserInitiatedRef.current) {
-        scrollToTop()
+        scrollConsoleMainToTop()
       }
       isUserInitiatedRef.current = false
       prevPageRef.current = currentPage
@@ -77,7 +63,7 @@ export function SimplePagination({
     if (canGoPrevious && !disabled) {
       isUserInitiatedRef.current = true
       onPageChange(currentPage - 1)
-      scrollToTop()
+      scrollConsoleMainToTop()
     }
   }
 
@@ -85,7 +71,7 @@ export function SimplePagination({
     if (canGoNext && !disabled) {
       isUserInitiatedRef.current = true
       onPageChange(currentPage + 1)
-      scrollToTop()
+      scrollConsoleMainToTop()
     }
   }
 
@@ -145,6 +131,12 @@ export interface PaginationProps {
   itemLabel?: string
   /** Show the "Show X per page" selector; set to false to fix page size (e.g. billing breakdown) */
   showPageSizeSelector?: boolean
+  /**
+   * Inclusive 1-based range in the overall list for the summary text (`start–end of total`).
+   * Use when the number of rendered rows on this page can differ from `pageSize` (e.g. API page
+   * plus client dedupe) so the default `(page−1)×pageSize+1 … page×pageSize` would be wrong.
+   */
+  displayItemRange?: { start: number; end: number }
 }
 
 export function Pagination({
@@ -158,10 +150,15 @@ export function Pagination({
   showTotal = true,
   itemLabel = 'items',
   showPageSizeSelector = true,
+  displayItemRange,
 }: PaginationProps) {
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
-  const startItem = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1
-  const endItem = Math.min(currentPage * pageSize, totalItems)
+  const derivedStart = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1
+  const derivedEnd = Math.min(currentPage * pageSize, totalItems)
+  const startItem = displayItemRange?.start ?? derivedStart
+  const endItem = displayItemRange
+    ? Math.min(displayItemRange.end, totalItems)
+    : derivedEnd
 
   const canGoPrevious = currentPage > 1
   const canGoNext = currentPage < totalPages
@@ -169,21 +166,7 @@ export function Pagination({
   const prevPageRef = useRef(currentPage)
   const isUserInitiatedRef = useRef(false)
 
-  const scrollToTop = () => {
-    // Use a delay to ensure React has updated the DOM and data has loaded
-    // Try both window and documentElement to handle different scroll containers
-    setTimeout(() => {
-      if (
-        typeof document !== 'undefined' &&
-        document.documentElement.scrollTop > 0
-      ) {
-        document.documentElement.scrollTo({ top: 0, behavior: 'smooth' })
-      }
-      if (typeof window !== 'undefined' && window.scrollY > 0) {
-        window.scrollTo({ top: 0, behavior: 'smooth' })
-      }
-    }, 150)
-  }
+  const scrollToTop = () => scrollConsoleMainToTop()
 
   // Scroll to top when page changes programmatically (not via button clicks)
   useEffect(() => {

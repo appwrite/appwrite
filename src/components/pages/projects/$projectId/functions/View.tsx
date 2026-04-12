@@ -50,7 +50,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { TemplatesView } from './Templates'
 import { PlanLimitWarning } from '../shared/PlanLimitWarning'
 import { resolveOrganizationPlanDisplayLabel } from '@/lib/utils/plan-filter'
 import { formatCronExpression } from './CronScheduleEditor'
@@ -84,28 +83,7 @@ export function View() {
   useQueryClient()
   const search = useSearch({ strict: false })
 
-  // Derive active tab from pathname
-  const activeTab = useMemo(() => {
-    const pathParts = location.pathname.split('/').filter(Boolean)
-    const functionsIndex = pathParts.findIndex((part) => part === 'functions')
-
-    if (functionsIndex >= 0) {
-      // Check if there's a tab segment after 'functions'
-      // pathParts structure: ['projects', 'projectId', 'functions', 'tab?']
-      if (pathParts[functionsIndex + 1]) {
-        const tabFromPath = pathParts[functionsIndex + 1]
-        if (['templates'].includes(tabFromPath)) {
-          return tabFromPath
-        }
-      }
-    }
-
-    // Default to functions for index route (/projects/:projectId/functions or /projects/:projectId/functions/)
-    return 'functions'
-  }, [location.pathname])
-
   const isFunctionsIndex =
-    activeTab === 'functions' &&
     location.pathname.replace(/\/$/, '') === `/projects/${projectId}/functions`
   const defaultFunctionsSort = {
     sortBy: FUNCTIONS_DEFAULT_SORT_BY,
@@ -480,9 +458,8 @@ export function View() {
 
     if (from === 'github') {
       if (to === 'template') {
-        // Redirect to templates page
         navigate({
-          to: '/projects/$projectId/functions/templates',
+          to: '/projects/$projectId/functions/create',
           params: { projectId: projectId! },
         })
       } else if (to === 'cover') {
@@ -507,20 +484,7 @@ export function View() {
     })
   }
 
-  // Use displayed data for empty states so we don't flash "No results" before syncing
-  const filtersMatch =
-    (displayedSearch ?? '') === (urlSearch ?? '') &&
-    displayedFilterQueryString === filterQueryString
-  const hasFunctions = (displayedTotal ?? 0) > 0
-  const hasFilters = (urlSearch && urlSearch.length > 0) || filterMap.size > 0
-  const noSearchResults =
-    hasFilters &&
-    filtersMatch &&
-    (displayedTotal ?? 0) === 0 &&
-    !displayedLoading
-
-  // Update tabs with dynamic function count
-  const tabs: Tab[] = useMemo(
+  const functionsTabs: Tab[] = useMemo(
     () => [
       {
         id: 'functions',
@@ -538,163 +502,39 @@ export function View() {
     [projectId],
   )
 
-  const getCreateLabel = () => {
-    switch (activeTab) {
-      case 'functions':
-        return 'Create function'
-      default:
-        return undefined
-    }
-  }
+  // Use displayed data for empty states so we don't flash "No results" before syncing
+  const filtersMatch =
+    (displayedSearch ?? '') === (urlSearch ?? '') &&
+    displayedFilterQueryString === filterQueryString
+  const hasFunctions = (displayedTotal ?? 0) > 0
+  const hasFilters = (urlSearch && urlSearch.length > 0) || filterMap.size > 0
+  const noSearchResults =
+    hasFilters &&
+    filtersMatch &&
+    (displayedTotal ?? 0) === 0 &&
+    !displayedLoading
 
   if (error) {
     return (
       <div className="flex flex-col">
         <ServiceHeader
           title="Functions"
-          tabs={tabs}
-          activeTab={activeTab}
-          searchPlaceholder={
-            activeTab === 'functions' ? 'Search functions...' : undefined
-          }
-          searchValue={activeTab === 'functions' ? searchInput : undefined}
-          onSearchChange={
-            activeTab === 'functions' ? handleSearchChange : undefined
-          }
-          createLabel={getCreateLabel()}
-          onCreate={
-            activeTab === 'functions' ? handleCreateFunction : undefined
-          }
-          createDisabled={activeTab === 'functions' ? isCreateDisabled : false}
+          tabs={functionsTabs}
+          activeTab="functions"
+          searchPlaceholder="Search functions..."
+          searchValue={searchInput}
+          onSearchChange={handleSearchChange}
+          createLabel="Create function"
+          onCreate={handleCreateFunction}
+          createDisabled={isCreateDisabled}
           createDisabledTooltip={
-            activeTab === 'functions' && noCreatePermission
+            noCreatePermission
               ? "You don't have permission to create functions."
               : undefined
           }
           fullWidthBorder
-          showFilters={activeTab === 'functions'}
+          showFilters
           filterTrigger={
-            activeTab === 'functions' ? (
-              <FiltersPopover
-                open={filtersOpen}
-                onOpenChange={setFiltersOpen}
-                columns={functionsFilterColumns}
-                filterMap={filterMap}
-                onRemoveFilter={removeFilter}
-                onClearAll={clearAllFilters}
-                onApplyFilter={applyFilter}
-                resourceLabel="functions"
-                filterScope="functions"
-                onApplyQuery={(queryParam, sortParam) =>
-                  navigateToFunctionsList({
-                    search: urlSearch ?? undefined,
-                    query: queryParam ?? undefined,
-                    page: 1,
-                    limit: urlLimit,
-                    sort: sortParam ?? undefined,
-                  })
-                }
-                sortBy={urlSortBy}
-                sortOrder={urlSortOrder}
-                onSortChange={handleFunctionsSortChange}
-                defaultSortParam={encodeSort(
-                  FUNCTIONS_DEFAULT_SORT_BY,
-                  FUNCTIONS_DEFAULT_SORT_ORDER,
-                )}
-                onReset={() => {
-                  navigate({
-                    to: '/projects/$projectId/functions',
-                    params: { projectId: projectId! },
-                    search: { page: 1, limit: urlLimit },
-                    replace: true,
-                  })
-                }}
-                teamId={project?.teamId}
-              />
-            ) : undefined
-          }
-          beforeCreateButtons={
-            activeTab === 'functions' ? (
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-9 gap-1.5 text-[13px]"
-                asChild
-              >
-                <Link
-                  to="/projects/$projectId/functions/editor"
-                  params={{ projectId: projectId as string }}
-                >
-                  <FileCode className="h-4 w-4" />
-                  Local editor
-                </Link>
-              </Button>
-            ) : undefined
-          }
-        />
-        <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
-          <div className="rounded-lg border border-border bg-card py-12 text-center">
-            <p className="text-sm text-muted-foreground">
-              Failed to load functions. Please try again.
-            </p>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="flex flex-col">
-      <ServiceHeader
-        title="Functions"
-        tabs={tabs}
-        activeTab={activeTab}
-        searchPlaceholder={
-          activeTab === 'functions' ? 'Search functions...' : undefined
-        }
-        searchValue={activeTab === 'functions' ? searchInput : undefined}
-        onSearchChange={
-          activeTab === 'functions' ? handleSearchChange : undefined
-        }
-        createLabel={getCreateLabel()}
-        onCreate={activeTab === 'functions' ? handleCreateFunction : undefined}
-        createDisabled={activeTab === 'functions' ? isCreateDisabled : false}
-        createDisabledTooltip={
-          activeTab === 'functions' && noCreatePermission
-            ? "You don't have permission to create functions."
-            : undefined
-        }
-        fullWidthBorder
-        beforeCreateButtons={
-          activeTab === 'functions' ? (
-            <TooltipProvider delayDuration={0}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-9 gap-1.5 text-[13px]"
-                    asChild
-                  >
-                    <Link
-                      to="/projects/$projectId/functions/editor"
-                      params={{ projectId: projectId as string }}
-                    >
-                      <FileCode className="h-4 w-4" />
-                      Local editor
-                    </Link>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">
-                  <p>Edit code locally and prepare gzip for deployment</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          ) : undefined
-        }
-        showFilters={activeTab === 'functions'}
-        filterTrigger={
-          activeTab === 'functions' ? (
             <FiltersPopover
               open={filtersOpen}
               onOpenChange={setFiltersOpen}
@@ -731,10 +571,118 @@ export function View() {
               }}
               teamId={project?.teamId}
             />
-          ) : undefined
+          }
+          beforeCreateButtons={
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 gap-1.5 text-[13px]"
+              asChild
+            >
+              <Link
+                to="/projects/$projectId/functions/editor"
+                params={{ projectId: projectId as string }}
+              >
+                <FileCode className="h-4 w-4" />
+                Local editor
+              </Link>
+            </Button>
+          }
+        />
+        <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
+          <div className="rounded-lg border border-border bg-card py-12 text-center">
+            <p className="text-sm text-muted-foreground">
+              Failed to load functions. Please try again.
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col">
+      <ServiceHeader
+        title="Functions"
+        tabs={functionsTabs}
+        activeTab="functions"
+        searchPlaceholder="Search functions..."
+        searchValue={searchInput}
+        onSearchChange={handleSearchChange}
+        createLabel="Create function"
+        onCreate={handleCreateFunction}
+        createDisabled={isCreateDisabled}
+        createDisabledTooltip={
+          noCreatePermission
+            ? "You don't have permission to create functions."
+            : undefined
+        }
+        fullWidthBorder
+        beforeCreateButtons={
+          <TooltipProvider delayDuration={0}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 gap-1.5 text-[13px]"
+                  asChild
+                >
+                  <Link
+                    to="/projects/$projectId/functions/editor"
+                    params={{ projectId: projectId as string }}
+                  >
+                    <FileCode className="h-4 w-4" />
+                    Local editor
+                  </Link>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                <p>Edit code locally and prepare gzip for deployment</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        }
+        showFilters
+        filterTrigger={
+          <FiltersPopover
+            open={filtersOpen}
+            onOpenChange={setFiltersOpen}
+            columns={functionsFilterColumns}
+            filterMap={filterMap}
+            onRemoveFilter={removeFilter}
+            onClearAll={clearAllFilters}
+            onApplyFilter={applyFilter}
+            resourceLabel="functions"
+            filterScope="functions"
+            onApplyQuery={(queryParam, sortParam) =>
+              navigateToFunctionsList({
+                search: urlSearch ?? undefined,
+                query: queryParam ?? undefined,
+                page: 1,
+                limit: urlLimit,
+                sort: sortParam ?? undefined,
+              })
+            }
+            sortBy={urlSortBy}
+            sortOrder={urlSortOrder}
+            onSortChange={handleFunctionsSortChange}
+            defaultSortParam={encodeSort(
+              FUNCTIONS_DEFAULT_SORT_BY,
+              FUNCTIONS_DEFAULT_SORT_ORDER,
+            )}
+            onReset={() => {
+              navigate({
+                to: '/projects/$projectId/functions',
+                params: { projectId: projectId! },
+                search: { page: 1, limit: urlLimit },
+                replace: true,
+              })
+            }}
+            teamId={project?.teamId}
+          />
         }
         contentAfterBorder={
-          activeTab === 'functions' &&
           project &&
           organizationPlan !== undefined &&
           totalFunctionsData !== undefined ? (
@@ -753,10 +701,7 @@ export function View() {
       />
 
       <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
-        {activeTab === 'templates' ? (
-          <TemplatesView />
-        ) : (
-          <>
+        <>
             {showLoading ? (
               <div className="rounded-lg border border-border bg-card py-12 text-center">
                 <p className="text-[13px] text-muted-foreground">
@@ -906,8 +851,7 @@ export function View() {
                 />
               </>
             )}
-          </>
-        )}
+        </>
       </div>
     </div>
   )

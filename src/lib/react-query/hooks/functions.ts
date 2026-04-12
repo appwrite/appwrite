@@ -12,7 +12,7 @@ import {
   keepPreviousData,
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
-import { Query } from '@appwrite.io/console'
+import { Query, Runtimes, UseCases } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
@@ -139,46 +139,264 @@ export async function fetchFunctionDeployment(
   return await projectSdk.functions.getDeployment({ functionId, deploymentId })
 }
 
+/** Batch size for listing templates until the full catalog is loaded. */
+const FUNCTION_TEMPLATES_LIST_BATCH = 100
+
+function dedupeTemplateFunctionsById(
+  templates: Models.TemplateFunction[],
+): Models.TemplateFunction[] {
+  const seen = new Set<string>()
+  const out: Models.TemplateFunction[] = []
+  for (const t of templates) {
+    const id = t.id != null && t.id !== '' ? String(t.id) : null
+    if (id) {
+      if (seen.has(id)) continue
+      seen.add(id)
+    }
+    out.push(t)
+  }
+  return out
+}
+
+function templatesSortKey(arr: string[] | undefined): string {
+  if (!arr?.length) return ''
+  return [...arr].sort().join('\u0001')
+}
+
+/** SDK types use enum arrays; API accepts the same string values as the template catalog. */
+function listTemplatesFilterPayload(
+  runtimes: string[] | undefined,
+  useCases: string[] | undefined,
+): { runtimes?: Runtimes[]; useCases?: UseCases[] } {
+  return {
+    runtimes: runtimes?.length
+      ? (runtimes as unknown as Runtimes[])
+      : undefined,
+    useCases: useCases?.length
+      ? (useCases as unknown as UseCases[])
+      : undefined,
+  }
+}
+
 /**
- * Query function to fetch function templates
- *
- * This is extracted so it can be reused in both hooks and route loaders.
- *
- * @param projectId - The project ID
- * @param runtimes - Optional array of runtime names to filter by
- * @param useCases - Optional array of use case names to filter by
- * @param limit - Maximum number of templates to return (default: 25)
- * @param offset - Offset for pagination (default: 0)
- * @param total - Whether to calculate total count (default: true)
- * @returns Templates list response from the API
+ * One page of function templates from the API (server-side offset/limit).
+ * Name search is not supported by the API; use fetchAllFunctionTemplatesForSearch when searching.
  */
-export async function fetchFunctionTemplates(
+export async function fetchFunctionTemplatesPage(
   projectId: string,
+  offset: number,
+  limit: number,
   runtimes?: string[],
   useCases?: string[],
-  limit: number = DEFAULT_PAGE_SIZE,
-  offset: number = 0,
-  total: boolean = true,
-): Promise<Models.TemplateFunctionList> {
+): Promise<{ templates: Models.TemplateFunction[]; total: number }> {
   if (!projectId) {
     return { templates: [], total: 0 }
   }
 
   const projectSdk = sdk.forProject(projectId)
   const response = await projectSdk.functions.listTemplates({
-    runtimes,
-    useCases,
+    ...listTemplatesFilterPayload(runtimes, useCases),
     limit,
     offset,
-    total,
+    total: true,
   })
 
-  // Ensure we return exactly what the API gives us - no modifications
-  // Create a fresh array to prevent any reference issues
-  return {
-    templates: response.templates ? [...response.templates] : [],
-    total: response.total || 0,
+  const raw = response.templates ? [...response.templates] : []
+  // Paginated list keeps API row count (dedupe would shrink pages under fixed offset/limit URLs).
+  const templates = raw
+  const total = response.total ?? templates.length
+
+  return { templates, total }
+}
+
+/**
+ * Distinct use case and runtime labels for filter UI (scans the full catalog once).
+ */
+export async function fetchFunctionTemplateFacets(
+  projectId: string,
+): Promise<{ useCases: string[]; runtimes: string[] }> {
+  if (!projectId) {
+    return { useCases: [], runtimes: [] }
   }
+
+  const projectSdk = sdk.forProject(projectId)
+  const useCaseSet = new Set<string>()
+  const runtimeSet = new Set<string>()
+  let offset = 0
+  let reportedTotal = 0
+
+  while (true) {
+    const response = await projectSdk.functions.listTemplates({
+      limit: FUNCTION_TEMPLATES_LIST_BATCH,
+      offset,
+      total: offset === 0,
+    })
+
+    if (offset === 0) {
+      reportedTotal = response.total || 0
+    }
+
+    const batch = response.templates ? [...response.templates] : []
+    for (const t of batch) {
+      for (const u of t.useCases ?? []) {
+        useCaseSet.add(u)
+      }
+      for (const r of t.runtimes ?? []) {
+        if (r.name) runtimeSet.add(r.name)
+      }
+    }
+
+    if (batch.length === 0) break
+    if (batch.length < FUNCTION_TEMPLATES_LIST_BATCH) break
+    if (reportedTotal > 0 && offset + batch.length >= reportedTotal) break
+
+    offset += FUNCTION_TEMPLATES_LIST_BATCH
+  }
+
+  return {
+    useCases: [...useCaseSet].sort((a, b) => a.localeCompare(b)),
+    runtimes: [...runtimeSet].sort((a, b) => a.localeCompare(b)),
+  }
+}
+
+export function functionTemplateFacetsQueryOptions(
+  projectId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['function-templates', 'facets', 'project', projectId],
+    queryFn: () => fetchFunctionTemplateFacets(projectId!),
+    enabled: !!projectId,
+    staleTime: DEFAULT_STALE_TIME,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: LONG_STALE_TIME,
+  })
+}
+
+export function functionTemplatesPageQueryOptions(
+  projectId: string | null | undefined,
+  offset: number,
+  limit: number,
+  runtimes: string[],
+  useCases: string[],
+) {
+  const rt = runtimes?.length ? runtimes : undefined
+  const uc = useCases?.length ? useCases : undefined
+  return queryOptions({
+    queryKey: [
+      'function-templates',
+      'page',
+      'project',
+      projectId,
+      offset,
+      limit,
+      templatesSortKey(rt),
+      templatesSortKey(uc),
+    ],
+    queryFn: () =>
+      fetchFunctionTemplatesPage(
+        projectId!,
+        offset,
+        limit,
+        rt,
+        uc,
+      ),
+    enabled: !!projectId,
+    staleTime: DEFAULT_STALE_TIME,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: LONG_STALE_TIME,
+    structuralSharing: false,
+    placeholderData: keepPreviousData,
+  })
+}
+
+export type FetchAllFunctionTemplatesFilters = {
+  runtimes?: string[]
+  useCases?: string[]
+}
+
+/**
+ * Load every function template matching optional API filters (for name search in the UI).
+ */
+export async function fetchAllFunctionTemplates(
+  projectId: string,
+  filters?: FetchAllFunctionTemplatesFilters,
+): Promise<Models.TemplateFunctionList> {
+  if (!projectId) {
+    return { templates: [], total: 0 }
+  }
+
+  const projectSdk = sdk.forProject(projectId)
+  const all: Models.TemplateFunction[] = []
+  let offset = 0
+  let total = 0
+  while (true) {
+    const response = await projectSdk.functions.listTemplates({
+      ...listTemplatesFilterPayload(filters?.runtimes, filters?.useCases),
+      limit: FUNCTION_TEMPLATES_LIST_BATCH,
+      offset,
+      total: offset === 0,
+    })
+
+    const raw = response.templates ? [...response.templates] : []
+    const batch = raw.slice(0, FUNCTION_TEMPLATES_LIST_BATCH)
+
+    if (offset === 0) {
+      total = response.total || 0
+    }
+
+    all.push(...batch)
+
+    if (batch.length === 0) {
+      break
+    }
+    if (batch.length < FUNCTION_TEMPLATES_LIST_BATCH) {
+      break
+    }
+    if (total > 0 && all.length >= total) {
+      break
+    }
+
+    offset += FUNCTION_TEMPLATES_LIST_BATCH
+  }
+
+  const templates = dedupeTemplateFunctionsById(all)
+
+  return {
+    templates,
+    total: templates.length,
+  }
+}
+
+/**
+ * Query options for the full function template list (name search only — API has no search param).
+ */
+export function allFunctionTemplatesQueryOptions(
+  projectId: string | null | undefined,
+  filters?: FetchAllFunctionTemplatesFilters,
+) {
+  return queryOptions({
+    queryKey: [
+      'function-templates',
+      'all',
+      'project',
+      projectId,
+      templatesSortKey(filters?.runtimes),
+      templatesSortKey(filters?.useCases),
+    ],
+    queryFn: () => fetchAllFunctionTemplates(projectId!, filters),
+    enabled: !!projectId,
+    staleTime: DEFAULT_STALE_TIME,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: LONG_STALE_TIME,
+    structuralSharing: false,
+    placeholderData: keepPreviousData,
+  })
 }
 
 /**
@@ -838,70 +1056,20 @@ export function useFunctionDeployment(
 }
 
 /**
- * Hook to fetch function templates
- *
- * This is useful for displaying function templates with optional filtering and pagination.
- * Matches the pattern used in useOrganizationInvoices for consistency.
- *
- * @param projectId - The project ID
- * @param page - Page number (0-indexed)
- * @param limit - Number of items per page (default: 25)
- * @param runtimes - Optional array of runtime names to filter by
- * @param useCases - Optional array of use case names to filter by
- * @returns Templates list with loading state
+ * Hook to load the full function template list for a project (used when filtering by name in the UI).
  */
-export function useFunctionTemplates(
+export function useAllFunctionTemplates(
   projectId: string | null | undefined,
-  page: number = 0,
-  limit: number = DEFAULT_PAGE_SIZE,
-  runtimes?: string[],
-  useCases?: string[],
+  filters?: FetchAllFunctionTemplatesFilters,
 ) {
-  // Convert page to offset (API uses offset)
-  const offset = page * limit
-
-  // Serialize arrays for stable query keys - sort to ensure consistent ordering
-  // Handle empty arrays as null to ensure consistent cache keys
-  const runtimesKey =
-    runtimes && runtimes.length > 0 ? [...runtimes].sort().join(',') : null
-  const useCasesKey =
-    useCases && useCases.length > 0 ? [...useCases].sort().join(',') : null
-
-  const { data, isLoading, isFetching, isPending, error, refetch } = useQuery({
-    // Serialize arrays in query key to ensure proper cache differentiation
-    // Each unique combination of page, limit, runtimes, and useCases gets its own cache entry
-    // Include offset explicitly in key for extra safety (even though it's derived from page*limit)
-    queryKey: [
-      'function-templates',
-      'project',
-      projectId,
-      page, // Page number (0-indexed)
-      limit, // Items per page
-      offset, // Calculated offset (page * limit) - explicit for cache uniqueness
-      runtimesKey, // Serialized runtimes filter (null if no filter)
-      useCasesKey, // Serialized useCases filter (null if no filter)
-    ],
-    queryFn: () =>
-      fetchFunctionTemplates(
-        projectId!,
-        runtimes,
-        useCases,
-        limit,
-        offset,
-        true,
-      ),
-    enabled: !!projectId,
-    staleTime: DEFAULT_STALE_TIME, // Matches org view pattern
-    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
-    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
-    refetchOnReconnect: false, // Prevent refetch on network reconnect
-    gcTime: LONG_STALE_TIME, // Keep cache for a reasonable time
-  })
+  const { data, isLoading, isFetching, isPending, error, refetch } = useQuery(
+    allFunctionTemplatesQueryOptions(projectId, filters),
+  )
 
   return {
     templates: data?.templates || [],
     total: data?.total || 0,
-    data, // Expose data object to check if query has been executed
+    data,
     isLoading,
     isFetching,
     isPending,

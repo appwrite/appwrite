@@ -28,6 +28,8 @@ export interface EmptyStateProps {
    * This allows full control over the empty state content
    */
   children?: ReactNode
+  /** Renders below the description inside the same layout (e.g. clear filters button) */
+  action?: ReactNode
   /**
    * Additional CSS classes
    */
@@ -56,6 +58,7 @@ export function EmptyState({
   isEmpty = true,
   hasFilters = false,
   children,
+  action,
   className,
   variant = 'default',
   iconSize = 'sm',
@@ -144,6 +147,11 @@ export function EmptyState({
         {defaultTitle}
       </p>
       <p className="text-[13px] text-muted-foreground">{defaultDescription}</p>
+      {action ? (
+        <div className="mt-6 flex w-full flex-wrap justify-center gap-2">
+          {action}
+        </div>
+      ) : null}
     </div>
   )
 

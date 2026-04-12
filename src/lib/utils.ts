@@ -19,3 +19,25 @@ export function truncateMiddle(str: string, maxLength: number): string {
   const last = str.slice(-(take - half))
   return `${first}${ELLIPSIS}${last}`
 }
+
+/**
+ * Scroll the console shell main region to top. List views use `#main-content`
+ * (overflow-y-auto); window/document scroll is often zero, so pagination must
+ * target this element.
+ */
+export function scrollConsoleMainToTop() {
+  setTimeout(() => {
+    if (typeof document === 'undefined') return
+    const main = document.getElementById('main-content')
+    if (main) {
+      main.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
+    if (document.documentElement.scrollTop > 0) {
+      document.documentElement.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+    if (typeof window !== 'undefined' && window.scrollY > 0) {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }, 150)
+}
