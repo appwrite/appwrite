@@ -137,6 +137,7 @@ class Update extends Action
 
         if (!is_null($name)) {
             $file->setAttribute('name', $name);
+            $file->setAttribute('search', implode(' ', [$fileId, $name]));
         }
 
         try {
