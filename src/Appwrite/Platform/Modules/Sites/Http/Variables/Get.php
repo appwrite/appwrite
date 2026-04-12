@@ -74,10 +74,6 @@ class Get extends Base
             throw new Exception(Exception::VARIABLE_NOT_FOUND);
         }
 
-        if ($variable === false || $variable->isEmpty()) {
-            throw new Exception(Exception::VARIABLE_NOT_FOUND);
-        }
-
         $response->dynamic($variable, Response::MODEL_VARIABLE);
     }
 }

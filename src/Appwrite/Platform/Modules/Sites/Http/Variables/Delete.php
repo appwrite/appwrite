@@ -71,10 +71,6 @@ class Delete extends Base
             throw new Exception(Exception::VARIABLE_NOT_FOUND);
         }
 
-        if ($variable === false || $variable->isEmpty()) {
-            throw new Exception(Exception::VARIABLE_NOT_FOUND);
-        }
-
         $dbForProject->deleteDocument('variables', $variable->getId());
 
         $dbForProject->updateDocument('sites', $site->getId(), new Document([
