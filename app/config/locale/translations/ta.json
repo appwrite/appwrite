@@ -245,5 +245,15 @@
     "emails.otpSession.clientInfo": "இந்த உள்நுழைவு {{agentClient}} மூலம் {{agentDevice}} {{agentOs}} இல் கோரப்பட்டுள்ளது. நீங்கள் உள்நுழைவை கோரவில்லை எனில், இந்த மின்னஞ்சலை புறக்கணிக்கலாம்.",
     "emails.otpSession.securityPhrase": "இந்த மின்னஞ்சலுக்கான பாதுகாப்பு வாசகம் {{phrase}} ஆகும். இந்த வாசகம் உள்நுழையும் போது காட்டப்பட்ட வாசகத்துடன் பொருந்துமானால், இந்த மின்னஞ்சலை நம்பலாம்.",
     "emails.otpSession.thanks": "நன்றி,",
-    "emails.otpSession.signature": "{{project}} குழு"
+    "emails.otpSession.signature": "{{project}} குழு",
+    "emails.sessionAlert.subject": "Security alert: new session on your {{project}} account",
+    "emails.sessionAlert.preview": "New login detected on {{project}} at {{time}} UTC.",
+    "emails.sessionAlert.hello": "Hello {{user}},",
+    "emails.sessionAlert.body": "A new session has been created on your {{b}}{{project}}{{/b}} account, {{b}}on {{date}}, {{year}} at {{time}} UTC{{/b}}.\nHere are the details of the new session: ",
+    "emails.sessionAlert.listDevice": "Device: {{b}}{{device}}{{/b}}",
+    "emails.sessionAlert.listIpAddress": "IP Address: {{b}}{{ipAddress}}{{/b}}",
+    "emails.sessionAlert.listCountry": "Country: {{b}}{{country}}{{/b}}",
+    "emails.sessionAlert.footer": "If this was you, there's nothing more you need to do.\nIf you didn't initiate this session or suspect any unauthorized activity, please secure your account.",
+    "emails.sessionAlert.thanks": "Thanks,",
+    "emails.sessionAlert.signature": "{{project}} team"
 }

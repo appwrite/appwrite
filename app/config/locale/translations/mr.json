@@ -245,5 +245,15 @@
     "emails.otpSession.clientInfo": "ही साइन इन विनंती {{agentClient}} वापरुन {{agentDevice}} {{agentOs}} वरुन करण्यात आली आहे. जर तुम्ही ही साइन इन विनंती केली नसेल, तर तुम्ही हा ईमेल सुरक्षितपणे दुर्लक्ष करू शकता.",
     "emails.otpSession.securityPhrase": "या ईमेलसाठीचे सुरक्षा वाक्यांश {{phrase}} आहे. जर हे वाक्यांश साइन इन करताना दाखवल्या गेलेल्या वाक्यांशाशी जुळत असेल तर आपण या ईमेलवर विश्वास ठेवू शकता.",
     "emails.otpSession.thanks": "धन्यवाद,",
-    "emails.otpSession.signature": "{{project}} संघ"
+    "emails.otpSession.signature": "{{project}} संघ",
+    "emails.sessionAlert.subject": "Security alert: new session on your {{project}} account",
+    "emails.sessionAlert.preview": "New login detected on {{project}} at {{time}} UTC.",
+    "emails.sessionAlert.hello": "Hello {{user}},",
+    "emails.sessionAlert.body": "A new session has been created on your {{b}}{{project}}{{/b}} account, {{b}}on {{date}}, {{year}} at {{time}} UTC{{/b}}.\nHere are the details of the new session: ",
+    "emails.sessionAlert.listDevice": "Device: {{b}}{{device}}{{/b}}",
+    "emails.sessionAlert.listIpAddress": "IP Address: {{b}}{{ipAddress}}{{/b}}",
+    "emails.sessionAlert.listCountry": "Country: {{b}}{{country}}{{/b}}",
+    "emails.sessionAlert.footer": "If this was you, there's nothing more you need to do.\nIf you didn't initiate this session or suspect any unauthorized activity, please secure your account.",
+    "emails.sessionAlert.thanks": "Thanks,",
+    "emails.sessionAlert.signature": "{{project}} team"
 }
