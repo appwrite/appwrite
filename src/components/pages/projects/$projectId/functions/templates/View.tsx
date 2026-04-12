@@ -36,13 +36,16 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command'
+import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet'
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import {
   Tooltip,
   TooltipContent,
@@ -52,7 +55,6 @@ import {
 import { cn, scrollConsoleMainToTop } from '@/lib/utils'
 import {
   allFunctionTemplatesQueryOptions,
-  functionTemplateFacetsQueryOptions,
   functionTemplatesPageQueryOptions,
   useProject,
   useOrganizationPlan,
@@ -121,6 +123,24 @@ function formatUseCaseLabel(useCase: string) {
   const u = useCase.trim()
   if (u.toLowerCase() === 'ai') return 'AI'
   return u.charAt(0).toUpperCase() + u.slice(1)
+}
+
+/** Build filter labels from template rows (same source as catalog pages — no extra listTemplates batch). */
+function collectTemplateFacetLabels(templates: Models.TemplateFunction[] | undefined) {
+  const useCaseSet = new Set<string>()
+  const runtimeSet = new Set<string>()
+  for (const t of templates ?? []) {
+    for (const u of t.useCases ?? []) {
+      useCaseSet.add(u)
+    }
+    for (const r of t.runtimes ?? []) {
+      if (r.name) runtimeSet.add(r.name)
+    }
+  }
+  return {
+    useCases: [...useCaseSet].sort((a, b) => a.localeCompare(b)),
+    runtimes: [...runtimeSet].sort((a, b) => a.localeCompare(b)),
+  }
 }
 
 function formatRuntimeLabel(runtime: string) {
@@ -273,6 +293,379 @@ function GitHubIcon({ className }: { className?: string }) {
     >
       <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
     </svg>
+  )
+}
+
+/** Optional fields returned by the templates catalog API. */
+type CatalogTemplateExtra = {
+  score?: number
+  timeout?: number
+  permissions?: string[]
+  events?: string[]
+  cron?: string
+  instructions?: string
+  vcsProvider?: string
+  providerRepositoryId?: string
+  providerOwner?: string
+  providerVersion?: string
+  variables?: Array<{
+    name?: string
+    description?: string
+    placeholder?: string
+    required?: boolean
+    type?: string
+    value?: string
+  }>
+  scopes?: string[]
+}
+
+function asCatalogTemplate(t: Models.TemplateFunction) {
+  return t as Models.TemplateFunction & CatalogTemplateExtra
+}
+
+function catalogTemplateSourceUrl(
+  t: Models.TemplateFunction & CatalogTemplateExtra,
+): string | null {
+  const provider = (t.vcsProvider ?? '').toLowerCase()
+  const owner = t.providerOwner
+  const repo = t.providerRepositoryId
+  const root = t.runtimes?.[0]?.providerRootDirectory
+  if (!owner || !repo || !root) return null
+  if (provider === 'github' || provider === '') {
+    return `https://github.com/${owner}/${repo}/tree/main/${root}`
+  }
+  return null
+}
+
+function truncateMiddle(s: string, max: number) {
+  if (s.length <= max) return s
+  const head = Math.floor((max - 1) / 2)
+  const tail = Math.ceil((max - 1) / 2)
+  return `${s.slice(0, head)}…${s.slice(s.length - tail)}`
+}
+
+function FunctionTemplateDetailDrawer({
+  open,
+  onOpenChange,
+  template,
+  projectId,
+  createBlockedTooltip,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  template: Models.TemplateFunction | null
+  projectId: string
+  createBlockedTooltip?: string
+}) {
+  if (!template) return null
+
+  const t = asCatalogTemplate(template)
+  const sourceUrl = catalogTemplateSourceUrl(t)
+  const runtimes = t.runtimes ?? []
+  const variables = t.variables ?? []
+  const scopes = t.scopes ?? []
+  const permissions = t.permissions ?? []
+  const events = t.events ?? []
+  const cron = (t.cron ?? '').trim()
+
+  const hasExecutionDetails =
+    permissions.length > 0 || events.length > 0 || cron.length > 0
+  const useCasesList = t.useCases ?? []
+  const hasUseCases = useCasesList.length > 0
+  const executionIsPermissionsOnly =
+    hasExecutionDetails && events.length === 0 && cron.length === 0
+
+  return (
+    <BaseDrawer
+      open={open}
+      onOpenChange={onOpenChange}
+      title={t.name ?? 'Template'}
+      maxWidth="sm:max-w-lg"
+      contentClassName="overflow-hidden"
+    >
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div className="shrink-0 border-b border-border" />
+        <ScrollArea className="min-h-0 flex-1">
+          <div className="space-y-4 px-6 py-4">
+            <div className="space-y-3">
+              {t.tagline ? (
+                <p className="text-[13px] leading-snug text-muted-foreground">
+                  {t.tagline}
+                </p>
+              ) : null}
+              {(t.providerOwner || t.providerRepositoryId) && (
+                <p className="truncate font-mono text-[11px] text-muted-foreground/90">
+                  {[t.providerOwner, t.providerRepositoryId]
+                    .filter(Boolean)
+                    .join('/')}
+                  {t.providerVersion ? (
+                    <span className="text-muted-foreground/70">
+                      {' '}
+                      @ {t.providerVersion}
+                    </span>
+                  ) : null}
+                </p>
+              )}
+              {sourceUrl ? (
+                <div className="border-t border-border/80 pt-3">
+                  <a
+                    href={sourceUrl}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="inline-flex items-center gap-1.5 text-[12px] font-medium text-foreground hover:underline"
+                  >
+                    <GitHubIcon className="h-3.5 w-3.5 shrink-0 opacity-70" />
+                    View on GitHub
+                    <ExternalLink className="h-3 w-3 shrink-0 opacity-70" />
+                  </a>
+                </div>
+              ) : null}
+            </div>
+
+            {hasUseCases ? (
+              <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 border-t border-border pt-4 text-[13px]">
+                <dt className="text-[12px] text-muted-foreground">Use case</dt>
+                <dd className="flex min-w-0 flex-wrap gap-1">
+                  {useCasesList.map((u) => (
+                    <Badge
+                      key={u}
+                      variant="info"
+                      className="text-[10px] font-normal"
+                    >
+                      {formatUseCaseLabel(u)}
+                    </Badge>
+                  ))}
+                </dd>
+              </dl>
+            ) : null}
+
+            {executionIsPermissionsOnly && permissions.length > 0 ? (
+              <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 border-t border-border pt-4 text-[13px]">
+                <dt className="text-[12px] text-muted-foreground">Permission</dt>
+                <dd className="flex min-w-0 flex-wrap gap-1">
+                  {permissions.map((p) => (
+                    <Badge
+                      key={p}
+                      variant="info"
+                      className="font-mono text-[10px] font-normal"
+                    >
+                      {p}
+                    </Badge>
+                  ))}
+                </dd>
+              </dl>
+            ) : null}
+
+            {hasExecutionDetails && !executionIsPermissionsOnly && (
+              <div className="space-y-3 border-t border-border pt-4">
+                <p className="text-[12px] font-medium text-foreground">
+                  Execution
+                </p>
+                <div className="space-y-3">
+                  {permissions.length > 0 && (
+                    <div>
+                      <p className="text-[10px] text-muted-foreground">
+                        Permissions
+                      </p>
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {permissions.map((p) => (
+                          <Badge
+                            key={p}
+                            variant="info"
+                            className="font-mono text-[10px] font-normal"
+                          >
+                            {p}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {events.length > 0 && (
+                    <div>
+                      <p className="text-[10px] text-muted-foreground">
+                        Events
+                      </p>
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {events.map((ev) => (
+                          <code
+                            key={ev}
+                            className="rounded border border-border bg-muted/30 px-1.5 py-px font-mono text-[10px] text-foreground"
+                          >
+                            {ev}
+                          </code>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {cron.length > 0 && (
+                    <div>
+                      <p className="text-[10px] text-muted-foreground">Cron</p>
+                      <code className="mt-1 block w-full overflow-x-auto rounded border border-border bg-muted/30 px-2 py-1 font-mono text-[11px] leading-snug text-foreground">
+                        {cron}
+                      </code>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {t.instructions ? (
+              <div className="border-t border-border pt-4">
+                <p className="mb-2 text-[12px] font-medium text-foreground">
+                  Documentation
+                </p>
+                <div
+                  className="text-[13px] leading-relaxed text-muted-foreground [&_a]:font-medium [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-2"
+                  dangerouslySetInnerHTML={{ __html: t.instructions }}
+                />
+              </div>
+            ) : null}
+
+            {runtimes.length > 0 && (
+              <div className="border-t border-border pt-4">
+                <p className="mb-2 text-[12px] font-medium text-foreground">
+                  Runtimes
+                </p>
+                <div className="max-h-[min(240px,45vh)] overflow-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="hover:bg-transparent border-b border-border">
+                        <TableHead className="px-3 py-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                          Runtime
+                        </TableHead>
+                        <TableHead className="px-3 py-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                          Entrypoint
+                        </TableHead>
+                        <TableHead className="px-3 py-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                          Build
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {runtimes.map((r) => (
+                        <TableRow key={r.name}>
+                          <TableCell className="px-3 py-2 align-top">
+                            <span className="font-mono text-[11px] text-foreground">
+                              {r.name}
+                            </span>
+                          </TableCell>
+                          <TableCell className="px-3 py-2 align-top">
+                            <span className="break-all font-mono text-[11px] text-muted-foreground">
+                              {r.entrypoint ?? '—'}
+                            </span>
+                          </TableCell>
+                          <TableCell className="px-3 py-2 align-top">
+                            <span
+                              className="break-all font-mono text-[10px] leading-snug text-muted-foreground"
+                              title={r.commands ?? ''}
+                            >
+                              {r.commands
+                                ? truncateMiddle(r.commands, 48)
+                                : '—'}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            )}
+
+            {variables.length > 0 && (
+              <div className="border-t border-border pt-4">
+                <p className="mb-2 text-[12px] font-medium text-foreground">
+                  Environment variables
+                </p>
+                <ul className="space-y-3">
+                  {variables.map((v, idx) => (
+                    <li
+                      key={v.name ?? `var-${idx}`}
+                      className="border-b border-border/60 pb-3 last:border-0 last:pb-0"
+                    >
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="font-mono text-[12px] font-medium text-foreground">
+                          {v.name}
+                        </span>
+                        {v.required ? (
+                          <Badge variant="warning" className="h-5 text-[9px] px-1">
+                            Req
+                          </Badge>
+                        ) : (
+                          <Badge variant="info" className="h-5 text-[9px] px-1">
+                            Opt
+                          </Badge>
+                        )}
+                        {v.type ? (
+                          <Badge
+                            variant="info"
+                            className="h-5 font-mono text-[9px] px-1"
+                          >
+                            {v.type}
+                          </Badge>
+                        ) : null}
+                      </div>
+                      {v.description ? (
+                        <div
+                          className="mt-1.5 text-[12px] leading-snug text-muted-foreground [&_a]:font-medium [&_a]:text-primary [&_a]:underline"
+                          dangerouslySetInnerHTML={{ __html: v.description }}
+                        />
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {scopes.length > 0 && (
+              <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 border-t border-border pt-4 text-[13px]">
+                <dt className="text-[12px] text-muted-foreground">API scopes</dt>
+                <dd className="flex min-w-0 flex-wrap gap-1">
+                  {scopes.map((s) => (
+                    <Badge
+                      key={s}
+                      variant="info"
+                      className="font-mono text-[10px] font-normal"
+                    >
+                      {s}
+                    </Badge>
+                  ))}
+                </dd>
+              </dl>
+            )}
+          </div>
+        </ScrollArea>
+
+        <div className="shrink-0 border-t border-border bg-background px-6 py-4">
+          {createBlockedTooltip ? (
+            <TooltipProvider delayDuration={0}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex w-full">
+                    <Button className="w-full" disabled type="button">
+                      Create from template
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>{createBlockedTooltip}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : (
+            <Button className="w-full" asChild>
+              <Link
+                to="/projects/$projectId/functions/create/template/$templateId"
+                params={{
+                  projectId,
+                  templateId: String(t.id ?? ''),
+                }}
+              >
+                Create from template
+              </Link>
+            </Button>
+          )}
+        </div>
+      </div>
+    </BaseDrawer>
   )
 }
 
@@ -608,7 +1001,17 @@ export function View() {
   const isNameSearch = urlSearch.trim().length > 0
   const pageSize = Math.max(1, urlLimit)
 
-  const facetsQuery = useQuery(functionTemplateFacetsQueryOptions(projectId))
+  /** First catalog page, unfiltered — drives filter chips; dedupes with `pageQuery` on default URL. */
+  const facetSourceQuery = useQuery({
+    ...functionTemplatesPageQueryOptions(
+      projectId,
+      0,
+      GRID_DEFAULT_PAGE_SIZE,
+      [],
+      [],
+    ),
+    enabled: !!projectId && !isNameSearch,
+  })
 
   const pageQuery = useQuery({
     ...functionTemplatesPageQueryOptions(
@@ -646,13 +1049,18 @@ export function View() {
       })
   }, [isNameSearch, urlSearch, searchCatalogQuery.data?.templates])
 
-  const catalogUseCases = useMemo(
-    () => facetsQuery.data?.useCases ?? [],
-    [facetsQuery.data],
-  )
-  const catalogRuntimes = useMemo(
-    () => facetsQuery.data?.runtimes ?? [],
-    [facetsQuery.data],
+  const { useCases: catalogUseCases, runtimes: catalogRuntimes } = useMemo(
+    () => {
+      const templates = isNameSearch
+        ? searchCatalogQuery.data?.templates
+        : facetSourceQuery.data?.templates
+      return collectTemplateFacetLabels(templates)
+    },
+    [
+      isNameSearch,
+      facetSourceQuery.data?.templates,
+      searchCatalogQuery.data?.templates,
+    ],
   )
 
   /** Distinguishes filter sets so we can reuse last known `total` while paging (offset is not part of key). */
@@ -816,9 +1224,11 @@ export function View() {
     useState<Models.TemplateFunction | null>(null)
 
   const listError =
-    facetsQuery.error ?? pageQuery.error ?? searchCatalogQuery.error
+    facetSourceQuery.error ?? pageQuery.error ?? searchCatalogQuery.error
 
-  const facetsLoading = facetsQuery.isPending && !facetsQuery.data
+  const facetsLoading =
+    (!isNameSearch && facetSourceQuery.isPending && !facetSourceQuery.data) ||
+    (isNameSearch && searchCatalogQuery.isPending && !searchCatalogQuery.data)
   const pageLoading =
     !isNameSearch &&
     pageQuery.isPending &&
@@ -970,91 +1380,13 @@ export function View() {
         </div>
       </div>
 
-      <Sheet
+      <FunctionTemplateDetailDrawer
         open={!!detailTemplate}
         onOpenChange={(open) => !open && setDetailTemplate(null)}
-      >
-        <SheetContent className="flex w-full flex-col gap-0 overflow-y-auto sm:max-w-md">
-          {detailTemplate && (
-            <>
-              <SheetHeader className="space-y-1 border-b border-border px-6 pb-4 pt-6 text-left">
-                <SheetTitle className="text-left text-[17px] font-semibold leading-snug">
-                  {detailTemplate.name}
-                </SheetTitle>
-                <SheetDescription className="text-left text-[13px] leading-relaxed">
-                  {detailTemplate.tagline}
-                </SheetDescription>
-              </SheetHeader>
-              <div className="space-y-6 px-6 py-6">
-                <div>
-                  <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                    Use cases
-                  </p>
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {(detailTemplate.useCases ?? []).map((u) => (
-                      <Badge
-                        key={u}
-                        variant="info"
-                        className="text-[10px] font-normal"
-                      >
-                        {formatUseCaseLabel(u)}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                    Runtimes
-                  </p>
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {(detailTemplate.runtimes ?? []).map((r) => (
-                      <Badge
-                        key={r.name}
-                        variant="info"
-                        className="font-mono text-[10px] font-normal"
-                      >
-                        {r.name}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-                <div className="flex flex-col gap-2 border-t border-border pt-6">
-                  {createBlockedTooltip ? (
-                    <TooltipProvider delayDuration={0}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span className="inline-flex w-full">
-                            <Button
-                              className="w-full"
-                              disabled
-                              type="button"
-                            >
-                              Create from template
-                            </Button>
-                          </span>
-                        </TooltipTrigger>
-                        <TooltipContent>{createBlockedTooltip}</TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  ) : (
-                    <Button className="w-full" asChild>
-                      <Link
-                        to="/projects/$projectId/functions/create/template/$templateId"
-                        params={{
-                          projectId: projectId!,
-                          templateId: detailTemplate.id,
-                        }}
-                      >
-                        Create from template
-                      </Link>
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </>
-          )}
-        </SheetContent>
-      </Sheet>
+        template={detailTemplate}
+        projectId={projectId!}
+        createBlockedTooltip={createBlockedTooltip}
+      />
     </div>
   )
 }

@@ -180,7 +180,7 @@ function listTemplatesFilterPayload(
 
 /**
  * One page of function templates from the API (server-side offset/limit).
- * Name search is not supported by the API; use fetchAllFunctionTemplatesForSearch when searching.
+ * Name search is not supported by the API; use fetchAllFunctionTemplates when searching client-side.
  */
 export async function fetchFunctionTemplatesPage(
   projectId: string,
@@ -207,71 +207,6 @@ export async function fetchFunctionTemplatesPage(
   const total = response.total ?? templates.length
 
   return { templates, total }
-}
-
-/**
- * Distinct use case and runtime labels for filter UI (scans the full catalog once).
- */
-export async function fetchFunctionTemplateFacets(
-  projectId: string,
-): Promise<{ useCases: string[]; runtimes: string[] }> {
-  if (!projectId) {
-    return { useCases: [], runtimes: [] }
-  }
-
-  const projectSdk = sdk.forProject(projectId)
-  const useCaseSet = new Set<string>()
-  const runtimeSet = new Set<string>()
-  let offset = 0
-  let reportedTotal = 0
-
-  while (true) {
-    const response = await projectSdk.functions.listTemplates({
-      limit: FUNCTION_TEMPLATES_LIST_BATCH,
-      offset,
-      total: offset === 0,
-    })
-
-    if (offset === 0) {
-      reportedTotal = response.total || 0
-    }
-
-    const batch = response.templates ? [...response.templates] : []
-    for (const t of batch) {
-      for (const u of t.useCases ?? []) {
-        useCaseSet.add(u)
-      }
-      for (const r of t.runtimes ?? []) {
-        if (r.name) runtimeSet.add(r.name)
-      }
-    }
-
-    if (batch.length === 0) break
-    if (batch.length < FUNCTION_TEMPLATES_LIST_BATCH) break
-    if (reportedTotal > 0 && offset + batch.length >= reportedTotal) break
-
-    offset += FUNCTION_TEMPLATES_LIST_BATCH
-  }
-
-  return {
-    useCases: [...useCaseSet].sort((a, b) => a.localeCompare(b)),
-    runtimes: [...runtimeSet].sort((a, b) => a.localeCompare(b)),
-  }
-}
-
-export function functionTemplateFacetsQueryOptions(
-  projectId: string | null | undefined,
-) {
-  return queryOptions({
-    queryKey: ['function-templates', 'facets', 'project', projectId],
-    queryFn: () => fetchFunctionTemplateFacets(projectId!),
-    enabled: !!projectId,
-    staleTime: DEFAULT_STALE_TIME,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-    gcTime: LONG_STALE_TIME,
-  })
 }
 
 export function functionTemplatesPageQueryOptions(
@@ -1053,29 +988,6 @@ export function useFunctionDeployment(
   return useQuery(
     functionDeploymentQueryOptions(projectId, functionId, deploymentId),
   )
-}
-
-/**
- * Hook to load the full function template list for a project (used when filtering by name in the UI).
- */
-export function useAllFunctionTemplates(
-  projectId: string | null | undefined,
-  filters?: FetchAllFunctionTemplatesFilters,
-) {
-  const { data, isLoading, isFetching, isPending, error, refetch } = useQuery(
-    allFunctionTemplatesQueryOptions(projectId, filters),
-  )
-
-  return {
-    templates: data?.templates || [],
-    total: data?.total || 0,
-    data,
-    isLoading,
-    isFetching,
-    isPending,
-    error,
-    refetch,
-  }
 }
 
 /**

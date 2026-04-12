@@ -8,13 +8,17 @@
 import { createFileRoute, Outlet, useParams } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import {
-  allFunctionTemplatesQueryOptions,
   fetchProject,
+  functionTemplatesPageQueryOptions,
   vcsInstallationsQueryOptions,
   projectRuntimesQueryOptions,
   functionSpecificationsQueryOptions,
   projectQueryOptions,
 } from '@/lib/react-query/hooks'
+import {
+  CREATE_FUNCTION_WIZARD_BROWSE_LIMIT,
+  CREATE_FUNCTION_WIZARD_STARTER_LIMIT,
+} from '@/lib/react-query/hooks/constants'
 import { useQuery } from '@tanstack/react-query'
 import {
   FunctionWizardProvider,
@@ -53,7 +57,22 @@ export const Route = createFileRoute(
           functionSpecificationsQueryOptions(projectId),
         ),
         queryClient.ensureQueryData(
-          allFunctionTemplatesQueryOptions(projectId),
+          functionTemplatesPageQueryOptions(
+            projectId,
+            0,
+            CREATE_FUNCTION_WIZARD_STARTER_LIMIT,
+            [],
+            ['starter'],
+          ),
+        ),
+        queryClient.ensureQueryData(
+          functionTemplatesPageQueryOptions(
+            projectId,
+            0,
+            CREATE_FUNCTION_WIZARD_BROWSE_LIMIT,
+            [],
+            [],
+          ),
         ),
       ])
 

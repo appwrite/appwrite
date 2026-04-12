@@ -28,6 +28,16 @@ export const DEFAULT_PAGE_SIZE = 10
 export const GRID_DEFAULT_PAGE_SIZE = 12
 
 /**
+ * Create function wizard: one API page of starter templates (filtered by use case).
+ */
+export const CREATE_FUNCTION_WIZARD_STARTER_LIMIT = 24
+
+/**
+ * Create function wizard: one API page of browse templates for highlights and language cards.
+ */
+export const CREATE_FUNCTION_WIZARD_BROWSE_LIMIT = 48
+
+/**
  * Default page size for database rows (table-style data)
  */
 export const ROWS_DEFAULT_PAGE_SIZE = 25

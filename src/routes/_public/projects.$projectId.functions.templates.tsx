@@ -3,7 +3,6 @@ import { z } from 'zod'
 import { View } from '@/components/pages/projects/$projectId/functions/templates/View'
 import {
   fetchProject,
-  functionTemplateFacetsQueryOptions,
   functionTemplatesPageQueryOptions,
   organizationPlanQueryOptions,
 } from '@/lib/react-query/hooks'
@@ -64,9 +63,7 @@ export const Route = createFileRoute(
       staleTime: 5 * 60 * 1000,
     })
 
-    const prefetch: Promise<unknown>[] = [
-      queryClient.ensureQueryData(functionTemplateFacetsQueryOptions(projectId)),
-    ]
+    const prefetch: Promise<unknown>[] = []
 
     // Server-side paging when not using name search (API has no name filter).
     if (!nameSearch) {
@@ -94,6 +91,24 @@ export const Route = createFileRoute(
           ),
         ),
       )
+      const needsFacetBootstrap =
+        offset !== 0 ||
+        runtimes.length > 0 ||
+        useCases.length > 0 ||
+        limit !== GRID_DEFAULT_PAGE_SIZE
+      if (needsFacetBootstrap) {
+        prefetch.push(
+          queryClient.ensureQueryData(
+            functionTemplatesPageQueryOptions(
+              projectId,
+              0,
+              GRID_DEFAULT_PAGE_SIZE,
+              [],
+              [],
+            ),
+          ),
+        )
+      }
     }
 
     await Promise.all([

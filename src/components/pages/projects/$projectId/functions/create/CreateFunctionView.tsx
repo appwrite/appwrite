@@ -35,11 +35,16 @@ import {
   LayoutTemplate,
 } from 'lucide-react'
 import { VCSDetectionType } from '@appwrite.io/console'
+import { useQuery } from '@tanstack/react-query'
 import {
+  functionTemplatesPageQueryOptions,
   useRepositories,
-  useAllFunctionTemplates,
   useProject,
 } from '@/lib/react-query/hooks'
+import {
+  CREATE_FUNCTION_WIZARD_BROWSE_LIMIT,
+  CREATE_FUNCTION_WIZARD_STARTER_LIMIT,
+} from '@/lib/react-query/hooks/constants'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
 import { cn } from '@/lib/utils'
 import { EmptyState } from '@/components/global/shared/EmptyState'
@@ -289,21 +294,37 @@ export function CreateFunctionView() {
   )
   const hasMoreRepos = repositories.length === REPO_PAGE_SIZE
 
-  const { templates: allFunctionTemplatesList } = useAllFunctionTemplates(
-    projectId,
-  )
+  const { data: starterPage } = useQuery({
+    ...functionTemplatesPageQueryOptions(
+      projectId,
+      0,
+      CREATE_FUNCTION_WIZARD_STARTER_LIMIT,
+      [],
+      [QUICK_START_USE_CASE],
+    ),
+  })
+
+  const { data: browsePage } = useQuery({
+    ...functionTemplatesPageQueryOptions(
+      projectId,
+      0,
+      CREATE_FUNCTION_WIZARD_BROWSE_LIMIT,
+      [],
+      [],
+    ),
+  })
+
+  const starterTemplates = starterPage?.templates ?? []
+  const browseTemplates = browsePage?.templates ?? []
 
   const quickStartTemplates = useMemo(
-    () =>
-      allFunctionTemplatesList
-        .filter((t) => t.useCases?.includes(QUICK_START_USE_CASE))
-        .slice(0, 6),
-    [allFunctionTemplatesList],
+    () => starterTemplates.slice(0, 6),
+    [starterTemplates],
   )
 
   const allTemplatesForHighlighted = useMemo(
-    () => allFunctionTemplatesList.slice(0, 20),
-    [allFunctionTemplatesList],
+    () => browseTemplates.slice(0, 20),
+    [browseTemplates],
   )
 
   const { templateByLanguage, highlighted } = useMemo(() => {
