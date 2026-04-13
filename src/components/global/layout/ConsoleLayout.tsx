@@ -104,7 +104,6 @@ export function ConsoleLayout({
     <div
       className={cn('flex h-full flex-col bg-background', layoutContainerClass)}
     >
-      <SkipToContent />
       {/* Sticky header section - takes space in flex layout */}
       {/* z-[110]: above PausedProjectCurtain (z-100) so alerts / exit impersonation stay reachable */}
       <div className="sticky top-0 z-[110] flex shrink-0 flex-col bg-background">
@@ -119,6 +118,8 @@ export function ConsoleLayout({
           hideSearch={showNativeAppBar}
         />
       </div>
+      {/* After sticky header in DOM: same z-[110] stacks the skip link above the bar; Radix dialogs portaled after #root still cover it at z-[110]. */}
+      <SkipToContent />
 
       {/* Mobile sidebar overlay */}
       {sidebar?.mobileOpen && (
@@ -145,7 +146,7 @@ export function ConsoleLayout({
           id="main-content"
           tabIndex={-1}
           className={cn(
-            'flex-1 bg-background flex flex-col min-h-0',
+            'flex-1 bg-background flex flex-col min-h-0 outline-none',
             fixedLayout ? 'overflow-hidden' : 'overflow-y-auto',
           )}
         >
