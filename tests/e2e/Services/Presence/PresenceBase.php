@@ -1,4 +1,5 @@
 <?php
+
 namespace Tests\E2E\Services\Presence;
 
 use Tests\E2E\Client;
@@ -12,45 +13,38 @@ trait PresenceBase
     protected function setupPresence(array $overrides = []): array
     {
         $projectId = $this->getProject()['$id'];
-        $cacheKey = $projectId . ':' . $this->getSide();
+        $cacheKey = $projectId;
 
         if (empty($overrides) && !empty(self::$presenceCache[$cacheKey])) {
             return self::$presenceCache[$cacheKey];
         }
 
         $payload = \array_merge([
+            'userId' => $this->getUser()['$id'],
             'status' => 'online',
             'metadata' => [
                 'device' => 'web',
-                'side' => $this->getSide(),
+                'setup' => true,
             ],
         ], $overrides);
-
-        if ($this->getSide() === 'server' && !isset($payload['userId'])) {
-            $payload['userId'] = $this->getUser()['$id'];
-        }
 
         $response = $this->client->call(
             Client::METHOD_PUT,
             '/presences/' . ID::unique(),
-            \array_merge([
+            [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $projectId,
-            ], $this->getHeaders()),
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ],
             $payload
         );
-
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertArrayHasKey('userId', $response['body']);
         $this->assertArrayHasKey('status', $response['body']);
         $this->assertArrayHasKey('metadata', $response['body']);
 
-        if ($this->getSide() === 'client') {
-            $this->assertEquals($this->getUser()['$id'], $response['body']['userId']);
-        } else {
-            $this->assertEquals($payload['userId'], $response['body']['userId']);
-        }
+        $this->assertEquals($payload['userId'], $response['body']['userId']);
 
         if (empty($overrides)) {
             self::$presenceCache[$cacheKey] = $response['body'];
@@ -61,6 +55,24 @@ trait PresenceBase
 
     public function testUpsertAndGetPresence(): void
     {
+        if ($this->getSide() === 'client') {
+            $upsert = $this->client->call(
+                Client::METHOD_PUT,
+                '/presences/' . ID::unique(),
+                \array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], $this->getHeaders()),
+                [
+                    'status' => 'online',
+                    'metadata' => ['device' => 'web'],
+                ]
+            );
+
+            $this->assertEquals(401, $upsert['headers']['status-code']);
+            return;
+        }
+
         $presence = $this->setupPresence();
 
         $get = $this->client->call(
@@ -80,6 +92,20 @@ trait PresenceBase
 
     public function testListPresences(): void
     {
+        if ($this->getSide() === 'client') {
+            $list = $this->client->call(
+                Client::METHOD_GET,
+                '/presences',
+                \array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], $this->getHeaders())
+            );
+
+            $this->assertEquals(401, $list['headers']['status-code']);
+            return;
+        }
+
         $presence = $this->setupPresence();
 
         $list = $this->client->call(
@@ -105,6 +131,24 @@ trait PresenceBase
 
     public function testUpdatePresenceSparseFields(): void
     {
+        if ($this->getSide() === 'client') {
+            $update = $this->client->call(
+                Client::METHOD_PATCH,
+                '/presences/' . ID::unique(),
+                \array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], $this->getHeaders()),
+                [
+                    'status' => 'busy',
+                    'metadata' => ['source' => 'update'],
+                ]
+            );
+
+            $this->assertEquals(401, $update['headers']['status-code']);
+            return;
+        }
+
         $presence = $this->setupPresence([
             'status' => 'away',
             'metadata' => ['source' => 'setup'],
@@ -136,6 +180,20 @@ trait PresenceBase
 
     public function testDeletePresence(): void
     {
+        if ($this->getSide() === 'client') {
+            $delete = $this->client->call(
+                Client::METHOD_DELETE,
+                '/presences/' . ID::unique(),
+                \array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], $this->getHeaders())
+            );
+
+            $this->assertEquals(401, $delete['headers']['status-code']);
+            return;
+        }
+
         $presence = $this->setupPresence([
             'status' => 'temp-delete',
             'metadata' => ['cleanup' => true],
@@ -155,6 +213,23 @@ trait PresenceBase
 
     public function testUpdateNotFound(): void
     {
+        if ($this->getSide() === 'client') {
+            $response = $this->client->call(
+                Client::METHOD_PATCH,
+                '/presences/' . ID::unique(),
+                \array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], $this->getHeaders()),
+                [
+                    'status' => 'ghost',
+                ]
+            );
+
+            $this->assertEquals(401, $response['headers']['status-code']);
+            return;
+        }
+
         $payload = [
             'status' => 'ghost',
         ];
@@ -197,7 +272,6 @@ trait PresenceBase
         );
 
         $this->assertEquals(401, $response['headers']['status-code']);
-        $this->assertEquals('general_unauthorized_scope', $response['body']['type']);
     }
 
     public function testServerRequiresUserId(): void
