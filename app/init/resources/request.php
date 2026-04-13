@@ -75,6 +75,8 @@ return function (Container $container): void {
     $log = new Log();
     $log->addExtra('breadcrumbs', $breadcrumbs);
 
+    //$breadcrumbs = $log->getExtra()['breadcrumbs'] ?? [];
+
     $container->set('log', fn () => $log, $breadcrumbs);
 
     $container->set('logger', function ($register) {
