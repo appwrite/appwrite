@@ -2754,48 +2754,9 @@ return [
             ],
         ],
     ],
-    // to track connected users via realtime
-    // TODO: check we need expiry or not so that we ttl the user
-    'presence' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('presence'),
-        'name' => 'Presence',
-        'attributes' => [
-            [
-                '$id' => ID::custom('userInternalId'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => true,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => ID::custom('userId'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ]
-        ],
-        'indexes' => [
-            [
-                '$id' => ID::custom('_unique_userId'),
-                'type' => Database::INDEX_UNIQUE,
-                'attributes' => ['userId'],
-                'lengths' => [Database::LENGTH_KEY],
-                'orders' => [Database::ORDER_ASC],
-            ]
-        ]
-    ],
 
-    // event logs
+    // Naming it presenceLogs as later it might be only be used as a presence events table only and not for the actual presence
+    // TODO: check between var_string and var_id => userInternalId, userId(they can be null as well in case of guest login)
     'presenceLogs' => [
         '$collection' => ID::custom(Database::METADATA),
         '$id' => ID::custom('presenceLogs'),
@@ -2803,7 +2764,7 @@ return [
         'attributes' => [
             [
                 '$id' => ID::custom('userInternalId'),
-                'type' => Database::VAR_STRING,
+                'type' => Database::VAR_ID,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
                 'signed' => true,
@@ -2814,19 +2775,7 @@ return [
             ],
             [
                 '$id' => ID::custom('userId'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            // permissions must be sorted before md5 conversion to have deterministic hashes
-            [
-                '$id' => ID::custom('perms_md5'),
-                'type' => Database::VAR_STRING,
+                'type' => Database::VAR_ID,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
                 'signed' => true,
@@ -2867,7 +2816,7 @@ return [
                 'array' => false,
                 'filters' => [],
             ],
-            // TODO: check the usecase and apply it
+            // TODO: the current pod? Shall we make it the region? instead of the hostname? So that when its restarted it can delete all the presence?
             [
                 '$id' => ID::custom('hostname'),
                 'type' => Database::VAR_STRING,
@@ -2891,13 +2840,50 @@ return [
                 'filters' => ['json'],
             ],
         ],
+        // TODO: shall we create the perms_md5 now only for the upsertion based on perms_md5 or later via patch script? 
+        // permissions must be sorted before md5 conversion to have deterministic hashes
         'indexes' => [
             [
-                '$id' => ID::custom('_unique_userId_perms'),
-                'type' => Database::INDEX_UNIQUE,
-                'attributes' => ['userId','perms_md5'],
+                '$id' => ID::custom('_key_userId'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['userId'],
                 'lengths' => [Database::LENGTH_KEY],
-                'orders' => [Database::ORDER_ASC],
+                'orders' => [Database::ORDER_ASC]
+            ],
+            [
+                '$id' => ID::custom('_key_userInternal'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['userInternalId'],
+                'lengths' => [Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_ASC]
+            ],
+            [
+                '$id' => ID::custom('_key_expiry'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['expiry'],
+                'lengths' => [],
+                'orders' => [Database::ORDER_ASC]
+            ],
+            [
+                '$id' => ID::custom('_key_status'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['status'],
+                'lengths' => [Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_ASC]
+            ],
+            [
+                '$id' => ID::custom('_key_source'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['source'],
+                'lengths' => [Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_ASC]
+            ],
+            [
+                '$id' => ID::custom('_key_source_status'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['source', 'status'],
+                'lengths' => [Database::LENGTH_KEY, Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_ASC, Database::ORDER_ASC]
             ]
         ]
     ]
