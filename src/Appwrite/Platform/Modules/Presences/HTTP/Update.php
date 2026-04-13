@@ -34,7 +34,7 @@ class Update extends PresenceAction
             ->setHttpPath('/v1/presences/:presenceId')
             ->desc('Update presence')
             ->groups(['api', 'presences'])
-            ->label('scope', 'documents.write')
+            ->label('scope', 'users.write')
             ->label('sdk', new Method(
                 namespace: 'presences',
                 group: 'presences',

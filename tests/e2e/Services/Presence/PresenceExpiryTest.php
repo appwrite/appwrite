@@ -14,6 +14,24 @@ class PresenceExpiryTest extends Scope
     use ProjectCustom;
     use SideServer;
 
+    private static array $presenceApiKeyCache = [];
+
+    private function getPresenceApiKey(): string
+    {
+        $projectId = $this->getProject()['$id'];
+
+        if (!empty(self::$presenceApiKeyCache[$projectId])) {
+            return self::$presenceApiKeyCache[$projectId];
+        }
+
+        self::$presenceApiKeyCache[$projectId] = $this->getNewKey([
+            'users.read',
+            'users.write',
+        ]);
+
+        return self::$presenceApiKeyCache[$projectId];
+    }
+
     public function testExpiredPresenceDeletedByMaintenance(): void
     {
         $projectId = $this->getProject()['$id'];
@@ -26,7 +44,7 @@ class PresenceExpiryTest extends Scope
             [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $projectId,
-                'x-appwrite-key' => $this->getProject()['apiKey'],
+                'x-appwrite-key' => $this->getPresenceApiKey(),
             ],
             [
                 'userId' => $userId,
@@ -44,7 +62,7 @@ class PresenceExpiryTest extends Scope
             [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $projectId,
-                'x-appwrite-key' => $this->getProject()['apiKey'],
+                'x-appwrite-key' => $this->getPresenceApiKey(),
             ],
             [
                 'userId' => $userId,
@@ -53,7 +71,10 @@ class PresenceExpiryTest extends Scope
         );
 
         $this->assertEquals(200, $expireServer['headers']['status-code']);
-        $this->assertEquals($expiredAt, $expireServer['body']['expiry']);
+        $this->assertEquals(
+            (new \DateTime($expiredAt))->getTimestamp(),
+            (new \DateTime($expireServer['body']['expiry']))->getTimestamp()
+        );
 
         $createClient = $this->client->call(
             Client::METHOD_PUT,
@@ -88,7 +109,10 @@ class PresenceExpiryTest extends Scope
         );
 
         $this->assertEquals(200, $expireClient['headers']['status-code']);
-        $this->assertEquals($expiredAt, $expireClient['body']['expiry']);
+        $this->assertEquals(
+            (new \DateTime($expiredAt))->getTimestamp(),
+            (new \DateTime($expireClient['body']['expiry']))->getTimestamp()
+        );
 
         $stdout = '';
         $stderr = '';
@@ -102,7 +126,7 @@ class PresenceExpiryTest extends Scope
                 [
                     'content-type' => 'application/json',
                     'x-appwrite-project' => $projectId,
-                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                    'x-appwrite-key' => $this->getPresenceApiKey(),
                 ]
             );
 
@@ -112,7 +136,7 @@ class PresenceExpiryTest extends Scope
                 [
                     'content-type' => 'application/json',
                     'x-appwrite-project' => $projectId,
-                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                    'x-appwrite-key' => $this->getPresenceApiKey(),
                 ]
             );
 

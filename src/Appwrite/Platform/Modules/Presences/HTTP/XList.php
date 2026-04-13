@@ -37,7 +37,7 @@ class XList extends Base
             ->setHttpPath('/v1/presences')
             ->desc('List presences')
             ->groups(['api', 'presences'])
-            ->label('scope', 'documents.read')
+            ->label('scope', 'users.read')
             ->label('sdk', new Method(
                 namespace: 'presences',
                 group: 'presences',
