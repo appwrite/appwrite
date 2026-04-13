@@ -340,7 +340,8 @@ class Response extends SwooleResponse
             $this->sent = true;
         }
 
-        $this->addHeader('X-Debug-Speed', (string) (microtime(true) - $this->startTime), override: true);
+        $this->removeHeader('X-Debug-Speed');
+        $this->addHeader('X-Debug-Speed', (string) (microtime(true) - $this->startTime));
 
         if (!$this->chunking) {
             $this->chunking = true;
