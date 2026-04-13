@@ -379,7 +379,7 @@ class OpenAPI3 extends Format
                 /**
                  * @var \Utopia\Validator $validator
                  */
-                $validator = (\is_callable($param['validator'])) ? call_user_func_array($param['validator'], $this->app->getResources($param['injections'])) : $param['validator'];
+                $validator = $this->getValidator($param);
 
                 $node = [
                     'name' => $name,

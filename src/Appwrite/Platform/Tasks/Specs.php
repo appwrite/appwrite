@@ -21,7 +21,6 @@ use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\DI\Container;
-use Utopia\Http\Adapter\FPM\Server as FPMServer;
 use Utopia\Http\Http;
 use Utopia\Http\Request as UtopiaRequest;
 use Utopia\Http\Response as UtopiaResponse;
@@ -448,7 +447,7 @@ class Specs extends Action
             }
 
             $arguments = [
-                new Http(new FPMServer($specsContainer), 'UTC'),
+                $specsContainer,
                 $services,
                 $routes,
                 $models,

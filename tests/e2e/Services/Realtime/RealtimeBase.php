@@ -101,18 +101,14 @@ trait RealtimeBase
         $client->close();
     }
 
-    public function testConnectionFailureMissingChannels(): void
+    public function testConnectionSuccessMissingChannels(): void
     {
         $client = $this->getWebsocket([]);
         $payload = json_decode($client->receive(), true);
 
         $this->assertArrayHasKey("type", $payload);
         $this->assertArrayHasKey("data", $payload);
-        $this->assertEquals("error", $payload["type"]);
-        $this->assertEquals(1008, $payload["data"]["code"]);
-        $this->assertEquals("Missing channels", $payload["data"]["message"]);
-        \usleep(250000); // 250ms
-        $this->expectException(ConnectionException::class); // Check if server disconnected client
+        $this->assertEquals("connected", $payload["type"]);
         $client->close();
     }
 

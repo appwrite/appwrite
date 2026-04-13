@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Project\Http\Project\Platforms;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Platform;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -115,6 +116,10 @@ class XList extends Action
             $total = $includeTotal ? $authorization->skip(fn () => $dbForPlatform->count('platforms', $filterQueries, APP_LIMIT_COUNT)) : 0;
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
+
+        foreach ($platforms as $platform) {
+            $platform->setAttribute('type', Platform::mapDeprecatedType($platform->getAttribute('type')));
         }
 
         $response->dynamic(new Document([

@@ -1,6 +1,9 @@
 <?php
 
 use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Execution as ExecutionPublisher;
+use Appwrite\Event\Publisher\Migration as MigrationPublisher;
+use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Utopia\Database\Documents\User;
 use Executor\Executor;
@@ -81,6 +84,18 @@ $container->set('publisherWebhooks', function (Publisher $publisher) {
 $container->set('publisherForUsage', fn (Publisher $publisher) => new UsagePublisher(
     $publisher,
     new Queue(System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', Event::STATS_USAGE_QUEUE_NAME))
+), ['publisher']);
+$container->set('publisherForExecutions', fn (Publisher $publisher) => new ExecutionPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_EXECUTIONS_QUEUE_NAME', Event::EXECUTIONS_QUEUE_NAME))
+), ['publisher']);
+$container->set('publisherForMigrations', fn (Publisher $publisher) => new MigrationPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_MIGRATIONS_QUEUE_NAME', Event::MIGRATIONS_QUEUE_NAME))
+), ['publisher']);
+$container->set('publisherForStatsResources', fn (Publisher $publisher) => new StatsResourcesPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_STATS_RESOURCES_QUEUE_NAME', Event::STATS_RESOURCES_QUEUE_NAME))
 ), ['publisher']);
 
 /**

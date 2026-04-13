@@ -381,9 +381,7 @@ class Swagger2 extends Format
                 }
 
                 /** @var Validator $validator */
-                $validator = (\is_callable($param['validator']))
-                    ? ($param['validator'])(...$this->app->getResources($param['injections']))
-                    : $param['validator'];
+                $validator = $this->getValidator($param);
 
                 $node = [
                     'name' => $name,

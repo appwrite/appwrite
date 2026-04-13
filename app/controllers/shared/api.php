@@ -37,6 +37,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Roles;
 use Utopia\Http\Http;
+use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Validator\WhiteList;
@@ -633,6 +634,7 @@ Http::init()
             $isDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && ! $user->isPrivileged($authorization->getRoles());
 
             $key = $request->cacheIdentifier();
+            Span::add('storage.cache.key', $key);
             $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
             $cache = new Cache(
                 new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
@@ -681,6 +683,8 @@ Http::init()
                     if ($file->isEmpty()) {
                         throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
                     }
+                    Span::add('storage.bucket.id', $bucketId);
+                    Span::add('storage.file.id', $fileId);
                     // Do not update transformedAt if it's a console user
                     if (! $user->isPrivileged($authorization->getRoles())) {
                         $transformedAt = $file->getAttribute('transformedAt', '');
@@ -693,16 +697,27 @@ Http::init()
                     }
                 }
 
+                $accessedAt = $cacheLog->getAttribute('accessedAt', '');
+                if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_CACHE_UPDATE)) > $accessedAt) {
+                    $authorization->skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), new Document([
+                        'accessedAt' => DateTime::now(),
+                    ])));
+                    // Refresh the filesystem file's mtime so TTL-based expiry in cache->load() stays valid
+                    $cache->save($key, $data);
+                }
+
                 $response
                     ->addHeader('Cache-Control', sprintf('private, max-age=%d', $timestamp))
                     ->addHeader('X-Appwrite-Cache', 'hit')
                     ->setContentType($cacheLog->getAttribute('mimeType'));
                 $storageCacheOperationsCounter->add(1, ['result' => 'hit']);
                 if (! $isImageTransformation || ! $isDisabled) {
+                    Span::add('storage.cache.hit', true);
                     $response->send($data);
                 }
             } else {
                 $storageCacheOperationsCounter->add(1, ['result' => 'miss']);
+                Span::add('storage.cache.hit', false);
                 $response
                     ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
                     ->addHeader('Pragma', 'no-cache')
