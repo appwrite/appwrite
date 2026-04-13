@@ -4,7 +4,7 @@ namespace Appwrite\Platform\Modules\Presences\HTTP;
 
 use Appwrite\Extend\Exception;
 use Appwrite\ID;
-use Appwrite\Platform\Modules\Presences\Action as PresenceAction;
+use Appwrite\Platform\Modules\Presences\HTTP\Action as PresenceAction;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;

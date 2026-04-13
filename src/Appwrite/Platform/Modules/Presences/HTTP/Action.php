@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Presences;
+namespace Appwrite\Platform\Modules\Presences\HTTP;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action as PlatformAction;
