@@ -13,10 +13,10 @@ use Utopia\Database\Validator\Authorization;
 
 class Action extends PlatformAction
 {
-    public function setPermission(Document $document, ?array $permissions, Document $user, Authorization $authorization): Document
+    public function setPermission(Document $document, ?array $permissions, User $user, Authorization $authorization): Document
     {
-        $isAPIKey = User::isApp($authorization->getRoles());
-        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
+        $isAPIKey = $user->isApp($authorization->getRoles());
+        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         $allowedPermissions = [
             Database::PERMISSION_READ,

@@ -34,7 +34,7 @@ class Update extends PresenceAction
             ->setHttpPath('/v1/presences/:presenceId')
             ->desc('Update presence')
             ->groups(['api', 'presences'])
-            ->label('scope', 'users.write')
+            ->label('scope', 'documents.write')
             ->label('sdk', new Method(
                 namespace: 'presences',
                 group: 'presences',
@@ -70,11 +70,11 @@ class Update extends PresenceAction
         ?array $permissions,
         Response $response,
         Database $dbForProject,
-        Document $user,
+        User $user,
         Authorization $authorization
     ): void {
-        $isAPIKey = User::isApp($authorization->getRoles());
-        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
+        $isAPIKey = $user->isApp($authorization->getRoles());
+        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         if ($userId && !$isAPIKey && !$isPrivilegedUser) {
             throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'userId is not allowed for non-API key and non-privileged users');

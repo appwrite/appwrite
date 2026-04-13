@@ -30,7 +30,7 @@ class Delete extends Base
             ->setHttpPath('/v1/presences/:presenceId')
             ->desc('Delete presence')
             ->groups(['api', 'presences'])
-            ->label('scope', 'users.write')
+            ->label('scope', 'documents.write')
             ->label('sdk', new Method(
                 namespace: 'presences',
                 group: 'presences',
