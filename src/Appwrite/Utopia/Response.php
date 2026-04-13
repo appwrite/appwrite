@@ -256,7 +256,11 @@ class Response extends SwooleResponse
     public const MODEL_MOCK_NUMBER = 'mockNumber';
     public const MODEL_AUTH_PROVIDER = 'authProvider';
     public const MODEL_AUTH_PROVIDER_LIST = 'authProviderList';
-    public const MODEL_PLATFORM = 'platform';
+    public const MODEL_PLATFORM_APPLE = 'platformApple';
+    public const MODEL_PLATFORM_ANDROID = 'platformAndroid';
+    public const MODEL_PLATFORM_WINDOWS = 'platformWindows';
+    public const MODEL_PLATFORM_LINUX = 'platformLinux';
+    public const MODEL_PLATFORM_WEB = 'platformWeb';
     public const MODEL_PLATFORM_LIST = 'platformList';
     public const MODEL_VARIABLE = 'variable';
     public const MODEL_VARIABLE_LIST = 'variableList';
@@ -299,7 +303,7 @@ class Response extends SwooleResponse
     /**
      * @var bool
      */
-    protected static bool $showSensitive = false;
+    protected bool $showSensitive = false;
 
     /**
      * @var array<string, Model>
@@ -516,7 +520,13 @@ class Response extends SwooleResponse
                             foreach ($rule['type'] as $type) {
                                 $condition = false;
                                 foreach ($this->getModel($type)->conditions as $attribute => $val) {
-                                    $condition = $item->getAttribute($attribute) === $val;
+
+                                    if (\is_array($val)) {
+                                        $condition = \in_array($item->getAttribute($attribute), $val);
+                                    } else {
+                                        $condition = $item->getAttribute($attribute) === $val;
+                                    }
+
                                     if (!$condition) {
                                         break;
                                     }
@@ -549,7 +559,7 @@ class Response extends SwooleResponse
                 $isPrivilegedUser = $user->isPrivileged($roles);
                 $isAppUser = $user->isApp($roles);
 
-                if ((!$isPrivilegedUser && !$isAppUser) && !self::$showSensitive) {
+                if ((!$isPrivilegedUser && !$isAppUser) && !$this->showSensitive) {
                     $data->setAttribute($key, '');
                 }
             }
@@ -699,18 +709,20 @@ class Response extends SwooleResponse
     }
 
     /**
-     * Static wrapper to show sensitive data in response
+     * Wrapper to show sensitive data in response
      *
      * @param callable(): array $callback The callback to show sensitive information for
      * @return array
      */
-    public static function showSensitive(callable $callback): array
+    public function showSensitive(callable $callback): array
     {
+        $previous = $this->showSensitive;
+
         try {
-            self::$showSensitive = true;
+            $this->showSensitive = true;
             return $callback();
         } finally {
-            self::$showSensitive = false;
+            $this->showSensitive = $previous;
         }
     }
 

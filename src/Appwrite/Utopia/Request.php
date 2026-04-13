@@ -17,7 +17,7 @@ class Request extends UtopiaRequest
      * @var array<Filter>
      */
     private array $filters = [];
-    private static ?Route $route = null;
+    private ?Route $route = null;
 
     public function __construct(SwooleRequest $request)
     {
@@ -34,11 +34,11 @@ class Request extends UtopiaRequest
     {
         $parameters = parent::getParams();
 
-        if (!$this->hasFilters() || !self::hasRoute()) {
+        if (!$this->hasFilters() || !$this->hasRoute()) {
             return $parameters;
         }
 
-        $methods = self::getRoute()->getLabel('sdk', null);
+        $methods = $this->getRoute()?->getLabel('sdk', null);
 
         if (empty($methods)) {
             return $parameters;
@@ -131,9 +131,9 @@ class Request extends UtopiaRequest
      *
      * @return void
      */
-    public static function setRoute(?Route $route): void
+    public function setRoute(?Route $route): void
     {
-        self::$route = $route;
+        $this->route = $route;
     }
 
     /**
@@ -141,9 +141,9 @@ class Request extends UtopiaRequest
      *
      * @return Route|null
      */
-    public static function getRoute(): ?Route
+    public function getRoute(): ?Route
     {
-        return self::$route;
+        return $this->route;
     }
 
     /**
@@ -151,9 +151,9 @@ class Request extends UtopiaRequest
      *
      * @return bool
      */
-    public static function hasRoute(): bool
+    public function hasRoute(): bool
     {
-        return self::$route !== null;
+        return $this->route !== null;
     }
 
     /**
@@ -234,6 +234,10 @@ class Request extends UtopiaRequest
     public function cacheIdentifier(): string
     {
         $params = $this->getParams();
+        $allowedParams = $this->getRoute()?->getLabel('cache.params', null);
+        if ($allowedParams !== null) {
+            $params = array_intersect_key($params, array_flip($allowedParams));
+        }
         ksort($params);
         return md5($this->getURI() . '*' . serialize($params) . '*' . APP_CACHE_BUSTER);
     }

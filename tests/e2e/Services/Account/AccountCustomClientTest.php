@@ -802,6 +802,16 @@ class AccountCustomClientTest extends Scope
         $sessionId = $response['body']['$id'];
         $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
 
+        $accountResponse = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]));
+
+        $this->assertEquals(200, $accountResponse['headers']['status-code']);
+        $this->assertEquals($email, $accountResponse['body']['email']);
+
         // apiKey is only available in custom client test
         $apiKey = $this->getProject()['apiKey'];
         if (!empty($apiKey)) {
@@ -4149,5 +4159,179 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(401, $verification3['headers']['status-code']);
+    }
+
+    /**
+     * Test that a new email/password session is immediately usable even when
+     * a concurrent request re-populates the user cache between the cache purge
+     * and session creation.
+     *
+     * Regression test for: purging the user cache BEFORE persisting the session
+     * allows a concurrent request (from a different Swoole worker) to re-cache
+     * a stale user document that lacks the new session, causing sessionVerify
+     * to fail with 401 on subsequent requests using the new session.
+     */
+    public function testEmailPasswordSessionNotCorruptedByConcurrentRequests(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $endpoint = $this->client->getEndpoint();
+
+        $email = uniqid('race_', true) . getmypid() . '@localhost.test';
+        $password = 'password123!';
+
+        // Create user
+        $response = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => 'Race Test User',
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        // Login to get session A
+        $responseA = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertEquals(201, $responseA['headers']['status-code']);
+        $sessionA = $responseA['cookies']['a_session_' . $projectId];
+
+        // Verify session A works
+        $verifyA = $this->client->call(Client::METHOD_GET, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $sessionA,
+        ]);
+        $this->assertEquals(200, $verifyA['headers']['status-code']);
+
+        /**
+         * Race condition scenario:
+         * 1. Start login B via curl_multi (non-blocking)
+         * 2. Drive the transfer for ~150ms so login B reaches purgeCachedDocument
+         *    (findOne ~15ms + Argon2 hash verify ~60ms + middleware overhead)
+         * 3. THEN add GET requests to curl_multi - these hit different workers and
+         *    re-cache a stale user document (without session B) during the window
+         *    between purgeCachedDocument and createDocument
+         * 4. After all complete, verify session B is usable
+         */
+        for ($attempt = 0; $attempt < 5; $attempt++) {
+            $loginCookies = [];
+
+            $multi = curl_multi_init();
+
+            // Start login B first (alone)
+            $loginHandle = curl_init("{$endpoint}/account/sessions/email");
+            curl_setopt_array($loginHandle, [
+                CURLOPT_POST => true,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_HTTPHEADER => [
+                    'origin: http://localhost',
+                    'content-type: application/json',
+                    "x-appwrite-project: {$projectId}",
+                ],
+                CURLOPT_POSTFIELDS => \json_encode([
+                    'email' => $email,
+                    'password' => $password,
+                ]),
+                CURLOPT_HEADERFUNCTION => function ($curl, $header) use (&$loginCookies) {
+                    if (\stripos($header, 'set-cookie:') === 0) {
+                        $cookiePart = \trim(\substr($header, 11));
+                        $eqPos = \strpos($cookiePart, '=');
+                        if ($eqPos !== false) {
+                            $name = \substr($cookiePart, 0, $eqPos);
+                            $rest = \substr($cookiePart, $eqPos + 1);
+                            $semiPos = \strpos($rest, ';');
+                            $loginCookies[$name] = $semiPos !== false
+                                ? \substr($rest, 0, $semiPos)
+                                : $rest;
+                        }
+                    }
+                    return \strlen($header);
+                },
+            ]);
+            curl_multi_add_handle($multi, $loginHandle);
+
+            // Drive the login transfer forward and wait for the server to start
+            // processing the login (past hash verification + cache purge).
+            $deadline = \microtime(true) + 0.15; // 150ms
+            do {
+                curl_multi_exec($multi, $active);
+                curl_multi_select($multi, 0.005);
+            } while (\microtime(true) < $deadline && $active);
+
+            // NOW add GET requests - they arrive after the cache purge
+            // but before session creation (which is delayed by the usleep or I/O).
+            $getHandles = [];
+            for ($i = 0; $i < 10; $i++) {
+                $gh = curl_init("{$endpoint}/account");
+                curl_setopt_array($gh, [
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_HTTPHEADER => [
+                        'origin: http://localhost',
+                        'content-type: application/json',
+                        "x-appwrite-project: {$projectId}",
+                        "cookie: a_session_{$projectId}={$sessionA}",
+                    ],
+                ]);
+                curl_multi_add_handle($multi, $gh);
+                $getHandles[] = $gh;
+            }
+
+            // Drive all to completion
+            do {
+                $status = curl_multi_exec($multi, $active);
+                if ($active) {
+                    curl_multi_select($multi, 0.05);
+                }
+            } while ($active && $status === CURLM_OK);
+
+            $loginStatus = curl_getinfo($loginHandle, CURLINFO_HTTP_CODE);
+
+            curl_multi_remove_handle($multi, $loginHandle);
+            curl_close($loginHandle);
+            foreach ($getHandles as $gh) {
+                curl_multi_remove_handle($multi, $gh);
+                curl_close($gh);
+            }
+            curl_multi_close($multi);
+
+            $this->assertEquals(201, $loginStatus, 'Login for session B should succeed');
+
+            $sessionBCookie = $loginCookies["a_session_{$projectId}"] ?? null;
+            $this->assertNotNull($sessionBCookie, 'Session B cookie should be set');
+
+            // THE CRITICAL CHECK: verify session B is usable immediately
+            $verifyB = $this->client->call(Client::METHOD_GET, '/account', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'cookie' => "a_session_{$projectId}={$sessionBCookie}",
+            ]);
+
+            $this->assertEquals(
+                200,
+                $verifyB['headers']['status-code'],
+                'Session B must be immediately usable after login. '
+                . 'A 401 here means a stale user cache (without the new session) was served. '
+                . 'The fix is to create the session document BEFORE purging the user cache.'
+            );
+
+            // Clean up session B for next iteration
+            $this->client->call(Client::METHOD_DELETE, '/account/sessions/current', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'cookie' => "a_session_{$projectId}={$sessionBCookie}",
+            ]);
+        }
     }
 }

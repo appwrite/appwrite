@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\Event\Message\StatsResources as StatsResourcesMessage;
 use Appwrite\Platform\Action;
 use Exception;
 use Throwable;
@@ -67,8 +68,8 @@ class StatsResources extends Action
     {
         $this->logError = $logError;
 
-        $payload = $message->getPayload() ?? [];
-        if (empty($payload)) {
+        $statsResources = StatsResourcesMessage::fromArray($message->getPayload() ?? []);
+        if ($statsResources->project->isEmpty()) {
             throw new Exception('Missing payload');
         }
 

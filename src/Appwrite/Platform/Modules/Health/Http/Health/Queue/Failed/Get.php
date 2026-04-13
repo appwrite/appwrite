@@ -11,10 +11,10 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
-use Appwrite\Event\Migration;
+use Appwrite\Event\Publisher\Migration as MigrationPublisher;
+use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Screenshot;
-use Appwrite\Event\StatsResources;
 use Appwrite\Event\Webhook;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Base;
 use Appwrite\SDK\AuthType;
@@ -78,13 +78,13 @@ class Get extends Base
             ->inject('queueForAudits')
             ->inject('queueForMails')
             ->inject('queueForFunctions')
-            ->inject('queueForStatsResources')
+            ->inject('publisherForStatsResources')
             ->inject('publisherForUsage')
             ->inject('queueForWebhooks')
             ->inject('queueForCertificates')
             ->inject('queueForBuilds')
             ->inject('queueForMessaging')
-            ->inject('queueForMigrations')
+            ->inject('publisherForMigrations')
             ->inject('queueForScreenshots')
             ->callback($this->action(...));
     }
@@ -98,13 +98,13 @@ class Get extends Base
         Audit $queueForAudits,
         Mail $queueForMails,
         Func $queueForFunctions,
-        StatsResources $queueForStatsResources,
+        StatsResourcesPublisher $publisherForStatsResources,
         UsagePublisher $publisherForUsage,
         Webhook $queueForWebhooks,
         Certificate $queueForCertificates,
         Build $queueForBuilds,
         Messaging $queueForMessaging,
-        Migration $queueForMigrations,
+        MigrationPublisher $publisherForMigrations,
         Screenshot $queueForScreenshots,
     ): void {
         $threshold = (int) $threshold;
@@ -115,14 +115,14 @@ class Get extends Base
             System::getEnv('_APP_AUDITS_QUEUE_NAME', Event::AUDITS_QUEUE_NAME) => $queueForAudits,
             System::getEnv('_APP_MAILS_QUEUE_NAME', Event::MAILS_QUEUE_NAME) => $queueForMails,
             System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME) => $queueForFunctions,
-            System::getEnv('_APP_STATS_RESOURCES_QUEUE_NAME', Event::STATS_RESOURCES_QUEUE_NAME) => $queueForStatsResources,
+            System::getEnv('_APP_STATS_RESOURCES_QUEUE_NAME', Event::STATS_RESOURCES_QUEUE_NAME) => $publisherForStatsResources,
             System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', Event::STATS_USAGE_QUEUE_NAME) => $publisherForUsage,
             System::getEnv('_APP_WEBHOOK_QUEUE_NAME', Event::WEBHOOK_QUEUE_NAME) => $queueForWebhooks,
             System::getEnv('_APP_CERTIFICATES_QUEUE_NAME', Event::CERTIFICATES_QUEUE_NAME) => $queueForCertificates,
             System::getEnv('_APP_BUILDS_QUEUE_NAME', Event::BUILDS_QUEUE_NAME) => $queueForBuilds,
             System::getEnv('_APP_SCREENSHOTS_QUEUE_NAME', Event::SCREENSHOTS_QUEUE_NAME) => $queueForScreenshots,
             System::getEnv('_APP_MESSAGING_QUEUE_NAME', Event::MESSAGING_QUEUE_NAME) => $queueForMessaging,
-            System::getEnv('_APP_MIGRATIONS_QUEUE_NAME', Event::MIGRATIONS_QUEUE_NAME) => $queueForMigrations,
+            System::getEnv('_APP_MIGRATIONS_QUEUE_NAME', Event::MIGRATIONS_QUEUE_NAME) => $publisherForMigrations,
         };
         $failed = $queue->getSize(failed: true);
 

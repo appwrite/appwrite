@@ -79,7 +79,7 @@ class Delete extends Action
         Device $deviceForFiles,
         DeleteEvent $queueForDeletes,
         Authorization $authorization,
-        User $user
+        User $user,
     ) {
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -110,10 +110,17 @@ class Delete extends Action
 
         $deviceDeleted = false;
         if ($file->getAttribute('chunksTotal') !== $file->getAttribute('chunksUploaded')) {
-            $deviceDeleted = $deviceForFiles->abort(
-                $file->getAttribute('path'),
-                ($file->getAttribute('metadata', [])['uploadId'] ?? '')
-            );
+            try {
+                $deviceDeleted = $deviceForFiles->abort(
+                    $file->getAttribute('path'),
+                    ($file->getAttribute('metadata', [])['uploadId'] ?? '')
+                );
+            } catch (\Exception $e) {
+                // If the partial upload chunks are already gone from the device
+                // (e.g. the upload never wrote anything to disk), treat it as deleted
+                // so the pending file document can still be removed from the database.
+                $deviceDeleted = true;
+            }
         } else {
             $deviceDeleted = $deviceForFiles->delete($file->getAttribute('path'));
         }
