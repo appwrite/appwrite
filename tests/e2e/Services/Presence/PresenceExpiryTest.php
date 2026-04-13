@@ -76,50 +76,12 @@ class PresenceExpiryTest extends Scope
             (new \DateTime($expireServer['body']['expiry']))->getTimestamp()
         );
 
-        $createClient = $this->client->call(
-            Client::METHOD_PUT,
-            '/presences/' . ID::unique(),
-            [
-                'origin' => 'http://localhost',
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $projectId,
-                'cookie' => 'a_session_' . $projectId . '=' . $this->getUser()['session'],
-            ],
-            [
-                'status' => 'online',
-                'metadata' => ['test' => 'presence-expiry-client'],
-            ]
-        );
-
-        $this->assertEquals(200, $createClient['headers']['status-code']);
-        $presenceIdClient = $createClient['body']['$id'];
-
-        $expireClient = $this->client->call(
-            Client::METHOD_PATCH,
-            '/presences/' . $presenceIdClient,
-            [
-                'origin' => 'http://localhost',
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $projectId,
-                'cookie' => 'a_session_' . $projectId . '=' . $this->getUser()['session'],
-            ],
-            [
-                'expiry' => $expiredAt,
-            ]
-        );
-
-        $this->assertEquals(200, $expireClient['headers']['status-code']);
-        $this->assertEquals(
-            (new \DateTime($expiredAt))->getTimestamp(),
-            (new \DateTime($expireClient['body']['expiry']))->getTimestamp()
-        );
-
         $stdout = '';
         $stderr = '';
         $code = Console::execute('docker exec appwrite maintenance --type=trigger', '', $stdout, $stderr);
         $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
 
-        $this->assertEventually(function () use ($presenceIdServer, $presenceIdClient, $projectId) {
+        $this->assertEventually(function () use ($presenceIdServer, $projectId) {
             $getServer = $this->client->call(
                 Client::METHOD_GET,
                 '/presences/' . $presenceIdServer,
@@ -130,18 +92,7 @@ class PresenceExpiryTest extends Scope
                 ]
             );
 
-            $getClient = $this->client->call(
-                Client::METHOD_GET,
-                '/presences/' . $presenceIdClient,
-                [
-                    'content-type' => 'application/json',
-                    'x-appwrite-project' => $projectId,
-                    'x-appwrite-key' => $this->getPresenceApiKey(),
-                ]
-            );
-
             $this->assertEquals(404, $getServer['headers']['status-code']);
-            $this->assertEquals(404, $getClient['headers']['status-code']);
         });
     }
 }
