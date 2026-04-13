@@ -627,6 +627,17 @@ class Response extends SwooleResponse
     }
 
     /**
+     * Reset the sent flag so the response can be reused for another
+     * action execution (e.g. batched GraphQL queries that share one
+     * Response instance).
+     */
+    public function clearSent(): static
+    {
+        $this->sent = false;
+        return $this;
+    }
+
+    /**
      * Function to add a response filter, the order of filters are first in - first out.
      *
      * @param $filter - the response filter to set

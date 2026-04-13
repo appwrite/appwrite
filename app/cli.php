@@ -6,8 +6,8 @@ use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
+use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
-use Appwrite\Event\StatsResources;
 use Appwrite\Platform\Appwrite;
 use Appwrite\Runtimes\Runtimes;
 use Appwrite\Usage\Context as UsageContext;
@@ -253,9 +253,10 @@ $container->set('publisherForUsage', fn (Publisher $publisher) => new UsagePubli
     $publisher,
     new Queue(System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', Event::STATS_USAGE_QUEUE_NAME))
 ), ['publisher']);
-$container->set('queueForStatsResources', function (Publisher $publisher) {
-    return new StatsResources($publisher);
-}, ['publisher']);
+$container->set('publisherForStatsResources', fn (Publisher $publisher) => new StatsResourcesPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_STATS_RESOURCES_QUEUE_NAME', Event::STATS_RESOURCES_QUEUE_NAME))
+), ['publisher']);
 $container->set('queueForFunctions', function (Publisher $publisher) {
     return new Func($publisher);
 }, ['publisher']);

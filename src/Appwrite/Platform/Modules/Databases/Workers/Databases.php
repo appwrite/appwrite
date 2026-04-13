@@ -650,26 +650,30 @@ class Databases extends Action
         Document|null $attribute = null,
         Document|null $index = null,
     ): void {
-        $queueForRealtime
-            ->setProject($project)
-            ->setSubscribers(['console'])
-            ->setEvent($event)
-            ->setParam('databaseId', $database->getId())
-            ->setParam('tableId', $collection->getId())
-            ->setParam('collectionId', $collection->getId());
-
-        if (! empty($attribute)) {
+        try {
             $queueForRealtime
-                ->setParam('columnId', $attribute->getId())
-                ->setParam('attributeId', $attribute->getId())
-                ->setPayload($attribute->getArrayCopy());
-        }
-        if (! empty($index)) {
-            $queueForRealtime
-                ->setParam('indexId', $index->getId())
-                ->setPayload($index->getArrayCopy());
+                ->setProject($project)
+                ->setSubscribers(['console'])
+                ->setEvent($event)
+                ->setParam('databaseId', $database->getId())
+                ->setParam('tableId', $collection->getId())
+                ->setParam('collectionId', $collection->getId());
+
+            if (! empty($attribute)) {
+                $queueForRealtime
+                    ->setParam('columnId', $attribute->getId())
+                    ->setParam('attributeId', $attribute->getId())
+                    ->setPayload($attribute->getArrayCopy());
+            }
+            if (! empty($index)) {
+                $queueForRealtime
+                    ->setParam('indexId', $index->getId())
+                    ->setPayload($index->getArrayCopy());
+            }
+            $queueForRealtime->trigger();
+        } finally {
+            $queueForRealtime->reset();
         }
 
-        $queueForRealtime->trigger();
     }
 }
