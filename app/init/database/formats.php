@@ -27,7 +27,21 @@ Structure::addFormat(APP_DATABASE_ATTRIBUTE_IP, function () {
 }, Database::VAR_STRING);
 
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_URL, function () {
-    return new URL();
+    return new class extends URL {
+        public function isValid($value): bool
+        {
+            if (!parent::isValid($value)) {
+                return false;
+            }
+            $scheme = \strtolower((string) \parse_url($value, PHP_URL_SCHEME));
+            return \in_array($scheme, ['http', 'https'], true);
+        }
+
+        public function getDescription(): string
+        {
+            return 'Value must be a valid URL using the http or https scheme.';
+        }
+    };
 }, Database::VAR_STRING);
 
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_INT_RANGE, function ($attribute) {
