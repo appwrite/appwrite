@@ -57,20 +57,20 @@ class Currency extends Model
 
     /**
      * Get Name
-     * 
+     *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'Currency';
     }
 
     /**
-     * Get Collection
-     * 
+     * Get Type
+     *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_CURRENCY;
     }

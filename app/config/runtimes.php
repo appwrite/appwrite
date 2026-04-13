@@ -1,15 +1,9 @@
 <?php
 
-use Utopia\App;
+/**
+ * List of Appwrite Functions supported runtimes
+ */
+
 use Appwrite\Runtimes\Runtimes;
 
-/**
- * List of Appwrite Cloud Functions supported runtimes
- */
-$runtimes = new Runtimes();
-
-$allowList = empty(App::getEnv('_APP_FUNCTIONS_RUNTIMES')) ? [] : \explode(',', App::getEnv('_APP_FUNCTIONS_RUNTIMES'));
-
-$runtimes = $runtimes->getAll(true, $allowList);
-
-return $runtimes;
+return (new Runtimes('v5'))->getAll();

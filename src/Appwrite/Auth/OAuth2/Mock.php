@@ -9,24 +9,29 @@ class Mock extends OAuth2
     /**
      * @var string
      */
-    protected $version = 'v1';
+    protected string $version = 'v1';
 
     /**
      * @var array
      */
-    protected $scopes = [
+    protected array $scopes = [
         'email'
     ];
 
     /**
      * @var array
      */
-    protected $user = [];
+    protected array $user = [];
+
+    /**
+     * @var array
+     */
+    protected array $tokens = [];
 
     /**
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'mock';
     }
@@ -34,9 +39,9 @@ class Mock extends OAuth2
     /**
      * @return string
      */
-    public function getLoginURL():string
+    public function getLoginURL(): string
     {
-        return 'http://localhost/'.$this->version.'/mock/tests/general/oauth2?'. \http_build_query([
+        return 'http://localhost/' . $this->version . '/mock/tests/general/oauth2?' . \http_build_query([
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
             'scope' => \implode(' ', $this->getScopes()),
@@ -47,28 +52,49 @@ class Mock extends OAuth2
     /**
      * @param string $code
      *
-     * @return string
+     * @return array
      */
-    public function getAccessToken(string $code):string
+    protected function getTokens(string $code): array
     {
-        $accessToken = $this->request(
+        if (empty($this->tokens)) {
+            $this->tokens = \json_decode($this->request(
+                'GET',
+                'http://localhost/' . $this->version . '/mock/tests/general/oauth2/token?' .
+                    \http_build_query([
+                        'client_id' => $this->appID,
+                        'redirect_uri' => $this->callback,
+                        'client_secret' => $this->appSecret,
+                        'code' => $code
+                    ])
+            ), true);
+        }
+
+        return $this->tokens;
+    }
+
+    /**
+     * @param string $refreshToken
+     *
+     * @return array
+     */
+    public function refreshTokens(string $refreshToken): array
+    {
+        $this->tokens = \json_decode($this->request(
             'GET',
-            'http://localhost/'.$this->version.'/mock/tests/general/oauth2/token?'.
-            \http_build_query([
-                'client_id' => $this->appID,
-                'redirect_uri' => $this->callback,
-                'client_secret' => $this->appSecret,
-                'code' => $code
-            ])
-        );
+            'http://localhost/' . $this->version . '/mock/tests/general/oauth2/token?' .
+                \http_build_query([
+                    'client_id' => $this->appID,
+                    'client_secret' => $this->appSecret,
+                    'refresh_token' => $refreshToken,
+                    'grant_type' => 'refresh_token'
+                ])
+        ), true);
 
-        $accessToken = \json_decode($accessToken, true); //
-
-        if (isset($accessToken['access_token'])) {
-            return $accessToken['access_token'];
+        if (empty($this->tokens['refresh_token'])) {
+            $this->tokens['refresh_token'] = $refreshToken;
         }
 
-        return '';
+        return $this->tokens;
     }
 
     /**
@@ -76,15 +102,11 @@ class Mock extends OAuth2
      *
      * @return string
      */
-    public function getUserID(string $accessToken):string
+    public function getUserID(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['id'])) {
-            return $user['id'];
-        }
-
-        return '';
+        return $user['id'] ?? '';
     }
 
     /**
@@ -92,15 +114,25 @@ class Mock extends OAuth2
      *
      * @return string
      */
-    public function getUserEmail(string $accessToken):string
+    public function getUserEmail(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['email'])) {
-            return $user['email'];
-        }
+        return $user['email'] ?? '';
+    }
 
-        return '';
+    /**
+     * Check if the OAuth email is verified
+     *
+     * @param string $accessToken
+     *
+     * @return bool
+     */
+    public function isEmailVerified(string $accessToken): bool
+    {
+        $user = $this->getUser($accessToken);
+
+        return $user['verified'] ?? true;
     }
 
     /**
@@ -108,15 +140,11 @@ class Mock extends OAuth2
      *
      * @return string
      */
-    public function getUserName(string $accessToken):string
+    public function getUserName(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['name'])) {
-            return $user['name'];
-        }
-
-        return '';
+        return $user['name'] ?? '';
     }
 
     /**
@@ -124,10 +152,10 @@ class Mock extends OAuth2
      *
      * @return array
      */
-    protected function getUser(string $accessToken):array
+    protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $user = $this->request('GET', 'http://localhost/'.$this->version.'/mock/tests/general/oauth2/user?token='.\urlencode($accessToken));
+            $user = $this->request('GET', 'http://localhost/' . $this->version . '/mock/tests/general/oauth2/user?token=' . \urlencode($accessToken));
 
             $this->user = \json_decode($user, true);
         }

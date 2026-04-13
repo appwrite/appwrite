@@ -9,12 +9,12 @@ class ErrorDev extends Error
     /**
      * @var bool
      */
-    protected $public = false;
+    protected bool $public = false;
 
     public function __construct()
     {
         parent::__construct();
-        
+
         $this
             ->addRule('file', [
                 'type' => self::TYPE_STRING,
@@ -39,11 +39,11 @@ class ErrorDev extends Error
     }
 
     /**
-     * Get Collection
-     * 
+     * Get Type
+     *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_ERROR_DEV;
     }

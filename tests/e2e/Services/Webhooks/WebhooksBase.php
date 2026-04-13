@@ -2,551 +2,1859 @@
 
 namespace Tests\E2E\Services\Webhooks;
 
-use CURLFile;
+use Appwrite\Tests\Async;
 use Tests\E2E\Client;
+use Utopia\Database\Document;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Query;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 trait WebhooksBase
 {
-    public function testCreateCollection(): array
+    use Async;
+
+    // Tests for all auth scenarios
+
+    public function testCreateWebhook(): void
     {
-        /**
-         * Test for SUCCESS
-         */
-        $actors = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'name' => 'Actors',
-            'read' => ['*'],
-            'write' => ['*'],
-            'rules' => [
-                [
-                    'label' => 'First Name',
-                    'key' => 'firstName',
-                    'type' => 'text',
-                    'default' => '',
-                    'required' => true,
-                    'array' => false
-                ],
-                [
-                    'label' => 'Last Name',
-                    'key' => 'lastName',
-                    'type' => 'text',
-                    'default' => '',
-                    'required' => true,
-                    'array' => false
-                ],
-            ],
-        ]);
-        
-        $this->assertEquals($actors['headers']['status-code'], 201);
-        $this->assertNotEmpty($actors['body']['$id']);
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Test Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
 
-        $webhook = $this->getLastRequest();
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $this->assertNotEmpty($webhook['body']['$id']);
+        $this->assertEquals('Test Webhook', $webhook['body']['name']);
+        $this->assertEquals('https://appwrite.io', $webhook['body']['url']);
+        $this->assertContains('users.*.create', $webhook['body']['events']);
+        $this->assertCount(1, $webhook['body']['events']);
+        $this->assertEquals(true, $webhook['body']['enabled']);
+        $this->assertEquals(false, $webhook['body']['tls']);
+        $this->assertEquals('', $webhook['body']['authUsername']);
+        $this->assertEquals('', $webhook['body']['authPassword']);
+        $this->assertNotEmpty($webhook['body']['secret']);
+        $this->assertEquals(128, \strlen($webhook['body']['secret']));
+        $this->assertEquals(0, $webhook['body']['attempts']);
+        $this->assertEquals('', $webhook['body']['logs']);
 
-        $this->assertEquals($webhook['method'], 'POST');
-        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
-        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Event'], 'database.collections.create');
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), true);
-        $this->assertNotEmpty($webhook['data']['$id']);
-        $this->assertEquals($webhook['data']['name'], 'Actors');
-        $this->assertIsArray($webhook['data']['$permissions']);
-        $this->assertIsArray($webhook['data']['$permissions']['read']);
-        $this->assertIsArray($webhook['data']['$permissions']['write']);
-        $this->assertCount(1, $webhook['data']['$permissions']['read']);
-        $this->assertCount(1, $webhook['data']['$permissions']['write']);
-        $this->assertCount(2, $webhook['data']['rules']);
+        $dateValidator = new DatetimeValidator();
+        $this->assertEquals(true, $dateValidator->isValid($webhook['body']['$createdAt']));
+        $this->assertEquals(true, $dateValidator->isValid($webhook['body']['$updatedAt']));
 
-        return array_merge(['actorsId' => $actors['body']['$id']]);
+        // Verify via GET
+        $get = $this->getWebhook($webhook['body']['$id']);
+        $this->assertEquals(200, $get['headers']['status-code']);
+        $this->assertEquals($webhook['body']['$id'], $get['body']['$id']);
+        $this->assertEquals('Test Webhook', $get['body']['name']);
+
+        // Verify via LIST
+        $list = $this->listWebhooks(null, true);
+        $this->assertEquals(200, $list['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(1, $list['body']['total']);
+        $this->assertGreaterThanOrEqual(1, \count($list['body']['webhooks']));
+
+        // Cleanup
+        $this->deleteWebhook($webhook['body']['$id']);
     }
 
-    /**
-     * @depends testCreateCollection
-     */
-    public function testCreateDocument(array $data): array
+    public function testCreateWebhookWithTls(): void
     {
-        $document = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['actorsId'] . '/documents', array_merge([
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Webhook With TLS',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            true,
+            null,
+            null
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $this->assertNotEmpty($webhook['body']['$id']);
+        $this->assertEquals(true, $webhook['body']['tls']);
+        $this->assertIsBool($webhook['body']['tls']);
+
+        // Cleanup
+        $this->deleteWebhook($webhook['body']['$id']);
+    }
+
+    public function testCreateWebhookWithHttpAuth(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Webhook With HTTP Auth',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            true,
+            'username',
+            'password'
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $this->assertNotEmpty($webhook['body']['$id']);
+        $this->assertEquals('username', $webhook['body']['authUsername']);
+        $this->assertEquals('password', $webhook['body']['authPassword']);
+        $this->assertEquals(true, $webhook['body']['tls']);
+
+        // Verify via GET
+        $get = $this->getWebhook($webhook['body']['$id']);
+        $this->assertEquals(200, $get['headers']['status-code']);
+        $this->assertEquals('username', $get['body']['authUsername']);
+
+        // Cleanup
+        $this->deleteWebhook($webhook['body']['$id']);
+    }
+
+    public function testCreateWebhookEnabled(): void
+    {
+        // Create disabled webhook
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Disabled Webhook',
+            ['users.*.create'],
+            false,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $this->assertEquals(false, $webhook['body']['enabled']);
+        $this->assertIsBool($webhook['body']['enabled']);
+
+        // Cleanup
+        $this->deleteWebhook($webhook['body']['$id']);
+
+        // Create enabled webhook explicitly
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Enabled Webhook',
+            ['users.*.create'],
+            true,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $this->assertEquals(true, $webhook['body']['enabled']);
+
+        // Cleanup
+        $this->deleteWebhook($webhook['body']['$id']);
+    }
+
+    public function testCreateWebhookWithoutAuthentication(): void
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/webhooks', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'webhookId' => ID::unique(),
+            'name' => 'Test Webhook',
+            'events' => ['users.*.create'],
+            'url' => 'https://appwrite.io',
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+    }
+
+    public function testCreateWebhookInvalidId(): void
+    {
+        $webhook = $this->createWebhook(
+            '!invalid-id!',
+            'Test Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(400, $webhook['headers']['status-code']);
+    }
+
+    public function testCreateWebhookMissingName(): void
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/webhooks', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'data' => [
-                'firstName' => 'Chris',
-                'lastName' => 'Evans',
-                 
-            ],
-            'read' => ['*'],
-            'write' => ['*'],
+            'webhookId' => ID::unique(),
+            'events' => ['users.*.create'],
+            'url' => 'https://appwrite.io',
         ]);
 
-        $this->assertEquals($document['headers']['status-code'], 201);
-        $this->assertNotEmpty($document['body']['$id']);
-
-        $webhook = $this->getLastRequest();
-
-        $this->assertEquals($webhook['method'], 'POST');
-        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
-        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Event'], 'database.documents.create');
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
-        $this->assertNotEmpty($webhook['data']['$id']);
-        $this->assertEquals($webhook['data']['firstName'], 'Chris');
-        $this->assertEquals($webhook['data']['lastName'], 'Evans');
-        $this->assertIsArray($webhook['data']['$permissions']['read']);
-        $this->assertIsArray($webhook['data']['$permissions']['write']);
-        $this->assertCount(1, $webhook['data']['$permissions']['read']);
-        $this->assertCount(1, $webhook['data']['$permissions']['write']);
-
-        $data['documentId'] = $document['body']['$id'];
-
-        return $data;
+        $this->assertEquals(400, $response['headers']['status-code']);
     }
 
-    /**
-     * @depends testCreateDocument
-     */
-    public function testUpdateDocument(array $data): array
+    public function testCreateWebhookMissingUrl(): void
     {
-        $document = $this->client->call(Client::METHOD_PATCH, '/database/collections/' . $data['actorsId'] . '/documents/'.$data['documentId'], array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/webhooks', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'data' => [
-                'firstName' => 'Chris1',
-                'lastName' => 'Evans2',
-            ],
-            'read' => ['*'],
-            'write' => ['*'],
+            'webhookId' => ID::unique(),
+            'name' => 'Test Webhook',
+            'events' => ['users.*.create'],
         ]);
 
-        $this->assertEquals($document['headers']['status-code'], 200);
-        $this->assertNotEmpty($document['body']['$id']);
-
-        $webhook = $this->getLastRequest();
-
-        $this->assertEquals($webhook['method'], 'POST');
-        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
-        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Event'], 'database.documents.update');
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
-        $this->assertNotEmpty($webhook['data']['$id']);
-        $this->assertEquals($webhook['data']['firstName'], 'Chris1');
-        $this->assertEquals($webhook['data']['lastName'], 'Evans2');
-        $this->assertIsArray($webhook['data']['$permissions']['read']);
-        $this->assertIsArray($webhook['data']['$permissions']['write']);
-        $this->assertCount(1, $webhook['data']['$permissions']['read']);
-        $this->assertCount(1, $webhook['data']['$permissions']['write']);
-
-        return $data;
+        $this->assertEquals(400, $response['headers']['status-code']);
     }
 
-    /**
-     * @depends testCreateCollection
-     */
-    public function testDeleteDocument(array $data): array
+    public function testCreateWebhookMissingEvents(): void
     {
-        $document = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['actorsId'] . '/documents', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/webhooks', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'data' => [
-                'firstName' => 'Bradly',
-                'lastName' => 'Cooper',
-                 
-            ],
-            'read' => ['*'],
-            'write' => ['*'],
+            'webhookId' => ID::unique(),
+            'name' => 'Test Webhook',
+            'url' => 'https://appwrite.io',
         ]);
 
-        $this->assertEquals($document['headers']['status-code'], 201);
-        $this->assertNotEmpty($document['body']['$id']);
+        $this->assertEquals(400, $response['headers']['status-code']);
+    }
 
-        $document = $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $data['actorsId'] . '/documents/' . $document['body']['$id'], array_merge([
+    public function testCreateWebhookDuplicateId(): void
+    {
+        $webhookId = ID::unique();
+
+        $webhook = $this->createWebhook(
+            $webhookId,
+            'Test Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+
+        // Attempt to create with same ID
+        $duplicate = $this->createWebhook(
+            $webhookId,
+            'Duplicate Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(409, $duplicate['headers']['status-code']);
+        $this->assertEquals('webhook_already_exists', $duplicate['body']['type']);
+
+        // Cleanup
+        $this->deleteWebhook($webhookId);
+    }
+
+    public function testCreateWebhookAudit(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Audit Webhook',
+            ['users.*.create', 'users.*.update.email'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $this->assertNotEmpty($webhook['body']['$id']);
+        $this->assertContains('users.*.create', $webhook['body']['events']);
+        $this->assertContains('users.*.update.email', $webhook['body']['events']);
+        $this->assertCount(2, $webhook['body']['events']);
+
+        // Cleanup
+        $this->deleteWebhook($webhook['body']['$id']);
+    }
+
+    public function testUpdateWebhook(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Original Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+
+        // Update the webhook
+        $updated = $this->updateWebhook(
+            $webhookId,
+            'Updated Webhook',
+            ['users.*.delete', 'users.*.sessions.*.delete'],
+            null,
+            'https://appwrite.io/new',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(200, $updated['headers']['status-code']);
+        $this->assertEquals($webhookId, $updated['body']['$id']);
+        $this->assertEquals('Updated Webhook', $updated['body']['name']);
+        $this->assertEquals('https://appwrite.io/new', $updated['body']['url']);
+        $this->assertContains('users.*.delete', $updated['body']['events']);
+        $this->assertContains('users.*.sessions.*.delete', $updated['body']['events']);
+        $this->assertCount(2, $updated['body']['events']);
+
+        // Verify update persisted via GET
+        $get = $this->getWebhook($webhookId);
+        $this->assertEquals(200, $get['headers']['status-code']);
+        $this->assertEquals('Updated Webhook', $get['body']['name']);
+        $this->assertEquals('https://appwrite.io/new', $get['body']['url']);
+
+        // Cleanup
+        $this->deleteWebhook($webhookId);
+    }
+
+    public function testUpdateWebhookWithTls(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'TLS Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            false,
+            null,
+            null
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $this->assertEquals(false, $webhook['body']['tls']);
+        $webhookId = $webhook['body']['$id'];
+
+        // Update to enable security
+        $updated = $this->updateWebhook(
+            $webhookId,
+            'Security Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            true,
+            null,
+            null
+        );
+
+        $this->assertEquals(200, $updated['headers']['status-code']);
+        $this->assertEquals(true, $updated['body']['tls']);
+        $this->assertIsBool($updated['body']['tls']);
+
+        // Cleanup
+        $this->deleteWebhook($webhookId);
+    }
+
+    public function testUpdateWebhookWithHttpAuth(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'HTTP Auth Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            true,
+            null,
+            null
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $this->assertEquals('', $webhook['body']['authUsername']);
+        $this->assertEquals('', $webhook['body']['authPassword']);
+        $webhookId = $webhook['body']['$id'];
+
+        // Update with HTTP auth credentials
+        $updated = $this->updateWebhook(
+            $webhookId,
+            'HTTP Auth Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            true,
+            'newuser',
+            'newpass'
+        );
+
+        $this->assertEquals(200, $updated['headers']['status-code']);
+        $this->assertEquals('newuser', $updated['body']['authUsername']);
+        $this->assertEquals('newpass', $updated['body']['authPassword']);
+
+        // Verify via GET
+        $get = $this->getWebhook($webhookId);
+        $this->assertEquals(200, $get['headers']['status-code']);
+        $this->assertEquals('newuser', $get['body']['authUsername']);
+
+        // Cleanup
+        $this->deleteWebhook($webhookId);
+    }
+
+    public function testUpdateWebhookEnabled(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Enabled Webhook',
+            ['users.*.create'],
+            true,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $this->assertEquals(true, $webhook['body']['enabled']);
+        $webhookId = $webhook['body']['$id'];
+
+        // Disable the webhook
+        $updated = $this->updateWebhook(
+            $webhookId,
+            'Enabled Webhook',
+            ['users.*.create'],
+            false,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(200, $updated['headers']['status-code']);
+        $this->assertEquals(false, $updated['body']['enabled']);
+        $this->assertIsBool($updated['body']['enabled']);
+
+        // Re-enable the webhook (should reset attempts to 0)
+        $updated = $this->updateWebhook(
+            $webhookId,
+            'Enabled Webhook',
+            ['users.*.create'],
+            true,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(200, $updated['headers']['status-code']);
+        $this->assertEquals(true, $updated['body']['enabled']);
+        $this->assertEquals(0, $updated['body']['attempts']);
+
+        // Cleanup
+        $this->deleteWebhook($webhookId);
+    }
+
+    public function testUpdateWebhookWithoutAuthentication(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Auth Test Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+
+        // Attempt update without authentication
+        $response = $this->client->call(Client::METHOD_PUT, '/webhooks/' . $webhookId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'name' => 'Updated Webhook',
+            'events' => ['users.*.create'],
+            'url' => 'https://appwrite.io',
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        // Cleanup
+        $this->deleteWebhook($webhookId);
+    }
+
+    public function testUpdateWebhookInvalidId(): void
+    {
+        $updated = $this->updateWebhook(
+            'non-existent-id',
+            'Updated Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(404, $updated['headers']['status-code']);
+        $this->assertEquals('webhook_not_found', $updated['body']['type']);
+    }
+
+    public function testUpdateWebhookMissingName(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Missing Name Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+
+        $response = $this->client->call(Client::METHOD_PUT, '/webhooks/' . $webhookId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'events' => ['users.*.create'],
+            'url' => 'https://appwrite.io',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Cleanup
+        $this->deleteWebhook($webhookId);
+    }
+
+    public function testUpdateWebhookMissingUrl(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Missing URL Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+
+        $response = $this->client->call(Client::METHOD_PUT, '/webhooks/' . $webhookId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Missing URL Webhook',
+            'events' => ['users.*.create'],
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Cleanup
+        $this->deleteWebhook($webhookId);
+    }
+
+    public function testUpdateWebhookMissingEvents(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Missing Events Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+
+        $response = $this->client->call(Client::METHOD_PUT, '/webhooks/' . $webhookId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Missing Events Webhook',
+            'url' => 'https://appwrite.io',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Cleanup
+        $this->deleteWebhook($webhookId);
+    }
+
+    public function testUpdateWebhookDuplicateId(): void
+    {
+        // Update endpoint doesn't change the ID, so this tests updating a non-existent webhook
+        $updated = $this->updateWebhook(
+            'non-existent-id',
+            'Duplicate Test Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(404, $updated['headers']['status-code']);
+        $this->assertEquals('webhook_not_found', $updated['body']['type']);
+    }
+
+    public function testUpdateWebhookAudit(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Audit Update Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+
+        // Update with multiple events
+        $updated = $this->updateWebhook(
+            $webhookId,
+            'Audit Update Webhook Updated',
+            ['users.*.delete', 'users.*.sessions.*.delete', 'buckets.*.files.*.create'],
+            null,
+            'https://appwrite.io/updated',
+            true,
+            'user',
+            'pass'
+        );
+
+        $this->assertEquals(200, $updated['headers']['status-code']);
+        $this->assertEquals($webhookId, $updated['body']['$id']);
+        $this->assertEquals('Audit Update Webhook Updated', $updated['body']['name']);
+        $this->assertContains('users.*.delete', $updated['body']['events']);
+        $this->assertContains('users.*.sessions.*.delete', $updated['body']['events']);
+        $this->assertContains('buckets.*.files.*.create', $updated['body']['events']);
+        $this->assertCount(3, $updated['body']['events']);
+        $this->assertEquals('https://appwrite.io/updated', $updated['body']['url']);
+        $this->assertEquals(true, $updated['body']['tls']);
+        $this->assertEquals('user', $updated['body']['authUsername']);
+        $this->assertEquals('pass', $updated['body']['authPassword']);
+
+        // Cleanup
+        $this->deleteWebhook($webhookId);
+    }
+
+    public function testUpdateWebhookSecret(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Secret Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+        $originalSecret = $webhook['body']['secret'];
+
+        $this->assertNotEmpty($originalSecret);
+        $this->assertEquals(128, \strlen($originalSecret));
+
+        // Update secret
+        $updated = $this->updateWebhookSecret($webhookId);
+
+        $this->assertEquals(200, $updated['headers']['status-code']);
+        $this->assertEquals($webhookId, $updated['body']['$id']);
+        $this->assertNotEmpty($updated['body']['secret']);
+        $this->assertEquals(128, \strlen($updated['body']['secret']));
+        $this->assertNotEquals($originalSecret, $updated['body']['secret']);
+
+        // Verify new secret persisted via GET
+        $get = $this->getWebhook($webhookId);
+        $this->assertEquals(200, $get['headers']['status-code']);
+        $this->assertNotEquals($originalSecret, $get['body']['secret']);
+
+        // Test secret update on non-existent webhook
+        $notFound = $this->updateWebhookSecret('non-existent-id');
+        $this->assertEquals(404, $notFound['headers']['status-code']);
+        $this->assertEquals('webhook_not_found', $notFound['body']['type']);
+
+        // Cleanup
+        $this->deleteWebhook($webhookId);
+    }
+
+    // URL validation tests
+
+    public function testCreateWebhookWithPrivateDomain(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Private Domain Webhook',
+            ['users.*.create'],
+            null,
+            'http://localhost/webhook',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(400, $webhook['headers']['status-code']);
+    }
+
+    public function testUpdateWebhookWithPrivateDomain(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Private Domain Update Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+
+        // Attempt to update URL to private domain
+        $updated = $this->updateWebhook(
+            $webhookId,
+            'Private Domain Update Webhook',
+            ['users.*.create'],
+            null,
+            'http://localhost/webhook',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(400, $updated['headers']['status-code']);
+
+        // Verify original URL unchanged
+        $get = $this->getWebhook($webhookId);
+        $this->assertEquals(200, $get['headers']['status-code']);
+        $this->assertEquals('https://appwrite.io', $get['body']['url']);
+
+        // Cleanup
+        $this->deleteWebhook($webhookId);
+    }
+
+    public function testCreateWebhookInvalidUrlScheme(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Invalid Scheme Webhook',
+            ['users.*.create'],
+            null,
+            'invalid://appwrite.io',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(400, $webhook['headers']['status-code']);
+    }
+
+    public function testUpdateWebhookInvalidUrlScheme(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Scheme Update Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+
+        // Attempt to update URL to invalid scheme
+        $updated = $this->updateWebhook(
+            $webhookId,
+            'Scheme Update Webhook',
+            ['users.*.create'],
+            null,
+            'invalid://appwrite.io',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(400, $updated['headers']['status-code']);
+
+        // Verify original URL unchanged
+        $get = $this->getWebhook($webhookId);
+        $this->assertEquals(200, $get['headers']['status-code']);
+        $this->assertEquals('https://appwrite.io', $get['body']['url']);
+
+        // Cleanup
+        $this->deleteWebhook($webhookId);
+    }
+
+    // Event validation tests
+
+    public function testCreateWebhookInvalidEvents(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Invalid Events Webhook',
+            ['account.unknown'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(400, $webhook['headers']['status-code']);
+    }
+
+    public function testUpdateWebhookInvalidEvents(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Invalid Events Update Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+
+        // Attempt to update with invalid event
+        $updated = $this->updateWebhook(
+            $webhookId,
+            'Invalid Events Update Webhook',
+            ['account.unknown'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(400, $updated['headers']['status-code']);
+
+        // Verify original events unchanged
+        $get = $this->getWebhook($webhookId);
+        $this->assertEquals(200, $get['headers']['status-code']);
+        $this->assertContains('users.*.create', $get['body']['events']);
+
+        // Cleanup
+        $this->deleteWebhook($webhookId);
+    }
+
+    // Custom ID test
+
+    public function testCreateWebhookCustomId(): void
+    {
+        $customId = 'my-custom-webhook-id';
+
+        $webhook = $this->createWebhook(
+            $customId,
+            'Custom ID Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $this->assertEquals($customId, $webhook['body']['$id']);
+
+        // Verify via GET
+        $get = $this->getWebhook($customId);
+        $this->assertEquals(200, $get['headers']['status-code']);
+        $this->assertEquals($customId, $get['body']['$id']);
+
+        // Cleanup
+        $this->deleteWebhook($customId);
+    }
+
+    // Get webhook tests
+
+    public function testGetWebhook(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Get Test Webhook',
+            ['users.*.create', 'users.*.update.email'],
+            null,
+            'https://appwrite.io',
+            true,
+            'myuser',
+            'mypass'
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+
+        $get = $this->getWebhook($webhookId);
+
+        $this->assertEquals(200, $get['headers']['status-code']);
+        $this->assertEquals($webhookId, $get['body']['$id']);
+        $this->assertEquals('Get Test Webhook', $get['body']['name']);
+        $this->assertEquals('https://appwrite.io', $get['body']['url']);
+        $this->assertContains('users.*.create', $get['body']['events']);
+        $this->assertContains('users.*.update.email', $get['body']['events']);
+        $this->assertCount(2, $get['body']['events']);
+        $this->assertEquals(true, $get['body']['enabled']);
+        $this->assertEquals(true, $get['body']['tls']);
+        $this->assertEquals('myuser', $get['body']['authUsername']);
+        $this->assertEquals('mypass', $get['body']['authPassword']);
+        $this->assertNotEmpty($get['body']['secret']);
+        $this->assertEquals(128, \strlen($get['body']['secret']));
+        $this->assertEquals(0, $get['body']['attempts']);
+        $this->assertEquals('', $get['body']['logs']);
+
+        $dateValidator = new DatetimeValidator();
+        $this->assertEquals(true, $dateValidator->isValid($get['body']['$createdAt']));
+        $this->assertEquals(true, $dateValidator->isValid($get['body']['$updatedAt']));
+
+        // Cleanup
+        $this->deleteWebhook($webhookId);
+    }
+
+    public function testGetWebhookNotFound(): void
+    {
+        $get = $this->getWebhook('non-existent-id');
+
+        $this->assertEquals(404, $get['headers']['status-code']);
+        $this->assertEquals('webhook_not_found', $get['body']['type']);
+    }
+
+    public function testGetWebhookWithoutAuthentication(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Auth Get Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+
+        // Attempt GET without authentication
+        $response = $this->client->call(Client::METHOD_GET, '/webhooks/' . $webhookId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        // Cleanup
+        $this->deleteWebhook($webhookId);
+    }
+
+    // List webhooks tests
+
+    public function testListWebhooks(): void
+    {
+        // Create multiple webhooks
+        $webhook1 = $this->createWebhook(
+            ID::unique(),
+            'List Webhook Alpha',
+            ['users.*.create'],
+            true,
+            'https://appwrite.io/alpha',
+            false,
+            null,
+            null
+        );
+        $this->assertEquals(201, $webhook1['headers']['status-code']);
+
+        $webhook2 = $this->createWebhook(
+            ID::unique(),
+            'List Webhook Beta',
+            ['users.*.delete'],
+            false,
+            'https://appwrite.io/beta',
+            true,
+            'user',
+            'pass'
+        );
+        $this->assertEquals(201, $webhook2['headers']['status-code']);
+
+        $webhook3 = $this->createWebhook(
+            ID::unique(),
+            'List Webhook Gamma',
+            ['users.*.create', 'users.*.delete'],
+            true,
+            'https://appwrite.io/gamma',
+            false,
+            null,
+            null
+        );
+        $this->assertEquals(201, $webhook3['headers']['status-code']);
+
+        // List all
+        $list = $this->listWebhooks(null, true);
+
+        $this->assertEquals(200, $list['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(3, $list['body']['total']);
+        $this->assertGreaterThanOrEqual(3, \count($list['body']['webhooks']));
+        $this->assertIsArray($list['body']['webhooks']);
+
+        // Verify structure of returned webhooks
+        foreach ($list['body']['webhooks'] as $webhook) {
+            $this->assertArrayHasKey('$id', $webhook);
+            $this->assertArrayHasKey('$createdAt', $webhook);
+            $this->assertArrayHasKey('$updatedAt', $webhook);
+            $this->assertArrayHasKey('name', $webhook);
+            $this->assertArrayHasKey('url', $webhook);
+            $this->assertArrayHasKey('events', $webhook);
+            $this->assertArrayHasKey('tls', $webhook);
+            $this->assertArrayHasKey('enabled', $webhook);
+            $this->assertArrayHasKey('secret', $webhook);
+            $this->assertArrayHasKey('attempts', $webhook);
+            $this->assertArrayHasKey('logs', $webhook);
+        }
+
+        // Cleanup
+        $this->deleteWebhook($webhook1['body']['$id']);
+        $this->deleteWebhook($webhook2['body']['$id']);
+        $this->deleteWebhook($webhook3['body']['$id']);
+    }
+
+    public function testListWebhooksWithLimit(): void
+    {
+        $webhook1 = $this->createWebhook(
+            ID::unique(),
+            'Limit Webhook 1',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io/one',
+            null,
+            null,
+            null
+        );
+        $this->assertEquals(201, $webhook1['headers']['status-code']);
+
+        $webhook2 = $this->createWebhook(
+            ID::unique(),
+            'Limit Webhook 2',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io/two',
+            null,
+            null,
+            null
+        );
+        $this->assertEquals(201, $webhook2['headers']['status-code']);
+
+        // List with limit of 1
+        $list = $this->listWebhooks([
+            Query::limit(1)->toString(),
+        ], true);
+
+        $this->assertEquals(200, $list['headers']['status-code']);
+        $this->assertCount(1, $list['body']['webhooks']);
+        $this->assertGreaterThanOrEqual(2, $list['body']['total']);
+
+        // Cleanup
+        $this->deleteWebhook($webhook1['body']['$id']);
+        $this->deleteWebhook($webhook2['body']['$id']);
+    }
+
+    public function testListWebhooksWithOffset(): void
+    {
+        $webhook1 = $this->createWebhook(
+            ID::unique(),
+            'Offset Webhook 1',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io/one',
+            null,
+            null,
+            null
+        );
+        $this->assertEquals(201, $webhook1['headers']['status-code']);
+
+        $webhook2 = $this->createWebhook(
+            ID::unique(),
+            'Offset Webhook 2',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io/two',
+            null,
+            null,
+            null
+        );
+        $this->assertEquals(201, $webhook2['headers']['status-code']);
+
+        // List all to get total
+        $listAll = $this->listWebhooks(null, true);
+        $this->assertEquals(200, $listAll['headers']['status-code']);
+        $totalAll = \count($listAll['body']['webhooks']);
+
+        // List with offset
+        $listOffset = $this->listWebhooks([
+            Query::offset(1)->toString(),
+        ], true);
+
+        $this->assertEquals(200, $listOffset['headers']['status-code']);
+        $this->assertCount($totalAll - 1, $listOffset['body']['webhooks']);
+
+        // Cleanup
+        $this->deleteWebhook($webhook1['body']['$id']);
+        $this->deleteWebhook($webhook2['body']['$id']);
+    }
+
+    public function testListWebhooksFilterByName(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'UniqueFilterName-XYZ',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+
+        $list = $this->listWebhooks([
+            Query::equal('name', ['UniqueFilterName-XYZ'])->toString(),
+        ], true);
+
+        $this->assertEquals(200, $list['headers']['status-code']);
+        $this->assertEquals(1, $list['body']['total']);
+        $this->assertCount(1, $list['body']['webhooks']);
+        $this->assertEquals('UniqueFilterName-XYZ', $list['body']['webhooks'][0]['name']);
+
+        // Cleanup
+        $this->deleteWebhook($webhook['body']['$id']);
+    }
+
+    public function testListWebhooksFilterByEnabled(): void
+    {
+        $webhookEnabled = $this->createWebhook(
+            ID::unique(),
+            'Enabled Filter Webhook',
+            ['users.*.create'],
+            true,
+            'https://appwrite.io/enabled',
+            null,
+            null,
+            null
+        );
+        $this->assertEquals(201, $webhookEnabled['headers']['status-code']);
+
+        $webhookDisabled = $this->createWebhook(
+            ID::unique(),
+            'Disabled Filter Webhook',
+            ['users.*.create'],
+            false,
+            'https://appwrite.io/disabled',
+            null,
+            null,
+            null
+        );
+        $this->assertEquals(201, $webhookDisabled['headers']['status-code']);
+
+        // Filter by enabled=true
+        $listEnabled = $this->listWebhooks([
+            Query::equal('enabled', [true])->toString(),
+        ], true);
+
+        $this->assertEquals(200, $listEnabled['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(1, $listEnabled['body']['total']);
+        foreach ($listEnabled['body']['webhooks'] as $webhook) {
+            $this->assertEquals(true, $webhook['enabled']);
+        }
+
+        // Filter by enabled=false
+        $listDisabled = $this->listWebhooks([
+            Query::equal('enabled', [false])->toString(),
+        ], true);
+
+        $this->assertEquals(200, $listDisabled['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(1, $listDisabled['body']['total']);
+        foreach ($listDisabled['body']['webhooks'] as $webhook) {
+            $this->assertEquals(false, $webhook['enabled']);
+        }
+
+        // Cleanup
+        $this->deleteWebhook($webhookEnabled['body']['$id']);
+        $this->deleteWebhook($webhookDisabled['body']['$id']);
+    }
+
+    public function testListWebhooksFilterByUrl(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'URL Filter Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io/unique-url-filter',
+            null,
+            null,
+            null
+        );
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+
+        $list = $this->listWebhooks([
+            Query::equal('url', ['https://appwrite.io/unique-url-filter'])->toString(),
+        ], true);
+
+        $this->assertEquals(200, $list['headers']['status-code']);
+        $this->assertEquals(1, $list['body']['total']);
+        $this->assertCount(1, $list['body']['webhooks']);
+        $this->assertEquals('https://appwrite.io/unique-url-filter', $list['body']['webhooks'][0]['url']);
+
+        // Cleanup
+        $this->deleteWebhook($webhook['body']['$id']);
+    }
+
+    public function testListWebhooksFilterByTls(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'TLS Filter Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io/sec',
+            true,
+            null,
+            null
+        );
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+
+        $list = $this->listWebhooks([
+            Query::equal('tls', [true])->toString(),
+        ], true);
+
+        $this->assertEquals(200, $list['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(1, $list['body']['total']);
+        foreach ($list['body']['webhooks'] as $w) {
+            $this->assertEquals(true, $w['tls']);
+        }
+
+        // Cleanup
+        $this->deleteWebhook($webhook['body']['$id']);
+    }
+
+    public function testListWebhooksWithoutTotal(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'No Total Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io/nototal',
+            null,
+            null,
+            null
+        );
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+
+        // List with total=false
+        $list = $this->listWebhooks(null, false);
+
+        $this->assertEquals(200, $list['headers']['status-code']);
+        $this->assertEquals(0, $list['body']['total']);
+        $this->assertGreaterThanOrEqual(1, \count($list['body']['webhooks']));
+
+        // Cleanup
+        $this->deleteWebhook($webhook['body']['$id']);
+    }
+
+    public function testListWebhooksCursorPagination(): void
+    {
+        $webhook1 = $this->createWebhook(
+            ID::unique(),
+            'Cursor Webhook 1',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io/cursor1',
+            null,
+            null,
+            null
+        );
+        $this->assertEquals(201, $webhook1['headers']['status-code']);
+
+        $webhook2 = $this->createWebhook(
+            ID::unique(),
+            'Cursor Webhook 2',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io/cursor2',
+            null,
+            null,
+            null
+        );
+        $this->assertEquals(201, $webhook2['headers']['status-code']);
+
+        // Get first page with limit 1
+        $page1 = $this->listWebhooks([
+            Query::limit(1)->toString(),
+        ], true);
+
+        $this->assertEquals(200, $page1['headers']['status-code']);
+        $this->assertCount(1, $page1['body']['webhooks']);
+        $cursorId = $page1['body']['webhooks'][0]['$id'];
+
+        // Get next page using cursor
+        $page2 = $this->listWebhooks([
+            Query::limit(1)->toString(),
+            Query::cursorAfter(new Document(['$id' => $cursorId]))->toString(),
+        ], true);
+
+        $this->assertEquals(200, $page2['headers']['status-code']);
+        $this->assertCount(1, $page2['body']['webhooks']);
+        $this->assertNotEquals($cursorId, $page2['body']['webhooks'][0]['$id']);
+
+        // Cleanup
+        $this->deleteWebhook($webhook1['body']['$id']);
+        $this->deleteWebhook($webhook2['body']['$id']);
+    }
+
+    public function testListWebhooksWithoutAuthentication(): void
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/webhooks', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+    }
+
+    public function testListWebhooksInvalidCursor(): void
+    {
+        $list = $this->listWebhooks([
+            Query::cursorAfter(new Document(['$id' => 'non-existent-id']))->toString(),
+        ], true);
+
+        $this->assertEquals(400, $list['headers']['status-code']);
+    }
+
+    // Delete webhook tests
+
+    public function testDeleteWebhook(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Delete Test Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+
+        // Verify it exists
+        $get = $this->getWebhook($webhookId);
+        $this->assertEquals(200, $get['headers']['status-code']);
+
+        // Delete
+        $delete = $this->deleteWebhook($webhookId);
+        $this->assertEquals(204, $delete['headers']['status-code']);
+        $this->assertEmpty($delete['body']);
+
+        // Verify it no longer exists
+        $get = $this->getWebhook($webhookId);
+        $this->assertEquals(404, $get['headers']['status-code']);
+        $this->assertEquals('webhook_not_found', $get['body']['type']);
+    }
+
+    public function testDeleteWebhookNotFound(): void
+    {
+        $delete = $this->deleteWebhook('non-existent-id');
+
+        $this->assertEquals(404, $delete['headers']['status-code']);
+        $this->assertEquals('webhook_not_found', $delete['body']['type']);
+    }
+
+    public function testDeleteWebhookWithoutAuthentication(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Delete Auth Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+
+        // Attempt DELETE without authentication
+        $response = $this->client->call(Client::METHOD_DELETE, '/webhooks/' . $webhookId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        // Verify it still exists
+        $get = $this->getWebhook($webhookId);
+        $this->assertEquals(200, $get['headers']['status-code']);
+
+        // Cleanup
+        $this->deleteWebhook($webhookId);
+    }
+
+    public function testDeleteWebhookRemovedFromList(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Delete List Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+
+        // Get list count before delete
+        $listBefore = $this->listWebhooks(null, true);
+        $this->assertEquals(200, $listBefore['headers']['status-code']);
+        $countBefore = $listBefore['body']['total'];
+
+        // Delete
+        $delete = $this->deleteWebhook($webhookId);
+        $this->assertEquals(204, $delete['headers']['status-code']);
+
+        // Get list count after delete
+        $listAfter = $this->listWebhooks(null, true);
+        $this->assertEquals(200, $listAfter['headers']['status-code']);
+        $this->assertEquals($countBefore - 1, $listAfter['body']['total']);
+
+        // Verify the deleted webhook is not in the list
+        $ids = \array_column($listAfter['body']['webhooks'], '$id');
+        $this->assertNotContains($webhookId, $ids);
+    }
+
+    public function testDeleteWebhookDoubleDelete(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Double Delete Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+
+        // First delete succeeds
+        $delete = $this->deleteWebhook($webhookId);
+        $this->assertEquals(204, $delete['headers']['status-code']);
+
+        // Second delete returns 404
+        $delete = $this->deleteWebhook($webhookId);
+        $this->assertEquals(404, $delete['headers']['status-code']);
+        $this->assertEquals('webhook_not_found', $delete['body']['type']);
+    }
+
+    // =========================================================================
+    // Backward compatibility tests (1.9.0 response format)
+    // =========================================================================
+
+    public function testCreateWebhookV22BackwardCompatRequest(): void
+    {
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.0',
+        ], $this->getHeaders());
+
+        // Send old param names with 1.9.0 header
+        $webhook = $this->client->call(Client::METHOD_POST, '/webhooks', $headers, [
+            'webhookId' => ID::unique(),
+            'name' => 'V22 Compat Create',
+            'events' => ['users.*.create'],
+            'url' => 'https://appwrite.io',
+            'security' => true,
+            'httpUser' => 'olduser',
+            'httpPass' => 'oldpass',
+        ]);
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+
+        // Response should use OLD field names
+        $this->assertArrayHasKey('security', $webhook['body']);
+        $this->assertArrayHasKey('httpUser', $webhook['body']);
+        $this->assertArrayHasKey('httpPass', $webhook['body']);
+        $this->assertArrayHasKey('signatureKey', $webhook['body']);
+
+        // New field names should NOT be present
+        $this->assertArrayNotHasKey('tls', $webhook['body']);
+        $this->assertArrayNotHasKey('authUsername', $webhook['body']);
+        $this->assertArrayNotHasKey('authPassword', $webhook['body']);
+        $this->assertArrayNotHasKey('secret', $webhook['body']);
+
+        // Values should be correct
+        $this->assertEquals(true, $webhook['body']['security']);
+        $this->assertEquals('olduser', $webhook['body']['httpUser']);
+        $this->assertEquals('oldpass', $webhook['body']['httpPass']);
+        $this->assertNotEmpty($webhook['body']['signatureKey']);
+        $this->assertEquals(128, \strlen($webhook['body']['signatureKey']));
+
+        // Cleanup
+        $this->deleteWebhook($webhook['body']['$id']);
+    }
+
+    public function testUpdateWebhookV22BackwardCompatRequest(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'V22 Compat Update',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.0',
+        ], $this->getHeaders());
+
+        // Update using old param names
+        $updated = $this->client->call(Client::METHOD_PUT, '/webhooks/' . $webhookId, $headers, [
+            'name' => 'V22 Compat Updated',
+            'events' => ['users.*.create'],
+            'url' => 'https://appwrite.io',
+            'security' => true,
+            'httpUser' => 'updateduser',
+            'httpPass' => 'updatedpass',
+        ]);
+
+        $this->assertEquals(200, $updated['headers']['status-code']);
+
+        // Response should use OLD field names
+        $this->assertArrayHasKey('security', $updated['body']);
+        $this->assertArrayHasKey('httpUser', $updated['body']);
+        $this->assertArrayHasKey('httpPass', $updated['body']);
+        $this->assertArrayHasKey('signatureKey', $updated['body']);
+
+        $this->assertArrayNotHasKey('tls', $updated['body']);
+        $this->assertArrayNotHasKey('authUsername', $updated['body']);
+        $this->assertArrayNotHasKey('authPassword', $updated['body']);
+        $this->assertArrayNotHasKey('secret', $updated['body']);
+
+        $this->assertEquals(true, $updated['body']['security']);
+        $this->assertEquals('updateduser', $updated['body']['httpUser']);
+        $this->assertEquals('updatedpass', $updated['body']['httpPass']);
+
+        // Cleanup
+        $this->deleteWebhook($webhookId);
+    }
+
+    public function testGetWebhookV22BackwardCompatResponse(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'V22 Compat Get',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            true,
+            'getuser',
+            'getpass'
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+
+        // GET with 1.9.0 header
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.0',
+        ], $this->getHeaders());
+
+        $get = $this->client->call(Client::METHOD_GET, '/webhooks/' . $webhookId, $headers);
+
+        $this->assertEquals(200, $get['headers']['status-code']);
+
+        // Should have old field names
+        $this->assertArrayHasKey('security', $get['body']);
+        $this->assertArrayHasKey('httpUser', $get['body']);
+        $this->assertArrayHasKey('httpPass', $get['body']);
+        $this->assertArrayHasKey('signatureKey', $get['body']);
+
+        $this->assertArrayNotHasKey('tls', $get['body']);
+        $this->assertArrayNotHasKey('authUsername', $get['body']);
+        $this->assertArrayNotHasKey('authPassword', $get['body']);
+        $this->assertArrayNotHasKey('secret', $get['body']);
+
+        $this->assertEquals(true, $get['body']['security']);
+        $this->assertEquals('getuser', $get['body']['httpUser']);
+        $this->assertEquals('getpass', $get['body']['httpPass']);
+        $this->assertNotEmpty($get['body']['signatureKey']);
+
+        // Cleanup
+        $this->deleteWebhook($webhookId);
+    }
+
+    public function testListWebhooksV22BackwardCompatResponse(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'V22 Compat List',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            true,
+            'listuser',
+            'listpass'
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+
+        // LIST with 1.9.0 header
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.0',
+        ], $this->getHeaders());
+
+        $list = $this->client->call(Client::METHOD_GET, '/webhooks', $headers, [
+            'queries' => [
+                Query::equal('name', ['V22 Compat List'])->toString(),
+            ],
+            'total' => true,
+        ]);
+
+        $this->assertEquals(200, $list['headers']['status-code']);
+        $this->assertEquals(1, $list['body']['total']);
+        $this->assertCount(1, $list['body']['webhooks']);
+
+        $item = $list['body']['webhooks'][0];
+
+        // Each item should have old field names
+        $this->assertArrayHasKey('security', $item);
+        $this->assertArrayHasKey('httpUser', $item);
+        $this->assertArrayHasKey('httpPass', $item);
+        $this->assertArrayHasKey('signatureKey', $item);
+
+        $this->assertArrayNotHasKey('tls', $item);
+        $this->assertArrayNotHasKey('authUsername', $item);
+        $this->assertArrayNotHasKey('authPassword', $item);
+        $this->assertArrayNotHasKey('secret', $item);
+
+        $this->assertEquals(true, $item['security']);
+        $this->assertEquals('listuser', $item['httpUser']);
+        $this->assertEquals('listpass', $item['httpPass']);
+
+        // Cleanup
+        $this->deleteWebhook($webhookId);
+    }
+
+    public function testUpdateWebhookSecretV22BackwardCompatResponse(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'V22 Compat Secret',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+
+        // Update secret with 1.9.0 header
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.0',
+        ], $this->getHeaders());
+
+        $updated = $this->client->call(Client::METHOD_PATCH, '/webhooks/' . $webhookId . '/secret', $headers);
+
+        $this->assertEquals(200, $updated['headers']['status-code']);
+
+        // Response should use old field names
+        $this->assertArrayHasKey('signatureKey', $updated['body']);
+        $this->assertArrayHasKey('security', $updated['body']);
+        $this->assertArrayHasKey('httpUser', $updated['body']);
+        $this->assertArrayHasKey('httpPass', $updated['body']);
+
+        $this->assertArrayNotHasKey('secret', $updated['body']);
+        $this->assertArrayNotHasKey('tls', $updated['body']);
+        $this->assertArrayNotHasKey('authUsername', $updated['body']);
+        $this->assertArrayNotHasKey('authPassword', $updated['body']);
+
+        $this->assertNotEmpty($updated['body']['signatureKey']);
+        $this->assertEquals(128, \strlen($updated['body']['signatureKey']));
+
+        // Cleanup
+        $this->deleteWebhook($webhookId);
+    }
+
+    // Helpers
+
+    /**
+     * @param array<string>|null $queries
+     */
+    protected function listWebhooks(?array $queries, ?bool $total): mixed
+    {
+        $webhooks = $this->client->call(Client::METHOD_GET, '/webhooks', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => $queries,
+            'total' => $total
+        ]);
+
+        return $webhooks;
+    }
+
+    protected function getWebhook(string $webhookId): mixed
+    {
+        $webhook = $this->client->call(Client::METHOD_GET, '/webhooks/' . $webhookId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals($document['headers']['status-code'], 204);
-
-        $webhook = $this->getLastRequest();
-
-        $this->assertEquals($webhook['method'], 'POST');
-        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
-        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Event'], 'database.documents.delete');
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
-        $this->assertNotEmpty($webhook['data']['$id']);
-        $this->assertEquals($webhook['data']['firstName'], 'Bradly');
-        $this->assertEquals($webhook['data']['lastName'], 'Cooper');
-        $this->assertIsArray($webhook['data']['$permissions']['read']);
-        $this->assertIsArray($webhook['data']['$permissions']['write']);
-        $this->assertCount(1, $webhook['data']['$permissions']['read']);
-        $this->assertCount(1, $webhook['data']['$permissions']['write']);
-
-        return $data;
+        return $webhook;
     }
 
-    public function testCreateFile(): array
+    protected function createWebhook(string $webhookId, string $name, array $events, ?bool $enabled, ?string $url, ?bool $tls, ?string $authUsername, ?string $authPassword): mixed
     {
-        /**
-         * Test for SUCCESS
-         */
-        $file = $this->client->call(Client::METHOD_POST, '/storage/files', array_merge([
-            'content-type' => 'multipart/form-data',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
-            'read' => ['*'],
-            'write' => ['*'],
-            'folderId' => 'xyz',
-        ]);
-
-        $this->assertEquals($file['headers']['status-code'], 201);
-        $this->assertNotEmpty($file['body']['$id']);
-
-        $webhook = $this->getLastRequest();
-
-        $this->assertEquals($webhook['method'], 'POST');
-        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
-        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Event'], 'storage.files.create');
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
-        $this->assertNotEmpty($webhook['data']['$id']);
-        $this->assertIsArray($webhook['data']['$permissions']);
-        $this->assertEquals($webhook['data']['name'], 'logo.png');
-        $this->assertIsInt($webhook['data']['dateCreated'], 'logo.png');
-        $this->assertNotEmpty($webhook['data']['signature']);
-        $this->assertEquals($webhook['data']['mimeType'], 'image/png');
-        $this->assertEquals($webhook['data']['sizeOriginal'], 47218);
-
-        /**
-         * Test for FAILURE
-         */
-        return ['fileId' => $file['body']['$id']];
-    }
-    
-    /**
-     * @depends testCreateFile
-     */
-    public function testUpdateFile(array $data): array
-    {
-        /**
-         * Test for SUCCESS
-         */
-        $file = $this->client->call(Client::METHOD_PUT, '/storage/files/' . $data['fileId'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'read' => ['*'],
-            'write' => ['*'],
-        ]);
-
-        $this->assertEquals($file['headers']['status-code'], 200);
-        $this->assertNotEmpty($file['body']['$id']);
-
-        $webhook = $this->getLastRequest();
-
-        $this->assertEquals($webhook['method'], 'POST');
-        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
-        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Event'], 'storage.files.update');
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
-        $this->assertNotEmpty($webhook['data']['$id']);
-        $this->assertIsArray($webhook['data']['$permissions']);
-        $this->assertEquals($webhook['data']['name'], 'logo.png');
-        $this->assertIsInt($webhook['data']['dateCreated'], 'logo.png');
-        $this->assertNotEmpty($webhook['data']['signature']);
-        $this->assertEquals($webhook['data']['mimeType'], 'image/png');
-        $this->assertEquals($webhook['data']['sizeOriginal'], 47218);
-        
-        return $data;
-    }
-    
-    /**
-     * @depends testUpdateFile
-     */
-    public function testDeleteFile(array $data): array
-    {
-        /**
-         * Test for SUCCESS
-         */
-        $file = $this->client->call(Client::METHOD_DELETE, '/storage/files/' . $data['fileId'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        $this->assertEquals(204, $file['headers']['status-code']);
-        $this->assertEmpty($file['body']);
-
-        $webhook = $this->getLastRequest();
-
-        $this->assertEquals($webhook['method'], 'POST');
-        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
-        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Event'], 'storage.files.delete');
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
-        $this->assertNotEmpty($webhook['data']['$id']);
-        $this->assertIsArray($webhook['data']['$permissions']);
-        $this->assertEquals($webhook['data']['name'], 'logo.png');
-        $this->assertIsInt($webhook['data']['dateCreated'], 'logo.png');
-        $this->assertNotEmpty($webhook['data']['signature']);
-        $this->assertEquals($webhook['data']['mimeType'], 'image/png');
-        $this->assertEquals($webhook['data']['sizeOriginal'], 47218);
-        
-        return $data;
-    }
-
-    public function testCreateTeam(): array
-    {
-        /**
-         * Test for SUCCESS
-         */
-        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'name' => 'Arsenal'
-        ]);
-
-        $this->assertEquals(201, $team['headers']['status-code']);
-        $this->assertNotEmpty($team['body']['$id']);
-
-        $webhook = $this->getLastRequest();
-
-        $this->assertEquals($webhook['method'], 'POST');
-        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
-        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Event'], 'teams.create');
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
-        $this->assertNotEmpty($webhook['data']['$id']);
-        $this->assertEquals('Arsenal', $webhook['data']['name']);
-        $this->assertGreaterThan(-1, $webhook['data']['sum']);
-        $this->assertIsInt($webhook['data']['sum']);
-        $this->assertIsInt($webhook['data']['dateCreated']);
-
-        /**
-         * Test for FAILURE
-         */
-        return ['teamId' => $team['body']['$id']];
-    }
-
-    /**
-     * @depends testCreateTeam
-     */
-    public function testUpdateTeam($data): array
-    {
-        /**
-         * Test for SUCCESS
-         */
-        $team = $this->client->call(Client::METHOD_PUT, '/teams/'.$data['teamId'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'name' => 'Demo New'
-        ]);
-
-        $this->assertEquals(200, $team['headers']['status-code']);
-        $this->assertNotEmpty($team['body']['$id']);
-
-        $webhook = $this->getLastRequest();
-
-        $this->assertEquals($webhook['method'], 'POST');
-        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
-        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Event'], 'teams.update');
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
-        $this->assertNotEmpty($webhook['data']['$id']);
-        $this->assertEquals('Demo New', $webhook['data']['name']);
-        $this->assertGreaterThan(-1, $webhook['data']['sum']);
-        $this->assertIsInt($webhook['data']['sum']);
-        $this->assertIsInt($webhook['data']['dateCreated']);
-
-        /**
-         * Test for FAILURE
-         */
-        return ['teamId' => $team['body']['$id']];
-    }
-
-    public function testDeleteTeam(): array
-    {
-        /**
-         * Test for SUCCESS
-         */
-        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'name' => 'Chelsea'
-        ]);
-
-        $this->assertEquals(201, $team['headers']['status-code']);
-        $this->assertNotEmpty($team['body']['$id']);
-
-        $team = $this->client->call(Client::METHOD_DELETE, '/teams/'.$team['body']['$id'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        $webhook = $this->getLastRequest();
-
-        $this->assertEquals($webhook['method'], 'POST');
-        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
-        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Event'], 'teams.delete');
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
-        $this->assertNotEmpty($webhook['data']['$id']);
-        $this->assertEquals('Chelsea', $webhook['data']['name']);
-        $this->assertGreaterThan(-1, $webhook['data']['sum']);
-        $this->assertIsInt($webhook['data']['sum']);
-        $this->assertIsInt($webhook['data']['dateCreated']);
-
-        /**
-         * Test for FAILURE
-         */
-        return [];
-    }
-
-    /**
-     * @depends testCreateTeam
-     */
-    public function testCreateTeamMembership($data): array
-    {
-        $teamUid = $data['teamId'] ?? '';
-        $email = uniqid().'friend@localhost.test';
-
-        /**
-         * Test for SUCCESS
-         */
-        $team = $this->client->call(Client::METHOD_POST, '/teams/'.$teamUid.'/memberships', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'email' => $email,
-            'name' => 'Friend User',
-            'roles' => ['admin', 'editor'],
-            'url' => 'http://localhost:5000/join-us#title'
-        ]);
-
-        $this->assertEquals(201, $team['headers']['status-code']);
-        $this->assertNotEmpty($team['body']['$id']);
-
-        $lastEmail = $this->getLastEmail();
-
-        $secret = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
-        $membershipUid = substr($lastEmail['text'], strpos($lastEmail['text'], '?membershipId=', 0) + 14, 13);
-        $userUid = substr($lastEmail['text'], strpos($lastEmail['text'], '&userId=', 0) + 8, 13);
-
-        $webhook = $this->getLastRequest();
-
-        $this->assertEquals($webhook['method'], 'POST');
-        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
-        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Event'], 'teams.memberships.create');
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
-        $this->assertNotEmpty($webhook['data']['$id']);
-        $this->assertNotEmpty($webhook['data']['userId']);
-        $this->assertNotEmpty($webhook['data']['teamId']);
-        $this->assertCount(2, $webhook['data']['roles']);
-        $this->assertIsInt($webhook['data']['joined']);
-        $this->assertEquals(('server' === $this->getSide()), $webhook['data']['confirm']);
-
-        /**
-         * Test for FAILURE
-         */
-        return [
-            'teamId' => $teamUid,
-            'secret' => $secret,
-            'membershipId' => $membershipUid,
-            'userId' => $webhook['data']['userId'],
+        $params = [
+            'webhookId' => $webhookId,
+            'name' => $name,
+            'events' => $events,
+            'url' => $url,
         ];
-    }
 
-    /**
-     * @depends testCreateTeam
-     */
-    public function testDeleteTeamMembership($data): array
-    {
-        $teamUid = $data['teamId'] ?? '';
-        $email = uniqid().'friend@localhost.test';
+        if ($enabled !== null) {
+            $params['enabled'] = $enabled;
+        }
+        if ($tls !== null) {
+            $params['tls'] = $tls;
+        }
+        if ($authUsername !== null) {
+            $params['authUsername'] = $authUsername;
+        }
+        if ($authPassword !== null) {
+            $params['authPassword'] = $authPassword;
+        }
 
-        /**
-         * Test for SUCCESS
-         */
-        $team = $this->client->call(Client::METHOD_POST, '/teams/'.$teamUid.'/memberships', array_merge([
+        $webhook = $this->client->call(Client::METHOD_POST, '/webhooks', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'email' => $email,
-            'name' => 'Friend User',
-            'roles' => ['admin', 'editor'],
-            'url' => 'http://localhost:5000/join-us#title'
-        ]);
+        ], $this->getHeaders()), $params);
 
-        $this->assertEquals(201, $team['headers']['status-code']);
-        $this->assertNotEmpty($team['body']['$id']);
-        
-        $team = $this->client->call(Client::METHOD_DELETE, '/teams/'.$teamUid.'/memberships/'.$team['body']['$id'], array_merge([
-            'origin' => 'http://localhost',
+        return $webhook;
+    }
+
+    protected function updateWebhook(string $webhookId, string $name, array $events, ?bool $enabled, ?string $url, ?bool $tls, ?string $authUsername, ?string $authPassword): mixed
+    {
+        $params = [
+            'name' => $name,
+            'events' => $events,
+            'url' => $url,
+        ];
+
+        if ($enabled !== null) {
+            $params['enabled'] = $enabled;
+        }
+        if ($tls !== null) {
+            $params['tls'] = $tls;
+        }
+        if ($authUsername !== null) {
+            $params['authUsername'] = $authUsername;
+        }
+        if ($authPassword !== null) {
+            $params['authPassword'] = $authPassword;
+        }
+
+        $webhook = $this->client->call(Client::METHOD_PUT, '/webhooks/' . $webhookId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), $params);
+
+        return $webhook;
+    }
+
+    protected function updateWebhookSecret(string $webhookId): mixed
+    {
+        $webhook = $this->client->call(Client::METHOD_PATCH, '/webhooks/' . $webhookId . '/secret', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals(204, $team['headers']['status-code']);
+        return $webhook;
+    }
 
-        $webhook = $this->getLastRequest();
+    protected function deleteWebhook(string $webhookId): mixed
+    {
+        $webhook = $this->client->call(Client::METHOD_DELETE, '/webhooks/' . $webhookId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
 
-        $this->assertEquals($webhook['method'], 'POST');
-        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
-        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Event'], 'teams.memberships.delete');
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
-        $this->assertNotEmpty($webhook['data']['$id']);
-        $this->assertNotEmpty($webhook['data']['userId']);
-        $this->assertNotEmpty($webhook['data']['teamId']);
-        $this->assertCount(2, $webhook['data']['roles']);
-        $this->assertIsInt($webhook['data']['joined']);
-        $this->assertEquals(('server' === $this->getSide()), $webhook['data']['confirm']);
-
-        /**
-         * Test for FAILURE
-         */
-        return [];
+        return $webhook;
     }
 }

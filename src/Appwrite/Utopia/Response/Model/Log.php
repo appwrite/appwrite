@@ -16,6 +16,36 @@ class Log extends Model
                 'default' => '',
                 'example' => 'account.sessions.create',
             ])
+            ->addRule('userId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'User ID of the actor recorded for this log. During impersonation, this is the original impersonator, not the impersonated target user.',
+                'default' => '',
+                'example' => '610fc2f985ee0',
+            ])
+            ->addRule('userEmail', [
+                'type' => self::TYPE_STRING,
+                'description' => 'User email of the actor recorded for this log. During impersonation, this is the original impersonator.',
+                'default' => '',
+                'example' => 'john@appwrite.io',
+            ])
+            ->addRule('userName', [
+                'type' => self::TYPE_STRING,
+                'description' => 'User name of the actor recorded for this log. During impersonation, this is the original impersonator.',
+                'default' => '',
+                'example' => 'John Doe',
+            ])
+            ->addRule('mode', [
+                'type' => self::TYPE_STRING,
+                'description' => 'API mode when event triggered.',
+                'default' => '',
+                'example' => 'admin',
+            ])
+            ->addRule('userType', [
+                'type' => self::TYPE_STRING,
+                'description' => 'User type who triggered the audit log. Possible values: user, admin, guest, keyProject, keyAccount, keyOrganization.',
+                'default' => '',
+                'example' => 'user',
+            ])
             ->addRule('ip', [
                 'type' => self::TYPE_STRING,
                 'description' => 'IP session in use when the session was created.',
@@ -23,10 +53,10 @@ class Log extends Model
                 'example' => '127.0.0.1',
             ])
             ->addRule('time', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Log creation time in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981250,
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Log creation date in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('osCode', [
                 'type' => self::TYPE_STRING,
@@ -117,20 +147,20 @@ class Log extends Model
 
     /**
      * Get Name
-     * 
+     *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'Log';
     }
 
     /**
-     * Get Collection
-     * 
+     * Get Type
+     *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_LOG;
     }

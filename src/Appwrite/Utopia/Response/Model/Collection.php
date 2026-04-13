@@ -16,56 +16,112 @@ class Collection extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
+            ->addRule('$createdAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Collection creation date in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+            ->addRule('$updatedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Collection update date in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
             ->addRule('$permissions', [
-                'type' => Response::MODEL_PERMISSIONS,
-                'description' => 'Collection permissions.',
-                'default' => new \stdClass,
-                'example' => new \stdClass,
-                'array' => false,
+                'type' => self::TYPE_STRING,
+                'description' => 'Collection permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).',
+                'default' => '',
+                'example' => ['read("any")'],
+                'array' => true
+            ])
+            ->addRule('databaseId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Database ID.',
+                'default' => '',
+                'example' => '5e5ea5c16897e',
             ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Collection name.',
                 'default' => '',
-                'example' => 'Movies',
+                'example' => 'My Collection',
             ])
-            ->addRule('dateCreated', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Collection creation date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981250,
+            ->addRule('enabled', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Collection enabled. Can be \'enabled\' or \'disabled\'. When disabled, the collection is inaccessible to users, but remains accessible to Server SDKs using API keys.',
+                'default' => true,
+                'example' => false,
             ])
-            ->addRule('dateUpdated', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Collection creation date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981550,
+            ->addRule('documentSecurity', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether document-level permissions are enabled. [Learn more about permissions](https://appwrite.io/docs/permissions).',
+                'default' => '',
+                'example' => true,
             ])
-            ->addRule('rules', [
-                'type' => Response::MODEL_RULE,
-                'description' => 'Collection rules.',
+            ->addRule('attributes', [
+                'type' => [
+                    Response::MODEL_ATTRIBUTE_BOOLEAN,
+                    Response::MODEL_ATTRIBUTE_INTEGER,
+                    Response::MODEL_ATTRIBUTE_FLOAT,
+                    Response::MODEL_ATTRIBUTE_EMAIL,
+                    Response::MODEL_ATTRIBUTE_ENUM,
+                    Response::MODEL_ATTRIBUTE_URL,
+                    Response::MODEL_ATTRIBUTE_IP,
+                    Response::MODEL_ATTRIBUTE_DATETIME,
+                    Response::MODEL_ATTRIBUTE_RELATIONSHIP,
+                    Response::MODEL_ATTRIBUTE_POINT,
+                    Response::MODEL_ATTRIBUTE_LINE,
+                    Response::MODEL_ATTRIBUTE_POLYGON,
+                    Response::MODEL_ATTRIBUTE_VARCHAR,
+                    Response::MODEL_ATTRIBUTE_TEXT,
+                    Response::MODEL_ATTRIBUTE_MEDIUMTEXT,
+                    Response::MODEL_ATTRIBUTE_LONGTEXT,
+                    Response::MODEL_ATTRIBUTE_STRING, // needs to be last, since its condition would dominate any other string attribute
+                ],
+                'description' => 'Collection attributes.',
                 'default' => [],
+                'example' => new \stdClass(),
                 'array' => true,
+            ])
+            ->addRule('indexes', [
+                'type' => Response::MODEL_INDEX,
+                'description' => 'Collection indexes.',
+                'default' => [],
+                'example' => new \stdClass(),
+                'array' => true
+            ])
+            ->addRule('bytesMax', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Maximum document size in bytes. Returns 0 when no limit applies.',
+                'default' => 0,
+                'example' => 65535,
+            ])
+            ->addRule('bytesUsed', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Currently used document size in bytes based on defined attributes.',
+                'default' => 0,
+                'example' => 1500,
             ])
         ;
     }
 
     /**
      * Get Name
-     * 
+     *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'Collection';
     }
 
     /**
-     * Get Collection
-     * 
+     * Get Type
+     *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_COLLECTION;
     }

@@ -16,74 +16,114 @@ class Rule extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
-            ->addRule('$collection', [ // TODO remove this from public response
+            ->addRule('$createdAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Rule creation date in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+            ->addRule('$updatedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Rule update date in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+            ->addRule('domain', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Rule Collection.',
-                'example' => '5e5e66c16897e',
+                'description' => 'Domain name.',
+                'default' => '',
+                'example' => 'appwrite.company.com',
             ])
             ->addRule('type', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Rule type. Possible values: ',
+                'description' => 'Action definition for the rule. Possible values are "api", "deployment", or "redirect"',
                 'default' => '',
-                'example' => 'title',
+                'example' => 'deployment',
             ])
-            ->addRule('key', [
+            ->addRule('trigger', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Rule key.',
+                'description' => 'Defines how the rule was created. Possible values are "manual" or "deployment"',
                 'default' => '',
-                'example' => 'title',
+                'example' => 'manual',
             ])
-            ->addRule('label', [
+            ->addRule('redirectUrl', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Rule label.',
+                'description' => 'URL to redirect to. Used if type is "redirect"',
                 'default' => '',
-                'example' => 'Title',
+                'example' => 'https://appwrite.io/docs',
             ])
-            ->addRule('default', [ // TODO should be of mixed types
+            ->addRule('redirectStatusCode', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Status code to apply during redirect. Used if type is "redirect"',
+                'default' => 301,
+                'example' => 301,
+            ])
+            ->addRule('deploymentId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Rule default value.',
+                'description' => 'ID of deployment. Used if type is "deployment"',
                 'default' => '',
-                'example' => 'Movie Name',
+                'example' => 'n3u9feiwmf',
             ])
-            ->addRule('array', [
-                'type' => self::TYPE_BOOLEAN,
-                'description' => 'Is array?',
-                'default' => false,
-                'example' => false,
+            ->addRule('deploymentResourceType', [
+                'type' => self::TYPE_ENUM,
+                'required' => false,
+                'description' => 'Type of deployment. Possible values are "function", "site". Used if rule\'s type is "deployment".',
+                'default' => null,
+                'example' => 'function',
+                'enum' => ['function', 'site'],
             ])
-            ->addRule('required', [
-                'type' => self::TYPE_BOOLEAN,
-                'description' => 'Is required?',
-                'default' => false,
-                'example' => true,
-            ])
-            ->addRule('list', [
+            ->addRule('deploymentResourceId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'List of allowed values',
-                'array' => true,
-                'default' => [],
-                'example' => '5e5ea5c168099',
+                'description' => 'ID deployment\'s resource. Used if type is "deployment"',
+                'default' => '',
+                'example' => 'n3u9feiwmf',
+            ])
+            ->addRule('deploymentVcsProviderBranch', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Name of Git branch that updates rule. Used if type is "deployment"',
+                'default' => '',
+                'example' => 'main',
+            ])
+            ->addRule('status', [
+                'type' => self::TYPE_ENUM,
+                'description' => 'Domain verification status. Possible values are "created", "verifying", "verified" and "unverified"',
+                'default' => 'created',
+                'example' => 'verified',
+                'enum' => ['created', 'verifying', 'verified', 'unverified'],
+            ])
+            ->addRule('logs', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Logs from rule verification or certificate generation. Certificate generation logs are prioritized if both are available.',
+                'default' => '',
+                'example' => 'Verification of DNS records failed with DNS resolver 8.8.8.8. Domain stage.myapp.com does not have DNS record.',
+            ])
+            ->addRule('renewAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Certificate auto-renewal date in ISO 8601 format.',
+                'default' => APP_DATABASE_ATTRIBUTE_DATETIME,
+                'example' => APP_DATABASE_ATTRIBUTE_DATETIME,
+                'array' => false,
             ])
         ;
     }
 
     /**
      * Get Name
-     * 
+     *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'Rule';
     }
 
     /**
-     * Get Collection
-     * 
+     * Get Type
+     *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
-        return Response::MODEL_RULE;
+        return Response::MODEL_PROXY_RULE;
     }
 }

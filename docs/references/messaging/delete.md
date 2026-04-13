@@ -1,0 +1,1 @@
+Delete a message by its unique ID.

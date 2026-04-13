@@ -1,0 +1,1 @@
+Update a webhook by its unique ID. Use this endpoint to update the URL, events, or status of an existing webhook. 

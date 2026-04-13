@@ -1,0 +1,1 @@
+List available function templates. You can use template details in [createFunction](/docs/references/cloud/server-nodejs/functions#create) method.

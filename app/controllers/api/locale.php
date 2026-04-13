@@ -1,38 +1,42 @@
 <?php
 
-use Appwrite\Database\Document;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use Utopia\App;
+use MaxMind\Db\Reader;
 use Utopia\Config\Config;
+use Utopia\Database\Document;
+use Utopia\Http\Http;
+use Utopia\Locale\Locale;
 
-App::get('/v1/locale')
-    ->desc('Get User Locale')
+Http::get('/v1/locale')
+    ->desc('Get user locale')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'locale')
-    ->label('sdk.method', 'get')
-    ->label('sdk.description', '/docs/references/locale/get-locale.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_LOCALE)
+    ->label('sdk', new Method(
+        namespace: 'locale',
+        group: null,
+        name: 'get',
+        description: '/docs/references/locale/get-locale.md',
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_LOCALE,
+            )
+        ]
+    ))
     ->inject('request')
     ->inject('response')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function ($request, $response, $locale, $geodb) {
-        /** @var Utopia\Swoole\Request $request */
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Locale\Locale $locale */
-        /** @var MaxMind\Db\Reader $geodb */
-
+    ->action(function (Request $request, Response $response, Locale $locale, Reader $geodb) {
         $eu = Config::getParam('locale-eu');
         $currencies = Config::getParam('locale-currencies');
         $output = [];
         $ip = $request->getIP();
-        $time = (60 * 60 * 24 * 45); // 45 days cache
-        $countries = $locale->getText('countries');
-        $continents = $locale->getText('continents');
 
         $output['ip'] = $ip;
 
@@ -42,8 +46,8 @@ App::get('/v1/locale')
 
         if ($record) {
             $output['countryCode'] = $record['country']['iso_code'];
-            $output['country'] = (isset($countries[$record['country']['iso_code']])) ? $countries[$record['country']['iso_code']] : $locale->getText('locale.country.unknown');
-            $output['continent'] = (isset($continents[$record['continent']['code']])) ? $continents[$record['continent']['code']] : $locale->getText('locale.country.unknown');
+            $output['country'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
+            $output['continent'] = $locale->getText('continents.' . strtolower($record['continent']['code']), $locale->getText('locale.country.unknown'));
             $output['continentCode'] = $record['continent']['code'];
             $output['eu'] = (\in_array($record['country']['iso_code'], $eu)) ? true : false;
 
@@ -63,192 +67,235 @@ App::get('/v1/locale')
             $output['currency'] = $currency;
         }
 
-        $response
-            ->addHeader('Cache-Control', 'public, max-age='.$time)
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $time).' GMT') // 45 days cache
-        ;
         $response->dynamic(new Document($output), Response::MODEL_LOCALE);
     });
 
-App::get('/v1/locale/countries')
-    ->desc('List Countries')
+Http::get('/v1/locale/codes')
+    ->desc('List locale codes')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'locale')
-    ->label('sdk.method', 'getCountries')
-    ->label('sdk.description', '/docs/references/locale/get-countries.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_COUNTRY_LIST)
+    ->label('sdk', new Method(
+        namespace: 'locale',
+        group: null,
+        name: 'listCodes',
+        description: '/docs/references/locale/list-locale-codes.md',
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_LOCALE_CODE_LIST,
+            )
+        ]
+    ))
+    ->inject('response')
+    ->action(function (Response $response) {
+        $codes = Config::getParam('locale-codes');
+        $response->dynamic(new Document([
+            'localeCodes' => $codes,
+            'total' => count($codes),
+        ]), Response::MODEL_LOCALE_CODE_LIST);
+    });
+
+Http::get('/v1/locale/countries')
+    ->desc('List countries')
+    ->groups(['api', 'locale'])
+    ->label('scope', 'locale.read')
+    ->label('sdk', new Method(
+        namespace: 'locale',
+        group: null,
+        name: 'listCountries',
+        description: '/docs/references/locale/list-countries.md',
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_COUNTRY_LIST,
+            )
+        ]
+    ))
     ->inject('response')
     ->inject('locale')
-    ->action(function ($response, $locale) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Locale\Locale $locale */
-
-        $list = $locale->getText('countries'); /* @var $list array */
+    ->action(function (Response $response, Locale $locale) {
+        $list = array_keys(Config::getParam('locale-countries')); /* @var $list array */
         $output = [];
 
-        \asort($list); // sort by abc per locale
-
-        foreach ($list as $key => $value) {
+        foreach ($list as $value) {
             $output[] = new Document([
-                'name' => $value,
-                'code' => $key,
+                'name' => $locale->getText('countries.' . strtolower($value)),
+                'code' => $value,
             ]);
         }
 
-        $response->dynamic(new Document(['countries' => $output, 'sum' => \count($output)]), Response::MODEL_COUNTRY_LIST);
+        usort($output, function ($a, $b) {
+            return strcmp($a->getAttribute('name'), $b->getAttribute('name'));
+        });
+
+        $response->dynamic(new Document(['countries' => $output, 'total' => \count($output)]), Response::MODEL_COUNTRY_LIST);
     });
 
-App::get('/v1/locale/countries/eu')
-    ->desc('List EU Countries')
+Http::get('/v1/locale/countries/eu')
+    ->desc('List EU countries')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'locale')
-    ->label('sdk.method', 'getCountriesEU')
-    ->label('sdk.description', '/docs/references/locale/get-countries-eu.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_COUNTRY_LIST)
+    ->label('sdk', new Method(
+        namespace: 'locale',
+        group: null,
+        name: 'listCountriesEU',
+        description: '/docs/references/locale/list-countries-eu.md',
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_COUNTRY_LIST,
+            )
+        ]
+    ))
     ->inject('response')
     ->inject('locale')
-    ->action(function ($response, $locale) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Locale\Locale $locale */
-
-        $list = $locale->getText('countries'); /* @var $countries array */
+    ->action(function (Response $response, Locale $locale) {
         $eu = Config::getParam('locale-eu');
         $output = [];
 
-        \asort($list);
-
         foreach ($eu as $code) {
-            if (\array_key_exists($code, $list)) {
+            if ($locale->getText('countries.' . strtolower($code), false) !== false) {
                 $output[] = new Document([
-                    'name' => $list[$code],
+                    'name' => $locale->getText('countries.' . strtolower($code)),
                     'code' => $code,
                 ]);
             }
         }
 
-        $response->dynamic(new Document(['countries' => $output, 'sum' => \count($output)]), Response::MODEL_COUNTRY_LIST);
+        usort($output, function ($a, $b) {
+            return strcmp($a->getAttribute('name'), $b->getAttribute('name'));
+        });
+
+        $response->dynamic(new Document(['countries' => $output, 'total' => \count($output)]), Response::MODEL_COUNTRY_LIST);
     });
 
-App::get('/v1/locale/countries/phones')
-    ->desc('List Countries Phone Codes')
+Http::get('/v1/locale/countries/phones')
+    ->desc('List countries phone codes')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'locale')
-    ->label('sdk.method', 'getCountriesPhones')
-    ->label('sdk.description', '/docs/references/locale/get-countries-phones.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PHONE_LIST)
+    ->label('sdk', new Method(
+        namespace: 'locale',
+        group: null,
+        name: 'listCountriesPhones',
+        description: '/docs/references/locale/list-countries-phones.md',
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PHONE_LIST,
+            )
+        ]
+    ))
     ->inject('response')
     ->inject('locale')
-    ->action(function ($response, $locale) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Locale\Locale $locale */
-
+    ->action(function (Response $response, Locale $locale) {
         $list = Config::getParam('locale-phones'); /* @var $list array */
-        $countries = $locale->getText('countries'); /* @var $countries array */
         $output = [];
-        
+
         \asort($list);
 
         foreach ($list as $code => $name) {
-            if (\array_key_exists($code, $countries)) {
+            if ($locale->getText('countries.' . strtolower($code), false) !== false) {
                 $output[] = new Document([
-                    'code' => '+'.$list[$code],
+                    'code' => '+' . $list[$code],
                     'countryCode' => $code,
-                    'countryName' => $countries[$code],
+                    'countryName' => $locale->getText('countries.' . strtolower($code)),
                 ]);
             }
         }
 
-        $response->dynamic(new Document(['phones' => $output, 'sum' => \count($output)]), Response::MODEL_PHONE_LIST);
+        $response->dynamic(new Document(['phones' => $output, 'total' => \count($output)]), Response::MODEL_PHONE_LIST);
     });
 
-App::get('/v1/locale/continents')
-    ->desc('List Continents')
+Http::get('/v1/locale/continents')
+    ->desc('List continents')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'locale')
-    ->label('sdk.method', 'getContinents')
-    ->label('sdk.description', '/docs/references/locale/get-continents.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_CONTINENT_LIST)
+    ->label('sdk', new Method(
+        namespace: 'locale',
+        group: null,
+        name: 'listContinents',
+        description: '/docs/references/locale/list-continents.md',
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_CONTINENT_LIST,
+            )
+        ]
+    ))
     ->inject('response')
     ->inject('locale')
-    ->action(function ($response, $locale) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Locale\Locale $locale */
+    ->action(function (Response $response, Locale $locale) {
+        $list = array_keys(Config::getParam('locale-continents'));
+        $output = [];
 
-        $list = $locale->getText('continents'); /* @var $list array */
-
-        \asort($list);
-        
-        foreach ($list as $key => $value) {
+        foreach ($list as $value) {
             $output[] = new Document([
-                'name' => $value,
-                'code' => $key,
+                'name' => $locale->getText('continents.' . strtolower($value)),
+                'code' => $value,
             ]);
         }
 
-        $response->dynamic(new Document(['continents' => $output, 'sum' => \count($output)]), Response::MODEL_CONTINENT_LIST);
+        usort($output, function ($a, $b) {
+            return strcmp($a->getAttribute('name'), $b->getAttribute('name'));
+        });
+
+        $response->dynamic(new Document(['continents' => $output, 'total' => \count($output)]), Response::MODEL_CONTINENT_LIST);
     });
 
-App::get('/v1/locale/currencies')
-    ->desc('List Currencies')
+Http::get('/v1/locale/currencies')
+    ->desc('List currencies')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'locale')
-    ->label('sdk.method', 'getCurrencies')
-    ->label('sdk.description', '/docs/references/locale/get-currencies.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_CURRENCY_LIST)
+    ->label('sdk', new Method(
+        namespace: 'locale',
+        group: null,
+        name: 'listCurrencies',
+        description: '/docs/references/locale/list-currencies.md',
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_CURRENCY_LIST,
+            )
+        ]
+    ))
     ->inject('response')
-    ->action(function ($response) {
-        /** @var Appwrite\Utopia\Response $response */
-
+    ->action(function (Response $response) {
         $list = Config::getParam('locale-currencies');
 
-        $list = array_map(function($node) {
-            return new Document($node);
-        }, $list);
+        $list = array_map(fn ($node) => new Document($node), $list);
 
-        $response->dynamic(new Document(['currencies' => $list, 'sum' => \count($list)]), Response::MODEL_CURRENCY_LIST);
+        $response->dynamic(new Document(['currencies' => $list, 'total' => \count($list)]), Response::MODEL_CURRENCY_LIST);
     });
 
 
-App::get('/v1/locale/languages')
-    ->desc('List Languages')
+Http::get('/v1/locale/languages')
+    ->desc('List languages')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'locale')
-    ->label('sdk.method', 'getLanguages')
-    ->label('sdk.description', '/docs/references/locale/get-languages.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_LANGUAGE_LIST)
+    ->label('sdk', new Method(
+        namespace: 'locale',
+        group: null,
+        name: 'listLanguages',
+        description: '/docs/references/locale/list-languages.md',
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_LANGUAGE_LIST,
+            )
+        ]
+    ))
     ->inject('response')
-    ->action(function ($response) {
-        /** @var Appwrite\Utopia\Response $response */
-
+    ->action(function (Response $response) {
         $list = Config::getParam('locale-languages');
 
-        $list = array_map(function($node) {
-            return new Document($node);
-        }, $list);
+        $list = array_map(fn ($node) => new Document($node), $list);
 
-        $response->dynamic(new Document(['languages' => $list, 'sum' => \count($list)]), Response::MODEL_LANGUAGE_LIST);
+        $response->dynamic(new Document(['languages' => $list, 'total' => \count($list)]), Response::MODEL_LANGUAGE_LIST);
     });

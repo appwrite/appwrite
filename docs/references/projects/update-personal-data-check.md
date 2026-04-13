@@ -1,0 +1,1 @@
+Enable or disable checking user passwords against their personal data. This helps prevent users from using personal information in their passwords. 

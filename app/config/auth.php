@@ -1,42 +1,55 @@
-<?php 
+<?php
 
 // Auth methods
 
 return [
     'email-password' => [
         'name' => 'Email/Password',
-        'key' => 'usersAuthEmailPassword',
+        'key' => 'emailPassword',
         'icon' => '/images/users/email.png',
-        'docs' => 'https://appwrite.io/docs/client/account?sdk=web#accountCreateSession',
+        'docs' => 'https://appwrite.io/docs/references/cloud/client-web/account#accountCreateEmailPasswordSession',
+        'enabled' => true,
+    ],
+    'magic-url' => [
+        'name' => 'Magic URL',
+        'key' => 'usersAuthMagicURL',
+        'icon' => '/images/users/magic-url.png',
+        'docs' => 'https://appwrite.io/docs/references/cloud/client-web/account#accountCreateMagicURLToken',
+        'enabled' => true,
+    ],
+    'email-otp' => [
+        'name' => 'Email (OTP)',
+        'key' => 'emailOtp',
+        'icon' => '/images/users/email.png',
+        'docs' => 'https://appwrite.io/docs/references/cloud/client-web/account#accountCreateEmailToken',
         'enabled' => true,
     ],
     'anonymous' => [
         'name' => 'Anonymous',
-        'key' => 'usersAuthAnonymous',
+        'key' => 'anonymous',
         'icon' => '/images/users/anonymous.png',
-        'docs' => 'https://appwrite.io/docs/client/account?sdk=web#accountCreateAnonymousSession',
+        'docs' => 'https://appwrite.io/docs/references/cloud/client-web/account#accountCreateAnonymousSession',
         'enabled' => true,
     ],
     'invites' => [
         'name' => 'Invites',
-        'key' => 'usersAuthInvites',
+        'key' => 'invites',
         'icon' => '/images/users/invites.png',
-        'docs' => 'https://appwrite.io/docs/client/teams?sdk=web#teamsCreateMembership',
+        'docs' => 'https://appwrite.io/docs/client/teams?sdk=web-default#teamsCreateMembership',
         'enabled' => true,
     ],
     'jwt' => [
         'name' => 'JWT',
-        'key' => 'usersAuthJWT',
+        'key' => 'JWT',
         'icon' => '/images/users/jwt.png',
-        'docs' => 'https://appwrite.io/docs/client/account?sdk=web#accountCreateJWT',
+        'docs' => 'https://appwrite.io/docs/client/account?sdk=web-default#accountCreateJWT',
         'enabled' => true,
     ],
     'phone' => [
         'name' => 'Phone',
-        'key' => 'usersAuthPhone',
+        'key' => 'phone',
         'icon' => '/images/users/phone.png',
-        'docs' => 'https://appwrite.io/docs/client/account?sdk=web#accountCreatePhoneSession',
-        'docs' => '',
-        'enabled' => false,
+        'docs' => 'https://appwrite.io/docs/references/cloud/client-web/account#accountCreatePhoneToken',
+        'enabled' => true,
     ],
 ];

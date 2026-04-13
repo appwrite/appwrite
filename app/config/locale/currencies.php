@@ -870,13 +870,13 @@ return [
     ],
     [
         'symbol' => 'zł',
-        'name' => 'Polish Zloty',
+        'name' => 'Polski Złoty',
         'symbolNative' => 'zł',
         'decimalDigits' => 2,
         'rounding' => 0,
         'code' => 'PLN',
-        'namePlural' => 'Polish zlotys',
-        'locations' => [],
+        'namePlural' => 'Polish zlotych',
+        'locations' => ['PL'],
     ],
     [
         'symbol' => '₲',

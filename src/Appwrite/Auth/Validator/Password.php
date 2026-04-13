@@ -11,6 +11,13 @@ use Utopia\Validator;
  */
 class Password extends Validator
 {
+    protected bool $allowEmpty;
+
+    public function __construct(bool $allowEmpty = false)
+    {
+        $this->allowEmpty = $allowEmpty;
+    }
+
     /**
      * Get Description.
      *
@@ -18,23 +25,33 @@ class Password extends Validator
      *
      * @return string
      */
-    public function getDescription()
+    public function getDescription(): string
     {
-        return 'Password must be between 6 and 32 chars and contain ...';
+        return 'Password must be between 8 and 256 characters long.';
     }
 
     /**
      * Is valid.
      *
-     * Validation username
-     *
      * @param mixed $value
      *
      * @return bool
      */
-    public function isValid($value)
+    public function isValid($value): bool
     {
-        if (\strlen($value) < 6 || \strlen($value) > 32) {
+        if (!\is_string($value)) {
+            return false;
+        }
+
+        if ($this->allowEmpty && \strlen($value) === 0) {
+            return true;
+        }
+
+        if (\strlen($value) < 8) {
+            return false;
+        }
+
+        if (\strlen($value) > 256) {
             return false;
         }
 

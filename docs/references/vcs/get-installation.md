@@ -1,0 +1,1 @@
+Get a VCS installation by its unique ID. This endpoint returns the installation's details including its provider, organization, and configuration. 

@@ -2,7 +2,6 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
-use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
 class BaseList extends Model
@@ -10,12 +9,12 @@ class BaseList extends Model
     /**
      * @var string
      */
-    protected $name = '';
-    
+    protected string $name = '';
+
     /**
      * @var string
      */
-    protected $type = '';
+    protected string $type = '';
 
     /**
      * @param string $name
@@ -25,23 +24,43 @@ class BaseList extends Model
      * @param bool $paging
      * @param bool $public
      */
-    public function __construct(string $name, string $type, string $key, string $model, bool $paging = true, bool $public = true)
-    {
+    public function __construct(
+        string $name,
+        string $type,
+        string $key,
+        string $model,
+        bool $paging = true,
+        bool $public = true
+    ) {
         $this->name = $name;
         $this->type = $type;
         $this->public = $public;
 
         if ($paging) {
-            $this->addRule('sum', [
+            $namesWithCap = [
+                'rows', 'tables', // new api
+                'documents', 'collections', // legacy api
+                'users', 'files', 'buckets', 'functions',
+                'deployments', 'executions', 'projects',
+                'webhooks', 'keys', 'platforms', 'rules', 'memberships', 'teams'
+            ];
+
+            if (\in_array($name, $namesWithCap)) {
+                $description = 'Total number of ' . $key . ' that matched your query used as reference for offset pagination. When the `total` number of ' . $key . ' rows available is greater than 5000, total returned will be capped at 5000, and cursor pagination should be used. Read more about [pagination](https://appwrite.io/docs/pagination).';
+            } else {
+                $description = 'Total number of ' . $key . ' that matched your query.';
+            }
+
+            $this->addRule('total', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Total sum of items in the list.',
+                'description' => $description,
                 'default' => 0,
                 'example' => 5,
             ]);
         }
         $this->addRule($key, [
             'type' => $model,
-            'description' => 'List of '.$key.'.',
+            'description' => 'List of ' . $key . '.',
             'default' => [],
             'array' => true,
         ]);
@@ -49,20 +68,20 @@ class BaseList extends Model
 
     /**
      * Get Name
-     * 
+     *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return $this->name;
     }
 
     /**
-     * Get Collection
-     * 
+     * Get Type
+     *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return $this->type;
     }

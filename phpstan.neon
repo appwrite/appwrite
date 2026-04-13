@@ -1,0 +1,14 @@
+parameters:
+  level: 3
+  tmpDir: .phpstan-cache
+  paths:
+    - src
+    - app
+    - bin
+    - tests
+  bootstrapFiles:
+    - app/init/constants.php
+  scanDirectories:
+    - vendor/swoole/ide-helper
+  excludePaths:
+    - tests/resources

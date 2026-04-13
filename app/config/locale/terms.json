@@ -1,0 +1,1122 @@
+[
+    {
+        "term": "settings.inspire",
+        "comment": "This string is used as an easter egg in the appwrite.io source code.",
+        "reference": ""
+    },
+    {
+        "term": "settings.locale",
+        "comment": "These strings are used to configure Appwrite's settings.",
+        "reference": ""
+    },
+    {
+        "term": "settings.direction",
+        "comment": "These strings are used to configure Appwrite's settings.",
+        "reference": ""
+    },
+    {
+        "term": "emails.sender",
+        "comment": "This string is used as the name of the sender in all the Appwrite Email templates.",
+        "reference": ""
+    },
+    {
+        "term": "emails.verification.subject",
+        "comment": "These strings are used in the email verification templates.",
+        "reference": ""
+    },
+    {
+        "term": "emails.verification.hello",
+        "comment": "These strings are used in the email verification templates.",
+        "reference": ""
+    },
+    {
+        "term": "emails.verification.body",
+        "comment": "These strings are used in the email verification templates.",
+        "reference": ""
+    },
+    {
+        "term": "emails.verification.footer",
+        "comment": "These strings are used in the email verification templates.",
+        "reference": ""
+    },
+    {
+        "term": "emails.verification.thanks",
+        "comment": "These strings are used in the email verification templates.",
+        "reference": ""
+    },
+    {
+        "term": "emails.verification.signature",
+        "comment": "These strings are used in the email verification templates.",
+        "reference": ""
+    },
+    {
+        "term": "emails.recovery.subject",
+        "comment": "These strings are used in the password recovery templates.",
+        "reference": ""
+    },
+    {
+        "term": "emails.recovery.hello",
+        "comment": "These strings are used in the password recovery templates.",
+        "reference": ""
+    },
+    {
+        "term": "emails.recovery.body",
+        "comment": "These strings are used in the password recovery templates.",
+        "reference": ""
+    },
+    {
+        "term": "emails.recovery.footer",
+        "comment": "These strings are used in the password recovery templates.",
+        "reference": ""
+    },
+    {
+        "term": "emails.recovery.thanks",
+        "comment": "These strings are used in the password recovery templates.",
+        "reference": ""
+    },
+    {
+        "term": "emails.recovery.signature",
+        "comment": "These strings are used in the password recovery templates.",
+        "reference": ""
+    },
+    {
+        "term": "emails.invitation.subject",
+        "comment": "These strings are used in the team invitation templates.",
+        "reference": ""
+    },
+    {
+        "term": "emails.invitation.hello",
+        "comment": "These strings are used in the team invitation templates.",
+        "reference": ""
+    },
+    {
+        "term": "emails.invitation.body",
+        "comment": "These strings are used in the team invitation templates.",
+        "reference": ""
+    },
+    {
+        "term": "emails.invitation.footer",
+        "comment": "These strings are used in the team invitation templates.",
+        "reference": ""
+    },
+    {
+        "term": "emails.invitation.thanks",
+        "comment": "These strings are used in the team invitation templates.",
+        "reference": ""
+    },
+    {
+        "term": "emails.invitation.signature",
+        "comment": "These strings are used in the team invitation templates.",
+        "reference": ""
+    },
+    {
+        "term": "locale.country.unknown",
+        "comment": "This string is used as the country name in case of a missing [ country_code => country_name ] mapping.",
+        "reference": ""
+    },
+    {
+        "term": "countries.af",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.ao",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.al",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.ad",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.ae",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.ar",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.am",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.ag",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.au",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.at",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.az",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.bi",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.be",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.bj",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.bf",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.bd",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.bg",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.bh",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.bs",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.ba",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.by",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.bz",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.bo",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.br",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.bb",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.bn",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.bt",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.bw",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.cf",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.ca",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.ch",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.cl",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.cn",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.ci",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.cm",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.cd",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.cg",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.co",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.km",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.cv",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.cr",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.cu",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.cy",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.cz",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.de",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.dj",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.dm",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.dk",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.do",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.dz",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.ec",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.eg",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.er",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.es",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.ee",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.et",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.fi",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.fj",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.fr",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.fm",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.ga",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.gb",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.ge",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.gh",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.gn",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.gm",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.gw",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.gq",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.gr",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.gd",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.gt",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.gy",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.hn",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.hr",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.ht",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.hu",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.id",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.in",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.ie",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.ir",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.iq",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.is",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.il",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.it",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.jm",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.jo",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.jp",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.kz",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.ke",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.kg",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.kh",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.ki",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.kn",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.kr",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.kw",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.la",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.lb",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.lr",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.ly",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.lc",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.li",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.lk",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.ls",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.lt",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.lu",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.lv",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.ma",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.mc",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.md",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.mg",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.mv",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.mx",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.mh",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.mk",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.ml",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.mt",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.mm",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.me",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.mn",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.mz",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.mr",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.mu",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.mw",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.my",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.na",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.ne",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.ng",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.ni",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.nl",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.no",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.np",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.nr",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.nz",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.om",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.pk",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.pa",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.pe",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.ph",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.pw",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.pg",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.pl",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.kp",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.pt",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.py",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.qa",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.ro",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.ru",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.rw",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.sa",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.sd",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.sn",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.sg",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.sb",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.sl",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.sv",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.sm",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.so",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.rs",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.ss",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.st",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.sr",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.sk",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.si",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.se",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.sz",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.sc",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.sy",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.td",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.tg",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.th",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.tj",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.tm",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.tl",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.to",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.tt",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.tn",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.tr",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.tv",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.tz",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.ug",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.ua",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.uy",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.us",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.uz",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.va",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.vc",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.ve",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.vn",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.vu",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.ws",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.ye",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.za",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.zm",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "countries.zw",
+        "comment": "These country names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetCountries",
+        "reference": ""
+    },
+    {
+        "term": "continents.af",
+        "comment": "These continent names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetContinents",
+        "reference": ""
+    },
+    {
+        "term": "continents.an",
+        "comment": "These continent names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetContinents",
+        "reference": ""
+    },
+    {
+        "term": "continents.as",
+        "comment": "These continent names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetContinents",
+        "reference": ""
+    },
+    {
+        "term": "continents.eu",
+        "comment": "These continent names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetContinents",
+        "reference": ""
+    },
+    {
+        "term": "continents.na",
+        "comment": "These continent names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetContinents",
+        "reference": ""
+    },
+    {
+        "term": "continents.oc",
+        "comment": "These continent names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetContinents",
+        "reference": ""
+    },
+    {
+        "term": "continents.sa",
+        "comment": "These continent names are used in Appwrite's Locale API. Learn more at https://appwrite.io/docs/client/locale#localeGetContinents",
+        "reference": ""
+    }
+]

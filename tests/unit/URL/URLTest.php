@@ -1,13 +1,13 @@
 <?php
 
-namespace Appwrite\Tests;
+namespace Tests\Unit\URL;
 
 use Appwrite\URL\URL;
 use PHPUnit\Framework\TestCase;
 
 class URLTest extends TestCase
 {
-    public function testParse()
+    public function testParse(): void
     {
         $url = URL::parse('https://appwrite.io:8080/path?query=string&param=value');
 
@@ -26,9 +26,18 @@ class URLTest extends TestCase
         $this->assertEquals(null, $url['port']);
         $this->assertEquals('', $url['path']);
         $this->assertEquals('', $url['query']);
+
+        $url = URL::parse('appwrite-callback-project://');
+
+        $this->assertIsArray($url);
+        $this->assertEquals('appwrite-callback-project', $url['scheme']);
+        $this->assertEquals('', $url['host']);
+        $this->assertEquals(null, $url['port']);
+        $this->assertEquals('', $url['path']);
+        $this->assertEquals('', $url['query']);
     }
 
-    public function testUnparse()
+    public function testUnparse(): void
     {
         $url = URL::unparse([
             'scheme' => 'https',
@@ -86,9 +95,22 @@ class URLTest extends TestCase
 
         $this->assertIsString($url);
         $this->assertEquals('https://eldad:fux@appwrite.io/#bottom', $url);
+
+        $url = URL::unparse([
+            'scheme' => 'https',
+            'user' => '',
+            'pass' => '',
+            'host' => 'appwrite.io',
+            'port' => null,
+            'path' => '',
+            'fragment' => '',
+        ]);
+
+        $this->assertIsString($url);
+        $this->assertEquals('https://appwrite.io/#', $url);
     }
 
-    public function testParseQuery()
+    public function testParseQuery(): void
     {
         $result = URL::parseQuery('param1=value1&param2=value2');
 
@@ -96,7 +118,7 @@ class URLTest extends TestCase
         $this->assertEquals(['param1' => 'value1', 'param2' => 'value2'], $result);
     }
 
-    public function testUnParseQuery()
+    public function testUnParseQuery(): void
     {
         $result = URL::unparseQuery(['param1' => 'value1', 'param2' => 'value2']);
 

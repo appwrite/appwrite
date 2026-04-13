@@ -10,24 +10,24 @@ class None extends Model
     /**
      * @var bool
      */
-    protected $none = true;
+    protected bool $none = true;
 
     /**
      * Get Name
-     * 
+     *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'None';
     }
 
     /**
-     * Get Collection
-     * 
+     * Get Type
+     *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_NONE;
     }

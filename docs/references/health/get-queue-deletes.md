@@ -1,0 +1,1 @@
+Get the number of background destructive changes that are waiting to be processed in the Appwrite internal queue server.

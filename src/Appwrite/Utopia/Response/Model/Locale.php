@@ -42,7 +42,7 @@ class Locale extends Model
             ])
             ->addRule('eu', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'True if country is part of the Europian Union.',
+                'description' => 'True if country is part of the European Union.',
                 'default' => false,
                 'example' => false,
             ])
@@ -57,20 +57,20 @@ class Locale extends Model
 
     /**
      * Get Name
-     * 
+     *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'Locale';
     }
 
     /**
-     * Get Collection
-     * 
+     * Get Type
+     *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_LOCALE;
     }

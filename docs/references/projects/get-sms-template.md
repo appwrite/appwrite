@@ -1,0 +1,1 @@
+Get a custom SMS template for the specified locale and type returning it's contents.

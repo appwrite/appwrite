@@ -3,6 +3,9 @@
 namespace Tests\E2E\Scopes;
 
 use Tests\E2E\Client;
+use Utopia\Database\DateTime;
+use Utopia\Database\Helpers\ID;
+use Utopia\System\System;
 
 trait ProjectCustom
 {
@@ -12,150 +15,240 @@ trait ProjectCustom
     protected static $project = [];
 
     /**
+     * @param bool $fresh
      * @return array
      */
-    public function getProject(): array
+    public function getProject(bool $fresh = false): array
     {
-        if (!empty(self::$project)) {
+        if (!empty(self::$project) && !$fresh) {
             return self::$project;
         }
 
-        $team = $this->client->call(Client::METHOD_POST, '/teams', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-            'x-appwrite-project' => 'console',
-        ], [
-            'name' => 'Demo Project Team',
-        ]);
+        if ($fresh) {
+            return $this->createNewProject();
+        }
 
-        $this->assertEquals(201, $team['headers']['status-code']);
-        $this->assertEquals('Demo Project Team', $team['body']['name']);
-        $this->assertNotEmpty($team['body']['$id']);
+        self::$project = $this->createNewProject();
 
-        $project = $this->client->call(Client::METHOD_POST, '/projects', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-            'x-appwrite-project' => 'console',
-        ], [
-            'name' => 'Demo Project',
-            'teamId' => $team['body']['$id'],
-            'description' => 'Demo Project Description',
-            'logo' => '',
-            'url' => 'https://appwrite.io',
-            'legalName' => '',
-            'legalCountry' => '',
-            'legalState' => '',
-            'legalCity' => '',
-            'legalAddress' => '',
-            'legalTaxId' => '',
-        ]);
+        return self::$project;
+    }
 
-        $this->assertEquals(201, $project['headers']['status-code']);
+    /**
+     * Create a new project with team, API key, dev key, webhook, and SMTP config.
+     */
+    protected function createNewProject(): array
+    {
+        // Small delay to ensure session is fully propagated under parallel load
+        usleep(100000); // 100ms
+
+        $maxRetries = 5;
+        $team = null;
+        $teamId = ID::unique();
+
+        for ($i = 0; $i < $maxRetries; $i++) {
+            $team = $this->client->call(Client::METHOD_POST, '/teams', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+                'x-appwrite-project' => 'console',
+            ], [
+                'teamId' => $teamId,
+                'name' => 'Demo Project Team',
+            ]);
+
+            if ($team['headers']['status-code'] === 201 || $team['headers']['status-code'] === 409) {
+                break;
+            }
+
+            if ($team['headers']['status-code'] === 401 && $i < $maxRetries - 1) {
+                \usleep(500000); // 500ms delay before retry
+                continue;
+            }
+        }
+
+        $this->assertContains($team['headers']['status-code'], [201, 409], 'Team creation failed with status: ' . $team['headers']['status-code']);
+        if ($team['headers']['status-code'] === 201) {
+            $this->assertEquals('Demo Project Team', $team['body']['name']);
+            $this->assertNotEmpty($team['body']['$id']);
+            $teamId = $team['body']['$id'];
+        }
+
+        $project = null;
+        for ($i = 0; $i < $maxRetries; $i++) {
+            $project = $this->client->call(Client::METHOD_POST, '/projects', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+                'x-appwrite-project' => 'console',
+            ], [
+                'projectId' => ID::unique(),
+                'region' => System::getEnv('_APP_REGION', 'default'),
+                'name' => 'Demo Project',
+                'teamId' => $teamId,
+                'description' => 'Demo Project Description',
+                'url' => 'https://appwrite.io',
+            ]);
+
+            if ($project['headers']['status-code'] === 201) {
+                break;
+            }
+
+            if ($project['headers']['status-code'] === 401 && $i < $maxRetries - 1) {
+                \usleep(500000); // 500ms delay before retry
+                continue;
+            }
+        }
+
+        $this->assertEquals(201, $project['headers']['status-code'], 'Project creation failed with status: ' . $project['headers']['status-code']);
         $this->assertNotEmpty($project['body']);
 
-        $key = $this->client->call(Client::METHOD_POST, '/projects/' . $project['body']['$id'] . '/keys', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-            'x-appwrite-project' => 'console',
-        ], [
-            'name' => 'Demo Project Key',
-            'scopes' => [
-                'users.read',
-                'users.write',
-                'teams.read',
-                'teams.write',
-                'collections.read',
-                'collections.write',
-                'documents.read',
-                'documents.write',
-                'files.read',
-                'files.write',
-                'functions.read',
-                'functions.write',
-                'execution.read',
-                'execution.write',
-                'locale.read',
-                'avatars.read',
-                'health.read',
-            ],
-        ]);
+        $key = null;
+        for ($i = 0; $i < $maxRetries; $i++) {
+            $key = $this->client->call(Client::METHOD_POST, '/projects/' . $project['body']['$id'] . '/keys', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+                'x-appwrite-project' => 'console',
+            ], [
+                'keyId' => ID::unique(),
+                'name' => 'Demo Project Key',
+                'scopes' => [
+                    'users.read',
+                    'users.write',
+                    'teams.read',
+                    'teams.write',
+                    'databases.read',
+                    'databases.write',
+                    'collections.read',
+                    'collections.write',
+                    'tables.read',
+                    'tables.write',
+                    'documents.read',
+                    'documents.write',
+                    'rows.read',
+                    'rows.write',
+                    'files.read',
+                    'files.write',
+                    'buckets.read',
+                    'buckets.write',
+                    'sites.read',
+                    'sites.write',
+                    'functions.read',
+                    'functions.write',
+                    'sites.read',
+                    'sites.write',
+                    'execution.read',
+                    'execution.write',
+                    'log.read',
+                    'log.write',
+                    'locale.read',
+                    'avatars.read',
+                    'health.read',
+                    'rules.read',
+                    'rules.write',
+                    'sessions.write',
+                    'targets.read',
+                    'targets.write',
+                    'providers.read',
+                    'providers.write',
+                    'messages.read',
+                    'messages.write',
+                    'topics.write',
+                    'topics.read',
+                    'subscribers.write',
+                    'subscribers.read',
+                    'migrations.write',
+                    'migrations.read',
+                    'tokens.read',
+                    'tokens.write',
+                    'webhooks.read',
+                    'webhooks.write',
+                    'project.read',
+                    'project.write',
+                    'keys.read',
+                    'keys.write',
+                    'platforms.read',
+                    'platforms.write',
+                ],
+            ]);
 
-        $this->assertEquals(201, $key['headers']['status-code']);
+            if ($key['headers']['status-code'] === 201) {
+                break;
+            }
+
+            if ($key['headers']['status-code'] === 401 && $i < $maxRetries - 1) {
+                \usleep(500000);
+                continue;
+            }
+        }
+
+        $this->assertEquals(201, $key['headers']['status-code'], 'Key creation failed with status: ' . $key['headers']['status-code']);
         $this->assertNotEmpty($key['body']);
         $this->assertNotEmpty($key['body']['secret']);
 
-        $webhook = $this->client->call(Client::METHOD_POST, '/projects/'.$project['body']['$id'].'/webhooks', [
+        $devKey = $this->client->call(Client::METHOD_POST, '/projects/' . $project['body']['$id'] . '/dev-keys', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ], [
+            'name' => 'Key Test',
+            'expire' => DateTime::addSeconds(new \DateTime(), 3600),
+        ]);
+        $this->assertEquals(201, $devKey['headers']['status-code']);
+        $this->assertNotEmpty($devKey['body']);
+        $this->assertNotEmpty($devKey['body']['secret']);
+
+        $webhook = $this->client->call(Client::METHOD_POST, '/webhooks', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => $project['body']['$id'],
+            'x-appwrite-mode' => 'admin'
+        ], [
+            'webhookId' => 'unique()',
             'name' => 'Webhook Test',
             'events' => [
-                'account.create',
-                'account.update.email',
-                'account.update.name',
-                'account.update.password',
-                'account.update.prefs',
-                'account.recovery.create',
-                'account.recovery.update',
-                'account.verification.create',
-                'account.verification.update',
-                'account.delete',
-                'account.sessions.create',
-                'account.sessions.delete',
-                'database.collections.create',
-                'database.collections.update',
-                'database.collections.delete',
-                'database.documents.create',
-                'database.documents.update',
-                'database.documents.delete',
-                'functions.create',
-                'functions.update',
-                'functions.delete',
-                'functions.tags.create',
-                'functions.tags.update',
-                'functions.tags.delete',
-                'functions.executions.create',
-                'functions.executions.update',
-                'storage.files.create',
-                'storage.files.update',
-                'storage.files.delete',
-                'users.create',
-                'users.update.prefs',
-                'users.update.status',
-                'users.delete',
-                'users.sessions.delete',
-                'teams.create',
-                'teams.update',
-                'teams.delete',
-                'teams.memberships.create',
-                'teams.memberships.update.status',
-                'teams.memberships.delete',
+                'databases.*',
+                'functions.*',
+                'buckets.*',
+                'teams.*',
+                'users.*'
             ],
-            'url' => 'http://request-catcher:5000/webhook',
-            'security' => false,
-            'httpUser' => '',
-            'httpPass' => '',
+            'url' => 'http://request-catcher-webhook:5000/',
+            'tls' => false,
         ]);
 
         $this->assertEquals(201, $webhook['headers']['status-code']);
         $this->assertNotEmpty($webhook['body']);
 
-        self::$project = [
+        $this->client->call(Client::METHOD_PATCH, '/projects/' . $project['body']['$id'] . '/smtp', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ], [
+            'enabled' => true,
+            'senderEmail' => 'mailer@appwrite.io',
+            'senderName' => 'Mailer',
+            'host' => 'maildev',
+            'port' => intval(System::getEnv('_APP_SMTP_PORT', "1025")),
+            'username' => System::getEnv('_APP_SMTP_USERNAME', 'user'),
+            'password' => System::getEnv('_APP_SMTP_PASSWORD', 'password'),
+        ]);
+
+        return [
             '$id' => $project['body']['$id'],
             'name' => $project['body']['name'],
             'apiKey' => $key['body']['secret'],
+            'devKey' => $devKey['body']['secret'],
             'webhookId' => $webhook['body']['$id'],
+            'signatureKey' => $webhook['body']['secret'],
         ];
-
-        return self::$project;
     }
 
-    public function getNewKey(array $scopes) {
+    public function getNewKey(array $scopes)
+    {
 
         $projectId = self::$project['$id'];
 
@@ -165,6 +258,7 @@ trait ProjectCustom
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ], [
+            'keyId' => ID::unique(),
             'name' => 'Demo Project Key',
             'scopes' => $scopes,
         ]);
@@ -174,5 +268,18 @@ trait ProjectCustom
         $this->assertNotEmpty($key['body']['secret']);
 
         return $key['body']['secret'];
+    }
+    public function updateProjectinvalidateSessionsProperty(bool $value)
+    {
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . self::$project['$id'] . '/auth/session-invalidation', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ]), [
+            'enabled' => $value,
+        ]);
+
+        return $response['headers']['status-code'];
     }
 }

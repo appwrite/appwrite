@@ -1,1 +1,1 @@
-Delete a team by its unique ID. Only team owners have write access for this resource.
+Delete a team using its ID. Only team members with the owner role can delete the team.

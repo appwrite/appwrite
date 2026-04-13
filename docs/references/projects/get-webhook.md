@@ -1,0 +1,1 @@
+Get a webhook by its unique ID. This endpoint returns details about a specific webhook configured for a project. 

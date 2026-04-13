@@ -7,27 +7,31 @@ use Appwrite\Utopia\Response;
 class Preferences extends Any
 {
     /**
-     * @var bool
-     */
-    protected $any = true;
-
-    /**
      * Get Name
-     * 
+     *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'Preferences';
     }
 
     /**
-     * Get Collection
-     * 
+     * Get Type
+     *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_PREFERENCES;
+    }
+
+    public function getSampleData(): array
+    {
+        return [
+            'language' => 'en',
+            'timezone' => 'UTC',
+            'darkTheme' => true,
+        ];
     }
 }

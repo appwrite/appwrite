@@ -11,17 +11,14 @@ class Service
      */
     protected $service = [];
 
-    /**
-     * @var string $path
-     */
     public function __construct(array $service)
     {
         $this->service = $service;
-        
+
         $ports = (isset($this->service['ports']) && is_array($this->service['ports'])) ? $this->service['ports'] : [];
         $this->service['ports'] = [];
 
-        array_walk($ports, function(&$value, $key) {
+        array_walk($ports, function (&$value, $key) {
             $split = explode(':', $value);
             $this->service['ports'][
                 (isset($split[0])) ? $split[0] : ''
@@ -54,7 +51,7 @@ class Service
     public function getImageVersion(): string
     {
         $image = $this->getImage();
-        return substr($image, ((int)strpos($image, ':'))+1);
+        return substr($image, ((int)strpos($image, ':')) + 1);
     }
 
     /**

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 Not Found</title>
+
+    <link rel="preconnect" href="https://assets.appwrite.io/" crossorigin>
+    <style>
+        @font-face {
+            font-family: 'Inter';
+            src: url('https://assets.appwrite.io/fonts/inter/Inter-Regular.woff2') format('woff2');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Inter';
+            src: url('https://assets.appwrite.io/fonts/inter/Inter-Medium.woff2') format('woff2');
+            font-weight: 500;
+            font-style: normal;
+            font-display: swap;
+        }
+        
+        @font-face {
+            font-family: 'Fira Code';
+            src: url('https://assets.appwrite.io/fonts/fira-code/FiraCode-Regular.woff2') format('woff2');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+    </style>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #FFFFFF;
+        }
+
+        .main {
+            display: flex;
+            min-height: 100vh;
+            width: 100vw;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .content {
+            margin-left: auto;
+            margin-right: auto;
+            max-width: 400px;
+        }
+
+        span {
+            padding: var(--space-1, 2px) var(--space-3, 6px);
+            border-radius: var(--border-radius-XS, 6px);
+            background: var(--color-overlay-on-neutral, rgba(0, 0, 0, 0.06));
+            color: var(--color-fgColor-neutral-secondary, #56565C);
+            text-align: center;
+            font-family: var(--font-family-sansSerif, Inter), sans-serif;
+            font-size: var(--font-size-S, 14px);
+            font-style: normal;
+            font-weight: 400;
+            line-height: 140%;
+            letter-spacing: -0.063px;
+        }
+
+        h1 {
+            color: var(--color-fgColor-neutral-primary, #2D2D31);
+            text-align: center;
+            font-family: var(--font-family-sansSerif, Inter), sans-serif;
+            font-size: var(--font-size-XXXL, 32px);
+            font-style: normal;
+            font-weight: 400;
+            line-height: 140%;
+            letter-spacing: -0.144px;
+            margin-top: 8px;
+            margin-bottom: 32px;
+        }
+
+        button {
+            border-radius: var(--border-radius-S, 8px);
+            font-family: var(--font-family-sansSerif, Inter), sans-serif;
+            font-size: var(--font-size-S, 14px);
+            font-style: normal;
+            font-weight: 500;
+            line-height: 140%;
+            letter-spacing: -0.063px;
+            padding: var(--space-3, 6px) var(--space-5, 10px);
+            cursor: pointer;
+            border: var(--border-width-S, 1px) solid var(--color-border-neutral-strong, #D8D8DB);
+            background: var(--color-bgColor-neutral-primary, #FFF);
+            color: var(--color-fgColor-neutral-secondary, #56565C);
+        }
+
+        .center {
+            display: flex;
+            justify-content: center;
+        }
+
+        .brand {
+            position: absolute;
+            width: 100%;
+            bottom: 32px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .brand p {
+            font-family: var(--font-family-monospace, "Fira Code"), monospace;
+            font-size: var(--font-size-XS, 12px);
+            font-style: normal;
+            font-weight: 400;
+            line-height: 130%;
+            letter-spacing: 0.96px;
+            text-transform: uppercase;
+            color: var(--color-fgColor-neutral-secondary, #56565C);
+        }
+
+        .brand svg {
+            height: 20px;
+        }
+
+        .logo-dark {
+            display: none;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #1D1D21;
+            }
+
+            h1 {
+                color: var(--color-fgColor-neutral-primary, #EDEDF0);
+            }
+
+            button {
+                border: var(--border-width-S, 1px) solid var(--color-border-neutral-strong, #414146);
+                background: var(--color-bgColor-neutral-primary, #1D1D21);
+                color: var(--color-fgColor-neutral-secondary, #C3C3C6);
+            }
+
+            .brand p {
+                color: var(--color-fgColor-neutral-secondary, #C3C3C6);
+            }
+
+            span {
+                background: var(--color-overlay-on-neutral, rgba(255, 255, 255, 0.20));
+                color: var(--color-fgColor-neutral-secondary, #C3C3C6);
+            }
+
+            .logo-light {
+                display: none;
+            }
+
+            .logo-dark {
+                display: block;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main">
+        <div class="content">
+            <div class="center"><span>Page not found</span></div>
+            <h1>The page you’re looking for doesn’t exist.</h1>
+            <div class="center"><a href="/"><button>Go to homepage</button></a></div>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,15 +1,19 @@
 <?php
+
 namespace Appwrite\Tests;
 
-use PHPUnit\Runner\AfterTestHook;
+use PHPUnit\Runner\Extension\Extension;
+use PHPUnit\Runner\Extension\Facade;
+use PHPUnit\Runner\Extension\ParameterCollection;
+use PHPUnit\TextUI\Configuration\Configuration;
 
-class TestHook implements AfterTestHook
+class TestHook implements Extension
 {
-    public function executeAfterTest(string $test, float $time): void
+    protected const MAX_SECONDS_ALLOWED = 15;
+
+    public function bootstrap(Configuration $configuration, Facade $facade, ParameterCollection $parameters): void
     {
-        printf("%s ended in %s seconds\n", 
-           $test,
-           $time
-        );
+        $facade->registerSubscriber(new TestFinishedSubscriber(self::MAX_SECONDS_ALLOWED));
+        $facade->registerSubscriber(new RetrySubscriber());
     }
 }

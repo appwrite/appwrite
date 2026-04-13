@@ -1,0 +1,68 @@
+<?php
+
+namespace Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Boolean;
+
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Boolean\Update as BooleanUpdate;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Response as UtopiaResponse;
+use Utopia\Database\Database;
+use Utopia\Database\Validator\Key;
+use Utopia\Database\Validator\UID;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Validator\Boolean;
+use Utopia\Validator\Nullable;
+
+class Update extends BooleanUpdate
+{
+    public static function getName(): string
+    {
+        return 'updateBooleanColumn';
+    }
+
+    protected function getResponseModel(): string|array
+    {
+        return UtopiaResponse::MODEL_COLUMN_BOOLEAN;
+    }
+
+    public function __construct()
+    {
+        $this
+            ->setHttpMethod(self::HTTP_REQUEST_METHOD_PATCH)
+            ->setHttpPath('/v1/tablesdb/:databaseId/tables/:tableId/columns/boolean/:key')
+            ->desc('Update boolean column')
+            ->groups(['api', 'database', 'schema'])
+            ->label('scope', ['tables.write', 'collections.write'])
+            ->label('resourceType', RESOURCE_TYPE_DATABASES)
+            ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].update')
+            ->label('audits.event', 'column.update')
+            ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
+            ->label('sdk', new Method(
+                namespace: $this->getSDKNamespace(),
+                group: $this->getSDKGroup(),
+                name: self::getName(),
+                description: '/docs/references/tablesdb/update-boolean-column.md',
+                auth: [AuthType::ADMIN, AuthType::KEY],
+                responses: [
+                    new SDKResponse(
+                        code: SwooleResponse::STATUS_CODE_OK,
+                        model: $this->getResponseModel(),
+                    )
+                ],
+                contentType: ContentType::JSON
+            ))
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('tableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/references/cloud/server-dart/tablesDB#createTable).', false, ['dbForProject'])
+            ->param('key', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Column Key.', false, ['dbForProject'])
+            ->param('required', null, new Boolean(), 'Is column required?')
+            ->param('default', null, new Nullable(new Boolean()), 'Default value for column when not provided. Cannot be set when column is required.')
+            ->param('newKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'New Column Key.', true, ['dbForProject'])
+            ->inject('response')
+            ->inject('dbForProject')
+            ->inject('queueForEvents')
+            ->inject('authorization')
+            ->callback($this->action(...));
+    }
+}

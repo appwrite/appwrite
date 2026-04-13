@@ -1,0 +1,1 @@
+Send a test email to verify SMTP configuration. 

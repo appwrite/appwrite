@@ -16,12 +16,24 @@ class Func extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
-            ->addRule('$permissions', [
-                'type' => Response::MODEL_PERMISSIONS,
-                'description' => 'Function permissions.',
-                'default' => new \stdClass,
-                'example' => new \stdClass,
-                'array' => false,
+            ->addRule('$createdAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Function creation date in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+            ->addRule('$updatedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Function update date in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+            ->addRule('execute', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Execution permissions.',
+                'default' => [],
+                'example' => 'users',
+                'array' => true,
             ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
@@ -29,41 +41,79 @@ class Func extends Model
                 'default' => '',
                 'example' => 'My Function',
             ])
-            ->addRule('dateCreated', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Function creation date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981250,
+            ->addRule('enabled', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Function enabled.',
+                'default' => true,
+                'example' => false,
             ])
-            ->addRule('dateUpdated', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Function update date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981257,
+            ->addRule('live', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Is the function deployed with the latest configuration? This is set to false if you\'ve changed an environment variables, entrypoint, commands, or other settings that needs redeploy to be applied. When the value is false, redeploy the function to update it with the latest configuration.',
+                'default' => true,
+                'example' => false,
             ])
-            ->addRule('status', [
+            ->addRule('logging', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'When disabled, executions will exclude logs and errors, and will be slightly faster.',
+                'default' => true,
+                'example' => false,
+            ])
+            ->addRule('runtime', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Function status. Possible values: disabled, enabled',
-                'default' => '',
-                'example' => 'enabled',
-            ])
-            ->addRule('env', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Function execution environment.',
+                'description' => 'Function execution and build runtime.',
                 'default' => '',
                 'example' => 'python-3.8',
             ])
-            ->addRule('tag', [
+            ->addRule('deploymentRetention', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'How many days to keep the non-active deployments before they will be automatically deleted.',
+                'default' => 0,
+                'example' => 7,
+            ])
+            ->addRule('deploymentId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Function active tag ID.',
+                'description' => 'Function\'s active deployment ID.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
+            ->addRule('deploymentCreatedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Active deployment creation date in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+            ->addRule('latestDeploymentId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Function\'s latest deployment ID.',
+                'default' => '',
+                'example' => '5e5ea5c16897e',
+            ])
+            ->addRule('latestDeploymentCreatedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Latest deployment creation date in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+            ->addRule('latestDeploymentStatus', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Status of latest deployment. Possible values are "waiting", "processing", "building", "ready", and "failed".',
+                'default' => '',
+                'example' => 'ready',
+            ])
+            ->addRule('scopes', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Allowed permission scopes.',
+                'default' => [],
+                'example' => 'users.read',
+                'array' => true,
+            ])
             ->addRule('vars', [
-                'type' => self::TYPE_JSON,
-                'description' => 'Function environment variables.',
-                'default' => new \stdClass,
-                'example' => ['key' => 'value'],
+                'type' => Response::MODEL_VARIABLE,
+                'description' => 'Function variables.',
+                'default' => [],
+                'example' => [],
+                'array' => true
             ])
             ->addRule('events', [
                 'type' => self::TYPE_STRING,
@@ -74,47 +124,95 @@ class Func extends Model
             ])
             ->addRule('schedule', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Function execution schedult in CRON format.',
+                'description' => 'Function execution schedule in CRON format.',
                 'default' => '',
                 'example' => '5 4 * * *',
-            ])
-            ->addRule('scheduleNext', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Function next scheduled execution date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981292,
-            ])
-            ->addRule('schedulePrevious', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Function next scheduled execution date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981237,
             ])
             ->addRule('timeout', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Function execution timeout in seconds.',
                 'default' => 15,
-                'example' => 1592981237,
+                'example' => 300,
+            ])
+            ->addRule('entrypoint', [
+                'type' => self::TYPE_STRING,
+                'description' => 'The entrypoint file used to execute the deployment.',
+                'default' => '',
+                'example' => 'index.js',
+            ])
+            ->addRule('commands', [
+                'type' => self::TYPE_STRING,
+                'description' => 'The build command used to build the deployment.',
+                'default' => '',
+                'example' => 'npm install',
+            ])
+            ->addRule('version', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Version of Open Runtimes used for the function.',
+                'default' => 'v5',
+                'example' => 'v2',
+            ])
+            ->addRule('installationId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Function VCS (Version Control System) installation id.',
+                'default' => '',
+                'example' => '6m40at4ejk5h2u9s1hboo',
+            ])
+            ->addRule('providerRepositoryId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'VCS (Version Control System) Repository ID',
+                'default' => '',
+                'example' => 'appwrite',
+            ])
+            ->addRule('providerBranch', [
+                'type' => self::TYPE_STRING,
+                'description' => 'VCS (Version Control System) branch name',
+                'default' => '',
+                'example' => 'main',
+            ])
+            ->addRule('providerRootDirectory', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Path to function in VCS (Version Control System) repository',
+                'default' => '',
+                'example' => 'functions/helloWorld',
+            ])
+            ->addRule('providerSilentMode', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Is VCS (Version Control System) connection is in silent mode? When in silence mode, no comments will be posted on the repository pull or merge requests',
+                'default' => false,
+                'example' => false,
+            ])
+            ->addRule('buildSpecification', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Machine specification for deployment builds.',
+                'default' => APP_COMPUTE_SPECIFICATION_DEFAULT,
+                'example' => APP_COMPUTE_SPECIFICATION_DEFAULT,
+            ])
+            ->addRule('runtimeSpecification', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Machine specification for executions.',
+                'default' => APP_COMPUTE_SPECIFICATION_DEFAULT,
+                'example' => APP_COMPUTE_SPECIFICATION_DEFAULT,
             ])
         ;
     }
 
     /**
      * Get Name
-     * 
+     *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'Function';
     }
 
     /**
-     * Get Collection
-     * 
+     * Get Type
+     *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_FUNCTION;
     }

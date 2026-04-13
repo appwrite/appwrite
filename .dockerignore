@@ -1,8 +1,6 @@
 app/db/SQL
 node_modules
 storage
-public/scripts
-public/styles
 .git
 .idea
 .cd .babelrc

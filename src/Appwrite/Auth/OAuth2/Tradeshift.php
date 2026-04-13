@@ -9,33 +9,40 @@ use Appwrite\Auth\OAuth2;
 
 class Tradeshift extends OAuth2
 {
-    const TRADESHIFT_SANDBOX_API_DOMAIN = 'api-sandbox.tradeshift.com';
-    const TRADESHIFT_API_DOMAIN = 'api.tradeshift.com';
+    public const TRADESHIFT_SANDBOX_API_DOMAIN = 'api-sandbox.tradeshift.com';
+    public const TRADESHIFT_API_DOMAIN = 'api.tradeshift.com';
 
-    private $apiDomain = [
+    private array $apiDomain = [
         'sandbox' => self::TRADESHIFT_SANDBOX_API_DOMAIN,
         'live' => self::TRADESHIFT_API_DOMAIN,
     ];
 
-    private $endpoint = [
+    private array $endpoint = [
         'sandbox' => 'https://' . self::TRADESHIFT_SANDBOX_API_DOMAIN . '/tradeshift/',
         'live' => 'https://' . self::TRADESHIFT_API_DOMAIN . '/tradeshift/',
     ];
 
-    private $resourceEndpoint = [
+    private array $resourceEndpoint = [
         'sandbox' => 'https://' . self::TRADESHIFT_SANDBOX_API_DOMAIN . '/tradeshift/rest/external/',
         'live' => 'https://' . self::TRADESHIFT_API_DOMAIN . '/tradeshift/rest/external/',
     ];
 
-    protected $environment = 'live';
+    protected string $environment = 'live';
 
     /**
      * @var array
      */
-    protected $user = [];
+    protected array $user = [];
 
+    /**
+     * @var array
+     */
+    protected array $tokens = [];
 
-    protected $scopes = [
+    /**
+     * @var array
+     */
+    protected array $scopes = [
         'openid',
         'offline',
     ];
@@ -69,23 +76,47 @@ class Tradeshift extends OAuth2
     /**
      * @param string $code
      *
-     * @return string
+     * @return array
      */
-    public function getAccessToken(string $code): string
+    protected function getTokens(string $code): array
     {
-        $response = $this->request(
+        if (empty($this->tokens)) {
+            $this->tokens = \json_decode($this->request(
+                'POST',
+                $this->endpoint[$this->environment] . 'auth/token',
+                ['Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret)],
+                \http_build_query([
+                    'grant_type' => 'authorization_code',
+                    'code' => $code,
+                ])
+            ), true);
+        }
+
+        return $this->tokens;
+    }
+
+    /**
+     * @param string $refreshToken
+     *
+     * @return array
+     */
+    public function refreshTokens(string $refreshToken): array
+    {
+        $this->tokens = \json_decode($this->request(
             'POST',
             $this->endpoint[$this->environment] . 'auth/token',
             ['Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret)],
             \http_build_query([
-                'grant_type' => 'authorization_code',
-                'code' => $code,
+                'grant_type' => 'refresh_token',
+                'refresh_token' => $refreshToken,
             ])
-        );
+        ), true);
 
-        $accessToken = \json_decode($response, true);
+        if (empty($this->tokens['refresh_token'])) {
+            $this->tokens['refresh_token'] = $refreshToken;
+        }
 
-        return $accessToken['access_token'] ?? '';
+        return $this->tokens;
     }
 
     /**
@@ -110,6 +141,22 @@ class Tradeshift extends OAuth2
         $user = $this->getUser($accessToken);
 
         return $user['Username'] ?? '';
+    }
+
+    /**
+     * Check if the OAuth email is verified
+     *
+     * If present, the email is verified. This was verfied through a manual Tradeshift sign up process
+     *
+     * @param string $accessToken
+     *
+     * @return bool
+     */
+    public function isEmailVerified(string $accessToken): bool
+    {
+        $email = $this->getUser($accessToken);
+
+        return !empty($email);
     }
 
     /**

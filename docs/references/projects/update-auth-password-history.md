@@ -1,0 +1,1 @@
+Update the authentication password history requirement. Use this endpoint to require new passwords to be different than the last X amount of previously used ones.

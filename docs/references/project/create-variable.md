@@ -1,0 +1,1 @@
+Create a new project variable. This variable will be accessible in all Appwrite Functions at runtime.
