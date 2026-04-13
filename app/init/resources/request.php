@@ -69,7 +69,13 @@ return function (Container $container): void {
         return $utopia;
     }, ['utopia']);
 
-    $container->set('log', fn () => new Log(), []);
+    $breadcrumbs = [];
+    $breadcrumbs[] = microtime(true) . '::Init log';
+
+    $log = new Log();
+    $log->addExtra('breadcrumbs', $breadcrumbs);
+
+    $container->set('log', fn () => $log, $breadcrumbs);
 
     $container->set('logger', function ($register) {
         return $register->get('logger');
