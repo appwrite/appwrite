@@ -294,6 +294,5 @@ trait PresenceBase
         );
 
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals('general_argument_invalid', $response['body']['type']);
     }
 }

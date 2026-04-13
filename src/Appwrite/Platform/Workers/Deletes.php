@@ -214,6 +214,7 @@ class Deletes extends Action
                 $this->deleteUsageStats($project, $getProjectDB, $getLogsDB, $hourlyUsageRetentionDatetime);
                 $this->deleteExpiredSessions($project, $getProjectDB);
                 $this->deleteExpiredTransactions($project, $getProjectDB);
+                $this->deleteExpiredPresences($project, $getProjectDB);
                 $this->deleteOldDeployments($queueForDeletes, $project, $getProjectDB);
                 break;
             default:
@@ -1640,6 +1641,18 @@ class Deletes extends Action
 
         $dbForProject->deleteDocuments('transactionLogs', [
             Query::equal('transactionInternalId', $transactionInternalIds),
+        ], onError: function (Throwable $th) {
+            // Swallow errors to avoid breaking the cleanup process
+        });
+    }
+
+    private function deleteExpiredPresences(Document $project, callable $getProjectDB): void
+    {
+        $dbForProject = $getProjectDB($project);
+
+        $dbForProject->deleteDocuments('presenceLogs', [
+            Query::isNotNull('expiry'),
+            Query::lessThan('expiry', DateTime::format(new \DateTime())),
         ], onError: function (Throwable $th) {
             // Swallow errors to avoid breaking the cleanup process
         });

@@ -55,7 +55,7 @@ class Upsert extends PresenceAction
                 ],
             ))
             ->param('presenceId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Presence unique ID.', false, ['dbForProject'])
-            ->param('userId', '', new UID(), 'User ID.', false)
+            ->param('userId', null, new Nullable(new UID()), 'User ID.', true)
             ->param('status', '', new Text(Database::LENGTH_KEY), 'Presence status.', false)
             ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE])), 'An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             // TODO: what shall be the min and max date here
@@ -92,16 +92,16 @@ class Upsert extends PresenceAction
         $userInternalId = null;
         $resolvedUserId = $userId;
         if (!$isAPIKey && !$isPrivilegedUser) {
-            $userInternalId = $user->getId();
+            $userInternalId = $user->getSequence();
             $resolvedUserId = $user->getId();
         } else {
-            $user = $dbForProject->getDocument('users', $userId);
-            if ($user->isEmpty()) {
+            $fetchedUser = $dbForProject->getDocument('users', $userId);
+            if ($fetchedUser->isEmpty()) {
                 throw new Exception(Exception::USER_NOT_FOUND, params: [$userId]);
             }
 
-            $userInternalId = $user->getId();
-            $resolvedUserId = $user->getId();
+            $userInternalId = $fetchedUser->getSequence();
+            $resolvedUserId = $fetchedUser->getId();
         }
 
         $presenceData = [

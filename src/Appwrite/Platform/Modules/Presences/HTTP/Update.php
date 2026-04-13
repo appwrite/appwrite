@@ -80,10 +80,6 @@ class Update extends PresenceAction
             throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'userId is not allowed for non-API key and non-privileged users');
         }
 
-        if (($isAPIKey || $isPrivilegedUser) && !$userId) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'userId is required for API key and privileged users');
-        }
-
         $presence = $dbForProject->getDocument('presenceLogs', $presenceId);
 
         if ($presence->isEmpty()) {
@@ -94,6 +90,8 @@ class Update extends PresenceAction
 
         if ($userId !== null) {
             $updateData['userId'] = $userId;
+            $userDoc = $dbForProject->getDocument('users', $userId);
+            $updateData['userInternalId'] = $userDoc->getSequence();
         }
 
         if ($status !== null) {
