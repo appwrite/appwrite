@@ -59,6 +59,7 @@ class Get extends DocumentGet
             ->inject('usage')
             ->inject('transactionState')
             ->inject('authorization')
+            ->inject('user')
             ->callback($this->action(...));
     }
 }

@@ -82,6 +82,9 @@ class Exception extends \Exception
     public const string USER_PASSWORD_RECENTLY_USED = 'password_recently_used';
     public const string USER_PASSWORD_PERSONAL_DATA = 'password_personal_data';
     public const string USER_EMAIL_ALREADY_EXISTS = 'user_email_already_exists';
+    public const string USER_EMAIL_DISPOSABLE = 'user_email_disposable';
+    public const string USER_EMAIL_FREE = 'user_email_free';
+    public const string USER_EMAIL_NOT_CANONICAL = 'user_email_not_canonical';
     public const string USER_PASSWORD_MISMATCH = 'user_password_mismatch';
     public const string USER_SESSION_NOT_FOUND = 'user_session_not_found';
     public const string USER_IDENTITY_NOT_FOUND = 'user_identity_not_found';
@@ -330,6 +333,8 @@ class Exception extends \Exception
 
     /** Platform */
     public const string PLATFORM_NOT_FOUND = 'platform_not_found';
+    public const string PLATFORM_METHOD_UNSUPPORTED = 'platform_method_unsupported';
+    public const string PLATFORM_ALREADY_EXISTS = 'platform_already_exists';
 
     /** GraphqQL */
     public const string GRAPHQL_NO_QUERY = 'graphql_no_query';

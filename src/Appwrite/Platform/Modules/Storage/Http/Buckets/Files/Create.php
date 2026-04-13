@@ -103,7 +103,7 @@ class Create extends Action
         Request $request,
         Response $response,
         Database $dbForProject,
-        Document $user,
+        User $user,
         Event $queueForEvents,
         string $mode,
         Device $deviceForFiles,
@@ -112,8 +112,8 @@ class Create extends Action
     ) {
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        $isAPIKey = User::isApp($authorization->getRoles());
-        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
+        $isAPIKey = $user->isApp($authorization->getRoles());
+        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
@@ -286,6 +286,8 @@ class Create extends Action
             $mimeType = $deviceForFiles->getFileMimeType($path); // Get mime-type before compression and encryption
             $fileHash = $deviceForFiles->getFileHash($path); // Get file hash before compression and encryption
             $data = '';
+            $iv = '';
+            $tag = null;
             // Compression
             $algorithm = $bucket->getAttribute('compression', Compression::NONE);
             if ($fileSize <= APP_STORAGE_READ_BUFFER && $algorithm != Compression::NONE) {

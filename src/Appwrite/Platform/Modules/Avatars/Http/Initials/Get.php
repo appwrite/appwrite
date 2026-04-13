@@ -90,7 +90,7 @@ class Get extends Action
             }
         }
 
-        $rand = \substr($code, -1);
+        $rand = (int) \substr((string) $code, -1);
 
         $rand = ($rand > \count($themes) - 1) ? $rand % \count($themes) : $rand;
 

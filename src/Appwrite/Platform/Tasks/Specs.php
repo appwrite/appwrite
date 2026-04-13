@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\Network\Validator\Redirect;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Specification\Format\OpenAPI3;
@@ -18,6 +19,8 @@ use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\DI\Container;
 use Utopia\Http\Http;
 use Utopia\Http\Request as UtopiaRequest;
 use Utopia\Http\Response as UtopiaResponse;
@@ -336,17 +339,30 @@ class Specs extends Action
 
         $mocks = ($mode === 'mocks');
 
-        // Mock dependencies
-        Http::setResource('request', fn () => $this->getRequest());
-        Http::setResource('response', fn () => $response);
-        Http::setResource('dbForPlatform', fn () => new Database(new MySQL(''), new Cache(new None())));
-        Http::setResource('dbForProject', fn () => new Database(new MySQL(''), new Cache(new None())));
+        // Mock dependencies needed by param validator injections in route definitions
+        $specsContainer = new Container();
+        $specsContainer->set('request', fn () => $this->getRequest());
+        $specsContainer->set('response', fn () => $response);
+        $specsContainer->set('dbForPlatform', fn () => new Database(new MySQL(''), new Cache(new None())));
+        $specsContainer->set('dbForProject', fn () => new Database(new MySQL(''), new Cache(new None())));
+        $specsContainer->set('redirectValidator', fn () => new Redirect([], []));
+        $specsContainer->set('project', fn () => new Document([]));
+        $specsContainer->set('passwordsDictionary', fn () => []);
+        $specsContainer->set('localeCodes', fn () => \array_map(fn ($locale) => $locale['code'], Config::getParam('locale-codes', [])));
+        $specsContainer->set('plan', fn () => []);
 
         $platforms = static::getPlatforms();
         $authCounts = $this->getAuthCounts();
         $keys = $this->getKeys();
 
         $generatedFiles = [];
+        $endpoint = System::getEnv('_APP_HOME', 'https://appwrite.io');
+        $email = System::getEnv('_APP_SYSTEM_TEAM_EMAIL', 'team@appwrite.io');
+        $specsDir = __DIR__ . '/../../../../app/config/specs';
+
+        if (!is_dir($specsDir) && !@mkdir($specsDir, 0755, true) && !is_dir($specsDir)) {
+            throw new Exception('Failed to create specs directory: ' . $specsDir);
+        }
 
         foreach ($platforms as $platform) {
             $routes = [];
@@ -431,7 +447,7 @@ class Specs extends Action
             }
 
             $arguments = [
-                new Http('UTC'),
+                $specsContainer,
                 $services,
                 $routes,
                 $models,
@@ -443,8 +459,6 @@ class Specs extends Action
             foreach (['swagger2', 'open-api3'] as $format) {
                 $formatInstance = $this->getFormatInstance($format, $arguments);
                 $specs = new Specification($formatInstance);
-                $endpoint = System::getEnv('_APP_HOME', '[HOSTNAME]');
-                $email = System::getEnv('_APP_SYSTEM_TEAM_EMAIL', APP_EMAIL_TEAM);
 
                 $formatInstance
                     ->setParam('name', APP_NAME)
@@ -463,36 +477,35 @@ class Specs extends Action
                     ->setParam('docs.description', 'Full API docs, specs and tutorials')
                     ->setParam('docs.url', $endpoint . '/docs');
 
-                $specsDir = __DIR__ . '/../../../../app/config/specs';
+                $path = $mocks
+                    ? $specsDir . '/' . $format . '-mocks-' . $platform . '.json'
+                    : $specsDir . '/' . $format . '-' . $version . '-' . $platform . '.json';
 
-                if (!is_dir($specsDir)) {
-                    if (!mkdir($specsDir, 0755, true)) {
-                        throw new Exception('Failed to create specs directory: ' . $specsDir);
-                    }
+                try {
+                    $parsedSpecs = $specs->parse();
+                } catch (\RuntimeException $e) {
+                    throw new \RuntimeException("Spec generation failed for {$platform} ({$format}): " . $e->getMessage(), 0, $e);
                 }
 
-                if ($mocks) {
-                    $path = $specsDir . '/' . $format . '-mocks-' . $platform . '.json';
+                $encodedSpecs = \json_encode($parsedSpecs, JSON_PRETTY_PRINT);
 
-                    if (!file_put_contents($path, json_encode($specs->parse(), JSON_PRETTY_PRINT))) {
-                        throw new Exception('Failed to save mocks spec file: ' . $path);
-                    }
+                unset($parsedSpecs);
 
-                    $generatedFiles[] = realpath($path);
-                    Console::success('Saved mocks spec file: ' . realpath($path));
-
-                    continue;
+                if ($encodedSpecs === false) {
+                    throw new Exception('Failed to encode ' . ($mocks ? 'mocks ' : '') . 'spec file: ' . \json_last_error_msg());
                 }
 
-                $path = $specsDir . '/' . $format . '-' . $version . '-' . $platform . '.json';
-
-                if (!file_put_contents($path, json_encode($specs->parse(), JSON_PRETTY_PRINT))) {
-                    throw new Exception('Failed to save spec file: ' . $path);
+                if (\file_put_contents($path, $encodedSpecs) === false) {
+                    throw new Exception('Failed to save ' . ($mocks ? 'mocks ' : '') . 'spec file: ' . $path);
                 }
 
                 $generatedFiles[] = realpath($path);
-                Console::success('Saved spec file: ' . realpath($path));
+                Console::success('Saved ' . ($mocks ? 'mocks ' : '') . 'spec file: ' . realpath($path));
+
+                unset($encodedSpecs, $specs, $formatInstance);
             }
+
+            unset($arguments, $models, $routes, $services);
         }
 
         if ($git === 'yes') {

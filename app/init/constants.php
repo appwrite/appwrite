@@ -46,8 +46,8 @@ const APP_PROJECT_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_RESOURCE_TOKEN_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_FILE_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 4321;
-const APP_VERSION_STABLE = '1.9.0';
+const APP_CACHE_BUSTER = 4322;
+const APP_VERSION_STABLE = '1.9.1';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -97,6 +97,7 @@ const APP_COMPUTE_DEPLOYMENT_MAX_RETENTION = 100 * 365; // 100 years
 const APP_SDK_PLATFORM_SERVER = 'server';
 const APP_SDK_PLATFORM_CLIENT = 'client';
 const APP_SDK_PLATFORM_CONSOLE = 'console';
+const APP_SDK_PLATFORM_STATIC = 'static';
 const APP_VCS_GITHUB_USERNAME = 'Appwrite';
 const APP_VCS_GITHUB_EMAIL = 'team@appwrite.io';
 const APP_VCS_GITHUB_URL = 'https://github.com/TeamAppwrite';
@@ -155,9 +156,12 @@ const SESSION_PROVIDER_SERVER = 'server';
 /**
  * Activity associated with user or the app.
  */
-const ACTIVITY_TYPE_APP = 'app';
 const ACTIVITY_TYPE_USER = 'user';
+const ACTIVITY_TYPE_ADMIN = 'admin';
 const ACTIVITY_TYPE_GUEST = 'guest';
+const ACTIVITY_TYPE_KEY_PROJECT = 'keyProject';
+const ACTIVITY_TYPE_KEY_ACCOUNT = 'keyAccount';
+const ACTIVITY_TYPE_KEY_ORGANIZATION = 'keyOrganization';
 
 /**
  * MFA

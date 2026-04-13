@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Modules\Project\Http\Project\Variables;
 
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -19,7 +18,7 @@ use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
 
-class XList extends Base
+class XList extends Action
 {
     use HTTP;
 

@@ -28,6 +28,8 @@ class Status extends Action
 
     public function action(string $installId, Response $response, State $state): void
     {
+        $state->clearStaleLockIfNeeded();
+
         $installId = $state->sanitizeInstallId($installId);
         if ($installId === '') {
             $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);

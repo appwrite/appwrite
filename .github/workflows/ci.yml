@@ -150,8 +150,37 @@ jobs:
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress --ignore-platform-reqs
 
+      - name: Cache PHPStan result cache
+        uses: actions/cache@v4
+        with:
+          path: .phpstan-cache
+          key: phpstan-${{ github.sha }}
+          restore-keys: |
+            phpstan-
+
       - name: Run PHPStan
-        run: composer analyze
+        run: composer analyze -- --no-progress
+
+  specs:
+    name: Checks / Specs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: swoole
+          tools: composer:v2
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --ignore-platform-reqs
+
+      - name: Generate specs
+        run: _APP_STORAGE_LIMIT=5368709120 php app/cli.php specs --version=latest --git=no
 
   locale:
     name: Checks / Locale
@@ -451,6 +480,10 @@ jobs:
           _APP_BROWSER_HOST: http://invalid-browser/v1
           _APP_DATABASE_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'database_db_main' || '' }}
           _APP_DATABASE_SHARED_TABLES_V1: ${{ matrix.mode == 'shared_v1' && 'database_db_main' || '' }}
+          _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'documentsdb_db_main' || '' }}
+          _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES_V1: ${{ matrix.mode == 'shared_v1' && 'documentsdb_db_main' || '' }}
+          _APP_DATABASE_VECTORSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'vectorsdb_db_main' || '' }}
+          _APP_DATABASE_VECTORSDB_SHARED_TABLES_V1: ${{ matrix.mode == 'shared_v1' && 'vectorsdb_db_main' || '' }}
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose pull --quiet --ignore-buildable
@@ -525,6 +558,10 @@ jobs:
           _APP_OPTIONS_ABUSE: enabled
           _APP_DATABASE_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'database_db_main' || '' }}
           _APP_DATABASE_SHARED_TABLES_V1: ${{ matrix.mode == 'shared_v1' && 'database_db_main' || '' }}
+          _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'documentsdb_db_main' || '' }}
+          _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES_V1: ${{ matrix.mode == 'shared_v1' && 'documentsdb_db_main' || '' }}
+          _APP_DATABASE_VECTORSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'vectorsdb_db_main' || '' }}
+          _APP_DATABASE_VECTORSDB_SHARED_TABLES_V1: ${{ matrix.mode == 'shared_v1' && 'vectorsdb_db_main' || '' }}
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose pull --quiet --ignore-buildable
@@ -582,6 +619,10 @@ jobs:
         env:
           _APP_DATABASE_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'database_db_main' || '' }}
           _APP_DATABASE_SHARED_TABLES_V1: ${{ matrix.mode == 'shared_v1' && 'database_db_main' || '' }}
+          _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'documentsdb_db_main' || '' }}
+          _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES_V1: ${{ matrix.mode == 'shared_v1' && 'documentsdb_db_main' || '' }}
+          _APP_DATABASE_VECTORSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'vectorsdb_db_main' || '' }}
+          _APP_DATABASE_VECTORSDB_SHARED_TABLES_V1: ${{ matrix.mode == 'shared_v1' && 'vectorsdb_db_main' || '' }}
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose pull --quiet --ignore-buildable

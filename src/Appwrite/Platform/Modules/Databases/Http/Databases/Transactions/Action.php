@@ -33,7 +33,7 @@ abstract class Action extends DatabasesAction
         return $this->databaseType.'.'.METRIC_DATABASE_ID_OPERATIONS_WRITES;
     }
 
-    public function setHttpPath(string $path): DatabasesAction
+    public function setHttpPath(string $path): self
     {
         switch (true) {
             case str_contains($path, '/tablesdb'):
@@ -50,7 +50,8 @@ abstract class Action extends DatabasesAction
                 $this->databaseType = VECTORSDB;
                 break;
         }
-        return parent::setHttpPath($path);
+        parent::setHttpPath($path);
+        return $this;
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace Tests\Unit\Utopia\Response\Filters;
 
 use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Response\Filter;
 use Appwrite\Utopia\Response\Filters\V16;
 use Cron\CronExpression;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -11,10 +12,7 @@ use Utopia\Database\DateTime;
 
 class V16Test extends TestCase
 {
-    /**
-     * @var Filter
-     */
-    protected $filter = null;
+    protected Filter $filter;
 
     public function setUp(): void
     {

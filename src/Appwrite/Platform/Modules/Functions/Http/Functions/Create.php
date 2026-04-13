@@ -424,8 +424,8 @@ class Create extends Base
 
                 /** Trigger Realtime Events */
                 $queueForRealtime
-                    ->from($ruleCreate)
                     ->setSubscribers(['console', $project->getId()])
+                    ->from($ruleCreate)
                     ->trigger();
             }
         }

@@ -1180,6 +1180,7 @@ Http::get('/v1/messaging/providers/:providerId/logs')
                 'userEmail' => $log['data']['userEmail'] ?? null,
                 'userName' => $log['data']['userName'] ?? null,
                 'mode' => $log['data']['mode'] ?? null,
+                'userType' => $log['data']['userType'] ?? null,
                 'ip' => $log['ip'],
                 'time' => $log['time'],
                 'osCode' => $os['osCode'],
@@ -2585,6 +2586,7 @@ Http::get('/v1/messaging/topics/:topicId/logs')
                 'userEmail' => $log['data']['userEmail'] ?? null,
                 'userName' => $log['data']['userName'] ?? null,
                 'mode' => $log['data']['mode'] ?? null,
+                'userType' => $log['data']['userType'] ?? null,
                 'ip' => $log['ip'],
                 'time' => $log['time'],
                 'osCode' => $os['osCode'],
@@ -3000,6 +3002,7 @@ Http::get('/v1/messaging/subscribers/:subscriberId/logs')
                 'userEmail' => $log['data']['userEmail'] ?? null,
                 'userName' => $log['data']['userName'] ?? null,
                 'mode' => $log['data']['mode'] ?? null,
+                'userType' => $log['data']['userType'] ?? null,
                 'ip' => $log['ip'],
                 'time' => $log['time'],
                 'osCode' => $os['osCode'],
@@ -3566,7 +3569,7 @@ Http::post('/v1/messaging/messages/push')
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
             $endpoint = "$protocol://{$platform['apiHostname']}/v1";
 
-            $scheduleTime = $currentScheduledAt ?? $scheduledAt;
+            $scheduleTime = $scheduledAt;
             if (!\is_null($scheduleTime)) {
                 $expiry = (new \DateTime($scheduleTime))->add(new \DateInterval('P15D'))->format('U');
             } else {
@@ -3813,6 +3816,7 @@ Http::get('/v1/messaging/messages/:messageId/logs')
                 'userEmail' => $log['data']['userEmail'] ?? null,
                 'userName' => $log['data']['userName'] ?? null,
                 'mode' => $log['data']['mode'] ?? null,
+                'userType' => $log['data']['userType'] ?? null,
                 'ip' => $log['ip'],
                 'time' => $log['time'],
                 'osCode' => $os['osCode'],

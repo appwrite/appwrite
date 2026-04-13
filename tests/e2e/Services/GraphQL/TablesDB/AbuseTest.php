@@ -102,7 +102,7 @@ class AbuseTest extends Scope
         $maxQueries = System::getEnv('_APP_GRAPHQL_MAX_QUERIES', 10);
 
         $query = [];
-        for ($i = 0; $i <= $maxQueries + 1; $i++) {
+        for ($i = 0; $i <= ((int) $maxQueries) + 1; $i++) {
             $query[] = ['query' => $this->getQuery(self::LIST_COUNTRIES)];
         }
 

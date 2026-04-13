@@ -1,7 +1,8 @@
 <?php
 
 use Appwrite\Event\Event;
-use Appwrite\Event\Migration;
+use Appwrite\Event\Message\Migration as MigrationMessage;
+use Appwrite\Event\Publisher\Migration as MigrationPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\SDK\AuthType;
@@ -29,6 +30,7 @@ use Utopia\Migration\Resource;
 use Utopia\Migration\Sources\Appwrite;
 use Utopia\Migration\Sources\CSV;
 use Utopia\Migration\Sources\Firebase;
+use Utopia\Migration\Sources\JSON;
 use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
 use Utopia\Migration\Transfer;
@@ -50,6 +52,15 @@ function getDatabaseTransferResourceServices(string $databaseType)
         DATABASE_TYPE_TABLESDB => Transfer::GROUP_DATABASES_TABLES_DB,
         DATABASE_TYPE_VECTORSDB => Transfer::GROUP_DATABASES_VECTOR_DB,
         DATABASE_TYPE_DOCUMENTSDB => Transfer::GROUP_DATABASES_DOCUMENTS_DB
+    };
+}
+
+function getDatabaseResourceType(string $databaseType): string
+{
+    return match($databaseType) {
+        DATABASE_TYPE_VECTORSDB => Resource::TYPE_DATABASE_VECTORSDB,
+        DATABASE_TYPE_DOCUMENTSDB => Resource::TYPE_DATABASE_DOCUMENTSDB,
+        default => Resource::TYPE_DATABASE,
     };
 }
 
@@ -80,10 +91,9 @@ Http::post('/v1/migrations/appwrite')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('platform')
-    ->inject('user')
     ->inject('queueForEvents')
-    ->inject('queueForMigrations')
-    ->action(function (array $resources, string $endpoint, string $projectId, string $apiKey, Response $response, Database $dbForProject, Document $project, array $platform, Document $user, Event $queueForEvents, Migration $queueForMigrations) {
+    ->inject('publisherForMigrations')
+    ->action(function (array $resources, string $endpoint, string $projectId, string $apiKey, Response $response, Database $dbForProject, Document $project, array $platform, Event $queueForEvents, MigrationPublisher $publisherForMigrations) {
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => ID::unique(),
             'status' => 'pending',
@@ -104,12 +114,11 @@ Http::post('/v1/migrations/appwrite')
         $queueForEvents->setParam('migrationId', $migration->getId());
 
         // Trigger Transfer
-        $queueForMigrations
-            ->setMigration($migration)
-            ->setProject($project)
-            ->setPlatform($platform)
-            ->setUser($user)
-            ->trigger();
+        $publisherForMigrations->enqueue(new MigrationMessage(
+            project: $project,
+            migration: $migration,
+            platform: $platform,
+        ));
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
@@ -141,10 +150,9 @@ Http::post('/v1/migrations/firebase')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('platform')
-    ->inject('user')
     ->inject('queueForEvents')
-    ->inject('queueForMigrations')
-    ->action(function (array $resources, string $serviceAccount, Response $response, Database $dbForProject, Document $project, array $platform, Document $user, Event $queueForEvents, Migration $queueForMigrations) {
+    ->inject('publisherForMigrations')
+    ->action(function (array $resources, string $serviceAccount, Response $response, Database $dbForProject, Document $project, array $platform, Event $queueForEvents, MigrationPublisher $publisherForMigrations) {
         $serviceAccountData = json_decode($serviceAccount, true);
 
         if (empty($serviceAccountData)) {
@@ -173,12 +181,11 @@ Http::post('/v1/migrations/firebase')
         $queueForEvents->setParam('migrationId', $migration->getId());
 
         // Trigger Transfer
-        $queueForMigrations
-            ->setMigration($migration)
-            ->setProject($project)
-            ->setPlatform($platform)
-            ->setUser($user)
-            ->trigger();
+        $publisherForMigrations->enqueue(new MigrationMessage(
+            project: $project,
+            migration: $migration,
+            platform: $platform,
+        ));
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
@@ -215,10 +222,9 @@ Http::post('/v1/migrations/supabase')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('platform')
-    ->inject('user')
     ->inject('queueForEvents')
-    ->inject('queueForMigrations')
-    ->action(function (array $resources, string $endpoint, string $apiKey, string $databaseHost, string $username, string $password, int $port, Response $response, Database $dbForProject, Document $project, array $platform, Document $user, Event $queueForEvents, Migration $queueForMigrations) {
+    ->inject('publisherForMigrations')
+    ->action(function (array $resources, string $endpoint, string $apiKey, string $databaseHost, string $username, string $password, int $port, Response $response, Database $dbForProject, Document $project, array $platform, Event $queueForEvents, MigrationPublisher $publisherForMigrations) {
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => ID::unique(),
             'status' => 'pending',
@@ -242,12 +248,11 @@ Http::post('/v1/migrations/supabase')
         $queueForEvents->setParam('migrationId', $migration->getId());
 
         // Trigger Transfer
-        $queueForMigrations
-            ->setMigration($migration)
-            ->setProject($project)
-            ->setPlatform($platform)
-            ->setUser($user)
-            ->trigger();
+        $publisherForMigrations->enqueue(new MigrationMessage(
+            project: $project,
+            migration: $migration,
+            platform: $platform,
+        ));
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
@@ -285,10 +290,9 @@ Http::post('/v1/migrations/nhost')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('platform')
-    ->inject('user')
     ->inject('queueForEvents')
-    ->inject('queueForMigrations')
-    ->action(function (array $resources, string $subdomain, string $region, string $adminSecret, string $database, string $username, string $password, int $port, Response $response, Database $dbForProject, Document $project, array $platform, Document $user, Event $queueForEvents, Migration $queueForMigrations) {
+    ->inject('publisherForMigrations')
+    ->action(function (array $resources, string $subdomain, string $region, string $adminSecret, string $database, string $username, string $password, int $port, Response $response, Database $dbForProject, Document $project, array $platform, Event $queueForEvents, MigrationPublisher $publisherForMigrations) {
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => ID::unique(),
             'status' => 'pending',
@@ -313,12 +317,11 @@ Http::post('/v1/migrations/nhost')
         $queueForEvents->setParam('migrationId', $migration->getId());
 
         // Trigger Transfer
-        $queueForMigrations
-            ->setMigration($migration)
-            ->setProject($project)
-            ->setPlatform($platform)
-            ->setUser($user)
-            ->trigger();
+        $publisherForMigrations->enqueue(new MigrationMessage(
+            project: $project,
+            migration: $migration,
+            platform: $platform,
+        ));
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
@@ -358,7 +361,7 @@ Http::post('/v1/migrations/csv/imports')
     ->inject('deviceForFiles')
     ->inject('deviceForMigrations')
     ->inject('queueForEvents')
-    ->inject('queueForMigrations')
+    ->inject('publisherForMigrations')
     ->action(function (
         string $bucketId,
         string $fileId,
@@ -373,7 +376,7 @@ Http::post('/v1/migrations/csv/imports')
         Device $deviceForFiles,
         Device $deviceForMigrations,
         Event $queueForEvents,
-        Migration $queueForMigrations
+        MigrationPublisher $publisherForMigrations
     ) {
         $bucket = $authorization->skip(function () use ($internalFile, $dbForPlatform, $dbForProject, $bucketId) {
             if ($internalFile) {
@@ -447,6 +450,7 @@ Http::post('/v1/migrations/csv/imports')
         }
         $fileSize = $deviceForMigrations->getFileSize($newPath);
         $resources = Transfer::extractServices([getDatabaseTransferResourceServices($databaseType)]);
+        $resourceType = getDatabaseResourceType($databaseType);
 
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => $migrationId,
@@ -456,7 +460,7 @@ Http::post('/v1/migrations/csv/imports')
             'destination' => Appwrite::getName(),
             'resources' => $resources,
             'resourceId' => $resourceId,
-            'resourceType' => Resource::TYPE_DATABASE,
+            'resourceType' => $resourceType,
             'statusCounters' => '{}',
             'resourceData' => '{}',
             'errors' => [],
@@ -468,11 +472,10 @@ Http::post('/v1/migrations/csv/imports')
 
         $queueForEvents->setParam('migrationId', $migration->getId());
 
-        $queueForMigrations
-            ->setMigration($migration)
-            ->setProject($project)
-            ->setProject($project)
-            ->trigger();
+        $publisherForMigrations->enqueue(new MigrationMessage(
+            project: $project,
+            migration: $migration,
+        ));
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
@@ -515,7 +518,7 @@ Http::post('/v1/migrations/csv/exports')
     ->inject('project')
     ->inject('platform')
     ->inject('queueForEvents')
-    ->inject('queueForMigrations')
+    ->inject('publisherForMigrations')
     ->action(function (
         string $resourceId,
         string $filename,
@@ -534,7 +537,7 @@ Http::post('/v1/migrations/csv/exports')
         Document $project,
         array $platform,
         Event $queueForEvents,
-        Migration $queueForMigrations
+        MigrationPublisher $publisherForMigrations
     ) {
         try {
             $parsedQueries = Query::parseQueries($queries);
@@ -565,16 +568,6 @@ Http::post('/v1/migrations/csv/exports')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $validator = new Documents(
-            attributes: $collection->getAttribute('attributes', []),
-            indexes: $collection->getAttribute('indexes', []),
-            idAttributeType: $dbForProject->getAdapter()->getIdAttributeType(),
-        );
-
-        if (!$validator->isValid($parsedQueries)) {
-            throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
-        }
-
         // getting databasetype
         $resources = explode(':', $resourceId);
         $databaseId = $resources[0];
@@ -583,7 +576,23 @@ Http::post('/v1/migrations/csv/exports')
         if (!in_array($databaseType, CSV_ALLOWED_DATABASE_TYPES)) {
             throw new Exception(Exception::MIGRATION_DATABASE_TYPE_UNSUPPORTED, 'Database type not supported for csv');
         }
+
+        // Schemaless databases (DocumentsDB, VectorsDB) allow queries on dynamic fields
+        $isSchemaless = in_array($databaseType, [DATABASE_TYPE_DOCUMENTSDB, DATABASE_TYPE_VECTORSDB]);
+
+        $validator = new Documents(
+            attributes: $collection->getAttribute('attributes', []),
+            indexes: $collection->getAttribute('indexes', []),
+            idAttributeType: $dbForProject->getAdapter()->getIdAttributeType(),
+            supportForAttributes: !$isSchemaless,
+        );
+
+        if (!$validator->isValid($parsedQueries)) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+        }
+
         $resources = Transfer::extractServices([getDatabaseTransferResourceServices($databaseType)]);
+        $resourceType = getDatabaseResourceType($databaseType);
 
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => ID::unique(),
@@ -593,7 +602,7 @@ Http::post('/v1/migrations/csv/exports')
             'destination' => CSV::getName(),
             'resources' => $resources,
             'resourceId' => $resourceId,
-            'resourceType' => Resource::TYPE_DATABASE,
+            'resourceType' => $resourceType,
             'statusCounters' => '{}',
             'resourceData' => '{}',
             'errors' => [],
@@ -613,11 +622,296 @@ Http::post('/v1/migrations/csv/exports')
 
         $queueForEvents->setParam('migrationId', $migration->getId());
 
-        $queueForMigrations
-            ->setMigration($migration)
-            ->setProject($project)
-            ->setPlatform($platform)
-            ->trigger();
+        $publisherForMigrations->enqueue(new MigrationMessage(
+            project: $project,
+            migration: $migration,
+            platform: $platform,
+        ));
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($migration, Response::MODEL_MIGRATION);
+    });
+
+Http::post('/v1/migrations/json/imports')
+    ->groups(['api', 'migrations'])
+    ->desc('Import documents from a JSON')
+    ->label('scope', 'migrations.write')
+    ->label('event', 'migrations.[migrationId].create')
+    ->label('audits.event', 'migration.create')
+    ->label('sdk', new Method(
+        namespace: 'migrations',
+        group: null,
+        name: 'createJSONImport',
+        description: '/docs/references/migrations/migration-json-import.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_ACCEPTED,
+                model: Response::MODEL_MIGRATION,
+            )
+        ]
+    ))
+    ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
+    ->param('fileId', '', new UID(), 'File ID.')
+    ->param('resourceId', null, new CompoundUID(), 'Composite ID in the format {databaseId:collectionId}, identifying a collection within a database.')
+    ->param('internalFile', false, new Boolean(), 'Is the file stored in an internal bucket?', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('dbForPlatform')
+    ->inject('authorization')
+    ->inject('project')
+    ->inject('platform')
+    ->inject('deviceForFiles')
+    ->inject('deviceForMigrations')
+    ->inject('queueForEvents')
+    ->inject('publisherForMigrations')
+    ->action(function (
+        string $bucketId,
+        string $fileId,
+        string $resourceId,
+        bool $internalFile,
+        Response $response,
+        Database $dbForProject,
+        Database $dbForPlatform,
+        Authorization $authorization,
+        Document $project,
+        array $platform,
+        Device $deviceForFiles,
+        Device $deviceForMigrations,
+        Event $queueForEvents,
+        MigrationPublisher $publisherForMigrations
+    ) {
+        $bucket = $authorization->skip(function () use ($internalFile, $dbForPlatform, $dbForProject, $bucketId) {
+            if ($internalFile) {
+                return $dbForPlatform->getDocument('buckets', 'default');
+            }
+            return $dbForProject->getDocument('buckets', $bucketId);
+        });
+
+        if ($bucket->isEmpty()) {
+            throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+        }
+
+        $file = $authorization->skip(fn () => $internalFile ? $dbForPlatform->getDocument('bucket_' . $bucket->getSequence(), $fileId) : $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
+        if ($file->isEmpty()) {
+            throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
+        }
+
+        $path = $file->getAttribute('path', '');
+        if (!$deviceForFiles->exists($path)) {
+            throw new Exception(Exception::STORAGE_FILE_NOT_FOUND, 'File not found in ' . $path);
+        }
+
+        // No encryption or compression on files above 20MB.
+        $hasEncryption = !empty($file->getAttribute('openSSLCipher'));
+        $compression = $file->getAttribute('algorithm', Compression::NONE);
+        $hasCompression = $compression !== Compression::NONE;
+
+        $migrationId = ID::unique();
+        $newPath = $deviceForMigrations->getPath($migrationId . '_' . $fileId . '.json');
+
+        if ($hasEncryption || $hasCompression) {
+            $source = $deviceForFiles->read($path);
+
+            if ($hasEncryption) {
+                $source = OpenSSL::decrypt(
+                    $source,
+                    $file->getAttribute('openSSLCipher'),
+                    System::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
+                    0,
+                    hex2bin($file->getAttribute('openSSLIV')),
+                    hex2bin($file->getAttribute('openSSLTag'))
+                );
+            }
+
+            if ($hasCompression) {
+                switch ($compression) {
+                    case Compression::ZSTD:
+                        $source = (new Zstd())->decompress($source);
+                        break;
+                    case Compression::GZIP:
+                        $source = (new GZIP())->decompress($source);
+                        break;
+                }
+            }
+
+            // Manual write after decryption and/or decompression
+            if (!$deviceForMigrations->write($newPath, $source, 'application/json')) {
+                throw new \Exception('Unable to copy file');
+            }
+        } elseif (!$deviceForFiles->transfer($path, $newPath, $deviceForMigrations)) {
+            throw new \Exception('Unable to copy file');
+        }
+
+        $fileSize = $deviceForMigrations->getFileSize($newPath);
+
+        [$databaseId] = \explode(':', $resourceId, 2);
+        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        if ($database->isEmpty()) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        }
+        $databaseType = $database->getAttribute('type');
+        $resources = Transfer::extractServices([getDatabaseTransferResourceServices($databaseType)]);
+        $resourceType = getDatabaseResourceType($databaseType);
+
+        $migration = $dbForProject->createDocument('migrations', new Document([
+            '$id' => $migrationId,
+            'status' => 'pending',
+            'stage' => 'init',
+            'source' => JSON::getName(),
+            'destination' => Appwrite::getName(),
+            'resources' => $resources,
+            'resourceId' => $resourceId,
+            'resourceType' => $resourceType,
+            'statusCounters' => '{}',
+            'resourceData' => '{}',
+            'errors' => [],
+            'options' => [
+                'path' => $newPath,
+                'size' => $fileSize,
+            ],
+        ]));
+
+        $queueForEvents->setParam('migrationId', $migration->getId());
+
+        $publisherForMigrations->enqueue(new MigrationMessage(
+            project: $project,
+            migration: $migration,
+            platform: $platform,
+        ));
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($migration, Response::MODEL_MIGRATION);
+    });
+
+Http::post('/v1/migrations/json/exports')
+    ->groups(['api', 'migrations'])
+    ->desc('Export documents to JSON')
+    ->label('scope', 'migrations.write')
+    ->label('event', 'migrations.[migrationId].create')
+    ->label('audits.event', 'migration.create')
+    ->label('sdk', new Method(
+        namespace: 'migrations',
+        group: null,
+        name: 'createJSONExport',
+        description: '/docs/references/migrations/migration-json-export.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_ACCEPTED,
+                model: Response::MODEL_MIGRATION,
+            )
+        ]
+    ))
+    ->param('resourceId', null, new CompoundUID(), 'Composite ID in the format {databaseId:collectionId}, identifying a collection within a database to export.')
+    ->param('filename', '', new Text(255), 'The name of the file to be created for the export, excluding the .json extension.')
+    ->param('columns', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of attributes to export. If empty, all attributes will be exported. You can use the `*` wildcard to export all attributes from the collection.', true)
+    ->param('queries', [], new ArrayList(new Text(0)), 'Array of query strings generated using the Query class provided by the SDK to filter documents to export. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
+    ->param('notify', true, new Boolean(), 'Set to true to receive an email when the export is complete. Default is true.', true)
+    ->inject('user')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('dbForPlatform')
+    ->inject('authorization')
+    ->inject('project')
+    ->inject('platform')
+    ->inject('queueForEvents')
+    ->inject('publisherForMigrations')
+    ->action(function (
+        string $resourceId,
+        string $filename,
+        array $columns,
+        array $queries,
+        bool $notify,
+        Document $user,
+        Response $response,
+        Database $dbForProject,
+        Database $dbForPlatform,
+        Authorization $authorization,
+        Document $project,
+        array $platform,
+        Event $queueForEvents,
+        MigrationPublisher $publisherForMigrations
+    ) {
+        try {
+            $parsedQueries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
+        $bucket = $authorization->skip(fn () => $dbForPlatform->getDocument('buckets', 'default'));
+        if ($bucket->isEmpty()) {
+            throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+        }
+
+        [$databaseId, $collectionId] = \explode(':', $resourceId, 2);
+        if (empty($databaseId)) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        }
+        if (empty($collectionId)) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        }
+
+        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        if ($database->isEmpty()) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        }
+
+        $collection = $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
+        if ($collection->isEmpty()) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        }
+
+        $databaseType = $database->getAttribute('type');
+
+        // Schemaless databases (DocumentsDB, VectorsDB) allow queries on dynamic fields
+        $isSchemaless = in_array($databaseType, [DATABASE_TYPE_DOCUMENTSDB, DATABASE_TYPE_VECTORSDB]);
+
+        $validator = new Documents(
+            attributes: $collection->getAttribute('attributes', []),
+            indexes: $collection->getAttribute('indexes', []),
+            idAttributeType: $dbForProject->getAdapter()->getIdAttributeType(),
+            supportForAttributes: !$isSchemaless,
+        );
+
+        if (!$validator->isValid($parsedQueries)) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+        }
+
+        $resources = Transfer::extractServices([getDatabaseTransferResourceServices($databaseType)]);
+        $resourceType = getDatabaseResourceType($databaseType);
+
+        $migration = $dbForProject->createDocument('migrations', new Document([
+            '$id' => ID::unique(),
+            'status' => 'pending',
+            'stage' => 'init',
+            'source' => Appwrite::getName(),
+            'destination' => JSON::getName(),
+            'resources' => $resources,
+            'resourceId' => $resourceId,
+            'resourceType' => $resourceType,
+            'statusCounters' => '{}',
+            'resourceData' => '{}',
+            'errors' => [],
+            'options' => [
+                'bucketId' => 'default', // Always use internal bucket
+                'filename' => $filename,
+                'columns' => $columns,
+                'queries' => $queries,
+                'notify' => $notify,
+                'userInternalId' => $user->getSequence(),
+            ],
+        ]));
+
+        $queueForEvents->setParam('migrationId', $migration->getId());
+
+        $publisherForMigrations->enqueue(new MigrationMessage(
+            project: $project,
+            migration: $migration,
+            platform: $platform,
+        ));
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
@@ -914,9 +1208,8 @@ Http::patch('/v1/migrations/:migrationId')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('platform')
-    ->inject('user')
-    ->inject('queueForMigrations')
-    ->action(function (string $migrationId, Response $response, Database $dbForProject, Document $project, array $platform, Document $user, Migration $queueForMigrations) {
+    ->inject('publisherForMigrations')
+    ->action(function (string $migrationId, Response $response, Database $dbForProject, Document $project, array $platform, MigrationPublisher $publisherForMigrations) {
         $migration = $dbForProject->getDocument('migrations', $migrationId);
 
         if ($migration->isEmpty()) {
@@ -932,12 +1225,11 @@ Http::patch('/v1/migrations/:migrationId')
             ->setAttribute('dateUpdated', \time());
 
         // Trigger Migration
-        $queueForMigrations
-            ->setMigration($migration)
-            ->setProject($project)
-            ->setPlatform($platform)
-            ->setUser($user)
-            ->trigger();
+        $publisherForMigrations->enqueue(new MigrationMessage(
+            project: $project,
+            migration: $migration,
+            platform: $platform,
+        ));
 
         $response->noContent();
     });

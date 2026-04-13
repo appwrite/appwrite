@@ -15,7 +15,6 @@ use Utopia\Compression\Algorithms\GZIP;
 use Utopia\Compression\Algorithms\Zstd;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
-use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -26,6 +25,7 @@ use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Image\Image;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Span\Span;
 use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\Validator\HexColor;
@@ -54,6 +54,7 @@ class Get extends Action
             ->label('cache', true)
             ->label('cache.resourceType', 'bucket/{request.bucketId}')
             ->label('cache.resource', 'file/{request.fileId}')
+            ->label('cache.params', ['width', 'height', 'gravity', 'quality', 'borderWidth', 'borderColor', 'borderRadius', 'opacity', 'rotation', 'background', 'output'])
             ->label('sdk', new Method(
                 namespace: 'storage',
                 group: 'files',
@@ -92,6 +93,7 @@ class Get extends Action
             ->inject('deviceForLocal')
             ->inject('project')
             ->inject('authorization')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
@@ -117,7 +119,8 @@ class Get extends Action
         Device $deviceForFiles,
         Device $deviceForLocal,
         Document $project,
-        Authorization $authorization
+        Authorization $authorization,
+        User $user
     ) {
 
         if (!\extension_loaded('imagick')) {
@@ -127,8 +130,8 @@ class Get extends Action
         /* @type Document $bucket */
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        $isAPIKey = User::isApp($authorization->getRoles());
-        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
+        $isAPIKey = $user->isApp($authorization->getRoles());
+        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
@@ -266,16 +269,28 @@ class Get extends Action
 
         $totalTime = \microtime(true) - $startTime;
 
-        Console::info("File preview rendered,project=" . $project->getId() . ",bucket=" . $bucketId . ",file=" . $file->getId() . ",uri=" . $request->getURI() . ",total=" . $totalTime . ",rendering=" . $renderingTime . ",decryption=" . $decryptionTime . ",decompression=" . $decompressionTime . ",download=" . $downloadTime);
+        Span::add('storage.file.id', $file->getId());
+        Span::add('storage.bucket.id', $bucketId);
+        Span::add('storage.file.size_bytes', $file->getAttribute('sizeActual'));
+        if (!empty($type)) {
+            Span::add('storage.file.extension', $type);
+        }
+        Span::add('storage.timing.download_seconds', $downloadTime);
+        Span::add('storage.timing.decryption_seconds', $decryptionTime);
+        Span::add('storage.timing.decompression_seconds', $decompressionTime);
+        Span::add('storage.timing.rendering_seconds', $renderingTime);
+        Span::add('storage.timing.total_seconds', $totalTime);
 
         $contentType = (\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg'];
 
         //Do not update transformedAt if it's a console user
-        if (!User::isPrivileged($authorization->getRoles())) {
+        if (!$user->isPrivileged($authorization->getRoles())) {
             $transformedAt = $file->getAttribute('transformedAt', '');
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $transformedAt) {
                 $file->setAttribute('transformedAt', DateTime::now());
-                $authorization->skip(fn () => $dbForProject->updateDocument('bucket_' . $file->getAttribute('bucketInternalId'), $file->getId(), $file));
+                $authorization->skip(fn () => $dbForProject->updateDocument('bucket_' . $file->getAttribute('bucketInternalId'), $file->getId(), new Document([
+                    'transformedAt' => $file->getAttribute('transformedAt'),
+                ])));
             }
         }
 
