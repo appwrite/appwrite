@@ -872,18 +872,18 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_BUILD_TIMEOUT',
-                'description' => 'Deprecated since 1.7.0. The maximum number of seconds allowed as a timeout value when building a new function. The default value is 900 seconds.',
+                'description' => 'Deprecated since 1.7.0. The maximum number of seconds allowed as a timeout value when building a new function. The default value is 2700 seconds.',
                 'introduction' => '0.13.0',
-                'default' => '900',
+                'default' => '2700',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
             ],
             [
                 'name' => '_APP_COMPUTE_BUILD_TIMEOUT',
-                'description' => 'The maximum number of seconds allowed as a timeout value when building a new function or site. The default value is 900 seconds.',
+                'description' => 'The maximum number of seconds allowed as a timeout value when building a new function or site. The default value is 2700 seconds.',
                 'introduction' => '1.7.0',
-                'default' => '900',
+                'default' => '2700',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
