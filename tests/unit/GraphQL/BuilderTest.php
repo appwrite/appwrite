@@ -24,6 +24,7 @@ class BuilderTest extends TestCase
     {
         $model = $this->response->getModel(Response::MODEL_TABLE);
         $type = Mapper::model(\ucfirst($model->getType()));
-        $this->assertEquals('Table', $type->name);
+        $this->assertInstanceOf(\GraphQL\Type\Definition\NamedType::class, $type);
+        $this->assertSame('Table', $type->name());
     }
 }
