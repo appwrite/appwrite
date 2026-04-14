@@ -1008,6 +1008,8 @@ Http::get('/v1/users/:userId/logs')
                 'userId' => ID::custom($log['data']['userId']),
                 'userEmail' => $log['data']['userEmail'] ?? null,
                 'userName' => $log['data']['userName'] ?? null,
+                'mode' => $log['data']['mode'] ?? null,
+                'userType' => $log['data']['userType'] ?? null,
                 'ip' => $log['ip'],
                 'time' => $log['time'],
                 'osCode' => $os['osCode'],

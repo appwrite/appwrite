@@ -46,8 +46,8 @@ const APP_PROJECT_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_RESOURCE_TOKEN_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_FILE_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 4321;
-const APP_VERSION_STABLE = '1.9.0';
+const APP_CACHE_BUSTER = 4322;
+const APP_VERSION_STABLE = '1.9.1';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -156,9 +156,12 @@ const SESSION_PROVIDER_SERVER = 'server';
 /**
  * Activity associated with user or the app.
  */
-const ACTIVITY_TYPE_APP = 'app';
 const ACTIVITY_TYPE_USER = 'user';
+const ACTIVITY_TYPE_ADMIN = 'admin';
 const ACTIVITY_TYPE_GUEST = 'guest';
+const ACTIVITY_TYPE_KEY_PROJECT = 'keyProject';
+const ACTIVITY_TYPE_KEY_ACCOUNT = 'keyAccount';
+const ACTIVITY_TYPE_KEY_ORGANIZATION = 'keyOrganization';
 
 /**
  * MFA

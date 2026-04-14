@@ -4,12 +4,12 @@ namespace Appwrite\SDK\Specification;
 
 use Appwrite\Utopia\Response\Model;
 use Utopia\Config\Config;
-use Utopia\Http\Http;
+use Utopia\DI\Container;
 use Utopia\Http\Route;
 
 abstract class Format
 {
-    protected Http $app;
+    protected Container $container;
 
     /**
      * @var array<Route>
@@ -78,11 +78,23 @@ abstract class Format
         ],
     ];
 
+    private const array REQUEST_PARAMETER_OVERRIDES = [
+        [
+            'namespace' => 'project',
+            'methods' => [
+                'createWebPlatform',
+                'updateWebPlatform',
+            ],
+            'parameter' => 'hostname',
+            'required' => true,
+        ],
+    ];
+
     protected array $enumBlacklist = [];
 
-    public function __construct(Http $app, array $services, array $routes, array $models, array $keys, int $authCount, string $platform)
+    public function __construct(Container $container, array $services, array $routes, array $models, array $keys, int $authCount, string $platform)
     {
-        $this->app = $app;
+        $this->container = $container;
         $this->services = $services;
         $this->routes = $routes;
         $this->models = $models;
@@ -208,6 +220,28 @@ abstract class Format
     public function getServices(): array
     {
         return $this->services;
+    }
+
+    /**
+     * @param list<string> $injections
+     * @return array<string, mixed>
+     */
+    protected function getResources(array $injections): array
+    {
+        $resources = [];
+
+        foreach ($injections as $name) {
+            $resources[$name] = $this->container->get($name);
+        }
+
+        return $resources;
+    }
+
+    protected function getValidator(array $param): mixed
+    {
+        return \is_callable($param['validator'])
+            ? ($param['validator'])(...$this->getResources($param['injections'] ?? []))
+            : $param['validator'];
     }
 
     protected function getDescriptionContents(?string $description): string
@@ -752,8 +786,38 @@ abstract class Format
         return $values;
     }
 
+    protected function getRequestParameterConfig(string $service, string $method, string $param, bool $optional, bool $nullable, mixed $default): array
+    {
+        $config = [
+            'required' => !$optional,
+            'nullable' => $nullable,
+        ];
+
+        foreach (self::REQUEST_PARAMETER_OVERRIDES as $override) {
+            if (
+                $override['namespace'] !== $service
+                || !\in_array($method, $override['methods'], true)
+                || $override['parameter'] !== $param
+            ) {
+                continue;
+            }
+
+            $config['required'] = $override['required'] ?? $config['required'];
+            $config['nullable'] = $override['nullable'] ?? $config['nullable'];
+            break;
+        }
+
+        $config['emitDefault'] = !$config['required'] && !\is_null($default);
+
+        return $config;
+    }
+
     public function getResponseEnumName(string $model, string $param): ?string
     {
+        if ($param === 'type' && \str_starts_with($model, 'platform') && $model !== 'platformList') {
+            return 'PlatformType';
+        }
+
         if ($param !== 'status') {
             return null;
         }

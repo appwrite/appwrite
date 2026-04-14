@@ -66,8 +66,9 @@ class Rule extends Model
             ])
             ->addRule('deploymentResourceType', [
                 'type' => self::TYPE_ENUM,
+                'required' => false,
                 'description' => 'Type of deployment. Possible values are "function", "site". Used if rule\'s type is "deployment".',
-                'default' => '',
+                'default' => null,
                 'example' => 'function',
                 'enum' => ['function', 'site'],
             ])

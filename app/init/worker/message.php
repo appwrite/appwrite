@@ -9,7 +9,6 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
-use Appwrite\Event\Migration;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Screenshot;
 use Appwrite\Event\Webhook;
@@ -342,10 +341,6 @@ return function (Container $container): void {
 
     $container->set('queueForCertificates', function (Publisher $publisher) {
         return new Certificate($publisher);
-    }, ['publisher']);
-
-    $container->set('queueForMigrations', function (Publisher $publisher) {
-        return new Migration($publisher);
     }, ['publisher']);
 
     $container->set('deviceForSites', function (Document $project, Telemetry $telemetry) {

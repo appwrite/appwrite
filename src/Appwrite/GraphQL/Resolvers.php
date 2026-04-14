@@ -262,17 +262,24 @@ class Resolvers
         $request = clone $request;
         $utopia->setResource('request', static fn () => $request);
         $response->setContentType(Response::CONTENT_TYPE_NULL);
+        $response->clearSent();
+
+        $original = $utopia->getRoute();
 
         try {
             $route = $utopia->match($request, fresh: true);
 
-            $utopia->execute($route, $request);
+            $utopia->execute($route, $request, $response);
         } catch (\Throwable $e) {
             if ($beforeReject) {
                 $e = $beforeReject($e);
             }
             $reject($e);
             return;
+        } finally {
+            if ($original !== null) {
+                $utopia->setRoute($original);
+            }
         }
 
         $payload = $response->getPayload();

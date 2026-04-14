@@ -374,6 +374,22 @@ class Project extends Model
                 ])
             ;
         }
+
+        $apis = Config::getParam('protocols', []);
+
+        foreach ($apis as $api) {
+            $name = $api['name'] ?? '';
+            $key = $api['key'] ?? '';
+
+            $this
+                ->addRule('protocolStatusFor' . ucfirst($key), [
+                    'type' => self::TYPE_BOOLEAN,
+                    'description' => $name . ' protocol status',
+                    'example' => true,
+                    'default' => true,
+                ])
+            ;
+        }
     }
 
     /**
@@ -405,6 +421,7 @@ class Project extends Model
     {
         $this->expandSmtpFields($document);
         $this->expandServiceFields($document);
+        $this->expandApiFields($document);
         $this->expandAuthFields($document);
         $this->expandOAuthProviders($document);
 
@@ -446,6 +463,22 @@ class Project extends Model
             $key = $service['key'] ?? '';
             $value = $values[$key] ?? true;
             $document->setAttribute('serviceStatusFor' . ucfirst($key), $value);
+        }
+    }
+
+    private function expandApiFields(Document $document): void
+    {
+        if (!$document->isSet('apis')) {
+            return;
+        }
+
+        $values = $document->getAttribute('apis', []);
+        $apis = Config::getParam('protocols', []);
+
+        foreach ($apis as $api) {
+            $key = $api['key'] ?? '';
+            $value = $values[$key] ?? true;
+            $document->setAttribute('protocolStatusFor' . ucfirst($key), $value);
         }
     }
 

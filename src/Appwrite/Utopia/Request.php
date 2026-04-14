@@ -234,6 +234,10 @@ class Request extends UtopiaRequest
     public function cacheIdentifier(): string
     {
         $params = $this->getParams();
+        $allowedParams = $this->getRoute()?->getLabel('cache.params', null);
+        if ($allowedParams !== null) {
+            $params = array_intersect_key($params, array_flip($allowedParams));
+        }
         ksort($params);
         return md5($this->getURI() . '*' . serialize($params) . '*' . APP_CACHE_BUSTER);
     }

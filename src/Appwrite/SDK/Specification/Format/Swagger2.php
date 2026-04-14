@@ -381,17 +381,24 @@ class Swagger2 extends Format
                 }
 
                 /** @var Validator $validator */
-                $validator = (\is_callable($param['validator']))
-                    ? ($param['validator'])(...$this->app->getResources($param['injections']))
-                    : $param['validator'];
+                $validator = $this->getValidator($param);
+
+                $isNullable = $validator instanceof Nullable;
+
+                $parameter = $this->getRequestParameterConfig(
+                    $sdk->getNamespace() ?? '',
+                    $methodName,
+                    $name,
+                    $param['optional'],
+                    $isNullable,
+                    $param['default'],
+                );
 
                 $node = [
                     'name' => $name,
                     'description' => $param['description'],
-                    'required' => !$param['optional'],
+                    'required' => $parameter['required'],
                 ];
-
-                $isNullable = $validator instanceof Nullable;
 
                 if ($isNullable) {
                     /** @var Nullable $validator */
@@ -713,7 +720,7 @@ class Swagger2 extends Format
                         break;
                 }
 
-                if ($param['optional'] && !\is_null($param['default'])) { // Param has default value
+                if ($parameter['emitDefault']) { // Param has default value
                     $node['default'] = $param['default'];
                 }
 
@@ -731,7 +738,7 @@ class Swagger2 extends Format
                         continue;
                     }
 
-                    if (!$param['optional']) {
+                    if ($node['required']) {
                         $bodyRequired[] = $name;
                     }
 
@@ -757,7 +764,7 @@ class Swagger2 extends Format
                         $body['schema']['properties'][$name]['x-global'] = true;
                     }
 
-                    if ($isNullable) {
+                    if ($parameter['nullable']) {
                         $body['schema']['properties'][$name]['x-nullable'] = true;
                     }
 

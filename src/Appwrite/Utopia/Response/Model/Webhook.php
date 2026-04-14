@@ -4,6 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use Utopia\Database\Document;
 
 class Webhook extends Model
 {
@@ -50,27 +51,27 @@ class Webhook extends Model
                 ],
                 'array' => true,
             ])
-            ->addRule('security', [
+            ->addRule('tls', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Indicated if SSL / TLS Certificate verification is enabled.',
+                'description' => 'Indicates if SSL / TLS certificate verification is enabled.',
                 'default' => true,
                 'example' => true,
             ])
-            ->addRule('httpUser', [
+            ->addRule('authUsername', [
                 'type' => self::TYPE_STRING,
                 'description' => 'HTTP basic authentication username.',
                 'default' => '',
                 'example' => 'username',
             ])
-            ->addRule('httpPass', [
+            ->addRule('authPassword', [
                 'type' => self::TYPE_STRING,
                 'description' => 'HTTP basic authentication password.',
                 'default' => '',
                 'example' => 'password',
             ])
-            ->addRule('signatureKey', [
+            ->addRule('secret', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Signature key which can be used to validated incoming',
+                'description' => 'Signature key which can be used to validate incoming webhook payloads. Only returned on creation and secret rotation.',
                 'default' => '',
                 'example' => 'ad3d581ca230e2b7059c545e5a',
             ])
@@ -92,6 +93,23 @@ class Webhook extends Model
                 'default' => 0,
                 'example' => 10,
             ]);
+    }
+
+    public function filter(Document $document): Document
+    {
+        $document->setAttribute('tls', $document->getAttribute('security'));
+        $document->removeAttribute('security');
+
+        $document->setAttribute('authUsername', $document->getAttribute('httpUser'));
+        $document->removeAttribute('httpUser');
+
+        $document->setAttribute('authPassword', $document->getAttribute('httpPass'));
+        $document->removeAttribute('httpPass');
+
+        $document->setAttribute('secret', $document->getAttribute('signatureKey'));
+        $document->removeAttribute('signatureKey');
+
+        return $document;
     }
 
     /**
