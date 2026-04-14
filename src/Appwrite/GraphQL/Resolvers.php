@@ -298,7 +298,7 @@ class Resolvers
         $resolve($payload);
     }
 
-    private static function escapePayload(array $payload, int $depth)
+    private static function escapePayload(array $payload, int $depth): array
     {
         if ($depth > System::getEnv('_APP_GRAPHQL_MAX_DEPTH', 3)) {
             return $payload;
