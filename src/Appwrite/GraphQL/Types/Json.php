@@ -14,21 +14,25 @@ use GraphQL\Type\Definition\ScalarType;
 // https://github.com/webonyx/graphql-php/issues/129#issuecomment-309366803
 class Json extends ScalarType
 {
-    public $name = 'Json';
-    public $description = 'The `JSON` scalar type represents JSON values as specified by
-        [ECMA-404](https://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).';
+    public function __construct()
+    {
+        parent::__construct([
+            'name' => 'Json',
+            'description' => 'The `JSON` scalar type represents JSON values as specified by [ECMA-404](https://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).',
+        ]);
+    }
 
-    public function serialize($value)
+    public function serialize($value): mixed
     {
         return $value;
     }
 
-    public function parseValue($value)
+    public function parseValue($value): mixed
     {
         return $value;
     }
 
-    public function parseLiteral(Node $valueNode, ?array $variables = null)
+    public function parseLiteral(Node $valueNode, ?array $variables = null): mixed
     {
         switch ($valueNode) {
             case $valueNode instanceof StringValueNode:
@@ -45,7 +49,7 @@ class Json extends ScalarType
                 }
                 return $value;
             case ($valueNode instanceof ListValueNode):
-                return array_map([$this, 'parseLiteral'], $valueNode->values);
+                return array_map([$this, 'parseLiteral'], iterator_to_array($valueNode->values));
             default:
                 return null;
         }
