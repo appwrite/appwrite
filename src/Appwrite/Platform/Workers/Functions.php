@@ -23,6 +23,7 @@ use Utopia\Database\Query;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\Span\Span;
 use Utopia\System\System;
 
 class Functions extends Action
@@ -114,6 +115,22 @@ class Functions extends Action
         $log->addTag('functionId', $function->getId());
         $log->addTag('projectId', $project->getId());
         $log->addTag('type', $type);
+
+        if (empty($events) && !$function->isEmpty()) {
+            $traceProjectId = System::getEnv('_APP_TRACE_PROJECT_ID', '');
+            $traceFunctionId = System::getEnv('_APP_TRACE_FUNCTION_ID', '');
+            if ($traceProjectId !== '' && $traceFunctionId !== '' && $project->getId() === $traceProjectId && $function->getId() === $traceFunctionId) {
+                Span::init('execution.trace.functions_worker_dequeue');
+                Span::add('datetime', gmdate('c'));
+                Span::add('projectId', $project->getId());
+                Span::add('functionId', $function->getId());
+                Span::add('payloadType', $type);
+                Span::add('queuePid', $message->getPid());
+                Span::add('queueName', $message->getQueue());
+                Span::add('messageTimestamp', (string) $message->getTimestamp());
+                Span::current()?->finish();
+            }
+        }
 
         if (!empty($events)) {
             $limit = 100;
@@ -303,6 +320,20 @@ class Functions extends Action
             'logs' => '',
             'duration' => 0.0,
         ]);
+
+        $traceProjectId = System::getEnv('_APP_TRACE_PROJECT_ID', '');
+        $traceFunctionId = System::getEnv('_APP_TRACE_FUNCTION_ID', '');
+        if ($traceProjectId !== '' && $traceFunctionId !== '' && $project->getId() === $traceProjectId && $function->getId() === $traceFunctionId) {
+            Span::init('execution.trace.functions_worker_before_execution_completed_bus_fail');
+            Span::add('datetime', gmdate('c'));
+            Span::add('projectId', $project->getId());
+            Span::add('functionId', $function->getId());
+            Span::add('executionId', $execution->getId());
+            Span::add('deploymentId', $execution->getAttribute('deploymentId', ''));
+            Span::add('trigger', $trigger);
+            Span::add('status', $execution->getAttribute('status', ''));
+            Span::current()?->finish();
+        }
 
         $bus->dispatch(new ExecutionCompleted(
             execution: $execution->getArrayCopy(),
@@ -522,6 +553,18 @@ class Functions extends Action
             $source = $deployment->getAttribute('buildPath', '');
             $extension = str_ends_with($source, '.tar') ? 'tar' : 'tar.gz';
             $command = $version === 'v2' ? '' : "cp /tmp/code.$extension /mnt/code/code.$extension && nohup helpers/start.sh \"$command\"";
+            $traceProjectId = System::getEnv('_APP_TRACE_PROJECT_ID', '');
+            $traceFunctionId = System::getEnv('_APP_TRACE_FUNCTION_ID', '');
+            if ($traceProjectId !== '' && $traceFunctionId !== '' && $project->getId() === $traceProjectId && $functionId === $traceFunctionId) {
+                Span::init('execution.trace.functions_worker_before_executor');
+                Span::add('datetime', gmdate('c'));
+                Span::add('projectId', $project->getId());
+                Span::add('functionId', $functionId);
+                Span::add('executionId', $executionId);
+                Span::add('deploymentId', $deployment->getId());
+                Span::add('trigger', $trigger);
+                Span::current()?->finish();
+            }
             $executionResponse = $executor->createExecution(
                 projectId: $project->getId(),
                 deploymentId: $deploymentId,
@@ -594,6 +637,19 @@ class Functions extends Action
             $errorCode = $th->getCode();
         } finally {
             /** Persist final execution status and record usage */
+            $traceProjectId = System::getEnv('_APP_TRACE_PROJECT_ID', '');
+            $traceFunctionId = System::getEnv('_APP_TRACE_FUNCTION_ID', '');
+            if ($traceProjectId !== '' && $traceFunctionId !== '' && $project->getId() === $traceProjectId && $functionId === $traceFunctionId) {
+                Span::init('execution.trace.functions_worker_before_execution_completed_bus');
+                Span::add('datetime', gmdate('c'));
+                Span::add('projectId', $project->getId());
+                Span::add('functionId', $functionId);
+                Span::add('executionId', $execution->getId());
+                Span::add('deploymentId', $execution->getAttribute('deploymentId', ''));
+                Span::add('status', $execution->getAttribute('status', ''));
+                Span::add('trigger', $trigger);
+                Span::current()?->finish();
+            }
             $bus->dispatch(new ExecutionCompleted(
                 execution: $execution->getArrayCopy(),
                 project: $project->getArrayCopy(),

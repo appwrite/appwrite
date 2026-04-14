@@ -264,6 +264,8 @@ class Resolvers
         $response->setContentType(Response::CONTENT_TYPE_NULL);
         $response->clearSent();
 
+        $original = $utopia->getRoute();
+
         try {
             $route = $utopia->match($request, fresh: true);
 
@@ -274,6 +276,10 @@ class Resolvers
             }
             $reject($e);
             return;
+        } finally {
+            if ($original !== null) {
+                $utopia->setRoute($original);
+            }
         }
 
         $payload = $response->getPayload();
