@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Func;
+use Appwrite\Extend\TraceFunctionExecution;
 use Cron\CronExpression;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -96,6 +97,16 @@ class ScheduleFunctions extends ScheduleBase
                     $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
                     $queueForFunctions = new Func($this->publisherFunctions);
+
+                    $projectDoc = $schedule['project'];
+                    $functionDoc = $schedule['resource'];
+                    TraceFunctionExecution::log('v1_functions_enqueue', [
+                        'projectId' => $projectDoc->getId(),
+                        'functionId' => $functionDoc->getId(),
+                        'scheduleId' => $schedule['$id'] ?? '',
+                        'schedule' => $schedule['schedule'] ?? '',
+                    ]);
+
 
                     $queueForFunctions
                         ->setType('schedule')

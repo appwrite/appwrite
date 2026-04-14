@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Workers;
 
 use Appwrite\Event\Message\Execution;
+use Appwrite\Extend\TraceFunctionExecution;
 use Exception;
 use Utopia\Database\Database;
 use Utopia\Platform\Action;
@@ -38,6 +39,14 @@ class Executions extends Action
         if ($execution->isEmpty()) {
             throw new Exception('Missing execution');
         }
+
+        TraceFunctionExecution::log('executions_worker_upsert', [
+            'projectId' => $executionMessage->project->getId(),
+            'functionId' => $execution->getAttribute('resourceId', ''),
+            'executionId' => $execution->getId(),
+            'deploymentId' => $execution->getAttribute('deploymentId', ''),
+            'resourceType' => $execution->getAttribute('resourceType', ''),
+        ]);
 
         $dbForProject->upsertDocument('executions', $execution);
     }

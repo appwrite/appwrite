@@ -9,6 +9,7 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception as AppwriteException;
+use Appwrite\Extend\TraceFunctionExecution;
 use Appwrite\Utopia\Response\Model\Execution;
 use Executor\Executor;
 use Utopia\Bus\Bus;
@@ -114,6 +115,17 @@ class Functions extends Action
         $log->addTag('functionId', $function->getId());
         $log->addTag('projectId', $project->getId());
         $log->addTag('type', $type);
+
+        if (empty($events) && !$function->isEmpty()) {
+            TraceFunctionExecution::log('functions_worker_dequeue', [
+                'projectId' => $project->getId(),
+                'functionId' => $function->getId(),
+                'payloadType' => $type,
+                'queuePid' => $message->getPid(),
+                'queueName' => $message->getQueue(),
+                'messageTimestamp' => $message->getTimestamp(),
+            ]);
+        }
 
         if (!empty($events)) {
             $limit = 100;
@@ -302,6 +314,15 @@ class Functions extends Action
             'errors' => $message,
             'logs' => '',
             'duration' => 0.0,
+        ]);
+
+        TraceFunctionExecution::log('functions_worker_before_execution_completed_bus_fail', [
+            'projectId' => $project->getId(),
+            'functionId' => $function->getId(),
+            'executionId' => $execution->getId(),
+            'deploymentId' => $execution->getAttribute('deploymentId', ''),
+            'trigger' => $trigger,
+            'status' => $execution->getAttribute('status', ''),
         ]);
 
         $bus->dispatch(new ExecutionCompleted(
@@ -522,6 +543,13 @@ class Functions extends Action
             $source = $deployment->getAttribute('buildPath', '');
             $extension = str_ends_with($source, '.tar') ? 'tar' : 'tar.gz';
             $command = $version === 'v2' ? '' : "cp /tmp/code.$extension /mnt/code/code.$extension && nohup helpers/start.sh \"$command\"";
+            TraceFunctionExecution::log('functions_worker_before_executor', [
+                'projectId' => $project->getId(),
+                'functionId' => $functionId,
+                'executionId' => $executionId,
+                'deploymentId' => $deployment->getId(),
+                'trigger' => $trigger,
+            ]);
             $executionResponse = $executor->createExecution(
                 projectId: $project->getId(),
                 deploymentId: $deploymentId,
@@ -594,6 +622,14 @@ class Functions extends Action
             $errorCode = $th->getCode();
         } finally {
             /** Persist final execution status and record usage */
+            TraceFunctionExecution::log('functions_worker_before_execution_completed_bus', [
+                'projectId' => $project->getId(),
+                'functionId' => $functionId,
+                'executionId' => $execution->getId(),
+                'deploymentId' => $execution->getAttribute('deploymentId', ''),
+                'status' => $execution->getAttribute('status', ''),
+                'trigger' => $trigger,
+            ]);
             $bus->dispatch(new ExecutionCompleted(
                 execution: $execution->getArrayCopy(),
                 project: $project->getArrayCopy(),
