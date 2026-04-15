@@ -1146,23 +1146,15 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                 if (array_key_exists('metadata', $message['data'])) {
                     $presenceData['metadata'] = $message['data']['metadata'];
                 }
-                // for an user if presence is present and expiry is null and service is realtime is the indicator that connection cleanup for the user failed
-                // in later case of multi-presence per user these must be cleaned up first
-                // currently in case of single presence per user we can directly upsert
                 $presenceDocument = new Document($presenceData);
                 setPermission($presenceDocument, $message['data']['permissions'] ?? null, $authorization);
 
-                $presence = $database->withTransaction(function () use ($database, $userId, $presenceDocument, $message) {
-                    $existingPresence = $database->findOne('presenceLogs', [
-                        Query::equal('userId', [$userId]),
-                    ]);
-                    if ($existingPresence->isEmpty()) {
-                        $presenceId = $message['data']['presenceId'] ?? 'unique()';
-                        $presenceDocument->setAttribute('$id', $presenceId === 'unique()' ? ID::unique() : $presenceId);
-                        return $database->createDocument('presenceLogs', $presenceDocument);
-                    }
-                    return $database->updateDocument('presenceLogs', $existingPresence->getId(), $presenceDocument);
-                });
+                $presenceId = $message['data']['presenceId'] ?? 'unique()';
+                if ($presenceId !== 'unique()') {
+                    $presenceDocument->setAttribute('$id', $presenceId);
+                }
+
+                $presence = $database->upsertDocument('presenceLogs', $presenceDocument);
 
                 $presence->removeAttribute('hostname');
 

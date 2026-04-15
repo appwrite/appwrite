@@ -2764,7 +2764,7 @@ return [
         'attributes' => [
             [
                 '$id' => ID::custom('userInternalId'),
-                'type' => Database::VAR_ID,
+                'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
                 'signed' => true,
@@ -2775,7 +2775,7 @@ return [
             ],
             [
                 '$id' => ID::custom('userId'),
-                'type' => Database::VAR_ID,
+                'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
                 'signed' => true,
@@ -2844,15 +2844,15 @@ return [
         // permissions must be sorted before md5 conversion to have deterministic hashes
         'indexes' => [
             [
-                '$id' => ID::custom('_key_userId'),
-                'type' => Database::INDEX_KEY,
+                '$id' => ID::custom('_unique_userId'),
+                'type' => Database::INDEX_UNIQUE,
                 'attributes' => ['userId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC]
             ],
             [
                 '$id' => ID::custom('_key_userInternal'),
-                'type' => Database::INDEX_KEY,
+                'type' => Database::INDEX_UNIQUE,
                 'attributes' => ['userInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC]

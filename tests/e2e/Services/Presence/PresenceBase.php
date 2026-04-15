@@ -312,4 +312,63 @@ trait PresenceBase
 
         $this->assertEquals(400, $response['headers']['status-code']);
     }
+
+    public function testUpsertSameUserMaintainsSinglePresence(): void
+    {
+        if ($this->getSide() === 'client') {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $projectId = $this->getProject()['$id'];
+        $userId = $this->getUser()['$id'];
+        $headers = \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders(false));
+
+        $firstUpsert = $this->client->call(
+            Client::METHOD_PUT,
+            '/presences/' . ID::unique(),
+            $headers,
+            [
+                'userId' => $userId,
+                'status' => 'online',
+                'metadata' => ['source' => 'first-upsert'],
+            ]
+        );
+        $this->assertEquals(200, $firstUpsert['headers']['status-code']);
+
+        $secondUpsert = $this->client->call(
+            Client::METHOD_PUT,
+            '/presences/' . ID::unique(),
+            $headers,
+            [
+                'userId' => $userId,
+                'status' => 'away',
+                'metadata' => ['source' => 'second-upsert'],
+            ]
+        );
+        $this->assertEquals(200, $secondUpsert['headers']['status-code']);
+
+        $this->assertEquals('away', $secondUpsert['body']['status']);
+        $this->assertEquals(['source' => 'second-upsert'], $secondUpsert['body']['metadata']);
+
+        $list = $this->client->call(
+            Client::METHOD_GET,
+            '/presences',
+            $headers,
+            [
+                'queries' => [
+                    Query::equal('userId', [$userId])->toString(),
+                ],
+            ]
+        );
+
+        $this->assertEquals(200, $list['headers']['status-code']);
+        $this->assertEquals(1, $list['body']['total']);
+        $this->assertCount(1, $list['body']['presences']);
+        $this->assertEquals($userId, $list['body']['presences'][0]['userId']);
+        $this->assertEquals('away', $list['body']['presences'][0]['status']);
+    }
 }

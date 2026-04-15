@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Modules\Presences\HTTP;
 
 use Appwrite\Extend\Exception;
-use Appwrite\ID;
 use Appwrite\Platform\Modules\Presences\HTTP\Action as PresenceAction;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -13,7 +12,6 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Permissions;
@@ -118,20 +116,11 @@ class Upsert extends PresenceAction
         $presenceDocument = new Document($presenceData);
         $this->setPermission($presenceDocument, $permissions, $user, $authorization);
 
-        // inside transaction as realtime also do get -> update/create
-        $presence = $dbForProject->withTransaction(function () use ($dbForProject, $resolvedUserId, $presenceId, $presenceDocument) {
-            $existingPresence = $dbForProject->findOne('presenceLogs', [
-                Query::equal('userId', [$resolvedUserId]),
-            ]);
+        if ($presenceId !== 'unique()') {
+            $presenceDocument->setAttribute('$id', $presenceId);
+        }
 
-            if ($existingPresence->isEmpty()) {
-                $presenceId = $presenceId === 'unique()' ? ID::unique() : $presenceId;
-                $presenceDocument->setAttribute('$id', $presenceId);
-                return $dbForProject->createDocument('presenceLogs', $presenceDocument);
-            }
-
-            return $dbForProject->updateDocument('presenceLogs', $existingPresence->getId(), $presenceDocument);
-        });
+        $presence = $dbForProject->upsertDocument('presenceLogs', $presenceDocument);
 
         $response->dynamic($presence, Response::MODEL_PRESENCE);
     }
