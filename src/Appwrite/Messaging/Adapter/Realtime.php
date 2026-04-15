@@ -22,6 +22,7 @@ class Realtime extends MessagingAdapter
      *      'roles' -> [ROLE_x, ROLE_Y]
      *      'userId' -> [USER_ID]
      *      'channels' -> [CHANNEL_NAME_X, CHANNEL_NAME_Y, CHANNEL_NAME_Z]
+     *      'presences' -> [PRESENCE_ID_1, PRESENCE_ID_2, ...]
      */
     public array $connections = [];
 
@@ -120,7 +121,8 @@ class Realtime extends MessagingAdapter
             'projectId' => $projectId,
             'roles' => $roles,
             'userId' => $userId ?? ($this->connections[$identifier]['userId'] ?? ''),
-            'channels' => $channels
+            'channels' => $channels,
+            'presences' => $this->connections[$identifier]['presences'] ?? []
         ];
     }
 

@@ -1166,6 +1166,8 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
 
                 $presence->removeAttribute('hostname');
 
+                $realtime->connections[$connection]['presences'] = array_merge($realtime->connections[$connection]['presences'] ?? [], [$presence->getId()]);
+
                 $responsePayload = json_encode([
                     'type' => 'response',
                     'data' => [
@@ -1228,6 +1230,29 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register) {
             $register->get('telemetry.connectionCounter')->add(-1);
 
             $projectId = $realtime->connections[$connection]['projectId'];
+            $presenceIds = $realtime->connections[$connection]['presences'] ?? [];
+
+            if (
+                !empty($presenceIds)
+                && $projectId !== 'console'
+            ) {
+                /** @var string[] $presenceIds */
+                $presenceIds = \array_values(\array_unique(\array_filter($presenceIds, fn (mixed $id): bool => \is_string($id) && $id !== '')));
+
+                if (!empty($presenceIds)) {
+                    $consoleDB = getConsoleDB();
+                    $project = $consoleDB->getAuthorization()->skip(fn () => $consoleDB->getDocument('projects', $projectId));
+
+                    if (!$project->isEmpty()) {
+                        $dbForProject = getProjectDB($project);
+                        $dbForProject->deleteDocuments('presenceLogs', [
+                            Query::equal('$id', $presenceIds),
+                        ], onError: function (Throwable $th) {
+                            // Swallow errors to avoid breaking disconnect cleanup
+                        });
+                    }
+                }
+            }
 
             triggerStats([
                 METRIC_REALTIME_CONNECTIONS => -1,
