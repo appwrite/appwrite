@@ -613,6 +613,8 @@ class Response extends SwooleResponse
             throw new \Exception('Response body is not a valid JSON object.');
         }
 
+        $this->payload = \is_array($data) ? $data : (array) $data;
+
         $this
             ->setContentType(Response::CONTENT_TYPE_JSON, self::CHARSET_UTF8)
             ->send(\json_encode($data, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
@@ -627,13 +629,12 @@ class Response extends SwooleResponse
     }
 
     /**
-     * Reset the sent flag so the response can be reused for another
-     * action execution (e.g. batched GraphQL queries that share one
-     * Response instance).
+     * Set the sent flag on the response. Pass false to allow reuse
+     * (e.g. batched GraphQL queries), true to prevent further writes.
      */
-    public function clearSent(): static
+    public function setSent(bool $sent): static
     {
-        $this->sent = false;
+        $this->sent = $sent;
         return $this;
     }
 

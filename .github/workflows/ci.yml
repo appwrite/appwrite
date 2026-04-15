@@ -512,7 +512,7 @@ jobs:
             # Services that rely on sequential test method execution (shared static state)
             FUNCTIONAL_FLAG="--functional"
             case "${{ matrix.service }}" in
-              Databases|TablesDB|Functions|Realtime|GraphQL) FUNCTIONAL_FLAG="" ;;
+              Databases|TablesDB|Functions|Realtime|GraphQL|ProjectWebhooks) FUNCTIONAL_FLAG="" ;;
             esac
 
             docker compose exec -T \
