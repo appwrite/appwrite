@@ -2791,7 +2791,7 @@ return [
                 'size' => 0,
                 'signed' => false,
                 'required' => false,
-                'default' => null, // TODO: needed a default value
+                'default' => null,
                 'array' => false,
                 'filters' => ['datetime'],
             ],

@@ -61,6 +61,7 @@ class XList extends Base
     public function action(array $queries, bool $includeTotal, Response $response, Database $dbForProject): void
     {
         try {
+            // TODO: make sure to add one more query here if not given -> send only not-expired presence -> presence will be cleared by the maintainance workers
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());

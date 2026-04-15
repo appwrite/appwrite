@@ -4,6 +4,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Network\Validator\Origin;
+use Appwrite\Platform\Permission;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
@@ -239,6 +240,36 @@ if (!function_exists('getTelemetry')) {
 if (!function_exists('triggerStats')) {
     function triggerStats(array $event, string $projectId): void
     {
+    }
+}
+
+if (!function_exists('setPermission')) {
+    function setPermission(Document $document, ?array $permissions, Authorization $authorization): void
+    {
+        $allowedPermissions = [
+            Database::PERMISSION_READ,
+            Database::PERMISSION_UPDATE,
+            Database::PERMISSION_DELETE,
+            Database::PERMISSION_WRITE,
+        ];
+        $permissions = Permission::aggregate($permissions, $allowedPermissions);
+        foreach (Database::PERMISSIONS as $type) {
+            foreach ($permissions as $permission) {
+                $permission = Permission::parse($permission);
+                if ($permission->getPermission() != $type) {
+                    continue;
+                }
+                $role = (new Role(
+                    $permission->getRole(),
+                    $permission->getIdentifier(),
+                    $permission->getDimension()
+                ))->toString();
+                if (!$authorization->hasRole($role)) {
+                    throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', $authorization->getRoles()) . ')');
+                }
+            }
+        }
+        $document->setAttribute('$permissions', $permissions ?? []);
     }
 }
 
@@ -1066,6 +1097,80 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                                 'queries' => \array_map(fn ($q) => $q->toString(), $parsedPayload['queries']),
                             ];
                         }, $parsedPayloads),
+                    ]
+                ]);
+
+                $server->send([$connection], $responsePayload);
+
+                if ($project !== null && !$project->isEmpty()) {
+                    $subscribeOutboundBytes = \strlen($responsePayload);
+
+                    if ($subscribeOutboundBytes > 0) {
+                        triggerStats([
+                            METRIC_REALTIME_OUTBOUND => $subscribeOutboundBytes,
+                        ], $project->getId());
+                    }
+                }
+
+                break;
+
+            case 'presence':
+                $userId = $realtime->connections[$connection]['userId'];
+                if (!isset($userId)) {
+                    throw new Exception(Exception::USER_UNAUTHORIZED, 'User must be authorized');
+                }
+                /** @var User $user */
+                $user = $database->getDocument('users', $userId);
+
+                if (!is_array($message['data'])) {
+                    throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Payload is not valid.');
+                }
+
+                if (!array_key_exists('status', $message['data'])) {
+                    throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Payload is not valid. status must be provided');
+                }
+
+                if (array_key_exists('permissions', $message['data']) && !\is_array($message['data']['permissions'])) {
+                    throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Payload is not valid. permissions must be an array.');
+                }
+
+                $presenceData = [
+                    'userInternalId' => $user->getSequence(),
+                    'userId' => $user->getId(),
+                    'source' => 'realtime',
+                    'status' => $message['data']['status']
+                ];
+
+                // TODO: add the created presence id to the connections connection id array for deletion at the end(bulk delete)
+
+                if (array_key_exists('metadata', $message['data'])) {
+                    $presenceData['metadata'] = $message['data']['metadata'];
+                }
+                // for an user if presence is present and expiry is null and service is realtime is the indicator that connection cleanup for the user failed
+                // in later case of multi-presence per user these must be cleaned up first
+                // currently in case of single presence per user we can directly upsert
+                $presenceDocument = new Document($presenceData);
+                setPermission($presenceDocument, $message['data']['permissions'] ?? null, $authorization);
+
+                $presence = $database->withTransaction(function () use ($database, $userId, $presenceDocument, $message) {
+                    $existingPresence = $database->findOne('presenceLogs', [
+                        Query::equal('userId', [$userId]),
+                    ]);
+                    if ($existingPresence->isEmpty()) {
+                        $presenceId = $message['data']['presenceId'] ?? 'unique()';
+                        $presenceDocument->setAttribute('$id', $presenceId === 'unique()' ? ID::unique() : $presenceId);
+                        return $database->createDocument('presenceLogs', $presenceDocument);
+                    }
+                    return $database->updateDocument('presenceLogs', $existingPresence->getId(), $presenceDocument);
+                });
+
+                $presence->removeAttribute('hostname');
+
+                $responsePayload = json_encode([
+                    'type' => 'response',
+                    'data' => [
+                        'to' => 'presence',
+                        'presence' => $presence->getArrayCopy()
                     ]
                 ]);
 

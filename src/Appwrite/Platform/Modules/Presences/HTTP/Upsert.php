@@ -108,7 +108,7 @@ class Upsert extends PresenceAction
             'userInternalId' => $userInternalId,
             'userId' => $resolvedUserId,
             'status' => $status,
-            'source' => 'HTTP',
+            'source' => 'rest',
             'expiry' => $expiry ?? DateTime::addSeconds(new \DateTime(), 15 * 60),
             // TODO: finding a way to find hostname
             // 'hostname' => $hostname,
@@ -118,17 +118,20 @@ class Upsert extends PresenceAction
         $presenceDocument = new Document($presenceData);
         $this->setPermission($presenceDocument, $permissions, $user, $authorization);
 
-        $existingPresence = $dbForProject->findOne('presenceLogs', [
-            Query::equal('userId', [$resolvedUserId]),
-        ]);
+        // inside transaction as realtime also do get -> update/create
+        $presence = $dbForProject->withTransaction(function () use ($dbForProject, $resolvedUserId, $presenceId, $presenceDocument) {
+            $existingPresence = $dbForProject->findOne('presenceLogs', [
+                Query::equal('userId', [$resolvedUserId]),
+            ]);
 
-        if ($existingPresence->isEmpty()) {
-            $presenceId = $presenceId === 'unique()' ? ID::unique() : $presenceId;
-            $presenceDocument->setAttribute('$id', $presenceId);
-            $presence = $dbForProject->createDocument('presenceLogs', $presenceDocument);
-        } else {
-            $presence = $dbForProject->updateDocument('presenceLogs', $existingPresence->getId(), $presenceDocument);
-        }
+            if ($existingPresence->isEmpty()) {
+                $presenceId = $presenceId === 'unique()' ? ID::unique() : $presenceId;
+                $presenceDocument->setAttribute('$id', $presenceId);
+                return $dbForProject->createDocument('presenceLogs', $presenceDocument);
+            }
+
+            return $dbForProject->updateDocument('presenceLogs', $existingPresence->getId(), $presenceDocument);
+        });
 
         $response->dynamic($presence, Response::MODEL_PRESENCE);
     }
