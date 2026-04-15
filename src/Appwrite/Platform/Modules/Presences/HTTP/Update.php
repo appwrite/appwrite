@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Presences\HTTP;
 
+use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Presences\HTTP\Action as PresenceAction;
 use Appwrite\SDK\AuthType;
@@ -35,6 +36,9 @@ class Update extends PresenceAction
             ->desc('Update presence')
             ->groups(['api', 'presences'])
             ->label('scope', 'users.write')
+            ->label('event', 'presences.[presenceId].update')
+            ->label('audits.event', 'presence.update')
+            ->label('audits.resource', 'presence/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'presences',
                 group: 'presences',
@@ -58,6 +62,7 @@ class Update extends PresenceAction
             ->inject('dbForProject')
             ->inject('user')
             ->inject('authorization')
+            ->inject('queueForEvents')
             ->callback($this->action(...));
     }
 
@@ -71,7 +76,8 @@ class Update extends PresenceAction
         Response $response,
         Database $dbForProject,
         User $user,
-        Authorization $authorization
+        Authorization $authorization,
+        Event $queueForEvents
     ): void {
         $isAPIKey = $user->isApp($authorization->getRoles());
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
@@ -118,6 +124,7 @@ class Update extends PresenceAction
         }
 
         $presence = $dbForProject->updateDocument('presenceLogs', $presenceId, $updates);
+        $queueForEvents->setParam('presenceId', $presence->getId());
 
         $response->dynamic($presence, Response::MODEL_PRESENCE);
     }

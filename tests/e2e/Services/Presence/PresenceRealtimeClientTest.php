@@ -208,4 +208,73 @@ class PresenceRealtimeClientTest extends Scope
 
         $client->close();
     }
+
+    public function testChannelParsing(): void
+    {
+        $presenceId = ID::unique();
+        $userId = $this->getUser()['$id'];
+        $headers = [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $this->getUser()['session'],
+        ];
+
+        $client = $this->getWebsocket(['presences', 'presences.' . $presenceId], $headers, timeout: 5);
+        $connected = \json_decode($client->receive(), true);
+
+        $this->assertSame('connected', $connected['type'] ?? null);
+        $this->assertCount(2, $connected['data']['channels'] ?? []);
+        $this->assertContains('presences', $connected['data']['channels']);
+        $this->assertContains('presences.' . $presenceId, $connected['data']['channels']);
+
+        $create = $this->client->call(
+            Client::METHOD_PUT,
+            '/presences/' . $presenceId,
+            $this->getServerHeaders(),
+            [
+                'userId' => $userId,
+                'status' => 'online',
+                'metadata' => ['source' => 'channel-parsing-create'],
+                'permissions' => $this->getPresencePermissions($userId),
+            ]
+        );
+        $this->assertSame(200, $create['headers']['status-code']);
+
+        $createEvent = \json_decode($client->receive(), true);
+        $this->assertSame('event', $createEvent['type'] ?? null);
+        $this->assertContains('presences', $createEvent['data']['channels'] ?? []);
+        $this->assertContains('presences.' . $presenceId, $createEvent['data']['channels'] ?? []);
+        $this->assertContains('presences.' . $presenceId . '.upsert', $createEvent['data']['events'] ?? []);
+
+        $update = $this->client->call(
+            Client::METHOD_PATCH,
+            '/presences/' . $presenceId,
+            $this->getServerHeaders(),
+            [
+                'status' => 'away',
+                'metadata' => ['source' => 'channel-parsing-update'],
+            ]
+        );
+        $this->assertSame(200, $update['headers']['status-code']);
+
+        $updateEvent = \json_decode($client->receive(), true);
+        $this->assertSame('event', $updateEvent['type'] ?? null);
+        $this->assertContains('presences', $updateEvent['data']['channels'] ?? []);
+        $this->assertContains('presences.' . $presenceId, $updateEvent['data']['channels'] ?? []);
+        $this->assertContains('presences.' . $presenceId . '.update', $updateEvent['data']['events'] ?? []);
+
+        $delete = $this->client->call(
+            Client::METHOD_DELETE,
+            '/presences/' . $presenceId,
+            $this->getServerHeaders()
+        );
+        $this->assertSame(204, $delete['headers']['status-code']);
+
+        $deleteEvent = \json_decode($client->receive(), true);
+        $this->assertSame('event', $deleteEvent['type'] ?? null);
+        $this->assertContains('presences', $deleteEvent['data']['channels'] ?? []);
+        $this->assertContains('presences.' . $presenceId, $deleteEvent['data']['channels'] ?? []);
+        $this->assertContains('presences.' . $presenceId . '.delete', $deleteEvent['data']['events'] ?? []);
+
+        $client->close();
+    }
 }

@@ -589,6 +589,11 @@ class Realtime extends MessagingAdapter
                     $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 }
                 break;
+            case 'presences':
+                $channels[] = 'presences';
+                $channels[] = 'presences.' . $parts[1];
+                $roles = $payload->getRead();
+                break;
         }
 
         return [

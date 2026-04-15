@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Presences\HTTP;
 
+use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
@@ -31,6 +32,9 @@ class Delete extends Base
             ->desc('Delete presence')
             ->groups(['api', 'presences'])
             ->label('scope', 'users.write')
+            ->label('event', 'presences.[presenceId].delete')
+            ->label('audits.event', 'presence.delete')
+            ->label('audits.resource', 'presence/{request.presenceId}')
             ->label('sdk', new Method(
                 namespace: 'presences',
                 group: 'presences',
@@ -48,10 +52,11 @@ class Delete extends Base
             ->param('presenceId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Presence unique ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('queueForEvents')
             ->callback($this->action(...));
     }
 
-    public function action(string $presenceId, Response $response, Database $dbForProject): void
+    public function action(string $presenceId, Response $response, Database $dbForProject, Event $queueForEvents): void
     {
         $presence = $dbForProject->getDocument('presenceLogs', $presenceId);
 
@@ -60,6 +65,7 @@ class Delete extends Base
         }
 
         $dbForProject->deleteDocument('presenceLogs', $presenceId);
+        $queueForEvents->setParam('presenceId', $presence->getId());
 
         $response->noContent();
     }

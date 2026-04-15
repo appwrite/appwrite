@@ -330,4 +330,25 @@ class MessagingTest extends TestCase
         $this->assertContains(Role::any()->toString(), $result['roles']);
         $this->assertContains(Role::team('123abc')->toString(), $result['roles']);
     }
+
+    public function testFromPayloadPresenceChannels(): void
+    {
+        $presenceId = ID::custom('presence123');
+
+        $result = Realtime::fromPayload(
+            event: 'presences.' . $presenceId . '.upsert',
+            payload: new Document([
+                '$id' => $presenceId,
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::users()),
+                    Permission::delete(Role::users()),
+                ],
+            ]),
+        );
+
+        $this->assertContains('presences', $result['channels']);
+        $this->assertContains('presences.' . $presenceId, $result['channels']);
+        $this->assertContains(Role::any()->toString(), $result['roles']);
+    }
 }

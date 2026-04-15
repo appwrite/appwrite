@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Presences\HTTP;
 
+use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Presences\HTTP\Action as PresenceAction;
 use Appwrite\SDK\AuthType;
@@ -39,6 +40,9 @@ class Upsert extends PresenceAction
             ->desc('Upsert presence')
             ->groups(['api', 'presences'])
             ->label('scope', 'users.write')
+            ->label('event', 'presences.[presenceId].upsert')
+            ->label('audits.event', 'presence.upsert')
+            ->label('audits.resource', 'presence/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'presences',
                 group: 'presences',
@@ -63,6 +67,7 @@ class Upsert extends PresenceAction
             ->inject('dbForProject')
             ->inject('user')
             ->inject('authorization')
+            ->inject('queueForEvents')
             ->callback($this->action(...));
     }
 
@@ -76,7 +81,8 @@ class Upsert extends PresenceAction
         Response $response,
         Database $dbForProject,
         User $user,
-        Authorization $authorization
+        Authorization $authorization,
+        Event $queueForEvents
     ): void {
         $isAPIKey = $user->isApp($authorization->getRoles());
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
@@ -121,6 +127,7 @@ class Upsert extends PresenceAction
         }
 
         $presence = $dbForProject->upsertDocument('presenceLogs', $presenceDocument);
+        $queueForEvents->setParam('presenceId', $presence->getId());
 
         $response->dynamic($presence, Response::MODEL_PRESENCE);
     }
