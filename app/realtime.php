@@ -4,7 +4,6 @@ use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Network\Validator\Origin;
-use Appwrite\Platform\Permission;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
@@ -31,6 +30,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
@@ -1116,7 +1116,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
 
             case 'presence':
                 $userId = $realtime->connections[$connection]['userId'];
-                if (!isset($userId)) {
+                if (empty($userId)) {
                     throw new Exception(Exception::USER_UNAUTHORIZED, 'User must be authorized');
                 }
                 /** @var User $user */
