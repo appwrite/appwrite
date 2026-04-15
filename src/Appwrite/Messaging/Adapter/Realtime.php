@@ -20,6 +20,7 @@ class Realtime extends MessagingAdapter
      * [CONNECTION_ID] ->
      *      'projectId' -> [PROJECT_ID]
      *      'roles' -> [ROLE_x, ROLE_Y]
+     *      'userId' -> [USER_ID]
      *      'channels' -> [CHANNEL_NAME_X, CHANNEL_NAME_Y, CHANNEL_NAME_Z]
      */
     public array $connections = [];
@@ -67,25 +68,35 @@ class Realtime extends MessagingAdapter
      * @param array $queryGroup Array of Query objects for this subscription (AND logic within subscription)
      * @return void
      */
-    public function subscribe(string $projectId, mixed $identifier, string $subscriptionId, array $roles, array $channels, array $queryGroup = []): void
-    {
+    public function subscribe(
+        string $projectId,
+        mixed $identifier,
+        string $subscriptionId,
+        array $roles,
+        array $channels,
+        array $queryGroup = [],
+        ?string $userId = null
+    ): void {
         if (!isset($this->subscriptions[$projectId])) { // Init Project
             $this->subscriptions[$projectId] = [];
         }
 
         $strings = [];
-        if (empty($queryGroup)) {
-            $strings[] = Query::select(['*'])->toString();
-        } else {
-            foreach ($queryGroup as $query) {
-                $strings[] = $query->toString();
-            }
-        }
+        $data = [];
 
-        $data = [
-            'strings' => $strings,
-            'compiled' => RuntimeQuery::compile($queryGroup),
-        ];
+        if (!empty($channels)) {
+            if (empty($queryGroup)) {
+                $strings[] = Query::select(['*'])->toString();
+            } else {
+                foreach ($queryGroup as $query) {
+                    $strings[] = $query->toString();
+                }
+            }
+            $data = [
+                'strings' => $strings,
+                'compiled' => RuntimeQuery::compile($queryGroup),
+            ];
+        }
 
         foreach ($roles as $role) {
             if (!isset($this->subscriptions[$projectId][$role])) {
@@ -103,10 +114,12 @@ class Realtime extends MessagingAdapter
             }
         }
 
-        // Update connection info
+        // Keep userId from onOpen/authentication when provided.
+        // Fallback to existing stored value for subsequent subscribe upserts.
         $this->connections[$identifier] = [
             'projectId' => $projectId,
             'roles' => $roles,
+            'userId' => $userId ?? ($this->connections[$identifier]['userId'] ?? ''),
             'channels' => $channels
         ];
     }

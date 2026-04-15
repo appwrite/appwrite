@@ -1,6 +1,12 @@
 <?php
 
 use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Audit as AuditPublisher;
+use Appwrite\Event\Publisher\Certificate as CertificatePublisher;
+use Appwrite\Event\Publisher\Execution as ExecutionPublisher;
+use Appwrite\Event\Publisher\Migration as MigrationPublisher;
+use Appwrite\Event\Publisher\Screenshot as ScreenshotPublisher;
+use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Utopia\Database\Documents\User;
 use Executor\Executor;
@@ -78,9 +84,33 @@ $container->set('publisherMessaging', function (Publisher $publisher) {
 $container->set('publisherWebhooks', function (Publisher $publisher) {
     return $publisher;
 }, ['publisher']);
+$container->set('publisherForAudits', fn (Publisher $publisher) => new AuditPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_AUDITS_QUEUE_NAME', Event::AUDITS_QUEUE_NAME))
+), ['publisher']);
+$container->set('publisherForCertificates', fn (Publisher $publisher) => new CertificatePublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_CERTIFICATES_QUEUE_NAME', Event::CERTIFICATES_QUEUE_NAME))
+), ['publisher']);
+$container->set('publisherForScreenshots', fn (Publisher $publisher) => new ScreenshotPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_SCREENSHOTS_QUEUE_NAME', Event::SCREENSHOTS_QUEUE_NAME))
+), ['publisher']);
 $container->set('publisherForUsage', fn (Publisher $publisher) => new UsagePublisher(
     $publisher,
     new Queue(System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', Event::STATS_USAGE_QUEUE_NAME))
+), ['publisher']);
+$container->set('publisherForExecutions', fn (Publisher $publisher) => new ExecutionPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_EXECUTIONS_QUEUE_NAME', Event::EXECUTIONS_QUEUE_NAME))
+), ['publisher']);
+$container->set('publisherForMigrations', fn (Publisher $publisher) => new MigrationPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_MIGRATIONS_QUEUE_NAME', Event::MIGRATIONS_QUEUE_NAME))
+), ['publisher']);
+$container->set('publisherForStatsResources', fn (Publisher $publisher) => new StatsResourcesPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_STATS_RESOURCES_QUEUE_NAME', Event::STATS_RESOURCES_QUEUE_NAME))
 ), ['publisher']);
 
 /**

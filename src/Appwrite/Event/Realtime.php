@@ -62,6 +62,26 @@ class Realtime extends Event
     }
 
     /**
+     * Reset the event state for long-lived worker processes.
+     *
+     * `Event::reset()` clears params/sensitive/event/payload only. Realtime routing also
+     * depends on `context`, `subscribers`, and `project`/`user` fields, so we clear them too
+     * to prevent stale state from affecting subsequent triggers.
+     */
+    public function reset(): self
+    {
+        parent::reset();
+
+        $this->subscribers = [];
+        $this->context = [];
+        $this->project = null;
+        $this->user = null;
+        $this->userId = null;
+
+        return $this;
+    }
+
+    /**
      * Execute Event.
      *
      * @return string|bool

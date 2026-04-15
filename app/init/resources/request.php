@@ -4,19 +4,15 @@ use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Key;
 use Appwrite\Databases\TransactionState;
-use Appwrite\Event\Audit as AuditEvent;
 use Appwrite\Event\Build;
-use Appwrite\Event\Certificate;
+use Appwrite\Event\Context\Audit as AuditContext;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
-use Appwrite\Event\Migration;
 use Appwrite\Event\Realtime;
-use Appwrite\Event\Screenshot;
-use Appwrite\Event\StatsResources;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Functions\EventProcessor;
@@ -130,9 +126,6 @@ return function (Container $container): void {
     $container->set('queueForBuilds', function (Publisher $publisher) {
         return new Build($publisher);
     }, ['publisher']);
-    $container->set('queueForScreenshots', function (Publisher $publisher) {
-        return new Screenshot($publisher);
-    }, ['publisher']);
     $container->set('queueForDatabase', function (Publisher $publisher) {
         return new EventDatabase($publisher);
     }, ['publisher']);
@@ -151,25 +144,13 @@ return function (Container $container): void {
     $container->set('usage', function () {
         return new UsageContext();
     }, []);
-    $container->set('queueForAudits', function (Publisher $publisher) {
-        return new AuditEvent($publisher);
-    }, ['publisher']);
+    $container->set('auditContext', fn () => new AuditContext(), []);
     $container->set('queueForFunctions', function (Publisher $publisher) {
         return new Func($publisher);
     }, ['publisher']);
     $container->set('eventProcessor', function () {
         return new EventProcessor();
     }, []);
-    $container->set('queueForCertificates', function (Publisher $publisher) {
-        return new Certificate($publisher);
-    }, ['publisher']);
-    $container->set('queueForMigrations', function (Publisher $publisher) {
-        return new Migration($publisher);
-    }, ['publisher']);
-    $container->set('queueForStatsResources', function (Publisher $publisher) {
-        return new StatsResources($publisher);
-    }, ['publisher']);
-
     $container->set('dbForPlatform', function (Group $pools, Cache $cache, Authorization $authorization) {
         $adapter = new DatabasePool($pools->get('console'));
         $database = new Database($adapter, $cache);

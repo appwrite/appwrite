@@ -7,9 +7,9 @@ use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Key;
 use Appwrite\Bus\Events\ExecutionCompleted;
 use Appwrite\Bus\Events\RequestCompleted;
-use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete as DeleteEvent;
 use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Network\Cors;
 use Appwrite\Platform\Appwrite;
@@ -25,6 +25,7 @@ use Appwrite\Utopia\Request\Filters\V18 as RequestV18;
 use Appwrite\Utopia\Request\Filters\V19 as RequestV19;
 use Appwrite\Utopia\Request\Filters\V20 as RequestV20;
 use Appwrite\Utopia\Request\Filters\V21 as RequestV21;
+use Appwrite\Utopia\Request\Filters\V22 as RequestV22;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filters\V16 as ResponseV16;
 use Appwrite\Utopia\Response\Filters\V17 as ResponseV17;
@@ -32,6 +33,7 @@ use Appwrite\Utopia\Response\Filters\V18 as ResponseV18;
 use Appwrite\Utopia\Response\Filters\V19 as ResponseV19;
 use Appwrite\Utopia\Response\Filters\V20 as ResponseV20;
 use Appwrite\Utopia\Response\Filters\V21 as ResponseV21;
+use Appwrite\Utopia\Response\Filters\V22 as ResponseV22;
 use Appwrite\Utopia\View;
 use Executor\Executor;
 use MaxMind\Db\Reader;
@@ -892,6 +894,9 @@ Http::init()
             if (version_compare($requestFormat, '1.9.0', '<')) {
                 $request->addFilter(new RequestV21());
             }
+            if (version_compare($requestFormat, '1.9.1', '<')) {
+                $request->addFilter(new RequestV22());
+            }
         }
 
         $localeParam = (string) $request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
@@ -916,6 +921,9 @@ Http::init()
          */
         $responseFormat = $request->getHeader('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
         if ($responseFormat) {
+            if (version_compare($responseFormat, '1.9.1', '<')) {
+                $response->addFilter(new ResponseV22());
+            }
             if (version_compare($responseFormat, '1.9.0', '<')) {
                 $response->addFilter(new ResponseV21());
             }
@@ -1006,11 +1014,11 @@ Http::init()
    ->inject('request')
    ->inject('console')
    ->inject('dbForPlatform')
-   ->inject('queueForCertificates')
+   ->inject('publisherForCertificates')
    ->inject('platform')
     ->inject('authorization')
     ->inject('certifiedDomains')
-   ->action(function (Request $request, Document $console, Database $dbForPlatform, Certificate $queueForCertificates, array $platform, Authorization $authorization, Table $certifiedDomains) {
+   ->action(function (Request $request, Document $console, Database $dbForPlatform, Certificate $publisherForCertificates, array $platform, Authorization $authorization, Table $certifiedDomains) {
        $hostname = $request->getHostname();
        $platformHostnames = $platform['hostnames'] ?? [];
 
@@ -1036,7 +1044,7 @@ Http::init()
        }
 
        // 4. Check/create rule (requires DB access)
-       $authorization->skip(function () use ($dbForPlatform, $domain, $console, $queueForCertificates, $certifiedDomains) {
+       $authorization->skip(function () use ($dbForPlatform, $domain, $console, $publisherForCertificates, $certifiedDomains) {
            try {
                // TODO: (@Meldiron) Remove after 1.7.x migration
                $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
@@ -1092,10 +1100,11 @@ Http::init()
                $dbForPlatform->createDocument('rules', $document);
 
                Console::info('Issuing a TLS certificate for the main domain (' . $domain->get() . ') in a few seconds...');
-               $queueForCertificates
-                   ->setDomain($document)
-                   ->setSkipRenewCheck(true)
-                   ->trigger();
+               $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(
+                   project: $console,
+                   domain: $document,
+                   skipRenewCheck: true,
+               ));
            } catch (Duplicate $e) {
                Console::info('Certificate already exists');
            } finally {
@@ -1168,15 +1177,6 @@ Http::error()
     ->inject('devKey')
     ->inject('authorization')
     ->action(function (Throwable $error, Http $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, Bus $bus, Document $devKey, Authorization $authorization) {
-        $trace = $error->getTrace();
-
-        foreach (array_slice($trace, 0, 100) as $index => $traceEntry) {
-            $file = isset($traceEntry['file']) ? $traceEntry['file'] : '[internal function]';
-            $line = isset($traceEntry['line']) ? $traceEntry['line'] : '';
-            $function = isset($traceEntry['function']) ? $traceEntry['function'] : '';
-            Console::error("[$index] $file : $line -> $function()");
-        }
-
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->getRoute();
         $class = \get_class($error);
@@ -1186,9 +1186,7 @@ Http::error()
         $line = $error->getLine();
         $trace = $error->getTrace();
 
-        if (php_sapi_name() === 'cli') {
-            Span::error($error);
-        }
+        Span::error($error);
 
         switch ($class) {
             case Utopia\Http\Exception::class:
@@ -1430,6 +1428,7 @@ Http::error()
             case 402: // Error allowed publicly
             case 403: // Error allowed publicly
             case 404: // Error allowed publicly
+            case 405: // Error allowed publicly
             case 408: // Error allowed publicly
             case 409: // Error allowed publicly
             case 412: // Error allowed publicly

@@ -60,7 +60,7 @@ class Update extends Base
             ))
             ->param('keyId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Key ID.', false, ['dbForPlatform'])
             ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
-            ->param('scopes', null, new Nullable(new ArrayList(new WhiteList(array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.')
+            ->param('scopes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.', optional: false)
             ->param('expire', null, new Nullable(new Datetime()), 'Expiration time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. Use null for unlimited expiration.', true)
             ->inject('response')
             ->inject('queueForEvents')
@@ -70,13 +70,10 @@ class Update extends Base
             ->callback($this->action(...));
     }
 
-    /**
-     * @param array<string>|null $scopes
-     */
     public function action(
         string $keyId,
         string $name,
-        ?array $scopes,
+        array $scopes,
         ?string $expire,
         Response $response,
         QueueEvent $queueForEvents,
@@ -92,7 +89,7 @@ class Update extends Base
 
         $updates = new Document([
             'name' => $name,
-            'scopes' => $scopes ?? [],
+            'scopes' => $scopes,
             'expire' => $expire,
         ]);
 

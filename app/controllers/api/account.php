@@ -9,6 +9,7 @@ use Appwrite\Auth\Validator\PasswordDictionary;
 use Appwrite\Auth\Validator\PasswordHistory;
 use Appwrite\Auth\Validator\PersonalData;
 use Appwrite\Auth\Validator\Phone;
+use Appwrite\Bus\Events\SessionCreated;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
@@ -41,6 +42,7 @@ use Utopia\Auth\Proofs\Code as ProofsCode;
 use Utopia\Auth\Proofs\Password as ProofsPassword;
 use Utopia\Auth\Proofs\Token as ProofsToken;
 use Utopia\Auth\Store;
+use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -75,139 +77,8 @@ use Utopia\Validator\WhiteList;
 $oauthDefaultSuccess = '/console/auth/oauth2/success';
 $oauthDefaultFailure = '/console/auth/oauth2/failure';
 
-function sendSessionAlert(Locale $locale, Document $user, Document $project, array $platform, Document $session, Mail $queueForMails)
-{
-    $subject = $locale->getText("emails.sessionAlert.subject");
-    $preview = $locale->getText("emails.sessionAlert.preview");
-    $customTemplate = $project->getAttribute('templates', [])['email.sessionAlert-' . $locale->default] ?? [];
-    $smtpBaseTemplate = $project->getAttribute('smtpBaseTemplate', 'email-base');
 
-    $validator = new FileName();
-    if (!$validator->isValid($smtpBaseTemplate)) {
-        throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid template path');
-    }
-
-    $bodyTemplate = __DIR__ . '/../../config/locale/templates/' . $smtpBaseTemplate . '.tpl';
-
-    $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-session-alert.tpl');
-    $message
-        ->setParam('{{hello}}', $locale->getText("emails.sessionAlert.hello"))
-        ->setParam('{{body}}', $locale->getText("emails.sessionAlert.body"))
-        ->setParam('{{listDevice}}', $locale->getText("emails.sessionAlert.listDevice"))
-        ->setParam('{{listIpAddress}}', $locale->getText("emails.sessionAlert.listIpAddress"))
-        ->setParam('{{listCountry}}', $locale->getText("emails.sessionAlert.listCountry"))
-        ->setParam('{{footer}}', $locale->getText("emails.sessionAlert.footer"))
-        ->setParam('{{thanks}}', $locale->getText("emails.sessionAlert.thanks"))
-        ->setParam('{{signature}}', $locale->getText("emails.sessionAlert.signature"));
-
-    $body = $message->render();
-
-    $smtp = $project->getAttribute('smtp', []);
-    $smtpEnabled = $smtp['enabled'] ?? false;
-
-    $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
-    $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
-    $replyTo = "";
-
-    if ($smtpEnabled) {
-        if (!empty($smtp['senderEmail'])) {
-            $senderEmail = $smtp['senderEmail'];
-        }
-        if (!empty($smtp['senderName'])) {
-            $senderName = $smtp['senderName'];
-        }
-        if (!empty($smtp['replyTo'])) {
-            $replyTo = $smtp['replyTo'];
-        }
-
-        $queueForMails
-            ->setSmtpHost($smtp['host'] ?? '')
-            ->setSmtpPort($smtp['port'] ?? '')
-            ->setSmtpUsername($smtp['username'] ?? '')
-            ->setSmtpPassword($smtp['password'] ?? '')
-            ->setSmtpSecure($smtp['secure'] ?? '');
-
-        if (!empty($customTemplate)) {
-            if (!empty($customTemplate['senderEmail'])) {
-                $senderEmail = $customTemplate['senderEmail'];
-            }
-            if (!empty($customTemplate['senderName'])) {
-                $senderName = $customTemplate['senderName'];
-            }
-            if (!empty($customTemplate['replyTo'])) {
-                $replyTo = $customTemplate['replyTo'];
-            }
-
-            $body = $customTemplate['message'] ?? '';
-            $subject = $customTemplate['subject'] ?? $subject;
-        }
-
-        $queueForMails
-            ->setSmtpReplyTo($replyTo)
-            ->setSmtpSenderEmail($senderEmail)
-            ->setSmtpSenderName($senderName);
-    }
-
-    // session alerts should always have a client name!
-    $clientName = $session->getAttribute('clientName');
-    if (empty($clientName)) {
-        // fallback to the user agent and then unknown!
-        $userAgent = $session->getAttribute('userAgent');
-        $clientName = !empty($userAgent) ? $userAgent : 'UNKNOWN';
-
-        $session->setAttribute('clientName', $clientName);
-    }
-
-    $projectName = $project->getAttribute('name');
-    if ($project->getId() === 'console') {
-        $projectName = $platform['platformName'];
-    }
-
-    $emailVariables = [
-        'direction' => $locale->getText('settings.direction'),
-        'date' => (new \DateTime())->format('F j'),
-        'year' => (new \DateTime())->format('YYYY'),
-        'time' => (new \DateTime())->format('H:i:s'),
-        'user' => $user->getAttribute('name'),
-        'project' => $projectName,
-        'device' => $session->getAttribute('clientName'),
-        'ipAddress' => $session->getAttribute('ip'),
-        'country' => $locale->getText('countries.' . $session->getAttribute('countryCode'), $locale->getText('locale.country.unknown')),
-    ];
-
-    if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
-        $emailVariables = array_merge($emailVariables, [
-            'accentColor' => $platform['accentColor'],
-            'logoUrl' => $platform['logoUrl'],
-            'twitter' => $platform['twitterUrl'],
-            'discord' => $platform['discordUrl'],
-            'github' => $platform['githubUrl'],
-            'terms' => $platform['termsUrl'],
-            'privacy' => $platform['privacyUrl'],
-            'platform' => $platform['platformName'],
-        ]);
-    }
-
-    $email = $user->getAttribute('email');
-
-    $queueForMails
-        ->setSubject($subject)
-        ->setPreview($preview)
-        ->setBody($body)
-        ->setBodyTemplate($bodyTemplate)
-        ->appendVariables($emailVariables)
-        ->setRecipient($email);
-
-    // since this is console project, set email sender name!
-    if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
-        $queueForMails->setSenderName($platform['emailSenderName']);
-    }
-
-    $queueForMails->trigger();
-}
-
-
-$createSession = function (string $userId, string $secret, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
+$createSession = function (string $userId, string $secret, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Reader $geodb, Event $queueForEvents, Bus $bus, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
 
     // Attempt to decode secret as a JWT (used by OAuth2 token flow to carry provider info)
     $oauthProvider = null;
@@ -318,23 +189,12 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed saving user to DB');
     }
 
-    $isAllowedTokenType = match ($verifiedToken->getAttribute('type')) {
-        TOKEN_TYPE_MAGIC_URL,
-        TOKEN_TYPE_EMAIL => false,
-        default => true
-    };
-
-    $hasUserEmail = $user->getAttribute('email', false) !== false;
-
-    $isSessionAlertsEnabled = $project->getAttribute('auths', [])['sessionAlerts'] ?? false;
-
-    $isNotFirstSession = $dbForProject->count('sessions', [
-        Query::equal('userId', [$user->getId()]),
-    ]) !== 1;
-
-    if ($isAllowedTokenType && $hasUserEmail && $isSessionAlertsEnabled && $isNotFirstSession) {
-        sendSessionAlert($locale, $user, $project, $platform, $session, $queueForMails);
-    }
+    $bus->dispatch(new SessionCreated(
+        user: $user->getArrayCopy(),
+        project: $project->getArrayCopy(),
+        session: $session->getArrayCopy(),
+        locale: $locale->default,
+    ));
 
     $queueForEvents
         ->setParam('userId', $user->getId())
@@ -1034,7 +894,7 @@ Http::post('/v1/account/sessions/email')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
-    ->inject('queueForMails')
+    ->inject('bus')
     ->inject('hooks')
     ->inject('store')
     ->inject('proofForPassword')
@@ -1042,7 +902,7 @@ Http::post('/v1/account/sessions/email')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('authorization')
-    ->action(function (string $email, string $password, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails, Hooks $hooks, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
+    ->action(function (string $email, string $password, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Reader $geodb, Event $queueForEvents, Bus $bus, Hooks $hooks, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
 
@@ -1141,15 +1001,12 @@ Http::post('/v1/account/sessions/email')
             ->setParam('sessionId', $session->getId())
         ;
 
-        if ($project->getAttribute('auths', [])['sessionAlerts'] ?? false) {
-            if (
-                $dbForProject->count('sessions', [
-                    Query::equal('userId', [$user->getId()]),
-                ]) !== 1
-            ) {
-                sendSessionAlert($locale, $user, $project, $platform, $session, $queueForMails);
-            }
-        }
+        $bus->dispatch(new SessionCreated(
+            user: $user->getArrayCopy(),
+            project: $project->getArrayCopy(),
+            session: $session->getArrayCopy(),
+            locale: $locale->default,
+        ));
 
         $response->dynamic($session, Response::MODEL_SESSION);
     });
@@ -1343,7 +1200,7 @@ Http::post('/v1/account/sessions/token')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
-    ->inject('queueForMails')
+    ->inject('bus')
     ->inject('store')
     ->inject('proofForToken')
     ->inject('proofForCode')
@@ -2897,16 +2754,16 @@ Http::put('/v1/account/sessions/magic-url')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
-    ->inject('queueForMails')
+    ->inject('bus')
     ->inject('store')
     ->inject('proofForCode')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('authorization')
-    ->action(function ($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geodb, $queueForEvents, $queueForMails, $store, $proofForCode, $domainVerification, $cookieDomain, $authorization) use ($createSession) {
+    ->action(function ($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geodb, $queueForEvents, $bus, $store, $proofForCode, $domainVerification, $cookieDomain, $authorization) use ($createSession) {
         $proofForToken = new ProofsToken(TOKEN_LENGTH_MAGIC_URL);
         $proofForToken->setHash(new Sha());
-        $createSession($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geodb, $queueForEvents, $queueForMails, $store, $proofForToken, $proofForCode, $domainVerification, $cookieDomain, $authorization);
+        $createSession($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geodb, $queueForEvents, $bus, $store, $proofForToken, $proofForCode, $domainVerification, $cookieDomain, $authorization);
     });
 
 Http::put('/v1/account/sessions/phone')
@@ -2948,7 +2805,7 @@ Http::put('/v1/account/sessions/phone')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
-    ->inject('queueForMails')
+    ->inject('bus')
     ->inject('store')
     ->inject('proofForToken')
     ->inject('proofForCode')
