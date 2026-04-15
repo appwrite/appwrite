@@ -42,7 +42,7 @@ switch ($type) {
         $type = '';
         $label = 'Error ' . $code;
         
-        $message = $code >= 500 ? 'An unexpected server error occured.' : 'An unexpected client error occured.';
+        $message = $code >= 500 ? 'An unexpected server error occurred.' : 'An unexpected client error occurred.';
         switch($code) {
             case 401:
                 $message = 'You must sign in to access this page.';
