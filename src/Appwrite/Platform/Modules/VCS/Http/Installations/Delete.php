@@ -11,6 +11,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Text;
 
@@ -48,6 +49,7 @@ class Delete extends Action
             ))
             ->param('installationId', '', new Text(256), 'Installation Id')
             ->inject('response')
+            ->inject('project')
             ->inject('dbForPlatform')
             ->inject('queueForDeletes')
             ->callback($this->action(...));
@@ -56,12 +58,17 @@ class Delete extends Action
     public function action(
         string $installationId,
         Response $response,
+        Document $project,
         Database $dbForPlatform,
         DeleteEvent $queueForDeletes
     ) {
         $installation = $dbForPlatform->getDocument('installations', $installationId);
 
         if ($installation->isEmpty()) {
+            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+        }
+
+        if ($installation->getAttribute('projectInternalId') !== $project->getSequence()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
