@@ -65,7 +65,10 @@ class Delete extends Base
         }
 
         $dbForProject->deleteDocument('presenceLogs', $presenceId);
-        $queueForEvents->setParam('presenceId', $presence->getId());
+
+        $queueForEvents
+            ->setParam('presenceId', $presence->getId())
+            ->setPayload($response->output($presence, Response::MODEL_PRESENCE));
 
         $response->noContent();
     }
