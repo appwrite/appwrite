@@ -116,9 +116,10 @@ class Functions extends Action
         $log->addTag('projectId', $project->getId());
         $log->addTag('type', $type);
 
-        if (empty($events) && !$function->isEmpty()) {
+        #if (empty($events) && !$function->isEmpty()) {
             $traceProjectId = System::getEnv('_APP_TRACE_PROJECT_ID', '');
             $traceFunctionId = System::getEnv('_APP_TRACE_FUNCTION_ID', '');
+            var_dump($traceProjectId, $traceFunctionId, $project->getId(), $function->getId());
             if ($traceProjectId !== '' && $traceFunctionId !== '' && $project->getId() === $traceProjectId && $function->getId() === $traceFunctionId) {
                 Span::init('execution.trace.functions_worker_dequeue');
                 Span::add('datetime', gmdate('c'));
@@ -129,7 +130,7 @@ class Functions extends Action
                 Span::add('queueName', $message->getQueue());
                 Span::add('messageTimestamp', (string) $message->getTimestamp());
                 Span::current()?->finish();
-            }
+           # }
         }
 
         if (!empty($events)) {
