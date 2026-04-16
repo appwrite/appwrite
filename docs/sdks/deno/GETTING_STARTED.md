@@ -1,6 +1,7 @@
 ## Getting Started
 
 ### Init your SDK
+
 Initialize your SDK with your Appwrite server API endpoint and project ID which can be found in your project settings page and your new API secret Key from project's API keys section.
 
 ```typescript
@@ -26,6 +27,7 @@ console.log(user);
 ```
 
 ### Full Example
+
 ```typescript
 import * as sdk from "https://deno.land/x/appwrite/mod.ts";
 
@@ -44,6 +46,7 @@ console.log(user);
 ```
 
 ### Error Handling
+
 The Appwrite Deno SDK raises `AppwriteException` object with `message`, `code` and `response` properties. You can handle any errors by catching `AppwriteException` and present the `message` to the user or handle it yourself based on the provided error information. Below is an example.
 
 ```typescript
@@ -57,6 +60,7 @@ try {
 ```
 
 ### Learn more
+
 You can use the following resources to learn more and get help
 - 🚀 [Getting Started Tutorial](https://appwrite.io/docs/getting-started-for-server)
 - 📜 [Appwrite Docs](https://appwrite.io/docs)

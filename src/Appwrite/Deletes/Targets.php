@@ -27,7 +27,7 @@ class Targets
         $database->deleteDocuments(
             'subscribers',
             [
-                Query::equal('targetInternalId', [$target->getInternalId()]),
+                Query::equal('targetInternalId', [$target->getSequence()]),
                 Query::orderAsc(),
             ],
             Database::DELETE_BATCH_SIZE,
@@ -35,7 +35,7 @@ class Targets
                 $topicId = $subscriber->getAttribute('topicId');
                 $topicInternalId = $subscriber->getAttribute('topicInternalId');
                 $topic = $database->getDocument('topics', $topicId);
-                if (!$topic->isEmpty() && $topic->getInternalId() === $topicInternalId) {
+                if (!$topic->isEmpty() && $topic->getSequence() === $topicInternalId) {
                     $totalAttribute = match ($target->getAttribute('providerType')) {
                         MESSAGE_TYPE_EMAIL => 'emailTotal',
                         MESSAGE_TYPE_SMS => 'smsTotal',

@@ -1,18 +1,15 @@
 <?php
 
+use Utopia\Config\Config;
 use Utopia\System\System;
 
 /**
  * List of Appwrite Sites templates
  */
 
-$protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-$hostname = System::getEnv('_APP_DOMAIN');
-
-// TODO: Development override
-if (System::getEnv('_APP_ENV') === 'development') {
-    $hostname = 'localhost';
-}
+$protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+$platform = Config::getParam('platform', []);
+$hostname = $platform['consoleHostname'] ?? '';
 
 $url = $protocol . '://' . $hostname;
 
@@ -24,6 +21,9 @@ class UseCases
     public const ECOMMERCE = 'ecommerce';
     public const DOCUMENTATION = 'documentation';
     public const BLOG = 'blog';
+    public const AI = 'artificial intelligence';
+    public const FORMS = 'forms';
+    public const DASHBOARD = 'dashboard';
 }
 
 const TEMPLATE_FRAMEWORKS = [
@@ -83,7 +83,7 @@ const TEMPLATE_FRAMEWORKS = [
         'installCommand' => '',
         'buildCommand' => 'flutter build web',
         'outputDirectory' => './build/web',
-        'buildRuntime' => 'flutter-3.29',
+        'buildRuntime' => 'flutter-3.35',
         'adapter' => 'static',
         'fallbackFile' => '',
     ],
@@ -115,6 +115,16 @@ const TEMPLATE_FRAMEWORKS = [
         'adapter' => 'static',
         'outputDirectory' => './dist',
         'fallbackFile' => '+not-found.html',
+    ],
+    'TANSTACK_START' => [
+        'key' => 'tanstack-start',
+        'name' => 'TanStack Start',
+        'installCommand' => 'npm install',
+        'buildCommand' => 'npm run build',
+        'outputDirectory' => './dist',
+        'buildRuntime' => 'node-22',
+        'adapter' => 'ssr',
+        'fallbackFile' => '',
     ],
     'ANGULAR' => [
         'key' => 'angular',
@@ -478,13 +488,13 @@ return [
         'frameworks' => [
             getFramework('FLUTTER', [
                 'providerRootDirectory' => './',
-                'buildCommand' => 'bash build.sh',
+                'buildCommand' => 'bash prepare-env.sh && flutter build web',
             ]),
         ],
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'starter-for-flutter',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.1.*',
+        'providerVersion' => '0.2.*',
         'variables' => [
             [
                 'name' => 'APPWRITE_PUBLIC_ENDPOINT',
@@ -956,6 +966,50 @@ return [
         ]
     ],
     [
+        'key' => 'starter-for-tanstack-start',
+        'name' => 'TanStack Start starter',
+        'useCases' => [UseCases::STARTER],
+        'tagline' => 'Simple TanStack Start application integrated with Appwrite SDK.',
+        'score' => 9, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'screenshotDark' => $url . '/images/sites/templates/starter-for-tanstack-start-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/starter-for-tanstack-start-light.png',
+        'frameworks' => [
+            getFramework('TANSTACK_START', [
+                'providerRootDirectory' => './',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'starter-for-tanstack-start',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.1.*',
+        'variables' => [
+            [
+                'name' => 'VITE_APPWRITE_ENDPOINT',
+                'description' => 'Endpoint of Appwrite server',
+                'value' => '{apiEndpoint}',
+                'placeholder' => '{apiEndpoint}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_PROJECT_ID',
+                'description' => 'Your Appwrite project ID',
+                'value' => '{projectId}',
+                'placeholder' => '{projectId}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_PROJECT_NAME',
+                'description' => 'Your Appwrite project name',
+                'value' => '{projectName}',
+                'placeholder' => '{projectName}',
+                'required' => true,
+                'type' => 'text'
+            ],
+        ]
+    ],
+    [
         'key' => 'starter-for-nuxt',
         'name' => 'Nuxt starter',
         'useCases' => [UseCases::STARTER],
@@ -1011,7 +1065,7 @@ return [
             getFramework('NEXTJS', [
                 'providerRootDirectory' => './',
                 'installCommand' => 'pnpm install',
-                'buildCommand' => 'npm run build',
+                'buildCommand' => 'pnpm build',
             ]),
         ],
         'vcsProvider' => 'github',
@@ -1020,7 +1074,7 @@ return [
         'providerVersion' => '0.1.*',
         'variables' => [
             [
-                'name' => 'NEXT_PUBLIC_APPWRITE_FUNCTION_PROJECT_ID',
+                'name' => 'NEXT_PUBLIC_APPWRITE_FUNCTION_API_ENDPOINT',
                 'description' => 'Endpoint of Appwrite server',
                 'value' => '{apiEndpoint}',
                 'placeholder' => '{apiEndpoint}',
@@ -1028,7 +1082,7 @@ return [
                 'type' => 'text'
             ],
             [
-                'name' => 'NEXT_PUBLIC_APPWRITE_FUNCTION_API_ENDPOINT',
+                'name' => 'NEXT_PUBLIC_APPWRITE_FUNCTION_PROJECT_ID',
                 'description' => 'Your Appwrite project ID',
                 'value' => '{projectId}',
                 'placeholder' => '{projectId}',
@@ -1333,6 +1387,25 @@ return [
         'variables' => [],
     ],
     [
+        'key' => 'playground-for-tanstack-start',
+        'name' => 'TanStack Start playground',
+        'tagline' => 'A basic TanStack Start website without Appwrite SDK integration.',
+        'score' => 1, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::STARTER],
+        'screenshotDark' => $url . '/images/sites/templates/playground-for-tanstack-start-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/playground-for-tanstack-start-light.png',
+        'frameworks' => [
+            getFramework('TANSTACK_START', [
+                'providerRootDirectory' => './tanstack-start/starter',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.5.*',
+        'variables' => [],
+    ],
+    [
         'key' => 'playground-for-react-native',
         'name' => 'React Native playground',
         'tagline' => 'A basic React Native website without Appwrite SDK integration.',
@@ -1370,4 +1443,163 @@ return [
         'providerVersion' => '0.3.*',
         'variables' => []
     ],
+    [
+        'key' => 'text-to-speech',
+        'name' => 'Text-to-speech with ElevenLabs',
+        'tagline' => 'Next.js app that transforms text into natural, human-like speech using ElevenLabs',
+        'score' => 10, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::AI],
+        'screenshotDark' => $url . '/images/sites/templates/text-to-speech-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/text-to-speech-light.png',
+        'frameworks' => [
+            getFramework('NEXTJS', [
+                'providerRootDirectory' => './nextjs/text-to-speech',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.6.*',
+        'variables' => [
+            [
+                'name' => 'ELEVENLABS_API_KEY',
+                'description' => 'Your ElevenLabs API key',
+                'value' => '',
+                'placeholder' => 'sk_.....',
+                'required' => true,
+                'type' => 'password'
+            ],
+        ]
+    ],
+    [
+        'key' => 'crm-dashboard-react-admin',
+        'name' => 'CRM dashboard with React Admin',
+        'tagline' => 'A React-based admin dashboard template with CRM features.',
+        'score' => 4, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::DASHBOARD],
+        'screenshotDark' => $url . '/images/sites/templates/crm-dashboard-react-admin-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/crm-dashboard-react-admin-light.png',
+        'frameworks' => [
+            getFramework('REACT', [
+                'providerRootDirectory' => './react/react-admin',
+                'installCommand' => 'pnpm install',
+                'buildCommand' => 'pnpm build && pnpm db-seed',
+                'outputDirectory' => './dist',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.7.*',
+        'variables' => [
+            [
+                'name' => 'VITE_APPWRITE_ENDPOINT',
+                'description' => 'Endpoint of Appwrite server',
+                'value' => '{apiEndpoint}',
+                'placeholder' => '{apiEndpoint}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_PROJECT_ID',
+                'description' => 'Your Appwrite project ID',
+                'value' => '{projectId}',
+                'placeholder' => '{projectId}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'APPWRITE_API_KEY',
+                'description' => 'Your Appwrite API key (for seeding only)',
+                'value' => '',
+                'placeholder' => 'a0b1...',
+                'required' => true,
+                'type' => 'password'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_DATABASE_ID',
+                'description' => 'Database ID (default: admin)',
+                'value' => 'admin',
+                'placeholder' => 'admin',
+                'required' => false,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_TABLE_REVIEWS',
+                'description' => 'Table ID for reviews table',
+                'value' => 'reviews',
+                'placeholder' => 'reviews',
+                'required' => false,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_TABLE_INVOICES',
+                'description' => 'Table ID for invoices table',
+                'value' => 'invoices',
+                'placeholder' => 'invoices',
+                'required' => false,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_TABLE_ORDERS',
+                'description' => 'Table ID for orders table',
+                'value' => 'orders',
+                'placeholder' => 'orders',
+                'required' => false,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_TABLE_PRODUCTS',
+                'description' => 'Table ID for products table',
+                'value' => 'products',
+                'placeholder' => 'products',
+                'required' => false,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_TABLE_CATEGORIES',
+                'description' => 'Table ID for categories table',
+                'value' => 'categories',
+                'placeholder' => 'categories',
+                'required' => false,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_TABLE_CUSTOMERS',
+                'description' => 'Table ID for customers table',
+                'value' => 'customers',
+                'placeholder' => 'customers',
+                'required' => false,
+                'type' => 'text'
+            ],
+        ]
+    ],
+    [
+        'key' => 'job-applications-formspree',
+        'name' => 'Job applications form with Formspree',
+        'tagline' => 'A simple form submission template using Formspree.',
+        'score' => 4, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::FORMS],
+        'screenshotDark' => $url . '/images/sites/templates/job-applications-formspree-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/job-applications-formspree-light.png',
+        'frameworks' => [
+            getFramework('REACT', [
+                'providerRootDirectory' => './react/formspree',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.7.*',
+        'variables' => [
+            [
+                'name' => 'VITE_FORMSPREE_FORM_ID',
+                'description' => 'Your Formspree form ID',
+                'value' => '',
+                'placeholder' => 'xrgkpqld',
+                'required' => true,
+                'type' => 'text'
+            ],
+        ]
+    ]
 ];

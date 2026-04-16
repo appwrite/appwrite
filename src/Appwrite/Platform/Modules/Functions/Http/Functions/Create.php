@@ -23,6 +23,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -67,7 +68,7 @@ class Create extends Base
                 description: <<<EOT
                 Create a new function. You can pass a list of [permissions](https://appwrite.io/docs/permissions) to allow different project users or team with access to execute the function using the client API.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,
@@ -92,7 +93,7 @@ class Create extends Base
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function.', true)
             ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the function? In silent mode, comments will not be made on commits and pull requests.', true)
             ->param('providerRootDirectory', '', new Text(128, 0), 'Path to function code in the linked repo.', true)
-            ->param('specification', APP_COMPUTE_SPECIFICATION_DEFAULT, fn (array $plan) => new Specification(
+            ->param('specification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
                 $plan,
                 Config::getParam('specifications', []),
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
@@ -114,7 +115,8 @@ class Create extends Base
             ->inject('dbForPlatform')
             ->inject('request')
             ->inject('gitHub')
-            ->callback([$this, 'action']);
+            ->inject('authorization')
+            ->callback($this->action(...));
     }
 
     public function action(
@@ -151,7 +153,8 @@ class Create extends Base
         Func $queueForFunctions,
         Database $dbForPlatform,
         Request $request,
-        GitHub $github
+        GitHub $github,
+        Authorization $authorization
     ) {
 
         // Temporary abuse check
@@ -201,43 +204,47 @@ class Create extends Base
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'When connecting to VCS (Version Control System), you need to provide "installationId" and "providerBranch".');
         }
 
-        $function = $dbForProject->createDocument('functions', new Document([
-            '$id' => $functionId,
-            'execute' => $execute,
-            'enabled' => $enabled,
-            'live' => true,
-            'logging' => $logging,
-            'name' => $name,
-            'runtime' => $runtime,
-            'deploymentInternalId' => '',
-            'deploymentId' => '',
-            'events' => $events,
-            'schedule' => $schedule,
-            'scheduleInternalId' => '',
-            'scheduleId' => '',
-            'timeout' => $timeout,
-            'entrypoint' => $entrypoint,
-            'commands' => $commands,
-            'scopes' => $scopes,
-            'search' => implode(' ', [$functionId, $name, $runtime]),
-            'version' => 'v5',
-            'installationId' => $installation->getId(),
-            'installationInternalId' => $installation->getInternalId(),
-            'providerRepositoryId' => $providerRepositoryId,
-            'repositoryId' => '',
-            'repositoryInternalId' => '',
-            'providerBranch' => $providerBranch,
-            'providerRootDirectory' => $providerRootDirectory,
-            'providerSilentMode' => $providerSilentMode,
-            'specification' => $specification
-        ]));
+        try {
+            $function = $dbForProject->createDocument('functions', new Document([
+                '$id' => $functionId,
+                'execute' => $execute,
+                'enabled' => $enabled,
+                'live' => true,
+                'logging' => $logging,
+                'name' => $name,
+                'runtime' => $runtime,
+                'deploymentInternalId' => '',
+                'deploymentId' => '',
+                'events' => $events,
+                'schedule' => $schedule,
+                'scheduleInternalId' => '',
+                'scheduleId' => '',
+                'timeout' => $timeout,
+                'entrypoint' => $entrypoint,
+                'commands' => $commands,
+                'scopes' => $scopes,
+                'search' => implode(' ', [$functionId, $name, $runtime]),
+                'version' => 'v5',
+                'installationId' => $installation->getId(),
+                'installationInternalId' => $installation->getSequence(),
+                'providerRepositoryId' => $providerRepositoryId,
+                'repositoryId' => '',
+                'repositoryInternalId' => '',
+                'providerBranch' => $providerBranch,
+                'providerRootDirectory' => $providerRootDirectory,
+                'providerSilentMode' => $providerSilentMode,
+                'specification' => $specification
+            ]));
+        } catch (DuplicateException) {
+            throw new Exception(Exception::FUNCTION_ALREADY_EXISTS);
+        }
 
-        $schedule = Authorization::skip(
+        $schedule = $authorization->skip(
             fn () => $dbForPlatform->createDocument('schedules', new Document([
                 'region' => $project->getAttribute('region'),
-                'resourceType' => 'function',
+                'resourceType' => SCHEDULE_RESOURCE_TYPE_FUNCTION,
                 'resourceId' => $function->getId(),
-                'resourceInternalId' => $function->getInternalId(),
+                'resourceInternalId' => $function->getSequence(),
                 'resourceUpdatedAt' => DateTime::now(),
                 'projectId' => $project->getId(),
                 'schedule'  => $function->getAttribute('schedule'),
@@ -246,7 +253,7 @@ class Create extends Base
         );
 
         $function->setAttribute('scheduleId', $schedule->getId());
-        $function->setAttribute('scheduleInternalId', $schedule->getInternalId());
+        $function->setAttribute('scheduleInternalId', $schedule->getSequence());
 
         // Git connect logic
         if (!empty($providerRepositoryId)) {
@@ -262,18 +269,18 @@ class Create extends Base
                     Permission::delete(Role::team(ID::custom($teamId), 'developer')),
                 ],
                 'installationId' => $installation->getId(),
-                'installationInternalId' => $installation->getInternalId(),
+                'installationInternalId' => $installation->getSequence(),
                 'projectId' => $project->getId(),
-                'projectInternalId' => $project->getInternalId(),
+                'projectInternalId' => $project->getSequence(),
                 'providerRepositoryId' => $providerRepositoryId,
                 'resourceId' => $function->getId(),
-                'resourceInternalId' => $function->getInternalId(),
+                'resourceInternalId' => $function->getSequence(),
                 'resourceType' => 'function',
                 'providerPullRequestIds' => []
             ]));
 
             $function->setAttribute('repositoryId', $repository->getId());
-            $function->setAttribute('repositoryInternalId', $repository->getInternalId());
+            $function->setAttribute('repositoryInternalId', $repository->getSequence());
         }
 
         $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
@@ -310,13 +317,14 @@ class Create extends Base
                     template: $template,
                     github: $github,
                     activate: true,
+                    authorization: $authorization,
                     reference: $providerBranch,
                     referenceType: 'branch'
                 );
 
                 $function = $function
                     ->setAttribute('latestDeploymentId', $deployment->getId())
-                    ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
+                    ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
                     ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
                     ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
                 $dbForProject->updateDocument('functions', $function->getId(), $function);
@@ -331,7 +339,7 @@ class Create extends Base
                         Permission::delete(Role::any()),
                     ],
                     'resourceId' => $function->getId(),
-                    'resourceInternalId' => $function->getInternalId(),
+                    'resourceInternalId' => $function->getSequence(),
                     'resourceType' => 'functions',
                     'entrypoint' => $function->getAttribute('entrypoint', ''),
                     'buildCommands' => $function->getAttribute('commands', ''),
@@ -341,7 +349,7 @@ class Create extends Base
 
                 $function = $function
                     ->setAttribute('latestDeploymentId', $deployment->getId())
-                    ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
+                    ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
                     ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
                     ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
                 $dbForProject->updateDocument('functions', $function->getId(), $function);
@@ -357,23 +365,24 @@ class Create extends Base
             if (!empty($functionsDomain)) {
                 $routeSubdomain = ID::unique();
                 $domain = "{$routeSubdomain}.{$functionsDomain}";
-                // TODO: @christyjacob remove once we migrate the rules in 1.7.x
-                $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain) : ID::unique();
+                // TODO: (@Meldiron) Remove after 1.7.x migration
+                $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
+                $ruleId = $isMd5 ? md5($domain) : ID::unique();
 
-                $rule = Authorization::skip(
+                $rule = $authorization->skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
                         'projectId' => $project->getId(),
-                        'projectInternalId' => $project->getInternalId(),
+                        'projectInternalId' => $project->getSequence(),
                         'domain' => $domain,
                         'status' => 'verified',
                         'type' => 'deployment',
                         'trigger' => 'manual',
                         'deploymentId' => !isset($deployment) || $deployment->isEmpty() ? '' : $deployment->getId(),
-                        'deploymentInternalId' => !isset($deployment) || $deployment->isEmpty() ? '' : $deployment->getInternalId(),
+                        'deploymentInternalId' => !isset($deployment) || $deployment->isEmpty() ? '' : $deployment->getSequence(),
                         'deploymentResourceType' => 'function',
                         'deploymentResourceId' => $function->getId(),
-                        'deploymentResourceInternalId' => $function->getInternalId(),
+                        'deploymentResourceInternalId' => $function->getSequence(),
                         'deploymentVcsProviderBranch' => '',
                         'certificateId' => '',
                         'search' => implode(' ', [$ruleId, $domain]),

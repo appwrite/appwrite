@@ -41,7 +41,7 @@ class XList extends Base
                     description: <<<EOT
                     Get a list of all variables of a specific site.
                     EOT,
-                    auth: [AuthType::KEY],
+                    auth: [AuthType::ADMIN, AuthType::KEY],
                     responses: [
                         new SDKResponse(
                             code: Response::STATUS_CODE_OK,
@@ -53,7 +53,7 @@ class XList extends Base
             ->param('siteId', '', new UID(), 'Site unique ID.', false)
             ->inject('response')
             ->inject('dbForProject')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(

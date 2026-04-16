@@ -46,7 +46,7 @@ class Create extends Action
                 description: <<<EOT
                 Create a new build for an existing function deployment. This endpoint allows you to rebuild a deployment with the updated function configuration, including its entrypoint and build commands if they have been modified. The build process will be queued and executed asynchronously. The original deployment's code will be preserved and used for the new build.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_ACCEPTED,
@@ -62,7 +62,7 @@ class Create extends Action
             ->inject('queueForEvents')
             ->inject('queueForBuilds')
             ->inject('deviceForFunctions')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(
@@ -96,9 +96,9 @@ class Create extends Action
         $destination = $deviceForFunctions->getPath($deploymentId . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
         $deviceForFunctions->transfer($path, $destination, $deviceForFunctions);
 
-        $deployment->removeAttribute('$internalId');
+        $deployment->removeAttribute('$sequence');
+
         $deployment = $dbForProject->createDocument('deployments', $deployment->setAttributes([
-            '$internalId' => '',
             '$id' => $deploymentId,
             'sourcePath' => $destination,
             'totalSize' => $deployment->getAttribute('sourceSize', 0),
@@ -115,7 +115,7 @@ class Create extends Action
 
         $function = $function
             ->setAttribute('latestDeploymentId', $deployment->getId())
-            ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
+            ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
             ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
             ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
         $dbForProject->updateDocument('functions', $function->getId(), $function);

@@ -23,6 +23,7 @@ use Utopia\Swoole\Request;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 use Utopia\VCS\Adapter\Git\GitHub;
 
 class Create extends Base
@@ -52,10 +53,10 @@ class Create extends Base
                 name: 'createTemplateDeployment',
                 description: <<<EOT
                 Create a deployment based on a template.
-                
-                Use this endpoint with combination of [listTemplates](https://appwrite.io/docs/server/sites#listTemplates) to find the template details.
+
+                Use this endpoint with combination of [listTemplates](https://appwrite.io/docs/products/sites/templates) to find the template details.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_ACCEPTED,
@@ -67,7 +68,8 @@ class Create extends Base
             ->param('repository', '', new Text(128, 0), 'Repository name of the template.')
             ->param('owner', '', new Text(128, 0), 'The name of the owner of the template.')
             ->param('rootDirectory', '', new Text(128, 0), 'Path to site code in the template repo.')
-            ->param('version', '', new Text(128, 0), 'Version (tag) for the repo linked to the site template.')
+            ->param('type', '', new WhiteList(['branch', 'commit', 'tag']), 'Type for the reference provided. Can be commit, branch, or tag')
+            ->param('reference', '', new Text(128, 0), 'Reference value, can be a commit hash, branch name, or release tag')
             ->param('activate', false, new Boolean(), 'Automatically activate the deployment when it is finished building.', true)
             ->inject('request')
             ->inject('response')
@@ -77,7 +79,8 @@ class Create extends Base
             ->inject('queueForEvents')
             ->inject('queueForBuilds')
             ->inject('gitHub')
-            ->callback([$this, 'action']);
+            ->inject('authorization')
+            ->callback($this->action(...));
     }
 
     public function action(
@@ -85,7 +88,8 @@ class Create extends Base
         string $repository,
         string $owner,
         string $rootDirectory,
-        string $version,
+        string $type,
+        string $reference,
         bool $activate,
         Request $request,
         Response $response,
@@ -94,7 +98,8 @@ class Create extends Base
         Document $project,
         Event $queueForEvents,
         Build $queueForBuilds,
-        GitHub $github
+        GitHub $github,
+        Authorization $authorization
     ) {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -102,11 +107,15 @@ class Create extends Base
             throw new Exception(Exception::SITE_NOT_FOUND);
         }
 
+        $branchUrl = "https://github.com/$owner/$repository/blob/$reference";
+        $repositoryUrl = "https://github.com/$owner/$repository";
+
         $template = new Document([
             'repositoryName' => $repository,
             'ownerName' => $owner,
             'rootDirectory' => $rootDirectory,
-            'version' => $version
+            'referenceType' => $type,
+            'referenceValue' => $reference
         ]);
 
         if (!empty($site->getAttribute('providerRepositoryId'))) {
@@ -123,6 +132,7 @@ class Create extends Base
                 template: $template,
                 github: $github,
                 activate: $activate,
+                authorization: $authorization,
             );
 
             $queueForEvents
@@ -153,19 +163,24 @@ class Create extends Base
                 Permission::delete(Role::any()),
             ],
             'resourceId' => $site->getId(),
-            'resourceInternalId' => $site->getInternalId(),
+            'resourceInternalId' => $site->getSequence(),
             'resourceType' => 'sites',
             'buildCommands' => \implode(' && ', $commands),
             'buildOutput' => $site->getAttribute('outputDirectory', ''),
+            'providerRepositoryName' => $repository,
+            'providerRepositoryOwner' => $owner,
+            'providerRepositoryUrl' => $repositoryUrl,
+            'providerBranchUrl' => $branchUrl,
+            'providerBranch' => $type == GitHub::CLONE_TYPE_BRANCH ? $reference : '',
             'adapter' => $site->getAttribute('adapter', ''),
             'fallbackFile' => $site->getAttribute('fallbackFile', ''),
-            'type' => 'manual',
+            'type' => 'vcs',
             'activate' => $activate,
         ]));
 
         $site = $site
             ->setAttribute('latestDeploymentId', $deployment->getId())
-            ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
+            ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
             ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
             ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
         $dbForProject->updateDocument('sites', $site->getId(), $site);
@@ -173,28 +188,31 @@ class Create extends Base
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
         $domain = ID::unique() . "." . $sitesDomain;
 
-        // TODO: @christyjacob remove once we migrate the rules in 1.7.x
-        $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain) : ID::unique();
+        // TODO: (@Meldiron) Remove after 1.7.x migration
+        $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
+        $ruleId = $isMd5 ? md5($domain) : ID::unique();
 
-        Authorization::skip(
+        $authorization->skip(
             fn () => $dbForPlatform->createDocument('rules', new Document([
                 '$id' => $ruleId,
                 'projectId' => $project->getId(),
-                'projectInternalId' => $project->getInternalId(),
+                'projectInternalId' => $project->getSequence(),
                 'domain' => $domain,
                 'type' => 'deployment',
                 'trigger' => 'deployment',
                 'deploymentId' => $deployment->isEmpty() ? '' : $deployment->getId(),
-                'deploymentInternalId' => $deployment->isEmpty() ? '' : $deployment->getInternalId(),
+                'deploymentInternalId' => $deployment->isEmpty() ? '' : $deployment->getSequence(),
                 'deploymentResourceType' => 'site',
                 'deploymentResourceId' => $site->getId(),
-                'deploymentResourceInternalId' => $site->getInternalId(),
+                'deploymentResourceInternalId' => $site->getSequence(),
                 'status' => 'verified',
                 'certificateId' => '',
                 'owner' => 'Appwrite',
                 'region' => $project->getAttribute('region')
             ]))
         );
+
+        $this->updateEmptyManualRule($project, $site, $deployment, $dbForPlatform, $authorization);
 
         $queueForBuilds
             ->setType(BUILD_TYPE_DEPLOYMENT)

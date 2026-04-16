@@ -17,6 +17,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -28,6 +29,7 @@ use Utopia\Storage\Validator\Upload;
 use Utopia\Swoole\Request;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 
 class Create extends Action
@@ -62,7 +64,7 @@ class Create extends Action
 
                 Use the "command" param to set the entrypoint used to execute your code.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_ACCEPTED,
@@ -74,8 +76,8 @@ class Create extends Action
                 packaging: true,
             ))
             ->param('functionId', '', new UID(), 'Function ID.')
-            ->param('entrypoint', null, new Text(1028), 'Entrypoint File.', true)
-            ->param('commands', null, new Text(8192, 0), 'Build Commands.', true)
+            ->param('entrypoint', null, new Nullable(new Text(1028)), 'Entrypoint File.', true)
+            ->param('commands', null, new Nullable(new Text(8192, 0)), 'Build Commands.', true)
             ->param('code', [], new File(), 'Gzip file with your code package. When used with the Appwrite CLI, pass the path to your code directory, and the CLI will automatically package your code. Use a path that is within the current directory.', skipValidation: true)
             ->param('activate', false, new Boolean(true), 'Automatically activate the deployment when it is finished building.')
             ->inject('request')
@@ -87,7 +89,8 @@ class Create extends Action
             ->inject('deviceForLocal')
             ->inject('queueForBuilds')
             ->inject('plan')
-            ->callback([$this, 'action']);
+            ->inject('authorization')
+            ->callback($this->action(...));
     }
 
     public function action(
@@ -104,7 +107,8 @@ class Create extends Action
         Device $deviceForFunctions,
         Device $deviceForLocal,
         Build $queueForBuilds,
-        array $plan
+        array $plan,
+        Authorization $authorization
     ) {
         $activate = \strval($activate) === 'true' || \strval($activate) === '1';
 
@@ -237,7 +241,7 @@ class Create extends Action
                         Permission::update(Role::any()),
                         Permission::delete(Role::any()),
                     ],
-                    'resourceInternalId' => $function->getInternalId(),
+                    'resourceInternalId' => $function->getSequence(),
                     'resourceId' => $function->getId(),
                     'resourceType' => 'functions',
                     'entrypoint' => $entrypoint,
@@ -252,7 +256,7 @@ class Create extends Action
 
                 $function = $function
                     ->setAttribute('latestDeploymentId', $deployment->getId())
-                    ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
+                    ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
                     ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
                     ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
                 $dbForProject->updateDocument('functions', $function->getId(), $function);
@@ -274,7 +278,7 @@ class Create extends Action
                         Permission::update(Role::any()),
                         Permission::delete(Role::any()),
                     ],
-                    'resourceInternalId' => $function->getInternalId(),
+                    'resourceInternalId' => $function->getSequence(),
                     'resourceId' => $function->getId(),
                     'resourceType' => 'functions',
                     'entrypoint' => $entrypoint,
@@ -291,7 +295,7 @@ class Create extends Action
 
                 $function = $function
                     ->setAttribute('latestDeploymentId', $deployment->getId())
-                    ->setAttribute('latestDeploymentInternalId', $deployment->getInternalId())
+                    ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
                     ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
                     ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
                 $dbForProject->updateDocument('functions', $function->getId(), $function);

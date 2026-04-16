@@ -44,7 +44,7 @@ class Delete extends Base
                 description: <<<EOT
                 Delete a site by its unique ID.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_NOCONTENT,
@@ -58,7 +58,7 @@ class Delete extends Base
             ->inject('dbForProject')
             ->inject('queueForDeletes')
             ->inject('queueForEvents')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(

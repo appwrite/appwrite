@@ -50,7 +50,7 @@ class Get extends Action
         ->param('tokenId', '', new UID(), 'Token ID.')
         ->inject('response')
         ->inject('dbForProject')
-        ->callback([$this, 'action']);
+        ->callback($this->action(...));
     }
 
     public function action(string $tokenId, Response $response, Database $dbForProject)

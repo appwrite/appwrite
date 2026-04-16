@@ -14,6 +14,11 @@ use Utopia\System\System;
 
 class Mails extends Action
 {
+    protected int $previewMaxLen = 150;
+
+    protected string $whitespaceCodes = '&#xa0;&#x200C;&#x200B;&#x200D;&#x200E;&#x200F;&#xFEFF;';
+
+
     public static function getName(): string
     {
         return 'mails';
@@ -29,7 +34,7 @@ class Mails extends Action
             ->inject('message')
             ->inject('register')
             ->inject('log')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     /**
@@ -66,7 +71,7 @@ class Mails extends Action
         $log->addTag('type', empty($smtp) ? 'cloud' : 'smtp');
 
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-        $hostname = System::getEnv('_APP_DOMAIN');
+        $hostname = System::getEnv('_APP_CONSOLE_DOMAIN');
 
         $recipient = $payload['recipient'];
         $subject = $payload['subject'];
@@ -74,8 +79,10 @@ class Mails extends Action
         $variables['host'] = $protocol . '://' . $hostname;
         $name = $payload['name'];
         $body = $payload['body'];
+        $preview = $payload['preview'] ?? '';
 
         $variables['subject'] = $subject;
+        $variables['heading'] = $variables['heading'] ?? $subject;
         $variables['year'] = date("Y");
 
         $attachment = $payload['attachment'] ?? [];
@@ -92,6 +99,27 @@ class Mails extends Action
         foreach ($this->richTextParams as $key => $value) {
             $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
         }
+
+        $previewWhitespace = '';
+
+        if (!empty($preview)) {
+            $previewTemplate = Template::fromString($preview);
+            foreach ($variables as $key => $value) {
+                $previewTemplate->setParam('{{' . $key . '}}', $value);
+            }
+            // render() will return the subject in <p> tags, so use strip_tags() to remove them
+            $preview = \strip_tags($previewTemplate->render());
+
+            $previewLen = strlen($preview);
+            if ($previewLen < $this->previewMaxLen) {
+                $previewWhitespace =  str_repeat($this->whitespaceCodes, $this->previewMaxLen - $previewLen);
+            }
+        }
+
+
+        $bodyTemplate->setParam('{{preview}}', $preview);
+        $bodyTemplate->setParam('{{previewWhitespace}}', $previewWhitespace, false);
+
         $body = $bodyTemplate->render();
 
         $subjectTemplate = Template::fromString($subject);
@@ -124,9 +152,21 @@ class Mails extends Action
         $replyTo = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
         $replyToName = \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
 
-        if (!empty($smtp)) {
-            $replyTo = !empty($smtp['replyTo']) ? $smtp['replyTo'] : $smtp['senderEmail'];
-            $replyToName = $smtp['senderName'];
+        $customMailOptions = $payload['customMailOptions'] ?? [];
+
+        // fallback hierarchy: Custom options > SMTP config > Defaults.
+        if (!empty($customMailOptions['senderEmail']) || !empty($customMailOptions['senderName'])) {
+            $fromEmail = $customMailOptions['senderEmail'] ?? $mail->From;
+            $fromName = $customMailOptions['senderName'] ?? $mail->FromName;
+            $mail->setFrom($fromEmail, $fromName);
+        }
+
+        if (!empty($customMailOptions['replyToEmail']) || !empty($customMailOptions['replyToName'])) {
+            $replyTo = $customMailOptions['replyToEmail'] ?? $replyTo;
+            $replyToName = $customMailOptions['replyToName'] ?? $replyToName;
+        } elseif (!empty($smtp)) {
+            $replyTo = !empty($smtp['replyTo']) ? $smtp['replyTo'] : ($smtp['senderEmail'] ?? $replyTo);
+            $replyToName = $smtp['senderName'] ?? $replyToName;
         }
 
         $mail->addReplyTo($replyTo, $replyToName);

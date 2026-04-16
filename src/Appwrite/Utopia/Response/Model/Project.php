@@ -2,7 +2,6 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Config\Config;
@@ -105,7 +104,7 @@ class Project extends Model
             ->addRule('authDuration', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Session duration in seconds.',
-                'default' => Auth::TOKEN_EXPIRATION_LOGIN_LONG,
+                'default' => TOKEN_EXPIRATION_LOGIN_LONG,
                 'example' => 60,
             ])
             ->addRule('authLimit', [
@@ -166,6 +165,12 @@ class Project extends Model
             ->addRule('authMembershipsMfa', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Whether or not to show user MFA status in the teams membership response.',
+                'default' => false,
+                'example' => true,
+            ])
+            ->addRule('authInvalidateSessions', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether or not all existing sessions should be invalidated on password change',
                 'default' => false,
                 'example' => true,
             ])
@@ -366,7 +371,7 @@ class Project extends Model
         $auth = Config::getParam('auth', []);
 
         $document->setAttribute('authLimit', $authValues['limit'] ?? 0);
-        $document->setAttribute('authDuration', $authValues['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG);
+        $document->setAttribute('authDuration', $authValues['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG);
         $document->setAttribute('authSessionsLimit', $authValues['maxSessions'] ?? APP_LIMIT_USER_SESSIONS_DEFAULT);
         $document->setAttribute('authPasswordHistory', $authValues['passwordHistory'] ?? 0);
         $document->setAttribute('authPasswordDictionary', $authValues['passwordDictionary'] ?? false);
@@ -376,6 +381,7 @@ class Project extends Model
         $document->setAttribute('authMembershipsUserName', $authValues['membershipsUserName'] ?? true);
         $document->setAttribute('authMembershipsUserEmail', $authValues['membershipsUserEmail'] ?? true);
         $document->setAttribute('authMembershipsMfa', $authValues['membershipsMfa'] ?? true);
+        $document->setAttribute('authInvalidateSessions', $authValues['invalidateSessions'] ?? false);
 
         foreach ($auth as $index => $method) {
             $key = $method['key'];

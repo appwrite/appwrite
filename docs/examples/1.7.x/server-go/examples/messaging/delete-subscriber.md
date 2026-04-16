@@ -7,13 +7,13 @@ import (
 )
 
 func main() {
-    client := client.NewClient()
+    client := client.New(
+        client.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+        client.WithProject("<YOUR_PROJECT_ID>") // Your project ID
+        client.WithJWT("<YOUR_JWT>") // Your secret JSON Web Token
+    )
 
-    client.SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
-    client.SetProject("<YOUR_PROJECT_ID>") // Your project ID
-    client.SetJWT("<YOUR_JWT>") // Your secret JSON Web Token
-
-    service := messaging.NewMessaging(client)
+    service := messaging.New(client)
     response, error := service.DeleteSubscriber(
         "<TOPIC_ID>",
         "<SUBSCRIBER_ID>",

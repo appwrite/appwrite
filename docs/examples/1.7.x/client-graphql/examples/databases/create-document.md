@@ -7,6 +7,7 @@ mutation {
         permissions: ["read("any")"]
     ) {
         _id
+        _sequence
         _collectionId
         _databaseId
         _createdAt

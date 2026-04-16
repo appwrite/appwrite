@@ -68,7 +68,7 @@ trait ProxyBase
         return $rule;
     }
 
-    protected function createRedirectRule(string $domain, string $url, int $statusCode): mixed
+    protected function createRedirectRule(string $domain, string $url, int $statusCode, string $resourceType, string $resourceId): mixed
     {
         $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/redirect', array_merge([
             'content-type' => 'application/json',
@@ -77,6 +77,8 @@ trait ProxyBase
             'domain' => $domain,
             'url' => $url,
             'statusCode' => $statusCode,
+            'resourceType' => $resourceType,
+            'resourceId' => $resourceId,
         ]);
 
         return $rule;
@@ -115,9 +117,9 @@ trait ProxyBase
         return $rule['body']['$id'];
     }
 
-    protected function setupRedirectRule(string $domain, string $url, int $statusCode): string
+    protected function setupRedirectRule(string $domain, string $url, int $statusCode, string $resourceType, string $resourceId): string
     {
-        $rule = $this->createRedirectRule($domain, $url, $statusCode);
+        $rule = $this->createRedirectRule($domain, $url, $statusCode, $resourceType, $resourceId);
 
         $this->assertEquals(201, $rule['headers']['status-code'], 'Failed to setup rule: ' . \json_encode($rule));
 
@@ -225,7 +227,7 @@ trait ProxyBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'functionId' => ID::unique(),
-            'runtime' => 'node-18.0',
+            'runtime' => 'node-22',
             'name' => 'Proxy Function',
             'entrypoint' => 'index.js',
             'commands' => '',
@@ -242,7 +244,7 @@ trait ProxyBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'code' => $this->packageFunction('node'),
+            'code' => $this->packageFunction('basic'),
             'activate' => 'true'
         ]);
 

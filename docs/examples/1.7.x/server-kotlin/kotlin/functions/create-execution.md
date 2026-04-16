@@ -16,5 +16,5 @@ val response = functions.createExecution(
     path = "<PATH>", // optional
     method = "GET", // optional
     headers = mapOf( "a" to "b" ), // optional
-    scheduledAt = "" // optional
+    scheduledAt = "<SCHEDULED_AT>" // optional
 )

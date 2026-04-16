@@ -10,7 +10,8 @@ class Buckets extends Base
         'fileSecurity',
         'maximumFileSize',
         'encryption',
-        'antivirus'
+        'antivirus',
+        'transformations',
     ];
 
     /**

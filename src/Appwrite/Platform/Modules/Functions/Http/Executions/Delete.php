@@ -5,7 +5,6 @@ namespace Appwrite\Platform\Modules\Functions\Http\Executions;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
-use Appwrite\Platform\Tasks\ScheduleExecutions;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -47,7 +46,7 @@ class Delete extends Base
                 description: <<<EOT
                 Delete a function execution by its unique ID.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_NOCONTENT,
@@ -62,7 +61,8 @@ class Delete extends Base
             ->inject('dbForProject')
             ->inject('dbForPlatform')
             ->inject('queueForEvents')
-            ->callback([$this, 'action']);
+            ->inject('authorization')
+            ->callback($this->action(...));
     }
 
     public function action(
@@ -71,7 +71,8 @@ class Delete extends Base
         Response $response,
         Database $dbForProject,
         Database $dbForPlatform,
-        Event $queueForEvents
+        Event $queueForEvents,
+        Authorization $authorization
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -84,7 +85,7 @@ class Delete extends Base
             throw new Exception(Exception::EXECUTION_NOT_FOUND);
         }
 
-        if ($execution->getAttribute('resourceType') !== 'functions' && $execution->getAttribute('resourceInternalId') !== $function->getInternalId()) {
+        if ($execution->getAttribute('resourceType') !== 'functions' && $execution->getAttribute('resourceInternalId') !== $function->getSequence()) {
             throw new Exception(Exception::EXECUTION_NOT_FOUND);
         }
         $status = $execution->getAttribute('status');
@@ -100,7 +101,7 @@ class Delete extends Base
         if ($status === 'scheduled') {
             $schedule = $dbForPlatform->findOne('schedules', [
                 Query::equal('resourceId', [$execution->getId()]),
-                Query::equal('resourceType', [ScheduleExecutions::getSupportedResource()]),
+                Query::equal('resourceType', [SCHEDULE_RESOURCE_TYPE_EXECUTION]),
                 Query::equal('active', [true]),
             ]);
 
@@ -109,7 +110,7 @@ class Delete extends Base
                     ->setAttribute('resourceUpdatedAt', DateTime::now())
                     ->setAttribute('active', false);
 
-                Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
+                $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
             }
         }
 

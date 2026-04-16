@@ -46,7 +46,7 @@ class Delete extends Action
                 description: <<<EOT
                 Delete a site deployment by its unique ID.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_NOCONTENT,
@@ -62,7 +62,7 @@ class Delete extends Action
             ->inject('queueForDeletes')
             ->inject('queueForEvents')
             ->inject('deviceForSites')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(
@@ -101,7 +101,7 @@ class Delete extends Action
         if ($site->getAttribute('latestDeploymentId') === $deployment->getId()) {
             $latestDeployment = $dbForProject->findOne('deployments', [
                 Query::equal('resourceType', ['sites']),
-                Query::equal('resourceInternalId', [$site->getInternalId()]),
+                Query::equal('resourceInternalId', [$site->getSequence()]),
                 Query::orderDesc('$createdAt'),
             ]);
             $site = $dbForProject->updateDocument(
@@ -109,7 +109,7 @@ class Delete extends Action
                 $site->getId(),
                 $site
                 ->setAttribute('latestDeploymentCreatedAt', $latestDeployment->isEmpty() ? '' : $latestDeployment->getCreatedAt())
-                ->setAttribute('latestDeploymentInternalId', $latestDeployment->isEmpty() ? '' : $latestDeployment->getInternalId())
+                ->setAttribute('latestDeploymentInternalId', $latestDeployment->isEmpty() ? '' : $latestDeployment->getSequence())
                 ->setAttribute('latestDeploymentId', $latestDeployment->isEmpty() ? '' : $latestDeployment->getId())
                 ->setAttribute('latestDeploymentStatus', $latestDeployment->isEmpty() ? '' : $latestDeployment->getAttribute('status', ''))
             );

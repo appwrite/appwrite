@@ -17,7 +17,7 @@ class HooksTest extends Scope
     public function setUp(): void
     {
         parent::setUp();
-        $this->client->setEndpoint('http://traefik');
+        $this->client->setEndpoint('http://appwrite.test');
     }
 
     public function testProjectHooks()

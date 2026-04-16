@@ -1,6 +1,6 @@
 The Databases service allows you to create structured collections of documents, query and filter lists of documents, and manage an advanced set of read and write access permissions.
 
-All data returned by the Databases service are represented as structured JSON documents.
+All data returned by the Databases service are represented as structured JSON objects.
 
 The Databases service can contain multiple databases, each database can contain multiple collections. A collection is a group of similarly structured documents. The accepted structure of documents is defined by [collection attributes](https://appwrite.io/docs/databases#attributes). The collection attributes help you ensure all your user-submitted data is validated and stored according to the collection structure.
 

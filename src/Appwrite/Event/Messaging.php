@@ -162,19 +162,6 @@ class Messaging extends Event
     }
 
     /**
-     * Set project for this event.
-     *
-     * @param Document $project
-     * @return self
-     */
-    public function setProject(Document $project): self
-    {
-        $this->project = $project;
-
-        return $this;
-    }
-
-    /**
      * Prepare the payload for the event
      *
      * @return array

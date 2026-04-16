@@ -2,6 +2,7 @@
 
 namespace Appwrite\Tests\Async;
 
+use Appwrite\Tests\Async\Exceptions\Critical;
 use PHPUnit\Framework\Constraint\Constraint;
 
 final class Eventually extends Constraint
@@ -23,6 +24,8 @@ final class Eventually extends Constraint
             try {
                 $probe();
                 return true;
+            } catch (Critical $exception) {
+                throw $exception;
             } catch (\Exception $exception) {
                 $lastException = $exception;
             }

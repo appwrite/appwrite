@@ -47,7 +47,7 @@ class Create extends Base
                 description: <<<EOT
                 Create a new site variable. These variables can be accessed during build and runtime (server-side rendering) as environment variables.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,
@@ -62,7 +62,7 @@ class Create extends Base
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(string $siteId, string $key, string $value, bool $secret, Response $response, Database $dbForProject, Document $project)
@@ -85,7 +85,7 @@ class Create extends Base
                 Permission::delete(Role::team(ID::custom($teamId), 'owner')),
                 Permission::delete(Role::team(ID::custom($teamId), 'developer')),
             ],
-            'resourceInternalId' => $site->getInternalId(),
+            'resourceInternalId' => $site->getSequence(),
             'resourceId' => $site->getId(),
             'resourceType' => 'site',
             'key' => $key,

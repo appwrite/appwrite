@@ -7,6 +7,7 @@ mutation {
         total
         documents {
             _id
+            _sequence
             _collectionId
             _databaseId
             _createdAt

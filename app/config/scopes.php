@@ -28,23 +28,41 @@ return [ // List of publicly visible scopes
     'collections.write' => [
         'description' => 'Access to create, update, and delete your project\'s database collections',
     ],
+    'tables.read' => [
+        'description' => 'Access to read your project\'s database tables',
+    ],
+    'tables.write' => [
+        'description' => 'Access to create, update, and delete your project\'s database tables',
+    ],
     'attributes.read' => [
         'description' => 'Access to read your project\'s database collection\'s attributes',
     ],
     'attributes.write' => [
         'description' => 'Access to create, update, and delete your project\'s database collection\'s attributes',
     ],
+    'columns.read' => [
+        'description' => 'Access to read your project\'s database table\'s columns',
+    ],
+    'columns.write' => [
+        'description' => 'Access to create, update, and delete your project\'s database table\'s columns',
+    ],
     'indexes.read' => [
-        'description' => 'Access to read your project\'s database collection\'s indexes',
+        'description' => 'Access to read your project\'s database table\'s indexes',
     ],
     'indexes.write' => [
-        'description' => 'Access to create, update, and delete your project\'s database collection\'s indexes',
+        'description' => 'Access to create, update, and delete your project\'s database table\'s indexes',
     ],
     'documents.read'  => [
         'description' => 'Access to read your project\'s database documents',
     ],
     'documents.write' => [
         'description' => 'Access to create, update, and delete your project\'s database documents',
+    ],
+    'rows.read'  => [
+        'description' => 'Access to read your project\'s database rows',
+    ],
+    'rows.write' => [
+        'description' => 'Access to create, update, and delete your project\'s database rows',
     ],
     'files.read' => [
         'description' => 'Access to read your project\'s storage files and preview images',

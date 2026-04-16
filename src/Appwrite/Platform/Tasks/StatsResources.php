@@ -8,7 +8,6 @@ use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 use Utopia\System\System;
 
 /**
@@ -45,7 +44,7 @@ class StatsResources extends Action
             ->inject('dbForPlatform')
             ->inject('logError')
             ->inject('queueForStatsResources')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(Database $dbForPlatform, callable $logError, EventStatsResources $queue): void
@@ -53,14 +52,15 @@ class StatsResources extends Action
         $this->logError = $logError;
         $this->dbForPlatform = $dbForPlatform;
 
+        $this->disableSubqueries();
+
         Console::title("Stats resources V1");
 
         Console::success('Stats resources: started');
 
         $interval = (int) System::getEnv('_APP_STATS_RESOURCES_INTERVAL', '3600');
-        Console::loop(function () use ($queue) {
-            Authorization::disable();
-            Authorization::setDefaultStatus(false);
+
+        Console::loop(function () use ($queue, $dbForPlatform) {
 
             $last24Hours = (new \DateTime())->sub(\DateInterval::createFromDateString('24 hours'));
             /**
@@ -73,7 +73,7 @@ class StatsResources extends Action
                 $queue
                     ->setProject($project)
                     ->trigger();
-                Console::success('project: ' . $project->getId() . '(' . $project->getInternalId() . ')' . ' queued');
+                Console::success('project: ' . $project->getId() . '(' . $project->getSequence() . ')' . ' queued');
             });
         }, $interval);
 

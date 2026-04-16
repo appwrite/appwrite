@@ -1,0 +1,1 @@
+Update a point column. Changing the `default` value will not update already existing rows.

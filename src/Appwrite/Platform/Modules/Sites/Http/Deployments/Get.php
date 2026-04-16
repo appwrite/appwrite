@@ -37,7 +37,7 @@ class Get extends Action
                 description: <<<EOT
                 Get a site deployment by its unique ID.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
@@ -49,7 +49,7 @@ class Get extends Action
             ->param('deploymentId', '', new UID(), 'Deployment ID.')
             ->inject('response')
             ->inject('dbForProject')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(string $siteId, string $deploymentId, Response $response, Database $dbForProject)

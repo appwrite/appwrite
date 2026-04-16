@@ -64,7 +64,7 @@ class Update extends Base
                 description: <<<EOT
                 Update function by its unique ID.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
@@ -89,7 +89,7 @@ class Update extends Base
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function', true)
             ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the function? In silent mode, comments will not be made on commits and pull requests.', true)
             ->param('providerRootDirectory', '', new Text(128, 0), 'Path to function code in the linked repo.', true)
-            ->param('specification', APP_COMPUTE_SPECIFICATION_DEFAULT, fn (array $plan) => new Specification(
+            ->param('specification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
                 $plan,
                 Config::getParam('specifications', []),
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
@@ -104,7 +104,8 @@ class Update extends Base
             ->inject('dbForPlatform')
             ->inject('gitHub')
             ->inject('executor')
-            ->callback([$this, 'action']);
+            ->inject('authorization')
+            ->callback($this->action(...));
     }
 
     public function action(
@@ -134,7 +135,8 @@ class Update extends Base
         Build $queueForBuilds,
         Database $dbForPlatform,
         GitHub $github,
-        Executor $executor
+        Executor $executor,
+        Authorization $authorization
     ) {
         // TODO: If only branch changes, re-deploy
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -175,8 +177,8 @@ class Update extends Base
         // Git disconnect logic. Disconnecting only when providerRepositoryId is empty, allowing for continue updates without disconnecting git
         if ($isConnected && ($providerRepositoryId !== null && empty($providerRepositoryId))) {
             $repositories = $dbForPlatform->find('repositories', [
-                Query::equal('projectInternalId', [$project->getInternalId()]),
-                Query::equal('resourceInternalId', [$function->getInternalId()]),
+                Query::equal('projectInternalId', [$project->getSequence()]),
+                Query::equal('resourceInternalId', [$function->getSequence()]),
                 Query::equal('resourceType', ['function']),
                 Query::limit(100),
             ]);
@@ -208,18 +210,18 @@ class Update extends Base
                     Permission::delete(Role::team(ID::custom($teamId), 'developer')),
                 ],
                 'installationId' => $installation->getId(),
-                'installationInternalId' => $installation->getInternalId(),
+                'installationInternalId' => $installation->getSequence(),
                 'projectId' => $project->getId(),
-                'projectInternalId' => $project->getInternalId(),
+                'projectInternalId' => $project->getSequence(),
                 'providerRepositoryId' => $providerRepositoryId,
                 'resourceId' => $function->getId(),
-                'resourceInternalId' => $function->getInternalId(),
+                'resourceInternalId' => $function->getSequence(),
                 'resourceType' => 'function',
                 'providerPullRequestIds' => []
             ]));
 
             $repositoryId = $repository->getId();
-            $repositoryInternalId = $repository->getInternalId();
+            $repositoryInternalId = $repository->getSequence();
         }
 
         $live = true;
@@ -260,7 +262,7 @@ class Update extends Base
             'commands' => $commands,
             'scopes' => $scopes,
             'installationId' => $installation->getId(),
-            'installationInternalId' => $installation->getInternalId(),
+            'installationInternalId' => $installation->getSequence(),
             'providerRepositoryId' => $providerRepositoryId,
             'repositoryId' => $repositoryId,
             'repositoryInternalId' => $repositoryInternalId,
@@ -282,7 +284,7 @@ class Update extends Base
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deploymentId')));
-        Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
+        $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $queueForEvents->setParam('functionId', $function->getId());
 

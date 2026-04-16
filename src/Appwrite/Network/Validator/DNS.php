@@ -2,110 +2,66 @@
 
 namespace Appwrite\Network\Validator;
 
-use Utopia\Validator;
+use Swoole\Coroutine\WaitGroup;
+use Utopia\DNS\Message\Record;
+use Utopia\DNS\Validator\DNS as BaseDNS;
 
-class DNS extends Validator
+class DNS extends BaseDNS
 {
-    public const RECORD_A = 'a';
-    public const RECORD_AAAA = 'aaaa';
-    public const RECORD_CNAME = 'cname';
+    protected array $dnsServers = [];
 
     /**
-     * @var mixed
+     * @param string $target Expected value for the DNS record
+     * @param int $type Type of DNS record to validate
+     *  For value, use const from Record, such as Record::TYPE_A
+     *  When using CAA type, you can provide exact match, or just issuer domain as $target
+     * @param array<string> $dnsServers DNS server IP(s) or domain(s) to use for validation
      */
-    protected mixed $logs;
-
-    /**
-     * @param string $target
-     */
-    public function __construct(protected string $target, protected string $type = self::RECORD_CNAME)
+    public function __construct(string $target, int $type = Record::TYPE_CNAME, array $dnsServers = [])
     {
+        parent::__construct($target, $type, $dnsServers[0] ?? self::DEFAULT_DNS_SERVER);
+
+        $this->dnsServers = $dnsServers;
     }
 
     /**
-     * @return string
-     */
-    public function getDescription(): string
-    {
-        return 'Invalid DNS record';
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getLogs(): mixed
-    {
-        return $this->logs;
-    }
-
-    /**
-     * Check if DNS record value matches specific value
+     * Validate DNS record value against multiple DNS servers
      *
-     * @param mixed $domain
-     *
+     * @param mixed $value
      * @return bool
      */
-    public function isValid($value): bool
+    public function isValid(mixed $value): bool
     {
-        $typeNative = match ($this->type) {
-            self::RECORD_A => DNS_A,
-            self::RECORD_AAAA => DNS_AAAA,
-            self::RECORD_CNAME => DNS_CNAME,
-            default => throw new \Exception('Record type not supported.')
-        };
+        $wg = new WaitGroup();
+        $failedValidator = null;
 
-        $dnsKey = match ($this->type) {
-            self::RECORD_A => 'ip',
-            self::RECORD_AAAA => 'ipv6',
-            self::RECORD_CNAME => 'target',
-            default => throw new \Exception('Record type not supported.')
-        };
+        foreach ($this->dnsServers as $dnsServer) {
+            $wg->add();
 
-        if (!is_string($value)) {
+            \go(function () use ($value, $dnsServer, $wg, &$failedValidator) {
+                try {
+                    $validator = new BaseDNS($this->target, $this->type, $dnsServer);
+                    $isValid = $validator->isValid($value);
+
+                    if (!$isValid) {
+                        $failedValidator = $validator;
+                    }
+                } finally {
+                    $wg->done();
+                }
+            });
+        }
+
+        $wg->wait();
+
+        if (!\is_null($failedValidator)) {
+            $this->count = $failedValidator->count;
+            $this->value = $failedValidator->value;
+            $this->reason = $failedValidator->reason;
+            $this->records = $failedValidator->records;
             return false;
         }
 
-        try {
-            $records = \dns_get_record($value, $typeNative);
-            $this->logs = $records;
-        } catch (\Throwable $th) {
-            return false;
-        }
-
-        if (!$records) {
-            return false;
-        }
-
-        foreach ($records as $record) {
-            if (isset($record[$dnsKey]) && $record[$dnsKey] === $this->target) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Is array
-     *
-     * Function will return true if object is array.
-     *
-     * @return bool
-     */
-    public function isArray(): bool
-    {
-        return false;
-    }
-
-    /**
-     * Get Type
-     *
-     * Returns validator type.
-     *
-     * @return string
-     */
-    public function getType(): string
-    {
-        return self::TYPE_STRING;
+        return true;
     }
 }

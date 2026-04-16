@@ -206,15 +206,17 @@ class MessagingConsoleClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        $logs = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topic['body']['$id'] . '/logs', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        $this->assertEventually(function () use ($topic) {
+            $logs = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topic['body']['$id'] . '/logs', \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
 
-        $this->assertEquals($logs['headers']['status-code'], 200);
-        $this->assertIsArray($logs['body']['logs']);
-        $this->assertCount(2, $logs['body']['logs']);
-        $this->assertIsNumeric($logs['body']['total']);
+            $this->assertEquals($logs['headers']['status-code'], 200);
+            $this->assertIsArray($logs['body']['logs']);
+            $this->assertCount(2, $logs['body']['logs']);
+            $this->assertIsNumeric($logs['body']['total']);
+        });
 
         $logs = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topic['body']['$id'] . '/logs', \array_merge([
             'content-type' => 'application/json',

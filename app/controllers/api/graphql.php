@@ -1,6 +1,5 @@
 <?php
 
-use Appwrite\Auth\Auth;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\GraphQL\Promises\Adapter;
@@ -9,6 +8,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use GraphQL\Error\DebugFlag;
@@ -28,11 +28,12 @@ use Utopia\Validator\Text;
 App::init()
     ->groups(['graphql'])
     ->inject('project')
-    ->action(function (Document $project) {
+    ->inject('authorization')
+    ->action(function (Document $project, Authorization $authorization) {
         if (
             array_key_exists('graphql', $project->getAttribute('apis', []))
             && !$project->getAttribute('apis', [])['graphql']
-            && !(Auth::isPrivilegedUser(Authorization::getRoles()) || Auth::isAppUser(Authorization::getRoles()))
+            && !(User::isPrivileged($authorization->getRoles()) || User::isApp($authorization->getRoles()))
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }
@@ -46,7 +47,7 @@ App::get('/v1/graphql')
         namespace: 'graphql',
         group: 'graphql',
         name: 'get',
-        auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
         hide: true,
         description: '/docs/references/graphql/get.md',
         responses: [
@@ -93,7 +94,7 @@ App::post('/v1/graphql/mutation')
         namespace: 'graphql',
         group: 'graphql',
         name: 'mutation',
-        auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
         description: '/docs/references/graphql/post.md',
         responses: [
             new SDKResponse(
@@ -144,7 +145,7 @@ App::post('/v1/graphql')
         namespace: 'graphql',
         group: 'graphql',
         name: 'query',
-        auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
         description: '/docs/references/graphql/post.md',
         responses: [
             new SDKResponse(

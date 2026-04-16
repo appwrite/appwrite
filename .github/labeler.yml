@@ -1,0 +1,83 @@
+# Fixes and upgrades for the Appwrite Auth / Users / Teams services.
+"product / auth":
+  - "(auth|session|login|logout|register|2fa|mfa|users|teams|memberships|invite|oauth|oauth2|sso|jwt)"
+
+# Fixes and upgrades for the Appwrite Realtime API.
+"api / realtime":
+  - "(realtime|subscribe|websockets)"
+
+# Console, UI and UX issues
+"product / console":
+  - "(console)"
+
+# Fixes and upgrades for the Appwrite Storage.
+"product / storage":
+  - "(storage|bucket|file|image|preview|download)"
+
+# Fixes and upgrades for the Appwrite Database.
+"product / databases":
+  - "(database|collection|tables|attribute|column|document|row|query|queries|indexes|search|filter|sort|pagination)"
+
+# Fixes and upgrades for the Appwrite Functions.
+"product / functions":
+  - "(function|runtime|deployment|execution|trigger|cron|schedule)"
+
+# Fixes and upgrades for the Appwrite Docs.
+# "product / docs":
+#   -
+
+# Fixes and upgrades for the Appwrite Migrations.
+"product / migrations":
+  - "(migrate|migration)"
+
+# Fixes and upgrades for the Appwrite Messaging.
+"product / messaging":
+  - "(messaging|email|sms|push|provider|topic|target|notification)"
+
+# Fixes and upgrades for the Appwrite Platform.
+# "product / platform":
+#   -
+
+# Fixes and upgrades for database relationships
+"feature / relationships":
+  - "(relationship)"
+
+# Issues found only on Appwrite Cloud
+# "product / cloud":
+#   -
+
+# Fixes and upgrades for the Appwrite VCS.
+"product / vcs":
+  - "(repo|push|vcs|repository)"
+
+# Fixes and upgrades for the Appwrite GraphQL API.
+"api / graphql":
+  - "(graphql|gql|mutation)"
+
+# Fixes and upgrades for the Appwrite Assistant.
+"product / assistant":
+  - "(assistant)"
+
+# Fixes and upgrades for the Appwrite Domains.
+"product / domains":
+  - "(domain|dns|ssl|certificate)"
+
+# Fixes and upgrades for the Appwrite Locale.
+"product / locale":
+  - "(locale|i18n|internationalization|localization|l10n|translation|timezone|country)"
+
+# Fixes and upgrades for the Appwrite Avatars.
+"product / avatars":
+  - "(avatar|initial|flag|icon)"
+
+# Fixes and upgrades for Appwrite Sites.
+"product / sites":
+  - "(site|web|hosting|domain|ssl|certificate|nextjs|nuxt|react|angular|vue|svelte|astro)"
+
+# Fixes and upgrades for the Appwrite CLI.
+"sdk / cli":
+  - "(cli|command line)"
+
+# Issues only found when self-hosting Appwrite
+"product / self-hosted":
+  - "(self-host|self host)"

@@ -10,7 +10,7 @@ App::get('/versions')
     ->label('scope', 'public')
     ->inject('response')
     ->action(function (Response $response) {
-        $platforms = Config::getParam('platforms');
+        $platforms = Config::getParam('sdks');
 
         $versions = [
             'server' => APP_VERSION_STABLE,

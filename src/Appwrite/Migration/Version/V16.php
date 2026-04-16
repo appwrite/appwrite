@@ -2,7 +2,6 @@
 
 namespace Appwrite\Migration\Version;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Migration\Migration;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
@@ -45,7 +44,7 @@ class V16 extends Migration
 
             Console::log("Migrating Collection \"{$id}\"");
 
-            $this->dbForProject->setNamespace("_{$this->project->getInternalId()}");
+            $this->dbForProject->setNamespace("_{$this->project->getSequence()}");
 
             switch ($id) {
                 case 'sessions':
@@ -118,7 +117,7 @@ class V16 extends Migration
                  * Set default authDuration
                  */
                 $document->setAttribute('auths', array_merge($document->getAttribute('auths', []), [
-                    'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG
+                    'duration' => TOKEN_EXPIRATION_LOGIN_LONG
                 ]));
 
                 /**

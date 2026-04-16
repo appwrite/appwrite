@@ -49,7 +49,7 @@ class Get extends Base
             ))
             ->param('templateId', '', new Text(128), 'Template ID.')
             ->inject('response')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(string $templateId, Response $response)

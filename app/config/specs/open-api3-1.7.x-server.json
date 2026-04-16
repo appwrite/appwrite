@@ -1,7 +1,7 @@
 {
     "openapi": "3.0.0",
     "info": {
-        "version": "1.7.0",
+        "version": "1.7.4",
         "title": "Appwrite",
         "description": "Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https:\/\/appwrite.io\/docs](https:\/\/appwrite.io\/docs)",
         "termsOfService": "https:\/\/appwrite.io\/policy\/terms",
@@ -2303,7 +2303,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "Sends the user an email with a secret key for creating a session. If the provided user ID has not be registered, a new user will be created. Use the returned user ID and secret and submit a request to the [POST \/v1\/account\/sessions\/token](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint to complete the login process. The secret sent to the user's email is valid for 15 minutes.\n\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).",
+                "description": "Sends the user an email with a secret key for creating a session. If the email address has never been used, a **new account is created** using the provided `userId`. Otherwise, if the email address is already attached to an account, the **user ID is ignored**. Then, the user will receive an email with the one-time password. Use the returned user ID and secret and submit a request to the [POST \/v1\/account\/sessions\/token](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint to complete the login process. The secret sent to the user's email is valid for 15 minutes.\n\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).\n",
                 "responses": {
                     "201": {
                         "description": "Token",
@@ -2354,7 +2354,7 @@
                                 "properties": {
                                     "userId": {
                                         "type": "string",
-                                        "description": "User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars.",
+                                        "description": "User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars. If the email address has never been used, a new account is created using the provided userId. Otherwise, if the email address is already attached to an account, the user ID is ignored.",
                                         "x-example": "<USER_ID>"
                                     },
                                     "email": {
@@ -2436,7 +2436,7 @@
                                 "properties": {
                                     "userId": {
                                         "type": "string",
-                                        "description": "Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars.",
+                                        "description": "Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars. If the email address has never been used, a new account is created using the provided userId. Otherwise, if the email address is already attached to an account, the user ID is ignored.",
                                         "x-example": "<USER_ID>"
                                     },
                                     "email": {
@@ -2658,7 +2658,7 @@
                                 "properties": {
                                     "userId": {
                                         "type": "string",
-                                        "description": "Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars.",
+                                        "description": "Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars. If the phone number has never been used, a new account is created using the provided userId. Otherwise, if the phone number is already attached to an account, the user ID is ignored.",
                                         "x-example": "<USER_ID>"
                                     },
                                     "phone": {
@@ -3129,7 +3129,7 @@
                 "parameters": [
                     {
                         "name": "code",
-                        "description": "Credit Card Code. Possible values: amex, argencard, cabal, cencosud, diners, discover, elo, hipercard, jcb, mastercard, naranja, targeta-shopping, union-china-pay, visa, mir, maestro, rupay.",
+                        "description": "Credit Card Code. Possible values: amex, argencard, cabal, cencosud, diners, discover, elo, hipercard, jcb, mastercard, naranja, targeta-shopping, unionpay, visa, mir, maestro, rupay.",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -3147,7 +3147,7 @@
                                 "mastercard",
                                 "naranja",
                                 "targeta-shopping",
-                                "union-china-pay",
+                                "unionpay",
                                 "visa",
                                 "mir",
                                 "maestro",
@@ -3167,7 +3167,7 @@
                                 "Mastercard",
                                 "Naranja",
                                 "Tarjeta Shopping",
-                                "Union China Pay",
+                                "Union Pay",
                                 "Visa",
                                 "MIR",
                                 "Maestro",
@@ -7497,6 +7497,7 @@
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
                     "scope": "documents.write",
                     "platforms": [
+                        "console",
                         "client",
                         "server",
                         "server"
@@ -7505,10 +7506,10 @@
                     "methods": [
                         {
                             "name": "createDocument",
+                            "desc": "Create document",
                             "auth": {
-                                "Session": [],
-                                "Key": [],
-                                "JWT": []
+                                "Project": [],
+                                "Session": []
                             },
                             "parameters": [
                                 "databaseId",
@@ -7529,7 +7530,34 @@
                                     "model": "#\/components\/schemas\/document"
                                 }
                             ],
-                            "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console."
+                            "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
+                            "demo": "databases\/create-document.md"
+                        },
+                        {
+                            "name": "createDocuments",
+                            "desc": "Create documents",
+                            "auth": {
+                                "Project": [],
+                                "Key": []
+                            },
+                            "parameters": [
+                                "databaseId",
+                                "collectionId",
+                                "documents"
+                            ],
+                            "required": [
+                                "databaseId",
+                                "collectionId",
+                                "documents"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/components\/schemas\/documentList"
+                                }
+                            ],
+                            "description": "Create new Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
+                            "demo": "databases\/create-documents.md"
                         }
                     ],
                     "auth": {
@@ -7606,7 +7634,7 @@
                 }
             },
             "put": {
-                "summary": "Create or update documents",
+                "summary": "Upsert documents",
                 "operationId": "databasesUpsertDocuments",
                 "tags": [
                     "databases"
@@ -7627,7 +7655,7 @@
                 "x-appwrite": {
                     "method": "upsertDocuments",
                     "group": "documents",
-                    "weight": 116,
+                    "weight": 118,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7638,6 +7666,7 @@
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
                     "scope": "documents.write",
                     "platforms": [
+                        "console",
                         "server"
                     ],
                     "packaging": false,
@@ -7688,7 +7717,10 @@
                                             "type": "object"
                                         }
                                     }
-                                }
+                                },
+                                "required": [
+                                    "documents"
+                                ]
                             }
                         }
                     }
@@ -7716,7 +7748,7 @@
                 "x-appwrite": {
                     "method": "updateDocuments",
                     "group": "documents",
-                    "weight": 115,
+                    "weight": 117,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7727,6 +7759,7 @@
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
                     "scope": "documents.write",
                     "platforms": [
+                        "console",
                         "server"
                     ],
                     "packaging": false,
@@ -7810,7 +7843,7 @@
                 "x-appwrite": {
                     "method": "deleteDocuments",
                     "group": "documents",
-                    "weight": 118,
+                    "weight": 120,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7821,6 +7854,7 @@
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
                     "scope": "documents.write",
                     "platforms": [
+                        "console",
                         "server"
                     ],
                     "packaging": false,
@@ -8210,7 +8244,7 @@
                 "x-appwrite": {
                     "method": "deleteDocument",
                     "group": "documents",
-                    "weight": 117,
+                    "weight": 119,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -8271,6 +8305,240 @@
                         "in": "path"
                     }
                 ]
+            }
+        },
+        "\/databases\/{databaseId}\/collections\/{collectionId}\/documents\/{documentId}\/{attribute}\/decrement": {
+            "patch": {
+                "summary": "Decrement document attribute",
+                "operationId": "databasesDecrementDocumentAttribute",
+                "tags": [
+                    "databases"
+                ],
+                "description": "Decrement a specific attribute of a document by a given value.",
+                "responses": {
+                    "200": {
+                        "description": "Document",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/document"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "decrementDocumentAttribute",
+                    "group": "documents",
+                    "weight": 116,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "databases\/decrement-document-attribute.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/decrement-document-attribute.md",
+                    "rate-limit": 120,
+                    "rate-time": 60,
+                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
+                    "scope": "documents.write",
+                    "platforms": [
+                        "console",
+                        "server",
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": [],
+                        "Key": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "collectionId",
+                        "description": "Collection ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<COLLECTION_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "documentId",
+                        "description": "Document ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DOCUMENT_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "attribute",
+                        "description": "Attribute key.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "value": {
+                                        "type": "number",
+                                        "description": "Value to decrement the attribute by. The value must be a number.",
+                                        "x-example": null
+                                    },
+                                    "min": {
+                                        "type": "number",
+                                        "description": "Minimum value for the attribute. If the current value is lesser than this value, an exception will be thrown.",
+                                        "x-example": null
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "\/databases\/{databaseId}\/collections\/{collectionId}\/documents\/{documentId}\/{attribute}\/increment": {
+            "patch": {
+                "summary": "Increment document attribute",
+                "operationId": "databasesIncrementDocumentAttribute",
+                "tags": [
+                    "databases"
+                ],
+                "description": "Increment a specific attribute of a document by a given value.",
+                "responses": {
+                    "200": {
+                        "description": "Document",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/document"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "incrementDocumentAttribute",
+                    "group": "documents",
+                    "weight": 115,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "databases\/increment-document-attribute.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/increment-document-attribute.md",
+                    "rate-limit": 120,
+                    "rate-time": 60,
+                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
+                    "scope": "documents.write",
+                    "platforms": [
+                        "console",
+                        "server",
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": [],
+                        "Key": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "collectionId",
+                        "description": "Collection ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<COLLECTION_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "documentId",
+                        "description": "Document ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DOCUMENT_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "attribute",
+                        "description": "Attribute key.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "value": {
+                                        "type": "number",
+                                        "description": "Value to increment the attribute by. The value must be a number.",
+                                        "x-example": null
+                                    },
+                                    "max": {
+                                        "type": "number",
+                                        "description": "Maximum value for the attribute. If the current value is greater than this value, an error will be thrown.",
+                                        "x-example": null
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         "\/databases\/{databaseId}\/collections\/{collectionId}\/indexes": {
@@ -8661,7 +8929,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "functions",
-                    "weight": 376,
+                    "weight": 378,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -8735,7 +9003,7 @@
                 "x-appwrite": {
                     "method": "create",
                     "group": "functions",
-                    "weight": 373,
+                    "weight": 375,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -8818,6 +9086,7 @@
                                             "dart-3.1",
                                             "dart-3.3",
                                             "dart-3.5",
+                                            "dart-3.8",
                                             "dotnet-6.0",
                                             "dotnet-7.0",
                                             "dotnet-8.0",
@@ -8843,7 +9112,8 @@
                                             "static-1",
                                             "flutter-3.24",
                                             "flutter-3.27",
-                                            "flutter-3.29"
+                                            "flutter-3.29",
+                                            "flutter-3.32"
                                         ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
@@ -8967,7 +9237,7 @@
                 "x-appwrite": {
                     "method": "listRuntimes",
                     "group": "runtimes",
-                    "weight": 378,
+                    "weight": 380,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9017,7 +9287,7 @@
                 "x-appwrite": {
                     "method": "listSpecifications",
                     "group": "runtimes",
-                    "weight": 379,
+                    "weight": 381,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9068,7 +9338,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "functions",
-                    "weight": 374,
+                    "weight": 376,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9128,7 +9398,7 @@
                 "x-appwrite": {
                     "method": "update",
                     "group": "functions",
-                    "weight": 375,
+                    "weight": 377,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9218,6 +9488,7 @@
                                             "dart-3.1",
                                             "dart-3.3",
                                             "dart-3.5",
+                                            "dart-3.8",
                                             "dotnet-6.0",
                                             "dotnet-7.0",
                                             "dotnet-8.0",
@@ -9243,7 +9514,8 @@
                                             "static-1",
                                             "flutter-3.24",
                                             "flutter-3.27",
-                                            "flutter-3.29"
+                                            "flutter-3.29",
+                                            "flutter-3.32"
                                         ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
@@ -9357,7 +9629,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "functions",
-                    "weight": 377,
+                    "weight": 379,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9419,7 +9691,7 @@
                 "x-appwrite": {
                     "method": "updateFunctionDeployment",
                     "group": "functions",
-                    "weight": 382,
+                    "weight": 384,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9500,7 +9772,7 @@
                 "x-appwrite": {
                     "method": "listDeployments",
                     "group": "deployments",
-                    "weight": 383,
+                    "weight": 385,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9584,7 +9856,7 @@
                 "x-appwrite": {
                     "method": "createDeployment",
                     "group": "deployments",
-                    "weight": 380,
+                    "weight": 382,
                     "cookies": false,
                     "type": "upload",
                     "deprecated": false,
@@ -9681,7 +9953,7 @@
                 "x-appwrite": {
                     "method": "createDuplicateDeployment",
                     "group": "deployments",
-                    "weight": 388,
+                    "weight": 390,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9767,7 +10039,7 @@
                 "x-appwrite": {
                     "method": "createTemplateDeployment",
                     "group": "deployments",
-                    "weight": 385,
+                    "weight": 387,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9871,7 +10143,7 @@
                 "x-appwrite": {
                     "method": "createVcsDeployment",
                     "group": "deployments",
-                    "weight": 386,
+                    "weight": 388,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -9969,7 +10241,7 @@
                 "x-appwrite": {
                     "method": "getDeployment",
                     "group": "deployments",
-                    "weight": 381,
+                    "weight": 383,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10032,7 +10304,7 @@
                 "x-appwrite": {
                     "method": "deleteDeployment",
                     "group": "deployments",
-                    "weight": 384,
+                    "weight": 386,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10097,7 +10369,7 @@
                 "x-appwrite": {
                     "method": "getDeploymentDownload",
                     "group": "deployments",
-                    "weight": 387,
+                    "weight": 389,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -10188,7 +10460,7 @@
                 "x-appwrite": {
                     "method": "updateDeploymentStatus",
                     "group": "deployments",
-                    "weight": 389,
+                    "weight": 391,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10260,7 +10532,7 @@
                 "x-appwrite": {
                     "method": "listExecutions",
                     "group": "executions",
-                    "weight": 392,
+                    "weight": 394,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10337,7 +10609,7 @@
                 "x-appwrite": {
                     "method": "createExecution",
                     "group": "executions",
-                    "weight": 390,
+                    "weight": 392,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10422,7 +10694,7 @@
                                     "scheduledAt": {
                                         "type": "string",
                                         "description": "Scheduled execution time in [ISO 8601](https:\/\/www.iso.org\/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.",
-                                        "x-example": null
+                                        "x-example": "<SCHEDULED_AT>"
                                     }
                                 }
                             }
@@ -10454,7 +10726,7 @@
                 "x-appwrite": {
                     "method": "getExecution",
                     "group": "executions",
-                    "weight": 391,
+                    "weight": 393,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10521,7 +10793,7 @@
                 "x-appwrite": {
                     "method": "deleteExecution",
                     "group": "executions",
-                    "weight": 393,
+                    "weight": 395,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10593,7 +10865,7 @@
                 "x-appwrite": {
                     "method": "listVariables",
                     "group": "variables",
-                    "weight": 398,
+                    "weight": 400,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10653,7 +10925,7 @@
                 "x-appwrite": {
                     "method": "createVariable",
                     "group": "variables",
-                    "weight": 396,
+                    "weight": 398,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10745,7 +11017,7 @@
                 "x-appwrite": {
                     "method": "getVariable",
                     "group": "variables",
-                    "weight": 397,
+                    "weight": 399,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10815,7 +11087,7 @@
                 "x-appwrite": {
                     "method": "updateVariable",
                     "group": "variables",
-                    "weight": 399,
+                    "weight": 401,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10907,7 +11179,7 @@
                 "x-appwrite": {
                     "method": "deleteVariable",
                     "group": "variables",
-                    "weight": 400,
+                    "weight": 402,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -10979,7 +11251,7 @@
                 "x-appwrite": {
                     "method": "query",
                     "group": "graphql",
-                    "weight": 306,
+                    "weight": 308,
                     "cookies": false,
                     "type": "graphql",
                     "deprecated": false,
@@ -11033,7 +11305,7 @@
                 "x-appwrite": {
                     "method": "mutation",
                     "group": "graphql",
-                    "weight": 305,
+                    "weight": 307,
                     "cookies": false,
                     "type": "graphql",
                     "deprecated": false,
@@ -11087,7 +11359,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "health",
-                    "weight": 130,
+                    "weight": 132,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11137,7 +11409,7 @@
                 "x-appwrite": {
                     "method": "getAntivirus",
                     "group": "health",
-                    "weight": 151,
+                    "weight": 153,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11187,7 +11459,7 @@
                 "x-appwrite": {
                     "method": "getCache",
                     "group": "health",
-                    "weight": 133,
+                    "weight": 135,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11237,7 +11509,7 @@
                 "x-appwrite": {
                     "method": "getCertificate",
                     "group": "health",
-                    "weight": 138,
+                    "weight": 140,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11298,7 +11570,7 @@
                 "x-appwrite": {
                     "method": "getDB",
                     "group": "health",
-                    "weight": 132,
+                    "weight": 134,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11348,7 +11620,7 @@
                 "x-appwrite": {
                     "method": "getPubSub",
                     "group": "health",
-                    "weight": 134,
+                    "weight": 136,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11398,7 +11670,7 @@
                 "x-appwrite": {
                     "method": "getQueueBuilds",
                     "group": "queue",
-                    "weight": 140,
+                    "weight": 142,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11461,7 +11733,7 @@
                 "x-appwrite": {
                     "method": "getQueueCertificates",
                     "group": "queue",
-                    "weight": 139,
+                    "weight": 141,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11524,7 +11796,7 @@
                 "x-appwrite": {
                     "method": "getQueueDatabases",
                     "group": "queue",
-                    "weight": 141,
+                    "weight": 143,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11598,7 +11870,7 @@
                 "x-appwrite": {
                     "method": "getQueueDeletes",
                     "group": "queue",
-                    "weight": 142,
+                    "weight": 144,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11661,7 +11933,7 @@
                 "x-appwrite": {
                     "method": "getFailedJobs",
                     "group": "queue",
-                    "weight": 152,
+                    "weight": 154,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11750,7 +12022,7 @@
                 "x-appwrite": {
                     "method": "getQueueFunctions",
                     "group": "queue",
-                    "weight": 146,
+                    "weight": 148,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11813,7 +12085,7 @@
                 "x-appwrite": {
                     "method": "getQueueLogs",
                     "group": "queue",
-                    "weight": 137,
+                    "weight": 139,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11876,7 +12148,7 @@
                 "x-appwrite": {
                     "method": "getQueueMails",
                     "group": "queue",
-                    "weight": 143,
+                    "weight": 145,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -11939,7 +12211,7 @@
                 "x-appwrite": {
                     "method": "getQueueMessaging",
                     "group": "queue",
-                    "weight": 144,
+                    "weight": 146,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12002,7 +12274,7 @@
                 "x-appwrite": {
                     "method": "getQueueMigrations",
                     "group": "queue",
-                    "weight": 145,
+                    "weight": 147,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12065,7 +12337,7 @@
                 "x-appwrite": {
                     "method": "getQueueStatsResources",
                     "group": "queue",
-                    "weight": 147,
+                    "weight": 149,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12128,7 +12400,7 @@
                 "x-appwrite": {
                     "method": "getQueueUsage",
                     "group": "queue",
-                    "weight": 148,
+                    "weight": 150,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12191,7 +12463,7 @@
                 "x-appwrite": {
                     "method": "getQueueWebhooks",
                     "group": "queue",
-                    "weight": 136,
+                    "weight": 138,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12254,7 +12526,7 @@
                 "x-appwrite": {
                     "method": "getStorage",
                     "group": "storage",
-                    "weight": 150,
+                    "weight": 152,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12304,7 +12576,7 @@
                 "x-appwrite": {
                     "method": "getStorageLocal",
                     "group": "storage",
-                    "weight": 149,
+                    "weight": 151,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12354,7 +12626,7 @@
                 "x-appwrite": {
                     "method": "getTime",
                     "group": "health",
-                    "weight": 135,
+                    "weight": 137,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12404,7 +12676,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": null,
-                    "weight": 122,
+                    "weight": 124,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12458,7 +12730,7 @@
                 "x-appwrite": {
                     "method": "listCodes",
                     "group": null,
-                    "weight": 123,
+                    "weight": 125,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12512,7 +12784,7 @@
                 "x-appwrite": {
                     "method": "listContinents",
                     "group": null,
-                    "weight": 127,
+                    "weight": 129,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12566,7 +12838,7 @@
                 "x-appwrite": {
                     "method": "listCountries",
                     "group": null,
-                    "weight": 124,
+                    "weight": 126,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12620,7 +12892,7 @@
                 "x-appwrite": {
                     "method": "listCountriesEU",
                     "group": null,
-                    "weight": 125,
+                    "weight": 127,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12674,7 +12946,7 @@
                 "x-appwrite": {
                     "method": "listCountriesPhones",
                     "group": null,
-                    "weight": 126,
+                    "weight": 128,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12728,7 +13000,7 @@
                 "x-appwrite": {
                     "method": "listCurrencies",
                     "group": null,
-                    "weight": 128,
+                    "weight": 130,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12782,7 +13054,7 @@
                 "x-appwrite": {
                     "method": "listLanguages",
                     "group": null,
-                    "weight": 129,
+                    "weight": 131,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12836,7 +13108,7 @@
                 "x-appwrite": {
                     "method": "listMessages",
                     "group": "messages",
-                    "weight": 360,
+                    "weight": 362,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -12913,7 +13185,7 @@
                 "x-appwrite": {
                     "method": "createEmail",
                     "group": "messages",
-                    "weight": 357,
+                    "weight": 359,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13058,7 +13330,7 @@
                 "x-appwrite": {
                     "method": "updateEmail",
                     "group": "messages",
-                    "weight": 364,
+                    "weight": 366,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13205,7 +13477,7 @@
                 "x-appwrite": {
                     "method": "createPush",
                     "group": "messages",
-                    "weight": 359,
+                    "weight": 361,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13380,7 +13652,7 @@
                 "x-appwrite": {
                     "method": "updatePush",
                     "group": "messages",
-                    "weight": 366,
+                    "weight": 368,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13559,7 +13831,7 @@
                 "x-appwrite": {
                     "method": "createSms",
                     "group": "messages",
-                    "weight": 358,
+                    "weight": 360,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13669,7 +13941,7 @@
                 "x-appwrite": {
                     "method": "updateSms",
                     "group": "messages",
-                    "weight": 365,
+                    "weight": 367,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13782,7 +14054,7 @@
                 "x-appwrite": {
                     "method": "getMessage",
                     "group": "messages",
-                    "weight": 363,
+                    "weight": 365,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13836,7 +14108,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "messages",
-                    "weight": 367,
+                    "weight": 369,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13899,7 +14171,7 @@
                 "x-appwrite": {
                     "method": "listMessageLogs",
                     "group": "logs",
-                    "weight": 361,
+                    "weight": 363,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -13975,7 +14247,7 @@
                 "x-appwrite": {
                     "method": "listTargets",
                     "group": "messages",
-                    "weight": 362,
+                    "weight": 364,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14051,7 +14323,7 @@
                 "x-appwrite": {
                     "method": "listProviders",
                     "group": "providers",
-                    "weight": 332,
+                    "weight": 334,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14128,7 +14400,7 @@
                 "x-appwrite": {
                     "method": "createApnsProvider",
                     "group": "providers",
-                    "weight": 331,
+                    "weight": 333,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14234,7 +14506,7 @@
                 "x-appwrite": {
                     "method": "updateApnsProvider",
                     "group": "providers",
-                    "weight": 344,
+                    "weight": 346,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14343,7 +14615,7 @@
                 "x-appwrite": {
                     "method": "createFcmProvider",
                     "group": "providers",
-                    "weight": 330,
+                    "weight": 332,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14429,7 +14701,7 @@
                 "x-appwrite": {
                     "method": "updateFcmProvider",
                     "group": "providers",
-                    "weight": 343,
+                    "weight": 345,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14518,7 +14790,7 @@
                 "x-appwrite": {
                     "method": "createMailgunProvider",
                     "group": "providers",
-                    "weight": 322,
+                    "weight": 324,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14634,7 +14906,7 @@
                 "x-appwrite": {
                     "method": "updateMailgunProvider",
                     "group": "providers",
-                    "weight": 335,
+                    "weight": 337,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14753,7 +15025,7 @@
                 "x-appwrite": {
                     "method": "createMsg91Provider",
                     "group": "providers",
-                    "weight": 325,
+                    "weight": 327,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14849,7 +15121,7 @@
                 "x-appwrite": {
                     "method": "updateMsg91Provider",
                     "group": "providers",
-                    "weight": 338,
+                    "weight": 340,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -14948,7 +15220,7 @@
                 "x-appwrite": {
                     "method": "createSendgridProvider",
                     "group": "providers",
-                    "weight": 323,
+                    "weight": 325,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15054,7 +15326,7 @@
                 "x-appwrite": {
                     "method": "updateSendgridProvider",
                     "group": "providers",
-                    "weight": 336,
+                    "weight": 338,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15163,7 +15435,7 @@
                 "x-appwrite": {
                     "method": "createSmtpProvider",
                     "group": "providers",
-                    "weight": 324,
+                    "weight": 326,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15307,7 +15579,7 @@
                 "x-appwrite": {
                     "method": "updateSmtpProvider",
                     "group": "providers",
-                    "weight": 337,
+                    "weight": 339,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15453,7 +15725,7 @@
                 "x-appwrite": {
                     "method": "createTelesignProvider",
                     "group": "providers",
-                    "weight": 326,
+                    "weight": 328,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15549,7 +15821,7 @@
                 "x-appwrite": {
                     "method": "updateTelesignProvider",
                     "group": "providers",
-                    "weight": 339,
+                    "weight": 341,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15648,7 +15920,7 @@
                 "x-appwrite": {
                     "method": "createTextmagicProvider",
                     "group": "providers",
-                    "weight": 327,
+                    "weight": 329,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15744,7 +16016,7 @@
                 "x-appwrite": {
                     "method": "updateTextmagicProvider",
                     "group": "providers",
-                    "weight": 340,
+                    "weight": 342,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15843,7 +16115,7 @@
                 "x-appwrite": {
                     "method": "createTwilioProvider",
                     "group": "providers",
-                    "weight": 328,
+                    "weight": 330,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -15939,7 +16211,7 @@
                 "x-appwrite": {
                     "method": "updateTwilioProvider",
                     "group": "providers",
-                    "weight": 341,
+                    "weight": 343,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16038,7 +16310,7 @@
                 "x-appwrite": {
                     "method": "createVonageProvider",
                     "group": "providers",
-                    "weight": 329,
+                    "weight": 331,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16134,7 +16406,7 @@
                 "x-appwrite": {
                     "method": "updateVonageProvider",
                     "group": "providers",
-                    "weight": 342,
+                    "weight": 344,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16233,7 +16505,7 @@
                 "x-appwrite": {
                     "method": "getProvider",
                     "group": "providers",
-                    "weight": 334,
+                    "weight": 336,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16287,7 +16559,7 @@
                 "x-appwrite": {
                     "method": "deleteProvider",
                     "group": "providers",
-                    "weight": 345,
+                    "weight": 347,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16350,7 +16622,7 @@
                 "x-appwrite": {
                     "method": "listProviderLogs",
                     "group": "providers",
-                    "weight": 333,
+                    "weight": 335,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16426,7 +16698,7 @@
                 "x-appwrite": {
                     "method": "listSubscriberLogs",
                     "group": "subscribers",
-                    "weight": 354,
+                    "weight": 356,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16502,7 +16774,7 @@
                 "x-appwrite": {
                     "method": "listTopics",
                     "group": "topics",
-                    "weight": 347,
+                    "weight": 349,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16577,7 +16849,7 @@
                 "x-appwrite": {
                     "method": "createTopic",
                     "group": "topics",
-                    "weight": 346,
+                    "weight": 348,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16661,7 +16933,7 @@
                 "x-appwrite": {
                     "method": "getTopic",
                     "group": "topics",
-                    "weight": 349,
+                    "weight": 351,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16722,7 +16994,7 @@
                 "x-appwrite": {
                     "method": "updateTopic",
                     "group": "topics",
-                    "weight": 350,
+                    "weight": 352,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16800,7 +17072,7 @@
                 "x-appwrite": {
                     "method": "deleteTopic",
                     "group": "topics",
-                    "weight": 351,
+                    "weight": 353,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16863,7 +17135,7 @@
                 "x-appwrite": {
                     "method": "listTopicLogs",
                     "group": "topics",
-                    "weight": 348,
+                    "weight": 350,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -16939,7 +17211,7 @@
                 "x-appwrite": {
                     "method": "listSubscribers",
                     "group": "subscribers",
-                    "weight": 353,
+                    "weight": 355,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17024,7 +17296,7 @@
                 "x-appwrite": {
                     "method": "createSubscriber",
                     "group": "subscribers",
-                    "weight": 352,
+                    "weight": 354,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17116,7 +17388,7 @@
                 "x-appwrite": {
                     "method": "getSubscriber",
                     "group": "subscribers",
-                    "weight": 355,
+                    "weight": 357,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17180,7 +17452,7 @@
                 "x-appwrite": {
                     "method": "deleteSubscriber",
                     "group": "subscribers",
-                    "weight": 356,
+                    "weight": 358,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17257,7 +17529,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "sites",
-                    "weight": 405,
+                    "weight": 407,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17328,7 +17600,7 @@
                 "x-appwrite": {
                     "method": "create",
                     "group": "sites",
-                    "weight": 403,
+                    "weight": 405,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17464,6 +17736,7 @@
                                             "dart-3.1",
                                             "dart-3.3",
                                             "dart-3.5",
+                                            "dart-3.8",
                                             "dotnet-6.0",
                                             "dotnet-7.0",
                                             "dotnet-8.0",
@@ -17489,7 +17762,8 @@
                                             "static-1",
                                             "flutter-3.24",
                                             "flutter-3.27",
-                                            "flutter-3.29"
+                                            "flutter-3.29",
+                                            "flutter-3.32"
                                         ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
@@ -17576,7 +17850,7 @@
                 "x-appwrite": {
                     "method": "listFrameworks",
                     "group": "frameworks",
-                    "weight": 408,
+                    "weight": 410,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17626,7 +17900,7 @@
                 "x-appwrite": {
                     "method": "listSpecifications",
                     "group": "frameworks",
-                    "weight": 431,
+                    "weight": 433,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17677,7 +17951,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "sites",
-                    "weight": 404,
+                    "weight": 406,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17737,7 +18011,7 @@
                 "x-appwrite": {
                     "method": "update",
                     "group": "sites",
-                    "weight": 406,
+                    "weight": 408,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -17880,6 +18154,7 @@
                                             "dart-3.1",
                                             "dart-3.3",
                                             "dart-3.5",
+                                            "dart-3.8",
                                             "dotnet-6.0",
                                             "dotnet-7.0",
                                             "dotnet-8.0",
@@ -17905,7 +18180,8 @@
                                             "static-1",
                                             "flutter-3.24",
                                             "flutter-3.27",
-                                            "flutter-3.29"
+                                            "flutter-3.29",
+                                            "flutter-3.32"
                                         ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
@@ -17981,7 +18257,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "sites",
-                    "weight": 407,
+                    "weight": 409,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18043,7 +18319,7 @@
                 "x-appwrite": {
                     "method": "updateSiteDeployment",
                     "group": "sites",
-                    "weight": 414,
+                    "weight": 416,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18124,7 +18400,7 @@
                 "x-appwrite": {
                     "method": "listDeployments",
                     "group": "deployments",
-                    "weight": 413,
+                    "weight": 415,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18208,7 +18484,7 @@
                 "x-appwrite": {
                     "method": "createDeployment",
                     "group": "deployments",
-                    "weight": 409,
+                    "weight": 411,
                     "cookies": false,
                     "type": "upload",
                     "deprecated": false,
@@ -18310,7 +18586,7 @@
                 "x-appwrite": {
                     "method": "createDuplicateDeployment",
                     "group": "deployments",
-                    "weight": 417,
+                    "weight": 419,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18391,7 +18667,7 @@
                 "x-appwrite": {
                     "method": "createTemplateDeployment",
                     "group": "deployments",
-                    "weight": 410,
+                    "weight": 412,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18495,7 +18771,7 @@
                 "x-appwrite": {
                     "method": "createVcsDeployment",
                     "group": "deployments",
-                    "weight": 411,
+                    "weight": 413,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18594,7 +18870,7 @@
                 "x-appwrite": {
                     "method": "getDeployment",
                     "group": "deployments",
-                    "weight": 412,
+                    "weight": 414,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18657,7 +18933,7 @@
                 "x-appwrite": {
                     "method": "deleteDeployment",
                     "group": "deployments",
-                    "weight": 415,
+                    "weight": 417,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18722,7 +18998,7 @@
                 "x-appwrite": {
                     "method": "getDeploymentDownload",
                     "group": "deployments",
-                    "weight": 416,
+                    "weight": 418,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -18813,7 +19089,7 @@
                 "x-appwrite": {
                     "method": "updateDeploymentStatus",
                     "group": "deployments",
-                    "weight": 418,
+                    "weight": 420,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18885,7 +19161,7 @@
                 "x-appwrite": {
                     "method": "listLogs",
                     "group": "logs",
-                    "weight": 420,
+                    "weight": 422,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -18957,7 +19233,7 @@
                 "x-appwrite": {
                     "method": "getLog",
                     "group": "logs",
-                    "weight": 419,
+                    "weight": 421,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -19020,7 +19296,7 @@
                 "x-appwrite": {
                     "method": "deleteLog",
                     "group": "logs",
-                    "weight": 421,
+                    "weight": 423,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -19092,7 +19368,7 @@
                 "x-appwrite": {
                     "method": "listVariables",
                     "group": "variables",
-                    "weight": 424,
+                    "weight": 426,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -19152,7 +19428,7 @@
                 "x-appwrite": {
                     "method": "createVariable",
                     "group": "variables",
-                    "weight": 422,
+                    "weight": 424,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -19244,7 +19520,7 @@
                 "x-appwrite": {
                     "method": "getVariable",
                     "group": "variables",
-                    "weight": 423,
+                    "weight": 425,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -19314,7 +19590,7 @@
                 "x-appwrite": {
                     "method": "updateVariable",
                     "group": "variables",
-                    "weight": 425,
+                    "weight": 427,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -19406,7 +19682,7 @@
                 "x-appwrite": {
                     "method": "deleteVariable",
                     "group": "variables",
-                    "weight": 426,
+                    "weight": 428,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -19478,7 +19754,7 @@
                 "x-appwrite": {
                     "method": "listBuckets",
                     "group": "buckets",
-                    "weight": 207,
+                    "weight": 209,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -19552,7 +19828,7 @@
                 "x-appwrite": {
                     "method": "createBucket",
                     "group": "buckets",
-                    "weight": 206,
+                    "weight": 208,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -19680,7 +19956,7 @@
                 "x-appwrite": {
                     "method": "getBucket",
                     "group": "buckets",
-                    "weight": 208,
+                    "weight": 210,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -19740,7 +20016,7 @@
                 "x-appwrite": {
                     "method": "updateBucket",
                     "group": "buckets",
-                    "weight": 209,
+                    "weight": 211,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -19865,7 +20141,7 @@
                 "x-appwrite": {
                     "method": "deleteBucket",
                     "group": "buckets",
-                    "weight": 210,
+                    "weight": 212,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -19927,7 +20203,7 @@
                 "x-appwrite": {
                     "method": "listFiles",
                     "group": "files",
-                    "weight": 212,
+                    "weight": 214,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -20015,7 +20291,7 @@
                 "x-appwrite": {
                     "method": "createFile",
                     "group": "files",
-                    "weight": 211,
+                    "weight": 213,
                     "cookies": false,
                     "type": "upload",
                     "deprecated": false,
@@ -20115,7 +20391,7 @@
                 "x-appwrite": {
                     "method": "getFile",
                     "group": "files",
-                    "weight": 213,
+                    "weight": 215,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -20189,7 +20465,7 @@
                 "x-appwrite": {
                     "method": "updateFile",
                     "group": "files",
-                    "weight": 218,
+                    "weight": 220,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -20280,7 +20556,7 @@
                 "x-appwrite": {
                     "method": "deleteFile",
                     "group": "files",
-                    "weight": 219,
+                    "weight": 221,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -20349,7 +20625,7 @@
                 "x-appwrite": {
                     "method": "getFileDownload",
                     "group": "files",
-                    "weight": 215,
+                    "weight": 217,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -20429,7 +20705,7 @@
                 "x-appwrite": {
                     "method": "getFilePreview",
                     "group": "files",
-                    "weight": 214,
+                    "weight": 216,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -20620,7 +20896,8 @@
                                 "png",
                                 "webp",
                                 "heic",
-                                "avif"
+                                "avif",
+                                "gif"
                             ],
                             "x-enum-name": "ImageFormat",
                             "x-enum-keys": [],
@@ -20658,7 +20935,7 @@
                 "x-appwrite": {
                     "method": "getFileView",
                     "group": "files",
-                    "weight": 216,
+                    "weight": 218,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -20745,7 +21022,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "teams",
-                    "weight": 223,
+                    "weight": 225,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -20823,7 +21100,7 @@
                 "x-appwrite": {
                     "method": "create",
                     "group": "teams",
-                    "weight": 222,
+                    "weight": 224,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -20910,7 +21187,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "teams",
-                    "weight": 224,
+                    "weight": 226,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -20974,7 +21251,7 @@
                 "x-appwrite": {
                     "method": "updateName",
                     "group": "teams",
-                    "weight": 226,
+                    "weight": 228,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -21050,7 +21327,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "teams",
-                    "weight": 228,
+                    "weight": 230,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -21116,7 +21393,7 @@
                 "x-appwrite": {
                     "method": "listMemberships",
                     "group": "memberships",
-                    "weight": 230,
+                    "weight": 232,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -21204,7 +21481,7 @@
                 "x-appwrite": {
                     "method": "createMembership",
                     "group": "memberships",
-                    "weight": 229,
+                    "weight": 231,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -21317,7 +21594,7 @@
                 "x-appwrite": {
                     "method": "getMembership",
                     "group": "memberships",
-                    "weight": 231,
+                    "weight": 233,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -21391,7 +21668,7 @@
                 "x-appwrite": {
                     "method": "updateMembership",
                     "group": "memberships",
-                    "weight": 232,
+                    "weight": 234,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -21480,7 +21757,7 @@
                 "x-appwrite": {
                     "method": "deleteMembership",
                     "group": "memberships",
-                    "weight": 234,
+                    "weight": 236,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -21556,7 +21833,7 @@
                 "x-appwrite": {
                     "method": "updateMembershipStatus",
                     "group": "memberships",
-                    "weight": 233,
+                    "weight": 235,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -21655,7 +21932,7 @@
                 "x-appwrite": {
                     "method": "getPrefs",
                     "group": "teams",
-                    "weight": 225,
+                    "weight": 227,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -21717,7 +21994,7 @@
                 "x-appwrite": {
                     "method": "updatePrefs",
                     "group": "teams",
-                    "weight": 227,
+                    "weight": 229,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -21800,7 +22077,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "files",
-                    "weight": 439,
+                    "weight": 441,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -21881,7 +22158,7 @@
                 "x-appwrite": {
                     "method": "createFileToken",
                     "group": "files",
-                    "weight": 437,
+                    "weight": 439,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -21971,7 +22248,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "tokens",
-                    "weight": 438,
+                    "weight": 440,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -22032,7 +22309,7 @@
                 "x-appwrite": {
                     "method": "update",
                     "group": "tokens",
-                    "weight": 440,
+                    "weight": 442,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -22103,7 +22380,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "tokens",
-                    "weight": 441,
+                    "weight": 443,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -22166,7 +22443,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "users",
-                    "weight": 245,
+                    "weight": 247,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -22240,7 +22517,7 @@
                 "x-appwrite": {
                     "method": "create",
                     "group": "users",
-                    "weight": 236,
+                    "weight": 238,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -22329,7 +22606,7 @@
                 "x-appwrite": {
                     "method": "createArgon2User",
                     "group": "users",
-                    "weight": 239,
+                    "weight": 241,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -22415,7 +22692,7 @@
                 "x-appwrite": {
                     "method": "createBcryptUser",
                     "group": "users",
-                    "weight": 237,
+                    "weight": 239,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -22501,7 +22778,7 @@
                 "x-appwrite": {
                     "method": "listIdentities",
                     "group": "identities",
-                    "weight": 253,
+                    "weight": 255,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -22570,7 +22847,7 @@
                 "x-appwrite": {
                     "method": "deleteIdentity",
                     "group": "identities",
-                    "weight": 276,
+                    "weight": 278,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -22632,7 +22909,7 @@
                 "x-appwrite": {
                     "method": "createMD5User",
                     "group": "users",
-                    "weight": 238,
+                    "weight": 240,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -22718,7 +22995,7 @@
                 "x-appwrite": {
                     "method": "createPHPassUser",
                     "group": "users",
-                    "weight": 241,
+                    "weight": 243,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -22804,7 +23081,7 @@
                 "x-appwrite": {
                     "method": "createScryptUser",
                     "group": "users",
-                    "weight": 242,
+                    "weight": 244,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -22920,7 +23197,7 @@
                 "x-appwrite": {
                     "method": "createScryptModifiedUser",
                     "group": "users",
-                    "weight": 243,
+                    "weight": 245,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -23024,7 +23301,7 @@
                 "x-appwrite": {
                     "method": "createSHAUser",
                     "group": "users",
-                    "weight": 240,
+                    "weight": 242,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -23130,7 +23407,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "users",
-                    "weight": 246,
+                    "weight": 248,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -23183,7 +23460,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "users",
-                    "weight": 274,
+                    "weight": 276,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -23245,7 +23522,7 @@
                 "x-appwrite": {
                     "method": "updateEmail",
                     "group": "users",
-                    "weight": 259,
+                    "weight": 261,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -23326,7 +23603,7 @@
                 "x-appwrite": {
                     "method": "createJWT",
                     "group": "sessions",
-                    "weight": 277,
+                    "weight": 279,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -23409,7 +23686,7 @@
                 "x-appwrite": {
                     "method": "updateLabels",
                     "group": "users",
-                    "weight": 255,
+                    "weight": 257,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -23493,7 +23770,7 @@
                 "x-appwrite": {
                     "method": "listLogs",
                     "group": "logs",
-                    "weight": 251,
+                    "weight": 253,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -23568,7 +23845,7 @@
                 "x-appwrite": {
                     "method": "listMemberships",
                     "group": "memberships",
-                    "weight": 250,
+                    "weight": 252,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -23654,7 +23931,7 @@
                 "x-appwrite": {
                     "method": "updateMfa",
                     "group": "users",
-                    "weight": 264,
+                    "weight": 266,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -23728,7 +24005,7 @@
                 "x-appwrite": {
                     "method": "deleteMfaAuthenticator",
                     "group": "mfa",
-                    "weight": 269,
+                    "weight": 271,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -23805,7 +24082,7 @@
                 "x-appwrite": {
                     "method": "listMfaFactors",
                     "group": "mfa",
-                    "weight": 265,
+                    "weight": 267,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -23867,7 +24144,7 @@
                 "x-appwrite": {
                     "method": "getMfaRecoveryCodes",
                     "group": "mfa",
-                    "weight": 266,
+                    "weight": 268,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -23927,7 +24204,7 @@
                 "x-appwrite": {
                     "method": "updateMfaRecoveryCodes",
                     "group": "mfa",
-                    "weight": 268,
+                    "weight": 270,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -23987,7 +24264,7 @@
                 "x-appwrite": {
                     "method": "createMfaRecoveryCodes",
                     "group": "mfa",
-                    "weight": 267,
+                    "weight": 269,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -24049,7 +24326,7 @@
                 "x-appwrite": {
                     "method": "updateName",
                     "group": "users",
-                    "weight": 257,
+                    "weight": 259,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -24130,7 +24407,7 @@
                 "x-appwrite": {
                     "method": "updatePassword",
                     "group": "users",
-                    "weight": 258,
+                    "weight": 260,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -24211,7 +24488,7 @@
                 "x-appwrite": {
                     "method": "updatePhone",
                     "group": "users",
-                    "weight": 260,
+                    "weight": 262,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -24292,7 +24569,7 @@
                 "x-appwrite": {
                     "method": "getPrefs",
                     "group": "users",
-                    "weight": 247,
+                    "weight": 249,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -24352,7 +24629,7 @@
                 "x-appwrite": {
                     "method": "updatePrefs",
                     "group": "users",
-                    "weight": 262,
+                    "weight": 264,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -24433,7 +24710,7 @@
                 "x-appwrite": {
                     "method": "listSessions",
                     "group": "sessions",
-                    "weight": 249,
+                    "weight": 251,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -24493,7 +24770,7 @@
                 "x-appwrite": {
                     "method": "createSession",
                     "group": "sessions",
-                    "weight": 270,
+                    "weight": 272,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -24546,7 +24823,7 @@
                 "x-appwrite": {
                     "method": "deleteSessions",
                     "group": "sessions",
-                    "weight": 273,
+                    "weight": 275,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -24601,7 +24878,7 @@
                 "x-appwrite": {
                     "method": "deleteSession",
                     "group": "sessions",
-                    "weight": 272,
+                    "weight": 274,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -24673,7 +24950,7 @@
                 "x-appwrite": {
                     "method": "updateStatus",
                     "group": "users",
-                    "weight": 254,
+                    "weight": 256,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -24754,7 +25031,7 @@
                 "x-appwrite": {
                     "method": "listTargets",
                     "group": "targets",
-                    "weight": 252,
+                    "weight": 254,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -24793,7 +25070,7 @@
                     },
                     {
                         "name": "queries",
-                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: name, email, phone, status, passwordUpdate, registration, emailVerification, phoneVerification, labels",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: userId, providerId, identifier, providerType",
                         "required": false,
                         "schema": {
                             "type": "array",
@@ -24828,7 +25105,7 @@
                 "x-appwrite": {
                     "method": "createTarget",
                     "group": "targets",
-                    "weight": 244,
+                    "weight": 246,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -24939,7 +25216,7 @@
                 "x-appwrite": {
                     "method": "getTarget",
                     "group": "targets",
-                    "weight": 248,
+                    "weight": 250,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -25010,7 +25287,7 @@
                 "x-appwrite": {
                     "method": "updateTarget",
                     "group": "targets",
-                    "weight": 263,
+                    "weight": 265,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -25100,7 +25377,7 @@
                 "x-appwrite": {
                     "method": "deleteTarget",
                     "group": "targets",
-                    "weight": 275,
+                    "weight": 277,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -25173,7 +25450,7 @@
                 "x-appwrite": {
                     "method": "createToken",
                     "group": "sessions",
-                    "weight": 271,
+                    "weight": 273,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -25256,7 +25533,7 @@
                 "x-appwrite": {
                     "method": "updateEmailVerification",
                     "group": "users",
-                    "weight": 261,
+                    "weight": 263,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -25337,7 +25614,7 @@
                 "x-appwrite": {
                     "method": "updatePhoneVerification",
                     "group": "users",
-                    "weight": 256,
+                    "weight": 258,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -25471,7 +25748,8 @@
             "any": {
                 "description": "Any",
                 "type": "object",
-                "additionalProperties": true
+                "additionalProperties": true,
+                "example": []
             },
             "error": {
                 "description": "Error",
@@ -25503,7 +25781,13 @@
                     "code",
                     "type",
                     "version"
-                ]
+                ],
+                "example": {
+                    "message": "Not found",
+                    "code": "404",
+                    "type": "not_found",
+                    "version": "1.0"
+                }
             },
             "documentList": {
                 "description": "Documents List",
@@ -25527,7 +25811,11 @@
                 "required": [
                     "total",
                     "documents"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "documents": ""
+                }
             },
             "collectionList": {
                 "description": "Collections List",
@@ -25551,7 +25839,11 @@
                 "required": [
                     "total",
                     "collections"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "collections": ""
+                }
             },
             "databaseList": {
                 "description": "Databases List",
@@ -25575,7 +25867,11 @@
                 "required": [
                     "total",
                     "databases"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "databases": ""
+                }
             },
             "indexList": {
                 "description": "Indexes List",
@@ -25599,7 +25895,11 @@
                 "required": [
                     "total",
                     "indexes"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "indexes": ""
+                }
             },
             "userList": {
                 "description": "Users List",
@@ -25623,7 +25923,11 @@
                 "required": [
                     "total",
                     "users"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "users": ""
+                }
             },
             "sessionList": {
                 "description": "Sessions List",
@@ -25647,7 +25951,11 @@
                 "required": [
                     "total",
                     "sessions"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "sessions": ""
+                }
             },
             "identityList": {
                 "description": "Identities List",
@@ -25671,7 +25979,11 @@
                 "required": [
                     "total",
                     "identities"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "identities": ""
+                }
             },
             "logList": {
                 "description": "Logs List",
@@ -25695,7 +26007,11 @@
                 "required": [
                     "total",
                     "logs"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "logs": ""
+                }
             },
             "fileList": {
                 "description": "Files List",
@@ -25719,7 +26035,11 @@
                 "required": [
                     "total",
                     "files"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "files": ""
+                }
             },
             "bucketList": {
                 "description": "Buckets List",
@@ -25743,7 +26063,11 @@
                 "required": [
                     "total",
                     "buckets"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "buckets": ""
+                }
             },
             "resourceTokenList": {
                 "description": "Resource Tokens List",
@@ -25767,7 +26091,11 @@
                 "required": [
                     "total",
                     "tokens"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "tokens": ""
+                }
             },
             "teamList": {
                 "description": "Teams List",
@@ -25791,7 +26119,11 @@
                 "required": [
                     "total",
                     "teams"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "teams": ""
+                }
             },
             "membershipList": {
                 "description": "Memberships List",
@@ -25815,7 +26147,11 @@
                 "required": [
                     "total",
                     "memberships"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "memberships": ""
+                }
             },
             "siteList": {
                 "description": "Sites List",
@@ -25839,7 +26175,11 @@
                 "required": [
                     "total",
                     "sites"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "sites": ""
+                }
             },
             "functionList": {
                 "description": "Functions List",
@@ -25863,7 +26203,11 @@
                 "required": [
                     "total",
                     "functions"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "functions": ""
+                }
             },
             "frameworkList": {
                 "description": "Frameworks List",
@@ -25887,7 +26231,11 @@
                 "required": [
                     "total",
                     "frameworks"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "frameworks": ""
+                }
             },
             "runtimeList": {
                 "description": "Runtimes List",
@@ -25911,7 +26259,11 @@
                 "required": [
                     "total",
                     "runtimes"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "runtimes": ""
+                }
             },
             "deploymentList": {
                 "description": "Deployments List",
@@ -25935,7 +26287,11 @@
                 "required": [
                     "total",
                     "deployments"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "deployments": ""
+                }
             },
             "executionList": {
                 "description": "Executions List",
@@ -25959,7 +26315,11 @@
                 "required": [
                     "total",
                     "executions"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "executions": ""
+                }
             },
             "countryList": {
                 "description": "Countries List",
@@ -25983,7 +26343,11 @@
                 "required": [
                     "total",
                     "countries"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "countries": ""
+                }
             },
             "continentList": {
                 "description": "Continents List",
@@ -26007,7 +26371,11 @@
                 "required": [
                     "total",
                     "continents"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "continents": ""
+                }
             },
             "languageList": {
                 "description": "Languages List",
@@ -26031,7 +26399,11 @@
                 "required": [
                     "total",
                     "languages"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "languages": ""
+                }
             },
             "currencyList": {
                 "description": "Currencies List",
@@ -26055,7 +26427,11 @@
                 "required": [
                     "total",
                     "currencies"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "currencies": ""
+                }
             },
             "phoneList": {
                 "description": "Phones List",
@@ -26079,7 +26455,11 @@
                 "required": [
                     "total",
                     "phones"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "phones": ""
+                }
             },
             "variableList": {
                 "description": "Variables List",
@@ -26103,7 +26483,11 @@
                 "required": [
                     "total",
                     "variables"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "variables": ""
+                }
             },
             "localeCodeList": {
                 "description": "Locale codes list",
@@ -26127,7 +26511,11 @@
                 "required": [
                     "total",
                     "localeCodes"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "localeCodes": ""
+                }
             },
             "providerList": {
                 "description": "Provider list",
@@ -26151,7 +26539,11 @@
                 "required": [
                     "total",
                     "providers"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "providers": ""
+                }
             },
             "messageList": {
                 "description": "Message list",
@@ -26175,7 +26567,11 @@
                 "required": [
                     "total",
                     "messages"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "messages": ""
+                }
             },
             "topicList": {
                 "description": "Topic list",
@@ -26199,7 +26595,11 @@
                 "required": [
                     "total",
                     "topics"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "topics": ""
+                }
             },
             "subscriberList": {
                 "description": "Subscriber list",
@@ -26223,7 +26623,11 @@
                 "required": [
                     "total",
                     "subscribers"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "subscribers": ""
+                }
             },
             "targetList": {
                 "description": "Target list",
@@ -26247,7 +26651,11 @@
                 "required": [
                     "total",
                     "targets"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "targets": ""
+                }
             },
             "specificationList": {
                 "description": "Specifications List",
@@ -26271,7 +26679,11 @@
                 "required": [
                     "total",
                     "specifications"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "specifications": ""
+                }
             },
             "database": {
                 "description": "Database",
@@ -26309,7 +26721,14 @@
                     "$createdAt",
                     "$updatedAt",
                     "enabled"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "name": "My Database",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "enabled": false
+                }
             },
             "collection": {
                 "description": "Collection",
@@ -26419,7 +26838,21 @@
                     "documentSecurity",
                     "attributes",
                     "indexes"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "$permissions": [
+                        "read(\"any\")"
+                    ],
+                    "databaseId": "5e5ea5c16897e",
+                    "name": "My Collection",
+                    "enabled": false,
+                    "documentSecurity": true,
+                    "attributes": {},
+                    "indexes": {}
+                }
             },
             "attributeList": {
                 "description": "Attributes List",
@@ -26474,7 +26907,11 @@
                 "required": [
                     "total",
                     "attributes"
-                ]
+                ],
+                "example": {
+                    "total": 5,
+                    "attributes": ""
+                }
             },
             "attributeString": {
                 "description": "AttributeString",
@@ -26532,6 +26969,12 @@
                         "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
                         "x-example": "default",
                         "nullable": true
+                    },
+                    "encrypt": {
+                        "type": "boolean",
+                        "description": "Defines whether this attribute is encrypted or not.",
+                        "x-example": false,
+                        "nullable": true
                     }
                 },
                 "required": [
@@ -26543,7 +26986,20 @@
                     "$createdAt",
                     "$updatedAt",
                     "size"
-                ]
+                ],
+                "example": {
+                    "key": "fullName",
+                    "type": "string",
+                    "status": "available",
+                    "error": "string",
+                    "required": true,
+                    "array": false,
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "size": 128,
+                    "default": "default",
+                    "encrypt": false
+                }
             },
             "attributeInteger": {
                 "description": "AttributeInteger",
@@ -26620,7 +27076,20 @@
                     "required",
                     "$createdAt",
                     "$updatedAt"
-                ]
+                ],
+                "example": {
+                    "key": "count",
+                    "type": "integer",
+                    "status": "available",
+                    "error": "string",
+                    "required": true,
+                    "array": false,
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "min": 1,
+                    "max": 10,
+                    "default": 10
+                }
             },
             "attributeFloat": {
                 "description": "AttributeFloat",
@@ -26697,7 +27166,20 @@
                     "required",
                     "$createdAt",
                     "$updatedAt"
-                ]
+                ],
+                "example": {
+                    "key": "percentageCompleted",
+                    "type": "double",
+                    "status": "available",
+                    "error": "string",
+                    "required": true,
+                    "array": false,
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "min": 1.5,
+                    "max": 10.5,
+                    "default": 2.5
+                }
             },
             "attributeBoolean": {
                 "description": "AttributeBoolean",
@@ -26759,7 +27241,18 @@
                     "required",
                     "$createdAt",
                     "$updatedAt"
-                ]
+                ],
+                "example": {
+                    "key": "isEnabled",
+                    "type": "boolean",
+                    "status": "available",
+                    "error": "string",
+                    "required": true,
+                    "array": false,
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "default": false
+                }
             },
             "attributeEmail": {
                 "description": "AttributeEmail",
@@ -26827,7 +27320,19 @@
                     "$createdAt",
                     "$updatedAt",
                     "format"
-                ]
+                ],
+                "example": {
+                    "key": "userEmail",
+                    "type": "string",
+                    "status": "available",
+                    "error": "string",
+                    "required": true,
+                    "array": false,
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "format": "email",
+                    "default": "default@example.com"
+                }
             },
             "attributeEnum": {
                 "description": "AttributeEnum",
@@ -26904,7 +27409,20 @@
                     "$updatedAt",
                     "elements",
                     "format"
-                ]
+                ],
+                "example": {
+                    "key": "status",
+                    "type": "string",
+                    "status": "available",
+                    "error": "string",
+                    "required": true,
+                    "array": false,
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "elements": "element",
+                    "format": "enum",
+                    "default": "element"
+                }
             },
             "attributeIp": {
                 "description": "AttributeIP",
@@ -26972,7 +27490,19 @@
                     "$createdAt",
                     "$updatedAt",
                     "format"
-                ]
+                ],
+                "example": {
+                    "key": "ipAddress",
+                    "type": "string",
+                    "status": "available",
+                    "error": "string",
+                    "required": true,
+                    "array": false,
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "format": "ip",
+                    "default": "192.0.2.0"
+                }
             },
             "attributeUrl": {
                 "description": "AttributeURL",
@@ -27040,7 +27570,19 @@
                     "$createdAt",
                     "$updatedAt",
                     "format"
-                ]
+                ],
+                "example": {
+                    "key": "githubUrl",
+                    "type": "string",
+                    "status": "available",
+                    "error": "string",
+                    "required": true,
+                    "array": false,
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "format": "url",
+                    "default": "http:\/\/example.com"
+                }
             },
             "attributeDatetime": {
                 "description": "AttributeDatetime",
@@ -27108,7 +27650,19 @@
                     "$createdAt",
                     "$updatedAt",
                     "format"
-                ]
+                ],
+                "example": {
+                    "key": "birthDay",
+                    "type": "datetime",
+                    "status": "available",
+                    "error": "string",
+                    "required": true,
+                    "array": false,
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "format": "datetime",
+                    "default": "2020-10-15T06:38:00.000+00:00"
+                }
             },
             "attributeRelationship": {
                 "description": "AttributeRelationship",
@@ -27200,7 +27754,23 @@
                     "twoWayKey",
                     "onDelete",
                     "side"
-                ]
+                ],
+                "example": {
+                    "key": "fullName",
+                    "type": "string",
+                    "status": "available",
+                    "error": "string",
+                    "required": true,
+                    "array": false,
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "relatedCollection": "collection",
+                    "relationType": "oneToOne|oneToMany|manyToOne|manyToMany",
+                    "twoWay": false,
+                    "twoWayKey": "string",
+                    "onDelete": "restrict|cascade|setNull",
+                    "side": "parent|child"
+                }
             },
             "index": {
                 "description": "Index",
@@ -27272,7 +27842,18 @@
                     "lengths",
                     "$createdAt",
                     "$updatedAt"
-                ]
+                ],
+                "example": {
+                    "key": "index1",
+                    "type": "primary",
+                    "status": "available",
+                    "error": "string",
+                    "attributes": [],
+                    "lengths": [],
+                    "orders": [],
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00"
+                }
             },
             "document": {
                 "description": "Document",
@@ -27283,15 +27864,24 @@
                         "description": "Document ID.",
                         "x-example": "5e5ea5c16897e"
                     },
+                    "$sequence": {
+                        "type": "integer",
+                        "description": "Document automatically incrementing ID.",
+                        "x-example": 1,
+                        "format": "int32",
+                        "readOnly": true
+                    },
                     "$collectionId": {
                         "type": "string",
                         "description": "Collection ID.",
-                        "x-example": "5e5ea5c15117e"
+                        "x-example": "5e5ea5c15117e",
+                        "readOnly": true
                     },
                     "$databaseId": {
                         "type": "string",
                         "description": "Database ID.",
-                        "x-example": "5e5ea5c15117e"
+                        "x-example": "5e5ea5c15117e",
+                        "readOnly": true
                     },
                     "$createdAt": {
                         "type": "string",
@@ -27317,12 +27907,29 @@
                 "additionalProperties": true,
                 "required": [
                     "$id",
+                    "$sequence",
                     "$collectionId",
                     "$databaseId",
                     "$createdAt",
                     "$updatedAt",
                     "$permissions"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "$sequence": 1,
+                    "$collectionId": "5e5ea5c15117e",
+                    "$databaseId": "5e5ea5c15117e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "$permissions": [
+                        "read(\"any\")"
+                    ],
+                    "username": "john.doe",
+                    "email": "john.doe@example.com",
+                    "fullName": "John Doe",
+                    "age": 30,
+                    "isAdmin": false
+                }
             },
             "log": {
                 "description": "Log",
@@ -27456,7 +28063,30 @@
                     "deviceModel",
                     "countryCode",
                     "countryName"
-                ]
+                ],
+                "example": {
+                    "event": "account.sessions.create",
+                    "userId": "610fc2f985ee0",
+                    "userEmail": "john@appwrite.io",
+                    "userName": "John Doe",
+                    "mode": "admin",
+                    "ip": "127.0.0.1",
+                    "time": "2020-10-15T06:38:00.000+00:00",
+                    "osCode": "Mac",
+                    "osName": "Mac",
+                    "osVersion": "Mac",
+                    "clientType": "browser",
+                    "clientCode": "CM",
+                    "clientName": "Chrome Mobile iOS",
+                    "clientVersion": "84.0",
+                    "clientEngine": "WebKit",
+                    "clientEngineVersion": "605.1.15",
+                    "deviceName": "smartphone",
+                    "deviceBrand": "Google",
+                    "deviceModel": "Nexus 5",
+                    "countryCode": "US",
+                    "countryName": "United States"
+                }
             },
             "user": {
                 "description": "User",
@@ -27617,7 +28247,33 @@
                     "prefs",
                     "targets",
                     "accessedAt"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "name": "John Doe",
+                    "password": "$argon2id$v=19$m=2048,t=4,p=3$aUZjLnliVWRINmFNTWMudg$5S+x+7uA31xFnrHFT47yFwcJeaP0w92L\/4LdgrVRXxE",
+                    "hash": "argon2",
+                    "hashOptions": {},
+                    "registration": "2020-10-15T06:38:00.000+00:00",
+                    "status": true,
+                    "labels": [
+                        "vip"
+                    ],
+                    "passwordUpdate": "2020-10-15T06:38:00.000+00:00",
+                    "email": "john@appwrite.io",
+                    "phone": "+4930901820",
+                    "emailVerification": true,
+                    "phoneVerification": true,
+                    "mfa": true,
+                    "prefs": {
+                        "theme": "pink",
+                        "timezone": "UTC"
+                    },
+                    "targets": [],
+                    "accessedAt": "2020-10-15T06:38:00.000+00:00"
+                }
             },
             "algoMd5": {
                 "description": "AlgoMD5",
@@ -27631,7 +28287,10 @@
                 },
                 "required": [
                     "type"
-                ]
+                ],
+                "example": {
+                    "type": "md5"
+                }
             },
             "algoSha": {
                 "description": "AlgoSHA",
@@ -27645,7 +28304,10 @@
                 },
                 "required": [
                     "type"
-                ]
+                ],
+                "example": {
+                    "type": "sha"
+                }
             },
             "algoPhpass": {
                 "description": "AlgoPHPass",
@@ -27659,7 +28321,10 @@
                 },
                 "required": [
                     "type"
-                ]
+                ],
+                "example": {
+                    "type": "phpass"
+                }
             },
             "algoBcrypt": {
                 "description": "AlgoBcrypt",
@@ -27673,7 +28338,10 @@
                 },
                 "required": [
                     "type"
-                ]
+                ],
+                "example": {
+                    "type": "bcrypt"
+                }
             },
             "algoScrypt": {
                 "description": "AlgoScrypt",
@@ -27715,7 +28383,14 @@
                     "costMemory",
                     "costParallel",
                     "length"
-                ]
+                ],
+                "example": {
+                    "type": "scrypt",
+                    "costCpu": 8,
+                    "costMemory": 14,
+                    "costParallel": 1,
+                    "length": 64
+                }
             },
             "algoScryptModified": {
                 "description": "AlgoScryptModified",
@@ -27747,7 +28422,13 @@
                     "salt",
                     "saltSeparator",
                     "signerKey"
-                ]
+                ],
+                "example": {
+                    "type": "scryptMod",
+                    "salt": "UxLMreBr6tYyjQ==",
+                    "saltSeparator": "Bw==",
+                    "signerKey": "XyEKE9RcTDeLEsL\/RjwPDBv\/RqDl8fb3gpYEOQaPihbxf1ZAtSOHCjuAAa7Q3oHpCYhXSN9tizHgVOwn6krflQ=="
+                }
             },
             "algoArgon2": {
                 "description": "AlgoArgon2",
@@ -27782,12 +28463,23 @@
                     "memoryCost",
                     "timeCost",
                     "threads"
-                ]
+                ],
+                "example": {
+                    "type": "argon2",
+                    "memoryCost": 65536,
+                    "timeCost": 4,
+                    "threads": 3
+                }
             },
             "preferences": {
                 "description": "Preferences",
                 "type": "object",
-                "additionalProperties": true
+                "additionalProperties": true,
+                "example": {
+                    "language": "en",
+                    "timezone": "UTC",
+                    "darkTheme": true
+                }
             },
             "session": {
                 "description": "Session",
@@ -27974,7 +28666,40 @@
                     "factors",
                     "secret",
                     "mfaUpdatedAt"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "userId": "5e5bb8c16897e",
+                    "expire": "2020-10-15T06:38:00.000+00:00",
+                    "provider": "email",
+                    "providerUid": "user@example.com",
+                    "providerAccessToken": "MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3",
+                    "providerAccessTokenExpiry": "2020-10-15T06:38:00.000+00:00",
+                    "providerRefreshToken": "MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3",
+                    "ip": "127.0.0.1",
+                    "osCode": "Mac",
+                    "osName": "Mac",
+                    "osVersion": "Mac",
+                    "clientType": "browser",
+                    "clientCode": "CM",
+                    "clientName": "Chrome Mobile iOS",
+                    "clientVersion": "84.0",
+                    "clientEngine": "WebKit",
+                    "clientEngineVersion": "605.1.15",
+                    "deviceName": "smartphone",
+                    "deviceBrand": "Google",
+                    "deviceModel": "Nexus 5",
+                    "countryCode": "US",
+                    "countryName": "United States",
+                    "current": true,
+                    "factors": [
+                        "email"
+                    ],
+                    "secret": "5e5bb8c16897e",
+                    "mfaUpdatedAt": "2020-10-15T06:38:00.000+00:00"
+                }
             },
             "identity": {
                 "description": "Identity",
@@ -28042,7 +28767,19 @@
                     "providerAccessToken",
                     "providerAccessTokenExpiry",
                     "providerRefreshToken"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "userId": "5e5bb8c16897e",
+                    "provider": "email",
+                    "providerUid": "5e5bb8c16897e",
+                    "providerEmail": "user@example.com",
+                    "providerAccessToken": "MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3",
+                    "providerAccessTokenExpiry": "2020-10-15T06:38:00.000+00:00",
+                    "providerRefreshToken": "MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3"
+                }
             },
             "token": {
                 "description": "Token",
@@ -28086,7 +28823,15 @@
                     "secret",
                     "expire",
                     "phrase"
-                ]
+                ],
+                "example": {
+                    "$id": "bb8ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "userId": "5e5ea5c168bb8",
+                    "secret": "",
+                    "expire": "2020-10-15T06:38:00.000+00:00",
+                    "phrase": "Golden Fox"
+                }
             },
             "jwt": {
                 "description": "JWT",
@@ -28100,7 +28845,10 @@
                 },
                 "required": [
                     "jwt"
-                ]
+                ],
+                "example": {
+                    "jwt": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+                }
             },
             "locale": {
                 "description": "Locale",
@@ -28150,7 +28898,16 @@
                     "continent",
                     "eu",
                     "currency"
-                ]
+                ],
+                "example": {
+                    "ip": "127.0.0.1",
+                    "countryCode": "US",
+                    "country": "United States",
+                    "continentCode": "NA",
+                    "continent": "North America",
+                    "eu": false,
+                    "currency": "USD"
+                }
             },
             "localeCode": {
                 "description": "LocaleCode",
@@ -28170,7 +28927,11 @@
                 "required": [
                     "code",
                     "name"
-                ]
+                ],
+                "example": {
+                    "code": "en-us",
+                    "name": "US"
+                }
             },
             "file": {
                 "description": "File",
@@ -28252,7 +29013,22 @@
                     "sizeOriginal",
                     "chunksTotal",
                     "chunksUploaded"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "bucketId": "5e5ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "$permissions": [
+                        "read(\"any\")"
+                    ],
+                    "name": "Pink.png",
+                    "signature": "5d529fd02b544198ae075bd57c1762bb",
+                    "mimeType": "image\/png",
+                    "sizeOriginal": 17890,
+                    "chunksTotal": 17890,
+                    "chunksUploaded": 17890
+                }
             },
             "bucket": {
                 "description": "Bucket",
@@ -28344,7 +29120,26 @@
                     "compression",
                     "encryption",
                     "antivirus"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "$permissions": [
+                        "read(\"any\")"
+                    ],
+                    "fileSecurity": true,
+                    "name": "Documents",
+                    "enabled": false,
+                    "maximumFileSize": 100,
+                    "allowedFileExtensions": [
+                        "jpg",
+                        "png"
+                    ],
+                    "compression": "gzip",
+                    "encryption": false,
+                    "antivirus": false
+                }
             },
             "resourceToken": {
                 "description": "ResourceToken",
@@ -28394,7 +29189,16 @@
                     "expire",
                     "secret",
                     "accessedAt"
-                ]
+                ],
+                "example": {
+                    "$id": "bb8ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "resourceId": "5e5ea5c168bb8:5e5ea5c168bb8",
+                    "resourceType": "files",
+                    "expire": "2020-10-15T06:38:00.000+00:00",
+                    "secret": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+                    "accessedAt": "2020-10-15T06:38:00.000+00:00"
+                }
             },
             "team": {
                 "description": "Team",
@@ -28445,7 +29249,18 @@
                     "name",
                     "total",
                     "prefs"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "name": "VIP",
+                    "total": 7,
+                    "prefs": {
+                        "theme": "pink",
+                        "timezone": "UTC"
+                    }
+                }
             },
             "membership": {
                 "description": "Membership",
@@ -28536,7 +29351,24 @@
                     "confirm",
                     "mfa",
                     "roles"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "userId": "5e5ea5c16897e",
+                    "userName": "John Doe",
+                    "userEmail": "john@appwrite.io",
+                    "teamId": "5e5ea5c16897e",
+                    "teamName": "VIP",
+                    "invited": "2020-10-15T06:38:00.000+00:00",
+                    "joined": "2020-10-15T06:38:00.000+00:00",
+                    "confirm": false,
+                    "mfa": false,
+                    "roles": [
+                        "owner"
+                    ]
+                }
             },
             "site": {
                 "description": "Site",
@@ -28722,7 +29554,38 @@
                     "buildRuntime",
                     "adapter",
                     "fallbackFile"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "name": "My Site",
+                    "enabled": false,
+                    "live": false,
+                    "logging": false,
+                    "framework": "react",
+                    "deploymentId": "5e5ea5c16897e",
+                    "deploymentCreatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "deploymentScreenshotLight": "5e5ea5c16897e",
+                    "deploymentScreenshotDark": "5e5ea5c16897e",
+                    "latestDeploymentId": "5e5ea5c16897e",
+                    "latestDeploymentCreatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "latestDeploymentStatus": "ready",
+                    "vars": [],
+                    "timeout": 300,
+                    "installCommand": "npm install",
+                    "buildCommand": "npm run build",
+                    "outputDirectory": "build",
+                    "installationId": "6m40at4ejk5h2u9s1hboo",
+                    "providerRepositoryId": "appwrite",
+                    "providerBranch": "main",
+                    "providerRootDirectory": "sites\/helloWorld",
+                    "providerSilentMode": false,
+                    "specification": "s-1vcpu-512mb",
+                    "buildRuntime": "node-22",
+                    "adapter": "static",
+                    "fallbackFile": "index.html"
+                }
             },
             "function": {
                 "description": "Function",
@@ -28911,7 +29774,37 @@
                     "providerRootDirectory",
                     "providerSilentMode",
                     "specification"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "execute": "users",
+                    "name": "My Function",
+                    "enabled": false,
+                    "live": false,
+                    "logging": false,
+                    "runtime": "python-3.8",
+                    "deploymentId": "5e5ea5c16897e",
+                    "deploymentCreatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "latestDeploymentId": "5e5ea5c16897e",
+                    "latestDeploymentCreatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "latestDeploymentStatus": "ready",
+                    "scopes": "users.read",
+                    "vars": [],
+                    "events": "account.create",
+                    "schedule": "5 4 * * *",
+                    "timeout": 300,
+                    "entrypoint": "index.js",
+                    "commands": "npm install",
+                    "version": "v2",
+                    "installationId": "6m40at4ejk5h2u9s1hboo",
+                    "providerRepositoryId": "appwrite",
+                    "providerBranch": "main",
+                    "providerRootDirectory": "functions\/helloWorld",
+                    "providerSilentMode": false,
+                    "specification": "s-1vcpu-512mb"
+                }
             },
             "runtime": {
                 "description": "Runtime",
@@ -28970,7 +29863,17 @@
                     "image",
                     "logo",
                     "supports"
-                ]
+                ],
+                "example": {
+                    "$id": "python-3.8",
+                    "key": "python",
+                    "name": "Python",
+                    "version": "3.8",
+                    "base": "python:3.8-alpine",
+                    "image": "appwrite\\\/runtime-for-python:3.8",
+                    "logo": "python.png",
+                    "supports": "amd64"
+                }
             },
             "framework": {
                 "description": "Framework",
@@ -29025,7 +29928,25 @@
                     "buildRuntime",
                     "runtimes",
                     "adapters"
-                ]
+                ],
+                "example": {
+                    "key": "sveltekit",
+                    "name": "SvelteKit",
+                    "buildRuntime": "node-22",
+                    "runtimes": [
+                        "static-1",
+                        "node-22"
+                    ],
+                    "adapters": [
+                        {
+                            "key": "static",
+                            "buildRuntime": "node-22",
+                            "buildCommand": "npm run build",
+                            "installCommand": "npm install",
+                            "outputDirectory": ".\/dist"
+                        }
+                    ]
+                }
             },
             "frameworkAdapter": {
                 "description": "Framework Adapter",
@@ -29063,7 +29984,14 @@
                     "buildCommand",
                     "outputDirectory",
                     "fallbackFile"
-                ]
+                ],
+                "example": {
+                    "key": "static",
+                    "installCommand": "npm install",
+                    "buildCommand": "npm run build",
+                    "outputDirectory": ".\/dist",
+                    "fallbackFile": "index.html"
+                }
             },
             "deployment": {
                 "description": "Deployment",
@@ -29237,7 +30165,36 @@
                     "providerCommitMessage",
                     "providerCommitUrl",
                     "providerBranchUrl"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "type": "vcs",
+                    "resourceId": "5e5ea6g16897e",
+                    "resourceType": "functions",
+                    "entrypoint": "index.js",
+                    "sourceSize": 128,
+                    "buildSize": 128,
+                    "totalSize": 128,
+                    "buildId": "5e5ea5c16897e",
+                    "activate": true,
+                    "screenshotLight": "5e5ea5c16897e",
+                    "screenshotDark": "5e5ea5c16897e",
+                    "status": "ready",
+                    "buildLogs": "Compiling source files...",
+                    "buildDuration": 128,
+                    "providerRepositoryName": "database",
+                    "providerRepositoryOwner": "utopia",
+                    "providerRepositoryUrl": "https:\/\/github.com\/vermakhushboo\/g4-node-function",
+                    "providerBranch": "0.7.x",
+                    "providerCommitHash": "7c3f25d",
+                    "providerCommitAuthorUrl": "https:\/\/github.com\/vermakhushboo",
+                    "providerCommitAuthor": "Khushboo Verma",
+                    "providerCommitMessage": "Update index.js",
+                    "providerCommitUrl": "https:\/\/github.com\/vermakhushboo\/g4-node-function\/commit\/60c0416257a9cbcdd96b2d370c38d8f8d150ccfb",
+                    "providerBranchUrl": "https:\/\/github.com\/vermakhushboo\/appwrite\/tree\/0.7.x"
+                }
             },
             "execution": {
                 "description": "Execution",
@@ -29272,6 +30229,11 @@
                         "type": "string",
                         "description": "Function ID.",
                         "x-example": "5e5ea6g16897e"
+                    },
+                    "deploymentId": {
+                        "type": "string",
+                        "description": "Function's deployment ID used to create the execution.",
+                        "x-example": "5e5ea5c16897e"
                     },
                     "trigger": {
                         "type": "string",
@@ -29357,6 +30319,7 @@
                     "$updatedAt",
                     "$permissions",
                     "functionId",
+                    "deploymentId",
                     "trigger",
                     "status",
                     "requestMethod",
@@ -29368,7 +30331,37 @@
                     "logs",
                     "errors",
                     "duration"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "$permissions": [
+                        "any"
+                    ],
+                    "functionId": "5e5ea6g16897e",
+                    "deploymentId": "5e5ea5c16897e",
+                    "trigger": "http",
+                    "status": "processing",
+                    "requestMethod": "GET",
+                    "requestPath": "\/articles?id=5",
+                    "requestHeaders": [
+                        {
+                            "Content-Type": "application\/json"
+                        }
+                    ],
+                    "responseStatusCode": 200,
+                    "responseBody": "",
+                    "responseHeaders": [
+                        {
+                            "Content-Type": "application\/json"
+                        }
+                    ],
+                    "logs": "",
+                    "errors": "",
+                    "duration": 0.4,
+                    "scheduledAt": "2020-10-15T06:38:00.000+00:00"
+                }
             },
             "variable": {
                 "description": "Variable",
@@ -29424,7 +30417,17 @@
                     "secret",
                     "resourceType",
                     "resourceId"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "key": "API_KEY",
+                    "value": "myPa$$word1",
+                    "secret": false,
+                    "resourceType": "function",
+                    "resourceId": "myAwesomeFunction"
+                }
             },
             "country": {
                 "description": "Country",
@@ -29444,7 +30447,11 @@
                 "required": [
                     "name",
                     "code"
-                ]
+                ],
+                "example": {
+                    "name": "United States",
+                    "code": "US"
+                }
             },
             "continent": {
                 "description": "Continent",
@@ -29464,7 +30471,11 @@
                 "required": [
                     "name",
                     "code"
-                ]
+                ],
+                "example": {
+                    "name": "Europe",
+                    "code": "EU"
+                }
             },
             "language": {
                 "description": "Language",
@@ -29490,7 +30501,12 @@
                     "name",
                     "code",
                     "nativeName"
-                ]
+                ],
+                "example": {
+                    "name": "Italian",
+                    "code": "it",
+                    "nativeName": "Italiano"
+                }
             },
             "currency": {
                 "description": "Currency",
@@ -29542,7 +30558,16 @@
                     "rounding",
                     "code",
                     "namePlural"
-                ]
+                ],
+                "example": {
+                    "symbol": "$",
+                    "name": "US dollar",
+                    "symbolNative": "$",
+                    "decimalDigits": 2,
+                    "rounding": 0,
+                    "code": "USD",
+                    "namePlural": "US dollars"
+                }
             },
             "phone": {
                 "description": "Phone",
@@ -29568,7 +30593,12 @@
                     "code",
                     "countryCode",
                     "countryName"
-                ]
+                ],
+                "example": {
+                    "code": "+1",
+                    "countryCode": "US",
+                    "countryName": "United States"
+                }
             },
             "healthAntivirus": {
                 "description": "Health Antivirus",
@@ -29588,7 +30618,11 @@
                 "required": [
                     "version",
                     "status"
-                ]
+                ],
+                "example": {
+                    "version": "1.0.0",
+                    "status": "online"
+                }
             },
             "healthQueue": {
                 "description": "Health Queue",
@@ -29603,7 +30637,10 @@
                 },
                 "required": [
                     "size"
-                ]
+                ],
+                "example": {
+                    "size": 8
+                }
             },
             "healthStatus": {
                 "description": "Health Status",
@@ -29630,7 +30667,12 @@
                     "name",
                     "ping",
                     "status"
-                ]
+                ],
+                "example": {
+                    "name": "database",
+                    "ping": 128,
+                    "status": "pass"
+                }
             },
             "healthCertificate": {
                 "description": "Health Certificate",
@@ -29674,7 +30716,15 @@
                     "validFrom",
                     "validTo",
                     "signatureTypeSN"
-                ]
+                ],
+                "example": {
+                    "name": "\/CN=www.google.com",
+                    "subjectSN": "",
+                    "issuerOrganisation": "",
+                    "validFrom": "1704200998",
+                    "validTo": "1711458597",
+                    "signatureTypeSN": "RSA-SHA256"
+                }
             },
             "healthTime": {
                 "description": "Health Time",
@@ -29703,7 +30753,12 @@
                     "remoteTime",
                     "localTime",
                     "diff"
-                ]
+                ],
+                "example": {
+                    "remoteTime": 1639490751,
+                    "localTime": 1639490844,
+                    "diff": 93
+                }
             },
             "headers": {
                 "description": "Headers",
@@ -29723,7 +30778,11 @@
                 "required": [
                     "name",
                     "value"
-                ]
+                ],
+                "example": {
+                    "name": "Content-Type",
+                    "value": "application\/json"
+                }
             },
             "specification": {
                 "description": "Specification",
@@ -29757,7 +30816,13 @@
                     "cpus",
                     "enabled",
                     "slug"
-                ]
+                ],
+                "example": {
+                    "memory": 512,
+                    "cpus": 1,
+                    "enabled": true,
+                    "slug": "s-1vcpu-512mb"
+                }
             },
             "mfaChallenge": {
                 "description": "MFA Challenge",
@@ -29789,7 +30854,13 @@
                     "$createdAt",
                     "userId",
                     "expire"
-                ]
+                ],
+                "example": {
+                    "$id": "bb8ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "userId": "5e5ea5c168bb8",
+                    "expire": "2020-10-15T06:38:00.000+00:00"
+                }
             },
             "mfaRecoveryCodes": {
                 "description": "MFA Recovery Codes",
@@ -29809,7 +30880,13 @@
                 },
                 "required": [
                     "recoveryCodes"
-                ]
+                ],
+                "example": {
+                    "recoveryCodes": [
+                        "a3kf0-s0cl2",
+                        "s0co1-as98s"
+                    ]
+                }
             },
             "mfaType": {
                 "description": "MFAType",
@@ -29829,7 +30906,11 @@
                 "required": [
                     "secret",
                     "uri"
-                ]
+                ],
+                "example": {
+                    "secret": true,
+                    "uri": true
+                }
             },
             "mfaFactors": {
                 "description": "MFAFactors",
@@ -29861,7 +30942,13 @@
                     "phone",
                     "email",
                     "recoveryCode"
-                ]
+                ],
+                "example": {
+                    "totp": true,
+                    "phone": true,
+                    "email": true,
+                    "recoveryCode": true
+                }
             },
             "provider": {
                 "description": "Provider",
@@ -29927,7 +31014,22 @@
                     "enabled",
                     "type",
                     "credentials"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "name": "Mailgun",
+                    "provider": "mailgun",
+                    "enabled": true,
+                    "type": "sms",
+                    "credentials": {
+                        "key": "123456789"
+                    },
+                    "options": {
+                        "from": "sender-email@mydomain"
+                    }
+                }
             },
             "message": {
                 "description": "Message",
@@ -30037,7 +31139,33 @@
                     "deliveredTotal",
                     "data",
                     "status"
-                ]
+                ],
+                "example": {
+                    "$id": "5e5ea5c16897e",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "providerType": "email",
+                    "topics": [
+                        "5e5ea5c16897e"
+                    ],
+                    "users": [
+                        "5e5ea5c16897e"
+                    ],
+                    "targets": [
+                        "5e5ea5c16897e"
+                    ],
+                    "scheduledAt": "2020-10-15T06:38:00.000+00:00",
+                    "deliveredAt": "2020-10-15T06:38:00.000+00:00",
+                    "deliveryErrors": [
+                        "Failed to send message to target 5e5ea5c16897e: Credentials not valid."
+                    ],
+                    "deliveredTotal": 1,
+                    "data": {
+                        "subject": "Welcome to Appwrite",
+                        "content": "Hi there, welcome to Appwrite family."
+                    },
+                    "status": "Message status can be one of the following: draft, processing, scheduled, sent, or failed."
+                }
             },
             "topic": {
                 "description": "Topic",
@@ -30099,7 +31227,17 @@
                     "smsTotal",
                     "pushTotal",
                     "subscribe"
-                ]
+                ],
+                "example": {
+                    "$id": "259125845563242502",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "name": "events",
+                    "emailTotal": 100,
+                    "smsTotal": 100,
+                    "pushTotal": 100,
+                    "subscribe": "users"
+                }
             },
             "subscriber": {
                 "description": "Subscriber",
@@ -30173,7 +31311,27 @@
                     "userName",
                     "topicId",
                     "providerType"
-                ]
+                ],
+                "example": {
+                    "$id": "259125845563242502",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "targetId": "259125845563242502",
+                    "target": {
+                        "$id": "259125845563242502",
+                        "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                        "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                        "providerType": "email",
+                        "providerId": "259125845563242502",
+                        "name": "ageon-app-email",
+                        "identifier": "random-mail@email.org",
+                        "userId": "5e5ea5c16897e"
+                    },
+                    "userId": "5e5ea5c16897e",
+                    "userName": "Aegon Targaryen",
+                    "topicId": "259125845563242502",
+                    "providerType": "email"
+                }
             },
             "target": {
                 "description": "Target",
@@ -30235,7 +31393,18 @@
                     "providerType",
                     "identifier",
                     "expired"
-                ]
+                ],
+                "example": {
+                    "$id": "259125845563242502",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "name": "Apple iPhone 12",
+                    "userId": "259125845563242502",
+                    "providerId": "259125845563242502",
+                    "providerType": "email",
+                    "identifier": "token",
+                    "expired": false
+                }
             }
         },
         "securitySchemes": {

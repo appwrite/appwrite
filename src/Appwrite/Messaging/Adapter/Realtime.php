@@ -230,7 +230,7 @@ class Realtime extends MessagingAdapter
 
         foreach ($channels as $key => $value) {
             switch (true) {
-                case \str_starts_with($key, 'account.'):
+                case str_starts_with($key, 'account.'):
                     unset($channels[$key]);
                     break;
 
@@ -273,6 +273,7 @@ class Realtime extends MessagingAdapter
                 $roles = [Role::user(ID::custom($parts[1]))->toString()];
                 break;
             case 'rules':
+            case 'migrations':
                 $channels[] = 'console';
                 $channels[] = 'projects.' . $project->getId();
                 $projectId = 'console';
@@ -297,22 +298,31 @@ class Realtime extends MessagingAdapter
                 $roles = [Role::team(ID::custom($parts[1]))->toString()];
                 break;
             case 'databases':
-                if (in_array($parts[4] ?? [], ['attributes', 'indexes'])) {
+                $resource = $parts[4] ?? '';
+                if (in_array($resource, ['columns', 'attributes', 'indexes'])) {
                     $channels[] = 'console';
                     $channels[] = 'projects.' . $project->getId();
                     $projectId = 'console';
                     $roles = [Role::team($project->getAttribute('teamId'))->toString()];
-                } elseif (($parts[4] ?? '') === 'documents') {
+                } elseif (in_array($resource, ['rows', 'documents'])) {
                     if ($database->isEmpty()) {
-                        throw new \Exception('Database needs to be passed to Realtime for Document events in the Database.');
+                        throw new \Exception('Database needs to be passed to Realtime for Document/Row events in the Database.');
                     }
                     if ($collection->isEmpty()) {
-                        throw new \Exception('Collection needs to be passed to Realtime for Document events in the Database.');
+                        throw new \Exception('Collection or the Table needs to be passed to Realtime for Document/Row events in the Database.');
                     }
 
+                    $tableId = $payload->getAttribute('$tableId', '');
+                    $collectionId = $payload->getAttribute('$collectionId', '');
+                    $resourceId = $tableId ?: $collectionId;
+
+                    $channels[] = 'rows';
+                    $channels[] = 'databases.' . $database->getId() .  '.tables.' . $resourceId . '.rows';
+                    $channels[] = 'databases.' . $database->getId() . '.tables.' . $resourceId . '.rows.' . $payload->getId();
+
                     $channels[] = 'documents';
-                    $channels[] = 'databases.' . $database->getId() .  '.collections.' . $payload->getAttribute('$collectionId') . '.documents';
-                    $channels[] = 'databases.' . $database->getId() . '.collections.' . $payload->getAttribute('$collectionId') . '.documents.' . $payload->getId();
+                    $channels[] = 'databases.' . $database->getId() .  '.collections.' . $resourceId . '.documents';
+                    $channels[] = 'databases.' . $database->getId() . '.collections.' . $resourceId . '.documents.' . $payload->getId();
 
                     $roles = $collection->getAttribute('documentSecurity', false)
                         ? \array_merge($collection->getRead(), $payload->getRead())
@@ -334,7 +344,6 @@ class Realtime extends MessagingAdapter
                 }
 
                 break;
-
             case 'functions':
                 if ($parts[2] === 'executions') {
                     if (!empty($payload->getRead())) {
@@ -360,12 +369,6 @@ class Realtime extends MessagingAdapter
                     $projectId = 'console';
                     $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 }
-                break;
-            case 'migrations':
-                $channels[] = 'console';
-                $channels[] = 'projects.' . $project->getId();
-                $projectId = 'console';
-                $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 break;
         }
 

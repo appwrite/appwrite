@@ -39,25 +39,17 @@ trait AccountBase
         $this->assertEquals($response['body']['labels'], []);
         $this->assertArrayHasKey('accessedAt', $response['body']);
         $this->assertNotEmpty($response['body']['accessedAt']);
+        $this->assertArrayHasKey('targets', $response['body']);
+        $this->assertEquals($email, $response['body']['targets'][0]['identifier']);
+        $this->assertArrayNotHasKey('emailCanonical', $response['body']);
+        $this->assertArrayNotHasKey('emailIsFree', $response['body']);
+        $this->assertArrayNotHasKey('emailIsDisposable', $response['body']);
+        $this->assertArrayNotHasKey('emailIsCorporate', $response['body']);
+        $this->assertArrayNotHasKey('emailIsCanonical', $response['body']);
 
         /**
          * Test for FAILURE
          */
-        // Deny request from blocked IP
-        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => 'console',
-            'x-forwarded-for' => '103.152.127.250' // Test IP for denied access region
-        ]), [
-            'userId' => ID::unique(),
-            'email' => $email,
-            'password' => $password,
-            'name' => $name,
-        ]);
-
-        $this->assertEquals(451, $response['headers']['status-code']);
-
         $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -150,6 +142,8 @@ trait AccountBase
 
     public function testEmailOTPSession(): void
     {
+        $isConsoleProject = $this->getProject()['$id'] === 'console';
+
         $response = $this->client->call(Client::METHOD_POST, '/account/tokens/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -159,7 +153,7 @@ trait AccountBase
             'email' => 'otpuser@appwrite.io'
         ]);
 
-        $this->assertEquals(201, $response['headers']['status-code'], );
+        $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertNotEmpty($response['body']['$createdAt']);
         $this->assertNotEmpty($response['body']['userId']);
@@ -170,6 +164,7 @@ trait AccountBase
         $userId = $response['body']['userId'];
 
         $lastEmail = $this->getLastEmail();
+
         $this->assertEquals('otpuser@appwrite.io', $lastEmail['to'][0]['address']);
         $this->assertEquals('OTP for ' . $this->getProject()['name'] . ' Login', $lastEmail['subject']);
 
@@ -178,6 +173,14 @@ trait AccountBase
         $code = ($matches[0] ?? [])[0] ?? '';
 
         $this->assertNotEmpty($code);
+        $this->assertStringContainsStringIgnoringCase('Use OTP ' . $code . ' to sign in to '. $this->getProject()['name'] . '. Expires in 15 minutes.', $lastEmail['text']);
+
+        // Only Console project has branded logo in email.
+        if ($isConsoleProject) {
+            $this->assertStringContainsStringIgnoringCase('Appwrite logo', $lastEmail['html']);
+        } else {
+            $this->assertStringNotContainsStringIgnoringCase('Appwrite logo', $lastEmail['html']);
+        }
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/token', array_merge([
             'origin' => 'http://localhost',
@@ -207,6 +210,8 @@ trait AccountBase
         $this->assertEquals($userId, $response['body']['$id']);
         $this->assertEquals($userId, $response['body']['$id']);
         $this->assertTrue($response['body']['emailVerification']);
+        $this->assertArrayHasKey('targets', $response['body']);
+        $this->assertEquals('otpuser@appwrite.io', $response['body']['targets'][0]['identifier']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/token', array_merge([
             'origin' => 'http://localhost',
@@ -320,5 +325,42 @@ trait AccountBase
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 204);
+    }
+
+    public function testFallbackForTrustedIp(): void
+    {
+        $email = uniqid() . 'user@localhost.test';
+        $password = 'password';
+        $name = 'User Name';
+
+        // call appwrite directly to avoid proxy stripping the headers
+        $this->client->setEndpoint('http://localhost/v1');
+
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-forwarded-for' => '191.0.113.195',
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 201);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-forwarded-for' => '191.0.113.195',
+        ]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals('191.0.113.195', $response['body']['clientIp'] ?? $response['body']['ip'] ?? '');
     }
 }

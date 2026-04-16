@@ -18,6 +18,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DateTimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -44,9 +45,10 @@ App::get('/v1/project/usage')
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
+    ->inject('authorization')
     ->inject('getLogsDB')
     ->inject('smsRates')
-    ->action(function (string $startDate, string $endDate, string $period, Response $response, Document $project, Database $dbForProject, callable $getLogsDB, array $smsRates) {
+    ->action(function (string $startDate, string $endDate, string $period, Response $response, Document $project, Database $dbForProject, Authorization $authorization, callable $getLogsDB, array $smsRates) {
         $stats = $total = $usage = [];
         $format = 'Y-m-d 00:00:00';
         $firstDay = (new DateTime($startDate))->format($format);
@@ -101,7 +103,7 @@ App::get('/v1/project/usage')
             '1d' => 'Y-m-d\T00:00:00.000P',
         };
 
-        Authorization::skip(function () use ($dbForProject, $dbForLogs, $firstDay, $lastDay, $period, $metrics, $limit, &$total, &$stats) {
+        $authorization->skip(function () use ($dbForProject, $dbForLogs, $firstDay, $lastDay, $period, $metrics, $limit, &$total, &$stats) {
             foreach ($metrics['total'] as $metric) {
                 $db = ($metric === METRIC_FILES_IMAGES_TRANSFORMED) ? $dbForLogs : $dbForProject;
 
@@ -150,7 +152,7 @@ App::get('/v1/project/usage')
         $executionsBreakdown = array_map(function ($function) use ($dbForProject) {
             $id = $function->getId();
             $name = $function->getAttribute('name');
-            $metric = str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS);
+            $metric = str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS);
             $value = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$metric]),
                 Query::equal('period', ['inf'])
@@ -166,7 +168,7 @@ App::get('/v1/project/usage')
         $executionsMbSecondsBreakdown = array_map(function ($function) use ($dbForProject) {
             $id = $function->getId();
             $name = $function->getAttribute('name');
-            $metric = str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS);
+            $metric = str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS);
             $value = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$metric]),
                 Query::equal('period', ['inf'])
@@ -182,7 +184,7 @@ App::get('/v1/project/usage')
         $buildsMbSecondsBreakdown = array_map(function ($function) use ($dbForProject) {
             $id = $function->getId();
             $name = $function->getAttribute('name');
-            $metric = str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_MB_SECONDS);
+            $metric = str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_MB_SECONDS);
             $value = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$metric]),
                 Query::equal('period', ['inf'])
@@ -198,7 +200,7 @@ App::get('/v1/project/usage')
         $bucketsBreakdown = array_map(function ($bucket) use ($dbForProject) {
             $id = $bucket->getId();
             $name = $bucket->getAttribute('name');
-            $metric = str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_STORAGE);
+            $metric = str_replace('{bucketInternalId}', $bucket->getSequence(), METRIC_BUCKET_ID_FILES_STORAGE);
             $value = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$metric]),
                 Query::equal('period', ['inf'])
@@ -214,7 +216,7 @@ App::get('/v1/project/usage')
         $databasesStorageBreakdown = array_map(function ($database) use ($dbForProject) {
             $id = $database->getId();
             $name = $database->getAttribute('name');
-            $metric = str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_STORAGE);
+            $metric = str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_STORAGE);
 
             $value = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$metric]),
@@ -231,13 +233,13 @@ App::get('/v1/project/usage')
         $functionsStorageBreakdown = array_map(function ($function) use ($dbForProject) {
             $id = $function->getId();
             $name = $function->getAttribute('name');
-            $deploymentMetric = str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getInternalId()], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS_STORAGE);
+            $deploymentMetric = str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getSequence()], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS_STORAGE);
             $deploymentValue = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$deploymentMetric]),
                 Query::equal('period', ['inf'])
             ]);
 
-            $buildMetric = str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE);
+            $buildMetric = str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE);
             $buildValue = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$buildMetric]),
                 Query::equal('period', ['inf'])
@@ -255,7 +257,7 @@ App::get('/v1/project/usage')
         $executionsMbSecondsBreakdown = array_map(function ($function) use ($dbForProject) {
             $id = $function->getId();
             $name = $function->getAttribute('name');
-            $metric = str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getInternalId()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS);
+            $metric = str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS);
             $value = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$metric]),
                 Query::equal('period', ['inf'])
@@ -271,7 +273,7 @@ App::get('/v1/project/usage')
         $buildsMbSecondsBreakdown = array_map(function ($function) use ($dbForProject) {
             $id = $function->getId();
             $name = $function->getAttribute('name');
-            $metric = str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getInternalId()], METRIC_RESOURCE_TYPE_ID_BUILDS_MB_SECONDS);
+            $metric = str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_MB_SECONDS);
             $value = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$metric]),
                 Query::equal('period', ['inf'])
@@ -285,7 +287,7 @@ App::get('/v1/project/usage')
         }, $dbForProject->find('functions'));
 
         // This total is includes free and paid SMS usage
-        $authPhoneTotal = Authorization::skip(fn () => $dbForProject->sum('stats', 'value', [
+        $authPhoneTotal = $authorization->skip(fn () => $dbForProject->sum('stats', 'value', [
             Query::equal('metric', [METRIC_AUTH_METHOD_PHONE]),
             Query::equal('period', ['1d']),
             Query::greaterThanEqual('time', $firstDay),
@@ -293,7 +295,7 @@ App::get('/v1/project/usage')
         ]));
 
         // This estimate is only for paid SMS usage
-        $authPhoneMetrics = Authorization::skip(fn () => $dbForProject->find('stats', [
+        $authPhoneMetrics = $authorization->skip(fn () => $dbForProject->find('stats', [
             Query::startsWith('metric', METRIC_AUTH_METHOD_PHONE . '.'),
             Query::equal('period', ['1d']),
             Query::greaterThanEqual('time', $firstDay),
@@ -354,6 +356,7 @@ App::get('/v1/project/usage')
             'executionsMbSecondsTotal' => $total[METRIC_EXECUTIONS_MB_SECONDS],
             'buildsMbSecondsTotal' => $total[METRIC_BUILDS_MB_SECONDS],
             'documentsTotal' => $total[METRIC_DOCUMENTS],
+            'rowsTotal' => $total[METRIC_DOCUMENTS],
             'databasesTotal' => $total[METRIC_DATABASES],
             'databasesStorageTotal' => $total[METRIC_DATABASES_STORAGE],
             'usersTotal' => $total[METRIC_USERS],
@@ -525,8 +528,8 @@ App::put('/v1/project/variables/:variableId')
     ))
     ->param('variableId', '', new UID(), 'Variable unique ID.', false)
     ->param('key', null, new Text(255), 'Variable key. Max length: 255 chars.', false)
-    ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', true)
-    ->param('secret', null, new Boolean(), 'Secret variables can be updated or deleted, but only projects can read them during build and runtime.', true)
+    ->param('value', null, new Nullable(new Text(8192, 0)), 'Variable value. Max length: 8192 chars.', true)
+    ->param('secret', null, new Nullable(new Boolean()), 'Secret variables can be updated or deleted, but only projects can read them during build and runtime.', true)
     ->inject('project')
     ->inject('response')
     ->inject('dbForProject')

@@ -2,8 +2,8 @@
 
 namespace Appwrite\Migration\Version;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Migration\Migration;
+use Utopia\Auth\Proofs\Password;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -44,7 +44,7 @@ class V17 extends Migration
     protected function migrateBuckets(): void
     {
         foreach ($this->documentsIterator('buckets') as $bucket) {
-            $id = "bucket_{$bucket->getInternalId()}";
+            $id = "bucket_{$bucket->getSequence()}";
 
             try {
                 $this->dbForProject->updateAttribute($id, 'mimeType', Database::VAR_STRING, 255, true, false);
@@ -67,7 +67,7 @@ class V17 extends Migration
 
             Console::log("Migrating Collection \"{$id}\"");
 
-            $this->dbForProject->setNamespace("_{$this->project->getInternalId()}");
+            $this->dbForProject->setNamespace("_{$this->project->getSequence()}");
 
             switch ($id) {
                 case 'builds':
@@ -270,7 +270,7 @@ class V17 extends Migration
                 * Set hashOptions type
                 */
                 $document->setAttribute('hashOptions', array_merge($document->getAttribute('hashOptions', []), [
-                    'type' => $document->getAttribute('hash', Auth::DEFAULT_ALGO)
+                    'type' => $document->getAttribute('hash', (new Password())->getHash()->getName())
                 ]));
                 break;
         }
