@@ -269,7 +269,8 @@ if (!function_exists('setPermission')) {
                 }
             }
         }
-        $document->setAttribute('$permissions', $permissions ?? []);
+        sort($permissions, SORT_STRING);
+        $document->setAttribute('$permissions', $permissions);
     }
 }
 

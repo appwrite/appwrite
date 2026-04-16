@@ -57,6 +57,7 @@ class Action extends PlatformAction
             }
         }
 
+        sort($permissions, SORT_STRING);
         $document->setAttribute('$permissions', $permissions);
 
         return $document;
