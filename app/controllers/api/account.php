@@ -298,7 +298,7 @@ Http::post('/v1/account')
             Query::equal('providerEmail', [$email]),
         ]);
         if (!$identityWithMatchingEmail->isEmpty()) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
+            throw new Exception(Exception::USER_ALREADY_EXISTS);
         }
 
         if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
