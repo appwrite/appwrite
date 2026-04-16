@@ -424,7 +424,8 @@ jobs:
           VCS,
           Messaging,
           Migrations,
-          Project
+          Project,
+          Presences
         ]
         include:
           - service: Databases
