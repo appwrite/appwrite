@@ -91,7 +91,7 @@ class Functions extends Action
         $headers = $payload['headers'] ?? [];
         $path = $payload['path'] ?? '/';
         $jwt = $payload['jwt'] ?? '';
-
+        var_dump($payload);
         if ($user->isEmpty() && !empty($userId)) {
             $user = $dbForProject->getDocument('users', $userId);
         }
