@@ -308,6 +308,90 @@ trait UsersBase
         return $data;
     }
 
+    public static function createUserNullNameProvider(): array
+    {
+        return [
+            'plaintext' => [
+                '/users',
+                [
+                    'password' => 'password',
+                ],
+            ],
+            'md5' => [
+                '/users/md5',
+                [
+                    'password' => '144fa7eaa4904e8ee120651997f70dcc',
+                ],
+            ],
+            'bcrypt' => [
+                '/users/bcrypt',
+                [
+                    'password' => '$2a$15$xX/myGbFU.ZSKHSi6EHdBOySTdYm8QxBLXmOPHrYMwV0mHRBBSBOq',
+                ],
+            ],
+            'argon2' => [
+                '/users/argon2',
+                [
+                    'password' => '$argon2i$v=19$m=20,t=3,p=2$YXBwd3JpdGU$A/54i238ed09ZR4NwlACU5XnkjNBZU9QeOEuhjLiexI',
+                ],
+            ],
+            'sha' => [
+                '/users/sha',
+                [
+                    'password' => '4243da0a694e8a2f727c8060fe0507c8fa01ca68146c76d2c190805b638c20c6bf6ba04e21f11ae138785d0bff63c416e6f87badbffad37f6dee50094cc38c70',
+                    'passwordVersion' => 'sha512',
+                ],
+            ],
+            'phpass' => [
+                '/users/phpass',
+                [
+                    'password' => '$P$Br387rwferoKN7uwHZqNMu98q3U8RO.',
+                ],
+            ],
+            'scrypt' => [
+                '/users/scrypt',
+                [
+                    'password' => '3fdef49701bc4cfaacd551fe017283513284b4731e6945c263246ef948d3cf63b5d269c31fd697246085111a428245e24a4ddc6b64c687bc60a8910dbafc1d5b',
+                    'passwordSalt' => 'appwrite',
+                    'passwordCpu' => 16384,
+                    'passwordMemory' => 13,
+                    'passwordParallel' => 2,
+                    'passwordLength' => 64,
+                ],
+            ],
+            'scrypt-modified' => [
+                '/users/scrypt-modified',
+                [
+                    'password' => 'UlM7JiXRcQhzAGlaonpSqNSLIz475WMddOgLjej5De9vxTy48K6WtqlEzrRFeK4t0COfMhWCb8wuMHgxOFCHFQ==',
+                    'passwordSalt' => 'UxLMreBr6tYyjQ==',
+                    'passwordSaltSeparator' => 'Bw==',
+                    'passwordSignerKey' => 'XyEKE9RcTDeLEsL/RjwPDBv/RqDl8fb3gpYEOQaPihbxf1ZAtSOHCjuAAa7Q3oHpCYhXSN9tizHgVOwn6krflQ==',
+                ],
+            ],
+        ];
+    }
+
+    #[DataProvider('createUserNullNameProvider')]
+    public function testCreateUserWithNullName(string $path, array $payload): void
+    {
+        $userId = 'null-name-' . ID::unique();
+        $email = $userId . '@example.test';
+
+        $user = $this->client->call(Client::METHOD_POST, $path, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), array_merge([
+            'userId' => $userId,
+            'email' => $email,
+            'name' => null,
+        ], $payload));
+
+        $this->assertEquals(Response::STATUS_CODE_CREATED, $user['headers']['status-code']);
+        $this->assertEquals($userId, $user['body']['$id']);
+        $this->assertEquals($email, $user['body']['email']);
+        $this->assertSame('', $user['body']['name']);
+    }
+
     public function testCreateUser(): void
     {
         /**
