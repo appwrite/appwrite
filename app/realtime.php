@@ -1,9 +1,9 @@
 <?php
 
-use Appwrite\Extend\Exception;
-use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Event\Realtime as QueueRealtime;
+use Appwrite\Extend\Exception;
+use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
@@ -928,6 +928,17 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
             $authorization = new Authorization();
         }
 
+        // Ensure `$authorization` contains the same roles as the realtime connection.
+        // `setPermission()` validates against `$authorization->getRoles()`, but roles are
+        // computed/stored separately in the realtime adapter connection tree.
+        $connectionRoles = $realtime->connections[$connection]['roles'] ?? [];
+        foreach ($connectionRoles as $role) {
+            if ($authorization->hasRole($role)) {
+                continue;
+            }
+            $authorization->addRole($role);
+        }
+
         $database = getConsoleDB();
         $database->setAuthorization($authorization);
 
@@ -1177,6 +1188,10 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                 }
                 /** @var User $user */
                 $user = $database->getDocument('users', $userId);
+
+                if ($user->isEmpty()) {
+                    throw new Exception(Exception::USER_NOT_FOUND, params:[$userId]);
+                }
 
                 if (!is_array($message['data'])) {
                     throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Payload is not valid.');
