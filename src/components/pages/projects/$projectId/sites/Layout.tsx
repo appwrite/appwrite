@@ -166,8 +166,13 @@ function SiteLayoutContent() {
     return deploymentsFilterColumns
   }, [activeTab])
 
-  const applySiteFilter = (key: CompactFilterKey, queryStr: string) => {
+  const applySiteFilter = (
+    key: CompactFilterKey,
+    queryStr: string,
+    replaceKey?: CompactFilterKey,
+  ) => {
     const newMap = new Map(siteFilterMap)
+    if (replaceKey) newMap.delete(replaceKey)
     newMap.set(key, queryStr)
     navigate({
       to: location.pathname,

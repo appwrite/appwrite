@@ -499,8 +499,13 @@ export function View() {
     })
   }
 
-  const applyFilter = (compactKey: CompactFilterKey, queryStr: string) => {
+  const applyFilter = (
+    compactKey: CompactFilterKey,
+    queryStr: string,
+    replaceKey?: CompactFilterKey,
+  ) => {
     const newMap = new Map(filterMap)
+    if (replaceKey) newMap.delete(replaceKey)
     newMap.set(compactKey, queryStr)
     navigate({
       to: '/projects/$projectId/storage/$bucketId/',

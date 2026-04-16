@@ -616,8 +616,13 @@ export function View({
     setUsersSearchInput(value)
   }
 
-  const applyUsersFilter = (compactKey: CompactFilterKey, queryStr: string) => {
+  const applyUsersFilter = (
+    compactKey: CompactFilterKey,
+    queryStr: string,
+    replaceKey?: CompactFilterKey,
+  ) => {
     const newMap = new Map(usersFilterMap)
+    if (replaceKey) newMap.delete(replaceKey)
     newMap.set(compactKey, queryStr)
     const queryEncoded = mapToQueryParam(newMap)
     navigate({
@@ -702,8 +707,13 @@ export function View({
     })
   }
 
-  const applyTeamsFilter = (compactKey: CompactFilterKey, queryStr: string) => {
+  const applyTeamsFilter = (
+    compactKey: CompactFilterKey,
+    queryStr: string,
+    replaceKey?: CompactFilterKey,
+  ) => {
     const newMap = new Map(teamsFilterMap)
+    if (replaceKey) newMap.delete(replaceKey)
     newMap.set(compactKey, queryStr)
     const queryEncoded = mapToQueryParam(newMap)
     navigate({

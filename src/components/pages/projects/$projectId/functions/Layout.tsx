@@ -133,8 +133,13 @@ function FunctionLayoutContent() {
     return deploymentsFilterColumns
   }, [activeTab])
 
-  const applyFunctionFilter = (key: CompactFilterKey, queryStr: string) => {
+  const applyFunctionFilter = (
+    key: CompactFilterKey,
+    queryStr: string,
+    replaceKey?: CompactFilterKey,
+  ) => {
     const newMap = new Map(functionFilterMap)
+    if (replaceKey) newMap.delete(replaceKey)
     newMap.set(key, queryStr)
     navigate({
       to: location.pathname,

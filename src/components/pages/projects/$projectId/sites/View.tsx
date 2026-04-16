@@ -287,8 +287,13 @@ export function View() {
     })
   }
 
-  const applyFilter = (compactKey: CompactFilterKey, queryStr: string) => {
+  const applyFilter = (
+    compactKey: CompactFilterKey,
+    queryStr: string,
+    replaceKey?: CompactFilterKey,
+  ) => {
     const next = new Map(filterMap)
+    if (replaceKey) next.delete(replaceKey)
     next.set(compactKey, queryStr)
     navigateToSitesList({
       search: urlSearch ?? undefined,

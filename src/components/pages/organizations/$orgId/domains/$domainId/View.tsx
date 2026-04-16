@@ -679,8 +679,13 @@ export function View({ initialData }: ViewProps = {}) {
       replace: true,
     })
   }
-  const applyFilter = (compactKey: CompactFilterKey, queryStr: string) => {
+  const applyFilter = (
+    compactKey: CompactFilterKey,
+    queryStr: string,
+    replaceKey?: CompactFilterKey,
+  ) => {
     const next = new Map(recordsFilterMap)
+    if (replaceKey) next.delete(replaceKey)
     next.set(compactKey, queryStr)
     setCurrentPage(1)
     setSelectedRecords(new Set())

@@ -670,8 +670,13 @@ export function View() {
     setSelectedDatabases(new Set())
   }
 
-  const applyFilter = (compactKey: CompactFilterKey, queryStr: string) => {
+  const applyFilter = (
+    compactKey: CompactFilterKey,
+    queryStr: string,
+    replaceKey?: CompactFilterKey,
+  ) => {
     const newMap = new Map(filterMap)
+    if (replaceKey) newMap.delete(replaceKey)
     newMap.set(compactKey, queryStr)
     navigate({
       to: '/projects/$projectId/databases/',
@@ -2296,8 +2301,13 @@ export function TableView({
     })
   }
 
-  const rowsApplyFilter = (compactKey: CompactFilterKey, queryStr: string) => {
+  const rowsApplyFilter = (
+    compactKey: CompactFilterKey,
+    queryStr: string,
+    replaceKey?: CompactFilterKey,
+  ) => {
     const next = new Map(rowsFilterMap)
+    if (replaceKey) next.delete(replaceKey)
     next.set(compactKey, queryStr)
     navigateToRowsList({
       search: rowsUrlSearch ?? undefined,
@@ -2365,8 +2375,13 @@ export function TableView({
       replace: true,
     })
   }
-  const columnsApplyFilter = (key: CompactFilterKey, queryStr: string) => {
+  const columnsApplyFilter = (
+    key: CompactFilterKey,
+    queryStr: string,
+    replaceKey?: CompactFilterKey,
+  ) => {
     const newMap = new Map(tableDetailFilterMap)
+    if (replaceKey) newMap.delete(replaceKey)
     newMap.set(key, queryStr)
     navigateTableDetailSearch({
       query: mapToQueryParam(newMap) || undefined,
@@ -2383,8 +2398,13 @@ export function TableView({
     navigateTableDetailSearch({ query: undefined })
     setColumnsFiltersOpen(false)
   }
-  const indexesApplyFilter = (key: CompactFilterKey, queryStr: string) => {
+  const indexesApplyFilter = (
+    key: CompactFilterKey,
+    queryStr: string,
+    replaceKey?: CompactFilterKey,
+  ) => {
     const newMap = new Map(tableDetailFilterMap)
+    if (replaceKey) newMap.delete(replaceKey)
     newMap.set(key, queryStr)
     navigateTableDetailSearch({
       query: mapToQueryParam(newMap) || undefined,

@@ -65,7 +65,11 @@ export {
   type TableIndexForFilters,
 } from './filter-configs/rows'
 
-export { SIZE_FILTER_UNITS, sizeFilterToBytes } from './size-filter'
+export {
+  SIZE_FILTER_UNITS,
+  sizeFilterToBytes,
+  bytesToSizeFilterInput,
+} from './size-filter'
 export {
   recordMatchesCompactKey,
   filterRecordsByCompactMap,

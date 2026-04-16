@@ -3,7 +3,7 @@
  * Used inside FiltersPopover; can also be used with a custom Popover wrapper.
  */
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   ArrowDown,
   ArrowUp,
@@ -16,6 +16,7 @@ import {
 import {
   buildFilterQueryString,
   buildFilterTagFromCompactKey,
+  bytesToSizeFilterInput,
   encodeSort,
   getOperatorsForType,
   SIZE_FILTER_UNITS,
@@ -59,12 +60,51 @@ function reorderList<T>(list: T[], fromIndex: number, toIndex: number): T[] {
   return copy
 }
 
+const K1024 = 1024
+
+function inferCustomAttributeType(key: CompactFilterKey): FilterColumnType {
+  const { v, o } = key
+  if (o === 'between' || o === 'notBetween') {
+    const raw = v == null ? '' : Array.isArray(v) ? v.join(',') : String(v)
+    const parts = raw
+      .split(',')
+      .map((p) => p.trim())
+      .filter(Boolean)
+    if (parts.length >= 2) {
+      const n0 = Number(parts[0])
+      const n1 = Number(parts[1])
+      if (
+        !Number.isNaN(n0) &&
+        !Number.isNaN(n1) &&
+        Number.isInteger(n0) &&
+        Number.isInteger(n1)
+      ) {
+        return 'integer'
+      }
+      if (!Number.isNaN(n0) && !Number.isNaN(n1)) return 'double'
+    }
+  }
+  if (typeof v === 'boolean') return 'boolean'
+  if (typeof v === 'number') {
+    return Number.isInteger(v) ? 'integer' : 'double'
+  }
+  if (typeof v === 'string') {
+    if (/^\d{4}-\d{2}-\d{2}T/.test(v)) return 'datetime'
+    return 'string'
+  }
+  return 'string'
+}
+
 export interface FiltersPopoverContentProps {
   columns: FilterColumn[]
   filterMap: FilterMap
   onRemoveFilter: (key: CompactFilterKey) => void
   onClearAll: () => void
-  onApplyFilter: (key: CompactFilterKey, queryStr: string) => void
+  onApplyFilter: (
+    key: CompactFilterKey,
+    queryStr: string,
+    replaceKey?: CompactFilterKey,
+  ) => void
   /** Called after applying a filter or clearing all (e.g. close popover). */
   onClose?: () => void
   /** e.g. "buckets", "files" – used in description. */
@@ -161,6 +201,26 @@ export function FiltersPopoverContent({
   const [customDocumentAttrKey, setCustomDocumentAttrKey] = useState('')
   const [customDocumentAttrType, setCustomDocumentAttrType] =
     useState<FilterColumnType>('string')
+  const [editingReplaceKey, setEditingReplaceKey] =
+    useState<CompactFilterKey | null>(null)
+
+  const resetFormToDefaults = useCallback(() => {
+    const first = columns[0]
+    if (first) {
+      setFilterColumnId(first.id)
+      const ops = getOperatorsForType(first.type, {
+        fulltextSearchable: !!first.fulltextSearchable,
+        enumOptional: first.type === 'enum' ? first.optional : undefined,
+      })
+      setFilterOperatorKey(ops[0]?.key ?? '')
+    }
+    setFilterValue('')
+    setFilterValueEnd('')
+    setFilterSizeUnit('mb')
+    setCustomDocumentAttrKey('')
+    setCustomDocumentAttrType('string')
+    setEditingReplaceKey(null)
+  }, [columns])
 
   useEffect(() => {
     if (columns.length > 0 && !filterColumnId) {
@@ -190,6 +250,145 @@ export function FiltersPopoverContent({
     filterOperatorKey,
     columns,
   ])
+
+  const loadFilterFormFromCompactKey = (key: CompactFilterKey) => {
+    let resolvedCol = columns.find((c) => c.id === key.c)
+    let customKey = ''
+    let customType: FilterColumnType = 'string'
+
+    if (!resolvedCol) {
+      const slot = columns.find((c) => c.customAttributeSlot)
+      if (slot) {
+        resolvedCol = slot
+        customKey = key.c
+        customType = inferCustomAttributeType(key)
+      } else {
+        resolvedCol = columns[0]
+      }
+    }
+
+    if (!resolvedCol) return
+
+    setFilterColumnId(resolvedCol.id)
+    setFilterOperatorKey(key.o)
+    setCustomDocumentAttrKey(customKey)
+    setCustomDocumentAttrType(
+      resolvedCol.customAttributeSlot ? customType : 'string',
+    )
+
+    const valueType = resolvedCol.customAttributeSlot
+      ? customType
+      : resolvedCol.type
+    const operators = getOperatorsForType(valueType, {
+      fulltextSearchable: resolvedCol.customAttributeSlot
+        ? false
+        : !!resolvedCol.fulltextSearchable,
+      enumOptional: valueType === 'enum' ? resolvedCol.optional : undefined,
+    })
+    const opMeta = operators.find((o) => o.key === key.o)
+    if (opMeta?.noValue) {
+      setFilterValue('')
+      setFilterValueEnd('')
+      return
+    }
+
+    const isBetween = key.o === 'between' || key.o === 'notBetween'
+    const rawV = key.v
+    if (isBetween) {
+      const raw =
+        rawV == null
+          ? ''
+          : Array.isArray(rawV)
+            ? rawV.join(',')
+            : String(rawV)
+      const parts = raw
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+      if (parts.length < 2) {
+        setFilterValue('')
+        setFilterValueEnd('')
+        return
+      }
+      if (resolvedCol.format === 'size') {
+        const numA = Number(parts[0])
+        const numB = Number(parts[1])
+        setFilterSizeUnit('mb')
+        setFilterValue(
+          !Number.isNaN(numA)
+            ? String(numA / (K1024 * K1024))
+            : (parts[0] ?? ''),
+        )
+        setFilterValueEnd(
+          !Number.isNaN(numB)
+            ? String(numB / (K1024 * K1024))
+            : (parts[1] ?? ''),
+        )
+        return
+      }
+      if (valueType === 'datetime') {
+        setFilterValue(parts[0] ?? '')
+        setFilterValueEnd(parts[1] ?? '')
+        return
+      }
+      setFilterValue(parts[0] ?? '')
+      setFilterValueEnd(parts[1] ?? '')
+      return
+    }
+
+    if (resolvedCol.format === 'size' && typeof rawV === 'number') {
+      const { value, unit } = bytesToSizeFilterInput(rawV)
+      setFilterValue(value)
+      setFilterSizeUnit(unit)
+      setFilterValueEnd('')
+      return
+    }
+
+    if (resolvedCol.id === 'status' && typeof rawV === 'boolean') {
+      setFilterValue(String(rawV))
+      setFilterValueEnd('')
+      return
+    }
+
+    if (valueType === 'boolean') {
+      setFilterValue(
+        typeof rawV === 'boolean' ? String(rawV) : String(rawV ?? ''),
+      )
+      setFilterValueEnd('')
+      return
+    }
+
+    if (rawV === undefined || rawV === '') {
+      setFilterValue('')
+      setFilterValueEnd('')
+      return
+    }
+
+    if (Array.isArray(rawV)) {
+      setFilterValue(rawV.join(','))
+      setFilterValueEnd('')
+      return
+    }
+
+    setFilterValue(String(rawV))
+    setFilterValueEnd('')
+  }
+
+  const beginEditFilter = (key: CompactFilterKey) => {
+    setEditingReplaceKey(key)
+    loadFilterFormFromCompactKey(key)
+  }
+
+  const cancelFilterEdit = () => {
+    resetFormToDefaults()
+  }
+
+  useEffect(() => {
+    if (!editingReplaceKey) return
+    if (!filterMap.has(editingReplaceKey)) {
+      resetFormToDefaults()
+    }
+  }, [filterMap, editingReplaceKey, resetFormToDefaults])
 
   const filterEntries = Array.from(filterMap.entries())
 
@@ -261,7 +460,8 @@ export function FiltersPopoverContent({
       o: filterOperatorKey,
       ...(val !== undefined && val !== '' ? { v: val } : {}),
     }
-    onApplyFilter(compactKey, queryString)
+    onApplyFilter(compactKey, queryString, editingReplaceKey ?? undefined)
+    setEditingReplaceKey(null)
     setFilterValue('')
     setFilterValueEnd('')
     // Keep popover open so users can add multiple filters in one go
@@ -772,14 +972,27 @@ export function FiltersPopoverContent({
             </div>
           )}
           {filterColumnId && renderValueInput()}
-          <Button
-            type="submit"
-            size="sm"
-            className="h-9 w-full text-[13px]"
-            disabled={isApplyDisabled}
-          >
-            Add filter
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              type="submit"
+              size="sm"
+              className="h-9 min-w-0 flex-1 text-[13px]"
+              disabled={isApplyDisabled}
+            >
+              {editingReplaceKey ? 'Update filter' : 'Add filter'}
+            </Button>
+            {editingReplaceKey && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-9 shrink-0 text-[13px]"
+                onClick={cancelFilterEdit}
+              >
+                Cancel
+              </Button>
+            )}
+          </div>
         </div>
       </form>
 
@@ -808,12 +1021,22 @@ export function FiltersPopoverContent({
                 const column = parts[1] ?? ''
                 const operator = (parts[2] ?? '').trim()
                 const value = parts[3] ?? null
+                const isEditingThis = editingReplaceKey === key
                 return (
                   <div
                     key={`${key.c}-${key.o}-${JSON.stringify(key.v ?? '')}`}
-                    className="flex items-center gap-2 rounded-lg border border-border bg-muted/30 px-2.5 py-1.5 group"
+                    className={cn(
+                      'flex items-center gap-2 rounded-lg border bg-muted/30 px-2.5 py-1.5 group',
+                      isEditingThis
+                        ? 'border-primary'
+                        : 'border-border',
+                    )}
                   >
-                    <span className="flex min-w-0 flex-1 items-center gap-1.5 truncate text-[12px]">
+                    <button
+                      type="button"
+                      onClick={() => beginEditFilter(key)}
+                      className="flex min-w-0 flex-1 cursor-pointer items-center gap-1.5 truncate text-left text-[12px] rounded-md outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring -mx-1 px-1 -my-0.5 py-0.5"
+                    >
                       <span className="shrink-0 font-medium text-foreground">
                         {column}
                       </span>
@@ -825,7 +1048,7 @@ export function FiltersPopoverContent({
                           {value}
                         </span>
                       )}
-                    </span>
+                    </button>
                     <button
                       type="button"
                       onClick={() => onRemoveFilter(key)}

@@ -24,7 +24,12 @@ export interface FiltersPopoverProps {
   filterMap: FilterMap
   onRemoveFilter: (key: CompactFilterKey) => void
   onClearAll: () => void
-  onApplyFilter: (key: CompactFilterKey, queryStr: string) => void
+  /** When `replaceKey` is set, that filter is removed before applying (single navigation). */
+  onApplyFilter: (
+    key: CompactFilterKey,
+    queryStr: string,
+    replaceKey?: CompactFilterKey,
+  ) => void
   /** e.g. "buckets", "files" – used in description. */
   resourceLabel?: string
   /**
