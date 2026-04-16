@@ -2214,11 +2214,22 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString("Action logs printed.", $response['body']);
 
-        $logs = $this->listLogs($siteId, [
-            Query::orderDesc('$createdAt')->toString(),
-            Query::equal('requestPath', ['/logs-action'])->toString(),
-            Query::limit(1)->toString(),
-        ]);
+        // Poll for execution logs to be written (async)
+        $logs = null;
+        $timeout = 120;
+        $start = \time();
+        while (\time() - $start < $timeout) {
+            $logs = $this->listLogs($siteId, [
+                Query::orderDesc('$createdAt')->toString(),
+                Query::equal('requestPath', ['/logs-action'])->toString(),
+                Query::limit(1)->toString(),
+            ]);
+            if (!empty($logs['body']['executions'])) {
+                break;
+            }
+            \usleep(500000);
+        }
+        $this->assertNotEmpty($logs['body']['executions'], 'Execution logs for /logs-action were not available within timeout');
         $this->assertEquals(200, $logs['headers']['status-code']);
         $this->assertStringContainsString($deploymentId, $logs['body']['executions'][0]['deploymentId']);
         $this->assertStringContainsString("GET", $logs['body']['executions'][0]['requestMethod']);
