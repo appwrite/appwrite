@@ -14,7 +14,12 @@ class AccountConsoleClientTest extends Scope
     use ProjectConsole;
     use SideClient;
 
-    public function testDeleteAccount(): void
+    /**
+     * Test that account deletion succeeds even with active team memberships.
+     * When the user is the sole owner and only member of a team, the team
+     * should be cleaned up automatically.
+     */
+    public function testDeleteAccountWithMembership(): void
     {
         $email = uniqid() . 'user@localhost.test';
         $password = 'password';
@@ -46,7 +51,7 @@ class AccountConsoleClientTest extends Scope
 
         $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
 
-        // create team
+        // Create team — user becomes sole owner and only member
         $team = $this->client->call(Client::METHOD_POST, '/teams', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -58,7 +63,51 @@ class AccountConsoleClientTest extends Scope
         ]);
         $this->assertEquals($team['headers']['status-code'], 201);
 
-        $teamId = $team['body']['$id'];
+        // Account deletion should succeed even with active membership
+        $response = $this->client->call(Client::METHOD_DELETE, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]));
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+    }
+
+    /**
+     * Test that account deletion works when the user has no team memberships.
+     */
+    public function testDeleteAccountWithoutMembership(): void
+    {
+        $email = uniqid() . 'user@localhost.test';
+        $password = 'password';
+        $name = 'User Name';
+
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 201);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 201);
+
+        $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
 
         $response = $this->client->call(Client::METHOD_DELETE, '/account', array_merge([
             'origin' => 'http://localhost',
@@ -67,27 +116,7 @@ class AccountConsoleClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 400);
-
-        // DELETE TEAM
-        $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . $teamId, array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]));
-        $this->assertEquals($response['headers']['status-code'], 204);
-
-        $this->assertEventually(function () use ($session) {
-            $response = $this->client->call(Client::METHOD_DELETE, '/account', array_merge([
-                'origin' => 'http://localhost',
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-            ]));
-
-            $this->assertEquals(204, $response['headers']['status-code']);
-        }, 10_000, 500);
+        $this->assertEquals(204, $response['headers']['status-code']);
     }
 
     public function testSessionAlert(): void
