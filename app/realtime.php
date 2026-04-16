@@ -1235,8 +1235,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                     // if presenceId differs then it will create a new document and not update the existing one
                     // TODO: send better error message telling about the presenceId mismatch
                     $existingPresence = $database->findOne('presenceLogs', [Query::equal('userId', [$userId])]);
-                    $presenceDocument->setAttribute('$id', $existingPresence->getId());
-                    $presence = $database->upsertDocument('presenceLogs', $presenceDocument);
+                    $presence = $database->updateDocument('presenceLogs', $existingPresence->getId(), $presenceDocument);
                 }
 
                 $presence->removeAttribute('hostname');
