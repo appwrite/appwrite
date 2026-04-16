@@ -101,16 +101,16 @@ class Mapper
 
                 if (\is_array($modelName)) {
                     foreach ($modelName as $name) {
-                        $models[] = static::$models[$name];
+                        $models[] = self::$models[$name];
                     }
                 } else {
-                    $models[] = static::$models[$modelName];
+                    $models[] = self::$models[$modelName];
                 }
             }
         } else {
             // If single response, get its model and wrap in array
             $modelName = $responses->getModel();
-            $models = [static::$models[$modelName]];
+            $models = [self::$models[$modelName]];
         }
 
         foreach ($models as $model) {
@@ -273,11 +273,9 @@ class Mapper
             case \Appwrite\Auth\Validator\Password::class:
             case \Appwrite\Event\Validator\Event::class:
             case \Appwrite\Event\Validator\FunctionEvent::class:
-            case \Appwrite\Network\Validator\CNAME::class:
             case \Utopia\Emails\Validator\Email::class:
             case \Appwrite\Network\Validator\Redirect::class:
             case \Appwrite\Network\Validator\DNS::class:
-            case \Appwrite\Network\Validator\Origin::class:
             case \Appwrite\Task\Validator\Cron::class:
             case \Appwrite\Utopia\Database\Validator\CustomId::class:
             case \Utopia\Database\Validator\Key::class:
@@ -286,7 +284,7 @@ class Mapper
             case \Utopia\Validator\HexColor::class:
             case \Utopia\Validator\Host::class:
             case \Utopia\Validator\IP::class:
-            case \Utopia\Validator\Origin::class:
+            case \Appwrite\Network\Validator\Origin::class:
             case \Utopia\Validator\Text::class:
             case \Utopia\Validator\URL::class:
             case \Utopia\Validator\WhiteList::class:
@@ -425,7 +423,7 @@ class Mapper
             'name' => $unionName,
             'types' => $types,
             'resolveType' => static function ($object) use ($unionName) {
-                return static::getUnionImplementation($unionName, $object);
+                return self::getUnionImplementation($unionName, $object);
             },
         ]);
 
@@ -440,11 +438,11 @@ class Mapper
 
         switch ($name) {
             case 'Attributes':
-                return static::getColumnImplementation($object);
+                return self::getColumnImplementation($object);
             case 'Columns':
-                return static::getColumnImplementation($object, true);
+                return self::getColumnImplementation($object, true);
             case 'HashOptions':
-                return static::getHashOptionsImplementation($object);
+                return self::getHashOptionsImplementation($object);
         }
 
         throw new Exception('Unknown union type: ' . $name);

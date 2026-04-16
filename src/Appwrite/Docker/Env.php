@@ -9,9 +9,6 @@ class Env
      */
     protected $vars = [];
 
-    /**
-     * @var string $data
-     */
     public function __construct(string $data)
     {
         $data = explode("\n", $data);

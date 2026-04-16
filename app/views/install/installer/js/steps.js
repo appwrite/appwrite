@@ -329,6 +329,30 @@
         }
     };
 
+    const initStep6 = (root) => {
+        if (!root) return;
+        syncInstallLockFlag?.();
+        applyLockPayload?.();
+        applyBodyDefaults?.();
+
+        const checkbox = root.querySelector('#run-migration');
+        if (checkbox) {
+            if (formState.migrate !== undefined) {
+                checkbox.checked = formState.migrate;
+            } else {
+                formState.migrate = checkbox.checked;
+            }
+            checkbox.addEventListener('change', () => {
+                formState.migrate = checkbox.checked;
+                dispatchStateChange?.('migrate');
+            });
+        }
+
+        if (isInstallLocked?.()) {
+            disableControls?.(root);
+        }
+    };
+
     const initStep = (step, container) => {
         if (!container) return;
         const root = container.querySelector('.step-layout') || container;
@@ -346,6 +370,7 @@
         if (normalized === 3) initStep3(root);
         if (normalized === 4) initStep4(root);
         if (normalized === 5) Progress.initStep5?.(root);
+        if (normalized === 6) initStep6(root);
     };
 
     window.InstallerSteps = {
@@ -390,10 +415,7 @@
                 if (!parsePort(httpPort, 'HTTP')) valid = false;
                 if (!parsePort(httpsPort, 'HTTPS')) valid = false;
 
-                if (!sslEmail || !sslEmail.value.trim()) {
-                    setFieldError?.(sslEmail, 'Please enter an email address for SSL certificates');
-                    valid = false;
-                } else if (!isValidEmail?.(sslEmail.value.trim())) {
+                if (sslEmail && sslEmail.value.trim() && !isValidEmail?.(sslEmail.value.trim())) {
                     setFieldError?.(sslEmail, 'Please enter a valid email address');
                     valid = false;
                 }

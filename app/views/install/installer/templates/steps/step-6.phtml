@@ -1,0 +1,37 @@
+<?php
+$isUpgrade = $isUpgrade ?? false;
+?>
+<div class="step-layout" data-step="6">
+    <div class="stack-xl">
+        <div class="stack-xxxs">
+            <h1 class="typography-title-s text-neutral-primary">Database migration</h1>
+            <p class="typography-text-m-400 text-neutral-secondary">
+                Run database migration after the update to apply schema changes.
+            </p>
+        </div>
+
+        <div class="stack-xl">
+            <label class="migration-option" for="run-migration">
+                <span class="migration-option-content">
+                    <span class="typography-text-m-500 text-neutral-primary">Run migration automatically</span>
+                    <span class="typography-text-xs-400 text-neutral-tertiary">Recommended when upgrading to a new version</span>
+                </span>
+                <span class="migration-switch">
+                    <input type="checkbox" id="run-migration" name="migrate" class="sr-only" checked>
+                    <span class="migration-switch-track" aria-hidden="true">
+                        <span class="migration-switch-thumb"></span>
+                    </span>
+                </span>
+            </label>
+
+            <div class="migration-hint">
+                <span class="migration-hint-icon">
+                    <?php include __DIR__ . '/../../icons/info.svg'; ?>
+                </span>
+                <span class="typography-text-xs-400 text-neutral-tertiary">
+                    To run manually later: <code class="migration-code">docker compose exec appwrite migrate</code>
+                </span>
+            </div>
+        </div>
+    </div>
+</div>

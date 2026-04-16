@@ -29,8 +29,8 @@ class DatabasesStringTypesTest extends Scope
     protected function setupDatabaseAndCollection(): array
     {
         $cacheKey = $this->getProject()['$id'] ?? 'default';
-        if (!empty(static::$setupCache[$cacheKey])) {
-            return static::$setupCache[$cacheKey];
+        if (!empty(self::$setupCache[$cacheKey])) {
+            return self::$setupCache[$cacheKey];
         }
 
         $projectId = $this->getProject()['$id'];
@@ -135,12 +135,12 @@ class DatabasesStringTypesTest extends Scope
         // Wait for all attributes to be available
         $this->waitForAllAttributes($databaseId, $collectionId);
 
-        static::$setupCache[$cacheKey] = [
+        self::$setupCache[$cacheKey] = [
             'databaseId' => $databaseId,
             'collectionId' => $collectionId,
         ];
 
-        return static::$setupCache[$cacheKey];
+        return self::$setupCache[$cacheKey];
     }
 
     public function testCreateDatabase(): void

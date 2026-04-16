@@ -31,6 +31,11 @@ class Get extends Action
         return UtopiaResponse::MODEL_USAGE_COLLECTION;
     }
 
+    protected function getMetric(): string
+    {
+        return METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS;
+    }
+
     public function __construct()
     {
         $this
@@ -64,14 +69,16 @@ class Get extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->inject('authorization')
+            ->inject('getDatabasesDB')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $range, string $collectionId, UtopiaResponse $response, Database $dbForProject, Authorization $authorization): void
+    public function action(string $databaseId, string $range, string $collectionId, UtopiaResponse $response, Database $dbForProject, Authorization $authorization, callable $getDatabasesDB): void
     {
         $database = $dbForProject->getDocument('databases', $databaseId);
         $collectionDocument = $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId);
-        $collection = $dbForProject->getCollection('database_' . $database->getSequence() . '_collection_' . $collectionDocument->getSequence());
+        $dbForDatabases = $getDatabasesDB($database);
+        $collection = $dbForDatabases->getCollection('database_' . $database->getSequence() . '_collection_' . $collectionDocument->getSequence());
 
         if ($collection->isEmpty()) {
             throw new Exception($this->getNotFoundException(), params: [$collectionId]);
@@ -81,7 +88,7 @@ class Get extends Action
         $stats = $usage = [];
         $days = $periods[$range];
         $metrics = [
-            str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getSequence(), $collectionDocument->getSequence()], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS),
+            str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getSequence(), $collectionDocument->getSequence()], $this->getMetric()),
         ];
 
         $authorization->skip(function () use ($dbForProject, $days, $metrics, &$stats) {

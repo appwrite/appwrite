@@ -11,9 +11,6 @@ class Service
      */
     protected $service = [];
 
-    /**
-     * @var string $path
-     */
     public function __construct(array $service)
     {
         $this->service = $service;

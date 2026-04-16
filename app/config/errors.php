@@ -226,6 +226,21 @@ return [
         'description' => 'A user with the same email already exists in the current project.',
         'code' => 409,
     ],
+    Exception::USER_EMAIL_DISPOSABLE => [
+        'name' => Exception::USER_EMAIL_DISPOSABLE,
+        'description' => 'Disposable email addresses are not allowed. Please use a permanent email address.',
+        'code' => 400,
+    ],
+    Exception::USER_EMAIL_FREE => [
+        'name' => Exception::USER_EMAIL_FREE,
+        'description' => 'Free email addresses are not allowed. Please use a business or custom-domain email address.',
+        'code' => 400,
+    ],
+    Exception::USER_EMAIL_NOT_CANONICAL => [
+        'name' => Exception::USER_EMAIL_NOT_CANONICAL,
+        'description' => 'This email address must already be in its canonical form. Please remove aliases, tags, or provider-specific variations and try again.',
+        'code' => 400,
+    ],
     Exception::USER_PASSWORD_MISMATCH => [
         'name' => Exception::USER_PASSWORD_MISMATCH,
         'description' => 'Passwords do not match. Please check the password and confirm password.',
@@ -1164,6 +1179,16 @@ return [
         'description' => 'Platform with the requested ID could not be found.',
         'code' => 404,
     ],
+    Exception::PLATFORM_METHOD_UNSUPPORTED => [
+        'name' => Exception::PLATFORM_METHOD_UNSUPPORTED,
+        'description' => 'The requested platform has invalid type. Please use corresponding update method for the platform type.',
+        'code' => 400,
+    ],
+    Exception::PLATFORM_ALREADY_EXISTS => [
+        'name' => Exception::PLATFORM_ALREADY_EXISTS,
+        'description' => 'Platform with the same ID already exists in this project. Try again with a different ID.',
+        'code' => 409,
+    ],
     Exception::VARIABLE_NOT_FOUND => [
         'name' => Exception::VARIABLE_NOT_FOUND,
         'description' => 'Variable with the requested ID could not be found.',
@@ -1205,6 +1230,11 @@ return [
         'name' => Exception::MIGRATION_IN_PROGRESS,
         'description' => 'Migration is already in progress. You can check the status of the migration in your Appwrite Console\'s "Settings" > "Migrations".',
         'code' => 409,
+    ],
+    Exception::MIGRATION_DATABASE_TYPE_UNSUPPORTED => [
+        'name' => Exception::MIGRATION_DATABASE_TYPE_UNSUPPORTED,
+        'description' => 'The specified database type is not supported for CSV import or export operations.',
+        'code' => 400,
     ],
 
     /** Realtime */

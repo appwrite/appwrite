@@ -3,12 +3,11 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Platform\Action as UtopiaAction;
-use Utopia\Platform\Scope\HTTP;
 
-abstract class Action extends UtopiaAction
+abstract class Action extends DatabasesAction
 {
     /**
      * The current API context (either 'table' or 'collection').
@@ -20,12 +19,13 @@ abstract class Action extends UtopiaAction
      */
     abstract protected function getResponseModel(): string;
 
-    public function setHttpPath(string $path): UtopiaAction
+    public function setHttpPath(string $path): self
     {
         if (\str_contains($path, '/tablesdb')) {
             $this->context = TABLES;
         }
-        return parent::setHttpPath($path);
+        parent::setHttpPath($path);
+        return $this;
     }
 
     /**

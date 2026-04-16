@@ -9,11 +9,6 @@ use Utopia\Database\Document;
 
 class Project extends Model
 {
-    /**
-     * @var bool
-     */
-    protected bool $public = false;
-
     public function __construct()
     {
         $this
@@ -137,6 +132,24 @@ class Project extends Model
                 'default' => false,
                 'example' => true,
             ])
+            ->addRule('authDisposableEmails', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether or not to disallow disposable email addresses during signup and email updates.',
+                'default' => false,
+                'example' => true,
+            ])
+            ->addRule('authCanonicalEmails', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether or not to require canonical email addresses during signup and email updates.',
+                'default' => false,
+                'example' => true,
+            ])
+            ->addRule('authFreeEmails', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether or not to disallow free email addresses during signup and email updates.',
+                'default' => false,
+                'example' => true,
+            ])
             ->addRule('authMockNumbers', [
                 'type' => Response::MODEL_MOCK_NUMBER,
                 'description' => 'An array of mock numbers and their corresponding verification codes (OTPs).',
@@ -182,7 +195,13 @@ class Project extends Model
                 'array' => true,
             ])
             ->addRule('platforms', [
-                'type' => Response::MODEL_PLATFORM,
+                'type' => [
+                    Response::MODEL_PLATFORM_WEB,
+                    Response::MODEL_PLATFORM_APPLE,
+                    Response::MODEL_PLATFORM_ANDROID,
+                    Response::MODEL_PLATFORM_WINDOWS,
+                    Response::MODEL_PLATFORM_LINUX,
+                ],
                 'description' => 'List of Platforms.',
                 'default' => [],
                 'example' => new \stdClass(),
@@ -325,6 +344,22 @@ class Project extends Model
                 ])
             ;
         }
+
+        $apis = Config::getParam('protocols', []);
+
+        foreach ($apis as $api) {
+            $name = $api['name'] ?? '';
+            $key = $api['key'] ?? '';
+
+            $this
+                ->addRule('protocolStatusFor' . ucfirst($key), [
+                    'type' => self::TYPE_BOOLEAN,
+                    'description' => $name . ' protocol status',
+                    'example' => true,
+                    'default' => true,
+                ])
+            ;
+        }
     }
 
     /**
@@ -356,6 +391,7 @@ class Project extends Model
     {
         $this->expandSmtpFields($document);
         $this->expandServiceFields($document);
+        $this->expandApiFields($document);
         $this->expandAuthFields($document);
         $this->expandOAuthProviders($document);
 
@@ -400,6 +436,22 @@ class Project extends Model
         }
     }
 
+    private function expandApiFields(Document $document): void
+    {
+        if (!$document->isSet('apis')) {
+            return;
+        }
+
+        $values = $document->getAttribute('apis', []);
+        $apis = Config::getParam('protocols', []);
+
+        foreach ($apis as $api) {
+            $key = $api['key'] ?? '';
+            $value = $values[$key] ?? true;
+            $document->setAttribute('protocolStatusFor' . ucfirst($key), $value);
+        }
+    }
+
     private function expandAuthFields(Document $document): void
     {
         if (!$document->isSet('auths')) {
@@ -415,6 +467,9 @@ class Project extends Model
         $document->setAttribute('authPasswordHistory', $authValues['passwordHistory'] ?? 0);
         $document->setAttribute('authPasswordDictionary', $authValues['passwordDictionary'] ?? false);
         $document->setAttribute('authPersonalDataCheck', $authValues['personalDataCheck'] ?? false);
+        $document->setAttribute('authDisposableEmails', $authValues['disposableEmails'] ?? false);
+        $document->setAttribute('authCanonicalEmails', $authValues['canonicalEmails'] ?? false);
+        $document->setAttribute('authFreeEmails', $authValues['freeEmails'] ?? false);
         $document->setAttribute('authMockNumbers', $authValues['mockNumbers'] ?? []);
         $document->setAttribute('authSessionAlerts', $authValues['sessionAlerts'] ?? false);
         $document->setAttribute('authMembershipsUserName', $authValues['membershipsUserName'] ?? true);

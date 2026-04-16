@@ -79,8 +79,8 @@ class OpenAPI3 extends Format
             $output['components']['securitySchemes']['Key']['x-appwrite'] = ['demo' => '<YOUR_API_KEY>'];
         }
 
-        if (isset($output['securityDefinitions']['JWT'])) {
-            $output['securityDefinitions']['JWT']['x-appwrite'] = ['demo' => '<YOUR_JWT>'];
+        if (isset($output['components']['securitySchemes']['JWT'])) {
+            $output['components']['securitySchemes']['JWT']['x-appwrite'] = ['demo' => '<YOUR_JWT>'];
         }
 
         if (isset($output['components']['securitySchemes']['Locale'])) {
@@ -99,7 +99,7 @@ class OpenAPI3 extends Format
 
             $sdk = $route->getLabel('sdk', false);
 
-            if (empty($sdk)) {
+            if ($sdk === false) {
                 continue;
             }
 
@@ -125,8 +125,7 @@ class OpenAPI3 extends Format
 
             $namespace = $sdk->getNamespace() ?? 'default';
 
-            $desc ??= '';
-            $descContents = \str_ends_with($desc, '.md') ? \file_get_contents($desc) : $desc;
+            $descContents = $this->getDescriptionContents($desc);
 
             $temp = [
                 'summary' => $route->getDesc(),
@@ -163,7 +162,7 @@ class OpenAPI3 extends Format
                 ];
             }
 
-            if (!empty($additionalMethods)) {
+            if (\is_array($additionalMethods) && \count($additionalMethods) > 0) {
                 $temp['x-appwrite']['methods'] = [];
                 foreach ($additionalMethods as $methodObj) {
                     /** @var Method $methodObj */
@@ -191,7 +190,7 @@ class OpenAPI3 extends Format
                         'parameters' => [],
                         'required' => [],
                         'responses' => [],
-                        'description' => ($desc) ? \file_get_contents($desc) : '',
+                        'description' => $this->getDescriptionContents($desc),
                         'demo' => \strtolower($namespace) . '/' . Template::fromCamelCaseToDash($methodObj->getMethodName()) . '.md',
                         'public' => $methodObj->isPublic(),
                     ];
@@ -279,6 +278,18 @@ class OpenAPI3 extends Format
                     }
                 }
 
+                if (\is_string($model)) {
+                    throw new \RuntimeException("Unresolved response model '{$model}' for method '{$sdk->getNamespace()}.{$sdk->getMethodName()}'. Ensure the model is registered.");
+                }
+
+                if (\is_array($model)) {
+                    foreach ($model as $m) {
+                        if (\is_string($m)) {
+                            throw new \RuntimeException("Unresolved response model '{$m}' for method '{$sdk->getNamespace()}.{$sdk->getMethodName()}'. Ensure the model is registered.");
+                        }
+                    }
+                }
+
                 if (!(\is_array($model)) && $model->isNone()) {
                     $temp['responses'][(string)$response->getCode() ?? '500'] = [
                         'description' => in_array($produces, [
@@ -329,7 +340,7 @@ class OpenAPI3 extends Format
 
                 if (($response->getCode() ?? 500) === 204) {
                     $temp['responses'][(string)$response->getCode() ?? '500']['description'] = 'No content';
-                    unset($temp['responses'][(string)$response->getCode() ?? '500']['schema']);
+                    unset($temp['responses'][(string)$response->getCode() ?? '500']['content']);
                 }
             }
 
@@ -368,22 +379,31 @@ class OpenAPI3 extends Format
                 /**
                  * @var \Utopia\Validator $validator
                  */
-                $validator = (\is_callable($param['validator'])) ? call_user_func_array($param['validator'], $this->app->getResources($param['injections'])) : $param['validator'];
+                $validator = $this->getValidator($param);
+
+                $isNullable = $validator instanceof Nullable;
+
+                $parameter = $this->getRequestParameterConfig(
+                    $sdk->getNamespace() ?? '',
+                    $methodName,
+                    $name,
+                    $param['optional'],
+                    $isNullable,
+                    $param['default'],
+                );
 
                 $node = [
                     'name' => $name,
                     'description' => $param['description'],
-                    'required' => !$param['optional'],
+                    'required' => $parameter['required'],
                 ];
-
-                $isNullable = $validator instanceof Nullable;
 
                 if ($isNullable) {
                     /** @var Nullable $validator */
                     $validator = $validator->getValidator();
                 }
 
-                $class = !empty($validator)
+                $class = $validator instanceof Validator
                     ? \get_class($validator)
                     : '';
 
@@ -431,7 +451,7 @@ class OpenAPI3 extends Format
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['x-example'] = ($param['example'] ?? '') ?: '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
                         break;
-                    case \Utopia\Database\Validator\DatetimeValidator::class:
+                    case \Utopia\Database\Validator\Datetime::class:
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'datetime';
                         $node['schema']['x-example'] = ($param['example'] ?? '') ?: Model::TYPE_DATETIME_EXAMPLE;
@@ -463,7 +483,6 @@ class OpenAPI3 extends Format
                         $node['schema']['x-example'] = ($param['example'] ?? '') ?: 'https://example.com';
                         break;
                     case \Utopia\Validator\JSON::class:
-                    case \Utopia\Validator\Mock::class:
                     case \Utopia\Validator\Assoc::class:
                         $param['default'] = (empty($param['default'])) ? new \stdClass() : $param['default'];
                         $node['schema']['type'] = 'object';
@@ -559,12 +578,6 @@ class OpenAPI3 extends Format
                     case \Utopia\Validator\FloatValidator::class:
                         $node['schema']['type'] = 'number';
                         $node['schema']['format'] = 'float';
-                        if (!empty($param['example'])) {
-                            $node['schema']['x-example'] = $param['example'];
-                        }
-                        break;
-                    case \Utopia\Validator\Length::class:
-                        $node['schema']['type'] = $validator->getType();
                         if (!empty($param['example'])) {
                             $node['schema']['x-example'] = $param['example'];
                         }
@@ -731,7 +744,7 @@ class OpenAPI3 extends Format
                         break;
                 }
 
-                if ($param['optional'] && !\is_null($param['default'])) { // Param has default value
+                if ($parameter['emitDefault']) { // Param has default value
                     $node['schema']['default'] = $param['default'];
                 }
 
@@ -742,7 +755,7 @@ class OpenAPI3 extends Format
                     $node['in'] = 'query';
                     $temp['parameters'][] = $node;
                 } else { // Param is in payload
-                    if (!$param['optional']) {
+                    if ($node['required']) {
                         $bodyRequired[] = $name;
                     }
 
@@ -779,7 +792,7 @@ class OpenAPI3 extends Format
                         $body['content'][$consumes[0]]['schema']['properties'][$name]['x-global'] = true;
                     }
 
-                    if ($isNullable) {
+                    if ($parameter['nullable']) {
                         $body['content'][$consumes[0]]['schema']['properties'][$name]['x-nullable'] = true;
                     }
                 }
@@ -829,6 +842,10 @@ class OpenAPI3 extends Format
             }
 
             foreach ($model->getRules() as $name => $rule) {
+                if (($rule['hidden'] ?? false) === true) {
+                    continue;
+                }
+
                 $type = '';
                 $format = null;
                 $items = null;

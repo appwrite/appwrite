@@ -97,6 +97,7 @@ trait StorageBase
             'x-appwrite-project' => $this->getProject()['$id']
         ];
         $id = '';
+        $largeFile = null;
         while (!feof($handle)) {
             $curlFile = new \CURLFile('data://' . $mimeType . ';base64,' . base64_encode(@fread($handle, $chunkSize)), $mimeType, 'large-file.mp4');
             $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . min(((($counter * $chunkSize) + $chunkSize) - 1), $size - 1) . '/' . $size;
@@ -132,7 +133,7 @@ trait StorageBase
         self::$cachedBucketFile[$cacheKey] = [
             'bucketId' => $bucketId,
             'fileId' => $file['body']['$id'],
-            'largeFileId' => $largeFile['body']['$id'],
+            'largeFileId' => $largeFile['body']['$id'] ?? '',
             'largeBucketId' => $bucket2['body']['$id'],
             'webpFileId' => $webpFile['body']['$id']
         ];
@@ -261,6 +262,7 @@ trait StorageBase
             'x-appwrite-project' => $this->getProject()['$id']
         ];
         $id = '';
+        $largeFile = null;
         while (!feof($handle)) {
             $curlFile = new \CURLFile('data://' . $mimeType . ';base64,' . base64_encode(@fread($handle, $chunkSize)), $mimeType, 'large-file.mp4');
             $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . min(((($counter * $chunkSize) + $chunkSize) - 1), $size - 1) . '/' . $size;
@@ -1067,6 +1069,97 @@ trait StorageBase
         $this->assertEquals(200, $preview['headers']['status-code']);
         $this->assertEquals('image/webp', $preview['headers']['content-type']);
         $this->assertNotEmpty($preview['body']);
+    }
+
+    public function testDeletePartiallyUploadedFile(): void
+    {
+        // Create a bucket for this test
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'Test Bucket Partial Upload',
+            'fileSecurity' => true,
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        // Simulate a partial (cancelled) chunked upload by sending only the first chunk
+        $source = __DIR__ . "/../../../resources/disk-a/large-file.mp4";
+        $totalSize = \filesize($source);
+        $chunkSize = 5 * 1024 * 1024; // 5MB chunks
+        $mimeType = mime_content_type($source);
+
+        $handle = fopen($source, "rb");
+        $this->assertNotFalse($handle, "Could not open test resource: $source");
+        $chunkData = fread($handle, $chunkSize);
+        fclose($handle);
+
+        $curlFile = new \CURLFile(
+            'data://' . $mimeType . ';base64,' . base64_encode($chunkData),
+            $mimeType,
+            'large-file.mp4'
+        );
+
+        // Send only the first chunk (bytes 0 to chunkSize-1 of totalSize)
+        $end = min($chunkSize - 1, $totalSize - 1);
+        $partialFile = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'content-range' => 'bytes 0-' . $end . '/' . $totalSize,
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => $curlFile,
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $partialFile['headers']['status-code']);
+        $fileId = $partialFile['body']['$id'];
+
+        // Confirm the file is in a pending state (chunksTotal > chunksUploaded)
+        $this->assertGreaterThan(
+            $partialFile['body']['chunksUploaded'],
+            $partialFile['body']['chunksTotal'],
+            'File should be partially uploaded (pending)'
+        );
+
+        // Delete the partially-uploaded (pending) file — this should succeed
+        $deleteResponse = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId . '/files/' . $fileId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $deleteResponse['headers']['status-code']);
+        $this->assertEmpty($deleteResponse['body']);
+
+        // Confirm the file is gone
+        $getResponse = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(404, $getResponse['headers']['status-code']);
+
+        // Clean up the test bucket
+        $deleteBucketResponse = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(204, $deleteBucketResponse['headers']['status-code']);
     }
 
     public function testDeleteBucketFile(): void

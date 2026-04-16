@@ -72,20 +72,21 @@ class XList extends Action
             ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
             ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Transaction ID to read uncommitted changes within the transaction.', true, ['dbForProject'])
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
-            ->param('ttl', 0, new Range(min: 0, max: 86400), 'TTL (seconds) for cached responses when caching is enabled for select queries. Must be between 0 and 86400 (24 hours).', true)
+            ->param('ttl', 0, new Range(min: 0, max: 86400), 'TTL (seconds) for caching list responses. Responses are stored in an in-memory key-value cache, keyed per project, collection, schema version (attributes and indexes), caller authorization roles, and the exact query — so users with different permissions never share cached entries. Schema changes invalidate cached entries automatically; document writes do not, so choose a TTL you are comfortable serving as stale data. Set to 0 to disable caching. Must be between 0 and 86400 (24 hours).', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('user')
+            ->inject('getDatabasesDB')
             ->inject('usage')
             ->inject('transactionState')
             ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, bool $includeTotal, int $ttl, UtopiaResponse $response, Database $dbForProject, Document $user, Context $usage, TransactionState $transactionState, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, bool $includeTotal, int $ttl, UtopiaResponse $response, Database $dbForProject, User $user, callable $getDatabasesDB, Context $usage, TransactionState $transactionState, Authorization $authorization): void
     {
-        $isAPIKey = User::isApp($authorization->getRoles());
-        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
+        $isAPIKey = $user->isApp($authorization->getRoles());
+        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
@@ -103,6 +104,7 @@ class XList extends Action
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
+        $dbForDatabases = $getDatabasesDB($database);
         $cursor = Query::getCursorQueries($queries, false);
         $cursor = \reset($cursor);
 
@@ -114,7 +116,7 @@ class XList extends Action
 
             $documentId = $cursor->getValue();
 
-            $cursorDocument = $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
+            $cursorDocument = $authorization->skip(fn () => $dbForDatabases->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
 
             if ($cursorDocument->isEmpty()) {
                 $type = ucfirst($this->getContext());
@@ -125,86 +127,73 @@ class XList extends Action
         }
 
         try {
-            $selectQueries = Query::groupByType($queries)['selections'] ?? [];
+            $hasSelects = ! empty(Query::groupByType($queries)['selections'] ?? []);
             $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+            // When there are no select queries, relationship loading is skipped on the
+            // underlying find() to avoid pulling related documents the caller did not ask for.
+            $find = $hasSelects
+                ? fn () => $dbForDatabases->find($collectionTableId, $queries)
+                : fn () => $dbForDatabases->skipRelationships(fn () => $dbForDatabases->find($collectionTableId, $queries));
 
             // Use transaction-aware document retrieval if transactionId is provided
             if ($transactionId !== null) {
-                $documents = $transactionState->listDocuments($collectionTableId, $transactionId, $queries);
-                $total = $includeTotal ? $transactionState->countDocuments($collectionTableId, $transactionId, $queries) : 0;
-            } elseif (! empty($selectQueries)) {
+                $documents = $transactionState->listDocuments($database, $collectionTableId, $transactionId, $queries);
+                $total = $includeTotal ? $transactionState->countDocuments($database, $collectionTableId, $transactionId, $queries) : 0;
+            } elseif ((int)$ttl > 0) {
+                $cacheKey = $this->getListCacheKey($dbForProject, $collectionId);
+                $roles = $dbForProject->getAuthorization()->getRoles();
+                $documentsField = $this->getListCacheField($collection, $roles, $queries, self::LIST_CACHE_FIELD_DOCUMENTS);
 
-                if ((int)$ttl > 0) {
-                    $serializedQueries = [];
-                    foreach ($queries as $query) {
-                        $serializedQueries[] = $query instanceof Query ? $query->toArray() : $query;
-                    }
-
-                    $hostname = $dbForProject->getAdapter()->getHostname();
-                    $roles = $dbForProject->getAuthorization()->getRoles();
-                    $schemaHash = \md5(\json_encode($collection->getAttribute('attributes', [])) . \json_encode($collection->getAttribute('indexes', [])));
-                    $cacheKeyBase = \sprintf(
-                        '%s-cache-%s:%s:%s:collection:%s:%s:user:%s:%s',
-                        $dbForProject->getCacheName(),
-                        $hostname ?? '',
-                        $dbForProject->getNamespace(),
-                        $dbForProject->getTenant(),
-                        $collectionId,
-                        $schemaHash,
-                        \md5(\json_encode($roles)),
-                        \md5(\json_encode($serializedQueries))
-                    );
-
-                    $documentsCacheKey = $cacheKeyBase . ':documents';
-                    $totalCacheKey = $cacheKeyBase . ':total';
-
-                    $documentsCacheHit = $totalDocumentsCacheHit = false;
-
-                    $cachedDocuments = $dbForProject->getCache()->load($documentsCacheKey, $ttl);
-
-                    if ($cachedDocuments !== null &&
-                        $cachedDocuments !== false &&
-                        \is_array($cachedDocuments)) {
-                        $documents = \array_map(function ($doc) {
-                            return new Document($doc);
-                        }, $cachedDocuments);
-                        $documentsCacheHit = true;
-                    } else {
-                        $documents = $dbForProject->find($collectionTableId, $queries);
-
-                        // Convert Document objects to arrays for caching
-                        $documentsArray = \array_map(function ($doc) {
-                            return $doc->getArrayCopy();
-                        }, $documents);
-                        $dbForProject->getCache()->save($documentsCacheKey, $documentsArray);
-                    }
-
-                    if ($includeTotal) {
-                        $cachedTotal = $dbForProject->getCache()->load($totalCacheKey, $ttl);
-                        if ($cachedTotal !== null && $cachedTotal !== false) {
-                            $total = $cachedTotal;
-                            $totalDocumentsCacheHit = true;
-                        } else {
-                            $total = $dbForProject->count($collectionTableId, $queries, APP_LIMIT_COUNT);
-                            $dbForProject->getCache()->save($totalCacheKey, $total);
-                        }
-                    } else {
-                        $total = 0;
-                    }
-
-                    $response->addHeader('X-Appwrite-Cache', $documentsCacheHit ? 'hit' : 'miss');
-
-                } else {
-                    // has selects, allow relationship on documents
-                    $documents = $dbForProject->find($collectionTableId, $queries);
-                    $total = $includeTotal ? $dbForProject->count($collectionTableId, $queries, APP_LIMIT_COUNT) : 0;
+                $documentsCacheHit = false;
+                try {
+                    $cachedDocuments = $dbForProject->getCache()->load($cacheKey, $ttl, $documentsField);
+                } catch (\Throwable) {
+                    $cachedDocuments = null;
                 }
 
+                if ($cachedDocuments !== null &&
+                    $cachedDocuments !== false &&
+                    \is_array($cachedDocuments)) {
+                    $documents = \array_map(function ($doc) {
+                        return new Document($doc);
+                    }, $cachedDocuments);
+                    $documentsCacheHit = true;
+                } else {
+                    $documents = $find();
+
+                    $documentsArray = \array_map(function ($doc) {
+                        return $doc->getArrayCopy();
+                    }, $documents);
+                    try {
+                        $dbForProject->getCache()->save($cacheKey, $documentsArray, $documentsField);
+                    } catch (\Throwable) {
+                    }
+                }
+
+                if ($includeTotal) {
+                    $totalField = $this->getListCacheField($collection, $roles, $queries, self::LIST_CACHE_FIELD_TOTAL);
+                    try {
+                        $cachedTotal = $dbForProject->getCache()->load($cacheKey, $ttl, $totalField);
+                    } catch (\Throwable) {
+                        $cachedTotal = null;
+                    }
+                    if ($cachedTotal !== null && $cachedTotal !== false) {
+                        $total = $cachedTotal;
+                    } else {
+                        $total = $dbForDatabases->count($collectionTableId, $queries, APP_LIMIT_COUNT);
+                        try {
+                            $dbForProject->getCache()->save($cacheKey, $total, $totalField);
+                        } catch (\Throwable) {
+                        }
+                    }
+                } else {
+                    $total = 0;
+                }
+
+                $response->addHeader('X-Appwrite-Cache', $documentsCacheHit ? 'hit' : 'miss');
             } else {
-                // has no selects, disable relationship loading on documents
-                /* @type Document[] $documents */
-                $documents = $dbForProject->skipRelationships(fn () => $dbForProject->find($collectionTableId, $queries));
-                $total = $includeTotal ? $dbForProject->count($collectionTableId, $queries, APP_LIMIT_COUNT) : 0;
+                $documents = $find();
+                $total = $includeTotal ? $dbForDatabases->count($collectionTableId, $queries, APP_LIMIT_COUNT) : 0;
             }
         } catch (OrderException $e) {
             $documents = $this->isCollectionsAPI() ? 'documents' : 'rows';
@@ -232,8 +221,8 @@ class XList extends Action
         }
 
         $usage
-            ->addMetric(METRIC_DATABASES_OPERATIONS_READS, max($operations, 1))
-            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations);
+            ->addMetric($this->getDatabasesOperationReadMetric(), max($operations, 1))
+            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), $this->getDatabasesIdOperationReadMetric()), $operations);
 
         $response->dynamic(new Document([
             'total' => $total,

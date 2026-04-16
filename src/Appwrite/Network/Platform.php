@@ -6,20 +6,10 @@ class Platform
 {
     public const TYPE_UNKNOWN = 'unknown';
     public const TYPE_WEB = 'web';
-    public const TYPE_FLUTTER_IOS = 'flutter-ios';
-    public const TYPE_FLUTTER_ANDROID = 'flutter-android';
-    public const TYPE_FLUTTER_MACOS = 'flutter-macos';
-    public const TYPE_FLUTTER_WINDOWS = 'flutter-windows';
-    public const TYPE_FLUTTER_LINUX = 'flutter-linux';
-    public const TYPE_FLUTTER_WEB = 'flutter-web';
-    public const TYPE_APPLE_IOS = 'apple-ios';
-    public const TYPE_APPLE_MACOS = 'apple-macos';
-    public const TYPE_APPLE_WATCHOS = 'apple-watchos';
-    public const TYPE_APPLE_TVOS = 'apple-tvos';
+    public const TYPE_APPLE = 'apple';
     public const TYPE_ANDROID = 'android';
-    public const TYPE_UNITY = 'unity';
-    public const TYPE_REACT_NATIVE_IOS = 'react-native-ios';
-    public const TYPE_REACT_NATIVE_ANDROID = 'react-native-android';
+    public const TYPE_WINDOWS = 'windows';
+    public const TYPE_LINUX = 'linux';
     public const TYPE_SCHEME = 'scheme';
 
     public const SCHEME_HTTP = 'http';
@@ -58,6 +48,36 @@ class Platform
     ];
 
     /**
+     * Map deprecated platform types to their new consolidated types.
+     *
+     * The 1.9.x refactor consolidated ~15 platform types into 5 new ones.
+     * Existing platforms in the database may still have old type values.
+     *
+     * @param string $type
+     * @return string The mapped type, or the original if not deprecated.
+     */
+    public static function mapDeprecatedType(string $type): string
+    {
+        $mapping = [
+            'flutter-web' => self::TYPE_WEB,
+            'unity' => self::TYPE_WEB,
+            'flutter-ios' => self::TYPE_APPLE,
+            'flutter-macos' => self::TYPE_APPLE,
+            'apple-ios' => self::TYPE_APPLE,
+            'apple-macos' => self::TYPE_APPLE,
+            'apple-watchos' => self::TYPE_APPLE,
+            'apple-tvos' => self::TYPE_APPLE,
+            'react-native-ios' => self::TYPE_APPLE,
+            'flutter-android' => self::TYPE_ANDROID,
+            'react-native-android' => self::TYPE_ANDROID,
+            'flutter-windows' => self::TYPE_WINDOWS,
+            'flutter-linux' => self::TYPE_LINUX,
+        ];
+
+        return $mapping[$type] ?? $type;
+    }
+
+    /**
      * Get user-friendly platform name from a scheme.
      *
      * @param string|null $scheme
@@ -77,25 +97,28 @@ class Platform
             $key = strtolower($platform['key'] ?? '');
 
             switch ($type) {
+                case 'flutter-web':
+                case 'unity':
                 case self::TYPE_WEB:
-                case self::TYPE_FLUTTER_WEB:
                     if (!empty($hostname)) {
                         $hostnames[] = $hostname;
                     }
                     break;
-                case self::TYPE_FLUTTER_IOS:
-                case self::TYPE_FLUTTER_ANDROID:
-                case self::TYPE_FLUTTER_MACOS:
-                case self::TYPE_FLUTTER_WINDOWS:
-                case self::TYPE_FLUTTER_LINUX:
+                case 'flutter-android':
+                case 'react-native-android':
                 case self::TYPE_ANDROID:
-                case self::TYPE_APPLE_IOS:
-                case self::TYPE_APPLE_MACOS:
-                case self::TYPE_APPLE_WATCHOS:
-                case self::TYPE_APPLE_TVOS:
-                case self::TYPE_REACT_NATIVE_IOS:
-                case self::TYPE_REACT_NATIVE_ANDROID:
-                case self::TYPE_UNITY:
+                case 'flutter-windows':
+                case self::TYPE_WINDOWS:
+                case 'flutter-linux':
+                case self::TYPE_LINUX:
+                case 'flutter-ios':
+                case 'flutter-macos':
+                case 'apple-ios':
+                case 'apple-macos':
+                case 'apple-watchos':
+                case 'apple-tvos':
+                case 'react-native-ios':
+                case self::TYPE_APPLE:
                     if (!empty($key)) {
                         $hostnames[] = $key;
                     }
@@ -120,37 +143,37 @@ class Platform
                         $schemes[] = $scheme;
                     }
                     break;
+                case 'flutter-web':
+                case 'unity':
                 case self::TYPE_WEB:
-                case self::TYPE_FLUTTER_WEB:
                     $schemes[] = self::SCHEME_HTTP;
                     $schemes[] = self::SCHEME_HTTPS;
                     break;
-                case self::TYPE_FLUTTER_IOS:
-                case self::TYPE_APPLE_IOS:
-                case self::TYPE_REACT_NATIVE_IOS:
-                    $schemes[] = self::SCHEME_IOS;
-                    break;
-                case self::TYPE_FLUTTER_ANDROID:
+                case 'flutter-android':
+                case 'react-native-android':
                 case self::TYPE_ANDROID:
-                case self::TYPE_REACT_NATIVE_ANDROID:
                     $schemes[] = self::SCHEME_ANDROID;
                     break;
-                case self::TYPE_FLUTTER_MACOS:
-                case self::TYPE_APPLE_MACOS:
+                case 'flutter-ios':
+                case 'flutter-macos':
+                case 'apple-ios':
+                case 'apple-macos':
+                case 'apple-watchos':
+                case 'apple-tvos':
+                case 'react-native-ios':
+                case self::TYPE_APPLE:
+                    $schemes[] = self::SCHEME_WATCHOS;
                     $schemes[] = self::SCHEME_MACOS;
+                    $schemes[] = self::SCHEME_TVOS;
+                    $schemes[] = self::SCHEME_IOS;
                     break;
-                case self::TYPE_FLUTTER_WINDOWS:
-                case self::TYPE_UNITY:
+                case 'flutter-windows':
+                case self::TYPE_WINDOWS:
                     $schemes[] = self::SCHEME_WINDOWS;
                     break;
-                case self::TYPE_FLUTTER_LINUX:
+                case 'flutter-linux':
+                case self::TYPE_LINUX:
                     $schemes[] = self::SCHEME_LINUX;
-                    break;
-                case self::TYPE_APPLE_WATCHOS:
-                    $schemes[] = self::SCHEME_WATCHOS;
-                    break;
-                case self::TYPE_APPLE_TVOS:
-                    $schemes[] = self::SCHEME_TVOS;
                     break;
                 default:
                     break;

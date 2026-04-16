@@ -22,6 +22,7 @@ use Appwrite\Utopia\Response\Model\AttributeLine;
 use Appwrite\Utopia\Response\Model\AttributeList;
 use Appwrite\Utopia\Response\Model\AttributeLongtext;
 use Appwrite\Utopia\Response\Model\AttributeMediumtext;
+use Appwrite\Utopia\Response\Model\AttributeObject;
 use Appwrite\Utopia\Response\Model\AttributePoint;
 use Appwrite\Utopia\Response\Model\AttributePolygon;
 use Appwrite\Utopia\Response\Model\AttributeRelationship;
@@ -29,6 +30,7 @@ use Appwrite\Utopia\Response\Model\AttributeString;
 use Appwrite\Utopia\Response\Model\AttributeText;
 use Appwrite\Utopia\Response\Model\AttributeURL;
 use Appwrite\Utopia\Response\Model\AttributeVarchar;
+use Appwrite\Utopia\Response\Model\AttributeVector;
 use Appwrite\Utopia\Response\Model\AuthProvider;
 use Appwrite\Utopia\Response\Model\BaseList;
 use Appwrite\Utopia\Response\Model\Branch;
@@ -65,6 +67,7 @@ use Appwrite\Utopia\Response\Model\DetectionRuntime;
 use Appwrite\Utopia\Response\Model\DetectionVariable;
 use Appwrite\Utopia\Response\Model\DevKey;
 use Appwrite\Utopia\Response\Model\Document as ModelDocument;
+use Appwrite\Utopia\Response\Model\Embedding;
 use Appwrite\Utopia\Response\Model\Error;
 use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\Execution;
@@ -103,7 +106,12 @@ use Appwrite\Utopia\Response\Model\Mock;
 use Appwrite\Utopia\Response\Model\MockNumber;
 use Appwrite\Utopia\Response\Model\None;
 use Appwrite\Utopia\Response\Model\Phone;
-use Appwrite\Utopia\Response\Model\Platform;
+use Appwrite\Utopia\Response\Model\PlatformAndroid;
+use Appwrite\Utopia\Response\Model\PlatformApple;
+use Appwrite\Utopia\Response\Model\PlatformLinux;
+use Appwrite\Utopia\Response\Model\PlatformList;
+use Appwrite\Utopia\Response\Model\PlatformWeb;
+use Appwrite\Utopia\Response\Model\PlatformWindows;
 use Appwrite\Utopia\Response\Model\Preferences;
 use Appwrite\Utopia\Response\Model\Project;
 use Appwrite\Utopia\Response\Model\Provider;
@@ -136,6 +144,8 @@ use Appwrite\Utopia\Response\Model\UsageBuckets;
 use Appwrite\Utopia\Response\Model\UsageCollection;
 use Appwrite\Utopia\Response\Model\UsageDatabase;
 use Appwrite\Utopia\Response\Model\UsageDatabases;
+use Appwrite\Utopia\Response\Model\UsageDocumentsDB;
+use Appwrite\Utopia\Response\Model\UsageDocumentsDBs;
 use Appwrite\Utopia\Response\Model\UsageFunction;
 use Appwrite\Utopia\Response\Model\UsageFunctions;
 use Appwrite\Utopia\Response\Model\UsageProject;
@@ -144,9 +154,12 @@ use Appwrite\Utopia\Response\Model\UsageSites;
 use Appwrite\Utopia\Response\Model\UsageStorage;
 use Appwrite\Utopia\Response\Model\UsageTable;
 use Appwrite\Utopia\Response\Model\UsageUsers;
+use Appwrite\Utopia\Response\Model\UsageVectorsDB;
+use Appwrite\Utopia\Response\Model\UsageVectorsDBs;
 use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Variable;
 use Appwrite\Utopia\Response\Model\VcsContent;
+use Appwrite\Utopia\Response\Model\VectorsDBCollection;
 use Appwrite\Utopia\Response\Model\Webhook;
 
 // General
@@ -189,7 +202,6 @@ Response::setModel(new BaseList('Webhooks List', Response::MODEL_WEBHOOK_LIST, '
 Response::setModel(new BaseList('API Keys List', Response::MODEL_KEY_LIST, 'keys', Response::MODEL_KEY, true, true));
 Response::setModel(new BaseList('Dev Keys List', Response::MODEL_DEV_KEY_LIST, 'devKeys', Response::MODEL_DEV_KEY, true, false));
 Response::setModel(new BaseList('Auth Providers List', Response::MODEL_AUTH_PROVIDER_LIST, 'platforms', Response::MODEL_AUTH_PROVIDER, true, false));
-Response::setModel(new BaseList('Platforms List', Response::MODEL_PLATFORM_LIST, 'platforms', Response::MODEL_PLATFORM, true, false));
 Response::setModel(new BaseList('Countries List', Response::MODEL_COUNTRY_LIST, 'countries', Response::MODEL_COUNTRY));
 Response::setModel(new BaseList('Continents List', Response::MODEL_CONTINENT_LIST, 'continents', Response::MODEL_CONTINENT));
 Response::setModel(new BaseList('Languages List', Response::MODEL_LANGUAGE_LIST, 'languages', Response::MODEL_LANGUAGE));
@@ -211,9 +223,12 @@ Response::setModel(new BaseList('Migrations List', Response::MODEL_MIGRATION_LIS
 Response::setModel(new BaseList('Migrations Firebase Projects List', Response::MODEL_MIGRATION_FIREBASE_PROJECT_LIST, 'projects', Response::MODEL_MIGRATION_FIREBASE_PROJECT));
 Response::setModel(new BaseList('Specifications List', Response::MODEL_SPECIFICATION_LIST, 'specifications', Response::MODEL_SPECIFICATION));
 Response::setModel(new BaseList('VCS Content List', Response::MODEL_VCS_CONTENT_LIST, 'contents', Response::MODEL_VCS_CONTENT));
+Response::setModel(new BaseList('VectorsDB Collections List', Response::MODEL_VECTORSDB_COLLECTION_LIST, 'collections', Response::MODEL_VECTORSDB_COLLECTION));
+Response::setModel(new BaseList('Embedding list', Response::MODEL_EMBEDDING_LIST, 'embeddings', Response::MODEL_EMBEDDING));
 
 // Entities
 Response::setModel(new Database());
+Response::setModel(new Embedding());
 
 // Collection API Models
 Response::setModel(new Collection());
@@ -236,6 +251,17 @@ Response::setModel(new AttributeVarchar());
 Response::setModel(new AttributeText());
 Response::setModel(new AttributeMediumtext());
 Response::setModel(new AttributeLongtext());
+
+// DocumentsDB API Models
+Response::setModel(new UsageDocumentsDBs());
+Response::setModel(new UsageDocumentsDB());
+
+// VectorsDB API Models
+Response::setModel(new VectorsDBCollection());
+Response::setModel(new AttributeObject());
+Response::setModel(new AttributeVector());
+Response::setModel(new UsageVectorsDBs());
+Response::setModel(new UsageVectorsDB());
 
 // Table API Models
 Response::setModel(new Table());
@@ -311,7 +337,12 @@ Response::setModel(new Key());
 Response::setModel(new DevKey());
 Response::setModel(new MockNumber());
 Response::setModel(new AuthProvider());
-Response::setModel(new Platform());
+Response::setModel(new PlatformWeb());
+Response::setModel(new PlatformApple());
+Response::setModel(new PlatformAndroid());
+Response::setModel(new PlatformWindows());
+Response::setModel(new PlatformLinux());
+Response::setModel(new PlatformList());
 Response::setModel(new Variable());
 Response::setModel(new Country());
 Response::setModel(new Continent());

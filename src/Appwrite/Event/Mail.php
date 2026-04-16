@@ -101,7 +101,7 @@ class Mail extends Event
     /**
      * Sets preview for the mail event.
      *
-     * @return string
+     * @return self
      */
     public function setPreview(string $preview): self
     {
@@ -115,7 +115,7 @@ class Mail extends Event
      *
      * @return string
      */
-    public function getPreview(string $preview): string
+    public function getPreview(): string
     {
         return $this->preview;
     }
@@ -181,7 +181,7 @@ class Mail extends Event
     /**
      * Set SMTP port
      *
-     * @param int port
+     * @param int $port
      * @return self
      */
     public function setSmtpPort(int $port): self
@@ -217,7 +217,7 @@ class Mail extends Event
     /**
      * Set SMTP secure
      *
-     * @param string $password
+     * @param string $secure
      * @return self
      */
     public function setSmtpSecure(string $secure): self

@@ -285,7 +285,7 @@ class Event
      *
      * @param string $key
      * @param Document $context
-     * @return self
+     * @return static
      */
     public function setContext(string $key, Document $context): self
     {
@@ -309,7 +309,7 @@ class Event
     /**
      * Set class used for this event.
      * @param string $class
-     * @return self
+     * @return static
      */
     public function setClass(string $class): self
     {
@@ -519,6 +519,7 @@ class Event
      * @param string $pattern
      * @param array $params
      * @param ?Document $database
+     * @param ?Document $database
      * @return array
      * @throws \InvalidArgumentException
      */
@@ -533,7 +534,7 @@ class Event
         $parsed = self::parseEventPattern($pattern);
         // to switch the resource types from databases to the required prefix
         // eg; all databases events get fired with databases. prefix which mainly depicts legacy type
-        // so a projection from databases to the actual prefix
+        // so a projection from databases to the actual prefix(documentsdb, vectorsdb,etc)
         if ((str_contains($pattern, 'databases.') && $database && $database->getAttribute('type') !== 'legacy')) {
             $parsed = self::getDatabaseTypeEvents($database, $parsed);
         }
@@ -636,9 +637,11 @@ class Event
          */
         $eventValues = \array_values($events);
 
-        /**
-         * Return a combined list of table, collection events and if tablesdb present then include all for backward compatibility
-        */
+        $databaseType = $database?->getAttribute('type', 'legacy');
+        if ($database !== null && !\in_array($databaseType, ['legacy', 'tablesdb'], true)) {
+            return $eventValues;
+        }
+
         return Event::mirrorCollectionEvents($pattern, $eventValues[0], $eventValues);
     }
 
@@ -647,10 +650,8 @@ class Event
      *
      * @param Event $event
      *
-     * @return self
-     *
      */
-    public function from(Event $event): self
+    public function from(Event $event): static
     {
         $this->project = $event->getProject();
         $this->user = $event->getUser();
@@ -663,19 +664,28 @@ class Event
     }
 
     /**
-     * Adds `table` events for `collection` events.
+     * Adds table/collection counterpart events for backward compatibility.
      *
      * Example:
      *
      * `databases.*.collections.*.documents.*.update` →\
      * `[databases.*.collections.*.documents.*.update, databases.*.tables.*.rows.*.update]`
+     *
+     * `databases.*.tables.*.rows.*.update` →\
+     * `[databases.*.tables.*.rows.*.update, databases.*.collections.*.documents.*.update]`
      */
     private static function mirrorCollectionEvents(string $pattern, string $firstEvent, array $events): array
     {
-        $tableEventMap = [
+        $collectionsToTablesMap = [
             'documents'    => 'rows',
             'collections'  => 'tables',
             'attributes'   => 'columns',
+        ];
+
+        $tablesToCollectionsMap = [
+            'rows'         => 'documents',
+            'tables'       => 'collections',
+            'columns'      => 'attributes',
         ];
 
         $databasesEventMap = [
@@ -688,37 +698,30 @@ class Event
         if (
             (
                 str_contains($pattern, 'databases.') &&
-                str_contains($firstEvent, 'collections')
+                (
+                    str_contains($firstEvent, 'collections') ||
+                    str_contains($firstEvent, 'tables')
+                )
             ) ||
             (
                 str_contains($firstEvent, 'tablesdb.')
             )
         ) {
             $pairedEvents = [];
-
             foreach ($events as $event) {
                 $pairedEvents[] = $event;
                 // tablesdb needs databases event with tables and collections
                 if (str_contains($event, 'tablesdb')) {
-                    $databasesSideEvent = str_replace(
-                        array_keys($databasesEventMap),
-                        array_values($databasesEventMap),
-                        $event
-                    );
+                    $databasesSideEvent = self::replaceEventSegments($event, $databasesEventMap);
                     $pairedEvents[] = $databasesSideEvent;
-                    $tableSideEvent = str_replace(
-                        array_keys($tableEventMap),
-                        array_values($tableEventMap),
-                        $databasesSideEvent
-                    );
+                    $tableSideEvent = self::replaceEventSegments($databasesSideEvent, $collectionsToTablesMap);
                     $pairedEvents[] = $tableSideEvent;
                 } elseif (str_contains($event, 'collections')) {
-                    $tableSideEvent = str_replace(
-                        array_keys($tableEventMap),
-                        array_values($tableEventMap),
-                        $event
-                    );
+                    $tableSideEvent = self::replaceEventSegments($event, $collectionsToTablesMap);
                     $pairedEvents[] = $tableSideEvent;
+                } elseif (str_contains($event, 'tables')) {
+                    $collectionSideEvent = self::replaceEventSegments($event, $tablesToCollectionsMap);
+                    $pairedEvents[] = $collectionSideEvent;
                 }
             }
 
@@ -728,6 +731,20 @@ class Event
         // array unique can turns list to hasmap in case duplicates present
         // so forcing array value will turn this to array list always
         return array_values(array_unique($events));
+    }
+
+    /**
+     * Replace only exact event path segments, never partial substrings.
+     */
+    private static function replaceEventSegments(string $event, array $map): string
+    {
+        $parts = \explode('.', $event);
+        $parts = \array_map(
+            fn (string $part) => $map[$part] ?? $part,
+            $parts
+        );
+
+        return \implode('.', $parts);
     }
 
     /**
@@ -743,6 +760,13 @@ class Event
                     'documents'    => 'rows',
                     'collections'  => 'tables',
                     'attributes'   => 'columns',
+                ];
+                break;
+            case 'documentsdb':
+            case 'vectorsdb':
+                // sending the type itself(eg: documentsdb, vectorsdb)
+                $eventMap = [
+                    'databases'    => $database->getAttribute('type')
                 ];
                 break;
         }

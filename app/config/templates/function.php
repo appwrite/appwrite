@@ -31,9 +31,6 @@ class FunctionUseCases
     public const DEV_TOOLS = 'dev-tools';
     public const AUTH = 'auth';
 
-    /**
-     * @var array<string>
-     */
     public static function getAll(): array
     {
         return [

@@ -22,7 +22,7 @@ class Comment
         'Every Git commit and branch gets its own deployment URL automatically',
         'Custom domains work with both CNAME for subdomains and NS records for apex domains',
         'HTTPS and SSL certificates are handled automatically for all your Sites',
-        'Functions can run for up to 15 minutes before timing out',
+        'Function builds can take up to 45 minutes before timing out',
         'Schedule functions to run as often as every minute with cron expressions',
         'Environment variables can be scoped per function or shared across your project',
         'Function scopes give you fine-grained control over API permissions',

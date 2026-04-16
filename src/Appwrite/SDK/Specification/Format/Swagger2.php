@@ -96,10 +96,9 @@ class Swagger2 extends Format
 
             $scope = $route->getLabel('scope', '');
 
-            /** @var Method $sdk */
             $sdk = $route->getLabel('sdk', false);
 
-            if (empty($sdk)) {
+            if ($sdk === false) {
                 continue;
             }
 
@@ -127,8 +126,7 @@ class Swagger2 extends Format
             $sdkPlatforms = array_values(array_unique($sdkPlatforms));
             $namespace = $sdk->getNamespace() ?? 'default';
 
-            $desc ??= '';
-            $descContents = \str_ends_with($desc, '.md') ? \file_get_contents($desc) : $desc;
+            $descContents = $this->getDescriptionContents($desc);
 
             $temp = [
                 'summary' => $route->getDesc(),
@@ -171,7 +169,7 @@ class Swagger2 extends Format
                 $temp['produces'][] = $produces;
             }
 
-            if (!empty($additionalMethods)) {
+            if (\is_array($additionalMethods) && \count($additionalMethods) > 0) {
                 $temp['x-appwrite']['methods'] = [];
                 foreach ($additionalMethods as $methodObj) {
                     /** @var Method $methodObj */
@@ -200,7 +198,7 @@ class Swagger2 extends Format
                         'parameters' => [],
                         'required' => [],
                         'responses' => [],
-                        'description' => ($desc) ? \file_get_contents($desc) : '',
+                        'description' => $this->getDescriptionContents($desc),
                         'demo' => \strtolower($namespace) . '/' . Template::fromCamelCaseToDash($methodObj->getMethodName()) . '.md',
                         'public' => $methodObj->isPublic(),
                     ];
@@ -283,6 +281,18 @@ class Swagger2 extends Format
                         if ($value->getType() === $model) {
                             $model = $value;
                             break;
+                        }
+                    }
+                }
+
+                if (\is_string($model)) {
+                    throw new \RuntimeException("Unresolved response model '{$model}' for method '{$sdk->getNamespace()}.{$sdk->getMethodName()}'. Ensure the model is registered.");
+                }
+
+                if (\is_array($model)) {
+                    foreach ($model as $m) {
+                        if (\is_string($m)) {
+                            throw new \RuntimeException("Unresolved response model '{$m}' for method '{$sdk->getNamespace()}.{$sdk->getMethodName()}'. Ensure the model is registered.");
                         }
                     }
                 }
@@ -371,24 +381,31 @@ class Swagger2 extends Format
                 }
 
                 /** @var Validator $validator */
-                $validator = (\is_callable($param['validator']))
-                    ? ($param['validator'])(...$this->app->getResources($param['injections']))
-                    : $param['validator'];
+                $validator = $this->getValidator($param);
+
+                $isNullable = $validator instanceof Nullable;
+
+                $parameter = $this->getRequestParameterConfig(
+                    $sdk->getNamespace() ?? '',
+                    $methodName,
+                    $name,
+                    $param['optional'],
+                    $isNullable,
+                    $param['default'],
+                );
 
                 $node = [
                     'name' => $name,
                     'description' => $param['description'],
-                    'required' => !$param['optional'],
+                    'required' => $parameter['required'],
                 ];
-
-                $isNullable = $validator instanceof Nullable;
 
                 if ($isNullable) {
                     /** @var Nullable $validator */
                     $validator = $validator->getValidator();
                 }
 
-                $class = !empty($validator)
+                $class = $validator instanceof Validator
                     ? \get_class($validator)
                     : '';
 
@@ -436,7 +453,7 @@ class Swagger2 extends Format
                         $node['type'] = $validator->getType();
                         $node['x-example'] = ($param['example'] ?? '') ?: '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
                         break;
-                    case \Utopia\Database\Validator\DatetimeValidator::class:
+                    case \Utopia\Database\Validator\Datetime::class:
                         $node['type'] = $validator->getType();
                         $node['format'] = 'datetime';
                         $node['x-example'] = ($param['example'] ?? '') ?: Model::TYPE_DATETIME_EXAMPLE;
@@ -479,7 +496,6 @@ class Swagger2 extends Format
                         }
                         break;
                     case \Utopia\Validator\JSON::class:
-                    case \Utopia\Validator\Mock::class:
                     case \Utopia\Validator\Assoc::class:
                         $node['type'] = 'object';
                         $node['default'] = (empty($param['default'])) ? new \stdClass() : $param['default'];
@@ -548,12 +564,6 @@ class Swagger2 extends Format
                     case \Utopia\Validator\FloatValidator::class:
                         $node['type'] = 'number';
                         $node['format'] = 'float';
-                        if (!empty($param['example'])) {
-                            $node['x-example'] = $param['example'];
-                        }
-                        break;
-                    case \Utopia\Validator\Length::class:
-                        $node['type'] = $validator->getType();
                         if (!empty($param['example'])) {
                             $node['x-example'] = $param['example'];
                         }
@@ -710,7 +720,7 @@ class Swagger2 extends Format
                         break;
                 }
 
-                if ($param['optional'] && !\is_null($param['default'])) { // Param has default value
+                if ($parameter['emitDefault']) { // Param has default value
                     $node['default'] = $param['default'];
                 }
 
@@ -728,7 +738,7 @@ class Swagger2 extends Format
                         continue;
                     }
 
-                    if (!$param['optional']) {
+                    if ($node['required']) {
                         $bodyRequired[] = $name;
                     }
 
@@ -754,7 +764,7 @@ class Swagger2 extends Format
                         $body['schema']['properties'][$name]['x-global'] = true;
                     }
 
-                    if ($isNullable) {
+                    if ($parameter['nullable']) {
                         $body['schema']['properties'][$name]['x-nullable'] = true;
                     }
 
@@ -810,6 +820,10 @@ class Swagger2 extends Format
             }
 
             foreach ($model->getRules() as $name => $rule) {
+                if (($rule['hidden'] ?? false) === true) {
+                    continue;
+                }
+
                 $type = '';
                 $format = null;
                 $items = null;

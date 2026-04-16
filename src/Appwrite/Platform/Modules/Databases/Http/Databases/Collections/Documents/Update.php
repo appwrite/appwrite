@@ -83,15 +83,17 @@ class Update extends Action
             ->inject('requestTimestamp')
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('getDatabasesDB')
             ->inject('queueForEvents')
             ->inject('usage')
             ->inject('transactionState')
             ->inject('plan')
             ->inject('authorization')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?string $transactionId, ?\DateTime $requestTimestamp, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents, Context $usage, TransactionState $transactionState, array $plan, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?string $transactionId, ?\DateTime $requestTimestamp, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Context $usage, TransactionState $transactionState, array $plan, Authorization $authorization, User $user): void
     {
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
@@ -101,8 +103,8 @@ class Update extends Action
 
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
-        $isAPIKey = User::isApp($authorization->getRoles());
-        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
+        $isAPIKey = $user->isApp($authorization->getRoles());
+        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
@@ -118,15 +120,15 @@ class Update extends Action
             $data = $this->parseOperators($data, $collection);
         }
 
+        $dbForDatabases = $getDatabasesDB($database);
         // Read permission should not be required for update
-        /** @var Document $document */
         $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
 
         if ($transactionId !== null) {
             // Use transaction-aware document retrieval to see changes from same transaction
-            $document = $transactionState->getDocument($collectionTableId, $documentId, $transactionId);
+            $document = $transactionState->getDocument($database, $collectionTableId, $documentId, $transactionId);
         } else {
-            $document = $authorization->skip(fn () => $dbForProject->getDocument($collectionTableId, $documentId));
+            $document = $authorization->skip(fn () => $dbForDatabases->getDocument($collectionTableId, $documentId));
         }
 
         if ($document->isEmpty()) {
@@ -247,8 +249,8 @@ class Update extends Action
         $setCollection($collection, $newDocument);
 
         $usage
-            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, max($operations, 1))
-            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations);
+            ->addMetric($this->getDatabasesOperationWriteMetric(), max($operations, 1))
+            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), $this->getDatabasesIdOperationWriteMetric()), $operations);
 
         // Handle transaction staging
         if ($transactionId !== null) {
@@ -319,9 +321,9 @@ class Update extends Action
 
 
         try {
-            $document = $dbForProject->withRequestTimestamp(
+            $document = $dbForDatabases->withRequestTimestamp(
                 $requestTimestamp,
-                fn () => $dbForProject->withPreserveDates(fn () => $dbForProject->updateDocument(
+                fn () => $dbForDatabases->withPreserveDates(fn () => $dbForDatabases->updateDocument(
                     'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
                     $document->getId(),
                     $newDocument

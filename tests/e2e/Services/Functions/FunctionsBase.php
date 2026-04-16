@@ -100,6 +100,24 @@ trait FunctionsBase
                     'x-appwrite-key' => $this->getProject()['apiKey'],
                 ]));
                 $this->assertNotEquals(401, $function['headers']['status-code'], 'Auth failed while polling function activation');
+
+                if (
+                    ($function['body']['deploymentId'] ?? '') !== $deploymentId
+                    && ($function['body']['latestDeploymentId'] ?? '') === $deploymentId
+                    && ($function['body']['latestDeploymentStatus'] ?? '') === 'ready'
+                ) {
+                    $activation = $this->updateFunctionDeployment($functionId, $deploymentId);
+                    $this->assertContains(
+                        $activation['headers']['status-code'],
+                        [200, 409],
+                        'Deployment activation request failed: ' . json_encode($activation['body'], JSON_PRETTY_PRINT)
+                    );
+
+                    if ($activation['headers']['status-code'] === 200) {
+                        $function = $activation;
+                    }
+                }
+
                 $this->assertEquals($deploymentId, $function['body']['deploymentId'] ?? '', 'Deployment is not activated, deployment: ' . json_encode($function['body'], JSON_PRETTY_PRINT));
             }, 120000, 500);
         }
@@ -264,7 +282,7 @@ trait FunctionsBase
         $folderPath = realpath(__DIR__ . '/../../../resources/functions') . "/$function";
         $tarPath = "$folderPath/code.tar.gz";
 
-        Console::execute("cd $folderPath && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->stdout, $this->stderr);
+        Console::execute("cd $folderPath && tar --exclude code.tar.gz --exclude node_modules -czf code.tar.gz .", '', $this->stdout, $this->stderr);
 
         if (filesize($tarPath) > 1024 * 1024 * 5) {
             throw new \Exception('Code package is too large. Use the chunked upload method instead.');
