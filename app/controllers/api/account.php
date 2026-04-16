@@ -474,19 +474,26 @@ Http::delete('/v1/account')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('queueForDeletes')
-    ->action(function (Document $user, Document $project, Response $response, Database $dbForProject, Event $queueForEvents, Delete $queueForDeletes) {
+    ->inject('authorization')
+    ->action(function (Document $user, Document $project, Response $response, Database $dbForProject, Event $queueForEvents, Delete $queueForDeletes, Authorization $authorization) {
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         if ($project->getId() === 'console') {
-            // get all memberships
             $memberships = $user->getAttribute('memberships', []);
             foreach ($memberships as $membership) {
-                // prevent deletion if at least one active membership
-                if ($membership->getAttribute('confirm', false)) {
-                    throw new Exception(Exception::USER_DELETION_PROHIBITED);
+                if (!$membership->getAttribute('confirm', false)) {
+                    continue;
                 }
+
+                $team = $dbForProject->getDocument('teams', $membership->getAttribute('teamId'));
+                if ($team->isEmpty()) {
+                    continue;
+                }
+
+                // Team is left as-is — we don't promote non-owner members to owner.
+                // Orphan teams are cleaned up later by Cloud's inactive project cleanup.
             }
         }
 

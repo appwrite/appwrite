@@ -126,6 +126,7 @@ class Delete extends Action
         if ($team->getAttribute('userInternalId') === $membership->getAttribute('userInternalId')) {
             $membership = $dbForProject->findOne('memberships', [
                 Query::equal('teamInternalId', [$team->getSequence()]),
+                Query::equal('confirm', [true]),
             ]);
 
             if (!$membership->isEmpty()) {

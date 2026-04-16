@@ -1288,6 +1288,7 @@ services:
     image: mongo:8.2.5
     container_name: appwrite-mongodb
     <<: *x-logging
+    restart: on-failure:3
     networks:
       - appwrite
     volumes:

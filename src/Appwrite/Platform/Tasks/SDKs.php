@@ -622,29 +622,28 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
             $repo->execute('config', 'advice.defaultBranchName', 'false');
             $repo->addRemote('origin', $gitUrl);
 
-            // Fetch and checkout base branch (or create if new repo)
+            // Fetch and checkout the target branch (e.g. dev) if it exists on remote,
+            // otherwise create it from the base branch (e.g. main).
+            // We build on top of the existing remote branch so a regular push
+            // works without force-pushing against protected branches.
+            $hasBranch = false;
             try {
-                $repo->execute('fetch', 'origin', '--quiet', '--no-tags', '--depth', '1', $repoBranch);
+                $repo->execute('fetch', 'origin', '--quiet', '--no-tags', '--depth', '1', $gitBranch);
+                $hasBranch = true;
+            } catch (\Throwable) {
+                // Branch doesn't exist on remote yet
+            }
+
+            if ($hasBranch) {
+                $repo->execute('checkout', '-f', $gitBranch);
+            } else {
+                // Fetch base branch to create the target branch from it
                 try {
+                    $repo->execute('fetch', 'origin', '--quiet', '--no-tags', '--depth', '1', $repoBranch);
                     $repo->execute('checkout', '-f', $repoBranch);
                 } catch (\Throwable) {
                     $repo->execute('checkout', '-b', $repoBranch);
                 }
-            } catch (\Throwable) {
-                $repo->execute('checkout', '-b', $repoBranch);
-            }
-
-            try {
-                $repo->execute('pull', 'origin', $repoBranch, '--quiet', '--no-tags');
-            } catch (\Throwable) {
-            }
-
-            // Create or checkout dev branch from the base branch
-            // This ensures dev always starts from the latest base branch,
-            // avoiding history divergence caused by squash merges.
-            try {
-                $repo->execute('checkout', '-B', $gitBranch, $repoBranch);
-            } catch (\Throwable) {
                 $repo->execute('checkout', '-b', $gitBranch);
             }
 
@@ -685,7 +684,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 return true;
             }
 
-            $repo->execute('push', '--force-with-lease', '-u', 'origin', $gitBranch, '--quiet');
+            $repo->execute('push', '-u', 'origin', $gitBranch, '--quiet');
         } catch (\Throwable $e) {
             Console::warning("  Git push failed: " . $e->getMessage());
             return false;

@@ -34,6 +34,12 @@ class Create extends DocumentCreate
         return UtopiaResponse::MODEL_DOCUMENT_LIST;
     }
 
+    protected function getSupportForEmptyDocument()
+    {
+        return true;
+    }
+
+
     public function __construct()
     {
         $this
