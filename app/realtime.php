@@ -2,6 +2,8 @@
 
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
+use Appwrite\Event\Event as QueueEvent;
+use Appwrite\Event\Realtime as QueueRealtime;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
@@ -38,6 +40,7 @@ use Utopia\DI\Container;
 use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Pools\Group;
+use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Registry\Registry;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
@@ -224,6 +227,7 @@ if (!function_exists('getRealtime')) {
     }
 }
 
+
 if (!function_exists('getTelemetry')) {
     function getTelemetry(int $workerId): Utopia\Telemetry\Adapter
     {
@@ -240,6 +244,57 @@ if (!function_exists('getTelemetry')) {
 if (!function_exists('triggerStats')) {
     function triggerStats(array $event, string $projectId): void
     {
+    }
+}
+
+if (!function_exists('triggerPresenceEvent')) {
+    function getQueueForEventsForProject(Document $project, User $user): QueueEvent
+    {
+        global $register;
+
+        /** @var Group $pools */
+        $pools = $register->get('pools');
+
+        $queueForEvents = new QueueEvent(new BrokerPool(
+            publisher: $pools->get('publisher')
+        ));
+
+        $queueForEvents->setProject($project);
+        $queueForEvents->setUser($user);
+
+        return $queueForEvents;
+    }
+
+    function triggerPresenceEvent(
+        Server $server,
+        Realtime $realtime,
+        Document $project,
+        User $user,
+        string $eventName,
+        Document $presence
+    ): void {
+        if ($project->isEmpty() || $presence->isEmpty()) {
+            return;
+        }
+
+        try {
+            $queueForEvents = getQueueForEventsForProject($project, $user);
+            $queueForEvents
+                ->setEvent($eventName)
+                ->setParam('presenceId', $presence->getId())
+                ->setPayload($presence->getArrayCopy());
+
+            (new QueueRealtime())
+                ->setProject($project)
+                ->setUser($user)
+                ->from($queueForEvents)
+                ->trigger();
+        } catch (Throwable $th) {
+            logError($th, 'realtimePresenceEvent', tags: [
+                'projectId' => $project->getId(),
+                'event' => $eventName,
+            ]);
+        }
     }
 }
 
@@ -1181,6 +1236,8 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                     }
                 }
 
+                triggerPresenceEvent($server, $realtime, $project, $user, 'presences.[presenceId].upsert', $presence);
+
                 break;
 
             default:
@@ -1216,7 +1273,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
     }
 });
 
-$server->onClose(function (int $connection) use ($realtime, $stats, $register) {
+$server->onClose(function (int $connection) use ($server, $realtime, $stats, $register) {
     try {
         if (array_key_exists($connection, $realtime->connections)) {
             $stats->decr($realtime->connections[$connection]['projectId'], 'connectionsTotal');
@@ -1236,13 +1293,21 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register) {
                     $consoleDB = getConsoleDB();
                     $project = $consoleDB->getAuthorization()->skip(fn () => $consoleDB->getDocument('projects', $projectId));
 
+                    // todo: have a bulk delete
                     if (!$project->isEmpty()) {
                         $dbForProject = getProjectDB($project);
-                        $dbForProject->deleteDocuments('presenceLogs', [
+                        $presences = $dbForProject->find('presenceLogs', [
                             Query::equal('$id', $presenceIds),
-                        ], onError: function (Throwable $th) {
-                            // Swallow errors to avoid breaking disconnect cleanup
-                        });
+                        ]);
+
+                        foreach ($presences as $presence) {
+                            try {
+                                $dbForProject->deleteDocument('presenceLogs', $presence->getId());
+                                triggerPresenceEvent($server, $realtime, $project, new User([]), 'presences.[presenceId].delete', $presence);
+                            } catch (Throwable) {
+                                // Swallow errors to avoid breaking disconnect cleanup
+                            }
+                        }
                     }
                 }
             }

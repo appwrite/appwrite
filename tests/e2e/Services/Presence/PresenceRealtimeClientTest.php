@@ -285,4 +285,52 @@ class PresenceRealtimeClientTest extends Scope
 
         $client->close();
     }
+
+    public function testPresenceMessageEmitsCreateAndDeleteEvents(): void
+    {
+        $presenceId = ID::unique();
+        $userId = $this->getUser()['$id'];
+        $headers = [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $this->getUser()['session'],
+        ];
+
+        $listener = $this->getWebsocket(['presences', 'presences.' . $presenceId], $headers, timeout: 8);
+        $connected = \json_decode($listener->receive(), true);
+        $this->assertSame('connected', $connected['type'] ?? null);
+
+        $publisher = $this->connectPresenceSocket(true, timeout: 8);
+
+        $publisher->send(\json_encode([
+            'type' => 'presence',
+            'data' => [
+                'presenceId' => $presenceId,
+                'status' => 'online',
+                'metadata' => [
+                    'source' => 'realtime-create-delete-events',
+                ],
+                'permissions' => $this->getPresencePermissions($userId),
+            ],
+        ]));
+
+        $createResponse = \json_decode($publisher->receive(), true);
+        $this->assertSame('response', $createResponse['type'] ?? null);
+        $this->assertSame('presence', $createResponse['data']['to'] ?? null);
+        $this->assertSame($presenceId, $createResponse['data']['presence']['$id'] ?? null);
+
+        $createEvent = \json_decode($listener->receive(), true);
+        $this->assertSame('event', $createEvent['type'] ?? null);
+        $this->assertContains('presences.' . $presenceId . '.upsert', $createEvent['data']['events'] ?? []);
+        $this->assertSame($presenceId, $createEvent['data']['payload']['$id'] ?? null);
+        $this->assertSame('online', $createEvent['data']['payload']['status'] ?? null);
+
+        $publisher->close();
+
+        $deleteEvent = \json_decode($listener->receive(), true);
+        $this->assertSame('event', $deleteEvent['type'] ?? null);
+        $this->assertContains('presences.' . $presenceId . '.delete', $deleteEvent['data']['events'] ?? []);
+        $this->assertSame($presenceId, $deleteEvent['data']['payload']['$id'] ?? null);
+
+        $listener->close();
+    }
 }
