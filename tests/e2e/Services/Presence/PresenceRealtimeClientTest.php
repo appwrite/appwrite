@@ -243,7 +243,10 @@ class PresenceRealtimeClientTest extends Scope
         $this->assertSame('event', $createEvent['type'] ?? null);
         $this->assertContains('presences', $createEvent['data']['channels'] ?? []);
         $this->assertContains('presences.' . $presenceId, $createEvent['data']['channels'] ?? []);
+        $this->assertNotEmpty($createEvent['data']['events'] ?? []);
         $this->assertContains('presences.' . $presenceId . '.upsert', $createEvent['data']['events'] ?? []);
+        $this->assertSame($presenceId, $createEvent['data']['payload']['$id'] ?? null);
+        $this->assertSame('online', $createEvent['data']['payload']['status'] ?? null);
 
         $update = $this->client->call(
             Client::METHOD_PATCH,
@@ -260,7 +263,10 @@ class PresenceRealtimeClientTest extends Scope
         $this->assertSame('event', $updateEvent['type'] ?? null);
         $this->assertContains('presences', $updateEvent['data']['channels'] ?? []);
         $this->assertContains('presences.' . $presenceId, $updateEvent['data']['channels'] ?? []);
+        $this->assertNotEmpty($updateEvent['data']['events'] ?? []);
         $this->assertContains('presences.' . $presenceId . '.update', $updateEvent['data']['events'] ?? []);
+        $this->assertSame($presenceId, $updateEvent['data']['payload']['$id'] ?? null);
+        $this->assertSame('away', $updateEvent['data']['payload']['status'] ?? null);
 
         $delete = $this->client->call(
             Client::METHOD_DELETE,
@@ -273,7 +279,9 @@ class PresenceRealtimeClientTest extends Scope
         $this->assertSame('event', $deleteEvent['type'] ?? null);
         $this->assertContains('presences', $deleteEvent['data']['channels'] ?? []);
         $this->assertContains('presences.' . $presenceId, $deleteEvent['data']['channels'] ?? []);
+        $this->assertNotEmpty($deleteEvent['data']['events'] ?? []);
         $this->assertContains('presences.' . $presenceId . '.delete', $deleteEvent['data']['events'] ?? []);
+        $this->assertSame($presenceId, $deleteEvent['data']['payload']['$id'] ?? null);
 
         $client->close();
     }
