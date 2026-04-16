@@ -3295,6 +3295,277 @@ class RealtimeCustomClientTest extends Scope
         $client->close();
     }
 
+    public function testChannelMirrorEventsAcrossDatabasesAndTablesdb(): void
+    {
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+
+        /**
+         * Case 1: Trigger event through /databases route and verify both
+         * legacy collections/documents and tables/rows events are generated.
+         */
+        $legacyDatabase = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'Mirror Legacy DB',
+        ]);
+        $this->assertEquals(201, $legacyDatabase['headers']['status-code']);
+        $legacyDatabaseId = $legacyDatabase['body']['$id'];
+
+        $legacyCollection = $this->client->call(Client::METHOD_POST, '/databases/' . $legacyDatabaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Legacy Collection',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            'documentSecurity' => true,
+        ]);
+        $legacyCollectionId = $legacyCollection['body']['$id'];
+
+        $attribute = $this->client->call(Client::METHOD_POST, '/databases/' . $legacyDatabaseId . '/collections/' . $legacyCollectionId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ]);
+        $this->assertEquals(202, $attribute['headers']['status-code']);
+
+        $this->assertEventually(function () use ($legacyDatabaseId, $legacyCollectionId) {
+            $attribute = $this->client->call(Client::METHOD_GET, '/databases/' . $legacyDatabaseId . '/collections/' . $legacyCollectionId . '/attributes/name', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+
+            $this->assertEquals('available', $attribute['body']['status']);
+        }, 30000, 250);
+
+        $legacyClient = $this->getWebsocket([
+            "databases.{$legacyDatabaseId}.collections.{$legacyCollectionId}.documents",
+            "databases.{$legacyDatabaseId}.tables.{$legacyCollectionId}.rows",
+        ], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]);
+
+        $connected = json_decode($legacyClient->receive(), true);
+        $this->assertEquals('connected', $connected['type']);
+
+        $legacyDocumentId = ID::unique();
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $legacyDatabaseId . '/collections/' . $legacyCollectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'documentId' => $legacyDocumentId,
+            'data' => [
+                'name' => 'legacy-route-create',
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $document['headers']['status-code']);
+
+        $legacyEvent = json_decode($legacyClient->receive(), true);
+        $this->assertEquals('event', $legacyEvent['type']);
+        $this->assertContains(
+            "databases.{$legacyDatabaseId}.collections.{$legacyCollectionId}.documents.{$legacyDocumentId}.create",
+            $legacyEvent['data']['events']
+        );
+        $this->assertContains(
+            "databases.{$legacyDatabaseId}.tables.{$legacyCollectionId}.rows.{$legacyDocumentId}.create",
+            $legacyEvent['data']['events']
+        );
+        $legacyClient->close();
+
+        /**
+         * Case 2: Trigger event through /tablesdb route and verify both
+         * tables/rows and legacy collections/documents events are generated.
+         */
+        $tablesDatabase = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $this->getHeaders()), [
+            'databaseId' => ID::unique(),
+            'name' => 'Mirror TablesDB',
+        ]);
+        $this->assertEquals(201, $tablesDatabase['headers']['status-code']);
+        $tablesDatabaseId = $tablesDatabase['body']['$id'];
+
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $tablesDatabaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $this->getHeaders()), [
+            'tableId' => ID::unique(),
+            'name' => 'Mirror Table',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $table['headers']['status-code']);
+        $tableId = $table['body']['$id'];
+
+        $column = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $tablesDatabaseId . '/tables/' . $tableId . '/columns/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $this->getHeaders()), [
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ]);
+        $this->assertEquals(202, $column['headers']['status-code']);
+
+        $this->assertEventually(function () use ($tablesDatabaseId, $tableId) {
+            $column = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $tablesDatabaseId . '/tables/' . $tableId . '/columns/name', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals('available', $column['body']['status']);
+        }, 120000, 500);
+
+        $tablesClient = $this->getWebsocket([
+            "databases.{$tablesDatabaseId}.tables.{$tableId}.rows",
+            "databases.{$tablesDatabaseId}.collections.{$tableId}.documents",
+        ], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]);
+
+        $connected = json_decode($tablesClient->receive(), true);
+        $this->assertEquals('connected', $connected['type']);
+
+        $rowId = ID::unique();
+        $row = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $tablesDatabaseId . '/tables/' . $tableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $this->getHeaders()), [
+            'rowId' => $rowId,
+            'data' => [
+                'name' => 'tablesdb-route-create',
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $row['headers']['status-code']);
+
+        $tablesEvent = json_decode($tablesClient->receive(), true);
+        $this->assertEquals('event', $tablesEvent['type']);
+        $this->assertContains(
+            "databases.{$tablesDatabaseId}.tables.{$tableId}.rows.{$rowId}.create",
+            $tablesEvent['data']['events']
+        );
+        $this->assertContains(
+            "databases.{$tablesDatabaseId}.collections.{$tableId}.documents.{$rowId}.create",
+            $tablesEvent['data']['events']
+        );
+        $tablesClient->close();
+
+        /**
+         * Case 3: Trigger event through /documentsdb route and verify only
+         * documentsdb events are generated (no databases/tablesdb mirrors).
+         */
+        $documentsDatabase = $this->client->call(Client::METHOD_POST, '/documentsdb', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'Mirror DocumentsDB',
+        ]);
+        $this->assertEquals(201, $documentsDatabase['headers']['status-code']);
+        $documentsDatabaseId = $documentsDatabase['body']['$id'];
+
+        $documentsCollection = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $documentsDatabaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Mirror Documents Collection',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            'documentSecurity' => true,
+        ]);
+        $this->assertEquals(201, $documentsCollection['headers']['status-code']);
+        $documentsCollectionId = $documentsCollection['body']['$id'];
+
+        $documentsClient = $this->getWebsocket([
+            "documentsdb.{$documentsDatabaseId}.collections.{$documentsCollectionId}.documents",
+            'documents',
+        ], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]);
+
+        $connected = json_decode($documentsClient->receive(), true);
+        $this->assertEquals('connected', $connected['type']);
+
+        $documentsDocumentId = ID::unique();
+        $documentsDocument = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $documentsDatabaseId . '/collections/' . $documentsCollectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $this->getHeaders()), [
+            'documentId' => $documentsDocumentId,
+            'data' => [
+                'name' => 'documentsdb-route-create',
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $documentsDocument['headers']['status-code']);
+
+        $documentsEvent = json_decode($documentsClient->receive(), true);
+        $this->assertEquals('event', $documentsEvent['type']);
+        $this->assertContains(
+            "documentsdb.{$documentsDatabaseId}.collections.{$documentsCollectionId}.documents.{$documentsDocumentId}.create",
+            $documentsEvent['data']['events']
+        );
+        $this->assertEmpty(
+            array_filter(
+                $documentsEvent['data']['events'],
+                fn (string $event) => \str_starts_with($event, 'databases.') || \str_starts_with($event, 'tablesdb.')
+            )
+        );
+        $documentsClient->close();
+    }
+
     public function testChannelDatabaseTransactionMultipleOperations()
     {
         $user = $this->getUser();
@@ -3968,7 +4239,16 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals(256, $name['body']['size']);
         $this->assertTrue($name['body']['required']);
 
-        sleep(2);
+        $this->assertEventually(function () use ($databaseId, $actorsId) {
+            $column = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $actorsId . '/columns/name', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $column['headers']['status-code']);
+            $this->assertEquals('available', $column['body']['status']);
+        }, 120000, 500);
 
         /**
          * Test Document Create
@@ -4683,6 +4963,8 @@ class RealtimeCustomClientTest extends Scope
         $this->assertContains('documentsdb.' . $databaseId . '.collections.' . $actorsId . '.documents', $response['data']['channels']);
         $this->assertContains('documentsdb.' . $databaseId . '.collections.' . $actorsId . '.documents.' . $documentId, $response['data']['channels']);
         $this->assertContains('documentsdb.' . $databaseId . '.collections.' . $actorsId . '.documents', $response['data']['channels']);
+        $this->assertContains("documentsdb.{$databaseId}.collections.{$actorsId}.documents.{$documentId}.create", $response['data']['events']);
+        $this->assertEmpty(array_filter($response['data']['events'], fn (string $event) => \str_starts_with($event, 'databases.') || \str_starts_with($event, 'tablesdb.')));
         $this->assertNotEmpty($response['data']['payload']);
         $this->assertEquals('Chris Evans', $response['data']['payload']['name']);
 
@@ -4714,6 +4996,8 @@ class RealtimeCustomClientTest extends Scope
         $this->assertContains('documents', $response['data']['channels']);
         $this->assertContains("documentsdb.{$databaseId}.collections.{$actorsId}.documents.{$documentId}", $response['data']['channels']);
         $this->assertContains("documentsdb.{$databaseId}.collections.{$actorsId}.documents", $response['data']['channels']);
+        $this->assertContains("documentsdb.{$databaseId}.collections.{$actorsId}.documents.{$documentId}.update", $response['data']['events']);
+        $this->assertEmpty(array_filter($response['data']['events'], fn (string $event) => \str_starts_with($event, 'databases.') || \str_starts_with($event, 'tablesdb.')));
         $this->assertNotEmpty($response['data']['payload']);
 
         $this->assertEquals('Chris Evans 2', $response['data']['payload']['name']);
@@ -5367,8 +5651,6 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('$id', $response['data']['payload']);
         $this->assertEquals(15, $response['data']['payload']['score']);
 
-        sleep(1);
-
         try {
             $client->receive();
             $this->fail('Should not receive duplicate event');
@@ -5399,8 +5681,6 @@ class RealtimeCustomClientTest extends Scope
         $this->assertIsArray($response['data']['payload']);
         $this->assertArrayHasKey('$id', $response['data']['payload']);
         $this->assertEquals(12, $response['data']['payload']['score']);
-
-        sleep(1);
 
         try {
             $client->receive();

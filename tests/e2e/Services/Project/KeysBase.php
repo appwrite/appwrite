@@ -78,12 +78,12 @@ trait KeysBase
         $this->deleteKey($key['body']['$id']);
     }
 
-    public function testCreateKeyWithNullScopes(): void
+    public function testCreateKeyWithEmptyScopes(): void
     {
         $key = $this->createKey(
             ID::unique(),
-            'Null Scopes Key',
-            null,
+            'Empty Scopes Key',
+            [],
         );
 
         $this->assertSame(201, $key['headers']['status-code']);
@@ -91,6 +91,58 @@ trait KeysBase
 
         // Cleanup
         $this->deleteKey($key['body']['$id']);
+    }
+
+    public function testCreateKeyWithNullScopesV22BackwardCompat(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.0',
+        ];
+        $headers = array_merge($headers, $this->getHeaders());
+
+        $key = $this->client->call(Client::METHOD_POST, '/project/keys', $headers, [
+            'keyId' => ID::unique(),
+            'name' => 'V22 Compat Key',
+            'scopes' => null,
+        ]);
+
+        $this->assertSame(201, $key['headers']['status-code']);
+        $this->assertSame([], $key['body']['scopes']);
+
+        // Cleanup
+        $this->deleteKey($key['body']['$id']);
+    }
+
+    public function testUpdateKeyWithNullScopesV22BackwardCompat(): void
+    {
+        $key = $this->createKey(
+            ID::unique(),
+            'V22 Update Compat Key',
+            ['users.read'],
+        );
+
+        $this->assertSame(201, $key['headers']['status-code']);
+        $keyId = $key['body']['$id'];
+
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.0',
+        ];
+        $headers = array_merge($headers, $this->getHeaders());
+
+        $updated = $this->client->call(Client::METHOD_PUT, '/project/keys/' . $keyId, $headers, [
+            'name' => 'V22 Update Compat Key',
+            'scopes' => null,
+        ]);
+
+        $this->assertSame(200, $updated['headers']['status-code']);
+        $this->assertSame([], $updated['body']['scopes']);
+
+        // Cleanup
+        $this->deleteKey($keyId);
     }
 
     public function testCreateKeyWithoutAuthentication(): void

@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Health\Http\Health\Queue\Logs;
 
-use Appwrite\Event\Audit;
+use Appwrite\Event\Publisher\Audit;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -42,16 +42,16 @@ class Get extends Base
                 contentType: ContentType::JSON
             ))
             ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
-            ->inject('queueForAudits')
+            ->inject('publisherForAudits')
             ->inject('response')
             ->callback($this->action(...));
     }
 
-    public function action(int|string $threshold, Audit $queueForAudits, Response $response): void
+    public function action(int|string $threshold, Audit $publisherForAudits, Response $response): void
     {
         $threshold = (int) $threshold;
 
-        $size = $queueForAudits->getSize();
+        $size = $publisherForAudits->getSize();
 
         $this->assertQueueThreshold($size, $threshold);
 

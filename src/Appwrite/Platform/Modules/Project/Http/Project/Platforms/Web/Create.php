@@ -64,7 +64,7 @@ class Create extends Action
             ))
             ->param('platformId', '', fn (Database $dbForPlatform) => new CustomId(false, $dbForPlatform->getAdapter()->getMaxUIDLength()), 'Platform ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForPlatform'])
             ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
-            ->param('hostname', '', new Hostname(), 'Platform web hostname. Max length: 256 chars.', optional: true) // Optional for backwards compatibility
+            ->param('hostname', '', new Hostname(), 'Platform web hostname. Max length: 256 chars.', optional: true, example: 'app.example.com') // Optional for backwards compatibility
             ->param('key', '', new Text(256), 'Deprecated: Package name for Android or bundle ID for iOS or macOS. Max length: 256 chars.', optional: true, deprecated: true) // Exists for backwards compatibility
             ->param('type', '', new Text(256), 'Deprecated: Platform type. Max length: 256 chars.', optional: true, deprecated: true) // Exists for backwards compatibility
             ->inject('request')
