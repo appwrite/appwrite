@@ -10,7 +10,6 @@ use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Bul
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Create as CreateDocument;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Delete as DeleteDocument;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Get as GetDocument;
-use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Logs\XList as ListDocumentLogs;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Update as UpdateDocument;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Upsert as UpsertDocument;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\XList as ListDocuments;
@@ -19,7 +18,6 @@ use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Indexes\Creat
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Indexes\Delete as DeleteIndex;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Indexes\Get as GetIndex;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Indexes\XList as ListIndexes;
-use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Logs\XList as ListCollectionLogs;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Update as UpdateCollection;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Usage\Get as GetCollectionUsage;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\XList as ListCollections;
@@ -69,7 +67,6 @@ class VectorsDB extends Base
         $service->addAction(UpdateCollection::getName(), new UpdateCollection());
         $service->addAction(DeleteCollection::getName(), new DeleteCollection());
         $service->addAction(ListCollections::getName(), new ListCollections());
-        $service->addAction(ListCollectionLogs::getName(), new ListCollectionLogs());
         $service->addAction(GetCollectionUsage::getName(), new GetCollectionUsage());
     }
 
@@ -92,7 +89,6 @@ class VectorsDB extends Base
         $service->addAction(UpdateDocuments::getName(), new UpdateDocuments());
         $service->addAction(UpsertDocuments::getName(), new UpsertDocuments());
         $service->addAction(DeleteDocuments::getName(), new DeleteDocuments());
-        $service->addAction(ListDocumentLogs::getName(), new ListDocumentLogs());
     }
 
     private function registerTransactionActions(Service $service): void

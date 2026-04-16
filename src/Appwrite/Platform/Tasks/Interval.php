@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Appwrite\Event\Certificate;
+use Appwrite\Event\Publisher\Certificate;
 use DateTime;
 use Swoole\Coroutine\Channel;
 use Swoole\Process;
@@ -29,16 +29,16 @@ class Interval extends Action
           ->desc('Schedules tasks on regular intervals by publishing them to our queues')
           ->inject('dbForPlatform')
           ->inject('getProjectDB')
-          ->inject('queueForCertificates')
+          ->inject('publisherForCertificates')
           ->callback($this->action(...));
     }
 
-    public function action(Database $dbForPlatform, callable $getProjectDB, Certificate $queueForCertificates): void
+    public function action(Database $dbForPlatform, callable $getProjectDB, Certificate $publisherForCertificates): void
     {
         Console::title('Interval V1');
         Console::success(APP_NAME . ' interval process v1 has started');
 
-        $timers = $this->runTasks($dbForPlatform, $getProjectDB, $queueForCertificates);
+        $timers = $this->runTasks($dbForPlatform, $getProjectDB, $publisherForCertificates);
 
         $chan = new Channel(1);
         Process::signal(SIGTERM, function () use ($chan) {
@@ -52,16 +52,16 @@ class Interval extends Action
         }
     }
 
-    public function runTasks(Database $dbForPlatform, callable $getProjectDB, Certificate $queueForCertificates): array
+    public function runTasks(Database $dbForPlatform, callable $getProjectDB, Certificate $publisherForCertificates): array
     {
         $timers = [];
         $tasks = $this->getTasks();
         foreach ($tasks as $task) {
-            $timers[] = Timer::tick($task['interval'], function () use ($task, $dbForPlatform, $getProjectDB, $queueForCertificates) {
+            $timers[] = Timer::tick($task['interval'], function () use ($task, $dbForPlatform, $getProjectDB, $publisherForCertificates) {
                 $taskName = $task['name'];
                 Span::init("interval.{$taskName}");
                 try {
-                    $task['callback']($dbForPlatform, $getProjectDB, $queueForCertificates);
+                    $task['callback']($dbForPlatform, $getProjectDB, $publisherForCertificates);
                 } catch (\Exception $e) {
                     Span::error($e);
                 } finally {
@@ -80,15 +80,15 @@ class Interval extends Action
         return [
             [
                 'name' => 'domainVerification',
-                "callback" => function (Database $dbForPlatform, callable $getProjectDB, Certificate $queueForCertificates) {
-                    $this->verifyDomain($dbForPlatform, $queueForCertificates);
+                "callback" => function (Database $dbForPlatform, callable $getProjectDB, Certificate $publisherForCertificates) {
+                    $this->verifyDomain($dbForPlatform, $publisherForCertificates);
                 },
                 'interval' => $intervalDomainVerification * 1000,
             ]
         ];
     }
 
-    private function verifyDomain(Database $dbForPlatform, Certificate $queueForCertificates): void
+    private function verifyDomain(Database $dbForPlatform, Certificate $publisherForCertificates): void
     {
         $time = DatabaseDateTime::now();
         $fromTime = new DateTime('-3 days'); // Max 3 days old
@@ -115,13 +115,17 @@ class Interval extends Action
 
         foreach ($rules as $rule) {
             try {
-                $queueForCertificates
-                    ->setDomain(new Document([
+                $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(
+                    project: new Document([
+                        '$id' => $rule->getAttribute('projectId', ''),
+                        '$sequence' => $rule->getAttribute('projectInternalId', 0),
+                    ]),
+                    domain: new Document([
                         'domain' => $rule->getAttribute('domain'),
                         'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
-                    ]))
-                    ->setAction(Certificate::ACTION_DOMAIN_VERIFICATION)
-                    ->trigger();
+                    ]),
+                    action: \Appwrite\Event\Certificate::ACTION_DOMAIN_VERIFICATION,
+                ));
                 $processed++;
             } catch (\Throwable $th) {
                 $failed++;

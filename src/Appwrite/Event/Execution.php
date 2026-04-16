@@ -53,4 +53,23 @@ class Execution extends Event
             'execution' => $this->execution,
         ];
     }
+
+    /**
+     * Trim payload for the execution event.
+     * Only the project ID is needed — the worker DI fetches the full project from the platform database.
+     *
+     * @return array
+     */
+    protected function trimPayload(): array
+    {
+        $trimmed = [];
+
+        if ($this->project) {
+            $trimmed['project'] = new Document([
+                '$id' => $this->project->getId(),
+            ]);
+        }
+
+        return $trimmed;
+    }
 }

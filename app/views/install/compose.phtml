@@ -993,7 +993,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     <<: *x-logging
     restart: unless-stopped
     stop_signal: SIGINT
-    image: openruntimes/executor:0.7.22
+    image: openruntimes/executor:0.11.4
     networks:
       - appwrite
       - runtimes

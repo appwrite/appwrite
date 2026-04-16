@@ -35,11 +35,11 @@ trait WebhooksBase
         $this->assertContains('users.*.create', $webhook['body']['events']);
         $this->assertCount(1, $webhook['body']['events']);
         $this->assertEquals(true, $webhook['body']['enabled']);
-        $this->assertEquals(false, $webhook['body']['security']);
-        $this->assertEquals('', $webhook['body']['httpUser']);
-        $this->assertEquals('', $webhook['body']['httpPass']);
-        $this->assertNotEmpty($webhook['body']['signatureKey']);
-        $this->assertEquals(128, \strlen($webhook['body']['signatureKey']));
+        $this->assertEquals(false, $webhook['body']['tls']);
+        $this->assertEquals('', $webhook['body']['authUsername']);
+        $this->assertEquals('', $webhook['body']['authPassword']);
+        $this->assertNotEmpty($webhook['body']['secret']);
+        $this->assertEquals(128, \strlen($webhook['body']['secret']));
         $this->assertEquals(0, $webhook['body']['attempts']);
         $this->assertEquals('', $webhook['body']['logs']);
 
@@ -63,11 +63,11 @@ trait WebhooksBase
         $this->deleteWebhook($webhook['body']['$id']);
     }
 
-    public function testCreateWebhookWithSecurity(): void
+    public function testCreateWebhookWithTls(): void
     {
         $webhook = $this->createWebhook(
             ID::unique(),
-            'Webhook With Security',
+            'Webhook With TLS',
             ['users.*.create'],
             null,
             'https://appwrite.io',
@@ -78,8 +78,8 @@ trait WebhooksBase
 
         $this->assertEquals(201, $webhook['headers']['status-code']);
         $this->assertNotEmpty($webhook['body']['$id']);
-        $this->assertEquals(true, $webhook['body']['security']);
-        $this->assertIsBool($webhook['body']['security']);
+        $this->assertEquals(true, $webhook['body']['tls']);
+        $this->assertIsBool($webhook['body']['tls']);
 
         // Cleanup
         $this->deleteWebhook($webhook['body']['$id']);
@@ -100,14 +100,14 @@ trait WebhooksBase
 
         $this->assertEquals(201, $webhook['headers']['status-code']);
         $this->assertNotEmpty($webhook['body']['$id']);
-        $this->assertEquals('username', $webhook['body']['httpUser']);
-        $this->assertEquals('password', $webhook['body']['httpPass']);
-        $this->assertEquals(true, $webhook['body']['security']);
+        $this->assertEquals('username', $webhook['body']['authUsername']);
+        $this->assertEquals('password', $webhook['body']['authPassword']);
+        $this->assertEquals(true, $webhook['body']['tls']);
 
         // Verify via GET
         $get = $this->getWebhook($webhook['body']['$id']);
         $this->assertEquals(200, $get['headers']['status-code']);
-        $this->assertEquals('username', $get['body']['httpUser']);
+        $this->assertEquals('username', $get['body']['authUsername']);
 
         // Cleanup
         $this->deleteWebhook($webhook['body']['$id']);
@@ -331,11 +331,11 @@ trait WebhooksBase
         $this->deleteWebhook($webhookId);
     }
 
-    public function testUpdateWebhookWithSecurity(): void
+    public function testUpdateWebhookWithTls(): void
     {
         $webhook = $this->createWebhook(
             ID::unique(),
-            'Security Webhook',
+            'TLS Webhook',
             ['users.*.create'],
             null,
             'https://appwrite.io',
@@ -345,7 +345,7 @@ trait WebhooksBase
         );
 
         $this->assertEquals(201, $webhook['headers']['status-code']);
-        $this->assertEquals(false, $webhook['body']['security']);
+        $this->assertEquals(false, $webhook['body']['tls']);
         $webhookId = $webhook['body']['$id'];
 
         // Update to enable security
@@ -361,8 +361,8 @@ trait WebhooksBase
         );
 
         $this->assertEquals(200, $updated['headers']['status-code']);
-        $this->assertEquals(true, $updated['body']['security']);
-        $this->assertIsBool($updated['body']['security']);
+        $this->assertEquals(true, $updated['body']['tls']);
+        $this->assertIsBool($updated['body']['tls']);
 
         // Cleanup
         $this->deleteWebhook($webhookId);
@@ -382,8 +382,8 @@ trait WebhooksBase
         );
 
         $this->assertEquals(201, $webhook['headers']['status-code']);
-        $this->assertEquals('', $webhook['body']['httpUser']);
-        $this->assertEquals('', $webhook['body']['httpPass']);
+        $this->assertEquals('', $webhook['body']['authUsername']);
+        $this->assertEquals('', $webhook['body']['authPassword']);
         $webhookId = $webhook['body']['$id'];
 
         // Update with HTTP auth credentials
@@ -399,13 +399,13 @@ trait WebhooksBase
         );
 
         $this->assertEquals(200, $updated['headers']['status-code']);
-        $this->assertEquals('newuser', $updated['body']['httpUser']);
-        $this->assertEquals('newpass', $updated['body']['httpPass']);
+        $this->assertEquals('newuser', $updated['body']['authUsername']);
+        $this->assertEquals('newpass', $updated['body']['authPassword']);
 
         // Verify via GET
         $get = $this->getWebhook($webhookId);
         $this->assertEquals(200, $get['headers']['status-code']);
-        $this->assertEquals('newuser', $get['body']['httpUser']);
+        $this->assertEquals('newuser', $get['body']['authUsername']);
 
         // Cleanup
         $this->deleteWebhook($webhookId);
@@ -657,19 +657,19 @@ trait WebhooksBase
         $this->assertContains('buckets.*.files.*.create', $updated['body']['events']);
         $this->assertCount(3, $updated['body']['events']);
         $this->assertEquals('https://appwrite.io/updated', $updated['body']['url']);
-        $this->assertEquals(true, $updated['body']['security']);
-        $this->assertEquals('user', $updated['body']['httpUser']);
-        $this->assertEquals('pass', $updated['body']['httpPass']);
+        $this->assertEquals(true, $updated['body']['tls']);
+        $this->assertEquals('user', $updated['body']['authUsername']);
+        $this->assertEquals('pass', $updated['body']['authPassword']);
 
         // Cleanup
         $this->deleteWebhook($webhookId);
     }
 
-    public function testUpdateWebhookSignature(): void
+    public function testUpdateWebhookSecret(): void
     {
         $webhook = $this->createWebhook(
             ID::unique(),
-            'Signature Webhook',
+            'Secret Webhook',
             ['users.*.create'],
             null,
             'https://appwrite.io',
@@ -680,29 +680,374 @@ trait WebhooksBase
 
         $this->assertEquals(201, $webhook['headers']['status-code']);
         $webhookId = $webhook['body']['$id'];
-        $originalSignatureKey = $webhook['body']['signatureKey'];
+        $originalSecret = $webhook['body']['secret'];
 
-        $this->assertNotEmpty($originalSignatureKey);
-        $this->assertEquals(128, \strlen($originalSignatureKey));
+        $this->assertNotEmpty($originalSecret);
+        $this->assertEquals(128, \strlen($originalSecret));
 
-        // Update signature
-        $updated = $this->updateWebhookSignature($webhookId);
+        // Update secret
+        $updated = $this->updateWebhookSecret($webhookId);
 
         $this->assertEquals(200, $updated['headers']['status-code']);
         $this->assertEquals($webhookId, $updated['body']['$id']);
-        $this->assertNotEmpty($updated['body']['signatureKey']);
-        $this->assertEquals(128, \strlen($updated['body']['signatureKey']));
-        $this->assertNotEquals($originalSignatureKey, $updated['body']['signatureKey']);
+        $this->assertNotEmpty($updated['body']['secret']);
+        $this->assertEquals(128, \strlen($updated['body']['secret']));
+        $this->assertNotEquals($originalSecret, $updated['body']['secret']);
 
-        // Verify new signature persisted via GET
+        // Verify secret is not exposed via GET
         $get = $this->getWebhook($webhookId);
         $this->assertEquals(200, $get['headers']['status-code']);
-        $this->assertNotEquals($originalSignatureKey, $get['body']['signatureKey']);
+        $this->assertEmpty($get['body']['secret']);
 
-        // Test signature update on non-existent webhook
-        $notFound = $this->updateWebhookSignature('non-existent-id');
+        // Test secret update on non-existent webhook
+        $notFound = $this->updateWebhookSecret('non-existent-id');
         $this->assertEquals(404, $notFound['headers']['status-code']);
         $this->assertEquals('webhook_not_found', $notFound['body']['type']);
+
+        // Cleanup
+        $this->deleteWebhook($webhookId);
+    }
+
+    public function testSecretRotationZeroDowntime(): void
+    {
+        // Create webhook pointing to request-catcher so deliveries are captured
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Rotation Test Webhook',
+            ['users.*.create'],
+            null,
+            'http://request-catcher-webhook:5000/',
+            false,
+            null,
+            null
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+        $originalSecret = $webhook['body']['secret'];
+        $this->assertNotEmpty($originalSecret);
+        $this->assertEquals(128, \strlen($originalSecret));
+
+        // Step 1: Trigger user creation with the original auto-generated secret
+        $email1 = uniqid() . 'rotation1@localhost.test';
+        $user1 = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => ID::unique(),
+            'email' => $email1,
+            'password' => 'password',
+            'name' => 'Rotation User 1',
+        ]);
+
+        $this->assertEquals(201, $user1['headers']['status-code']);
+        $userId1 = $user1['body']['$id'];
+
+        // Verify webhook delivery is signed with the original secret
+        $this->assertEventually(function () use ($userId1, $originalSecret) {
+            $delivery = $this->getLastRequest(function (array $request) use ($userId1) {
+                $this->assertStringContainsString(
+                    "users.{$userId1}.create",
+                    $request['headers']['X-Appwrite-Webhook-Events'] ?? ''
+                );
+            });
+
+            $this->assertNotEmpty($delivery);
+            $payload = json_encode($delivery['data']);
+            $url = $delivery['url'];
+            $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $originalSecret, true));
+            $this->assertEquals($signatureExpected, $delivery['headers']['X-Appwrite-Webhook-Signature']);
+        }, 15000, 500);
+
+        // Step 2: Rotate the secret to a known custom value
+        $newSecret = 'new-key-after-rotation';
+        $updated = $this->updateWebhookSecret($webhookId, $newSecret);
+
+        $this->assertEquals(200, $updated['headers']['status-code']);
+        $this->assertEquals($newSecret, $updated['body']['secret']);
+        $this->assertNotEquals($originalSecret, $updated['body']['secret']);
+
+        // Step 3: Trigger another user creation — should be signed with the new secret
+        $email2 = uniqid() . 'rotation2@localhost.test';
+        $user2 = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => ID::unique(),
+            'email' => $email2,
+            'password' => 'password',
+            'name' => 'Rotation User 2',
+        ]);
+
+        $this->assertEquals(201, $user2['headers']['status-code']);
+        $userId2 = $user2['body']['$id'];
+
+        // Verify webhook delivery is signed with the new rotated secret
+        $this->assertEventually(function () use ($userId2, $newSecret) {
+            $delivery = $this->getLastRequest(function (array $request) use ($userId2) {
+                $this->assertStringContainsString(
+                    "users.{$userId2}.create",
+                    $request['headers']['X-Appwrite-Webhook-Events'] ?? ''
+                );
+            });
+
+            $this->assertNotEmpty($delivery);
+            $payload = json_encode($delivery['data']);
+            $url = $delivery['url'];
+            $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $newSecret, true));
+            $this->assertEquals($signatureExpected, $delivery['headers']['X-Appwrite-Webhook-Signature']);
+        }, 15000, 500);
+
+        // Cleanup
+        $this->deleteWebhook($webhookId);
+    }
+
+    public function testCreateWebhookWithCustomSecret(): void
+    {
+        $customSecret = 'custom-secret-key';
+
+        // Create webhook with a custom secret pointing to request-catcher
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Custom Secret Webhook',
+            ['users.*.create'],
+            null,
+            'http://request-catcher-webhook:5000/',
+            false,
+            null,
+            null,
+            $customSecret
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+        $this->assertEquals($customSecret, $webhook['body']['secret']);
+
+        // Trigger user creation to generate a webhook delivery
+        $email = uniqid() . 'customsecret@localhost.test';
+        $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => 'password',
+            'name' => 'Custom Secret User',
+        ]);
+
+        $this->assertEquals(201, $user['headers']['status-code']);
+        $userId = $user['body']['$id'];
+
+        // Verify webhook delivery is signed with the custom secret
+        $this->assertEventually(function () use ($userId, $customSecret) {
+            $delivery = $this->getLastRequest(function (array $request) use ($userId) {
+                $this->assertStringContainsString(
+                    "users.{$userId}.create",
+                    $request['headers']['X-Appwrite-Webhook-Events'] ?? ''
+                );
+            });
+
+            $this->assertNotEmpty($delivery);
+            $payload = json_encode($delivery['data']);
+            $url = $delivery['url'];
+            $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $customSecret, true));
+            $this->assertEquals($signatureExpected, $delivery['headers']['X-Appwrite-Webhook-Signature']);
+        }, 15000, 500);
+
+        // Cleanup
+        $this->deleteWebhook($webhookId);
+    }
+
+    public function testCreateWebhookSecretMinLength(): void
+    {
+        // 7 chars — below minimum of 8
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Short Secret Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null,
+            'short12'
+        );
+
+        $this->assertEquals(400, $webhook['headers']['status-code']);
+
+        // 8 chars — exactly at minimum
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Min Secret Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null,
+            'exact8ch'
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $this->assertEquals('exact8ch', $webhook['body']['secret']);
+
+        // Cleanup
+        $this->deleteWebhook($webhook['body']['$id']);
+    }
+
+    public function testCreateWebhookSecretMaxLength(): void
+    {
+        // 256 chars — exactly at maximum
+        $maxSecret = str_repeat('a', 256);
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Max Secret Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null,
+            $maxSecret
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $this->assertEquals($maxSecret, $webhook['body']['secret']);
+
+        // Cleanup
+        $this->deleteWebhook($webhook['body']['$id']);
+
+        // 257 chars — above maximum
+        $tooLongSecret = str_repeat('a', 257);
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Too Long Secret Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null,
+            $tooLongSecret
+        );
+
+        $this->assertEquals(400, $webhook['headers']['status-code']);
+    }
+
+    public function testUpdateWebhookSecretMinLength(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Secret Min Update Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+
+        // 7 chars — below minimum of 8
+        $updated = $this->updateWebhookSecret($webhookId, 'short12');
+        $this->assertEquals(400, $updated['headers']['status-code']);
+
+        // 8 chars — exactly at minimum
+        $updated = $this->updateWebhookSecret($webhookId, 'exact8ch');
+        $this->assertEquals(200, $updated['headers']['status-code']);
+        $this->assertEquals('exact8ch', $updated['body']['secret']);
+
+        // Cleanup
+        $this->deleteWebhook($webhookId);
+    }
+
+    public function testUpdateWebhookSecretMaxLength(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Secret Max Update Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+
+        // 256 chars — exactly at maximum
+        $maxSecret = str_repeat('a', 256);
+        $updated = $this->updateWebhookSecret($webhookId, $maxSecret);
+        $this->assertEquals(200, $updated['headers']['status-code']);
+        $this->assertEquals($maxSecret, $updated['body']['secret']);
+
+        // 257 chars — above maximum
+        $tooLongSecret = str_repeat('a', 257);
+        $updated = $this->updateWebhookSecret($webhookId, $tooLongSecret);
+        $this->assertEquals(400, $updated['headers']['status-code']);
+
+        // Cleanup
+        $this->deleteWebhook($webhookId);
+    }
+
+    public function testWebhookSecretNotExposedInResponses(): void
+    {
+        // Create webhook — secret IS returned on creation
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Secret Exposure Test',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null,
+            'my-custom-secret'
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+        $this->assertEquals('my-custom-secret', $webhook['body']['secret']);
+        $this->assertArrayNotHasKey('signatureKey', $webhook['body']);
+
+        // Get webhook — secret must not be exposed
+        $get = $this->getWebhook($webhookId);
+        $this->assertEquals(200, $get['headers']['status-code']);
+        $this->assertEmpty($get['body']['secret']);
+        $this->assertArrayNotHasKey('signatureKey', $get['body']);
+
+        // List webhooks — secret must not be exposed
+        $list = $this->listWebhooks(null, true);
+        $this->assertEquals(200, $list['headers']['status-code']);
+        foreach ($list['body']['webhooks'] as $item) {
+            $this->assertEmpty($item['secret']);
+            $this->assertArrayNotHasKey('signatureKey', $item);
+        }
+
+        // Update webhook — secret must not be exposed
+        $updated = $this->updateWebhook(
+            $webhookId,
+            'Secret Exposure Test Updated',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+        $this->assertEquals(200, $updated['headers']['status-code']);
+        $this->assertEmpty($updated['body']['secret']);
+        $this->assertArrayNotHasKey('signatureKey', $updated['body']);
+
+        // Update webhook secret — secret IS returned on rotation
+        $rotated = $this->updateWebhookSecret($webhookId, 'rotated-secret-key');
+        $this->assertEquals(200, $rotated['headers']['status-code']);
+        $this->assertEquals('rotated-secret-key', $rotated['body']['secret']);
+        $this->assertArrayNotHasKey('signatureKey', $rotated['body']);
 
         // Cleanup
         $this->deleteWebhook($webhookId);
@@ -883,6 +1228,12 @@ trait WebhooksBase
     {
         $customId = 'my-custom-webhook-id';
 
+        // Clean up stale webhook from a previous run if it exists
+        $existing = $this->getWebhook($customId);
+        if ($existing['headers']['status-code'] === 200) {
+            $this->deleteWebhook($customId);
+        }
+
         $webhook = $this->createWebhook(
             $customId,
             'Custom ID Webhook',
@@ -901,6 +1252,19 @@ trait WebhooksBase
         $get = $this->getWebhook($customId);
         $this->assertEquals(200, $get['headers']['status-code']);
         $this->assertEquals($customId, $get['body']['$id']);
+
+        // Ensure duplicate creation fails
+        $duplicate = $this->createWebhook(
+            $customId,
+            'Duplicate Custom ID Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+        $this->assertEquals(409, $duplicate['headers']['status-code']);
 
         // Cleanup
         $this->deleteWebhook($customId);
@@ -934,11 +1298,10 @@ trait WebhooksBase
         $this->assertContains('users.*.update.email', $get['body']['events']);
         $this->assertCount(2, $get['body']['events']);
         $this->assertEquals(true, $get['body']['enabled']);
-        $this->assertEquals(true, $get['body']['security']);
-        $this->assertEquals('myuser', $get['body']['httpUser']);
-        $this->assertEquals('mypass', $get['body']['httpPass']);
-        $this->assertNotEmpty($get['body']['signatureKey']);
-        $this->assertEquals(128, \strlen($get['body']['signatureKey']));
+        $this->assertEquals(true, $get['body']['tls']);
+        $this->assertEquals('myuser', $get['body']['authUsername']);
+        $this->assertEquals('mypass', $get['body']['authPassword']);
+        $this->assertEmpty($get['body']['secret']);
         $this->assertEquals(0, $get['body']['attempts']);
         $this->assertEquals('', $get['body']['logs']);
 
@@ -1043,9 +1406,9 @@ trait WebhooksBase
             $this->assertArrayHasKey('name', $webhook);
             $this->assertArrayHasKey('url', $webhook);
             $this->assertArrayHasKey('events', $webhook);
-            $this->assertArrayHasKey('security', $webhook);
+            $this->assertArrayHasKey('tls', $webhook);
             $this->assertArrayHasKey('enabled', $webhook);
-            $this->assertArrayHasKey('signatureKey', $webhook);
+            $this->assertArrayHasKey('secret', $webhook);
             $this->assertArrayHasKey('attempts', $webhook);
             $this->assertArrayHasKey('logs', $webhook);
         }
@@ -1247,11 +1610,11 @@ trait WebhooksBase
         $this->deleteWebhook($webhook['body']['$id']);
     }
 
-    public function testListWebhooksFilterBySecurity(): void
+    public function testListWebhooksFilterByTls(): void
     {
         $webhook = $this->createWebhook(
             ID::unique(),
-            'Security Filter Webhook',
+            'TLS Filter Webhook',
             ['users.*.create'],
             null,
             'https://appwrite.io/sec',
@@ -1262,13 +1625,13 @@ trait WebhooksBase
         $this->assertEquals(201, $webhook['headers']['status-code']);
 
         $list = $this->listWebhooks([
-            Query::equal('security', [true])->toString(),
+            Query::equal('tls', [true])->toString(),
         ], true);
 
         $this->assertEquals(200, $list['headers']['status-code']);
         $this->assertGreaterThanOrEqual(1, $list['body']['total']);
         foreach ($list['body']['webhooks'] as $w) {
-            $this->assertEquals(true, $w['security']);
+            $this->assertEquals(true, $w['tls']);
         }
 
         // Cleanup
@@ -1503,6 +1866,254 @@ trait WebhooksBase
         $this->assertEquals('webhook_not_found', $delete['body']['type']);
     }
 
+    // =========================================================================
+    // Backward compatibility tests (1.9.0 response format)
+    // =========================================================================
+
+    public function testCreateWebhookV22BackwardCompatRequest(): void
+    {
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.0',
+        ], $this->getHeaders());
+
+        // Send old param names with 1.9.0 header
+        $webhook = $this->client->call(Client::METHOD_POST, '/webhooks', $headers, [
+            'webhookId' => ID::unique(),
+            'name' => 'V22 Compat Create',
+            'events' => ['users.*.create'],
+            'url' => 'https://appwrite.io',
+            'security' => true,
+            'httpUser' => 'olduser',
+            'httpPass' => 'oldpass',
+        ]);
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+
+        // Response should use OLD field names
+        $this->assertArrayHasKey('security', $webhook['body']);
+        $this->assertArrayHasKey('httpUser', $webhook['body']);
+        $this->assertArrayHasKey('httpPass', $webhook['body']);
+        $this->assertArrayHasKey('signatureKey', $webhook['body']);
+
+        // New field names should NOT be present
+        $this->assertArrayNotHasKey('tls', $webhook['body']);
+        $this->assertArrayNotHasKey('authUsername', $webhook['body']);
+        $this->assertArrayNotHasKey('authPassword', $webhook['body']);
+        $this->assertArrayNotHasKey('secret', $webhook['body']);
+
+        // Values should be correct
+        $this->assertEquals(true, $webhook['body']['security']);
+        $this->assertEquals('olduser', $webhook['body']['httpUser']);
+        $this->assertEquals('oldpass', $webhook['body']['httpPass']);
+        $this->assertNotEmpty($webhook['body']['signatureKey']);
+        $this->assertEquals(128, \strlen($webhook['body']['signatureKey']));
+
+        // Cleanup
+        $this->deleteWebhook($webhook['body']['$id']);
+    }
+
+    public function testUpdateWebhookV22BackwardCompatRequest(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'V22 Compat Update',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.0',
+        ], $this->getHeaders());
+
+        // Update using old param names
+        $updated = $this->client->call(Client::METHOD_PUT, '/webhooks/' . $webhookId, $headers, [
+            'name' => 'V22 Compat Updated',
+            'events' => ['users.*.create'],
+            'url' => 'https://appwrite.io',
+            'security' => true,
+            'httpUser' => 'updateduser',
+            'httpPass' => 'updatedpass',
+        ]);
+
+        $this->assertEquals(200, $updated['headers']['status-code']);
+
+        // Response should use OLD field names
+        $this->assertArrayHasKey('security', $updated['body']);
+        $this->assertArrayHasKey('httpUser', $updated['body']);
+        $this->assertArrayHasKey('httpPass', $updated['body']);
+        $this->assertArrayHasKey('signatureKey', $updated['body']);
+
+        $this->assertArrayNotHasKey('tls', $updated['body']);
+        $this->assertArrayNotHasKey('authUsername', $updated['body']);
+        $this->assertArrayNotHasKey('authPassword', $updated['body']);
+        $this->assertArrayNotHasKey('secret', $updated['body']);
+
+        $this->assertEquals(true, $updated['body']['security']);
+        $this->assertEquals('updateduser', $updated['body']['httpUser']);
+        $this->assertEquals('updatedpass', $updated['body']['httpPass']);
+
+        // Cleanup
+        $this->deleteWebhook($webhookId);
+    }
+
+    public function testGetWebhookV22BackwardCompatResponse(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'V22 Compat Get',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            true,
+            'getuser',
+            'getpass'
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+
+        // GET with 1.9.0 header
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.0',
+        ], $this->getHeaders());
+
+        $get = $this->client->call(Client::METHOD_GET, '/webhooks/' . $webhookId, $headers);
+
+        $this->assertEquals(200, $get['headers']['status-code']);
+
+        // Should have old field names
+        $this->assertArrayHasKey('security', $get['body']);
+        $this->assertArrayHasKey('httpUser', $get['body']);
+        $this->assertArrayHasKey('httpPass', $get['body']);
+        $this->assertArrayHasKey('signatureKey', $get['body']);
+
+        $this->assertArrayNotHasKey('tls', $get['body']);
+        $this->assertArrayNotHasKey('authUsername', $get['body']);
+        $this->assertArrayNotHasKey('authPassword', $get['body']);
+        $this->assertArrayNotHasKey('secret', $get['body']);
+
+        $this->assertEquals(true, $get['body']['security']);
+        $this->assertEquals('getuser', $get['body']['httpUser']);
+        $this->assertEquals('getpass', $get['body']['httpPass']);
+        $this->assertEmpty($get['body']['signatureKey']);
+
+        // Cleanup
+        $this->deleteWebhook($webhookId);
+    }
+
+    public function testListWebhooksV22BackwardCompatResponse(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'V22 Compat List',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            true,
+            'listuser',
+            'listpass'
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+
+        // LIST with 1.9.0 header
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.0',
+        ], $this->getHeaders());
+
+        $list = $this->client->call(Client::METHOD_GET, '/webhooks', $headers, [
+            'queries' => [
+                Query::equal('name', ['V22 Compat List'])->toString(),
+            ],
+            'total' => true,
+        ]);
+
+        $this->assertEquals(200, $list['headers']['status-code']);
+        $this->assertEquals(1, $list['body']['total']);
+        $this->assertCount(1, $list['body']['webhooks']);
+
+        $item = $list['body']['webhooks'][0];
+
+        // Each item should have old field names
+        $this->assertArrayHasKey('security', $item);
+        $this->assertArrayHasKey('httpUser', $item);
+        $this->assertArrayHasKey('httpPass', $item);
+        $this->assertArrayHasKey('signatureKey', $item);
+
+        $this->assertArrayNotHasKey('tls', $item);
+        $this->assertArrayNotHasKey('authUsername', $item);
+        $this->assertArrayNotHasKey('authPassword', $item);
+        $this->assertArrayNotHasKey('secret', $item);
+
+        $this->assertEquals(true, $item['security']);
+        $this->assertEquals('listuser', $item['httpUser']);
+        $this->assertEquals('listpass', $item['httpPass']);
+
+        // Cleanup
+        $this->deleteWebhook($webhookId);
+    }
+
+    public function testUpdateWebhookSecretV22BackwardCompatResponse(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'V22 Compat Secret',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+
+        // Update secret with 1.9.0 header
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.0',
+        ], $this->getHeaders());
+
+        $updated = $this->client->call(Client::METHOD_PATCH, '/webhooks/' . $webhookId . '/secret', $headers);
+
+        $this->assertEquals(200, $updated['headers']['status-code']);
+
+        // Response should use old field names
+        $this->assertArrayHasKey('signatureKey', $updated['body']);
+        $this->assertArrayHasKey('security', $updated['body']);
+        $this->assertArrayHasKey('httpUser', $updated['body']);
+        $this->assertArrayHasKey('httpPass', $updated['body']);
+
+        $this->assertArrayNotHasKey('secret', $updated['body']);
+        $this->assertArrayNotHasKey('tls', $updated['body']);
+        $this->assertArrayNotHasKey('authUsername', $updated['body']);
+        $this->assertArrayNotHasKey('authPassword', $updated['body']);
+
+        $this->assertNotEmpty($updated['body']['signatureKey']);
+        $this->assertEquals(128, \strlen($updated['body']['signatureKey']));
+
+        // Cleanup
+        $this->deleteWebhook($webhookId);
+    }
+
     // Helpers
 
     /**
@@ -1531,7 +2142,7 @@ trait WebhooksBase
         return $webhook;
     }
 
-    protected function createWebhook(string $webhookId, string $name, array $events, ?bool $enabled, ?string $url, ?bool $security, ?string $httpUser, ?string $httpPass): mixed
+    protected function createWebhook(string $webhookId, string $name, array $events, ?bool $enabled, ?string $url, ?bool $tls, ?string $authUsername, ?string $authPassword, ?string $secret = null): mixed
     {
         $params = [
             'webhookId' => $webhookId,
@@ -1543,14 +2154,17 @@ trait WebhooksBase
         if ($enabled !== null) {
             $params['enabled'] = $enabled;
         }
-        if ($security !== null) {
-            $params['security'] = $security;
+        if ($tls !== null) {
+            $params['tls'] = $tls;
         }
-        if ($httpUser !== null) {
-            $params['httpUser'] = $httpUser;
+        if ($authUsername !== null) {
+            $params['authUsername'] = $authUsername;
         }
-        if ($httpPass !== null) {
-            $params['httpPass'] = $httpPass;
+        if ($authPassword !== null) {
+            $params['authPassword'] = $authPassword;
+        }
+        if ($secret !== null) {
+            $params['secret'] = $secret;
         }
 
         $webhook = $this->client->call(Client::METHOD_POST, '/webhooks', array_merge([
@@ -1561,7 +2175,7 @@ trait WebhooksBase
         return $webhook;
     }
 
-    protected function updateWebhook(string $webhookId, string $name, array $events, ?bool $enabled, ?string $url, ?bool $security, ?string $httpUser, ?string $httpPass): mixed
+    protected function updateWebhook(string $webhookId, string $name, array $events, ?bool $enabled, ?string $url, ?bool $tls, ?string $authUsername, ?string $authPassword): mixed
     {
         $params = [
             'name' => $name,
@@ -1572,14 +2186,14 @@ trait WebhooksBase
         if ($enabled !== null) {
             $params['enabled'] = $enabled;
         }
-        if ($security !== null) {
-            $params['security'] = $security;
+        if ($tls !== null) {
+            $params['tls'] = $tls;
         }
-        if ($httpUser !== null) {
-            $params['httpUser'] = $httpUser;
+        if ($authUsername !== null) {
+            $params['authUsername'] = $authUsername;
         }
-        if ($httpPass !== null) {
-            $params['httpPass'] = $httpPass;
+        if ($authPassword !== null) {
+            $params['authPassword'] = $authPassword;
         }
 
         $webhook = $this->client->call(Client::METHOD_PUT, '/webhooks/' . $webhookId, array_merge([
@@ -1590,12 +2204,17 @@ trait WebhooksBase
         return $webhook;
     }
 
-    protected function updateWebhookSignature(string $webhookId): mixed
+    protected function updateWebhookSecret(string $webhookId, ?string $secret = null): mixed
     {
-        $webhook = $this->client->call(Client::METHOD_PATCH, '/webhooks/' . $webhookId . '/signature', array_merge([
+        $params = [];
+        if ($secret !== null) {
+            $params['secret'] = $secret;
+        }
+
+        $webhook = $this->client->call(Client::METHOD_PATCH, '/webhooks/' . $webhookId . '/secret', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        ], $this->getHeaders()), $params);
 
         return $webhook;
     }
