@@ -119,8 +119,10 @@ class Functions extends Action
         #if (empty($events) && !$function->isEmpty()) {
             $traceProjectId = System::getEnv('_APP_TRACE_PROJECT_ID', '');
             $traceFunctionId = System::getEnv('_APP_TRACE_FUNCTION_ID', '');
-            var_dump($traceProjectId, $traceFunctionId, $project->getId(), $function->getId());
-            if ($traceProjectId !== '' && $traceFunctionId !== '' && $project->getId() === $traceProjectId && $function->getId() === $traceFunctionId) {
+            var_dump($events);
+            var_dump($functionId);
+            var_dump($function);
+            if ($traceProjectId !== '' && $traceFunctionId !== '' && $project->getId() === $traceProjectId) {
                 Span::init('execution.trace.functions_worker_dequeue');
                 Span::add('datetime', gmdate('c'));
                 Span::add('projectId', $project->getId());
