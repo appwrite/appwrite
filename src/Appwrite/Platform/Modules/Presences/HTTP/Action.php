@@ -57,7 +57,7 @@ class Action extends PlatformAction
             }
         }
 
-        $document->setAttribute('$permissions', $permissions ?? []);
+        $document->setAttribute('$permissions', $permissions);
 
         return $document;
     }
