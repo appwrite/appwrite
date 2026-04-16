@@ -9,6 +9,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator;
@@ -26,7 +27,7 @@ class Update extends Action
 
     protected function getQueriesValidator(): Validator
     {
-        return new Projects();
+        return new Projects;
     }
 
     public function __construct()
@@ -49,14 +50,14 @@ class Update extends Action
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
                         model: Response::MODEL_PROJECT,
-                    )
+                    ),
                 ]
             ))
-            ->param('projectId', '', new UID(), 'Project unique ID.')
+            ->param('projectId', '', new UID, 'Project unique ID.')
             ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
             ->param('description', '', new Text(256), 'Project description. Max length: 256 chars.', true)
             ->param('logo', '', new Text(1024), 'Project logo.', true)
-            ->param('url', '', new URL(), 'Project URL.', true)
+            ->param('url', '', new URL, 'Project URL.', true)
             ->param('legalName', '', new Text(256), 'Project legal name. Max length: 256 chars.', true)
             ->param('legalCountry', '', new Text(256), 'Project legal country. Max length: 256 chars.', true)
             ->param('legalState', '', new Text(256), 'Project legal state. Max length: 256 chars.', true)
@@ -76,18 +77,21 @@ class Update extends Action
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $project = $dbForPlatform->updateDocument('projects', $project->getId(), $project
-            ->setAttribute('name', $name)
-            ->setAttribute('description', $description)
-            ->setAttribute('logo', $logo)
-            ->setAttribute('url', $url)
-            ->setAttribute('legalName', $legalName)
-            ->setAttribute('legalCountry', $legalCountry)
-            ->setAttribute('legalState', $legalState)
-            ->setAttribute('legalCity', $legalCity)
-            ->setAttribute('legalAddress', $legalAddress)
-            ->setAttribute('legalTaxId', $legalTaxId)
-            ->setAttribute('search', implode(' ', [$projectId, $name])));
+        $this->requireNonWhitespaceValue('name', $name);
+
+        $project = $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+            'name' => $name,
+            'description' => $description,
+            'logo' => $logo,
+            'url' => $url,
+            'legalName' => $legalName,
+            'legalCountry' => $legalCountry,
+            'legalState' => $legalState,
+            'legalCity' => $legalCity,
+            'legalAddress' => $legalAddress,
+            'legalTaxId' => $legalTaxId,
+            'search' => implode(' ', [$projectId, $name]),
+        ]));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     }

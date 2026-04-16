@@ -216,6 +216,25 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(404, $getProject['headers']['status-code']);
     }
 
+    public function testCreateProjectRejectsWhitespaceOnlyName(): void
+    {
+        $data = $this->setupProjectData();
+
+        foreach ([' ', '   ', "\t", " \t "] as $whitespace) {
+            $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'projectId' => ID::unique(),
+                'name' => $whitespace,
+                'teamId' => $data['teamId'],
+                'region' => System::getEnv('_APP_REGION', 'default')
+            ]);
+
+            $this->assertEquals(400, $response['headers']['status-code']);
+        }
+    }
+
     public function testCreateDuplicateProject(): void
     {
         // Create a team
@@ -936,6 +955,23 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
+    }
+
+    public function testUpdateProjectRejectsWhitespaceOnlyName(): void
+    {
+        $data = $this->setupProjectData();
+        $id = $data['projectId'];
+
+        foreach ([' ', '   ', "\t", " \t "] as $whitespace) {
+            $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'name' => $whitespace,
+            ]);
+
+            $this->assertEquals(400, $response['headers']['status-code']);
+        }
     }
 
     #[Group('smtpAndTemplates')]
