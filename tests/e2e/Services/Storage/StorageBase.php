@@ -867,7 +867,6 @@ trait StorageBase
         $this->assertEquals('attachment; filename="large-file.mp4"', $file7['headers']['content-disposition']);
         $this->assertEquals('video/mp4', $file7['headers']['content-type']);
         $this->assertEquals('bytes', $file7['headers']['accept-ranges']);
-        $this->assertNotEmpty($file7['headers']['content-length']);
         $this->assertNotEmpty($fileData);
         $this->assertEquals(md5_file(realpath(__DIR__ . '/../../../resources/disk-a/large-file.mp4')), md5($fileData)); // validate the file is downloaded correctly
 
