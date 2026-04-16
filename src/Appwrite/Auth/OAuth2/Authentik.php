@@ -42,7 +42,7 @@ class Authentik extends OAuth2
      */
     public function getLoginURL(): string
     {
-        return 'https://' . $this->getAuthentikDomain() . '/application/o/authorize?' . \http_build_query([
+        return 'https://' . $this->getAuthentikDomain() . '/application/o/authorize/?' . \http_build_query([
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
             'state' => \json_encode($this->state),
