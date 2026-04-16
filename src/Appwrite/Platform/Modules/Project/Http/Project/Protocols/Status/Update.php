@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Project\Http\Project\Protocols\Status;
 
+use Appwrite\Event\Event;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -33,8 +34,8 @@ class Update extends Action
             ->desc('Update project protocol status')
             ->groups(['api', 'project'])
             ->label('scope', 'project.write')
-            ->label('event', 'protocols.[protocol].update')
-            ->label('audits.event', 'project.protocols.[protocol].update')
+            ->label('event', 'protocols.[protocolId].update')
+            ->label('audits.event', 'project.protocols.[protocolId].update')
             ->label('audits.resource', 'project.protocols/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'project',
@@ -57,6 +58,7 @@ class Update extends Action
             ->inject('dbForPlatform')
             ->inject('project')
             ->inject('authorization')
+            ->inject('queueForEvents')
             ->callback($this->action(...));
     }
 
@@ -66,7 +68,8 @@ class Update extends Action
         Response $response,
         Database $dbForPlatform,
         Document $project,
-        Authorization $authorization
+        Authorization $authorization,
+        Event $queueForEvents,
     ): void {
         $protocols = $project->getAttribute('apis', []);
         $protocols[$protocolId] = $enabled;
@@ -74,6 +77,8 @@ class Update extends Action
         $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
             'apis' => $protocols,
         ])));
+
+        $queueForEvents->setParam('protocolId', $protocolId);
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     }

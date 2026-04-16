@@ -7,9 +7,9 @@ use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Key;
 use Appwrite\Bus\Events\ExecutionCompleted;
 use Appwrite\Bus\Events\RequestCompleted;
-use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete as DeleteEvent;
 use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Network\Cors;
 use Appwrite\Platform\Appwrite;
@@ -1014,11 +1014,11 @@ Http::init()
    ->inject('request')
    ->inject('console')
    ->inject('dbForPlatform')
-   ->inject('queueForCertificates')
+   ->inject('publisherForCertificates')
    ->inject('platform')
     ->inject('authorization')
     ->inject('certifiedDomains')
-   ->action(function (Request $request, Document $console, Database $dbForPlatform, Certificate $queueForCertificates, array $platform, Authorization $authorization, Table $certifiedDomains) {
+   ->action(function (Request $request, Document $console, Database $dbForPlatform, Certificate $publisherForCertificates, array $platform, Authorization $authorization, Table $certifiedDomains) {
        $hostname = $request->getHostname();
        $platformHostnames = $platform['hostnames'] ?? [];
 
@@ -1044,7 +1044,7 @@ Http::init()
        }
 
        // 4. Check/create rule (requires DB access)
-       $authorization->skip(function () use ($dbForPlatform, $domain, $console, $queueForCertificates, $certifiedDomains) {
+       $authorization->skip(function () use ($dbForPlatform, $domain, $console, $publisherForCertificates, $certifiedDomains) {
            try {
                // TODO: (@Meldiron) Remove after 1.7.x migration
                $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
@@ -1100,10 +1100,11 @@ Http::init()
                $dbForPlatform->createDocument('rules', $document);
 
                Console::info('Issuing a TLS certificate for the main domain (' . $domain->get() . ') in a few seconds...');
-               $queueForCertificates
-                   ->setDomain($document)
-                   ->setSkipRenewCheck(true)
-                   ->trigger();
+               $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(
+                   project: $console,
+                   domain: $document,
+                   skipRenewCheck: true,
+               ));
            } catch (Duplicate $e) {
                Console::info('Certificate already exists');
            } finally {

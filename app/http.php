@@ -72,8 +72,6 @@ $swooleAdapter = new Server(
     container: $container,
 );
 
-$container->set('container', fn () => fn () => $swooleAdapter->getContainer());
-
 $http = $swooleAdapter->getServer();
 
 /**
@@ -533,6 +531,7 @@ $swooleAdapter->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files
     }
 
     $requestContainer = $swooleAdapter->getContainer();
+    $requestContainer->set('container', fn () => $requestContainer);
     $requestContainer->set('request', fn () => $request);
     $requestContainer->set('response', fn () => $response);
 
