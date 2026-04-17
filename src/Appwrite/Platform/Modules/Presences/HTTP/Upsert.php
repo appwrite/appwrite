@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Presences\HTTP;
 
+use Appwrite\Databases\PresenceState;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Presences\HTTP\Action as PresenceAction;
@@ -13,7 +14,6 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Permissions;
@@ -120,22 +120,10 @@ class Upsert extends PresenceAction
             'metadata' => $metadata,
         ];
 
+        $presenceState = new PresenceState();
         $presenceDocument = new Document($presenceData);
-        $this->setPermission($presenceDocument, $permissions, $user, $authorization);
-
-        if ($presenceId !== 'unique()') {
-            $presenceDocument->setAttribute('$id', $presenceId);
-        }
-        try {
-            $presence = $dbForProject->upsertDocument('presenceLogs', $presenceDocument);
-        } catch (Duplicate $th) {
-            // will be triggerd in case of mongodb adapter everytime as $id needs to be same as well here
-            // in mongodb , upsert works on basis of set and unset by comparing the document with the existing one
-            // if presenceId differs then it will create a new document and not update the existing one
-            // TODO: send better error message telling about the presenceId mismatch
-            $existingPresence = $dbForProject->findOne('presenceLogs', [Query::equal('userId', [$userId])]);
-            $presence = $dbForProject->updateDocument('presenceLogs', $existingPresence->getId(), $presenceDocument);
-        }
+        $presenceState->setPermissions($presenceDocument, $permissions, $user, $authorization);
+        $presence = $presenceState->upsertForUser($dbForProject, $presenceDocument, $presenceId, $resolvedUserId);
         $queueForEvents->setParam('presenceId', $presence->getId());
 
         $response->dynamic($presence, Response::MODEL_PRESENCE);

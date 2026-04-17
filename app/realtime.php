@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Databases\PresenceState;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Event\Realtime as QueueRealtime;
 use Appwrite\Extend\Exception;
@@ -30,7 +31,6 @@ use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -336,6 +336,7 @@ $container->set('pools', function ($register) {
 }, ['register']);
 
 $realtime = getRealtime();
+$presenceState = new PresenceState();
 
 /**
  * Table for statistics across all workers.
@@ -915,7 +916,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
     }
 });
 
-$server->onMessage(function (int $connection, string $message) use ($server, $realtime, $containerId) {
+$server->onMessage(function (int $connection, string $message) use ($server, $realtime, $containerId, $presenceState) {
     $project = null;
     $authorization = null;
     try {
@@ -1219,24 +1220,10 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                     $presenceData['metadata'] = $message['data']['metadata'];
                 }
                 $presenceDocument = new Document($presenceData);
-                setPermission($presenceDocument, $message['data']['permissions'] ?? null, $authorization);
+                $presenceState->setPermissions($presenceDocument, $message['data']['permissions'] ?? null, $user, $authorization);
 
                 $presenceId = $message['data']['presenceId'] ?? 'unique()';
-                if ($presenceId !== 'unique()') {
-                    $presenceDocument->setAttribute('$id', $presenceId);
-                }
-                /** @var Document|null $presence */
-                $presence = null;
-                try {
-                    $presence = $database->upsertDocument('presenceLogs', $presenceDocument);
-                } catch (Duplicate $th) {
-                    // will be triggerd in case of mongodb adapter everytime as $id needs to be same as well here
-                    // in mongodb , upsert works on basis of set and unset by comparing the document with the existing one
-                    // if presenceId differs then it will create a new document and not update the existing one
-                    // TODO: send better error message telling about the presenceId mismatch
-                    $existingPresence = $database->findOne('presenceLogs', [Query::equal('userId', [$userId])]);
-                    $presence = $database->updateDocument('presenceLogs', $existingPresence->getId(), $presenceDocument);
-                }
+                $presence = $presenceState->upsertForUser($database, $presenceDocument, $presenceId, $userId);
 
                 $presence->removeAttribute('hostname');
 
