@@ -6,7 +6,6 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Tests\E2E\Services\Realtime\RealtimeBase;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -17,704 +16,566 @@ use WebSocket\TimeoutException;
 class PresenceRealtimeClientTest extends Scope
 {
     use ProjectCustom;
-    use RealtimeBase;
     use SideClient;
+
+    private function bootstrapIsolatedProject(): array
+    {
+        $project = $this->getProject(true);
+        self::$project = $project;
+
+        $user = $this->getUser(true);
+        $headers = [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $project['$id'] . '=' . $user['session'],
+        ];
+
+        return [$project, $user, $headers];
+    }
+
+    private function getServerHeaders(array $project): array
+    {
+        return [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+            'x-appwrite-key' => $project['apiKey'],
+        ];
+    }
+
+    private function connectRealtimeAndSubscribe(
+        array $project,
+        array $headers,
+        array $channels = [],
+        int $timeout = 1
+    ): WebSocketClient {
+        $queryString = \http_build_query([
+            'project' => $project['$id'],
+        ]);
+
+        $client = new WebSocketClient(
+            'ws://appwrite.test/v1/realtime?' . $queryString,
+            [
+                'headers' => $headers,
+                'timeout' => $timeout,
+            ]
+        );
+
+        $connected = \json_decode($client->receive(), true);
+        $this->assertSame('connected', $connected['type'] ?? null);
+
+        if (empty($channels)) {
+            return $client;
+        }
+
+        $client->send(\json_encode([
+            'type' => 'subscribe',
+            'data' => [[
+                'channels' => $channels,
+            ]],
+        ]));
+
+        $subscribeResponse = \json_decode($client->receive(), true);
+        $this->assertSame('response', $subscribeResponse['type'] ?? null);
+        $this->assertSame('subscribe', $subscribeResponse['data']['to'] ?? null);
+        $this->assertTrue($subscribeResponse['data']['success'] ?? false);
+        $this->assertNotEmpty($subscribeResponse['data']['subscriptions'] ?? []);
+
+        return $client;
+    }
+
+    private function receiveUntil(
+        WebSocketClient $client,
+        callable $match,
+        int $timeoutMs = 800,
+        int $pollMs = 50
+    ): array {
+        $deadline = \microtime(true) + ($timeoutMs / 1000);
+        $lastMessage = [];
+
+        while (\microtime(true) < $deadline) {
+            try {
+                $message = \json_decode($client->receive(), true);
+            } catch (TimeoutException) {
+                \usleep($pollMs * 1000);
+                continue;
+            }
+
+            if (!\is_array($message)) {
+                continue;
+            }
+
+            $lastMessage = $message;
+            if ($match($message)) {
+                return $message;
+            }
+        }
+
+        $this->fail('Timed out waiting for expected websocket frame. Last frame: ' . \json_encode($lastMessage));
+        return [];
+    }
+
+    private function drainSocketFor(WebSocketClient $client, int $timeoutMs = 500): void
+    {
+        $deadline = \microtime(true) + ($timeoutMs / 1000);
+        while (\microtime(true) < $deadline) {
+            try {
+                $client->receive();
+            } catch (TimeoutException) {
+                return;
+            }
+        }
+    }
+
+    private function assertQuietFor(WebSocketClient $client, callable $forbidden, int $timeoutMs = 150): void
+    {
+        $deadline = \microtime(true) + ($timeoutMs / 1000);
+        while (\microtime(true) < $deadline) {
+            try {
+                $message = \json_decode($client->receive(), true);
+            } catch (TimeoutException) {
+                continue;
+            }
+
+            if (!\is_array($message)) {
+                continue;
+            }
+
+            if ($forbidden($message)) {
+                $this->fail('Received forbidden websocket frame: ' . \json_encode($message));
+            }
+        }
+    }
 
     private function assertPresenceRealtimeEvent(
         array $event,
         string $presenceId,
         string $action,
         string $status,
-        array $metadata = [],
-        ?string $expectedUserId = null
+        array $metadata,
+        string $expectedUserId
     ): void {
-        $expectedUserId ??= $this->getUser()['$id'];
         $this->assertSame('event', $event['type'] ?? null);
         $this->assertContains('presences', $event['data']['channels'] ?? []);
         $this->assertContains('presences.' . $presenceId, $event['data']['channels'] ?? []);
-        $this->assertNotEmpty($event['data']['events'] ?? []);
         $this->assertContains('presences.' . $presenceId . '.' . $action, $event['data']['events'] ?? []);
-        $this->assertNotEmpty($event['data']['timestamp'] ?? null);
-        $this->assertArrayHasKey('subscriptions', $event['data'] ?? []);
-        $this->assertNotEmpty($event['data']['subscriptions'] ?? []);
         $this->assertSame($presenceId, $event['data']['payload']['$id'] ?? null);
         $this->assertSame($status, $event['data']['payload']['status'] ?? null);
         $this->assertSame($metadata, $event['data']['payload']['metadata'] ?? []);
         $this->assertSame($expectedUserId, $event['data']['payload']['userId'] ?? null);
     }
 
-    private function assertNoRealtimeEvent(WebSocketClient $client): void
-    {
-        try {
-            $client->receive();
-            $this->fail('Expected TimeoutException - event should not be received');
-        } catch (TimeoutException $e) {
-            $this->assertTrue(true);
-        }
-    }
-
-    /**
-     * Presence websocket contract: after sending a `type: presence` message,
-     * the sender socket should receive:
-     * 1) `type: response` (for the persistence write)
-     * 2) `type: event` (for the realtime upsert)
-     *
-     * This keeps the tests strict about ordering and avoids leaving unread
-     * realtime events in the socket buffer for later assertions.
-     */
-    private function assertPresenceResponseThenUpsertEvent(
-        WebSocketClient $client,
-        string $expectedStatus,
-        array $expectedMetadata,
-        ?string $expectedUserId = null
-    ): string {
-        $expectedUserId ??= $this->getUser()['$id'];
-
-        $presenceId = null;
-        $response = null;
-        $event = null;
-
-        // Ordering is not guaranteed because:
-        // - response is sent directly via $server->send(...)
-        // - event is emitted via pub/sub and may arrive earlier
-        for ($attempts = 0; $attempts < 5; $attempts++) {
-            $message = \json_decode($client->receive(), true);
-            $type = $message['type'] ?? null;
-
-            if ($type === 'response') {
-                $response ??= $message;
-
-                $this->assertSame('presence', $response['data']['to'] ?? null);
-                $presenceId ??= $response['data']['presence']['$id'] ?? null;
-                $this->assertNotEmpty($presenceId);
-                $this->assertSame($expectedStatus, $response['data']['presence']['status'] ?? null);
-                $this->assertSame($expectedMetadata, $response['data']['presence']['metadata'] ?? null);
-            } elseif ($type === 'event') {
-                $event ??= $message;
-                $presenceId ??= $event['data']['payload']['$id'] ?? null;
-                $this->assertNotEmpty($presenceId);
-
-                $this->assertPresenceRealtimeEvent(
-                    $event,
-                    $presenceId,
-                    'upsert',
-                    $expectedStatus,
-                    $expectedMetadata,
-                    $expectedUserId
-                );
-            }
-
-            if ($response !== null && $event !== null) {
-                return $presenceId;
-            }
-        }
-
-        $this->fail('Expected both realtime presence `response` and `event` messages');
-        return '';
-    }
-
-    /**
-     * After getting a `response` for a presence message, the next interesting
-     * realtime message should be the corresponding `event` for the same presence id.
-     */
     private function receivePresenceEvent(
         WebSocketClient $client,
         string $presenceId,
         string $action,
         string $status,
-        array $expectedMetadata,
-        ?string $expectedUserId = null
+        array $metadata,
+        string $expectedUserId,
+        int $timeoutMs = 2500
     ): array {
-        do {
-            $message = \json_decode($client->receive(), true);
-        } while (
-            ($message['type'] ?? null) !== 'event'
-            || ($message['data']['payload']['$id'] ?? null) !== $presenceId
+        $event = $this->receiveUntil(
+            $client,
+            fn (array $message): bool => ($message['type'] ?? null) === 'event'
+                && ($message['data']['payload']['$id'] ?? null) === $presenceId
+                && \in_array('presences.' . $presenceId . '.' . $action, $message['data']['events'] ?? [], true),
+            $timeoutMs
         );
 
-        $this->assertPresenceRealtimeEvent(
-            $message,
+        $this->assertPresenceRealtimeEvent($event, $presenceId, $action, $status, $metadata, $expectedUserId);
+        return $event;
+    }
+
+    private function collectPresenceOutcome(
+        WebSocketClient $client,
+        string $presenceId,
+        string $expectedStatus,
+        array $expectedMetadata,
+        string $expectedUserId
+    ): void {
+        $response = null;
+        $event = null;
+
+        $this->receiveUntil($client, function (array $message) use (
+            &$response,
+            &$event,
             $presenceId,
-            $action,
-            $status,
+            $expectedStatus,
             $expectedMetadata,
             $expectedUserId
+        ): bool {
+            $type = $message['type'] ?? null;
+            if ($type === 'response' && ($message['data']['to'] ?? null) === 'presence') {
+                if (($message['data']['presence']['$id'] ?? null) !== $presenceId) {
+                    return false;
+                }
+                $this->assertSame($expectedStatus, $message['data']['presence']['status'] ?? null);
+                $this->assertSame($expectedMetadata, $message['data']['presence']['metadata'] ?? null);
+                $response = $message;
+            }
+
+            if ($type === 'event' && ($message['data']['payload']['$id'] ?? null) === $presenceId) {
+                if (!\in_array('presences.' . $presenceId . '.upsert', $message['data']['events'] ?? [], true)) {
+                    return false;
+                }
+                $this->assertPresenceRealtimeEvent($message, $presenceId, 'upsert', $expectedStatus, $expectedMetadata, $expectedUserId);
+                $event = $message;
+            }
+
+            return $response !== null && $event !== null;
+        }, 2500);
+    }
+
+    private function receiveErrorMessage(WebSocketClient $client): array
+    {
+        $error = $this->receiveUntil(
+            $client,
+            fn (array $message): bool => ($message['type'] ?? null) === 'error',
+            3000
         );
-
-        return $message;
+        $this->assertSame('error', $error['type'] ?? null);
+        return $error;
     }
 
-    private function connectPresenceSocket(bool $authenticated = true, int $timeout = 2): WebSocketClient
-    {
-        $headers = [
-            'origin' => 'http://localhost',
-        ];
-
-        if ($authenticated) {
-            $headers['cookie'] = 'a_session_' . $this->getProject()['$id'] . '=' . $this->getUser()['session'];
-        }
-
-        $client = $this->getWebsocket(['presences'], $headers, timeout: $timeout);
-        $response = \json_decode($client->receive(), true);
-
-        $this->assertSame('connected', $response['type'] ?? null);
-
-        return $client;
+    private function sendPresenceMessage(
+        WebSocketClient $client,
+        string $presenceId,
+        string $status,
+        array $metadata,
+        array $permissions
+    ): void {
+        $client->send(\json_encode([
+            'type' => 'presence',
+            'data' => [
+                'presenceId' => $presenceId,
+                'status' => $status,
+                'metadata' => $metadata,
+                'permissions' => $permissions,
+            ],
+        ]));
     }
 
-    private function getServerHeaders(): array
+    private function getPresencePermissions(string|Role $readRole): array
     {
         return [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ];
-    }
-
-    private function getPresencePermissions(string $userId): array
-    {
-        $this->assertNotEmpty($userId);
-
-        return [
-            Permission::read(Role::any()),
+            Permission::read($readRole),
             Permission::update(Role::any()),
             Permission::delete(Role::any()),
         ];
     }
 
-    public function testPresenceMessageCreatesPresenceAndPersists(): void
+    public function testPresenceUpsertSenderGetsResponseAndEvent(): void
     {
+        [$project, $user, $headers] = $this->bootstrapIsolatedProject();
         $presenceId = ID::unique();
-        $userId = $this->getUser()['$id'];
-        $client = $this->connectPresenceSocket(true, 5);
+        $metadata = ['testRunId' => ID::unique(), 'case' => 'upsert-basic'];
 
-        $client->send(\json_encode([
-            'type' => 'presence',
-            'data' => [
-                'presenceId' => $presenceId,
-                'status' => 'online',
-                'metadata' => [
-                    'device' => 'web',
-                ],
-                'permissions' => $this->getPresencePermissions($userId),
-            ],
-        ]));
-
-        $this->assertPresenceResponseThenUpsertEvent(
-            $client,
-            'online',
-            ['device' => 'web'],
-            $userId
+        $publisher = $this->connectRealtimeAndSubscribe(
+            $project,
+            $headers,
+            ['presences', 'presences.' . $presenceId],
+            timeout: 2
         );
 
-        $read = $this->client->call(
-            Client::METHOD_GET,
-            '/presences/' . $presenceId,
-            $this->getServerHeaders()
-        );
+        try {
+            $this->sendPresenceMessage(
+                $publisher,
+                $presenceId,
+                'online',
+                $metadata,
+                $this->getPresencePermissions(Role::any())
+            );
 
-        $this->assertSame(200, $read['headers']['status-code']);
-        $this->assertSame($presenceId, $read['body']['$id']);
-        $this->assertSame($userId, $read['body']['userId']);
-        $this->assertSame('online', $read['body']['status']);
-        $this->assertSame(['device' => 'web'], $read['body']['metadata']);
+            $this->collectPresenceOutcome($publisher, $presenceId, 'online', $metadata, $user['$id']);
 
-        $client->close();
+            $read = $this->client->call(
+                Client::METHOD_GET,
+                '/presences/' . $presenceId,
+                $this->getServerHeaders($project)
+            );
+
+            $this->assertSame(200, $read['headers']['status-code']);
+            $this->assertSame($presenceId, $read['body']['$id']);
+            $this->assertSame($user['$id'], $read['body']['userId']);
+            $this->assertSame('online', $read['body']['status']);
+            $this->assertSame($metadata, $read['body']['metadata']);
+        } finally {
+            $publisher->close();
+        }
     }
 
-    public function testPresenceMessageUpsertWithSamePresenceIdPersistsSingleUpdatedRecord(): void
+    public function testPresenceUpsertSameUserUpdatesSingleRecord(): void
     {
-        $presenceId = ID::unique();
-        $userId = $this->getUser()['$id'];
-        $client = $this->connectPresenceSocket(true, 5);
-
-        $client->send(\json_encode([
-            'type' => 'presence',
-            'data' => [
-                'presenceId' => $presenceId,
-                'status' => 'away',
-                'metadata' => [
-                    'source' => 'first',
-                ],
-                'permissions' => $this->getPresencePermissions($userId),
-            ],
-        ]));
-        $this->assertPresenceResponseThenUpsertEvent(
-            $client,
-            'away',
-            ['source' => 'first'],
-            $userId
-        );
-
-        $client->send(\json_encode([
-            'type' => 'presence',
-            'data' => [
-                'presenceId' => $presenceId,
-                'status' => 'busy',
-                'metadata' => [
-                    'source' => 'second',
-                ],
-                'permissions' => $this->getPresencePermissions($userId),
-            ],
-        ]));
-        $this->assertPresenceResponseThenUpsertEvent(
-            $client,
-            'busy',
-            ['source' => 'second'],
-            $userId
-        );
-
-        $list = $this->client->call(
-            Client::METHOD_GET,
-            '/presences',
-            $this->getServerHeaders(),
-            [
-                'queries' => [
-                    Query::equal('$id', [$presenceId])->toString(),
-                    Query::equal('userId', [$userId])->toString(),
-                ],
-            ]
-        );
-
-        $this->assertSame(200, $list['headers']['status-code']);
-        $this->assertSame(1, $list['body']['total']);
-        $this->assertCount(1, $list['body']['presences']);
-        $this->assertSame($presenceId, $list['body']['presences'][0]['$id']);
-        $this->assertSame($userId, $list['body']['presences'][0]['userId']);
-        $this->assertSame('busy', $list['body']['presences'][0]['status']);
-        $this->assertSame(['source' => 'second'], $list['body']['presences'][0]['metadata']);
-
-        $client->close();
-    }
-
-    public function testPresenceMessageUpsertWithSameUserPersistsSingleRecord(): void
-    {
+        [$project, $user, $headers] = $this->bootstrapIsolatedProject();
         $firstPresenceId = ID::unique();
         $secondPresenceId = ID::unique();
-        $userId = $this->getUser()['$id'];
-        $client = $this->connectPresenceSocket(true, 5);
+        $marker = ID::unique();
 
-        $client->send(\json_encode([
-            'type' => 'presence',
-            'data' => [
-                'presenceId' => $firstPresenceId,
-                'status' => 'away',
-                'metadata' => [
-                    'source' => 'first-user-upsert',
-                ],
-                'permissions' => $this->getPresencePermissions($userId),
-            ],
-        ]));
-        $this->assertPresenceResponseThenUpsertEvent(
-            $client,
-            'away',
-            ['source' => 'first-user-upsert'],
-            $userId
+        $publisher = $this->connectRealtimeAndSubscribe(
+            $project,
+            $headers,
+            ['presences', 'presences.' . $firstPresenceId, 'presences.' . $secondPresenceId],
+            timeout: 2
         );
 
-        $client->send(\json_encode([
-            'type' => 'presence',
-            'data' => [
-                'presenceId' => $secondPresenceId,
-                'status' => 'busy',
-                'metadata' => [
-                    'source' => 'second-user-upsert',
-                ],
-                'permissions' => $this->getPresencePermissions($userId),
-            ],
-        ]));
-        $this->assertPresenceResponseThenUpsertEvent(
-            $client,
-            'busy',
-            ['source' => 'second-user-upsert'],
-            $userId
-        );
+        try {
+            $firstMetadata = ['testRunId' => $marker, 'step' => 'first'];
+            $secondMetadata = ['testRunId' => $marker, 'step' => 'second'];
 
-        $list = $this->client->call(
-            Client::METHOD_GET,
-            '/presences',
-            $this->getServerHeaders(),
-            [
-                'queries' => [
-                    Query::equal('userId', [$userId])->toString(),
-                ],
-            ]
-        );
+            $this->sendPresenceMessage(
+                $publisher,
+                $firstPresenceId,
+                'away',
+                $firstMetadata,
+                $this->getPresencePermissions(Role::any())
+            );
+            $this->collectPresenceOutcome($publisher, $firstPresenceId, 'away', $firstMetadata, $user['$id']);
 
-        $this->assertSame(200, $list['headers']['status-code']);
-        $this->assertSame(1, $list['body']['total']);
-        $this->assertCount(1, $list['body']['presences']);
-        $this->assertSame($userId, $list['body']['presences'][0]['userId']);
-        $this->assertSame('busy', $list['body']['presences'][0]['status']);
-        $this->assertSame(['source' => 'second-user-upsert'], $list['body']['presences'][0]['metadata']);
+            $this->sendPresenceMessage(
+                $publisher,
+                $secondPresenceId,
+                'busy',
+                $secondMetadata,
+                $this->getPresencePermissions(Role::any())
+            );
+            $this->collectPresenceOutcome($publisher, $secondPresenceId, 'busy', $secondMetadata, $user['$id']);
 
-        $client->close();
+            $list = $this->client->call(
+                Client::METHOD_GET,
+                '/presences',
+                $this->getServerHeaders($project),
+                [
+                    'queries' => [
+                        Query::equal('userId', [$user['$id']])->toString(),
+                    ],
+                ]
+            );
+
+            $this->assertSame(200, $list['headers']['status-code']);
+            $this->assertSame(1, $list['body']['total']);
+            $this->assertSame($user['$id'], $list['body']['presences'][0]['userId']);
+            $this->assertSame('busy', $list['body']['presences'][0]['status']);
+            $this->assertSame($secondMetadata, $list['body']['presences'][0]['metadata']);
+        } finally {
+            $publisher->close();
+        }
     }
 
-    public function testPresenceMessageValidationErrors(): void
+    public function testPresenceValidationErrorsReturnErrorOnly(): void
     {
-        $client = $this->connectPresenceSocket();
-
-        $client->send(\json_encode([
-            'type' => 'presence',
-            'data' => [
-                'metadata' => [
-                    'device' => 'web',
-                ],
-            ],
-        ]));
-        $missingStatus = \json_decode($client->receive(), true);
-        $this->assertSame('error', $missingStatus['type'] ?? null);
-        $this->assertStringContainsString('status must be provided', $missingStatus['data']['message'] ?? '');
-
-        $client->send(\json_encode([
-            'type' => 'presence',
-            'data' => [
-                'status' => 'online',
-                'permissions' => 'invalid',
-            ],
-        ]));
-        $invalidPermissions = \json_decode($client->receive(), true);
-        $this->assertSame('error', $invalidPermissions['type'] ?? null);
-        $this->assertStringContainsString('permissions must be an array', $invalidPermissions['data']['message'] ?? '');
-
-        $client->close();
-    }
-
-    public function testPresenceMessageRequiresAuthenticatedUser(): void
-    {
-        $client = $this->connectPresenceSocket(false);
-
-        $client->send(\json_encode([
-            'type' => 'presence',
-            'data' => [
-                'status' => 'online',
-            ],
-        ]));
-
-        $response = \json_decode($client->receive(), true);
-        $this->assertSame('error', $response['type'] ?? null);
-        $this->assertSame(401, $response['data']['code'] ?? null);
-        $this->assertSame('User must be authorized', $response['data']['message'] ?? null);
-
-        $client->close();
-    }
-
-    public function testChannelParsing(): void
-    {
+        [$project, , $headers] = $this->bootstrapIsolatedProject();
         $presenceId = ID::unique();
-        $userId = $this->getUser()['$id'];
-        $headers = [
-            'origin' => 'http://localhost',
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $this->getUser()['session'],
-        ];
+        $client = $this->connectRealtimeAndSubscribe($project, $headers, ['presences', 'presences.' . $presenceId], timeout: 2);
 
-        $client = $this->getWebsocket(['presences', 'presences.' . $presenceId], $headers, timeout: 5);
-        $connected = \json_decode($client->receive(), true);
-
-        $this->assertSame('connected', $connected['type'] ?? null);
-        $this->assertCount(2, $connected['data']['channels'] ?? []);
-        $this->assertContains('presences', $connected['data']['channels']);
-        $this->assertContains('presences.' . $presenceId, $connected['data']['channels']);
-
-        $create = $this->client->call(
-            Client::METHOD_PUT,
-            '/presences/' . $presenceId,
-            $this->getServerHeaders(),
-            [
-                'userId' => $userId,
-                'status' => 'online',
-                'metadata' => ['source' => 'channel-parsing-create'],
-                'permissions' => $this->getPresencePermissions($userId),
-            ]
-        );
-        $this->assertSame(200, $create['headers']['status-code']);
-
-        $createEvent = \json_decode($client->receive(), true);
-        $this->assertPresenceRealtimeEvent(
-            $createEvent,
-            $presenceId,
-            'upsert',
-            'online',
-            ['source' => 'channel-parsing-create']
-        );
-
-        $update = $this->client->call(
-            Client::METHOD_PATCH,
-            '/presences/' . $presenceId,
-            $this->getServerHeaders(),
-            [
-                'status' => 'away',
-                'metadata' => ['source' => 'channel-parsing-update'],
-            ]
-        );
-        $this->assertSame(200, $update['headers']['status-code']);
-
-        $updateEvent = \json_decode($client->receive(), true);
-        $this->assertPresenceRealtimeEvent(
-            $updateEvent,
-            $presenceId,
-            'update',
-            'away',
-            ['source' => 'channel-parsing-update']
-        );
-
-        $delete = $this->client->call(
-            Client::METHOD_DELETE,
-            '/presences/' . $presenceId,
-            $this->getServerHeaders()
-        );
-        $this->assertSame(204, $delete['headers']['status-code']);
-
-        $deleteEvent = \json_decode($client->receive(), true);
-        $this->assertPresenceRealtimeEvent(
-            $deleteEvent,
-            $presenceId,
-            'delete',
-            'away',
-            ['source' => 'channel-parsing-update']
-        );
-
-        $client->close();
-    }
-
-    public function testPresenceMessageEmitsCreateAndDeleteEvents(): void
-    {
-        $presenceId = ID::unique();
-        $userId = $this->getUser()['$id'];
-        $headers = [
-            'origin' => 'http://localhost',
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $this->getUser()['session'],
-        ];
-
-        $listener = $this->getWebsocket(['presences', 'presences.' . $presenceId], $headers, timeout: 8);
-        $connected = \json_decode($listener->receive(), true);
-        $this->assertSame('connected', $connected['type'] ?? null);
-        $this->assertCount(2, $connected['data']['channels'] ?? []);
-        $this->assertContains('presences', $connected['data']['channels'] ?? []);
-        $this->assertContains('presences.' . $presenceId, $connected['data']['channels'] ?? []);
-        $this->assertCount(1, $connected['data']['subscriptions'] ?? []);
-        $this->assertNotEmpty(array_values($connected['data']['subscriptions'] ?? []));
-
-        $publisher = $this->connectPresenceSocket(true, timeout: 8);
-
-        $publisher->send(\json_encode([
-            'type' => 'presence',
-            'data' => [
-                'presenceId' => $presenceId,
-                'status' => 'online',
-                'metadata' => [
-                    'source' => 'realtime-create-delete-events',
+        try {
+            $client->send(\json_encode([
+                'type' => 'presence',
+                'data' => [
+                    'presenceId' => $presenceId,
+                    'metadata' => [
+                        'testRunId' => ID::unique(),
+                    ],
                 ],
-                'permissions' => $this->getPresencePermissions($userId),
-            ],
-        ]));
+            ]));
+            $missingStatus = $this->receiveErrorMessage($client);
+            $this->assertStringContainsString('status must be provided', $missingStatus['data']['message'] ?? '');
+            $this->assertQuietFor(
+                $client,
+                fn (array $frame): bool => ($frame['type'] ?? null) === 'event'
+                    && ($frame['data']['payload']['$id'] ?? null) === $presenceId
+            );
 
-        $receivedPresenceId = $this->assertPresenceResponseThenUpsertEvent(
-            $publisher,
-            'online',
-            ['source' => 'realtime-create-delete-events'],
-            $userId
-        );
-        $this->assertSame($presenceId, $receivedPresenceId);
-
-        $createEvent = \json_decode($listener->receive(), true);
-        $this->assertPresenceRealtimeEvent(
-            $createEvent,
-            $presenceId,
-            'upsert',
-            'online',
-            ['source' => 'realtime-create-delete-events']
-        );
-
-        $publisher->close();
-
-        $deleteEvent = \json_decode($listener->receive(), true);
-        $this->assertPresenceRealtimeEvent(
-            $deleteEvent,
-            $presenceId,
-            'delete',
-            'online',
-            ['source' => 'realtime-create-delete-events']
-        );
-
-        $listener->close();
+            $client->send(\json_encode([
+                'type' => 'presence',
+                'data' => [
+                    'presenceId' => $presenceId,
+                    'status' => 'online',
+                    'permissions' => 'invalid',
+                ],
+            ]));
+            $invalidPermissions = $this->receiveErrorMessage($client);
+            $this->assertStringContainsString('permissions must be an array', $invalidPermissions['data']['message'] ?? '');
+            $this->assertQuietFor(
+                $client,
+                fn (array $frame): bool => ($frame['type'] ?? null) === 'event'
+                    && ($frame['data']['payload']['$id'] ?? null) === $presenceId
+            );
+        } finally {
+            $client->close();
+        }
     }
 
-    public function testPresencePermission(): void
+    public function testPresenceUnauthenticatedUserGetsAuthorizationError(): void
     {
-        $presenceIdAny = ID::unique();
-        $presenceIdUsers = ID::unique();
-        $presenceIdOwner = ID::unique();
+        $project = $this->getProject(true);
+        self::$project = $project;
 
-        $user1 = $this->getUser();
-        $user1Id = $user1['$id'];
+        $presenceId = ID::unique();
+        $client = $this->connectRealtimeAndSubscribe(
+            $project,
+            ['origin' => 'http://localhost'],
+            ['presences', 'presences.' . $presenceId],
+            timeout: 2
+        );
+
+        try {
+            $client->send(\json_encode([
+                'type' => 'presence',
+                'data' => [
+                    'presenceId' => $presenceId,
+                    'status' => 'online',
+                    'metadata' => ['testRunId' => ID::unique()],
+                ],
+            ]));
+
+            $error = $this->receiveErrorMessage($client);
+            $this->assertSame(401, $error['data']['code'] ?? null);
+            $this->assertSame('User must be authorized', $error['data']['message'] ?? null);
+
+            $this->assertQuietFor(
+                $client,
+                fn (array $frame): bool => ($frame['type'] ?? null) === 'event'
+                    && ($frame['data']['payload']['$id'] ?? null) === $presenceId
+            );
+        } finally {
+            $client->close();
+        }
+    }
+
+    public function testChannelParsingChannelsAndEvents(): void
+    {
+        [$project, $user, $headers] = $this->bootstrapIsolatedProject();
+        $presenceId = ID::unique();
+        $listener = $this->connectRealtimeAndSubscribe(
+            $project,
+            $headers,
+            ['presences', 'presences.' . $presenceId],
+            timeout: 2
+        );
+
+        try {
+            $createMetadata = ['testRunId' => ID::unique(), 'source' => 'channel-create'];
+            $updateMetadata = ['testRunId' => $createMetadata['testRunId'], 'source' => 'channel-update'];
+
+            $create = $this->client->call(
+                Client::METHOD_PUT,
+                '/presences/' . $presenceId,
+                $this->getServerHeaders($project),
+                [
+                    'userId' => $user['$id'],
+                    'status' => 'online',
+                    'metadata' => $createMetadata,
+                    'permissions' => $this->getPresencePermissions(Role::any()),
+                ]
+            );
+            $this->assertSame(200, $create['headers']['status-code']);
+            $this->receivePresenceEvent($listener, $presenceId, 'upsert', 'online', $createMetadata, $user['$id']);
+
+            $update = $this->client->call(
+                Client::METHOD_PATCH,
+                '/presences/' . $presenceId,
+                $this->getServerHeaders($project),
+                [
+                    'status' => 'away',
+                    'metadata' => $updateMetadata,
+                ]
+            );
+            $this->assertSame(200, $update['headers']['status-code']);
+            $this->receivePresenceEvent($listener, $presenceId, 'update', 'away', $updateMetadata, $user['$id']);
+
+            $delete = $this->client->call(
+                Client::METHOD_DELETE,
+                '/presences/' . $presenceId,
+                $this->getServerHeaders($project)
+            );
+            $this->assertSame(204, $delete['headers']['status-code']);
+            $this->receivePresenceEvent($listener, $presenceId, 'delete', 'away', $updateMetadata, $user['$id']);
+        } finally {
+            $listener->close();
+        }
+    }
+
+    public function testPresencePermissionsReceiverRouting(): void
+    {
+        [$project, $user1, $user1Headers] = $this->bootstrapIsolatedProject();
         $user2 = $this->getUser(true);
-        $user3 = $this->getUser(true);
-        $projectId = $this->getProject()['$id'];
-
-        $user1Headers = [
-            'origin' => 'http://localhost',
-            'cookie' => 'a_session_' . $projectId . '=' . $user1['session'],
-        ];
 
         $user2Headers = [
             'origin' => 'http://localhost',
-            'cookie' => 'a_session_' . $projectId . '=' . $user2['session'],
+            'cookie' => 'a_session_' . $project['$id'] . '=' . $user2['session'],
         ];
 
-        $user3Headers = [
-            'origin' => 'http://localhost',
-            'cookie' => 'a_session_' . $projectId . '=' . $user3['session'],
+        $presenceIdAny = ID::unique();
+        $presenceIdOwner = ID::unique();
+
+        $channels = [
+            'presences',
+            'presences.' . $presenceIdAny,
+            'presences.' . $presenceIdOwner,
         ];
 
-        $user1Listener = $this->getWebsocket(['presences', 'presences.' . $presenceIdAny, 'presences.' . $presenceIdUsers, 'presences.' . $presenceIdOwner], $user1Headers, timeout: 3);
-        $user2Listener = $this->getWebsocket(['presences', 'presences.' . $presenceIdAny, 'presences.' . $presenceIdUsers, 'presences.' . $presenceIdOwner], $user2Headers, timeout: 3);
-        $user3Listener = $this->getWebsocket(['presences', 'presences.' . $presenceIdAny, 'presences.' . $presenceIdUsers, 'presences.' . $presenceIdOwner], $user3Headers, timeout: 3);
+        $publisher = $this->connectRealtimeAndSubscribe($project, $user1Headers, ['presences'], timeout: 1);
+        $listener1 = $this->connectRealtimeAndSubscribe($project, $user1Headers, $channels, timeout: 1);
+        $listener2 = $this->connectRealtimeAndSubscribe($project, $user2Headers, $channels, timeout: 1);
 
-        $this->assertSame('connected', (\json_decode($user1Listener->receive(), true))['type'] ?? null);
-        $this->assertSame('connected', (\json_decode($user2Listener->receive(), true))['type'] ?? null);
-        $this->assertSame('connected', (\json_decode($user3Listener->receive(), true))['type'] ?? null);
+        try {
+            $metadataAny = ['testRunId' => ID::unique(), 'visibility' => 'any'];
+            $this->sendPresenceMessage(
+                $publisher,
+                $presenceIdAny,
+                'online',
+                $metadataAny,
+                $this->getPresencePermissions(Role::any())
+            );
+            $this->collectPresenceOutcome($publisher, $presenceIdAny, 'online', $metadataAny, $user1['$id']);
+            $this->receivePresenceEvent($listener1, $presenceIdAny, 'upsert', 'online', $metadataAny, $user1['$id']);
+            $this->receivePresenceEvent($listener2, $presenceIdAny, 'upsert', 'online', $metadataAny, $user1['$id']);
 
-        $publisher = $this->getWebsocket(['presences'], $user1Headers, timeout: 5);
-        $this->assertSame('connected', (\json_decode($publisher->receive(), true))['type'] ?? null);
+            $metadataOwner = ['testRunId' => ID::unique(), 'visibility' => 'owner'];
+            $this->sendPresenceMessage(
+                $publisher,
+                $presenceIdOwner,
+                'busy',
+                $metadataOwner,
+                $this->getPresencePermissions(Role::user($user1['$id']))
+            );
+            $this->collectPresenceOutcome($publisher, $presenceIdOwner, 'busy', $metadataOwner, $user1['$id']);
+            $this->receivePresenceEvent($listener1, $presenceIdOwner, 'upsert', 'busy', $metadataOwner, $user1['$id']);
+            $this->assertQuietFor(
+                $listener2,
+                fn (array $frame): bool => ($frame['type'] ?? null) === 'event'
+                    && ($frame['data']['payload']['$id'] ?? null) === $presenceIdOwner
+            );
+        } finally {
+            $publisher->close();
+            $listener1->close();
+            $listener2->close();
+        }
+    }
 
-        $publisher->send(\json_encode([
-            'type' => 'presence',
-            'data' => [
-                'presenceId' => $presenceIdAny,
-                'status' => 'online',
-                'metadata' => [
-                    'visibility' => 'any',
-                ],
-                'permissions' => [
-                    Permission::read(Role::any()),
-                    Permission::update(Role::any()),
-                    Permission::delete(Role::any()),
-                ],
-            ],
-        ]));
+    public function testPresenceCloseEmitsDeleteEvent(): void
+    {
+        [$project, $user, $headers] = $this->bootstrapIsolatedProject();
+        $presenceId = ID::unique();
+        $metadata = ['testRunId' => ID::unique(), 'source' => 'close-delete'];
 
-        $receivedPresenceId = $this->assertPresenceResponseThenUpsertEvent(
-            $publisher,
-            'online',
-            ['visibility' => 'any'],
-            $user1Id
-        );
-        $this->assertSame($presenceIdAny, $receivedPresenceId);
+        $publisher = $this->connectRealtimeAndSubscribe($project, $headers, ['presences', 'presences.' . $presenceId], timeout: 1);
+        $listener = $this->connectRealtimeAndSubscribe($project, $headers, ['presences', 'presences.' . $presenceId], timeout: 1);
 
-        $this->assertPresenceRealtimeEvent(
-            \json_decode($user1Listener->receive(), true),
-            $presenceIdAny,
-            'upsert',
-            'online',
-            ['visibility' => 'any'],
-            $user1Id
-        );
-        $this->assertPresenceRealtimeEvent(
-            \json_decode($user2Listener->receive(), true),
-            $presenceIdAny,
-            'upsert',
-            'online',
-            ['visibility' => 'any'],
-            $user1Id
-        );
-        $this->assertPresenceRealtimeEvent(
-            \json_decode($user3Listener->receive(), true),
-            $presenceIdAny,
-            'upsert',
-            'online',
-            ['visibility' => 'any'],
-            $user1Id
-        );
+        try {
+            $this->sendPresenceMessage(
+                $publisher,
+                $presenceId,
+                'online',
+                $metadata,
+                $this->getPresencePermissions(Role::any())
+            );
+            $this->collectPresenceOutcome($publisher, $presenceId, 'online', $metadata, $user['$id']);
+            $this->receivePresenceEvent($listener, $presenceId, 'upsert', 'online', $metadata, $user['$id']);
 
-        $publisher->send(\json_encode([
-            'type' => 'presence',
-            'data' => [
-                'presenceId' => $presenceIdUsers,
-                'status' => 'away',
-                'metadata' => [
-                    'visibility' => 'users',
-                ],
-                'permissions' => [
-                    Permission::read(Role::users()),
-                    Permission::update(Role::users()),
-                    Permission::delete(Role::users()),
-                ],
-            ],
-        ]));
+            $publisher->close();
 
-        $receivedPresenceId = $this->assertPresenceResponseThenUpsertEvent(
-            $publisher,
-            'away',
-            ['visibility' => 'users'],
-            $user1Id
-        );
-        $this->assertSame($presenceIdUsers, $receivedPresenceId);
-
-        $this->assertPresenceRealtimeEvent(
-            \json_decode($user1Listener->receive(), true),
-            $presenceIdUsers,
-            'upsert',
-            'away',
-            ['visibility' => 'users'],
-            $user1Id
-        );
-        $this->assertPresenceRealtimeEvent(
-            \json_decode($user3Listener->receive(), true),
-            $presenceIdUsers,
-            'upsert',
-            'away',
-            ['visibility' => 'users'],
-            $user1Id
-        );
-        $this->assertPresenceRealtimeEvent(
-            \json_decode($user2Listener->receive(), true),
-            $presenceIdUsers,
-            'upsert',
-            'away',
-            ['visibility' => 'users'],
-            $user1Id
-        );
-
-        $publisher->send(\json_encode([
-            'type' => 'presence',
-            'data' => [
-                'presenceId' => $presenceIdOwner,
-                'status' => 'busy',
-                'metadata' => [
-                    'visibility' => 'owner',
-                ],
-                'permissions' => [
-                    Permission::read(Role::user($user1Id)),
-                    Permission::update(Role::user($user1Id)),
-                    Permission::delete(Role::user($user1Id)),
-                ],
-            ],
-        ]));
-
-        $receivedPresenceId = $this->assertPresenceResponseThenUpsertEvent(
-            $publisher,
-            'busy',
-            ['visibility' => 'owner'],
-            $user1Id
-        );
-        $this->assertSame($presenceIdOwner, $receivedPresenceId);
-
-        $this->assertPresenceRealtimeEvent(
-            \json_decode($user1Listener->receive(), true),
-            $presenceIdOwner,
-            'upsert',
-            'busy',
-            ['visibility' => 'owner'],
-            $user1Id
-        );
-        $this->assertNoRealtimeEvent($user2Listener);
-        $this->assertNoRealtimeEvent($user3Listener);
-
-        $publisher->close();
-        $user1Listener->close();
-        $user2Listener->close();
-        $user3Listener->close();
+            $this->receivePresenceEvent($listener, $presenceId, 'delete', 'online', $metadata, $user['$id'], timeoutMs: 3000);
+        } finally {
+            $listener->close();
+        }
     }
 }

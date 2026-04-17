@@ -63,11 +63,31 @@ trait PresenceBase
 
         $this->assertEquals($payload['userId'], $response['body']['userId']);
 
+        $canonicalPresence = $this->client->call(
+            Client::METHOD_GET,
+            '/presences',
+            [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getPresenceApiKey(),
+            ],
+            [
+                'queries' => [
+                    Query::equal('userId', [$payload['userId']])->toString(),
+                ],
+            ]
+        );
+        $this->assertEquals(200, $canonicalPresence['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(1, $canonicalPresence['body']['total'] ?? 0);
+        $this->assertNotEmpty($canonicalPresence['body']['presences'][0] ?? []);
+
+        $presence = $canonicalPresence['body']['presences'][0];
+
         if (empty($overrides)) {
-            self::$presenceCache[$cacheKey] = $response['body'];
+            self::$presenceCache[$cacheKey] = $presence;
         }
 
-        return $response['body'];
+        return $presence;
     }
 
     public function testUpsertAndGetPresence(): void
