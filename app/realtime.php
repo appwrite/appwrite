@@ -845,18 +845,15 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         $database->setAuthorization($authorization);
 
         if (!empty($projectId) && $projectId !== 'console') {
-            $project = $authorization->skip(fn () => $database->getDocument('projects', $projectId));
+            // Negative-cache race: if any prior code path queried projects:$projectId
+            // before this project existed (e.g. a router probe during connection
+            // setup), the Database's shared cache may hold an empty result. HTTP
+            // worker creates the project via dbForPlatform which purges on write,
+            // but there's a window during which Realtime can re-populate a stale
+            // cache entry. Purge before reading to force a fresh adapter hit.
+            $database->purgeCachedDocument('projects', $projectId);
 
-            if ($project->isEmpty()) {
-                Console::warning(sprintf(
-                    '[realtime-project-diag] projectId=%s consoleDb=%s consoleNs=%s consoleTenant=%s consoleShared=%s — project lookup returned empty, will fall back to console',
-                    $projectId,
-                    $database->getDatabase(),
-                    $database->getNamespace(),
-                    (string) ($database->getTenant() ?? 'null'),
-                    $database->getSharedTables() ? 'yes' : 'no'
-                ));
-            }
+            $project = $authorization->skip(fn () => $database->getDocument('projects', $projectId));
 
             $database = getProjectDB($project);
             $database->setAuthorization($authorization);
