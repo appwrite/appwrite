@@ -18,6 +18,7 @@ use Exception;
 use Executor\Executor;
 use Swoole\Coroutine as Co;
 use Utopia\Cache\Cache;
+use Utopia\Command;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -307,10 +308,24 @@ class Builds extends Action
                         throw new \Exception('Unable to clone code repository: ' . $stderr);
                     }
 
-                    Console::execute('find ' . \escapeshellarg($tmpTemplateDirectory) . ' -type d -name ".git" -exec rm -rf {} +', '', $stdout, $stderr);
+                    $cleanupGitDirectoryCommand = (new Command('find'))
+                        ->argument($tmpTemplateDirectory)
+                        ->argument('-type')
+                        ->argument('d')
+                        ->argument('-name')
+                        ->argument('.git')
+                        ->argument('-exec')
+                        ->argument('rm')
+                        ->argument('-rf')
+                        ->argument('{}')
+                        ->argument('+');
+                    Console::execute($cleanupGitDirectoryCommand, '', $stdout, $stderr);
 
                     // Ensure directories
-                    Console::execute('mkdir -p ' . \escapeshellarg($tmpTemplateDirectory . '/' . $templateRootDirectory), '', $stdout, $stderr);
+                    $ensureTemplateDirectoryCommand = (new Command('mkdir'))
+                        ->flag('-p')
+                        ->argument($tmpTemplateDirectory . '/' . $templateRootDirectory);
+                    Console::execute($ensureTemplateDirectoryCommand, '', $stdout, $stderr);
 
                     $tmpPathFile = $tmpTemplateDirectory . '/code.tar.gz';
 
@@ -320,8 +335,14 @@ class Builds extends Action
                         $tmpTemplateDirectory .= '/';
                     }
 
-                    $tarParamDirectory = \escapeshellarg($tmpTemplateDirectory . (empty($templateRootDirectory) ? '' : '/' . $templateRootDirectory));
-                    Console::execute('tar --exclude code.tar.gz -czf ' . \escapeshellarg($tmpPathFile) . ' -C ' . \escapeshellcmd($tarParamDirectory) . ' .', '', $stdout, $stderr); // TODO: Replace escapeshellcmd with escapeshellarg if we find a way that doesnt break syntax
+                    $tarParamDirectory = $tmpTemplateDirectory . (empty($templateRootDirectory) ? '' : '/' . $templateRootDirectory);
+                    $archiveCommand = (new Command('tar'))
+                        ->option('--exclude', 'code.tar.gz')
+                        ->flag('-czf')
+                        ->argument($tmpPathFile)
+                        ->option('-C', $tarParamDirectory)
+                        ->argument('.');
+                    Console::execute($archiveCommand, '', $stdout, $stderr);
 
                     $source = $device->getPath($deployment->getId() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
                     $result = $localDevice->transfer($tmpPathFile, $source, $device);
@@ -330,7 +351,10 @@ class Builds extends Action
                         throw new \Exception('Unable to move file');
                     }
 
-                    Console::execute('rm -rf ' . \escapeshellarg($tmpTemplateDirectory), '', $stdout, $stderr);
+                    $removeTemplateDirectoryCommand = (new Command('rm'))
+                        ->flag('-rf')
+                        ->argument($tmpTemplateDirectory);
+                    Console::execute($removeTemplateDirectoryCommand, '', $stdout, $stderr);
 
                     $directorySize = $device->getFileSize($source);
                     $deployment
@@ -377,7 +401,10 @@ class Builds extends Action
                 $stdout = '';
                 $stderr = '';
 
-                Console::execute('mkdir -p ' . \escapeshellarg('/tmp/builds/' . $deploymentId), '', $stdout, $stderr);
+                $ensureBuildDirectoryCommand = (new Command('mkdir'))
+                    ->flag('-p')
+                    ->argument('/tmp/builds/' . $deploymentId);
+                Console::execute($ensureBuildDirectoryCommand, '', $stdout, $stderr);
 
                 if ($dbForProject->getDocument('deployments', $deploymentId)->getAttribute('status') === 'canceled') {
                     $this->cancelDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
@@ -398,7 +425,10 @@ class Builds extends Action
                     $rootDirectoryWithoutSpaces = str_replace(' ', '', $rootDirectory);
                     $from = $tmpDirectory . '/' . $rootDirectory;
                     $to = $tmpDirectory . '/' . $rootDirectoryWithoutSpaces;
-                    $exit = Console::execute('mv ' . \escapeshellarg($from) . ' ' . \escapeshellarg($to), '', $stdout, $stderr);
+                    $moveRootDirectoryCommand = (new Command('mv'))
+                        ->argument($from)
+                        ->argument($to);
+                    $exit = Console::execute($moveRootDirectoryCommand, '', $stdout, $stderr);
 
                     if ($exit !== 0) {
                         throw new \Exception('Unable to move function with spaces' . $stderr);
@@ -429,20 +459,67 @@ class Builds extends Action
                     }
 
                     // Ensure directories
-                    Console::execute('mkdir -p ' . \escapeshellarg($tmpTemplateDirectory . '/' . $templateRootDirectory), '', $stdout, $stderr);
-                    Console::execute('mkdir -p ' . \escapeshellarg($tmpDirectory . '/' . $rootDirectory), '', $stdout, $stderr);
+                    $ensureTemplateDirectoryCommand = (new Command('mkdir'))
+                        ->flag('-p')
+                        ->argument($tmpTemplateDirectory . '/' . $templateRootDirectory);
+                    Console::execute($ensureTemplateDirectoryCommand, '', $stdout, $stderr);
+
+                    $ensureRootDirectoryCommand = (new Command('mkdir'))
+                        ->flag('-p')
+                        ->argument($tmpDirectory . '/' . $rootDirectory);
+                    Console::execute($ensureRootDirectoryCommand, '', $stdout, $stderr);
 
                     // Merge template into user repo
-                    Console::execute('rsync -av --exclude \'.git\' ' . \escapeshellarg($tmpTemplateDirectory . '/' . $templateRootDirectory . '/') . ' ' . \escapeshellarg($tmpDirectory . '/' . $rootDirectory), '', $stdout, $stderr);
+                    $syncTemplateCommand = (new Command('rsync'))
+                        ->flag('-av')
+                        ->option('--exclude', '.git')
+                        ->argument($tmpTemplateDirectory . '/' . $templateRootDirectory . '/')
+                        ->argument($tmpDirectory . '/' . $rootDirectory);
+                    Console::execute($syncTemplateCommand, '', $stdout, $stderr);
 
                     // Commit and push
-                    $exit = Console::execute('git config --global user.email ' . \escapeshellarg(APP_VCS_GITHUB_EMAIL) . ' && git config --global user.name ' . \escapeshellarg(APP_VCS_GITHUB_USERNAME) . ' && cd ' . \escapeshellarg($tmpDirectory) . ' && git checkout -b ' . \escapeshellarg($branchName) . ' && git add . && git commit -m "Create ' . \escapeshellarg($resource->getAttribute('name', '')) . ' function" && git push origin ' . \escapeshellarg($branchName), '', $stdout, $stderr);
+                    $commitMessage = "Create '" . $resource->getAttribute('name', '') . "' function";
+                    $pushTemplateCommand = Command::and(
+                        (new Command('git'))
+                            ->argument('config')
+                            ->flag('--global')
+                            ->argument('user.email')
+                            ->argument(APP_VCS_GITHUB_EMAIL),
+                        (new Command('git'))
+                            ->argument('config')
+                            ->flag('--global')
+                            ->argument('user.name')
+                            ->argument(APP_VCS_GITHUB_USERNAME),
+                        (new Command('git'))
+                            ->option('-C', $tmpDirectory)
+                            ->argument('checkout')
+                            ->flag('-b')
+                            ->argument($branchName),
+                        (new Command('git'))
+                            ->option('-C', $tmpDirectory)
+                            ->argument('add')
+                            ->argument('.'),
+                        (new Command('git'))
+                            ->option('-C', $tmpDirectory)
+                            ->argument('commit')
+                            ->option('-m', $commitMessage),
+                        (new Command('git'))
+                            ->option('-C', $tmpDirectory)
+                            ->argument('push')
+                            ->argument('origin')
+                            ->argument($branchName)
+                    );
+                    $exit = Console::execute($pushTemplateCommand, '', $stdout, $stderr);
 
                     if ($exit !== 0) {
                         throw new \Exception('Unable to push code repository: ' . $stderr);
                     }
 
-                    $exit = Console::execute('cd ' . \escapeshellarg($tmpDirectory) . ' && git rev-parse HEAD', '', $stdout, $stderr);
+                    $providerCommitHashCommand = (new Command('git'))
+                        ->option('-C', $tmpDirectory)
+                        ->argument('rev-parse')
+                        ->argument('HEAD');
+                    $exit = Console::execute($providerCommitHashCommand, '', $stdout, $stderr);
 
                     if ($exit !== 0) {
                         throw new \Exception('Unable to get vcs commit SHA: ' . $stderr);
@@ -489,10 +566,27 @@ class Builds extends Action
                     throw new \Exception('Repository directory size should be less than ' . number_format($sizeLimit / (1000 * 1000), 2) . ' MBs.');
                 }
 
-                Console::execute('find ' . \escapeshellarg($tmpDirectory) . ' -type d -name ".git" -exec rm -rf {} +', '', $stdout, $stderr);
+                $cleanupGitDirectoryCommand = (new Command('find'))
+                    ->argument($tmpDirectory)
+                    ->argument('-type')
+                    ->argument('d')
+                    ->argument('-name')
+                    ->argument('.git')
+                    ->argument('-exec')
+                    ->argument('rm')
+                    ->argument('-rf')
+                    ->argument('{}')
+                    ->argument('+');
+                Console::execute($cleanupGitDirectoryCommand, '', $stdout, $stderr);
 
                 $tarParamDirectory = '/tmp/builds/' . $deploymentId . '/code' . (empty($rootDirectory) ? '' : '/' . $rootDirectory);
-                Console::execute('tar --exclude code.tar.gz -czf ' . \escapeshellarg($tmpPathFile) . ' -C ' . \escapeshellcmd($tarParamDirectory) . ' .', '', $stdout, $stderr); // TODO: Replace escapeshellcmd with escapeshellarg if we find a way that doesnt break syntax
+                $archiveCommand = (new Command('tar'))
+                    ->option('--exclude', 'code.tar.gz')
+                    ->flag('-czf')
+                    ->argument($tmpPathFile)
+                    ->option('-C', $tarParamDirectory)
+                    ->argument('.');
+                Console::execute($archiveCommand, '', $stdout, $stderr);
 
                 $source = $device->getPath($deployment->getId() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
                 $result = $localDevice->transfer($tmpPathFile, $source, $device);
@@ -501,7 +595,10 @@ class Builds extends Action
                     throw new \Exception('Unable to move file');
                 }
 
-                Console::execute('rm -rf ' . \escapeshellarg($tmpPath), '', $stdout, $stderr);
+                $removeBuildDirectoryCommand = (new Command('rm'))
+                    ->flag('-rf')
+                    ->argument($tmpPath);
+                Console::execute($removeBuildDirectoryCommand, '', $stdout, $stderr);
 
                 $directorySize = $device->getFileSize($source);
 

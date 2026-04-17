@@ -9,6 +9,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\Command;
 use Utopia\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -2942,7 +2943,10 @@ class SitesCustomServerTest extends Scope
         $stdout = '';
         $stderr = '';
         $folderPath = realpath(__DIR__ . '/../../../resources/sites') . '/empty';
-        Console::execute("mkdir -p $folderPath", '', $stdout, $stderr);
+        $createEmptySiteDirectoryCommand = (new Command('mkdir'))
+            ->flag('-p')
+            ->argument($folderPath);
+        Console::execute($createEmptySiteDirectoryCommand, '', $stdout, $stderr);
 
         $deployment = $this->createDeployment($siteId, [
             'code' => $this->packageSite('empty'),

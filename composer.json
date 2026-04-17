@@ -33,6 +33,29 @@
             "Appwrite\\Tests\\": "tests/extensions"
         }
     },
+    "repositories": [
+        {
+            "type": "package",
+            "package": {
+                "name": "utopia-php/console",
+                "version": "dev-feat/command-validation",
+                "source": {
+                    "type": "git",
+                    "url": "https://github.com/utopia-php/console.git",
+                    "reference": "feat/command-validation"
+                },
+                "require": {
+                    "php": ">=8.0",
+                    "utopia-php/validators": "^0.2.0"
+                },
+                "autoload": {
+                    "psr-4": {
+                        "Utopia\\": "src/"
+                    }
+                }
+            }
+        }
+    ],
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
@@ -60,7 +83,7 @@
         "utopia-php/cli": "0.23.*",
         "utopia-php/compression": "0.1.*",
         "utopia-php/config": "1.*",
-        "utopia-php/console": "0.1.*",
+        "utopia-php/console": "dev-feat/command-validation as 0.1.999",
         "utopia-php/database": "5.*",
         "utopia-php/detector": "0.2.*",
         "utopia-php/domains": "1.*",

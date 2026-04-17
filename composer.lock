@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c5ae97637fd0ec0a950044d1c33677ea",
+    "content-hash": "18aa5eb79915f6d9d8be65ac0a5f8e73",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3802,51 +3802,22 @@
         },
         {
             "name": "utopia-php/console",
-            "version": "0.1.1",
+            "version": "dev-feat/command-validation",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/console.git",
-                "reference": "d298e43960780e6d76e66de1228c75dc81220e3e"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/console/zipball/d298e43960780e6d76e66de1228c75dc81220e3e",
-                "reference": "d298e43960780e6d76e66de1228c75dc81220e3e",
-                "shasum": ""
+                "reference": "feat/command-validation"
             },
             "require": {
-                "php": ">=8.0"
-            },
-            "require-dev": {
-                "laravel/pint": "1.2.*",
-                "phpstan/phpstan": "^1.10",
-                "phpunit/phpunit": "^9.3",
-                "squizlabs/php_codesniffer": "^3.6",
-                "swoole/ide-helper": "4.8.8"
+                "php": ">=8.0",
+                "utopia-php/validators": "^0.2.0"
             },
             "type": "library",
             "autoload": {
                 "psr-4": {
                     "Utopia\\": "src/"
                 }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "Console helpers for logging, prompting, and executing commands",
-            "keywords": [
-                "cli",
-                "console",
-                "php",
-                "terminal",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/console/issues",
-                "source": "https://github.com/utopia-php/console/tree/0.1.1"
-            },
-            "time": "2026-02-10T10:20:29+00:00"
+            }
         },
         {
             "name": "utopia-php/database",
@@ -8440,9 +8411,18 @@
             "time": "2024-11-07T12:36:22+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/console",
+            "version": "dev-feat/command-validation",
+            "alias": "0.1.999",
+            "alias_normalized": "0.1.999.0"
+        }
+    ],
     "minimum-stability": "dev",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/console": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
