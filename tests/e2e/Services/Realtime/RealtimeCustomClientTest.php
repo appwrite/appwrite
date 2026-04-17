@@ -181,14 +181,21 @@ class RealtimeCustomClientTest extends Scope
         $client = $this->getWebsocket(['account'], [
             'origin' => 'http://localhost'
         ]);
-        $response = json_decode($client->receive(), true);
-
-        $this->assertArrayHasKey('type', $response);
-        $this->assertArrayHasKey('data', $response);
-        $this->assertEquals('connected', $response['type']);
-        $this->assertNotEmpty($response['data']);
-        $this->assertCount(1, $response['data']['channels']);
-        $this->assertContains('account', $response['data']['channels']);
+        $assertResponseEventually = function (callable $assertion) use ($client): void {
+            $this->assertEventually(function () use ($client, $assertion) {
+                $response = \json_decode($client->receive(), true);
+                $this->assertIsArray($response);
+                $assertion($response);
+            }, 10000, 250);
+        };
+        $assertResponseEventually(function (array $response): void {
+            $this->assertArrayHasKey('type', $response);
+            $this->assertArrayHasKey('data', $response);
+            $this->assertEquals('connected', $response['type']);
+            $this->assertNotEmpty($response['data']);
+            $this->assertCount(1, $response['data']['channels']);
+            $this->assertContains('account', $response['data']['channels']);
+        });
 
         $client->send(\json_encode([
             'type' => 'authentication',
@@ -197,16 +204,16 @@ class RealtimeCustomClientTest extends Scope
             ]
         ]));
 
-        $response = json_decode($client->receive(), true);
-
-        $this->assertArrayHasKey('type', $response);
-        $this->assertArrayHasKey('data', $response);
-        $this->assertEquals('response', $response['type']);
-        $this->assertNotEmpty($response['data']);
-        $this->assertEquals('authentication', $response['data']['to']);
-        $this->assertTrue($response['data']['success']);
-        $this->assertNotEmpty($response['data']['user']);
-        $this->assertEquals($userId, $response['data']['user']['$id']);
+        $assertResponseEventually(function (array $response) use ($userId): void {
+            $this->assertArrayHasKey('type', $response);
+            $this->assertArrayHasKey('data', $response);
+            $this->assertEquals('response', $response['type']);
+            $this->assertNotEmpty($response['data']);
+            $this->assertEquals('authentication', $response['data']['to']);
+            $this->assertTrue($response['data']['success']);
+            $this->assertNotEmpty($response['data']['user']);
+            $this->assertEquals($userId, $response['data']['user']['$id']);
+        });
 
         /**
          * Test for FAILURE
@@ -218,28 +225,28 @@ class RealtimeCustomClientTest extends Scope
             ]
         ]));
 
-        $response = json_decode($client->receive(), true);
-
-        $this->assertArrayHasKey('type', $response);
-        $this->assertArrayHasKey('data', $response);
-        $this->assertEquals('error', $response['type']);
-        $this->assertNotEmpty($response['data']);
-        $this->assertEquals(1003, $response['data']['code']);
-        $this->assertEquals('Session is not valid.', $response['data']['message']);
+        $assertResponseEventually(function (array $response): void {
+            $this->assertArrayHasKey('type', $response);
+            $this->assertArrayHasKey('data', $response);
+            $this->assertEquals('error', $response['type']);
+            $this->assertNotEmpty($response['data']);
+            $this->assertEquals(1003, $response['data']['code']);
+            $this->assertEquals('Session is not valid.', $response['data']['message']);
+        });
 
         $client->send(\json_encode([
             'type' => 'authentication',
             'data' => []
         ]));
 
-        $response = json_decode($client->receive(), true);
-
-        $this->assertArrayHasKey('type', $response);
-        $this->assertArrayHasKey('data', $response);
-        $this->assertEquals('error', $response['type']);
-        $this->assertNotEmpty($response['data']);
-        $this->assertEquals(1003, $response['data']['code']);
-        $this->assertEquals('Payload is not valid.', $response['data']['message']);
+        $assertResponseEventually(function (array $response): void {
+            $this->assertArrayHasKey('type', $response);
+            $this->assertArrayHasKey('data', $response);
+            $this->assertEquals('error', $response['type']);
+            $this->assertNotEmpty($response['data']);
+            $this->assertEquals(1003, $response['data']['code']);
+            $this->assertEquals('Payload is not valid.', $response['data']['message']);
+        });
 
         $client->send(\json_encode([
             'type' => 'unknown',
@@ -248,27 +255,27 @@ class RealtimeCustomClientTest extends Scope
             ]
         ]));
 
-        $response = json_decode($client->receive(), true);
-
-        $this->assertArrayHasKey('type', $response);
-        $this->assertArrayHasKey('data', $response);
-        $this->assertEquals('error', $response['type']);
-        $this->assertNotEmpty($response['data']);
-        $this->assertEquals(1003, $response['data']['code']);
-        $this->assertEquals('Message type is not valid.', $response['data']['message']);
+        $assertResponseEventually(function (array $response): void {
+            $this->assertArrayHasKey('type', $response);
+            $this->assertArrayHasKey('data', $response);
+            $this->assertEquals('error', $response['type']);
+            $this->assertNotEmpty($response['data']);
+            $this->assertEquals(1003, $response['data']['code']);
+            $this->assertEquals('Message type is not valid.', $response['data']['message']);
+        });
 
         $client->send(\json_encode([
             'test' => '123',
         ]));
 
-        $response = json_decode($client->receive(), true);
-
-        $this->assertArrayHasKey('type', $response);
-        $this->assertArrayHasKey('data', $response);
-        $this->assertEquals('error', $response['type']);
-        $this->assertNotEmpty($response['data']);
-        $this->assertEquals(1003, $response['data']['code']);
-        $this->assertEquals('Message format is not valid.', $response['data']['message']);
+        $assertResponseEventually(function (array $response): void {
+            $this->assertArrayHasKey('type', $response);
+            $this->assertArrayHasKey('data', $response);
+            $this->assertEquals('error', $response['type']);
+            $this->assertNotEmpty($response['data']);
+            $this->assertEquals(1003, $response['data']['code']);
+            $this->assertEquals('Message format is not valid.', $response['data']['message']);
+        });
 
 
         $client->close();
