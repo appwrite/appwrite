@@ -916,8 +916,19 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
 
                 $store->decode($message['data']['session']);
 
+                $userId = $store->getProperty('id', '');
+
+                // Read-after-write across processes: the HTTP worker writes the session
+                // to the user document on /account endpoints, then the client sends an
+                // authentication frame here over a different Swoole process. Cache-layer
+                // propagation isn't guaranteed to be observed on the next read — purge
+                // locally so sessionVerify sees the freshly-written session.
+                if (!empty($userId)) {
+                    $database->purgeCachedDocument('users', $userId);
+                }
+
                 /** @var User $user */
-                $user = $database->getDocument('users', $store->getProperty('id', ''));
+                $user = $database->getDocument('users', $userId);
 
                 /**
                  * TODO:
