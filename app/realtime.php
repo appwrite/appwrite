@@ -1300,7 +1300,7 @@ $server->onClose(function (int $connection) use ($server, $realtime, $stats, $re
                 && $projectId !== 'console'
             ) {
                 /** @var string[] $presenceIds */
-                $presenceIds = \array_values(\array_unique(\array_filter($presenceIds, fn (mixed $id): bool => \is_string($id) && $id !== '')));
+                $presenceIds = \array_values(\array_unique($presenceIds));
 
                 if (!empty($presenceIds)) {
                     $consoleDB = getConsoleDB();
@@ -1312,10 +1312,14 @@ $server->onClose(function (int $connection) use ($server, $realtime, $stats, $re
                         $presences = $dbForProject->find('presenceLogs', [
                             Query::equal('$id', $presenceIds),
                         ]);
+                        try {
+                            $dbForProject->deleteDocuments('presenceLogs', [Query::equal('$id', $presenceIds)]);
+                        } catch (Throwable $th) {
+                            // swallow errors to avoid breaking disconnect cleanup
+                        }
 
                         foreach ($presences as $presence) {
                             try {
-                                $dbForProject->deleteDocument('presenceLogs', $presence->getId());
                                 triggerPresenceEvent($server, $realtime, $project, new User([]), 'presences.[presenceId].delete', $presence);
                             } catch (Throwable) {
                                 // Swallow errors to avoid breaking disconnect cleanup
