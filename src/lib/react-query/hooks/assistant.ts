@@ -182,23 +182,7 @@ export function useCreateAssistantMessage() {
       context?: AssistantMessageContext
       attachments?: string[]
     }) => {
-      const assistant = sdk.forConsole.assistant as unknown as {
-        createMessage: (payload: {
-          conversationId: string
-          contentText: string
-          contentType: ContentType
-          contextTeamId?: string
-          contextProjectId?: string
-          contextOrganizationId?: string
-          contextPagePath?: string
-          contextPageTitle?: string
-          contextPageUrl?: string
-          attachments?: string[]
-          continueRun?: boolean
-        }) => Promise<Models.AssistantMessage>
-      }
-
-      return await assistant.createMessage({
+      return await sdk.forConsole.assistant.createMessage({
         conversationId: params.conversationId,
         contentText: params.contentText,
         contentType: ContentType.Text,

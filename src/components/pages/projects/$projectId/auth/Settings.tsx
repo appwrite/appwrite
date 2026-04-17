@@ -303,6 +303,12 @@ const OAUTH_PROVIDER_CONFIG: Record<
     icon: 'wordpress.svg',
     docsUrl: 'https://developer.wordpress.com/docs/oauth2/',
   },
+  [OAuthProvider.X]: {
+    key: OAuthProvider.X,
+    name: 'X',
+    icon: 'x.svg',
+    docsUrl: 'https://developer.x.com/en/docs/authentication/oauth-2-0',
+  },
   [OAuthProvider.Yahoo]: {
     key: OAuthProvider.Yahoo,
     name: 'Yahoo',
@@ -2301,34 +2307,33 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
                   return (
                     <button
                       key={provider.key}
+                      type="button"
                       onClick={() => handleProviderClick(provider.key)}
-                      className="rounded-lg border border-border bg-card/50 p-4 transition-colors hover:bg-card text-left"
+                      className="flex w-full cursor-pointer items-center justify-between gap-2 rounded-lg border border-border bg-card/50 p-4 text-left transition-colors hover:bg-card"
                     >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
-                            <img
-                              src={`/icons/${provider.icon}`}
-                              alt=""
-                              className={`h-5 w-5 ${PUBLIC_ICON_MUTED_CLASSES}`}
-                            />
-                          </div>
-                          <span className="text-[13px] font-medium text-foreground">
-                            {provider.name}
-                          </span>
+                      <div className="flex min-w-0 items-center gap-2">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted">
+                          <img
+                            src={`/icons/${provider.icon}`}
+                            alt=""
+                            className={`h-5 w-5 ${PUBLIC_ICON_MUTED_CLASSES}`}
+                          />
                         </div>
-                        <Badge
-                          variant={enabled ? 'default' : 'secondary'}
-                          className={cn(
-                            'text-[11px]',
-                            enabled
-                              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
-                              : 'bg-muted text-muted-foreground',
-                          )}
-                        >
-                          {enabled ? 'enabled' : 'disabled'}
-                        </Badge>
+                        <span className="text-[13px] font-medium text-foreground">
+                          {provider.name}
+                        </span>
                       </div>
+                      <Badge
+                        variant={enabled ? 'default' : 'secondary'}
+                        className={cn(
+                          'shrink-0 text-[11px]',
+                          enabled
+                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                            : 'bg-muted text-muted-foreground',
+                        )}
+                      >
+                        {enabled ? 'enabled' : 'disabled'}
+                      </Badge>
                     </button>
                   )
                 })}
@@ -2362,34 +2367,33 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
                   return (
                     <button
                       key={provider.key}
+                      type="button"
                       onClick={() => handleProviderClick(provider.key)}
-                      className="rounded-lg border border-border bg-card/50 p-4 transition-colors hover:bg-card text-left"
+                      className="flex w-full cursor-pointer items-center justify-between gap-2 rounded-lg border border-border bg-card/50 p-4 text-left transition-colors hover:bg-card"
                     >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
-                            <img
-                              src={`/icons/${provider.icon}`}
-                              alt=""
-                              className={`h-5 w-5 ${PUBLIC_ICON_MUTED_CLASSES}`}
-                            />
-                          </div>
-                          <span className="text-[13px] font-medium text-foreground">
-                            {provider.name}
-                          </span>
+                      <div className="flex min-w-0 items-center gap-2">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted">
+                          <img
+                            src={`/icons/${provider.icon}`}
+                            alt=""
+                            className={`h-5 w-5 ${PUBLIC_ICON_MUTED_CLASSES}`}
+                          />
                         </div>
-                        <Badge
-                          variant={enabled ? 'default' : 'secondary'}
-                          className={cn(
-                            'text-[11px]',
-                            enabled
-                              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
-                              : 'bg-muted text-muted-foreground',
-                          )}
-                        >
-                          {enabled ? 'enabled' : 'disabled'}
-                        </Badge>
+                        <span className="text-[13px] font-medium text-foreground">
+                          {provider.name}
+                        </span>
                       </div>
+                      <Badge
+                        variant={enabled ? 'default' : 'secondary'}
+                        className={cn(
+                          'shrink-0 text-[11px]',
+                          enabled
+                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                            : 'bg-muted text-muted-foreground',
+                        )}
+                      >
+                        {enabled ? 'enabled' : 'disabled'}
+                      </Badge>
                     </button>
                   )
                 })}

@@ -21,7 +21,6 @@ import {
   useMessageTargets,
   fetchTopic,
   fetchUser,
-  useProject,
   useProjectTopics,
   useProjectUsers,
 } from '@/lib/react-query/hooks'
@@ -65,14 +64,21 @@ export function View() {
   useLocation()
   const queryClient = useQueryClient()
 
-  // Fetch message (updated via realtime when backend emits message events)
-  const { data: message, isLoading: messageLoading } = useMessage(
-    projectId,
-    messageId,
-  )
+  const {
+    data: message,
+    isLoading: messageLoading,
+    refetch: refetchMessage,
+  } = useMessage(projectId, messageId)
 
-  // Fetch project to get project name
-  const { project } = useProject(projectId)
+  useEffect(() => {
+    if (!message || message.status !== 'processing') {
+      return
+    }
+    const interval = setInterval(() => {
+      void refetchMessage()
+    }, 2000)
+    return () => clearInterval(interval)
+  }, [message, refetchMessage])
 
   // Fetch message targets
   const { data: targetsData, isLoading: targetsLoading } = useMessageTargets(
@@ -558,66 +564,50 @@ export function View() {
           {/* Overview Card */}
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
             <div className="px-6 py-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-                  <TypeIcon className="h-5 w-5 text-muted-foreground" />
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                    <TypeIcon className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <h3 className="text-[15px] font-semibold text-foreground capitalize">
+                      {message.providerType}
+                    </h3>
+                    <CopyableId id={message.$id} size="xs" className="mt-1" />
+                  </div>
                 </div>
-                <h3 className="text-[15px] font-semibold text-foreground capitalize">
-                  {message.providerType}
-                </h3>
+                <div className="flex shrink-0 items-center gap-2 sm:pt-1">
+                  {getMessageStatusBadge()}
+                </div>
               </div>
             </div>
             <div className="border-t border-border" />
             <div className="px-6 py-4">
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                {/* Left Section - Provider Type */}
-                <div className="lg:col-span-1">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-                      <TypeIcon className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <p className="text-[13px] font-medium text-foreground capitalize">
-                        {message.providerType}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right Section - Metadata and Status */}
-                <div className="lg:col-span-2 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      {message.$createdAt && (
-                        <p className="text-[13px] text-muted-foreground">
-                          Created:{' '}
-                          <span className="text-foreground">
-                            {formatDateTime(message.$createdAt)}
-                          </span>
-                        </p>
-                      )}
-                      {message.scheduledAt && (
-                        <p className="text-[13px] text-muted-foreground">
-                          Scheduled at:{' '}
-                          <span className="text-foreground">
-                            {formatDateTime(message.scheduledAt)}
-                          </span>
-                        </p>
-                      )}
-                      {message.deliveredAt && (
-                        <p className="text-[13px] text-muted-foreground">
-                          Sent at:{' '}
-                          <span className="text-foreground">
-                            {formatDateTime(message.deliveredAt)}
-                          </span>
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {getMessageStatusBadge()}
-                    </div>
-                  </div>
-                </div>
+              <div className="space-y-1 text-[13px] text-muted-foreground">
+                {message.$createdAt && (
+                  <p>
+                    Created:{' '}
+                    <span className="text-foreground">
+                      {formatDateTime(message.$createdAt)}
+                    </span>
+                  </p>
+                )}
+                {message.scheduledAt && (
+                  <p>
+                    Scheduled at:{' '}
+                    <span className="text-foreground">
+                      {formatDateTime(message.scheduledAt)}
+                    </span>
+                  </p>
+                )}
+                {message.deliveredAt && (
+                  <p>
+                    Sent at:{' '}
+                    <span className="text-foreground">
+                      {formatDateTime(message.deliveredAt)}
+                    </span>
+                  </p>
+                )}
               </div>
             </div>
             {/* Footer Actions - Only show for draft/scheduled/failed */}
@@ -706,12 +696,7 @@ export function View() {
               </div>
               <div className="border-t border-border" />
               <div className="px-6 py-4">
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                  {/* Left Column - Empty for now (could add preview later) */}
-                  <div className="lg:col-span-1" />
-
-                  {/* Right Column - Form Fields */}
-                  <div className="lg:col-span-2 space-y-4">
+                <div className="max-w-2xl space-y-4">
                     <div>
                       <Label
                         htmlFor="email-subject"
@@ -764,7 +749,6 @@ export function View() {
                         disabled={!isDraft}
                       />
                     </div>
-                  </div>
                 </div>
               </div>
               {isDraft && (
@@ -791,33 +775,22 @@ export function View() {
               </div>
               <div className="border-t border-border" />
               <div className="px-6 py-4">
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                  {/* Left Column - Phone Preview */}
-                  <div className="lg:col-span-1">
-                    <SMSPhonePreview
-                      content={smsContent}
-                      projectName={project?.name}
+                <div className="max-w-2xl">
+                  <div>
+                    <Label
+                      htmlFor="sms-content"
+                      className="text-[13px] font-medium text-foreground"
+                    >
+                      Message
+                    </Label>
+                    <Textarea
+                      id="sms-content"
+                      value={smsContent}
+                      onChange={(e) => setSmsContent(e.target.value)}
+                      disabled={!isDraft}
+                      placeholder="SMS content"
+                      className="mt-1.5 min-h-32 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                     />
-                  </div>
-
-                  {/* Right Column - Form Fields */}
-                  <div className="lg:col-span-2">
-                    <div>
-                      <Label
-                        htmlFor="sms-content"
-                        className="text-[13px] font-medium text-foreground"
-                      >
-                        Message
-                      </Label>
-                      <Textarea
-                        id="sms-content"
-                        value={smsContent}
-                        onChange={(e) => setSmsContent(e.target.value)}
-                        disabled={!isDraft}
-                        placeholder="SMS content"
-                        className="mt-1.5 min-h-32 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                      />
-                    </div>
                   </div>
                 </div>
               </div>
@@ -845,18 +818,7 @@ export function View() {
               </div>
               <div className="border-t border-border" />
               <div className="px-6 py-4">
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                  {/* Left Column - Phone Preview */}
-                  <div className="lg:col-span-1">
-                    <PushPhonePreview
-                      title={pushTitle}
-                      body={pushBody}
-                      projectName={project?.name}
-                    />
-                  </div>
-
-                  {/* Right Column - Form Fields */}
-                  <div className="lg:col-span-2 space-y-4">
+                <div className="max-w-2xl space-y-4">
                     <div>
                       <Label
                         htmlFor="push-title"
@@ -981,7 +943,6 @@ export function View() {
                         ))}
                       </div>
                     </div>
-                  </div>
                 </div>
               </div>
               {isDraft && (
@@ -1403,151 +1364,6 @@ export function View() {
             </DialogContent>
           </Dialog>
         )}
-      </div>
-    </div>
-  )
-}
-
-// SMS Phone Preview Component
-function SMSPhonePreview({
-  content,
-  projectName,
-}: {
-  content: string
-  projectName?: string
-}) {
-  const currentTime = new Date().toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  })
-
-  return (
-    <div className="relative mx-auto w-[320px] h-[640px]">
-      {/* Phone Frame - iPhone-like with realistic proportions */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#1a1a1a] to-[#0f0f0f] rounded-[50px] border-[6px] border-[#2a2a2a] overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
-        {/* Dynamic Island / Notch - iPhone 14+ style */}
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 w-[126px] h-[37px] bg-black rounded-full z-10 shadow-inner">
-          {/* Speaker */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[54px] h-[6px] bg-[#1a1a1a] rounded-full"></div>
-        </div>
-
-        {/* Phone Screen Background - Dark with subtle gradient */}
-        <div className="absolute inset-[3px] bg-gradient-to-b from-[#000000] to-[#0a0a0a] rounded-[44px] overflow-hidden">
-          {/* Status Bar - iPhone style (time only on left) */}
-          <div className="absolute top-0 left-0 right-0 h-[54px] flex items-center justify-start px-8 pt-3 z-20">
-            <span className="text-[15px] font-semibold text-white">9:41</span>
-          </div>
-
-          {/* SMS Content */}
-          <div className="absolute inset-0 flex flex-col items-center pt-[100px] px-4">
-            {/* Project Avatar and Name */}
-            <div className="flex flex-col items-center gap-2 mb-8">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground text-xs font-medium">
-                {projectName?.substring(0, 2).toUpperCase() || 'PR'}
-              </div>
-              <p className="text-[12px] font-medium text-white/90">
-                {projectName || 'Project'}
-              </p>
-            </div>
-
-            {/* Message Bubble */}
-            <div className="w-full px-4 mt-auto mb-8">
-              <div className="flex items-start gap-2">
-                <div className="flex-1">
-                  <p className="text-[10px] text-white/60 mb-1">
-                    Today {currentTime}
-                  </p>
-                  <div className="rounded-[20px] bg-[#e9e9eb] dark:bg-[#333333] px-3 py-1.5 max-h-[80px] overflow-hidden">
-                    <p className="text-[13px] text-foreground dark:text-[#e0e0e0] line-clamp-4">
-                      {content || 'Message content will appear here'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// Push Phone Preview Component
-function PushPhonePreview({
-  title,
-  body,
-  projectName,
-}: {
-  title: string
-  body: string
-  projectName?: string
-}) {
-  // Get current date and time
-  const now = new Date()
-  const dateStr = now.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-  })
-  const timeStr = now.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: false,
-  })
-
-  return (
-    <div className="relative mx-auto w-[320px] h-[640px]">
-      {/* Phone Frame - iPhone-like with realistic proportions */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#1a1a1a] to-[#0f0f0f] rounded-[50px] border-[6px] border-[#2a2a2a] overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
-        {/* Dynamic Island / Notch - iPhone 14+ style */}
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 w-[126px] h-[37px] bg-black rounded-full z-10 shadow-inner">
-          {/* Speaker */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[54px] h-[6px] bg-[#1a1a1a] rounded-full"></div>
-        </div>
-
-        {/* Phone Screen Background - Dark with subtle gradient */}
-        <div className="absolute inset-[3px] bg-gradient-to-b from-[#000000] to-[#0a0a0a] rounded-[44px] overflow-hidden">
-          {/* Status Bar - iPhone style (time only on left) */}
-          <div className="absolute top-0 left-0 right-0 h-[54px] flex items-center justify-start px-8 pt-3 z-20">
-            <span className="text-[15px] font-semibold text-white">9:41</span>
-          </div>
-
-          {/* Lock Screen Elements - Date and Clock (centered, partially obscured by notification) */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center pt-[100px]">
-            <p className="text-white/90 text-[15px] font-medium mb-2">
-              {dateStr}
-            </p>
-            <p className="text-white text-[64px] font-light leading-none tracking-tight">
-              {timeStr}
-            </p>
-          </div>
-
-          {/* Notification Card - Positioned lower left, overlapping lock screen */}
-          <div className="absolute bottom-[120px] left-4 right-4 z-30">
-            <div className="rounded-[16px] bg-[#1a1a1a] dark:bg-[#2a2a2a] border border-white/10 p-4 backdrop-blur-sm">
-              {/* Header */}
-              <div className="flex items-center justify-between mb-2.5">
-                <div className="flex items-center gap-2">
-                  <Bell className="h-4 w-4 text-white/80" />
-                  <span className="text-[12px] font-medium text-white/90">
-                    {projectName || 'Project'}
-                  </span>
-                </div>
-                <span className="text-[11px] text-white/60">now</span>
-              </div>
-              {/* Content */}
-              <div>
-                <p className="text-[14px] font-semibold text-white mb-1.5 leading-tight">
-                  {title || 'Message Title'}
-                </p>
-                <p className="text-[13px] text-white/80 leading-snug line-clamp-4">
-                  {body || 'Message body will appear here'}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   )

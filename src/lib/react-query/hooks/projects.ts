@@ -13,7 +13,8 @@ import {
   keepPreviousData,
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
-import { Query, ID, Status } from '@appwrite.io/console'
+import { Query, ID, Status, Region, type Scopes } from '@appwrite.io/console'
+import type { Models } from '@appwrite.io/console'
 import type { Project } from '@/lib/utils/mock-data'
 import { sdk, setProjectRegion } from '@/lib/appwrite/sdk'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
@@ -190,9 +191,7 @@ export async function fetchApiKeys(projectId: string) {
   if (!projectId) {
     throw new Error('Project ID is required')
   }
-  // Fetch API keys from the console SDK
-  const response = await sdk.forConsole.projects.listKeys({ projectId })
-  return response
+  return sdk.forProject(projectId).project.listKeys({ total: true })
 }
 
 function apiKeyLastUsedFromRaw(accessedAt: unknown): string | null {
@@ -243,11 +242,130 @@ export async function fetchPlatforms(projectId: string) {
   if (!projectId) {
     throw new Error('Project ID is required')
   }
-  const response = await sdk.forConsole.projects.listPlatforms({
-    projectId,
-    total: true,
+  return sdk.forProject(projectId).project.listPlatforms({ total: true })
+}
+
+/**
+ * Register a platform using the SDK split create APIs (web / android / apple / linux / windows).
+ */
+export async function createPlatformForProject(
+  projectId: string,
+  input: {
+    variant: string
+    name: string
+    hostname?: string
+    key?: string
+  },
+): Promise<Models.PlatformList['platforms'][number]> {
+  const projectSdk = sdk.forProject(projectId)
+  const platformId = ID.unique()
+  const { variant, name, hostname, key } = input
+  const k = key?.trim() ?? ''
+
+  if (variant === 'web' || variant === 'flutter-web') {
+    return projectSdk.project.createWebPlatform({
+      platformId,
+      name,
+      hostname: hostname?.trim() || '',
+    })
+  }
+
+  if (
+    variant === 'android' ||
+    variant === 'flutter-android' ||
+    variant === 'react-native-android'
+  ) {
+    return projectSdk.project.createAndroidPlatform({
+      platformId,
+      name,
+      applicationId: k,
+    })
+  }
+
+  if (
+    variant.startsWith('apple-') ||
+    variant === 'flutter-ios' ||
+    variant === 'flutter-macos' ||
+    variant === 'react-native-ios'
+  ) {
+    return projectSdk.project.createApplePlatform({
+      platformId,
+      name,
+      bundleIdentifier: k,
+    })
+  }
+
+  if (variant === 'flutter-linux' || variant === 'linux') {
+    return projectSdk.project.createLinuxPlatform({
+      platformId,
+      name,
+      packageName: k,
+    })
+  }
+
+  if (variant === 'flutter-windows' || variant === 'windows') {
+    return projectSdk.project.createWindowsPlatform({
+      platformId,
+      name,
+      packageIdentifierName: k,
+    })
+  }
+
+  throw new Error(`Unsupported platform variant: ${variant}`)
+}
+
+async function updatePlatformForProject(
+  projectId: string,
+  data: {
+    platformId: string
+    name: string
+    key?: string
+    hostname?: string
+  },
+): Promise<Models.PlatformList['platforms'][number]> {
+  const projectSdk = sdk.forProject(projectId)
+  const current = await projectSdk.project.getPlatform({
+    platformId: data.platformId,
   })
-  return response
+  const name = data.name
+  const key = data.key?.trim()
+
+  if ('hostname' in current) {
+    return projectSdk.project.updateWebPlatform({
+      platformId: data.platformId,
+      name,
+      hostname: data.hostname ?? current.hostname,
+    })
+  }
+  if ('applicationId' in current) {
+    return projectSdk.project.updateAndroidPlatform({
+      platformId: data.platformId,
+      name,
+      applicationId: key || current.applicationId,
+    })
+  }
+  if ('bundleIdentifier' in current) {
+    return projectSdk.project.updateApplePlatform({
+      platformId: data.platformId,
+      name,
+      bundleIdentifier: key || current.bundleIdentifier,
+    })
+  }
+  if ('packageName' in current) {
+    return projectSdk.project.updateLinuxPlatform({
+      platformId: data.platformId,
+      name,
+      packageName: key || current.packageName,
+    })
+  }
+  if ('packageIdentifierName' in current) {
+    return projectSdk.project.updateWindowsPlatform({
+      platformId: data.platformId,
+      name,
+      packageIdentifierName: key || current.packageIdentifierName,
+    })
+  }
+  throw new Error('Unsupported platform type')
 }
 
 /**
@@ -417,10 +535,11 @@ export function useProject(projectId: string | undefined) {
     if (!projectData) return null
 
     // Include platforms/clients from the raw API response
-    const platforms =
-      (projectData as unknown).platforms ||
-      (projectData as unknown).clients ||
-      []
+    const raw = projectData as Models.Project & {
+      platforms?: unknown[]
+      clients?: unknown[]
+    }
+    const platforms = raw.platforms || raw.clients || []
 
     return {
       $id: projectData.$id,
@@ -549,15 +668,18 @@ export function useProjectsForTeam(
   const projects = useMemo(() => {
     if (!projectsData?.projects) return []
 
-    return projectsData.projects.map((project: unknown) => ({
-      $id: project.$id,
-      name: project.name,
-      teamId: project.teamId,
-      region: project.region || 'unknown',
-      createdAt: project.$createdAt || new Date().toISOString(),
-      icon: project.name.charAt(0).toUpperCase(),
-      archived: project.status === 'archived',
-    })) as Project[]
+    return projectsData.projects.map((project) => {
+      const p = project as Models.Project
+      return {
+        $id: p.$id,
+        name: p.name,
+        teamId: p.teamId,
+        region: p.region || 'unknown',
+        createdAt: p.$createdAt || new Date().toISOString(),
+        icon: p.name.charAt(0).toUpperCase(),
+        archived: p.status === 'archived',
+      }
+    }) as Project[]
   }, [projectsData])
 
   const totalPages = useMemo(() => {
@@ -759,10 +881,10 @@ export function useCreateApiKey(projectId: string | null | undefined) {
       if (!name.trim()) {
         throw new Error('API key name is required')
       }
-      return await sdk.forConsole.projects.createKey({
-        projectId,
+      return await sdk.forProject(projectId).project.createKey({
+        keyId: ID.unique(),
         name: name.trim(),
-        scopes,
+        scopes: scopes as Scopes[] | undefined,
         expire,
       })
     },
@@ -807,11 +929,10 @@ export function useUpdateApiKey(projectId: string | null | undefined) {
       if (!name.trim()) {
         throw new Error('API key name is required')
       }
-      return await sdk.forConsole.projects.updateKey({
-        projectId,
+      return await sdk.forProject(projectId).project.updateKey({
         keyId,
         name: name.trim(),
-        scopes,
+        scopes: scopes as Scopes[] | undefined,
         expire,
       })
     },
@@ -843,8 +964,7 @@ export function useDeleteApiKey(projectId: string | null | undefined) {
       if (!keyId) {
         throw new Error('API key ID is required')
       }
-      return await sdk.forConsole.projects.deleteKey({
-        projectId,
+      return await sdk.forProject(projectId).project.deleteKey({
         keyId,
       })
     },
@@ -921,8 +1041,7 @@ export function platformQueryOptions(
       if (!projectId || !platformId) {
         throw new Error('Project ID and Platform ID are required')
       }
-      return await sdk.forConsole.projects.getPlatform({
-        projectId,
+      return await sdk.forProject(projectId).project.getPlatform({
         platformId,
       })
     },
@@ -966,20 +1085,12 @@ export function useUpdatePlatform(projectId: string | null | undefined) {
       platformId: string
       name: string
       key?: string
-      store?: string
       hostname?: string
     }) => {
       if (!projectId) {
         throw new Error('Project ID is required')
       }
-      return await sdk.forConsole.projects.updatePlatform({
-        projectId,
-        platformId: data.platformId,
-        name: data.name,
-        key: data.key,
-        store: data.store,
-        hostname: data.hostname,
-      })
+      return await updatePlatformForProject(projectId, data)
     },
     onSuccess: async (_, variables) => {
       // refetchType: 'all' so list cache refreshes even when no observer is mounted
@@ -1013,8 +1124,7 @@ export function useDeletePlatform(projectId: string | null | undefined) {
       if (!projectId) {
         throw new Error('Project ID is required')
       }
-      return await sdk.forConsole.projects.deletePlatform({
-        projectId,
+      return await sdk.forProject(projectId).project.deletePlatform({
         platformId,
       })
     },
@@ -1025,6 +1135,45 @@ export function useDeletePlatform(projectId: string | null | undefined) {
       })
       await queryClient.invalidateQueries({
         queryKey: ['project', projectId],
+        refetchType: 'all',
+      })
+    },
+  })
+}
+
+/**
+ * Register a new platform (app) for a project.
+ */
+export function useCreatePlatform(projectId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation<
+    Models.PlatformList['platforms'][number],
+    Error,
+    {
+      variant: string
+      name: string
+      key?: string
+      hostname?: string
+    }
+  >({
+    mutationFn: async (data) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      return createPlatformForProject(projectId, data)
+    },
+    onSuccess: async (created) => {
+      await queryClient.invalidateQueries({
+        queryKey: ['platforms', projectId],
+        refetchType: 'all',
+      })
+      await queryClient.invalidateQueries({
+        queryKey: ['project', projectId],
+        refetchType: 'all',
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['platform', 'project', projectId, created.$id],
         refetchType: 'all',
       })
     },
@@ -1216,7 +1365,7 @@ export function useCreateProject(teamId: string | null | undefined) {
         projectId: finalProjectId,
         name: name.trim(),
         teamId,
-        region,
+        region: region as Region | undefined,
       })
     },
     onSuccess: () => {

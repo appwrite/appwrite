@@ -280,9 +280,9 @@ export function WizardLayout({
               </div>
             </div>
           </div>
-          {/* Header bottom extension - no padding wrapper, extends edge-to-edge */}
-          {headerBottom && <div>{headerBottom}</div>}
         </div>
+        {/* Full-bleed below title row; background can span 100% of wizard width */}
+        {headerBottom && <div className="w-full">{headerBottom}</div>}
       </div>
 
       {/* Main Content */}

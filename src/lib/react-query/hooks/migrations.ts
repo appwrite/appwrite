@@ -13,6 +13,8 @@ import {
 } from '@tanstack/react-query'
 import {
   Query,
+  ID,
+  type Scopes,
   AppwriteMigrationResource,
   SupabaseMigrationResource,
   FirebaseMigrationResource,
@@ -224,8 +226,8 @@ export function useCreateMigrationKey(projectId: string | null | undefined) {
         throw new Error('Project ID is required')
       }
       const name = `[AUTO-GENERATED] Migration ${new Date().toISOString()}`
-      return await sdk.forConsole.projects.createKey({
-        projectId,
+      return await sdk.forProject(projectId).project.createKey({
+        keyId: ID.unique(),
         name,
         scopes: [
           'users.read',
@@ -245,7 +247,7 @@ export function useCreateMigrationKey(projectId: string | null | undefined) {
           'locale.read',
           'avatars.read',
           'health.read',
-        ],
+        ] as Scopes[],
       })
     },
   })

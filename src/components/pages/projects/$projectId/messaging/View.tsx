@@ -1,14 +1,7 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useParams, useLocation, useNavigate } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
-import {
-  Mail,
-  Phone,
-  Bell,
-  List,
-  LayoutGrid,
-  MessageSquare,
-} from 'lucide-react'
+import { Mail, Phone, Bell, Loader2, MessageSquare } from 'lucide-react'
 import {
   useProjectMessages,
   useProjectTopics,
@@ -58,6 +51,34 @@ import { MessagingProviderIcon } from '@/components/global/shared/MessagingProvi
 import { MessageContextMenu } from './_components/MessageContextMenu'
 import { TopicContextMenu } from './_components/TopicContextMenu'
 import { ProviderContextMenu } from './_components/ProviderContextMenu'
+import { MessagingCreateControls } from './_components/MessagingCreateControls'
+
+function formatDeliveryErrors(
+  deliveryErrors: unknown,
+): string[] {
+  if (deliveryErrors == null) return []
+  if (Array.isArray(deliveryErrors)) {
+    return deliveryErrors.map((e) => {
+      if (typeof e === 'string') return e
+      if (e && typeof e === 'object' && 'message' in e) {
+        return String((e as { message?: string }).message ?? '')
+      }
+      try {
+        return JSON.stringify(e)
+      } catch {
+        return String(e)
+      }
+    })
+  }
+  if (typeof deliveryErrors === 'object') {
+    try {
+      return [JSON.stringify(deliveryErrors, null, 2)]
+    } catch {
+      return [String(deliveryErrors)]
+    }
+  }
+  return [String(deliveryErrors)]
+}
 
 export function View() {
   const { projectId } = useParams({
@@ -86,18 +107,22 @@ export function View() {
   }, [location.pathname])
 
   const [searchValue, setSearchValue] = useState('')
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
   const [requestedPage, setRequestedPage] = useState(1)
   const [displayedPage, setDisplayedPage] = useState(1)
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set())
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deliveryErrorLines, setDeliveryErrorLines] = useState<string[] | null>(
+    null,
+  )
+  const pollMessagesRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   // Fetch requested page (triggers load when user changes page) - active tab only
   const {
     total: messagesTotal,
     isLoading: messagesLoading,
     isFetching: messagesFetching,
+    refetch: refetchMessages,
   } = useProjectMessages(
     activeTab === 'messages' ? projectId : null,
     requestedPage - 1,
@@ -126,7 +151,11 @@ export function View() {
   )
 
   // Fetch displayed page (what we show - stays until new page is ready) - active tab only
-  const { messages, total: displayedMessagesTotal } = useProjectMessages(
+  const {
+    messages,
+    total: displayedMessagesTotal,
+    refetch: refetchDisplayedMessages,
+  } = useProjectMessages(
     activeTab === 'messages' ? projectId : null,
     displayedPage - 1,
     pageSize,
@@ -164,6 +193,44 @@ export function View() {
       setDisplayedPage(requestedPage)
     }
   }, [activeFetching, activeLoading, requestedPage, displayedPage])
+
+  // Poll message list while any visible message is still processing (matches legacy console behavior)
+  useEffect(() => {
+    if (activeTab !== 'messages' || !projectId) {
+      if (pollMessagesRef.current) {
+        clearInterval(pollMessagesRef.current)
+        pollMessagesRef.current = null
+      }
+      return
+    }
+    const hasProcessing = (messages ?? []).some((m) => m.status === 'processing')
+    if (!hasProcessing) {
+      if (pollMessagesRef.current) {
+        clearInterval(pollMessagesRef.current)
+        pollMessagesRef.current = null
+      }
+      return
+    }
+    if (pollMessagesRef.current) {
+      clearInterval(pollMessagesRef.current)
+    }
+    pollMessagesRef.current = setInterval(() => {
+      void refetchDisplayedMessages()
+      void refetchMessages()
+    }, 2000)
+    return () => {
+      if (pollMessagesRef.current) {
+        clearInterval(pollMessagesRef.current)
+        pollMessagesRef.current = null
+      }
+    }
+  }, [
+    activeTab,
+    projectId,
+    messages,
+    refetchDisplayedMessages,
+    refetchMessages,
+  ])
 
   // Get current data based on active tab (use displayed data and displayed total for stable range)
   const currentData = useMemo(() => {
@@ -254,7 +321,7 @@ export function View() {
         // Delete messages
         await Promise.all(
           itemIds.map((messageId) =>
-            projectSdk.messaging.deleteMessage({ messageId }),
+            projectSdk.messaging.delete({ messageId }),
           ),
         )
       } else if (activeTab === 'topics') {
@@ -368,45 +435,6 @@ export function View() {
     [projectId],
   )
 
-  const getCreateLabel = () => {
-    if (activeTab === 'messages') return 'Create message'
-    if (activeTab === 'topics') return 'Create topic'
-    if (activeTab === 'providers') return 'Create provider'
-    return 'Create'
-  }
-
-  const handleCreateClick = () => {
-    // TODO: Implement create dialogs
-    toast.info('Create functionality coming soon')
-  }
-
-  const ViewToggle = () => (
-    <div className="flex items-center gap-1 rounded-md border border-border bg-muted/30 p-0.5">
-      <Button
-        variant="ghost"
-        size="sm"
-        className={cn(
-          'h-7 w-7 p-0',
-          viewMode === 'list' ? 'bg-background' : 'hover:bg-transparent',
-        )}
-        onClick={() => setViewMode('list')}
-      >
-        <List className="h-4 w-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        className={cn(
-          'h-7 w-7 p-0',
-          viewMode === 'grid' ? 'bg-background' : 'hover:bg-transparent',
-        )}
-        onClick={() => setViewMode('grid')}
-      >
-        <LayoutGrid className="h-4 w-4" />
-      </Button>
-    </div>
-  )
-
   // Get message type icon
   const getMessageTypeIcon = (providerType: string) => {
     if (providerType === 'email') return Mail
@@ -418,27 +446,32 @@ export function View() {
   // Get message status badge
   const getMessageStatusBadge = (
     status: string,
-    deliveryErrors?: Array<{ message?: string }> | Record<string, unknown>,
+    deliveryErrors?: unknown,
   ) => {
     if (status === 'sent') {
       return <Badge variant="success">Sent</Badge>
     }
     if (status === 'processing') {
-      return <Badge variant="secondary">Processing</Badge>
+      return (
+        <div className="flex items-center gap-2">
+          <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+          <Badge variant="secondary">Processing</Badge>
+        </div>
+      )
     }
     if (status === 'failed') {
+      const lines = formatDeliveryErrors(deliveryErrors)
       return (
         <div className="flex items-center gap-2">
           <Badge variant="error">Failed</Badge>
-          {deliveryErrors && (
+          {lines.length > 0 && (
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 text-xs"
+              className="h-6 px-2 text-xs"
               onClick={(e) => {
                 e.stopPropagation()
-                // TODO: Show error details modal
-                toast.info('Error details: ' + JSON.stringify(deliveryErrors))
+                setDeliveryErrorLines(lines)
               }}
             >
               Details
@@ -449,6 +482,9 @@ export function View() {
     }
     if (status === 'draft') {
       return <Badge variant="secondary">Draft</Badge>
+    }
+    if (status === 'scheduled') {
+      return <Badge variant="info">Scheduled</Badge>
     }
     return <Badge variant="secondary">{status}</Badge>
   }
@@ -482,17 +518,21 @@ export function View() {
         }
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
-        createLabel={getCreateLabel()}
-        onCreate={handleCreateClick}
-        createDisabled={noCreatePermission}
-        createDisabledTooltip={createPermissionTooltip}
         fullWidthBorder
-        rightContent={<ViewToggle />}
+        beforeCreateButtons={
+          <MessagingCreateControls
+            projectId={projectId}
+            activeTab={
+              activeTab as 'messages' | 'topics' | 'providers'
+            }
+            disabled={noCreatePermission}
+            disabledTooltip={createPermissionTooltip}
+          />
+        }
       />
 
       <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
-        {viewMode === 'list' ? (
-          showLoading ? (
+        {showLoading ? (
             <div className="rounded-lg border border-border bg-card py-12 text-center">
               <p className="text-[13px] text-muted-foreground">
                 Loading {activeTab}...
@@ -984,17 +1024,7 @@ export function View() {
               hasFilters={!!searchValue}
               variant="card"
             />
-          )
-        ) : (
-          // Grid view - simplified for now, can be enhanced later
-          <EmptyState
-            icon={MessageSquare}
-            title="Grid view coming soon"
-            description="List view is currently available"
-            isEmpty={true}
-            variant="card"
-          />
-        )}
+          )}
 
         {/* Bulk Delete Action Bar */}
         {selectedItems.size > 0 && (
@@ -1054,6 +1084,31 @@ export function View() {
                 disabled={bulkDeleteMutation.isPending}
               >
                 Delete
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog
+          open={deliveryErrorLines !== null}
+          onOpenChange={(open) => !open && setDeliveryErrorLines(null)}
+        >
+          <DialogContent className="sm:max-w-lg p-0">
+            <DialogHeader className="px-6 pt-6 pb-4 text-left">
+              <DialogTitle>Message error</DialogTitle>
+              <DialogDescription className="text-[13px] mt-2">
+                The message failed to deliver. See the details below.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="border-t border-border" />
+            <div className="px-6 pb-4 pt-0">
+              <pre className="mt-4 max-h-[min(360px,50vh)] overflow-auto whitespace-pre-wrap break-words rounded-md border border-border bg-muted/30 p-4 text-[12px] text-foreground">
+                {(deliveryErrorLines ?? []).join('\n')}
+              </pre>
+            </div>
+            <div className="px-6 py-4 border-t border-border bg-muted/30 flex justify-end">
+              <Button variant="outline" onClick={() => setDeliveryErrorLines(null)}>
+                Close
               </Button>
             </div>
           </DialogContent>

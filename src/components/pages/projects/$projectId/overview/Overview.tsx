@@ -11,7 +11,9 @@ import {
   Key,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useNavigate } from '@tanstack/react-router'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import type { AddAppKind } from '@/lib/add-app-wizard/types'
 import { RequestsChart } from './RequestsChart'
 import { TopRequests } from './TopRequests'
 import { dashboardStats, formatNumber } from '@/lib/utils/mock-data'
@@ -33,7 +35,11 @@ import {
 } from '@/components/ui/tooltip'
 import { PlatformIcon } from '@/components/global/shared/Icon'
 import { LanguageIcon } from '@/components/global/shared/LanguageIcon'
-import { getPlatformDisplayName } from '@/lib/utils/platform'
+import {
+  getPlatformDisplayName,
+  getPlatformIdentifier,
+  type ProjectPlatform,
+} from '@/lib/utils/platform'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ApiKeysList, type ApiKey } from '../shared/ApiKeysList'
 import { ApiKeyDrawer } from '../api-keys/ApiKeyDrawer'
@@ -49,7 +55,6 @@ import {
 } from '@/components/ui/dialog'
 import type { Models } from '@appwrite.io/console'
 import { EmptyState } from '@/components/global/shared/EmptyState'
-import { ConnectProject } from '../shared/ConnectProject'
 import { DateRangePicker } from '../analytics/DateRangePicker'
 
 interface OverviewTab {
@@ -99,7 +104,7 @@ interface Integration {
   identifier: string // hostname for web, app ID for apps
   icon: React.ReactNode
   docsUrl: string
-  platform: Models.Platform
+  platform: ProjectPlatform
 }
 
 const supportedPlatforms = [
@@ -149,6 +154,7 @@ function getDefaultDashboardChartRange(): DateRange {
 }
 
 export function View({ projectId, initialData }: ViewProps) {
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('bandwidth')
   const [dashboardChartDateRange, setDashboardChartDateRange] = useState<
     DateRange | undefined
@@ -158,24 +164,18 @@ export function View({ projectId, initialData }: ViewProps) {
   const [updateDrawerOpen, setUpdateDrawerOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedKeyId, setSelectedKeyId] = useState<string | null>(null)
-  const [connectDialogOpen, setConnectDialogOpen] = useState(false)
-  const [connectInitialSdk, setConnectInitialSdk] = useState<string>('web')
   const [platformDrawerOpen, setPlatformDrawerOpen] = useState(false)
   const [selectedPlatform, setSelectedPlatform] =
-    useState<Models.Platform | null>(null)
+    useState<ProjectPlatform | null>(null)
   const { features, isCloud } = useConsoleProfile()
-  const handleConnectPlatform = (platform?: string) => {
-    const sdkMap: Record<string, string> = {
-      web: 'web',
-      'react-native': 'web',
-      flutter: 'flutter',
-      apple: 'apple',
-      android: 'android',
-      windows: 'web',
-      linux: 'web',
-    }
-    setConnectInitialSdk(sdkMap[platform ?? 'web'] ?? 'web')
-    setConnectDialogOpen(true)
+  const goToAddAppWizard = (kind?: AddAppKind) => {
+    navigate({
+      to: '/projects/$projectId/apps/add',
+      params: { projectId },
+      search: kind
+        ? { kind, configureStep: 'details' as const }
+        : {},
+    })
   }
 
   const handleCreateApiKey = () => {
@@ -225,23 +225,19 @@ export function View({ projectId, initialData }: ViewProps) {
   const deleteMutation = useDeleteApiKey(projectId)
 
   // Build integrations list from project platforms; use initialData for first paint to avoid empty-state flash
-  const platformsForIntegrations =
-    currentProject?.platforms ?? initialData?.platforms ?? []
+  const platformsForIntegrations = (currentProject?.platforms ??
+    initialData?.platforms ??
+    []) as ProjectPlatform[]
   const integrations = useMemo(() => {
     if (platformsForIntegrations.length === 0) return []
 
-    return platformsForIntegrations.map((platform: Record<string, unknown>) => {
-      const platformType = (platform.type ??
-        platform.platform ??
-        'web') as string
-      const platformId = (platform.$id ?? platform.id ?? platformType) as string
+    return platformsForIntegrations.map((platform) => {
+      const platformType = (platform.type ?? 'web') as string
+      const platformId = platform.$id
       // Use platform name if available, otherwise fall back to display name from type
-      const platformName = (platform.name ??
+      const platformName = (platform.name ||
         getPlatformDisplayName(platformType)) as string
-      const identifier = (platform.hostname ??
-        platform.identifier ??
-        platform.key ??
-        '') as string
+      const identifier = getPlatformIdentifier(platform)
 
       // Determine if it's web or app based on platform type
       const type: 'web' | 'app' = platformType === 'web' ? 'web' : 'app'
@@ -263,7 +259,7 @@ export function View({ projectId, initialData }: ViewProps) {
           />
         ),
         docsUrl: '#',
-        platform: platform as Models.Platform,
+        platform,
       } as Integration
     })
   }, [platformsForIntegrations])
@@ -675,7 +671,7 @@ export function View({ projectId, initialData }: ViewProps) {
             <h2 className="text-[15px] font-semibold text-foreground">Apps</h2>
             <Button
               variant="brandCta"
-              onClick={() => handleConnectPlatform()}
+              onClick={() => goToAddAppWizard()}
               size="sm"
               className="h-8 gap-1.5 text-[13px] font-medium"
             >
@@ -707,7 +703,7 @@ export function View({ projectId, initialData }: ViewProps) {
                   {supportedPlatforms.map(({ id, platform }) => (
                     <Button
                       key={id}
-                      onClick={() => handleConnectPlatform(id)}
+                      onClick={() => goToAddAppWizard(id as AddAppKind)}
                       variant="outline"
                       size="lg"
                     >
@@ -895,13 +891,6 @@ export function View({ projectId, initialData }: ViewProps) {
           </div>
         </DialogContent>
       </Dialog>
-
-      <ConnectProject
-        open={connectDialogOpen}
-        onOpenChange={setConnectDialogOpen}
-        projectId={projectId}
-        initialSdk={connectInitialSdk}
-      />
 
       <PlatformDrawer
         open={platformDrawerOpen}

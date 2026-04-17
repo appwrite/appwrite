@@ -63,7 +63,7 @@ export function MessageContextMenu({
     mutationFn: async () => {
       if (!message?.$id) return
       const projectSdk = sdk.forProject(projectId)
-      await projectSdk.messaging.deleteMessage({ messageId: message.$id })
+      await projectSdk.messaging.delete({ messageId: message.$id })
     },
     onSuccess: async () => {
       await queryClient.refetchQueries({

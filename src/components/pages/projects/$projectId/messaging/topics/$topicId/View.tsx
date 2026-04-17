@@ -383,13 +383,7 @@ export function View() {
               />
             )}
           </>
-        ) : (
-          <div className="rounded-lg border border-border bg-card py-12 text-center">
-            <p className="text-[13px] text-muted-foreground">
-              Settings tab coming soon
-            </p>
-          </div>
-        )}
+        ) : null}
       </div>
     </div>
   )
