@@ -10,6 +10,7 @@ use Appwrite\Vcs\Comment;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
@@ -49,8 +50,6 @@ trait Deployment
     ) {
         $errors = [];
         foreach ($repositories as $repository) {
-            $logBase = 'vcs.github.event.repo.unknown';
-
             try {
                 $repositoryId = $repository->getId();
                 $projectId = $repository->getAttribute('projectId');
@@ -71,8 +70,6 @@ trait Deployment
                 if ($project->isEmpty()) {
                     throw new Exception(Exception::PROJECT_NOT_FOUND, 'Repository references non-existent project');
                 }
-
-                $this->beforeCreateGitDeployment($project, $repository, $dbForPlatform, $authorization);
 
                 try {
                     $dsn = new DSN($project->getAttribute('database'));
@@ -107,12 +104,16 @@ trait Deployment
                     $activate = true;
                 }
 
-                $owner = $github->getOwnerName($providerInstallationId) ?? '';
+                // Cache repository name early to avoid duplicate calls and use for validation
                 try {
-                    $repositoryName = $github->getRepositoryName($providerRepositoryId);
+                    $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+                    if (empty($repositoryName)) {
+                        throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+                    }
                 } catch (RepositoryNotFound $e) {
                     throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
                 }
+                $owner = $github->getOwnerName($providerInstallationId) ?? '';
 
                 $isAuthorized = !$external;
 
@@ -124,40 +125,13 @@ trait Deployment
 
                 Span::add("{$logBase}.authorized", $isAuthorized);
 
+                $commentStatus = 'waiting';
                 $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
                 $hostname = $platform['consoleHostname'] ?? '';
 
                 $authorizeUrl = $protocol . '://' . $hostname . "/console/git/authorize-contributor?projectId={$projectId}&installationId={$installationId}&repositoryId={$repositoryId}&providerPullRequestId={$providerPullRequestId}";
 
                 $action = $isAuthorized ? ['type' => 'logs'] : ['type' => 'authorize', 'url' => $authorizeUrl];
-
-                $commentStatus = 'waiting';
-                $commentPreviewUrl = '';
-
-                // If this action was triggered by pull request, use most up to date details in comment
-                if (!empty($providerPullRequestId)) {
-                    $existingDeployment = $authorization->skip(fn () => $dbForProject->findOne('deployments', [
-                        Query::equal('resourceInternalId', [$resource->getSequence()]),
-                        Query::equal('resourceType', [$resourceCollection]),
-                        Query::equal('providerCommitHash', [$providerCommitHash]),
-                        Query::equal('providerBranch', [$providerBranch]),
-                        Query::orderDesc('$createdAt')
-                    ]));
-
-                    $commentStatus = $existingDeployment->getAttribute('status', 'waiting');
-
-                    if ($resource->getCollection() === 'sites') {
-                        $previewRule = $authorization->skip(fn () => $dbForPlatform->findOne('rules', [
-                            Query::equal('projectInternalId', [$project->getSequence()]),
-                            Query::equal('type', ['deployment']), // Not redirect
-                            Query::equal('trigger', ['deployment']), // Preview - Not manual
-                            Query::equal('deploymentResourceType', ['site']), // Not function
-                            Query::equal('deploymentInternalId', [$existingDeployment->getSequence()]),
-                        ]));
-
-                        $commentPreviewUrl = !$previewRule->isEmpty() ? ("{$protocol}://" . $previewRule->getAttribute('domain', '')) : '';
-                    }
-                }
 
                 $latestCommentId = '';
 
@@ -197,7 +171,7 @@ trait Deployment
                             try {
                                 $comment = new Comment($platform);
                                 $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
-                                $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, $commentPreviewUrl);
+                                $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '');
 
                                 $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
                             } finally {
@@ -206,7 +180,7 @@ trait Deployment
                         }
                     } else {
                         $comment = new Comment($platform);
-                        $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, $commentPreviewUrl);
+                        $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '');
                         $latestCommentId = \strval($github->createComment($owner, $repositoryName, $providerPullRequestId, $comment->generateComment()));
 
                         if (!empty($latestCommentId)) {
@@ -278,34 +252,43 @@ trait Deployment
                     }
                 }
 
-                if (!$isAuthorized) {
-                    $resourceName = $resource->getAttribute('name');
-                    $projectName = $project->getAttribute('name');
-                    $name = "{$resourceName} ({$projectName})";
-                    $message = 'Authorization required for external contributor.';
+                // Always create deployment regardless of authorization status
+                // External PRs will show "waiting" status until authorized
+                Console::info("Creating deployment for PR #{$providerPullRequestId} on branch '{$providerBranch}' - Authorized: " . ($isAuthorized ? 'true' : 'false'));
+                Span::add("{$logBase}.deployment.creating", 'true');
+                Span::add("{$logBase}.deployment.authorized", $isAuthorized);
+                Span::add("{$logBase}.deployment.external", $external);
 
-                    $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
-                    try {
-                        $repositoryName = $github->getRepositoryName($providerRepositoryId);
-                    } catch (RepositoryNotFound $e) {
-                        throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
-                    }
-                    $owner = $github->getOwnerName($providerInstallationId);
-                    $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $authorizeUrl, $name);
+                // Additional validation for required fields
+                if (empty($providerBranch)) {
+                    Console::warning("Empty branch for PR #{$providerPullRequestId}, skipping deployment");
+                    Span::add("{$logBase}.error", 'Empty branch');
                     continue;
                 }
 
-                if (!empty($providerPullRequestId)) {
-                    // Update comment ID so running build can update comment
-                    $authorization->skip(fn () => $dbForProject->updateDocuments('deployments', new Document([
-                        'providerCommentId' => \strval($latestCommentId)
-                    ]), [
-                        Query::equal('providerCommitHash', [$providerCommitHash]),
-                        Query::equal('providerBranch', [$providerBranch]),
-                    ]));
-
-                    // Skip rest - prevent double deployments (previous one was made by push)
+                if (empty($providerCommitHash)) {
+                    Console::warning("Empty commit hash for PR #{$providerPullRequestId}, skipping deployment");
+                    Span::add("{$logBase}.error", 'Empty commit hash');
                     continue;
+                }
+
+                // Update commit status BEFORE triggering build job to avoid race condition
+                if (!empty($providerCommitHash) && $resource->getAttribute('providerSilentMode', false) === false) {
+                    $resourceName = $resource->getAttribute('name');
+                    $projectName = $project->getAttribute('name');
+                    $name = "{$resourceName} ({$projectName})";
+                    // Reuse $protocol and $hostname already declared above
+                    
+                    if ($isAuthorized) {
+                        $message = 'Build starting...';
+                        $providerTargetUrl = $protocol . '://' . $hostname . "/console/project-" . $project->getAttribute('region', 'default') . "-{$projectId}/{$resourceCollection}/{$resourceType}-{$resourceId}";
+                        $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $providerTargetUrl, $name);
+                        Console::info("Updated commit status to 'pending' for authorized PR #{$providerPullRequestId}");
+                    } else {
+                        $message = 'Authorization required for external contributor.';
+                        $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $authorizeUrl, $name);
+                        Console::info("Updated commit status to 'pending' for external PR #{$providerPullRequestId}");
+                    }
                 }
 
                 $commands = [];
@@ -352,8 +335,17 @@ trait Deployment
                     'providerCommitUrl' => $providerCommitUrl,
                     'providerCommentId' => \strval($latestCommentId),
                     'providerBranch' => $providerBranch,
+                    'providerPullRequestId' => $providerPullRequestId,
+                    'external' => $external, // Persist external flag for build worker
                     'activate' => $activate,
+                    'status' => 'waiting', // Always start as 'waiting', build worker will update to 'processing' if authorized
+                    'buildStartedAt' => null, // Build worker will set this when starting
+                    'buildCompletedAt' => null, // Build worker will set this when completed
                 ])));
+
+                Console::info("Deployment '{$deploymentId}' created successfully with initial status: waiting");
+                Span::add("{$logBase}.deployment.created", 'true');
+                Span::add("{$logBase}.deployment.status", 'waiting');
 
                 $resource = $resource
                     ->setAttribute('latestDeploymentId', $deployment->getId())
@@ -493,7 +485,7 @@ trait Deployment
                             $rule = $authorization->skip(fn () => $dbForPlatform->getDocument('rules', $previewRuleId));
 
                             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-                            $previewUrl = !$rule->isEmpty() ? ("{$protocol}://" . $rule->getAttribute('domain', '')) : '';
+                            $previewUrl = !empty($rule) ? ("{$protocol}://" . $rule->getAttribute('domain', '')) : '';
 
                             if (!empty($previewUrl)) {
                                 $comment = new Comment($platform);
@@ -507,26 +499,11 @@ trait Deployment
                     }
                 }
 
-                if (!empty($providerCommitHash) && $resource->getAttribute('providerSilentMode', false) === false) {
-                    $resourceName = $resource->getAttribute('name');
-                    $projectName = $project->getAttribute('name');
-                    $region = $project->getAttribute('region', 'default');
-                    $name = "{$resourceName} ({$projectName})";
-                    $message = 'Starting...';
-
-                    $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
-                    try {
-                        $repositoryName = $github->getRepositoryName($providerRepositoryId);
-                    } catch (RepositoryNotFound $e) {
-                        throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
-                    }
-                    $owner = $github->getOwnerName($providerInstallationId);
-
-                    $providerTargetUrl = $protocol . '://' . $hostname . "/console/project-$region-$projectId/$resourceCollection/$resourceType-$resourceId";
-                    $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $providerTargetUrl, $name);
-                }
-
                 $queueName = $this->getBuildQueueName($project, $dbForPlatform, $authorization);
+
+                Console::info("Queueing build job for deployment '{$deploymentId}' on queue '{$queueName}'");
+                Span::add("{$logBase}.build.queueing", 'true');
+                Span::add("{$logBase}.build.queue.name", $queueName);
 
                 $queueForBuilds
                     ->setQueue($queueName)
@@ -537,6 +514,7 @@ trait Deployment
 
                 $queueForBuilds->trigger(); // must trigger here so that we create a build for each function/site
 
+                Console::info("Build job triggered successfully for deployment '{$deploymentId}'");
                 Span::add("{$logBase}.build.triggered", 'true');
                 //TODO: Add event?
             } catch (\Throwable $e) {
@@ -550,10 +528,6 @@ trait Deployment
         if (!empty($errors)) {
             throw new Exception(Exception::GENERAL_UNKNOWN, \implode("\n", $errors));
         }
-    }
-
-    protected function beforeCreateGitDeployment(Document $project, Document $repository, Database $dbForPlatform, Authorization $authorization): void
-    {
     }
 
     protected function getBuildQueueName(Document $project, Database $dbForPlatform, Authorization $authorization): string
