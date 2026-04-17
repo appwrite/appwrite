@@ -180,7 +180,7 @@ class RealtimeCustomClientTest extends Scope
          */
         $client = $this->getWebsocket(['account'], [
             'origin' => 'http://localhost'
-        ]);
+        ], timeout: 10);
         $assertResponseEventually = function (callable $assertion) use ($client): void {
             $this->assertEventually(function () use ($client, $assertion) {
                 $response = \json_decode($client->receive(), true);
