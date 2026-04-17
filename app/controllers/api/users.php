@@ -25,7 +25,6 @@ use Appwrite\Utopia\Database\Validator\Queries\Identities;
 use Appwrite\Utopia\Database\Validator\Queries\Memberships;
 use Appwrite\Utopia\Database\Validator\Queries\Targets;
 use Appwrite\Utopia\Database\Validator\Queries\Users;
-use Appwrite\Utopia\Request\Filters\V17;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
@@ -255,32 +254,6 @@ function createUser(Hash $hash, string $userId, ?string $email, ?string $passwor
     }
 
     return $user;
-}
-
-/**
- * Normalize shorthand query strings like limit(1) to JSON query format.
- *
- * @param array<mixed> $queries
- * @return array<mixed>
- */
-function normalizeLegacyShorthandQueries(array $queries): array
-{
-    $filter = new V17();
-
-    foreach ($queries as $index => $query) {
-        if (!\is_string($query)) {
-            continue;
-        }
-
-        try {
-            $parsed = $filter->parseQuery($query);
-            $queries[$index] = \json_encode(\array_filter($parsed->toArray()));
-        } catch (\Throwable) {
-            // Keep existing query values untouched when shorthand parsing fails.
-        }
-    }
-
-    return $queries;
 }
 
 Http::post('/v1/users')
@@ -730,7 +703,6 @@ Http::get('/v1/users')
     ->action(function (array $queries, string $search, bool $includeTotal, Response $response, Database $dbForProject) {
 
         try {
-            $queries = normalizeLegacyShorthandQueries($queries);
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
@@ -956,7 +928,6 @@ Http::get('/v1/users/:userId/memberships')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
         try {
-            $queries = normalizeLegacyShorthandQueries($queries);
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
@@ -1014,7 +985,6 @@ Http::get('/v1/users/:userId/logs')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
         try {
-            $queries = normalizeLegacyShorthandQueries($queries);
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
@@ -1100,7 +1070,6 @@ Http::get('/v1/users/:userId/targets')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
         try {
-            $queries = normalizeLegacyShorthandQueries($queries);
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
@@ -1159,7 +1128,6 @@ Http::get('/v1/users/identities')
     ->action(function (array $queries, string $search, bool $includeTotal, Response $response, Database $dbForProject) {
 
         try {
-            $queries = normalizeLegacyShorthandQueries($queries);
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
