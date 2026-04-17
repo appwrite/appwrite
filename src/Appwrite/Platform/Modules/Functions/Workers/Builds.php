@@ -592,9 +592,9 @@ class Builds extends Action
 
             $cpus = $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT;
             $memory = max($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT, $minMemory);
-            $timeout = (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
+            $timeout = (int) ($payload['buildTimeout'] ?? System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900));
 
-            $jwtExpiry = (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
+            $jwtExpiry = $timeout;
             $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
 
             $apiKey = $jwtObj->encode([
