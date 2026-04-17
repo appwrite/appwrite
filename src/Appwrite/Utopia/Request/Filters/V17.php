@@ -67,6 +67,36 @@ class V17 extends Filter
         $parsed = [];
         foreach ($content['queries'] as $query) {
             try {
+                if (is_string($query)) {
+                    $query = trim($query);
+
+                    if (preg_match('/^(\w+)\(([^)]*)\)$/', $query, $matches)) {
+                        $method = $matches[1];
+
+                        // Handle empty values safely
+                        $values = $matches[2] === ''
+                            ? []
+                            : array_map('trim', explode(',', $matches[2]));
+
+                        // Convert numeric values properly
+                        $values = array_map(function ($value) {
+                        if (is_numeric($value)) return (int)$value;
+
+                        if (is_string($value)) {
+                           $lower = strtolower($value);
+                           if ($lower === 'true') return true;
+                           if ($lower === 'false') return false;
+                           }
+                           return $value;
+                        }, $values);
+
+                        $query = [
+                            'method' => $method,
+                            'values' => $values
+                        ];
+                    }
+                }
+
                 $query = $this->parseQuery($query);
                 $parsed[] = \json_encode(\array_filter($query->toArray()));
             } catch (\Throwable $th) {
