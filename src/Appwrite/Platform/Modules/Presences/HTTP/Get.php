@@ -52,7 +52,6 @@ class Get extends Base
     public function action(string $presenceId, Response $response, Database $dbForProject): void
     {
         $presence = $dbForProject->getDocument('presenceLogs', $presenceId);
-
         if ($presence->isEmpty()) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }

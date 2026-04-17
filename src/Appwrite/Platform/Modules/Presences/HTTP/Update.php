@@ -12,6 +12,9 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Conflict as ConflictException;
+use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Permissions;
@@ -97,6 +100,9 @@ class Update extends PresenceAction
         if ($userId !== null) {
             $updateData['userId'] = $userId;
             $userDoc = $dbForProject->getDocument('users', $userId);
+            if ($userDoc->isEmpty()) {
+                throw new Exception(Exception::USER_NOT_FOUND, params: [$userId]);
+            }
             $updateData['userInternalId'] = $userDoc->getSequence();
         }
 
@@ -123,7 +129,15 @@ class Update extends PresenceAction
             return;
         }
 
-        $presence = $dbForProject->updateDocument('presenceLogs', $presenceId, $updates);
+        try {
+            $presence = $dbForProject->updateDocument('presenceLogs', $presenceId, $updates);
+        } catch (Duplicate $e) {
+            throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS, params: [$presenceId], previous: $e);
+        } catch (StructureException $e) {
+            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage(), previous: $e);
+        } catch (ConflictException $e) {
+            throw new Exception(Exception::DOCUMENT_UPDATE_CONFLICT, $e->getMessage(), previous: $e);
+        }
         $queueForEvents->setParam('presenceId', $presence->getId());
 
         $response->dynamic($presence, Response::MODEL_PRESENCE);

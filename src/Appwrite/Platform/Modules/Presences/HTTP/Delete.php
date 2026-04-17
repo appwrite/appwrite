@@ -11,6 +11,8 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Exception\Conflict as ConflictException;
+use Utopia\Database\Exception\Restricted as RestrictedException;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -64,7 +66,13 @@ class Delete extends Base
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
-        $dbForProject->deleteDocument('presenceLogs', $presenceId);
+        try {
+            $dbForProject->deleteDocument('presenceLogs', $presenceId);
+        } catch (ConflictException) {
+            throw new Exception(Exception::DOCUMENT_DELETE_RESTRICTED);
+        } catch (RestrictedException) {
+            throw new Exception(Exception::DOCUMENT_UPDATE_CONFLICT);
+        }
 
         $queueForEvents
             ->setParam('presenceId', $presence->getId())

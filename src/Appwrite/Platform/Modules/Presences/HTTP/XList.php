@@ -13,6 +13,8 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
+use Utopia\Database\Exception\Relationship as RelationshipException;
+use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Platform\Action;
@@ -94,6 +96,10 @@ class XList extends Base
             $total = $includeTotal ? $dbForProject->count('presenceLogs', $filterQueries, APP_LIMIT_COUNT) : 0;
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        } catch (StructureException $e) {
+            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage(), previous: $e);
+        } catch (RelationshipException $e) {
+            throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage(), previous: $e);
         }
 
         $response->dynamic(new Document([
