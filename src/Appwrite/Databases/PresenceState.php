@@ -9,12 +9,12 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
-use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\System\System;
 
 class PresenceState
 {
@@ -57,10 +57,14 @@ class PresenceState
             $presenceDocument->setAttribute('$id', $presenceId);
         }
 
+
         try {
+            if ($this->getSupportForUniqueIndexBasedUpsert()) {
+                return $this->transactionalUpsertForUser($dbForProject, $presenceDocument, $presenceId, $userId);
+            }
             return $dbForProject->upsertDocument('presenceLogs', $presenceDocument);
         } catch (DuplicateException $e) {
-            return $this->upsertFallback($dbForProject, $presenceDocument, $presenceId, $userId, $e);
+            throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS, params: [$presenceId], previous: $e);
         } catch (NotFoundException $e) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND, params: [$presenceId], previous: $e);
         } catch (StructureException $e) {
@@ -70,41 +74,40 @@ class PresenceState
         }
     }
 
-    private function upsertFallback(
+    private function transactionalUpsertForUser(
         Database $dbForProject,
         Document $presenceDocument,
         string $presenceId,
-        string $userId,
-        DuplicateException $previous
+        string $userId
     ): Document {
-        try {
-            return $dbForProject->withTransaction(function () use ($dbForProject, $presenceDocument, $presenceId, $userId, $previous) {
-                $existingPresence = $dbForProject->findOne('presenceLogs', [Query::equal('userId', [$userId])]);
+        return $dbForProject->withTransaction(function () use ($dbForProject, $presenceDocument, $presenceId, $userId) {
+            $existingPresence = $dbForProject->findOne('presenceLogs', [Query::equal('userId', [$userId])]);
 
-                if ($existingPresence->isEmpty()) {
-                    throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS, params: [$presenceId], previous: $previous);
-                }
+            if ($existingPresence->isEmpty()) {
+                return $dbForProject->createDocument('presenceLogs', $presenceDocument);
+            }
 
-                // Lock the current state before update to avoid races on duplicate fallback.
-                $currentPresence = $dbForProject->getDocument('presenceLogs', $existingPresence->getId(), forUpdate: true);
+            // Lock current state to avoid races while resolving upsert by userId.
+            $currentPresence = $dbForProject->getDocument('presenceLogs', $existingPresence->getId(), forUpdate: true);
 
-                if ($currentPresence->isEmpty()) {
-                    throw new Exception(Exception::DOCUMENT_NOT_FOUND, params: [$existingPresence->getId()]);
-                }
+            if ($currentPresence->isEmpty()) {
+                throw new Exception(Exception::DOCUMENT_NOT_FOUND, params: [$existingPresence->getId()]);
+            }
 
-                return $dbForProject->updateDocument('presenceLogs', $currentPresence->getId(), $presenceDocument);
-            });
-        } catch (DuplicateException $e) {
-            throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS, params: [$presenceId], previous: $e);
-        } catch (NotFoundException $e) {
-            throw new Exception(Exception::DOCUMENT_NOT_FOUND, params: [$presenceId], previous: $e);
-        } catch (RelationshipException $e) {
-            throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage(), previous: $e);
-        } catch (StructureException $e) {
-            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage(), previous: $e);
-        } catch (ConflictException $e) {
-            throw new Exception(Exception::DOCUMENT_UPDATE_CONFLICT, $e->getMessage(), previous: $e);
-        }
+            if ($presenceId !== 'unique()' && $currentPresence->getId() !== $presenceId) {
+                $presenceDocument->setAttribute('$id', $presenceId);
+                $dbForProject->deleteDocument('presenceLogs', $currentPresence->getId());
+                return $dbForProject->createDocument('presenceLogs', $presenceDocument);
+            }
+
+            return $dbForProject->updateDocument('presenceLogs', $currentPresence->getId(), $presenceDocument);
+        });
+    }
+
+    private function getSupportForUniqueIndexBasedUpsert(): bool
+    {
+        $adapter = \strtolower(System::getEnv('_APP_DB_ADAPTER', 'mariadb'));
+        return \in_array($adapter, ['mongodb', 'postgres', 'postgresql'], true);
     }
 
     private function assertPermissionsAgainstAuthorization(array $permissions, Authorization $authorization): void
