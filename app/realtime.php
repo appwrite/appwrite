@@ -847,6 +847,17 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         if (!empty($projectId) && $projectId !== 'console') {
             $project = $authorization->skip(fn () => $database->getDocument('projects', $projectId));
 
+            if ($project->isEmpty()) {
+                Console::warning(sprintf(
+                    '[realtime-project-diag] projectId=%s consoleDb=%s consoleNs=%s consoleTenant=%s consoleShared=%s — project lookup returned empty, will fall back to console',
+                    $projectId,
+                    $database->getDatabase(),
+                    $database->getNamespace(),
+                    (string) ($database->getTenant() ?? 'null'),
+                    $database->getSharedTables() ? 'yes' : 'no'
+                ));
+            }
+
             $database = getProjectDB($project);
             $database->setAuthorization($authorization);
         } else {
