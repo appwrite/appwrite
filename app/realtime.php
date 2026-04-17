@@ -947,37 +947,11 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                 $proofForToken = new Token();
                 $proofForToken->setHash(new Sha());
 
-                $sessionSecret = $store->getProperty('secret', '');
-                $userFound = !empty($user->getId());
-                $sessionsInDoc = $userFound ? \count($user->getAttribute('sessions', [])) : 0;
-                $sessionVerified = $userFound && $user->sessionVerify($sessionSecret, $proofForToken);
-
-                if (!$userFound || !$sessionVerified) {
-                    $dbAdapter = $database->getAdapter();
-                    $sessionIds = [];
-                    if ($userFound) {
-                        foreach ($user->getAttribute('sessions', []) as $s) {
-                            $sessionIds[] = \is_object($s) && \method_exists($s, 'getId')
-                                ? $s->getId()
-                                : (\is_array($s) ? ($s['$id'] ?? '?') : '?');
-                        }
-                    }
-                    Console::warning(sprintf(
-                        '[realtime-auth-diag] project=%s userId=%s userFound=%s sessions=%d sessionIds=%s secretPrefix=%s verified=%s db=%s ns=%s tenant=%s shared=%s host=%s sharedEnv=%s',
-                        $projectId ?? '(null)',
-                        $userId,
-                        $userFound ? 'yes' : 'no',
-                        $sessionsInDoc,
-                        \implode(',', $sessionIds) ?: '(none)',
-                        \substr($sessionSecret, 0, 8),
-                        $sessionVerified ? 'yes' : 'no',
-                        $database->getDatabase(),
-                        $database->getNamespace(),
-                        (string) ($database->getTenant() ?? 'null'),
-                        $database->getSharedTables() ? 'yes' : 'no',
-                        \method_exists($dbAdapter, 'getHostname') ? $dbAdapter->getHostname() : '?',
-                        System::getEnv('_APP_DATABASE_SHARED_TABLES', '(empty)')
-                    ));
+                if (
+                    empty($user->getId()) // Check a document has been found in the DB
+                    || !$user->sessionVerify($store->getProperty('secret', ''), $proofForToken) // Validate user has valid login token
+                ) {
+                    // cookie not valid
                     throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Session is not valid.');
                 }
 
