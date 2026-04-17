@@ -86,7 +86,8 @@ import {
   Dependencies,
 } from '@/lib/react-query/hooks'
 import { sdk, getSiteScreenshotFilePreviewUrl } from '@/lib/appwrite/sdk'
-import { DeploymentDownloadType } from '@appwrite.io/console'
+import { DeploymentDownloadType, ImageFormat } from '@appwrite.io/console'
+import { useAvifSupport } from '@/lib/avif-support'
 import { toast } from 'sonner'
 import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
@@ -220,6 +221,7 @@ export function SiteDeploymentsView() {
   const [screenshotThemeOverride, setScreenshotThemeOverride] = useState<
     'dark' | 'light' | null
   >(null)
+  const avifSupported = useAvifSupport()
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   const { theme, resolvedTheme } = useTheme()
@@ -679,6 +681,7 @@ export function SiteDeploymentsView() {
                           fileId: screenshotId,
                           width: SCREENSHOT_PREVIEW_WIDTH,
                           height: SCREENSHOT_PREVIEW_HEIGHT,
+                          output: avifSupported ? ImageFormat.Avif : undefined,
                         },
                       )
 

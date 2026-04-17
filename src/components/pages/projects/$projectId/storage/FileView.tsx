@@ -3,6 +3,8 @@ import { useParams, useNavigate, useLocation } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
+import { useAvifSupport } from '@/lib/avif-support'
+import { ImageFormat } from '@appwrite.io/console'
 import { useFile, useBucket, Dependencies } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { Button } from '@/components/ui/button'
@@ -54,6 +56,7 @@ export function FileView() {
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [imageLoaded, setImageLoaded] = useState(false)
+  const avifSupported = useAvifSupport()
 
   // Reset image loaded state when file changes
   useEffect(() => {
@@ -270,6 +273,9 @@ export function FileView() {
                                 bucketId,
                                 fileId,
                                 width: 400,
+                                output: avifSupported
+                                  ? ImageFormat.Avif
+                                  : undefined,
                               })
                             // Add mode=admin for console preview
                             const urlWithMode =

@@ -27,6 +27,8 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { DeploymentInfo } from '@/components/global/shared/DeploymentInfo'
 import { getDeploymentStatusBadge } from '@/lib/utils/deployment-status'
 import { sdk, getSiteScreenshotFilePreviewUrl } from '@/lib/appwrite/sdk'
+import { useAvifSupport } from '@/lib/avif-support'
+import { ImageFormat } from '@appwrite.io/console'
 import {
   ExternalLink,
   GitBranch,
@@ -177,6 +179,8 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
     )
   }, [theme, resolvedTheme])
 
+  const avifSupported = useAvifSupport()
+
   const screenshotUrl = useMemo(() => {
     if (!deployment) return null
     const screenshotId = isDark
@@ -188,8 +192,9 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
       fileId: screenshotId,
       width: 1280,
       height: 720,
+      output: avifSupported ? ImageFormat.Avif : undefined,
     })
-  }, [deployment, isDark, projectId])
+  }, [deployment, isDark, projectId, avifSupported])
 
   const primaryDomain = useMemo(() => {
     if (domains.length > 0) return domains[0].domain

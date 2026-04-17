@@ -46,12 +46,13 @@ import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { canCreateSite } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { sdk, getSiteScreenshotFilePreviewUrl } from '@/lib/appwrite/sdk'
+import { useAvifSupport } from '@/lib/avif-support'
 import { formatDistanceToNow } from 'date-fns'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
 import { resolveOrganizationPlanDisplayLabel } from '@/lib/utils/plan-filter'
-import type { Models } from '@appwrite.io/console'
+import { ImageFormat, type Models } from '@appwrite.io/console'
 import { PlanLimitWarning } from '../shared/PlanLimitWarning'
 import { SiteContextMenu } from './_components/SiteContextMenu'
 import {
@@ -173,6 +174,7 @@ export function View() {
   const [loadedScreenshots, setLoadedScreenshots] = useState<Set<string>>(
     new Set(),
   )
+  const avifSupported = useAvifSupport()
 
   useEffect(() => {
     setSearchInput(urlSearch ?? '')
@@ -366,6 +368,7 @@ export function View() {
       fileId: screenshotId,
       width: 1280,
       height: 720,
+      output: avifSupported ? ImageFormat.Avif : undefined,
     })
   }
 

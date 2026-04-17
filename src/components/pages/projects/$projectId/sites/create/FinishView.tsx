@@ -12,6 +12,8 @@ import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { sdk, getSiteScreenshotFilePreviewUrl } from '@/lib/appwrite/sdk'
+import { useAvifSupport } from '@/lib/avif-support'
+import { ImageFormat } from '@appwrite.io/console'
 import {
   ArrowRight,
   CheckCircle2,
@@ -80,6 +82,8 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
     )
   }, [theme, resolvedTheme])
 
+  const avifSupported = useAvifSupport()
+
   // Get screenshot URL (preview size, theme matches app)
   const screenshotUrl = useMemo(() => {
     if (!deployment) return null
@@ -92,8 +96,9 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
       fileId: screenshotId,
       width: 1280,
       height: 720,
+      output: avifSupported ? ImageFormat.Avif : undefined,
     })
-  }, [deployment, isDark, projectId])
+  }, [deployment, isDark, projectId, avifSupported])
 
   // Get primary domain
   const primaryDomain = useMemo(() => {

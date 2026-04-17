@@ -67,12 +67,13 @@ import {
 import { toast } from 'sonner'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useLocation, useSearch } from '@tanstack/react-router'
-import type { Models } from '@appwrite.io/console'
+import { ImageFormat, type Models } from '@appwrite.io/console'
 import {
   useDeploymentProxyRules,
   useFunctionDeploymentProxyRules,
 } from '@/lib/react-query/hooks'
 import { getSiteScreenshotFilePreviewUrl } from '@/lib/appwrite/sdk'
+import { useAvifSupport } from '@/lib/avif-support'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { cn } from '@/lib/utils'
 
@@ -592,6 +593,8 @@ export function DeploymentDetailView({
   const sidebarScreenshotTheme =
     sidebarScreenshotThemeOverride ?? defaultScreenshotTheme
 
+  const avifSupported = useAvifSupport()
+
   const sidebarScreenshotFileId = deployment
     ? sidebarScreenshotTheme === 'dark'
       ? deployment.screenshotDark
@@ -683,6 +686,7 @@ export function DeploymentDetailView({
             fileId: screenshotId,
             width: SCREENSHOT_PREVIEW_WIDTH,
             height: SCREENSHOT_PREVIEW_HEIGHT,
+            output: avifSupported ? ImageFormat.Avif : undefined,
           })
         : null
 
@@ -1035,6 +1039,7 @@ export function DeploymentDetailView({
     sidebarScreenshotTheme,
     sidebarScreenshotLoaded,
     urlCopyHiddenUntilLeave,
+    avifSupported,
   ])
 
   const refetchAndNavigate = async () => {

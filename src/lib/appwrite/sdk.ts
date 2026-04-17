@@ -14,6 +14,7 @@ import {
   Console,
   Functions,
   Health,
+  ImageFormat,
   Locale,
   Messaging,
   Migrations,
@@ -306,6 +307,7 @@ export function getSiteScreenshotFilePreviewUrl(
     fileId: string
     width?: number
     height?: number
+    output?: ImageFormat
   },
 ): string {
   const c = new Client()

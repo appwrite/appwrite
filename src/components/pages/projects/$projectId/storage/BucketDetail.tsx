@@ -51,12 +51,13 @@ import { useNavigate, useParams } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
+import { useAvifSupport } from '@/lib/avif-support'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { UploadFileDialog } from './UploadFileDialog'
 import { BucketSettings } from './BucketSettings'
 import { BucketSecurity } from './BucketSecurity'
 import { useUploadQueue } from '@/lib/upload-queue/use-upload-queue'
-import type { Models } from '@appwrite.io/console'
+import { ImageFormat, type Models } from '@appwrite.io/console'
 
 function getFileIcon(type: string) {
   if (type.startsWith('image/')) return Image
@@ -111,6 +112,7 @@ export function BucketDetailView() {
   const [uploadFileDialogOpen, setUploadFileDialogOpen] = useState(false)
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set())
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const avifSupported = useAvifSupport()
 
   // Refetch files list when an upload completes (list uses refetchOnMount: false)
   const refetchFiles = useCallback(() => {
@@ -502,6 +504,9 @@ export function BucketDetailView() {
                                                 bucketId,
                                                 fileId: file.$id,
                                                 width: 80,
+                                                output: avifSupported
+                                                  ? ImageFormat.Avif
+                                                  : undefined,
                                               }) + '&mode=admin'
                                           }
                                           alt={file.name}
@@ -535,6 +540,9 @@ export function BucketDetailView() {
                                                 bucketId,
                                                 fileId: file.$id,
                                                 width: 80,
+                                                output: avifSupported
+                                                  ? ImageFormat.Avif
+                                                  : undefined,
                                               }) + '&mode=admin'
                                           }
                                           alt={file.name}
@@ -714,6 +722,9 @@ export function BucketDetailView() {
                                         bucketId,
                                         fileId: file.$id,
                                         width: 400,
+                                        output: avifSupported
+                                          ? ImageFormat.Avif
+                                          : undefined,
                                       }) + '&mode=admin'
                                   }
                                   alt={file.name}

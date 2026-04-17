@@ -11,7 +11,11 @@ import {
 } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useLocation, useParams } from '@tanstack/react-router'
-import { Query, type RealtimeResponseEvent } from '@appwrite.io/console'
+import {
+  ImageFormat,
+  Query,
+  type RealtimeResponseEvent,
+} from '@appwrite.io/console'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { toast } from 'sonner'
 import {
@@ -66,6 +70,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { getApiEndpoint, sdk } from '@/lib/appwrite/sdk'
+import { useAvifSupport } from '@/lib/avif-support'
 import { registerConsoleRealtimeListener } from '@/lib/realtime'
 
 interface AIChatContextValue {
@@ -312,6 +317,7 @@ function MessageAttachments({
   const [fullscreenZoom, setFullscreenZoom] = useState(1)
   const [fullscreenPan, setFullscreenPan] = useState({ x: 0, y: 0 })
   const [loadedImageKeys, setLoadedImageKeys] = useState<Set<string>>(new Set())
+  const avifSupported = useAvifSupport()
   const [imageOrientations, setImageOrientations] = useState<
     Record<string, 'portrait' | 'landscape'>
   >({})
@@ -343,6 +349,7 @@ function MessageAttachments({
                 bucketId: ASSISTANT_ATTACHMENTS_BUCKET_ID,
                 fileId,
                 height: 640,
+                output: avifSupported ? ImageFormat.Avif : undefined,
               })
             : null,
           fullscreenPreviewUrl: file?.mimeType?.startsWith('image/')
@@ -350,6 +357,7 @@ function MessageAttachments({
                 bucketId: ASSISTANT_ATTACHMENTS_BUCKET_ID,
                 fileId,
                 height: 900,
+                output: avifSupported ? ImageFormat.Avif : undefined,
               })
             : null,
           openUrl: file?.mimeType?.startsWith('image/')
@@ -368,7 +376,7 @@ function MessageAttachments({
           }),
         }
       }),
-    [filesById, uniqueAttachmentIds],
+    [filesById, uniqueAttachmentIds, avifSupported],
   )
   const imageAttachments = useMemo(
     () =>
@@ -1222,6 +1230,7 @@ export function AIChatPanel() {
   const [composerImageOrientations, setComposerImageOrientations] = useState<
     Record<string, 'portrait' | 'landscape'>
   >({})
+  const composerAvifSupported = useAvifSupport()
   const pendingAttachmentsRef = useRef<ComposerPendingAttachment[]>([])
   const uploadTasksRef = useRef<Map<string, Promise<void>>>(new Map())
   const [isWaitingForAttachments, setIsWaitingForAttachments] = useState(false)
@@ -2229,6 +2238,9 @@ export function AIChatPanel() {
                               bucketId: ASSISTANT_ATTACHMENTS_BUCKET_ID,
                               fileId: attachmentId,
                               height: 240,
+                              output: composerAvifSupported
+                                ? ImageFormat.Avif
+                                : undefined,
                             })}
                             alt={attachmentName}
                             onLoad={(event) => {
@@ -2302,6 +2314,9 @@ export function AIChatPanel() {
                             bucketId: ASSISTANT_ATTACHMENTS_BUCKET_ID,
                             fileId: attachment.fileId,
                             height: 240,
+                            output: composerAvifSupported
+                              ? ImageFormat.Avif
+                              : undefined,
                           })}
                           alt={attachment.name}
                           onLoad={(event) => {
