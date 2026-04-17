@@ -30,7 +30,6 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { toast } from 'sonner'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { MessagingProviderWizard } from './MessagingProviderWizard'
 
 type ActiveTab = 'messages' | 'topics' | 'providers'
 
@@ -49,7 +48,6 @@ export function MessagingCreateControls({
   const queryClient = useQueryClient()
   const [topicDialogOpen, setTopicDialogOpen] = useState(false)
   const [topicName, setTopicName] = useState('')
-  const [providerWizardOpen, setProviderWizardOpen] = useState(false)
 
   const createDraftEmail = useMutation({
     mutationFn: async () => {
@@ -257,28 +255,19 @@ export function MessagingCreateControls({
 
   if (activeTab === 'providers') {
     return (
-      <>
-        <Button
-          variant="brandCta"
-          className="h-9 gap-2 px-4 text-[13px] font-medium"
-          onClick={() => setProviderWizardOpen(true)}
-        >
-          <Plus className="h-4 w-4" />
-          Create provider
-        </Button>
-        <MessagingProviderWizard
-          projectId={projectId}
-          open={providerWizardOpen}
-          onOpenChange={setProviderWizardOpen}
-          onCreated={(providerId) => {
-            queryClient.refetchQueries({ queryKey: ['providers', 'project', projectId] })
-            navigate({
-              to: '/projects/$projectId/messaging/providers/$providerId',
-              params: { projectId, providerId },
-            })
-          }}
-        />
-      </>
+      <Button
+        variant="brandCta"
+        className="h-9 gap-2 px-4 text-[13px] font-medium"
+        onClick={() =>
+          navigate({
+            to: '/projects/$projectId/messaging/providers/create',
+            params: { projectId },
+          })
+        }
+      >
+        <Plus className="h-4 w-4" />
+        Create provider
+      </Button>
     )
   }
 

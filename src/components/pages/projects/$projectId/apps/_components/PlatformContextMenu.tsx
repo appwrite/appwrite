@@ -1,0 +1,167 @@
+import { useState } from 'react'
+import { Copy, FileJson, Pencil, Tag, Trash2 } from 'lucide-react'
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuSub,
+  ContextMenuSubContent,
+  ContextMenuSubTrigger,
+  ContextMenuTrigger,
+} from '@/components/ui/context-menu'
+import { toast } from 'sonner'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { copyToClipboard, toPrettyJson } from '@/lib/utils/context-menu'
+import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
+import { useDeletePlatform } from '@/lib/react-query/hooks'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
+import {
+  getPlatformIdentifier,
+  type ProjectPlatform,
+} from '@/lib/utils/platform'
+
+interface PlatformContextMenuProps {
+  projectId: string
+  platform: ProjectPlatform
+  children: React.ReactNode
+  onUpdate?: (platform: ProjectPlatform) => void
+}
+
+export function PlatformContextMenu({
+  projectId,
+  platform,
+  children,
+  onUpdate,
+}: PlatformContextMenuProps) {
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const deleteMutation = useDeletePlatform(projectId)
+
+  if (!platform?.$id) {
+    return <>{children}</>
+  }
+
+  const hasName = !!platform.name
+  const identifier = getPlatformIdentifier(platform)
+  const hasIdentifier = !!identifier
+
+  const handleDelete = () => {
+    deleteMutation.mutate(platform.$id, {
+      onSuccess: () => {
+        toast.success('App deleted')
+        setDeleteDialogOpen(false)
+      },
+      onError: (error: Error) => {
+        toast.error(getErrorMessage(error) || 'Failed to delete app')
+      },
+    })
+  }
+
+  return (
+    <>
+      <ContextMenu>
+        <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
+        <ContextMenuContent className="w-56">
+          {onUpdate && (
+            <>
+              <ContextMenuItem onSelect={() => onUpdate(platform)}>
+                <ContextMenuIcon icon={Pencil} />
+                Update
+              </ContextMenuItem>
+              <ContextMenuSeparator />
+            </>
+          )}
+          <ContextMenuSub>
+            <ContextMenuSubTrigger>
+              <ContextMenuIcon icon={Copy} />
+              Copy
+            </ContextMenuSubTrigger>
+            <ContextMenuSubContent>
+              <ContextMenuItem
+                onSelect={() => copyToClipboard('ID', platform.$id)}
+              >
+                <ContextMenuIcon icon={Copy} />
+                Copy ID
+              </ContextMenuItem>
+              {hasName && (
+                <ContextMenuItem
+                  onSelect={() => copyToClipboard('Name', platform.name)}
+                >
+                  <ContextMenuIcon icon={Copy} />
+                  Copy name
+                </ContextMenuItem>
+              )}
+              {hasIdentifier && (
+                <ContextMenuItem
+                  onSelect={() =>
+                    copyToClipboard('Identifier', identifier)
+                  }
+                >
+                  <ContextMenuIcon icon={Tag} />
+                  Copy identifier
+                </ContextMenuItem>
+              )}
+              <ContextMenuItem
+                onSelect={() =>
+                  copyToClipboard(
+                    'JSON',
+                    toPrettyJson({
+                      id: platform.$id,
+                      name: platform.name ?? null,
+                      type: platform.type ?? null,
+                      identifier: identifier || null,
+                    }),
+                  )
+                }
+              >
+                <ContextMenuIcon icon={FileJson} />
+                Copy as JSON
+              </ContextMenuItem>
+            </ContextMenuSubContent>
+          </ContextMenuSub>
+          <ContextMenuSeparator />
+          <ContextMenuItem onSelect={() => setDeleteDialogOpen(true)}>
+            <ContextMenuIcon icon={Trash2} />
+            Delete
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-md p-0">
+          <DialogHeader className="px-6 pt-6 pb-4 text-left">
+            <DialogTitle>Delete app</DialogTitle>
+            <DialogDescription className="text-[13px] mt-2">
+              Are you sure you want to delete
+              {platform.name ? ` "${platform.name}"` : ' this app'}? This action
+              cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+              disabled={deleteMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={deleteMutation.isPending}
+            >
+              Delete
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  )
+}

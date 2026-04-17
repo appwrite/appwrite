@@ -26,7 +26,8 @@ const providerIconMap: Record<string, string> = {
   // Email Providers
   mailgun: 'mailgun.svg',
   sendgrid: 'sendgrid.svg',
-  // Note: resend, smtp, fcm, apns don't have icons yet
+  resend: 'resend.svg',
+  // Note: smtp, fcm, apns don't have icons yet
 }
 
 export function MessagingProviderIcon({

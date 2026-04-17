@@ -122,6 +122,7 @@ import { Route as PublicProjectsProjectIdSitesSiteIdDeploymentsRouteImport } fro
 import { Route as PublicProjectsProjectIdSettingsMigrationsImportRouteImport } from './routes/_public/projects.$projectId.settings.migrations.import'
 import { Route as PublicProjectsProjectIdSettingsDomainsAddRouteImport } from './routes/_public/projects.$projectId.settings.domains.add'
 import { Route as PublicProjectsProjectIdMessagingTopicsTopicIdRouteImport } from './routes/_public/projects.$projectId.messaging.topics.$topicId'
+import { Route as PublicProjectsProjectIdMessagingProvidersCreateRouteImport } from './routes/_public/projects.$projectId.messaging.providers.create'
 import { Route as PublicProjectsProjectIdMessagingProvidersProviderIdRouteImport } from './routes/_public/projects.$projectId.messaging.providers.$providerId'
 import { Route as PublicProjectsProjectIdFunctionsCreateManualRouteImport } from './routes/_public/projects.$projectId.functions.create.manual'
 import { Route as PublicProjectsProjectIdFunctionsCreateDeployingRouteImport } from './routes/_public/projects.$projectId.functions.create.deploying'
@@ -862,6 +863,12 @@ const PublicProjectsProjectIdMessagingTopicsTopicIdRoute =
     path: '/topics/$topicId',
     getParentRoute: () => PublicProjectsProjectIdMessagingRoute,
   } as any)
+const PublicProjectsProjectIdMessagingProvidersCreateRoute =
+  PublicProjectsProjectIdMessagingProvidersCreateRouteImport.update({
+    id: '/providers/create',
+    path: '/providers/create',
+    getParentRoute: () => PublicProjectsProjectIdMessagingRoute,
+  } as any)
 const PublicProjectsProjectIdMessagingProvidersProviderIdRoute =
   PublicProjectsProjectIdMessagingProvidersProviderIdRouteImport.update({
     id: '/providers/$providerId',
@@ -1564,6 +1571,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/functions/create/deploying': typeof PublicProjectsProjectIdFunctionsCreateDeployingRoute
   '/projects/$projectId/functions/create/manual': typeof PublicProjectsProjectIdFunctionsCreateManualRoute
   '/projects/$projectId/messaging/providers/$providerId': typeof PublicProjectsProjectIdMessagingProvidersProviderIdRouteWithChildren
+  '/projects/$projectId/messaging/providers/create': typeof PublicProjectsProjectIdMessagingProvidersCreateRoute
   '/projects/$projectId/messaging/topics/$topicId': typeof PublicProjectsProjectIdMessagingTopicsTopicIdRouteWithChildren
   '/projects/$projectId/settings/domains/add': typeof PublicProjectsProjectIdSettingsDomainsAddRoute
   '/projects/$projectId/settings/migrations/import': typeof PublicProjectsProjectIdSettingsMigrationsImportRoute
@@ -1736,6 +1744,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/functions/create/deploy': typeof PublicProjectsProjectIdFunctionsCreateDeployRoute
   '/projects/$projectId/functions/create/deploying': typeof PublicProjectsProjectIdFunctionsCreateDeployingRoute
   '/projects/$projectId/functions/create/manual': typeof PublicProjectsProjectIdFunctionsCreateManualRoute
+  '/projects/$projectId/messaging/providers/create': typeof PublicProjectsProjectIdMessagingProvidersCreateRoute
   '/projects/$projectId/settings/domains/add': typeof PublicProjectsProjectIdSettingsDomainsAddRoute
   '/projects/$projectId/settings/migrations/import': typeof PublicProjectsProjectIdSettingsMigrationsImportRoute
   '/projects/$projectId/sites/$siteId/logs': typeof PublicProjectsProjectIdSitesSiteIdLogsRoute
@@ -1928,6 +1937,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/functions/create/deploying': typeof PublicProjectsProjectIdFunctionsCreateDeployingRoute
   '/_public/projects/$projectId/functions/create/manual': typeof PublicProjectsProjectIdFunctionsCreateManualRoute
   '/_public/projects/$projectId/messaging/providers/$providerId': typeof PublicProjectsProjectIdMessagingProvidersProviderIdRouteWithChildren
+  '/_public/projects/$projectId/messaging/providers/create': typeof PublicProjectsProjectIdMessagingProvidersCreateRoute
   '/_public/projects/$projectId/messaging/topics/$topicId': typeof PublicProjectsProjectIdMessagingTopicsTopicIdRouteWithChildren
   '/_public/projects/$projectId/settings/domains/add': typeof PublicProjectsProjectIdSettingsDomainsAddRoute
   '/_public/projects/$projectId/settings/migrations/import': typeof PublicProjectsProjectIdSettingsMigrationsImportRoute
@@ -2124,6 +2134,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/functions/create/deploying'
     | '/projects/$projectId/functions/create/manual'
     | '/projects/$projectId/messaging/providers/$providerId'
+    | '/projects/$projectId/messaging/providers/create'
     | '/projects/$projectId/messaging/topics/$topicId'
     | '/projects/$projectId/settings/domains/add'
     | '/projects/$projectId/settings/migrations/import'
@@ -2296,6 +2307,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/functions/create/deploy'
     | '/projects/$projectId/functions/create/deploying'
     | '/projects/$projectId/functions/create/manual'
+    | '/projects/$projectId/messaging/providers/create'
     | '/projects/$projectId/settings/domains/add'
     | '/projects/$projectId/settings/migrations/import'
     | '/projects/$projectId/sites/$siteId/logs'
@@ -2487,6 +2499,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/functions/create/deploying'
     | '/_public/projects/$projectId/functions/create/manual'
     | '/_public/projects/$projectId/messaging/providers/$providerId'
+    | '/_public/projects/$projectId/messaging/providers/create'
     | '/_public/projects/$projectId/messaging/topics/$topicId'
     | '/_public/projects/$projectId/settings/domains/add'
     | '/_public/projects/$projectId/settings/migrations/import'
@@ -3382,6 +3395,13 @@ declare module '@tanstack/react-router' {
       path: '/topics/$topicId'
       fullPath: '/projects/$projectId/messaging/topics/$topicId'
       preLoaderRoute: typeof PublicProjectsProjectIdMessagingTopicsTopicIdRouteImport
+      parentRoute: typeof PublicProjectsProjectIdMessagingRoute
+    }
+    '/_public/projects/$projectId/messaging/providers/create': {
+      id: '/_public/projects/$projectId/messaging/providers/create'
+      path: '/providers/create'
+      fullPath: '/projects/$projectId/messaging/providers/create'
+      preLoaderRoute: typeof PublicProjectsProjectIdMessagingProvidersCreateRouteImport
       parentRoute: typeof PublicProjectsProjectIdMessagingRoute
     }
     '/_public/projects/$projectId/messaging/providers/$providerId': {
@@ -4603,6 +4623,7 @@ interface PublicProjectsProjectIdMessagingRouteChildren {
   PublicProjectsProjectIdMessagingMessageIdRoute: typeof PublicProjectsProjectIdMessagingMessageIdRouteWithChildren
   PublicProjectsProjectIdMessagingIndexRoute: typeof PublicProjectsProjectIdMessagingIndexRoute
   PublicProjectsProjectIdMessagingProvidersProviderIdRoute: typeof PublicProjectsProjectIdMessagingProvidersProviderIdRouteWithChildren
+  PublicProjectsProjectIdMessagingProvidersCreateRoute: typeof PublicProjectsProjectIdMessagingProvidersCreateRoute
   PublicProjectsProjectIdMessagingTopicsTopicIdRoute: typeof PublicProjectsProjectIdMessagingTopicsTopicIdRouteWithChildren
   PublicProjectsProjectIdMessagingProvidersIndexRoute: typeof PublicProjectsProjectIdMessagingProvidersIndexRoute
   PublicProjectsProjectIdMessagingTopicsIndexRoute: typeof PublicProjectsProjectIdMessagingTopicsIndexRoute
@@ -4616,6 +4637,8 @@ const PublicProjectsProjectIdMessagingRouteChildren: PublicProjectsProjectIdMess
       PublicProjectsProjectIdMessagingIndexRoute,
     PublicProjectsProjectIdMessagingProvidersProviderIdRoute:
       PublicProjectsProjectIdMessagingProvidersProviderIdRouteWithChildren,
+    PublicProjectsProjectIdMessagingProvidersCreateRoute:
+      PublicProjectsProjectIdMessagingProvidersCreateRoute,
     PublicProjectsProjectIdMessagingTopicsTopicIdRoute:
       PublicProjectsProjectIdMessagingTopicsTopicIdRouteWithChildren,
     PublicProjectsProjectIdMessagingProvidersIndexRoute:

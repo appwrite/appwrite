@@ -1,15 +1,16 @@
+/**
+ * Fullscreen create-provider wizard for messaging.
+ * Stage 1: pick a provider (Email / SMS / Push).
+ * Stage 2: configure the provider's specific fields.
+ */
+
 import { useEffect, useMemo, useState } from 'react'
-import { useMutation } from '@tanstack/react-query'
+import { useNavigate, useParams } from '@tanstack/react-router'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ID, SmtpEncryption } from '@appwrite.io/console'
 import { ChevronRight, Loader2, Mail, Phone, Bell } from 'lucide-react'
+import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -143,31 +144,21 @@ const PROVIDERS: ProviderConfig[] = [
       }),
   },
   {
-    id: 'mailgun',
-    name: 'Mailgun',
+    id: 'resend',
+    name: 'Resend',
     type: 'email',
-    description: 'Send transactional email through Mailgun.',
-    icon: 'mailgun.svg',
+    description: 'Send transactional email through Resend.',
+    icon: 'resend.svg',
     fields: [
       COMMON_NAME_FIELD,
       { key: 'apiKey', label: 'API key', type: 'password', required: true },
-      { key: 'domain', label: 'Domain', type: 'text', required: true, placeholder: 'mg.example.com' },
-      {
-        key: 'isEuRegion',
-        label: 'EU region',
-        type: 'switch',
-        defaultValue: false,
-        helper: 'Enable when your Mailgun account is hosted in the EU.',
-      },
       ...COMMON_FROM_EMAIL_FIELDS,
     ],
     submit: (projectSdk, providerId, v) =>
-      projectSdk.messaging.createMailgunProvider({
+      projectSdk.messaging.createResendProvider({
         providerId,
         name: String(v.name).trim(),
         apiKey: optString(v.apiKey),
-        domain: optString(v.domain),
-        isEuRegion: Boolean(v.isEuRegion),
         fromName: optString(v.fromName),
         fromEmail: optString(v.fromEmail),
         enabled: true,
@@ -195,20 +186,31 @@ const PROVIDERS: ProviderConfig[] = [
       }),
   },
   {
-    id: 'resend',
-    name: 'Resend',
+    id: 'mailgun',
+    name: 'Mailgun',
     type: 'email',
-    description: 'Send transactional email through Resend.',
+    description: 'Send transactional email through Mailgun.',
+    icon: 'mailgun.svg',
     fields: [
       COMMON_NAME_FIELD,
       { key: 'apiKey', label: 'API key', type: 'password', required: true },
+      { key: 'domain', label: 'Domain', type: 'text', required: true, placeholder: 'mg.example.com' },
+      {
+        key: 'isEuRegion',
+        label: 'EU region',
+        type: 'switch',
+        defaultValue: false,
+        helper: 'Enable when your Mailgun account is hosted in the EU.',
+      },
       ...COMMON_FROM_EMAIL_FIELDS,
     ],
     submit: (projectSdk, providerId, v) =>
-      projectSdk.messaging.createResendProvider({
+      projectSdk.messaging.createMailgunProvider({
         providerId,
         name: String(v.name).trim(),
         apiKey: optString(v.apiKey),
+        domain: optString(v.domain),
+        isEuRegion: Boolean(v.isEuRegion),
         fromName: optString(v.fromName),
         fromEmail: optString(v.fromEmail),
         enabled: true,
@@ -340,7 +342,7 @@ const PROVIDERS: ProviderConfig[] = [
         type: 'json',
         required: true,
         helper:
-          'Paste the contents of the FCM service account JSON file from Firebase console.',
+          'Paste the contents of the FCM service account JSON file from the Firebase console.',
       },
     ],
     submit: (projectSdk, providerId, v) => {
@@ -361,10 +363,22 @@ const PROVIDERS: ProviderConfig[] = [
     icon: 'apple.svg',
     fields: [
       COMMON_NAME_FIELD,
-      { key: 'authKey', label: 'Auth key', type: 'textarea', required: true, placeholder: '-----BEGIN PRIVATE KEY-----\n…\n-----END PRIVATE KEY-----' },
+      {
+        key: 'authKey',
+        label: 'Auth key',
+        type: 'textarea',
+        required: true,
+        placeholder: '-----BEGIN PRIVATE KEY-----\n…\n-----END PRIVATE KEY-----',
+      },
       { key: 'authKeyId', label: 'Auth key ID', type: 'text', required: true },
       { key: 'teamId', label: 'Team ID', type: 'text', required: true },
-      { key: 'bundleId', label: 'Bundle ID', type: 'text', required: true, placeholder: 'com.example.app' },
+      {
+        key: 'bundleId',
+        label: 'Bundle ID',
+        type: 'text',
+        required: true,
+        placeholder: 'com.example.app',
+      },
       {
         key: 'sandbox',
         label: 'Use sandbox environment',
@@ -433,19 +447,13 @@ function isFieldFilled(field: ProviderField, value: unknown): boolean {
   return value != null
 }
 
-interface MessagingProviderWizardProps {
-  projectId: string
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onCreated: (providerId: string) => void
-}
+export function CreateProviderWizardView() {
+  const { projectId } = useParams({ strict: false })
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const pid = projectId as string
 
-export function MessagingProviderWizard({
-  projectId,
-  open,
-  onOpenChange,
-  onCreated,
-}: MessagingProviderWizardProps) {
+  const [step, setStep] = useState<'pick' | 'configure'>('pick')
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [values, setValues] = useState<Record<string, unknown>>({})
 
@@ -453,17 +461,6 @@ export function MessagingProviderWizard({
     () => PROVIDERS.find((p) => p.id === selectedId) ?? null,
     [selectedId],
   )
-
-  // Reset state when the dialog closes
-  useEffect(() => {
-    if (!open) {
-      const t = setTimeout(() => {
-        setSelectedId(null)
-        setValues({})
-      }, 150)
-      return () => clearTimeout(t)
-    }
-  }, [open])
 
   const grouped = useMemo(() => {
     const out: Record<ProviderType, ProviderConfig[]> = {
@@ -475,16 +472,28 @@ export function MessagingProviderWizard({
     return out
   }, [])
 
+  // Keep step / selected state consistent if state goes out of sync
+  useEffect(() => {
+    if (step === 'configure' && !selected) {
+      setStep('pick')
+    }
+  }, [step, selected])
+
   const mutation = useMutation({
     mutationFn: async () => {
       if (!selected) throw new Error('No provider selected')
-      const projectSdk = sdk.forProject(projectId)
+      const projectSdk = sdk.forProject(pid)
       return selected.submit(projectSdk, ID.unique(), values)
     },
-    onSuccess: (provider) => {
+    onSuccess: async (provider) => {
+      await queryClient.refetchQueries({
+        queryKey: ['providers', 'project', pid],
+      })
       toast.success(`${selected?.name} provider created`)
-      onOpenChange(false)
-      onCreated(provider.$id)
+      navigate({
+        to: '/projects/$projectId/messaging/providers/$providerId',
+        params: { projectId: pid, providerId: provider.$id },
+      })
     },
     onError: (e: Error) =>
       toast.error(getErrorMessage(e) || 'Could not create provider'),
@@ -493,78 +502,65 @@ export function MessagingProviderWizard({
   const handlePickProvider = (p: ProviderConfig) => {
     setSelectedId(p.id)
     setValues(defaultsForProvider(p))
+    setStep('configure')
   }
+
+  const handleBackToPick = () => {
+    setStep('pick')
+  }
+
+  const fallbackPath = `/projects/${pid}/messaging/providers`
 
   const canSubmit =
     selected != null &&
     !mutation.isPending &&
     selected.fields.every((f) => isFieldFilled(f, values[f.key]))
 
+  const title = selected && step === 'configure'
+    ? `Configure ${selected.name}`
+    : 'Add provider'
+
+  const footer =
+    step === 'configure' && selected ? (
+      <div className="flex w-full justify-end">
+        <Button
+          type="button"
+          disabled={!canSubmit}
+          onClick={() => mutation.mutate()}
+        >
+          {mutation.isPending && (
+            <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+          )}
+          Create provider
+        </Button>
+      </div>
+    ) : undefined
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl p-0 max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader className="px-6 pt-6 pb-4 text-left shrink-0">
-          <DialogTitle>
-            {selected ? `Configure ${selected.name}` : 'Add provider'}
-          </DialogTitle>
-          <DialogDescription className="text-[13px] mt-2">
-            {selected
-              ? selected.description
-              : 'Pick a provider to send email, SMS, or push notifications.'}
-          </DialogDescription>
-        </DialogHeader>
-        <div className="border-t border-border" />
-
-        <div className="overflow-y-auto flex-1">
-          {!selected ? (
-            <ProviderPicker grouped={grouped} onPick={handlePickProvider} />
-          ) : (
-            <ProviderForm
-              provider={selected}
-              values={values}
-              onChange={(key, value) =>
-                setValues((prev) => ({ ...prev, [key]: value }))
-              }
-            />
-          )}
-        </div>
-
-        <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-between shrink-0">
-          {selected ? (
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedId(null)}
-              disabled={mutation.isPending}
-              className="sm:mr-auto"
-            >
-              Back
-            </Button>
-          ) : (
-            <span className="hidden sm:block" />
-          )}
-          <div className="flex flex-col-reverse gap-2 sm:flex-row">
-            <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={mutation.isPending}
-            >
-              Cancel
-            </Button>
-            {selected && (
-              <Button
-                onClick={() => mutation.mutate()}
-                disabled={!canSubmit}
-              >
-                {mutation.isPending && (
-                  <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                )}
-                Create
-              </Button>
-            )}
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+    <WizardLayout
+      title={title}
+      fullscreen
+      useSidebar={false}
+      maxWidth={step === 'configure' ? 'max-w-2xl' : 'max-w-4xl'}
+      fallbackPath={fallbackPath}
+      showBackButton={step === 'configure'}
+      onBack={handleBackToPick}
+      footer={footer}
+      footerAlign="right"
+    >
+      {step === 'pick' && (
+        <ProviderPicker grouped={grouped} onPick={handlePickProvider} />
+      )}
+      {step === 'configure' && selected && (
+        <ProviderForm
+          provider={selected}
+          values={values}
+          onChange={(key, value) =>
+            setValues((prev) => ({ ...prev, [key]: value }))
+          }
+        />
+      )}
+    </WizardLayout>
   )
 }
 
@@ -576,18 +572,18 @@ function ProviderPicker({
   onPick: (p: ProviderConfig) => void
 }) {
   return (
-    <div className="px-6 py-4 space-y-6">
+    <div className="space-y-10">
       {(['email', 'sms', 'push'] as ProviderType[]).map((type) => {
         const TypeIcon = TYPE_ICON[type]
         return (
-          <section key={type} className="space-y-2">
-            <div className="flex items-center gap-2">
+          <section key={type}>
+            <div className="mb-4 flex items-center gap-2">
               <TypeIcon className="h-4 w-4 text-muted-foreground" />
-              <h3 className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <h2 className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
                 {TYPE_LABEL[type]}
-              </h3>
+              </h2>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {grouped[type].map((p) => (
                 <ProviderCard key={p.id} provider={p} onPick={onPick} />
               ))}
@@ -612,12 +608,12 @@ function ProviderCard({
       type="button"
       onClick={() => onPick(provider)}
       className={cn(
-        'group flex w-full items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5 text-left transition-colors',
-        'hover:border-foreground/30 hover:bg-muted/50',
+        'group flex w-full cursor-pointer items-center gap-3 rounded-xl border border-border bg-card/50 p-4 text-left transition-all',
+        'hover:border-border/80 hover:bg-card/60',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
       )}
     >
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-background">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
         {provider.icon ? (
           <img
             src={`/icons/${provider.icon}`}
@@ -625,11 +621,11 @@ function ProviderCard({
             className={cn('h-5 w-5', PUBLIC_ICON_MUTED_CLASSES)}
           />
         ) : (
-          <TypeIcon className="h-4 w-4 text-muted-foreground" />
+          <TypeIcon className="h-5 w-5" />
         )}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[13px] font-medium text-foreground truncate">
+        <p className="text-[14px] font-medium text-foreground truncate">
           {provider.name}
         </p>
         <p className="text-[12px] text-muted-foreground truncate">
@@ -651,7 +647,7 @@ function ProviderForm({
   onChange: (key: string, value: unknown) => void
 }) {
   return (
-    <div className="px-6 py-4 space-y-3">
+    <div className="w-full space-y-4">
       {provider.fields.map((field) => (
         <FieldRenderer
           key={field.key}
@@ -677,11 +673,9 @@ function FieldRenderer({
 
   if (field.type === 'switch') {
     return (
-      <div className="flex items-start justify-between gap-3 rounded-md border border-border bg-card px-3 py-2.5">
+      <div className="flex items-start justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3">
         <div className="min-w-0 space-y-0.5">
-          <Label htmlFor={id} className="text-[13px]">
-            {field.label}
-          </Label>
+          <Label htmlFor={id}>{field.label}</Label>
           {field.helper && (
             <p className="text-[12px] text-muted-foreground">{field.helper}</p>
           )}
@@ -699,13 +693,13 @@ function FieldRenderer({
     const stringValue =
       typeof value === 'string' ? value : String(field.defaultValue ?? '')
     return (
-      <div>
-        <Label htmlFor={id} className="text-[13px]">
+      <div className="space-y-2">
+        <Label htmlFor={id}>
           {field.label}
           {field.required && <RequiredMark />}
         </Label>
         <Select value={stringValue} onValueChange={(v) => onChange(v)}>
-          <SelectTrigger id={id} className="mt-1.5 h-9">
+          <SelectTrigger id={id}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -717,7 +711,7 @@ function FieldRenderer({
           </SelectContent>
         </Select>
         {field.helper && (
-          <p className="mt-1 text-[12px] text-muted-foreground">{field.helper}</p>
+          <p className="text-[12px] text-muted-foreground">{field.helper}</p>
         )}
       </div>
     )
@@ -725,8 +719,8 @@ function FieldRenderer({
 
   if (field.type === 'textarea' || field.type === 'json') {
     return (
-      <div>
-        <Label htmlFor={id} className="text-[13px]">
+      <div className="space-y-2">
+        <Label htmlFor={id}>
           {field.label}
           {field.required && <RequiredMark />}
         </Label>
@@ -735,18 +729,18 @@ function FieldRenderer({
           value={typeof value === 'string' ? value : ''}
           onChange={(e) => onChange(e.target.value)}
           placeholder={field.placeholder}
-          className="mt-1.5 min-h-[120px] font-mono text-[12px]"
+          className="min-h-[140px] font-mono text-[12px]"
         />
         {field.helper && (
-          <p className="mt-1 text-[12px] text-muted-foreground">{field.helper}</p>
+          <p className="text-[12px] text-muted-foreground">{field.helper}</p>
         )}
       </div>
     )
   }
 
   return (
-    <div>
-      <Label htmlFor={id} className="text-[13px]">
+    <div className="space-y-2">
+      <Label htmlFor={id}>
         {field.label}
         {field.required && <RequiredMark />}
       </Label>
@@ -764,10 +758,9 @@ function FieldRenderer({
         value={typeof value === 'string' || typeof value === 'number' ? value : ''}
         onChange={(e) => onChange(e.target.value)}
         placeholder={field.placeholder}
-        className="mt-1.5 h-9"
       />
       {field.helper && (
-        <p className="mt-1 text-[12px] text-muted-foreground">{field.helper}</p>
+        <p className="text-[12px] text-muted-foreground">{field.helper}</p>
       )}
     </div>
   )

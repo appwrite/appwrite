@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, Fragment } from 'react'
 import { Key, Eye, Copy, Check, MoreHorizontal } from 'lucide-react'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Badge } from '@/components/ui/badge'
@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dialog'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { cn } from '@/lib/utils'
+import { ApiKeyContextMenu } from '../api-keys/_components/ApiKeyContextMenu'
 
 export interface ApiKey {
   id: string
@@ -38,6 +39,8 @@ interface ApiKeysListProps {
   onCopy?: (key: string, field: string) => void
   copiedField?: string | null
   showActions?: boolean
+  /** When set, wrap each row with a right-click context menu */
+  projectId?: string
 }
 
 function getExpirationStatus(expire: string | null) {
@@ -62,6 +65,7 @@ export function ApiKeysList({
   onCopy,
   copiedField,
   showActions = true,
+  projectId,
 }: ApiKeysListProps) {
   const [viewingKeyId, setViewingKeyId] = useState<string | null>(null)
 
@@ -113,9 +117,26 @@ export function ApiKeysList({
         <div className="divide-y divide-border">
           {apiKeys.map((apiKey) => {
             const expirationStatus = getExpirationStatus(apiKey.expire)
+            const Wrapper = projectId
+              ? ({ children }: { children: React.ReactNode }) => (
+                  <ApiKeyContextMenu
+                    projectId={projectId}
+                    apiKey={{
+                      id: apiKey.id,
+                      name: apiKey.name,
+                      key: apiKey.key,
+                      scopes: apiKey.scopes,
+                      expire: apiKey.expire,
+                    }}
+                    onUpdate={onUpdate}
+                  >
+                    {children}
+                  </ApiKeyContextMenu>
+                )
+              : Fragment
             return (
+              <Wrapper key={apiKey.id}>
               <div
-                key={apiKey.id}
                 role={onUpdate ? 'button' : undefined}
                 tabIndex={onUpdate ? 0 : undefined}
                 onClick={onUpdate ? () => onUpdate(apiKey.id) : undefined}
@@ -259,6 +280,7 @@ export function ApiKeysList({
                   </div>
                 )}
               </div>
+              </Wrapper>
             )
           })}
         </div>
