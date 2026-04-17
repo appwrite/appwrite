@@ -2852,7 +2852,7 @@ return [
             ],
             [
                 '$id' => ID::custom('_key_userInternal'),
-                'type' => Database::INDEX_UNIQUE,
+                'type' => Database::INDEX_KEY,
                 'attributes' => ['userInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC]
