@@ -425,7 +425,7 @@ jobs:
           Messaging,
           Migrations,
           Project,
-          Presences
+          Presence
         ]
         include:
           - service: Databases
