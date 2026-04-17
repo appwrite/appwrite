@@ -8,7 +8,11 @@ class DetectionFramework extends Detection
 {
     public function __construct()
     {
-        parent::__construct();
+        $this->conditions = [
+            'type' => 'framework',
+        ];
+
+        parent::__construct('framework');
 
         $this
             ->addRule('framework', [

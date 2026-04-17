@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Project\Http\Project\Services\Status;
 
+use Appwrite\Event\Event;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -33,8 +34,8 @@ class Update extends Action
             ->desc('Update project service status')
             ->groups(['api', 'project'])
             ->label('scope', 'project.write')
-            ->label('event', 'services.[service].update')
-            ->label('audits.event', 'project.services.[service].update')
+            ->label('event', 'services.[serviceId].update')
+            ->label('audits.event', 'project.services.[serviceId].update')
             ->label('audits.resource', 'project.services/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'project',
@@ -57,6 +58,7 @@ class Update extends Action
             ->inject('dbForPlatform')
             ->inject('project')
             ->inject('authorization')
+            ->inject('queueForEvents')
             ->callback($this->action(...));
     }
 
@@ -66,7 +68,8 @@ class Update extends Action
         Response $response,
         Database $dbForPlatform,
         Document $project,
-        Authorization $authorization
+        Authorization $authorization,
+        Event $queueForEvents
     ): void {
         $services = $project->getAttribute('services', []);
         $services[$serviceId] = $enabled;
@@ -74,6 +77,8 @@ class Update extends Action
         $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
             'services' => $services,
         ])));
+
+        $queueForEvents->setParam('serviceId', $serviceId);
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     }
