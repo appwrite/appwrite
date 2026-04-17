@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Outlet, useMatches } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/apps/View'
 import { fetchProject, fetchPlatforms } from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
@@ -39,7 +39,21 @@ export const Route = createFileRoute('/_public/projects/$projectId/apps')({
 })
 
 function AppsPage() {
+  const matches = useMatches()
   const loaderData = Route.useLoaderData()
+
+  const isAddAppRoute = matches.some(
+    (m) => m.routeId === '/_public/projects/$projectId/apps/add',
+  )
+
+  if (isAddAppRoute) {
+    return (
+      <div className="flex h-full min-h-0 flex-1 flex-col">
+        <Outlet />
+      </div>
+    )
+  }
+
   return (
     <View
       initialData={

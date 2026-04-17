@@ -15,18 +15,20 @@ import {
   useUpdatePlatform,
   useDeletePlatform,
 } from '@/lib/react-query/hooks'
-import { getPlatformDisplayName } from '@/lib/utils/platform'
+import {
+  getPlatformDisplayName,
+  getPlatformIdentifier,
+  type ProjectPlatform,
+} from '@/lib/utils/platform'
 import { PlatformIcon } from '@/components/global/shared/Icon'
 import { toast } from 'sonner'
 import { Trash2, ExternalLink } from 'lucide-react'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
-import type { Models } from '@appwrite.io/console'
-
 interface PlatformDrawerProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   projectId: string
-  platform: Models.Platform | null
+  platform: ProjectPlatform | null
   onSuccess?: () => void
 }
 
@@ -48,7 +50,6 @@ export function PlatformDrawer({
 
   const [name, setName] = useState('')
   const [key, setKey] = useState('')
-  const [store, setStore] = useState('')
   const [hostname, setHostname] = useState('')
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -57,15 +58,15 @@ export function PlatformDrawer({
     if (!open) {
       setName('')
       setKey('')
-      setStore('')
       setHostname('')
       setErrors({})
       setDeleteConfirmOpen(false)
     } else if (displayPlatform) {
       setName(displayPlatform.name || '')
-      setKey(displayPlatform.key || '')
-      setStore(displayPlatform.store || '')
-      setHostname(displayPlatform.hostname || '')
+      setKey(getPlatformIdentifier(displayPlatform))
+      setHostname(
+        'hostname' in displayPlatform ? displayPlatform.hostname || '' : '',
+      )
       setErrors({})
     }
   }, [open, displayPlatform])
@@ -95,7 +96,6 @@ export function PlatformDrawer({
         platformId,
         name: name.trim(),
         key: key.trim() || undefined,
-        store: store.trim() || undefined,
         hostname: hostname.trim() || undefined,
       },
       {
@@ -127,11 +127,14 @@ export function PlatformDrawer({
   }
 
   const platformType = (displayPlatform?.type ?? 'web') as string
-  const typeLower = platformType.toLowerCase()
-  const showKey = typeLower.includes('android') || typeLower.includes('apple')
+  const showKey =
+    !!displayPlatform &&
+    ('applicationId' in displayPlatform ||
+      'bundleIdentifier' in displayPlatform ||
+      'packageName' in displayPlatform ||
+      'packageIdentifierName' in displayPlatform)
   const showHostname =
-    typeLower === 'web' || typeLower.startsWith('flutter-web')
-  const showStore = typeLower.includes('android') || typeLower.includes('apple')
+    !!displayPlatform && 'hostname' in displayPlatform
 
   if (!platform && !platformId) return null
 
@@ -239,37 +242,21 @@ export function PlatformDrawer({
                           htmlFor="platform-key"
                           className="text-[12px] font-medium"
                         >
-                          {platformType.toLowerCase().includes('apple')
+                          {displayPlatform && 'bundleIdentifier' in displayPlatform
                             ? 'Bundle ID'
-                            : 'Package name'}
+                            : displayPlatform &&
+                                'applicationId' in displayPlatform
+                              ? 'Application ID'
+                              : displayPlatform &&
+                                  'packageIdentifierName' in displayPlatform
+                                ? 'Package identifier'
+                                : 'Package name'}
                         </Label>
                         <Input
                           id="platform-key"
-                          placeholder={
-                            platformType.toLowerCase().includes('apple')
-                              ? 'com.example.app'
-                              : 'com.example.app'
-                          }
+                          placeholder="com.example.app"
                           value={key}
                           onChange={(e) => setKey(e.target.value)}
-                          disabled={isPending}
-                        />
-                      </div>
-                    )}
-
-                    {showStore && (
-                      <div className="space-y-2">
-                        <Label
-                          htmlFor="platform-store"
-                          className="text-[12px] font-medium"
-                        >
-                          App store / Play store ID
-                        </Label>
-                        <Input
-                          id="platform-store"
-                          placeholder="Optional"
-                          value={store}
-                          onChange={(e) => setStore(e.target.value)}
                           disabled={isPending}
                         />
                       </div>

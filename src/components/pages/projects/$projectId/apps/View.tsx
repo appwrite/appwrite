@@ -1,8 +1,7 @@
 import { useState, useMemo } from 'react'
 import { Plug2 } from 'lucide-react'
-import { useParams } from '@tanstack/react-router'
+import { useNavigate, useParams } from '@tanstack/react-router'
 import { ServiceHeader } from '../shared/ServiceHeader'
-import { ConnectProject } from '../shared/ConnectProject'
 import { PlatformDrawer } from './_components/PlatformDrawer'
 import { PlatformIcon } from '@/components/global/shared/Icon'
 import { EmptyState } from '@/components/global/shared/EmptyState'
@@ -13,14 +12,19 @@ import {
 } from '@/lib/react-query/hooks'
 import { canCreatePlatform } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { getPlatformDisplayName } from '@/lib/utils/platform'
-import type { Models } from '@appwrite.io/console'
+import {
+  getPlatformDisplayName,
+  getPlatformIdentifier,
+  getPlatformSearchText,
+  type ProjectPlatform,
+} from '@/lib/utils/platform'
+import type { AddAppKind } from '@/lib/add-app-wizard/types'
 
 export type AppsInitialData = {
   project?: Awaited<
     ReturnType<typeof import('@/lib/react-query/hooks').fetchProject>
   >
-  platforms: Models.Platform[]
+  platforms: ProjectPlatform[]
 }
 
 type ViewProps = {
@@ -37,24 +41,13 @@ const supportedPlatforms = [
   { id: 'linux', platform: 'linux' },
 ] as const
 
-const platformToSdkId: Record<string, string> = {
-  web: 'web',
-  'react-native': 'web',
-  flutter: 'flutter',
-  apple: 'apple',
-  android: 'android',
-  windows: 'web',
-  linux: 'web',
-}
-
 export function View({ initialData }: ViewProps = {}) {
   const { projectId } = useParams({ strict: false })
+  const navigate = useNavigate()
   const [searchValue, setSearchValue] = useState('')
-  const [connectDialogOpen, setConnectDialogOpen] = useState(false)
-  const [connectInitialSdk, setConnectInitialSdk] = useState('web')
   const [platformDrawerOpen, setPlatformDrawerOpen] = useState(false)
   const [selectedPlatform, setSelectedPlatform] =
-    useState<Models.Platform | null>(null)
+    useState<ProjectPlatform | null>(null)
 
   // Use initialData on first paint so no loading skeleton flash
   const { platforms: platformsFromHook, isLoading } = usePlatforms(projectId)
@@ -75,20 +68,25 @@ export function View({ initialData }: ViewProps = {}) {
     return platforms.filter(
       (p) =>
         (p.name || '').toLowerCase().includes(q) ||
-        (p.hostname || '').toLowerCase().includes(q) ||
-        (p.key || '').toLowerCase().includes(q) ||
+        getPlatformSearchText(p).toLowerCase().includes(q) ||
         getPlatformDisplayName(p.type || '')
           .toLowerCase()
           .includes(q),
     )
   }, [platforms, searchValue])
 
-  const handleAddApp = (platformId?: string) => {
-    setConnectInitialSdk(platformToSdkId[platformId ?? 'web'] ?? 'web')
-    setConnectDialogOpen(true)
+  const goToAddAppWizard = (kind?: AddAppKind) => {
+    if (!projectId) return
+    navigate({
+      to: '/projects/$projectId/apps/add',
+      params: { projectId },
+      search: kind
+        ? { kind, configureStep: 'details' as const }
+        : {},
+    })
   }
 
-  const handlePlatformClick = (platform: Models.Platform) => {
+  const handlePlatformClick = (platform: ProjectPlatform) => {
     setSelectedPlatform(platform)
     setPlatformDrawerOpen(true)
   }
@@ -101,7 +99,7 @@ export function View({ initialData }: ViewProps = {}) {
         searchValue={searchValue}
         onSearchChange={setSearchValue}
         createLabel="Add app"
-        onCreate={handleAddApp}
+        onCreate={() => goToAddAppWizard()}
         createDisabled={noCreatePermission}
         createDisabledTooltip={
           noCreatePermission
@@ -156,7 +154,7 @@ export function View({ initialData }: ViewProps = {}) {
                     <button
                       key={id}
                       type="button"
-                      onClick={() => handleAddApp(id)}
+                      onClick={() => goToAddAppWizard(id as AddAppKind)}
                       className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-4 py-2 text-[13px] font-medium text-foreground transition-colors hover:bg-muted hover:text-foreground"
                     >
                       <PlatformIcon platform={platform} size="sm" />
@@ -178,12 +176,11 @@ export function View({ initialData }: ViewProps = {}) {
           )
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredPlatforms.map((platform: Models.Platform) => {
+            {filteredPlatforms.map((platform: ProjectPlatform) => {
               const platformType = platform.type || 'web'
               const displayName =
                 platform.name || getPlatformDisplayName(platformType)
-              const identifier =
-                platform.hostname || platform.key || platform.store || ''
+              const identifier = getPlatformIdentifier(platform)
               const initialIcon =
                 platformType === 'web'
                   ? (platform.$id?.charCodeAt(0) ?? 0) % 2 === 0
@@ -221,13 +218,6 @@ export function View({ initialData }: ViewProps = {}) {
           </div>
         )}
       </div>
-
-      <ConnectProject
-        open={connectDialogOpen}
-        onOpenChange={setConnectDialogOpen}
-        projectId={projectId ?? ''}
-        initialSdk={connectInitialSdk}
-      />
 
       <PlatformDrawer
         open={platformDrawerOpen}

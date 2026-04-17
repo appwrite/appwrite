@@ -85,6 +85,7 @@ import { Route as PublicProjectsProjectIdAuthTemplatesRouteImport } from './rout
 import { Route as PublicProjectsProjectIdAuthTeamsRouteImport } from './routes/_public/projects.$projectId.auth.teams'
 import { Route as PublicProjectsProjectIdAuthSettingsRouteImport } from './routes/_public/projects.$projectId.auth.settings'
 import { Route as PublicProjectsProjectIdAuthSecurityRouteImport } from './routes/_public/projects.$projectId.auth.security'
+import { Route as PublicProjectsProjectIdAppsAddRouteImport } from './routes/_public/projects.$projectId.apps.add'
 import { Route as PublicProjectsProjectIdAnalyticsWebsiteIdRouteImport } from './routes/_public/projects.$projectId.analytics.$websiteId'
 import { Route as PublicOrganizationsOrgIdSettingsOauthAppsRouteImport } from './routes/_public/organizations.$orgId.settings.oauth-apps'
 import { Route as PublicOrganizationsOrgIdSettingsMembersRouteImport } from './routes/_public/organizations.$orgId.settings.members'
@@ -638,6 +639,12 @@ const PublicProjectsProjectIdAuthSecurityRoute =
     id: '/security',
     path: '/security',
     getParentRoute: () => PublicProjectsProjectIdAuthRoute,
+  } as any)
+const PublicProjectsProjectIdAppsAddRoute =
+  PublicProjectsProjectIdAppsAddRouteImport.update({
+    id: '/add',
+    path: '/add',
+    getParentRoute: () => PublicProjectsProjectIdAppsRoute,
   } as any)
 const PublicProjectsProjectIdAnalyticsWebsiteIdRoute =
   PublicProjectsProjectIdAnalyticsWebsiteIdRouteImport.update({
@@ -1486,7 +1493,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/activity': typeof PublicProjectsProjectIdActivityRoute
   '/projects/$projectId/analytics': typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
   '/projects/$projectId/api-keys': typeof PublicProjectsProjectIdApiKeysRoute
-  '/projects/$projectId/apps': typeof PublicProjectsProjectIdAppsRoute
+  '/projects/$projectId/apps': typeof PublicProjectsProjectIdAppsRouteWithChildren
   '/projects/$projectId/auth': typeof PublicProjectsProjectIdAuthRouteWithChildren
   '/projects/$projectId/databases': typeof PublicProjectsProjectIdDatabasesRouteWithChildren
   '/projects/$projectId/firewall': typeof PublicProjectsProjectIdFirewallRoute
@@ -1512,6 +1519,7 @@ export interface FileRoutesByFullPath {
   '/organizations/$orgId/settings/members': typeof PublicOrganizationsOrgIdSettingsMembersRoute
   '/organizations/$orgId/settings/oauth-apps': typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
   '/projects/$projectId/analytics/$websiteId': typeof PublicProjectsProjectIdAnalyticsWebsiteIdRoute
+  '/projects/$projectId/apps/add': typeof PublicProjectsProjectIdAppsAddRoute
   '/projects/$projectId/auth/security': typeof PublicProjectsProjectIdAuthSecurityRoute
   '/projects/$projectId/auth/settings': typeof PublicProjectsProjectIdAuthSettingsRoute
   '/projects/$projectId/auth/teams': typeof PublicProjectsProjectIdAuthTeamsRouteWithChildren
@@ -1676,7 +1684,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/activity': typeof PublicProjectsProjectIdActivityRoute
   '/projects/$projectId/analytics': typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
   '/projects/$projectId/api-keys': typeof PublicProjectsProjectIdApiKeysRoute
-  '/projects/$projectId/apps': typeof PublicProjectsProjectIdAppsRoute
+  '/projects/$projectId/apps': typeof PublicProjectsProjectIdAppsRouteWithChildren
   '/projects/$projectId/firewall': typeof PublicProjectsProjectIdFirewallRoute
   '/projects/$projectId/imagine': typeof PublicProjectsProjectIdImagineRoute
   '/projects/$projectId/onboarding': typeof PublicProjectsProjectIdOnboardingRoute
@@ -1694,6 +1702,7 @@ export interface FileRoutesByTo {
   '/organizations/$orgId/settings/members': typeof PublicOrganizationsOrgIdSettingsMembersRoute
   '/organizations/$orgId/settings/oauth-apps': typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
   '/projects/$projectId/analytics/$websiteId': typeof PublicProjectsProjectIdAnalyticsWebsiteIdRoute
+  '/projects/$projectId/apps/add': typeof PublicProjectsProjectIdAppsAddRoute
   '/projects/$projectId/auth/security': typeof PublicProjectsProjectIdAuthSecurityRoute
   '/projects/$projectId/auth/settings': typeof PublicProjectsProjectIdAuthSettingsRoute
   '/projects/$projectId/auth/teams': typeof PublicProjectsProjectIdAuthTeamsRouteWithChildren
@@ -1848,7 +1857,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/activity': typeof PublicProjectsProjectIdActivityRoute
   '/_public/projects/$projectId/analytics': typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
   '/_public/projects/$projectId/api-keys': typeof PublicProjectsProjectIdApiKeysRoute
-  '/_public/projects/$projectId/apps': typeof PublicProjectsProjectIdAppsRoute
+  '/_public/projects/$projectId/apps': typeof PublicProjectsProjectIdAppsRouteWithChildren
   '/_public/projects/$projectId/auth': typeof PublicProjectsProjectIdAuthRouteWithChildren
   '/_public/projects/$projectId/databases': typeof PublicProjectsProjectIdDatabasesRouteWithChildren
   '/_public/projects/$projectId/firewall': typeof PublicProjectsProjectIdFirewallRoute
@@ -1874,6 +1883,7 @@ export interface FileRoutesById {
   '/_public/organizations/$orgId/settings/members': typeof PublicOrganizationsOrgIdSettingsMembersRoute
   '/_public/organizations/$orgId/settings/oauth-apps': typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
   '/_public/projects/$projectId/analytics/$websiteId': typeof PublicProjectsProjectIdAnalyticsWebsiteIdRoute
+  '/_public/projects/$projectId/apps/add': typeof PublicProjectsProjectIdAppsAddRoute
   '/_public/projects/$projectId/auth/security': typeof PublicProjectsProjectIdAuthSecurityRoute
   '/_public/projects/$projectId/auth/settings': typeof PublicProjectsProjectIdAuthSettingsRoute
   '/_public/projects/$projectId/auth/teams': typeof PublicProjectsProjectIdAuthTeamsRouteWithChildren
@@ -2069,6 +2079,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/settings/members'
     | '/organizations/$orgId/settings/oauth-apps'
     | '/projects/$projectId/analytics/$websiteId'
+    | '/projects/$projectId/apps/add'
     | '/projects/$projectId/auth/security'
     | '/projects/$projectId/auth/settings'
     | '/projects/$projectId/auth/teams'
@@ -2251,6 +2262,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/settings/members'
     | '/organizations/$orgId/settings/oauth-apps'
     | '/projects/$projectId/analytics/$websiteId'
+    | '/projects/$projectId/apps/add'
     | '/projects/$projectId/auth/security'
     | '/projects/$projectId/auth/settings'
     | '/projects/$projectId/auth/teams'
@@ -2430,6 +2442,7 @@ export interface FileRouteTypes {
     | '/_public/organizations/$orgId/settings/members'
     | '/_public/organizations/$orgId/settings/oauth-apps'
     | '/_public/projects/$projectId/analytics/$websiteId'
+    | '/_public/projects/$projectId/apps/add'
     | '/_public/projects/$projectId/auth/security'
     | '/_public/projects/$projectId/auth/settings'
     | '/_public/projects/$projectId/auth/teams'
@@ -3111,6 +3124,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/projects/$projectId/auth/security'
       preLoaderRoute: typeof PublicProjectsProjectIdAuthSecurityRouteImport
       parentRoute: typeof PublicProjectsProjectIdAuthRoute
+    }
+    '/_public/projects/$projectId/apps/add': {
+      id: '/_public/projects/$projectId/apps/add'
+      path: '/add'
+      fullPath: '/projects/$projectId/apps/add'
+      preLoaderRoute: typeof PublicProjectsProjectIdAppsAddRouteImport
+      parentRoute: typeof PublicProjectsProjectIdAppsRoute
     }
     '/_public/projects/$projectId/analytics/$websiteId': {
       id: '/_public/projects/$projectId/analytics/$websiteId'
@@ -4103,6 +4123,20 @@ const PublicProjectsProjectIdAnalyticsRouteWithChildren =
     PublicProjectsProjectIdAnalyticsRouteChildren,
   )
 
+interface PublicProjectsProjectIdAppsRouteChildren {
+  PublicProjectsProjectIdAppsAddRoute: typeof PublicProjectsProjectIdAppsAddRoute
+}
+
+const PublicProjectsProjectIdAppsRouteChildren: PublicProjectsProjectIdAppsRouteChildren =
+  {
+    PublicProjectsProjectIdAppsAddRoute: PublicProjectsProjectIdAppsAddRoute,
+  }
+
+const PublicProjectsProjectIdAppsRouteWithChildren =
+  PublicProjectsProjectIdAppsRoute._addFileChildren(
+    PublicProjectsProjectIdAppsRouteChildren,
+  )
+
 interface PublicProjectsProjectIdAuthTeamsTeamIdRouteChildren {
   PublicProjectsProjectIdAuthTeamsTeamIdActivityRoute: typeof PublicProjectsProjectIdAuthTeamsTeamIdActivityRoute
   PublicProjectsProjectIdAuthTeamsTeamIdMembersRoute: typeof PublicProjectsProjectIdAuthTeamsTeamIdMembersRoute
@@ -4863,7 +4897,7 @@ interface PublicProjectsProjectIdRouteChildren {
   PublicProjectsProjectIdActivityRoute: typeof PublicProjectsProjectIdActivityRoute
   PublicProjectsProjectIdAnalyticsRoute: typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
   PublicProjectsProjectIdApiKeysRoute: typeof PublicProjectsProjectIdApiKeysRoute
-  PublicProjectsProjectIdAppsRoute: typeof PublicProjectsProjectIdAppsRoute
+  PublicProjectsProjectIdAppsRoute: typeof PublicProjectsProjectIdAppsRouteWithChildren
   PublicProjectsProjectIdAuthRoute: typeof PublicProjectsProjectIdAuthRouteWithChildren
   PublicProjectsProjectIdDatabasesRoute: typeof PublicProjectsProjectIdDatabasesRouteWithChildren
   PublicProjectsProjectIdFirewallRoute: typeof PublicProjectsProjectIdFirewallRoute
@@ -4890,7 +4924,8 @@ const PublicProjectsProjectIdRouteChildren: PublicProjectsProjectIdRouteChildren
     PublicProjectsProjectIdAnalyticsRoute:
       PublicProjectsProjectIdAnalyticsRouteWithChildren,
     PublicProjectsProjectIdApiKeysRoute: PublicProjectsProjectIdApiKeysRoute,
-    PublicProjectsProjectIdAppsRoute: PublicProjectsProjectIdAppsRoute,
+    PublicProjectsProjectIdAppsRoute:
+      PublicProjectsProjectIdAppsRouteWithChildren,
     PublicProjectsProjectIdAuthRoute:
       PublicProjectsProjectIdAuthRouteWithChildren,
     PublicProjectsProjectIdDatabasesRoute:

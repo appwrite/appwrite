@@ -1,3 +1,30 @@
+import type { Models } from '@appwrite.io/console'
+
+/** Union of platform documents returned by `listPlatforms` / `getPlatform`. */
+export type ProjectPlatform = Models.PlatformList['platforms'][number]
+
+/** Hostname, bundle ID, package name, or other primary identifier for search/display. */
+export function getPlatformIdentifier(
+  platform: ProjectPlatform | Record<string, unknown>,
+): string {
+  const p = platform as Record<string, unknown>
+  if (typeof p.hostname === 'string' && p.hostname) return p.hostname
+  if (typeof p.applicationId === 'string') return p.applicationId
+  if (typeof p.bundleIdentifier === 'string') return p.bundleIdentifier
+  if (typeof p.packageName === 'string') return p.packageName
+  if (typeof p.packageIdentifierName === 'string')
+    return p.packageIdentifierName
+  if (typeof p.key === 'string') return p.key
+  if (typeof p.identifier === 'string') return p.identifier
+  return ''
+}
+
+export function getPlatformSearchText(platform: ProjectPlatform): string {
+  return [platform.name, getPlatformIdentifier(platform), platform.type]
+    .filter(Boolean)
+    .join(' ')
+}
+
 /**
  * Get human-readable display name for a platform type
  */
