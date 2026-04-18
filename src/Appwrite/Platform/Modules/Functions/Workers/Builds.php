@@ -144,7 +144,8 @@ class Builds extends Action
                     $log,
                     $executor,
                     $plan,
-                    $platform
+                    $platform,
+                    (int) ($payload['timeout'] ?? System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900))
                 );
                 break;
 
@@ -179,7 +180,8 @@ class Builds extends Action
         Log $log,
         Executor $executor,
         array $plan,
-        array $platform
+        array $platform,
+        int $timeout
     ): void {
         Console::info('Deployment action started');
 
@@ -592,10 +594,7 @@ class Builds extends Action
 
             $cpus = $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT;
             $memory = max($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT, $minMemory);
-            $timeout = (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
-
-            $jwtExpiry = (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
-            $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
+            $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $timeout, 0);
 
             $apiKey = $jwtObj->encode([
                 'projectId' => $project->getId(),

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f6a87c1012b316e614258f8f57a28e48",
+    "content-hash": "c5ae97637fd0ec0a950044d1c33677ea",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4325,16 +4325,16 @@
         },
         {
             "name": "utopia-php/image",
-            "version": "0.8.4",
+            "version": "0.8.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/image.git",
-                "reference": "ce788ff0121a79286fdbe3ef3eba566de646df65"
+                "reference": "9af2fcff028a42550465e2ccad88e3b31c3584f3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/image/zipball/ce788ff0121a79286fdbe3ef3eba566de646df65",
-                "reference": "ce788ff0121a79286fdbe3ef3eba566de646df65",
+                "url": "https://api.github.com/repos/utopia-php/image/zipball/9af2fcff028a42550465e2ccad88e3b31c3584f3",
+                "reference": "9af2fcff028a42550465e2ccad88e3b31c3584f3",
                 "shasum": ""
             },
             "require": {
@@ -4343,10 +4343,12 @@
                 "php": ">=8.1"
             },
             "require-dev": {
-                "laravel/pint": "1.2.*",
-                "phpstan/phpstan": "^1.10.0",
-                "phpunit/phpunit": "^9.3",
-                "vimeo/psalm": "4.13.1"
+                "laravel/pint": "1.24.*",
+                "phpstan/phpstan": "2.1.*",
+                "phpunit/phpunit": "10.5.*"
+            },
+            "suggest": {
+                "ext-imagick": "Imagick extension is required for Imagick adapter"
             },
             "type": "library",
             "autoload": {
@@ -4368,9 +4370,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/image/issues",
-                "source": "https://github.com/utopia-php/image/tree/0.8.4"
+                "source": "https://github.com/utopia-php/image/tree/0.8.5"
             },
-            "time": "2025-06-03T08:32:20+00:00"
+            "time": "2026-04-17T15:02:49+00:00"
         },
         {
             "name": "utopia-php/locale",
@@ -4642,16 +4644,16 @@
         },
         {
             "name": "utopia-php/platform",
-            "version": "0.12.1",
+            "version": "0.13.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/platform.git",
-                "reference": "2a6b88168b3a99d4d7d3b37d927f2cb91da5e0fc"
+                "reference": "d23af5349a7ea9ee11f9920a13626226f985522e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/platform/zipball/2a6b88168b3a99d4d7d3b37d927f2cb91da5e0fc",
-                "reference": "2a6b88168b3a99d4d7d3b37d927f2cb91da5e0fc",
+                "url": "https://api.github.com/repos/utopia-php/platform/zipball/d23af5349a7ea9ee11f9920a13626226f985522e",
+                "reference": "d23af5349a7ea9ee11f9920a13626226f985522e",
                 "shasum": ""
             },
             "require": {
@@ -4687,9 +4689,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/platform/issues",
-                "source": "https://github.com/utopia-php/platform/tree/0.12.1"
+                "source": "https://github.com/utopia-php/platform/tree/0.13.0"
             },
-            "time": "2026-04-08T04:11:31+00:00"
+            "time": "2026-04-17T09:57:18+00:00"
         },
         {
             "name": "utopia-php/pools",

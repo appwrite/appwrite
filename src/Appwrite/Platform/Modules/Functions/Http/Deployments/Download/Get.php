@@ -31,7 +31,7 @@ class Get extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/functions/:functionId/deployments/:deploymentId/download')
-            ->httpAlias('/v1/functions/:functionId/deployments/:deploymentId/build/download', ['type' => 'output'])
+            ->httpAlias('/v1/functions/:functionId/deployments/:deploymentId/build/download')
             ->groups(['api', 'functions'])
             ->desc('Get deployment download')
             ->label('scope', 'functions.read')
