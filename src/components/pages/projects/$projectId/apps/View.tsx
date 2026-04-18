@@ -3,6 +3,7 @@ import { Plug2 } from 'lucide-react'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import { ServiceHeader } from '../shared/ServiceHeader'
 import { PlatformDrawer } from './_components/PlatformDrawer'
+import { PlatformContextMenu } from './_components/PlatformContextMenu'
 import { PlatformIcon } from '@/components/global/shared/Icon'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import {
@@ -189,30 +190,36 @@ export function View({ initialData }: ViewProps = {}) {
                   : undefined
 
               return (
-                <button
+                <PlatformContextMenu
                   key={platform.$id}
-                  type="button"
-                  onClick={() => handlePlatformClick(platform)}
-                  className="group flex cursor-pointer items-center gap-4 rounded-xl border border-border bg-card/50 p-4 text-left transition-colors hover:border-border hover:bg-card"
+                  projectId={projectId ?? ''}
+                  platform={platform}
+                  onUpdate={handlePlatformClick}
                 >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground transition-colors group-hover:bg-accent group-hover:text-foreground">
-                    <PlatformIcon
-                      platform={platformType}
-                      size="md"
-                      initialIcon={initialIcon}
-                    />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[14px] font-medium text-foreground">
-                      {displayName}
-                    </p>
-                    {identifier && (
-                      <p className="text-[12px] text-muted-foreground">
-                        {identifier}
+                  <button
+                    type="button"
+                    onClick={() => handlePlatformClick(platform)}
+                    className="group flex cursor-pointer items-center gap-4 rounded-xl border border-border bg-card/50 p-4 text-left transition-colors hover:border-border hover:bg-card"
+                  >
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground transition-colors group-hover:bg-accent group-hover:text-foreground">
+                      <PlatformIcon
+                        platform={platformType}
+                        size="md"
+                        initialIcon={initialIcon}
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[14px] font-medium text-foreground">
+                        {displayName}
                       </p>
-                    )}
-                  </div>
-                </button>
+                      {identifier && (
+                        <p className="text-[12px] text-muted-foreground">
+                          {identifier}
+                        </p>
+                      )}
+                    </div>
+                  </button>
+                </PlatformContextMenu>
               )
             })}
           </div>

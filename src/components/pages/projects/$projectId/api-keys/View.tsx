@@ -326,6 +326,7 @@ export function View({ initialData }: ViewProps = {}) {
             onCopy={handleCopy}
             copiedField={copiedField}
             showActions={true}
+            projectId={projectId}
           />
         )}
       </div>

@@ -117,25 +117,7 @@ export function ApiKeysList({
         <div className="divide-y divide-border">
           {apiKeys.map((apiKey) => {
             const expirationStatus = getExpirationStatus(apiKey.expire)
-            const Wrapper = projectId
-              ? ({ children }: { children: React.ReactNode }) => (
-                  <ApiKeyContextMenu
-                    projectId={projectId}
-                    apiKey={{
-                      id: apiKey.id,
-                      name: apiKey.name,
-                      key: apiKey.key,
-                      scopes: apiKey.scopes,
-                      expire: apiKey.expire,
-                    }}
-                    onUpdate={onUpdate}
-                  >
-                    {children}
-                  </ApiKeyContextMenu>
-                )
-              : Fragment
-            return (
-              <Wrapper key={apiKey.id}>
+            const row = (
               <div
                 role={onUpdate ? 'button' : undefined}
                 tabIndex={onUpdate ? 0 : undefined}
@@ -280,8 +262,26 @@ export function ApiKeysList({
                   </div>
                 )}
               </div>
-              </Wrapper>
             )
+            if (projectId) {
+              return (
+                <ApiKeyContextMenu
+                  key={apiKey.id}
+                  projectId={projectId}
+                  apiKey={{
+                    id: apiKey.id,
+                    name: apiKey.name,
+                    key: apiKey.key,
+                    scopes: apiKey.scopes,
+                    expire: apiKey.expire,
+                  }}
+                  onUpdate={onUpdate}
+                >
+                  {row}
+                </ApiKeyContextMenu>
+              )
+            }
+            return <Fragment key={apiKey.id}>{row}</Fragment>
           })}
         </div>
       </div>

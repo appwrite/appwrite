@@ -44,6 +44,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { ApiKeysList, type ApiKey } from '../shared/ApiKeysList'
 import { ApiKeyDrawer } from '../api-keys/ApiKeyDrawer'
 import { PlatformDrawer } from '../apps/_components/PlatformDrawer'
+import { PlatformContextMenu } from '../apps/_components/PlatformContextMenu'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
@@ -717,29 +718,38 @@ export function View({ projectId, initialData }: ViewProps) {
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {integrations.map((integration) => (
-                <button
+                <PlatformContextMenu
                   key={integration.id}
-                  type="button"
-                  onClick={() => {
-                    setSelectedPlatform(integration.platform)
+                  projectId={projectId}
+                  platform={integration.platform}
+                  onUpdate={(p) => {
+                    setSelectedPlatform(p)
                     setPlatformDrawerOpen(true)
                   }}
-                  className="group flex cursor-pointer items-center gap-4 rounded-xl border border-border bg-card/50 p-4 text-left transition-colors hover:border-border hover:bg-card"
                 >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground transition-colors group-hover:bg-accent group-hover:text-foreground">
-                    {integration.icon}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[14px] font-medium text-foreground">
-                      {integration.name}
-                    </p>
-                    {integration.identifier && (
-                      <p className="text-[12px] text-muted-foreground">
-                        {integration.identifier}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedPlatform(integration.platform)
+                      setPlatformDrawerOpen(true)
+                    }}
+                    className="group flex cursor-pointer items-center gap-4 rounded-xl border border-border bg-card/50 p-4 text-left transition-colors hover:border-border hover:bg-card"
+                  >
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground transition-colors group-hover:bg-accent group-hover:text-foreground">
+                      {integration.icon}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[14px] font-medium text-foreground">
+                        {integration.name}
                       </p>
-                    )}
-                  </div>
-                </button>
+                      {integration.identifier && (
+                        <p className="text-[12px] text-muted-foreground">
+                          {integration.identifier}
+                        </p>
+                      )}
+                    </div>
+                  </button>
+                </PlatformContextMenu>
               ))}
             </div>
           )}
@@ -834,6 +844,7 @@ export function View({ projectId, initialData }: ViewProps) {
               onCopy={copyToClipboard}
               copiedField={copiedField}
               showActions={true}
+              projectId={projectId}
             />
           )}
         </div>

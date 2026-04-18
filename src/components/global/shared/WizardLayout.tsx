@@ -198,7 +198,7 @@ export function WizardLayout({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [handleClose])
   const containerClasses = fullscreen
-    ? 'fixed inset-0 z-[9998] flex h-screen w-screen flex-col bg-background'
+    ? 'fixed inset-0 z-[9998] flex h-[100dvh] max-h-[100dvh] w-screen flex-col overflow-hidden bg-background'
     : 'flex h-full flex-col'
 
   const headerClasses = fullscreen
