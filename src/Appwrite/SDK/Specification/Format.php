@@ -263,6 +263,182 @@ abstract class Format
         return $contents;
     }
 
+    /**
+     * @param array<Model> $models
+     * @return array<string, mixed>|null
+     */
+    protected function getDiscriminator(array $models, string $refPrefix): ?array
+    {
+        if (\count($models) < 2) {
+            return null;
+        }
+
+        $candidateKeys = \array_keys($models[0]->conditions);
+
+        foreach (\array_slice($models, 1) as $model) {
+            $candidateKeys = \array_values(\array_intersect($candidateKeys, \array_keys($model->conditions)));
+        }
+
+        if (empty($candidateKeys)) {
+            return null;
+        }
+
+        foreach ($candidateKeys as $key) {
+            $mapping = [];
+            $isValid = true;
+
+            foreach ($models as $model) {
+                $rules = $model->getRules();
+                $condition = $model->conditions[$key] ?? null;
+
+                if (!isset($rules[$key]) || ($rules[$key]['required'] ?? false) !== true) {
+                    $isValid = false;
+                    break;
+                }
+
+                if (!\is_array($condition)) {
+                    if (!\is_scalar($condition)) {
+                        $isValid = false;
+                        break;
+                    }
+
+                    $values = [$condition];
+                } else {
+                    if ($condition === []) {
+                        $isValid = false;
+                        break;
+                    }
+
+                    $values = $condition;
+                    $hasInvalidValue = false;
+
+                    foreach ($values as $value) {
+                        if (!\is_scalar($value)) {
+                            $hasInvalidValue = true;
+                            break;
+                        }
+                    }
+
+                    if ($hasInvalidValue) {
+                        $isValid = false;
+                        break;
+                    }
+                }
+
+                if (isset($rules[$key]['enum']) && \is_array($rules[$key]['enum'])) {
+                    $values = \array_values(\array_filter(
+                        $values,
+                        fn (mixed $value) => \in_array($value, $rules[$key]['enum'], true)
+                    ));
+                }
+
+                if ($values === []) {
+                    $isValid = false;
+                    break;
+                }
+
+                $ref = $refPrefix . $model->getType();
+
+                foreach ($values as $value) {
+                    $mappingKey = \is_bool($value) ? ($value ? 'true' : 'false') : (string) $value;
+
+                    if (isset($mapping[$mappingKey]) && $mapping[$mappingKey] !== $ref) {
+                        $isValid = false;
+                        break;
+                    }
+
+                    $mapping[$mappingKey] = $ref;
+                }
+
+                if (!$isValid) {
+                    break;
+                }
+            }
+
+            if (!$isValid || $mapping === []) {
+                continue;
+            }
+
+            return [
+                'propertyName' => $key,
+                'mapping' => $mapping,
+            ];
+        }
+
+        // Single-key failed — try compound discriminator
+        return $this->getCompoundDiscriminator($models, $refPrefix);
+    }
+
+    /**
+     * @param array<Model> $models
+     * @return array<string, mixed>|null
+     */
+    private function getCompoundDiscriminator(array $models, string $refPrefix): ?array
+    {
+        $allKeys = [];
+        foreach ($models as $model) {
+            foreach (\array_keys($model->conditions) as $key) {
+                if (!\in_array($key, $allKeys, true)) {
+                    $allKeys[] = $key;
+                }
+            }
+        }
+
+        if (\count($allKeys) < 2) {
+            return null;
+        }
+
+        $primaryKey = $allKeys[0];
+        $primaryMapping = [];
+        $compoundMapping = [];
+
+        foreach ($models as $model) {
+            $rules = $model->getRules();
+            $conditions = [];
+
+            foreach ($model->conditions as $key => $condition) {
+                if (!isset($rules[$key]) || ($rules[$key]['required'] ?? false) !== true) {
+                    return null;
+                }
+
+                if (!\is_scalar($condition)) {
+                    return null;
+                }
+
+                $conditions[$key] = \is_bool($condition) ? ($condition ? 'true' : 'false') : (string) $condition;
+            }
+
+            if (empty($conditions)) {
+                return null;
+            }
+
+            $ref = $refPrefix . $model->getType();
+            $compoundMapping[$ref] = $conditions;
+
+            // Best-effort single-key mapping — last model with this value wins (fallback)
+            if (isset($conditions[$primaryKey])) {
+                $primaryMapping[$conditions[$primaryKey]] = $ref;
+            }
+        }
+
+        // Verify compound uniqueness
+        $seen = [];
+        foreach ($compoundMapping as $conditions) {
+            $sig = \json_encode($conditions, JSON_THROW_ON_ERROR);
+            if (isset($seen[$sig])) {
+                return null;
+            }
+            $seen[$sig] = true;
+        }
+
+        return \array_filter([
+            'propertyName' => $primaryKey,
+            'mapping' => !empty($primaryMapping) ? $primaryMapping : null,
+            'x-propertyNames' => $allKeys,
+            'x-mapping' => $compoundMapping,
+        ]);
+    }
+
     protected function getRequestEnumName(string $service, string $method, string $param): ?string
     {
         /* `$service` is `$namespace` */
@@ -593,16 +769,6 @@ abstract class Format
                                 return 'EmailTemplateType';
                             case 'locale':
                                 return 'EmailTemplateLocale';
-                        }
-                        break;
-                    case 'getSmsTemplate':
-                    case 'updateSmsTemplate':
-                    case 'deleteSmsTemplate':
-                        switch ($param) {
-                            case 'type':
-                                return 'SmsTemplateType';
-                            case 'locale':
-                                return 'SmsTemplateLocale';
                         }
                         break;
                     case 'createPlatform':
