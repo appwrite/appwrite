@@ -559,23 +559,19 @@ code {
     color: oklch(0.14 0.03 285);
   }
 
-  /* Root height chain: use the dynamic viewport (100dvh) so layout matches the
-     actually visible area on iOS Safari, iPadOS, and Android. Older units
-     (100vh, -webkit-fill-available) refer to the *layout* viewport — taller
-     than visible when browser chrome is on screen — which leaves empty space
-     below the app footer when the URL bar collapses.
-
-     The `height: 100%` line is a safe fallback for the (now rare) browsers
-     without dvh support. dvh is supported in Safari 15.4+, Chrome 108+, FF 101+. */
+  /* Base document setup. We deliberately keep html/body at `height: 100%` and
+     do NOT set them to 100dvh — on iOS Safari, sizing body via dvh + overflow:
+     hidden produces a body that's slightly shorter than the visual viewport
+     (a known WebKit quirk), which leaves an empty band at the bottom of the
+     screen. Instead, the root container below uses `position: fixed; inset: 0`
+     to pin directly to the visual viewport, bypassing the html/body chain. */
   html {
     height: 100%;
-    height: 100dvh;
     overscroll-behavior: none;
   }
 
   body {
     height: 100%;
-    height: 100dvh;
     overflow: hidden;
     overscroll-behavior: none;
   }
@@ -587,16 +583,16 @@ code {
     overscroll-behavior: none;
   }
 
-  /* Root container fills the dynamic viewport exactly — no taller, no shorter.
-     Do NOT apply safe-area padding here: padding on the outer container shrinks
-     the entire layout (sidebar, header, footer) and leaves a visible empty band
-     at the bottom of the viewport. Backgrounds should extend edge-to-edge under
-     the iOS home indicator (which is a translucent overlay). Individual
-     bottom-anchored *content* (e.g. floating buttons, bottom sheets) should
-     opt into `padding-bottom: env(safe-area-inset-bottom)` themselves. */
+  /* Root container is pinned to the visual viewport via `position: fixed`.
+     This is the most reliable way to fill the actually visible area on iOS
+     Safari/iPadOS regardless of URL-bar state, address-bar collapse, or the
+     html/body height chain. On every other platform `position: fixed` with
+     `inset: 0` resolves to the viewport too, so this works universally. */
   .root-container {
+    position: fixed;
+    inset: 0;
+    width: 100%;
     height: 100dvh;
-    max-height: 100dvh;
   }
 
   /* Mobile/tablet flex constraints. The root chain already sizes to 100dvh, so
