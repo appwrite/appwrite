@@ -254,7 +254,19 @@ class Executor
         if (is_string($headers)) {
             $headers = \json_decode($headers, true);
         }
+        $logs = $response['body']['logs'] ?? $response['body']['stdout'] ?? '';
+        if (\is_array($logs)) {
+            $logs = \implode("\n", $logs);
+        }
+
+        $errors = $response['body']['errors'] ?? $response['body']['stderr'] ?? '';
+        if (\is_array($errors)) {
+            $errors = \implode("\n", $errors);
+        }
+
         $response['body']['headers'] = $headers;
+        $response['body']['logs'] = $logs;
+        $response['body']['errors'] = $errors;
         $response['body']['statusCode'] = \intval($response['body']['statusCode'] ?? 500);
         $response['body']['duration'] = \floatval($response['body']['duration'] ?? 0);
         $response['body']['startTime'] = \floatval($response['body']['startTime'] ?? \microtime(true));
