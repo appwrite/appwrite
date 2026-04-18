@@ -189,7 +189,7 @@ export function CsvImportBox({ projectId }: CsvImportBoxProps) {
           aria-modal="true"
         >
           <div
-            className="rounded-lg border border-border bg-card p-4 max-w-md max-h-[80vh] overflow-auto shadow-xl"
+            className="rounded-lg border border-border bg-card p-4 max-w-md max-h-[80dvh] overflow-auto shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-[13px] font-semibold mb-2">

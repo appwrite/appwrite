@@ -176,7 +176,7 @@ export function UploadFile({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md p-0 max-h-[85vh] overflow-hidden">
+      <DialogContent className="sm:max-w-md p-0 max-h-[85dvh] overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-4 text-left">
           <DialogTitle>
             {files.length > 1 ? 'Create files' : 'Create file'}
@@ -188,7 +188,7 @@ export function UploadFile({
         <div className="border-t border-border" />
 
         <form onSubmit={handleSubmit}>
-          <div className="px-6 pb-4 pt-0 space-y-4 max-h-[60vh] overflow-y-auto">
+          <div className="px-6 pb-4 pt-0 space-y-4 max-h-[60dvh] overflow-y-auto">
             {/* File Upload */}
             <div className="space-y-2">
               <Label htmlFor="file-upload">

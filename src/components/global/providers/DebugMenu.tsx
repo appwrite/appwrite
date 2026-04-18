@@ -708,7 +708,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           side="top"
           align="end"
           sideOffset={8}
-          className="z-[10060] w-80 max-h-[85vh] overflow-hidden rounded-xl border border-[#9B87F5]/25 bg-[#1A1F2C] p-0 shadow-xl"
+          className="z-[10060] w-80 max-h-[85dvh] overflow-hidden rounded-xl border border-[#9B87F5]/25 bg-[#1A1F2C] p-0 shadow-xl"
         >
           <div className="sticky top-0 z-10 border-b border-[#9B87F5]/20 bg-[#1A1F2C]/95 px-4 py-3 backdrop-blur-sm">
             <div className="flex items-center gap-2">
@@ -729,7 +729,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
 
           <div
             className="overflow-y-auto p-3"
-            style={{ maxHeight: 'calc(85vh - 52px)' }}
+            style={{ maxHeight: 'calc(85dvh - 52px)' }}
           >
             {currentSubmenu ? (
               <nav className="space-y-0.5" aria-label={currentSubmenu.title}>

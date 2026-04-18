@@ -80,7 +80,7 @@ export function VerifyDomainDialog({
           <DialogTitle>Verify {rule.domain}</DialogTitle>
         </DialogHeader>
         <div className="border-t border-border" />
-        <div className="px-6 py-4 max-h-[70vh] overflow-y-auto">
+        <div className="px-6 py-4 max-h-[70dvh] overflow-y-auto">
           <VerifyDomainContent
             rule={rule}
             region={region}

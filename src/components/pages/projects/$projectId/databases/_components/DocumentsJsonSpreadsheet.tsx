@@ -383,7 +383,7 @@ export function DocumentsJsonSpreadsheet({
         </>
       ) : (
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row">
-          <div className="flex max-h-[min(40vh,300px)] min-h-0 w-full shrink-0 flex-col border-b border-border md:max-h-none md:w-[min(420px,42%)] md:min-w-[260px] md:border-b-0 md:border-r">
+          <div className="flex max-h-[min(40dvh,300px)] min-h-0 w-full shrink-0 flex-col border-b border-border md:max-h-none md:w-[min(420px,42%)] md:min-w-[260px] md:border-b-0 md:border-r">
             <div className="min-h-0 min-w-0 flex-1 overflow-auto">
               <Table>
               <TableHeader>
@@ -488,7 +488,7 @@ export function DocumentsJsonSpreadsheet({
             </div>
           </div>
 
-          <div className="flex min-h-[min(36vh,240px)] min-w-0 flex-1 flex-col overflow-hidden bg-muted/20 md:min-h-0">
+          <div className="flex min-h-[min(36dvh,240px)] min-w-0 flex-1 flex-col overflow-hidden bg-muted/20 md:min-h-0">
             {previewRow ? (
               <pre className="min-h-0 flex-1 overflow-auto overflow-x-auto p-3 font-mono text-[11px] leading-relaxed text-foreground sm:p-4 sm:text-[12px]">
                 {documentPayloadJson(previewRow)}

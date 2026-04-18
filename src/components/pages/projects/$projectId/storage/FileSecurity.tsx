@@ -701,7 +701,7 @@ export function FileSecurity() {
           }
         }}
       >
-        <DialogContent className="sm:max-w-[600px] p-0 max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogContent className="sm:max-w-[600px] p-0 max-h-[90dvh] overflow-hidden flex flex-col">
           <DialogHeader className="px-6 pt-6 text-left shrink-0">
             <DialogTitle>Copy File URL</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">

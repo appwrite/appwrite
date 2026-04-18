@@ -43,7 +43,7 @@ export function VariableEditor({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="sm:max-w-3xl p-0 max-h-[90vh] flex flex-col"
+        className="sm:max-w-3xl p-0 max-h-[90dvh] flex flex-col"
         onEscapeKeyDown={(e) => e.stopPropagation()}
       >
         <DialogHeader className="px-6 pt-6 text-left">

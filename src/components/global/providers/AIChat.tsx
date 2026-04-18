@@ -830,7 +830,7 @@ function MessageAttachments({
             </div>
           }
         >
-          <div className="flex min-h-[calc(100vh-140px)] w-full flex-col bg-background p-4 sm:p-6">
+          <div className="flex min-h-[calc(100dvh-140px)] w-full flex-col bg-background p-4 sm:p-6">
             <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-auto p-2 sm:p-4">
               {!isFullscreenImageLoaded ? (
                 <div className="absolute inset-0 flex items-center justify-center bg-background/70 backdrop-blur-[1px]">
@@ -851,7 +851,7 @@ function MessageAttachments({
                   })
                 }
                 className={cn(
-                  'h-auto max-h-[calc(100vh-320px)] w-full max-w-[1400px] rounded-lg object-contain transition-opacity duration-300 select-none',
+                  'h-auto max-h-[calc(100dvh-320px)] w-full max-w-[1400px] rounded-lg object-contain transition-opacity duration-300 select-none',
                   fullscreenZoom > 1
                     ? isPanningRef.current
                       ? 'cursor-grabbing'

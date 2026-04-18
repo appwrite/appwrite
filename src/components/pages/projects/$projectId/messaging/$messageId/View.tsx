@@ -1449,7 +1449,7 @@ function TopicsSelectionModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl p-0 max-h-[80vh] flex flex-col">
+      <DialogContent className="sm:max-w-2xl p-0 max-h-[80dvh] flex flex-col">
         <DialogHeader className="px-6 pt-6 text-left">
           <DialogTitle>Select topics</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
@@ -1614,7 +1614,7 @@ function TargetsSelectionModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl p-0 max-h-[80vh] flex flex-col">
+      <DialogContent className="sm:max-w-2xl p-0 max-h-[80dvh] flex flex-col">
         <DialogHeader className="px-6 pt-6 text-left">
           <DialogTitle>Select targets</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">

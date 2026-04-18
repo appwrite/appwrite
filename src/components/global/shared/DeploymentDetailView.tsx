@@ -1803,7 +1803,7 @@ export function DeploymentDetailView({
             </div>
           </div>
 
-          <aside className="flex max-h-[min(45vh,22rem)] min-h-0 w-full shrink-0 flex-col overflow-y-auto border-t border-border bg-muted/15 px-4 py-3 sm:px-5 lg:max-h-none lg:w-[min(100%,20rem)] lg:px-6 xl:w-[min(100%,22rem)] lg:border-t-0 lg:bg-muted/10 lg:py-3">
+          <aside className="flex max-h-[min(45dvh,22rem)] min-h-0 w-full shrink-0 flex-col overflow-y-auto border-t border-border bg-muted/15 px-4 py-3 sm:px-5 lg:max-h-none lg:w-[min(100%,20rem)] lg:px-6 xl:w-[min(100%,22rem)] lg:border-t-0 lg:bg-muted/10 lg:py-3">
             {deploymentDetailSidebar}
           </aside>
         </div>

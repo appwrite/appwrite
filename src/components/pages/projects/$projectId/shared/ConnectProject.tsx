@@ -1391,7 +1391,7 @@ export function ConnectProject({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-6xl h-[70vh] max-h-[70vh] p-0 gap-0 flex flex-col overflow-hidden">
+      <DialogContent className="sm:max-w-6xl h-[70dvh] max-h-[70dvh] p-0 gap-0 flex flex-col overflow-hidden">
         <DialogHeader className="shrink-0 px-6 pt-6 pb-4 text-left">
           <DialogTitle>Connect to your project</DialogTitle>
         </DialogHeader>

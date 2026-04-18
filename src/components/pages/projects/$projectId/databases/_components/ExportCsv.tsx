@@ -147,7 +147,7 @@ export function ExportCsv({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-xl max-h-[90vh] flex flex-col p-0">
+      <DialogContent className="sm:max-w-xl max-h-[90dvh] flex flex-col p-0">
         <DialogHeader className="px-6 pt-6 pb-4 text-left shrink-0">
           <DialogTitle>Export CSV</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">

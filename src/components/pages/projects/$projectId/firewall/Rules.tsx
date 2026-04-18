@@ -600,7 +600,7 @@ export function RulesTab({ searchValue }: RulesTabProps) {
 
       {/* Create Rule Dialog */}
       <Dialog open={creatingRule} onOpenChange={setCreatingRule}>
-        <DialogContent className="sm:max-w-2xl p-0 max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-2xl p-0 max-h-[90dvh] overflow-y-auto">
           <DialogHeader className="px-6 pt-6 text-left">
             <DialogTitle>Create firewall rule</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
@@ -861,7 +861,7 @@ export function RulesTab({ searchValue }: RulesTabProps) {
         open={editingRule !== null}
         onOpenChange={(open) => !open && setEditingRule(null)}
       >
-        <DialogContent className="sm:max-w-2xl p-0 max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-2xl p-0 max-h-[90dvh] overflow-y-auto">
           <DialogHeader className="px-6 pt-6 text-left">
             <DialogTitle>Update firewall rule</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">

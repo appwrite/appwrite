@@ -413,7 +413,7 @@ export function Templates({ projectId }: TemplatesProps) {
                 {EMAIL_TEMPLATE_TYPES.length} templates
               </p>
             </div>
-            <div className="divide-y divide-border max-h-[60vh] overflow-y-auto @[640px]:max-h-none">
+            <div className="divide-y divide-border max-h-[60dvh] overflow-y-auto @[640px]:max-h-none">
               {EMAIL_TEMPLATE_TYPES.map((templateConfig) => {
                 const isSelected = selectedType === templateConfig.type
                 return (

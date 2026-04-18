@@ -536,7 +536,7 @@ export function View() {
 
   return (
     <SidebarProvider>
-      <div className="flex h-screen w-full">
+      <div className="flex h-dvh w-full">
         <Sidebar className="border-r">
           <SidebarContent>
             <SidebarGroup>

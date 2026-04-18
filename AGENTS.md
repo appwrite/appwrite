@@ -419,6 +419,36 @@ Example (DNS records on domain detail): `src/lib/table-filters/filter-configs/dn
 - **Button icon spacing**: Use `mr-1.5` or `gap-1.5`, not `mr-2` or larger
 - **Date tooltips**: Always include when showing dates for timezone clarity
 
+### Viewport units (CRITICAL — fixes mobile/iPad layout bugs)
+
+**Never use `vh`** (or `h-screen`, `min-h-screen`, `max-h-screen`). On iOS Safari, iPadOS, Chrome on Android, and any browser with a dynamic toolbar, `100vh` refers to the *layout viewport*, which is taller than the actually visible viewport when browser chrome (URL bar, toolbar) is on screen. Anything sized via `vh` extends below the visible area, hiding sticky footers, CTAs, and dialog actions.
+
+**Always use the dynamic viewport units instead:**
+
+- **`dvh` / `dvw`** — dynamic viewport (resizes when chrome appears/hides). Default choice for most layouts.
+- **`svh` / `svw`** — small viewport (smallest possible). Use for `min-h-svh` on full-page auth-style screens where you never want the layout to jump.
+- **`lvh` / `lvw`** — large viewport (largest possible). Rarely needed.
+
+**Tailwind tokens:**
+
+```tsx
+// Correct
+<div className="h-dvh">          {/* fullscreen overlay */}
+<div className="min-h-svh">      {/* full-page screen */}
+<div className="h-[100dvh]">     {/* fullscreen wizard / dialog */}
+<div className="max-h-[90dvh]"> {/* tall dialog content */}
+<div className="max-h-[min(40dvh,300px)]"> {/* responsive cap */}
+
+// Wrong — will be cut off on iPad/mobile
+<div className="h-screen">
+<div className="max-h-[90vh]">
+<div style={{ height: 'calc(100vh - 4rem)' }}>
+```
+
+**Inline styles** must use the same units (`'100dvh'`, `'calc(85dvh - 52px)'`, etc.).
+
+**Reference**: `src/components/global/shared/WizardLayout.tsx` — the fullscreen wizard container uses `h-[100dvh] max-h-[100dvh] overflow-hidden` so the inner flex layout (`shrink-0` header + `flex-1 min-h-0 overflow-y-auto` content + `shrink-0` footer) always reserves space for the sticky footer.
+
 ### Badge style
 
 Use the status-style badge variants so all badges share the same design (tinted background, colored text, subtle border) and differ only by color. Do not mix in solid variants like `destructive` or `secondary` for status/labels when a status variant exists.

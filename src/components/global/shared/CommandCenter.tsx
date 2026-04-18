@@ -1791,7 +1791,7 @@ export function CommandCenter({
           <CommandList
             className={cn(
               'p-2',
-              isMobile ? 'flex-1 min-h-0' : 'h-[min(600px,70vh)]',
+              isMobile ? 'flex-1 min-h-0' : 'h-[min(600px,70dvh)]',
             )}
           >
             <CommandEmpty className="py-6 text-center text-[13px] text-muted-foreground">

@@ -772,7 +772,7 @@ function TemplateCatalogFilters({
   return (
     <div
       className={cn(
-        'flex max-h-[min(70vh,calc(100vh-10rem))] flex-col gap-5',
+        'flex max-h-[min(70dvh,calc(100dvh-10rem))] flex-col gap-5',
         className,
       )}
     >
@@ -1351,7 +1351,7 @@ export function View() {
               onClearUseCases={clearUseCases}
               onSelectAllRuntimes={selectAllRuntimes}
               onClearRuntimes={clearRuntimes}
-              className="max-h-[min(55vh,26rem)] lg:max-h-none"
+              className="max-h-[min(55dvh,26rem)] lg:max-h-none"
             />
           </div>
           {listError ? (

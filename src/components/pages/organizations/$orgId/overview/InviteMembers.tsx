@@ -253,7 +253,7 @@ export function InviteMembersDialog({
         </DialogHeader>
         <div className="border-t border-border" />
 
-        <div className="px-6 pb-4 pt-0 max-h-[60vh] overflow-y-auto">
+        <div className="px-6 pb-4 pt-0 max-h-[60dvh] overflow-y-auto">
           {/* Member Limit Warning */}
           {memberLimit !== null &&
             memberLimit > 0 &&

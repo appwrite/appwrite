@@ -9178,7 +9178,7 @@ function RowsSpreadsheet({
               ? cn(
                   'shrink-0 border-border',
                   isDocumentsStackedLayout
-                    ? 'max-h-[min(42vh,320px)] w-full border-b'
+                    ? 'max-h-[min(42dvh,320px)] w-full border-b'
                     : 'border-r',
                   paginatedRows.length === 0 && 'border-t border-border',
                 )
@@ -9186,7 +9186,7 @@ function RowsSpreadsheet({
           )}
         >
           {useInlineDocumentPane && paginatedRows.length === 0 ? (
-            <div className="flex min-h-[min(240px,40vh)] flex-col items-stretch justify-center px-4 py-8">
+            <div className="flex min-h-[min(240px,40dvh)] flex-col items-stretch justify-center px-4 py-8">
               <EmptyState
                 icon={FileText}
                 title={
@@ -9705,7 +9705,7 @@ function RowsSpreadsheet({
             className={cn(
               'flex min-h-0 min-w-0 flex-1 flex-col bg-muted/10',
               isDocumentsStackedLayout
-                ? 'min-h-[min(46vh,360px)] border-t-0'
+                ? 'min-h-[min(46dvh,360px)] border-t-0'
                 : 'min-w-[280px] border-t border-border',
             )}
           >

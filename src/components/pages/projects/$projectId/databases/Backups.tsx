@@ -1173,7 +1173,7 @@ function CreatePolicyDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-2xl p-0 max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-2xl p-0 max-h-[90dvh] overflow-y-auto">
         <DialogHeader className="px-6 pt-6 text-left">
           <DialogTitle>Create backup policy</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
@@ -1596,7 +1596,7 @@ function RestoreBackupDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-2xl p-0 max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-2xl p-0 max-h-[90dvh] overflow-y-auto">
         <DialogHeader className="px-6 pt-6 pb-5 text-left">
           <DialogTitle>Restore backup</DialogTitle>
         </DialogHeader>

@@ -431,7 +431,7 @@ export function GitConfigurationCard({
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
-          <div className="px-6 pb-4 pt-0 max-h-[60vh] overflow-y-auto">
+          <div className="px-6 pb-4 pt-0 max-h-[60dvh] overflow-y-auto">
             {(functionsLoading || sitesLoading) && (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />

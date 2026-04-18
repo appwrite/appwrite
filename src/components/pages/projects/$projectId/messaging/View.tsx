@@ -1102,7 +1102,7 @@ export function View() {
             </DialogHeader>
             <div className="border-t border-border" />
             <div className="px-6 pb-4 pt-0">
-              <pre className="mt-4 max-h-[min(360px,50vh)] overflow-auto whitespace-pre-wrap break-words rounded-md border border-border bg-muted/30 p-4 text-[12px] text-foreground">
+              <pre className="mt-4 max-h-[min(360px,50dvh)] overflow-auto whitespace-pre-wrap break-words rounded-md border border-border bg-muted/30 p-4 text-[12px] text-foreground">
                 {(deliveryErrorLines ?? []).join('\n')}
               </pre>
             </div>

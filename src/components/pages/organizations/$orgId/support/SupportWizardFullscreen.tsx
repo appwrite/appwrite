@@ -390,7 +390,7 @@ export function SupportWizardFullscreen() {
         footerAlign="right"
         footer={<Button onClick={handleCancel}>Done</Button>}
       >
-        <div className="flex min-h-[70vh] flex-col items-center justify-center py-12 px-4">
+        <div className="flex min-h-[70dvh] flex-col items-center justify-center py-12 px-4">
           <div className="w-full max-w-xl flex flex-col items-center text-center">
             <div className="mb-6 flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-emerald-500/10">
               <CheckCircle2

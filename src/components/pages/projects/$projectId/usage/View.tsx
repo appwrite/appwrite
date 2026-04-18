@@ -282,7 +282,7 @@ function MobileCategoryDrawer({
             Usage Categories
           </SheetTitle>
         </SheetHeader>
-        <ScrollArea className="h-[calc(100vh-65px)]">
+        <ScrollArea className="h-[calc(100dvh-65px)]">
           <div className="p-3">
             <CategoryNavigation
               categories={categories}

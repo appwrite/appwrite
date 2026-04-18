@@ -362,7 +362,7 @@ export function ImportCsv({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
-        className="!flex flex-col gap-0 p-0 max-h-[90vh] !max-w-[min(95vw,1100px)] w-full overflow-hidden"
+        className="!flex flex-col gap-0 p-0 max-h-[90dvh] !max-w-[min(95vw,1100px)] w-full overflow-hidden"
         style={{ width: MODAL_WIDTH, height: MODAL_HEIGHT }}
       >
         <DialogHeader className="px-6 pt-6 pb-4 text-left shrink-0">

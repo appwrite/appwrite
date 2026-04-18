@@ -470,7 +470,7 @@ export function BuyDomainWizard({
             'transition-[min-height] duration-300 ease-out',
             hasContent
               ? 'min-h-0'
-              : 'flex min-h-[50vh] flex-1 items-center justify-center',
+              : 'flex min-h-[50dvh] flex-1 items-center justify-center',
           )}
         >
           <div className="w-full max-w-md space-y-2">

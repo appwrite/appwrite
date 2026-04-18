@@ -319,7 +319,7 @@ export function GitRepositoryCard({
                   </DialogDescription>
                 </DialogHeader>
                 <div className="border-t border-border" />
-                <div className="px-6 pb-4 pt-4 max-h-[70vh] overflow-y-auto">
+                <div className="px-6 pb-4 pt-4 max-h-[70dvh] overflow-y-auto">
                   <RepositoryPicker
                     projectId={projectId}
                     getGitHubAuthUrl={getGitHubAuthUrl}
