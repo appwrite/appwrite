@@ -559,21 +559,23 @@ code {
     color: oklch(0.14 0.03 285);
   }
 
-  /* Mobile touch scrolling improvements.
-     Use height: 100% (not 100vh) so visible viewport matches when address bar is shown.
-     See: https://stackoverflow.com/questions/52848856/100vh-height-when-address-bar-is-shown-chrome-mobile */
+  /* Root height chain: use the dynamic viewport (100dvh) so layout matches the
+     actually visible area on iOS Safari, iPadOS, and Android. Older units
+     (100vh, -webkit-fill-available) refer to the *layout* viewport — taller
+     than visible when browser chrome is on screen — which leaves empty space
+     below the app footer when the URL bar collapses.
+
+     The `height: 100%` line is a safe fallback for the (now rare) browsers
+     without dvh support. dvh is supported in Safari 15.4+, Chrome 108+, FF 101+. */
   html {
     height: 100%;
-    min-height: 100%;
-    min-height: -webkit-fill-available;
+    height: 100dvh;
     overscroll-behavior: none;
   }
 
-  /* Ensure body uses proper height and prevents scrolling */
   body {
     height: 100%;
-    min-height: 100%;
-    min-height: -webkit-fill-available;
+    height: 100dvh;
     overflow: hidden;
     overscroll-behavior: none;
   }
@@ -585,43 +587,33 @@ code {
     overscroll-behavior: none;
   }
 
-  /* Root container: use 100% height (visible viewport) not vh.
-     Combined with html/body height:100%, this avoids bottom trim when address bar is visible.
-     min-height: 100svh ensures fill on devices where the percentage chain fails (small viewport = no reflow). */
+  /* Root container fills the dynamic viewport exactly — no taller, no shorter.
+     Safe-area insets keep content above the iOS home indicator. */
   .root-container {
-    height: 100%;
-    min-height: 100%;
-    min-height: -webkit-fill-available;
-    min-height: 100svh;
-  }
-
-  /* Safe area insets for iPad/iPhone - prevent content from being trimmed by home indicator */
-  .root-container {
+    height: 100dvh;
+    max-height: 100dvh;
     padding-bottom: env(safe-area-inset-bottom, 0px);
     padding-left: env(safe-area-inset-left, 0px);
     padding-right: env(safe-area-inset-right, 0px);
   }
 
-  /* On mobile/tablet, ensure flex layout properly accounts for header height */
+  /* Mobile/tablet flex constraints. The root chain already sizes to 100dvh, so
+     these rules only need to ensure inner flex containers stay bounded and
+     scroll regions claim remaining space. */
   @media (max-width: 1024px) {
-    /* Ensure the root scroll container doesn't scroll (includes iPad) */
     .root-scroll-container {
       display: flex;
       flex-direction: column;
       height: 100%;
-      min-height: -webkit-fill-available;
       max-height: 100%;
     }
 
-    /* Ensure main content area properly calculates available height */
     main[class*='overflow-y-auto'] {
-      /* Use flex-1 to take remaining space after header */
       flex: 1 1 0%;
       min-height: 0;
       max-height: 100%;
     }
 
-    /* Ensure the flex container properly constrains children */
     .project-layout-container > div[class*='flex'][class*='flex-1'],
     .org-layout-container > div[class*='flex'][class*='flex-1'],
     .account-layout-container > div[class*='flex'][class*='flex-1'],
@@ -638,46 +630,6 @@ code {
       height: 100%;
       max-height: 100%;
       overflow: hidden;
-    }
-  }
-
-  /* Additional iOS-specific fixes (iPad + iPhone) */
-  @supports (-webkit-touch-callout: none) {
-    @media (max-width: 1024px) {
-      .root-container {
-        min-height: -webkit-fill-available;
-      }
-
-      .root-scroll-container {
-        min-height: -webkit-fill-available;
-      }
-
-      /* Ensure flex containers properly constrain on iOS */
-      .project-layout-container,
-      .org-layout-container,
-      .account-layout-container,
-      .domain-detail-layout-container {
-        display: flex;
-        flex-direction: column;
-        position: relative;
-      }
-
-      .project-layout-container > div[class*='flex'][class*='flex-1'],
-      .org-layout-container > div[class*='flex'][class*='flex-1'],
-      .account-layout-container > div[class*='flex'][class*='flex-1'],
-      .domain-detail-layout-container > div[class*='flex'][class*='flex-1'] {
-        min-height: 0;
-        max-height: 100%;
-        overflow: hidden;
-        position: relative;
-      }
-
-      /* Ensure content areas can scroll on iOS */
-      .org-layout-container > div[class*='overflow-y-auto'],
-      .account-layout-container > div[class*='overflow-y-auto'],
-      .domain-detail-layout-container > div[class*='overflow-y-auto'] {
-        max-height: 100%;
-      }
     }
   }
 }
