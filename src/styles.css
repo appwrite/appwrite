@@ -588,13 +588,15 @@ code {
   }
 
   /* Root container fills the dynamic viewport exactly — no taller, no shorter.
-     Safe-area insets keep content above the iOS home indicator. */
+     Do NOT apply safe-area padding here: padding on the outer container shrinks
+     the entire layout (sidebar, header, footer) and leaves a visible empty band
+     at the bottom of the viewport. Backgrounds should extend edge-to-edge under
+     the iOS home indicator (which is a translucent overlay). Individual
+     bottom-anchored *content* (e.g. floating buttons, bottom sheets) should
+     opt into `padding-bottom: env(safe-area-inset-bottom)` themselves. */
   .root-container {
     height: 100dvh;
     max-height: 100dvh;
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-    padding-left: env(safe-area-inset-left, 0px);
-    padding-right: env(safe-area-inset-right, 0px);
   }
 
   /* Mobile/tablet flex constraints. The root chain already sizes to 100dvh, so
