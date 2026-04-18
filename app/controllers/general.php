@@ -592,7 +592,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 memory: $spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT,
                 logging: $resource->getAttribute('logging', true),
                 requestTimeout: 30,
-                responseFormat: Executor::RESPONSE_FORMAT_ARRAY_HEADERS
+                responseFormat: $type === 'function' ? Executor::RESPONSE_FORMAT_OBJECT_HEADERS : Executor::RESPONSE_FORMAT_ARRAY_HEADERS
             );
 
             $headerOverrides = [];
