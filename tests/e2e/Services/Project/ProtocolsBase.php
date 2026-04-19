@@ -241,6 +241,33 @@ trait ProtocolsBase
         $this->assertSame(404, $response['headers']['status-code']);
     }
 
+    // Backwards compatibility
+
+    public function testUpdateProtocolLegacyStatusPath(): void
+    {
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        // Disable via the legacy `/status` alias
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/protocols/rest/status', $headers, [
+            'enabled' => false,
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertSame(false, $response['body']['protocolStatusForRest']);
+
+        // Re-enable via the legacy `/status` alias
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/protocols/rest/status', $headers, [
+            'enabled' => true,
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(true, $response['body']['protocolStatusForRest']);
+    }
+
     // Helpers
 
     protected function updateProtocolStatus(string $protocolId, bool $enabled, bool $authenticated = true): mixed
@@ -254,7 +281,7 @@ trait ProtocolsBase
             $headers = array_merge($headers, $this->getHeaders());
         }
 
-        return $this->client->call(Client::METHOD_PATCH, '/project/protocols/' . $protocolId . '/status', $headers, [
+        return $this->client->call(Client::METHOD_PATCH, '/project/protocols/' . $protocolId, $headers, [
             'enabled' => $enabled,
         ]);
     }

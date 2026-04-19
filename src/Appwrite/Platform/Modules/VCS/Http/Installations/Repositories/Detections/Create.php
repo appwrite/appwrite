@@ -307,6 +307,7 @@ class Create extends Action
             ];
         }
 
+        $output->setAttribute('type', $type);
         $output->setAttribute('variables', $variables);
 
         $response->dynamic($output, $type === 'framework' ? Response::MODEL_DETECTION_FRAMEWORK : Response::MODEL_DETECTION_RUNTIME);
