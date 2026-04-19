@@ -1,8 +1,6 @@
 <?php
 
-use Appwrite\Event\Audit;
 use Appwrite\Event\Build;
-use Appwrite\Event\Certificate;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
@@ -10,7 +8,6 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Realtime;
-use Appwrite\Event\Screenshot;
 use Appwrite\Event\Webhook;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
@@ -311,20 +308,12 @@ return function (Container $container): void {
         return new Build($publisher);
     }, ['publisher']);
 
-    $container->set('queueForScreenshots', function (Publisher $publisher) {
-        return new Screenshot($publisher);
-    }, ['publisher']);
-
     $container->set('queueForDeletes', function (Publisher $publisher) {
         return new Delete($publisher);
     }, ['publisher']);
 
     $container->set('queueForEvents', function (Publisher $publisher) {
         return new Event($publisher);
-    }, ['publisher']);
-
-    $container->set('queueForAudits', function (Publisher $publisher) {
-        return new Audit($publisher);
     }, ['publisher']);
 
     $container->set('queueForWebhooks', function (Publisher $publisher) {
@@ -338,10 +327,6 @@ return function (Container $container): void {
     $container->set('queueForRealtime', function () {
         return new Realtime();
     }, []);
-
-    $container->set('queueForCertificates', function (Publisher $publisher) {
-        return new Certificate($publisher);
-    }, ['publisher']);
 
     $container->set('deviceForSites', function (Document $project, Telemetry $telemetry) {
         return new TelemetryDevice($telemetry, getDevice(APP_STORAGE_SITES . '/app-' . $project->getId()));

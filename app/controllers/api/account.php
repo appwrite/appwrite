@@ -474,19 +474,26 @@ Http::delete('/v1/account')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('queueForDeletes')
-    ->action(function (Document $user, Document $project, Response $response, Database $dbForProject, Event $queueForEvents, Delete $queueForDeletes) {
+    ->inject('authorization')
+    ->action(function (Document $user, Document $project, Response $response, Database $dbForProject, Event $queueForEvents, Delete $queueForDeletes, Authorization $authorization) {
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         if ($project->getId() === 'console') {
-            // get all memberships
             $memberships = $user->getAttribute('memberships', []);
             foreach ($memberships as $membership) {
-                // prevent deletion if at least one active membership
-                if ($membership->getAttribute('confirm', false)) {
-                    throw new Exception(Exception::USER_DELETION_PROHIBITED);
+                if (!$membership->getAttribute('confirm', false)) {
+                    continue;
                 }
+
+                $team = $dbForProject->getDocument('teams', $membership->getAttribute('teamId'));
+                if ($team->isEmpty()) {
+                    continue;
+                }
+
+                // Team is left as-is — we don't promote non-owner members to owner.
+                // Orphan teams are cleaned up later by Cloud's inactive project cleanup.
             }
         }
 
@@ -2265,7 +2272,10 @@ Http::post('/v1/account/tokens/magic-url')
 
         $subject = $locale->getText("emails.magicSession.subject");
         $preview = $locale->getText("emails.magicSession.preview");
-        $customTemplate = $project->getAttribute('templates', [])['email.magicSession-' . $locale->default] ?? [];
+
+        $customTemplate =
+            $project->getAttribute('templates', [])['email.magicSession-' . $locale->default] ??
+            $project->getAttribute('templates', [])['email.magicSession-' . $locale->fallback] ?? [];
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $agentOs = $detector->getOS();
@@ -2575,7 +2585,9 @@ Http::post('/v1/account/tokens/email')
         $preview = $locale->getText("emails.otpSession.preview");
         $heading = $locale->getText("emails.otpSession.heading");
 
-        $customTemplate = $project->getAttribute('templates', [])['email.otpSession-' . $locale->default] ?? [];
+        $customTemplate =
+            $project->getAttribute('templates', [])['email.otpSession-' . $locale->default] ??
+            $project->getAttribute('templates', [])['email.otpSession-' . $locale->fallback] ?? [];
         $smtpBaseTemplate = $project->getAttribute('smtpBaseTemplate', 'email-base');
 
         $validator = new FileName();
@@ -2967,11 +2979,6 @@ Http::post('/v1/account/tokens/phone')
 
         if ($sendSMS) {
             $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
-
-            $customTemplate = $project->getAttribute('templates', [])['sms.login-' . $locale->default] ?? [];
-            if (!empty($customTemplate)) {
-                $message = $customTemplate['message'] ?? $message;
-            }
 
             $projectName = $project->getAttribute('name');
             if ($project->getId() === 'console') {
@@ -3726,7 +3733,9 @@ Http::post('/v1/account/recovery')
         $body = $locale->getText("emails.recovery.body");
         $subject = $locale->getText("emails.recovery.subject");
         $preview = $locale->getText("emails.recovery.preview");
-        $customTemplate = $project->getAttribute('templates', [])['email.recovery-' . $locale->default] ?? [];
+        $customTemplate =
+            $project->getAttribute('templates', [])['email.recovery-' . $locale->default] ??
+            $project->getAttribute('templates', [])['email.recovery-' . $locale->fallback] ?? [];
 
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
         $message
@@ -4034,7 +4043,9 @@ Http::post('/v1/account/verifications/email')
         $subject = $locale->getText("emails.verification.subject");
         $heading = $locale->getText("emails.verification.heading");
 
-        $customTemplate = $project->getAttribute('templates', [])['email.verification-' . $locale->default] ?? [];
+        $customTemplate =
+            $project->getAttribute('templates', [])['email.verification-' . $locale->default] ??
+            $project->getAttribute('templates', [])['email.verification-' . $locale->fallback] ?? [];
         $smtpBaseTemplate = $project->getAttribute('smtpBaseTemplate', 'email-base');
 
         $validator = new FileName();
@@ -4332,11 +4343,6 @@ Http::post('/v1/account/verifications/phone')
 
         if ($sendSMS) {
             $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
-
-            $customTemplate = $project->getAttribute('templates', [])['sms.verification-' . $locale->default] ?? [];
-            if (!empty($customTemplate)) {
-                $message = $customTemplate['message'] ?? $message;
-            }
 
             $messageContent = Template::fromString($locale->getText("sms.verification.body"));
             $messageContent

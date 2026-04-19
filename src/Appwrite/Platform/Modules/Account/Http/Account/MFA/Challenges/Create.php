@@ -170,11 +170,6 @@ class Create extends Action
 
                 $message = Template::fromFile($templatesPath . '/sms-base.tpl');
 
-                $customTemplate = $project->getAttribute('templates', [])['sms.mfaChallenge-' . $locale->default] ?? [];
-                if (!empty($customTemplate)) {
-                    $message = $customTemplate['message'] ?? $message;
-                }
-
                 $messageContent = Template::fromString($locale->getText("sms.verification.body"));
                 $messageContent
                     ->setParam('{{project}}', $projectName)
@@ -223,7 +218,9 @@ class Create extends Action
                 $preview = $locale->getText("emails.mfaChallenge.preview");
                 $heading = $locale->getText("emails.mfaChallenge.heading");
 
-                $customTemplate = $project->getAttribute('templates', [])['email.mfaChallenge-' . $locale->default] ?? [];
+                $customTemplate =
+                    $project->getAttribute('templates', [])['email.mfaChallenge-' . $locale->default] ??
+                    $project->getAttribute('templates', [])['email.mfaChallenge-' . $locale->fallback] ?? [];
                 $smtpBaseTemplate = $project->getAttribute('smtpBaseTemplate', 'email-base');
 
                 $validator = new FileName();

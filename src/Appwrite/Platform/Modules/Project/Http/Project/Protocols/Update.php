@@ -1,7 +1,8 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Project\Http\Project\Services\Status;
+namespace Appwrite\Platform\Modules\Project\Http\Project\Protocols;
 
+use Appwrite\Event\Event;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -21,27 +22,28 @@ class Update extends Action
 
     public static function getName()
     {
-        return 'updateProjectServiceStatus';
+        return 'updateProjectProtocol';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
-            ->setHttpPath('/v1/project/services/:serviceId/status')
-            ->httpAlias('/v1/projects/:projectId/service')
-            ->desc('Update project service status')
+            ->setHttpPath('/v1/project/protocols/:protocolId')
+            ->httpAlias('/v1/project/protocols/:protocolId/status')
+            ->httpAlias('/v1/projects/:projectId/api')
+            ->desc('Update project protocol')
             ->groups(['api', 'project'])
             ->label('scope', 'project.write')
-            ->label('event', 'services.[service].update')
-            ->label('audits.event', 'project.services.[service].update')
-            ->label('audits.resource', 'project.services/{response.$id}')
+            ->label('event', 'protocols.[protocolId].update')
+            ->label('audits.event', 'project.protocols.[protocolId].update')
+            ->label('audits.resource', 'project.protocols/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: null,
-                name: 'updateServiceStatus',
+                name: 'updateProtocol',
                 description: <<<EOT
-                Update the status of a specific service. Use this endpoint to enable or disable a service in your project. 
+                Update properties of a specific protocol. Use this endpoint to enable or disable a protocol in your project. 
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
@@ -51,29 +53,33 @@ class Update extends Action
                     )
                 ],
             ))
-            ->param('serviceId', '', new WhiteList(array_keys(array_filter(Config::getParam('services'), fn ($element) => $element['optional'])), true), 'Service name. Can be one of: '.\implode(', ', array_keys(array_filter(Config::getParam('services'), fn ($element) => $element['optional']))))
-            ->param('enabled', null, new Boolean(), 'Service status.')
+            ->param('protocolId', '', new WhiteList(array_keys(Config::getParam('protocols')), true), 'Protocol name. Can be one of: ' . \implode(', ', array_keys(Config::getParam('protocols'))))
+            ->param('enabled', null, new Boolean(), 'Protocol status.')
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')
             ->inject('authorization')
+            ->inject('queueForEvents')
             ->callback($this->action(...));
     }
 
     public function action(
-        string $serviceId,
+        string $protocolId,
         bool $enabled,
         Response $response,
         Database $dbForPlatform,
         Document $project,
-        Authorization $authorization
+        Authorization $authorization,
+        Event $queueForEvents,
     ): void {
-        $services = $project->getAttribute('services', []);
-        $services[$serviceId] = $enabled;
+        $protocols = $project->getAttribute('apis', []);
+        $protocols[$protocolId] = $enabled;
 
         $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-            'services' => $services,
+            'apis' => $protocols,
         ])));
+
+        $queueForEvents->setParam('protocolId', $protocolId);
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     }

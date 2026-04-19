@@ -398,6 +398,11 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
     $register->set('telemetry.connectionCounter', fn () => $telemetry->createUpDownCounter('realtime.server.open_connections'));
     $register->set('telemetry.connectionCreatedCounter', fn () => $telemetry->createCounter('realtime.server.connection.created'));
     $register->set('telemetry.messageSentCounter', fn () => $telemetry->createCounter('realtime.server.message.sent'));
+    $register->set('telemetry.deliveryDelayHistogram', fn () => $telemetry->createHistogram(
+        name: 'realtime.server.delivery_delay',
+        unit: 'ms',
+        advisory: ['ExplicitBucketBoundaries' => [100, 250, 500, 750, 1000, 1500, 2000, 3000, 5000, 7500, 10000, 15000, 30000]],
+    ));
 
     $attempts = 0;
     $start = time();
@@ -592,6 +597,20 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 if ($total > 0) {
                     $register->get('telemetry.messageSentCounter')->add($total);
                     $stats->incr($event['project'], 'messages', $total);
+                    $updatedAt = $event['data']['payload']['$updatedAt'] ?? null;
+                    if (\is_string($updatedAt)) {
+                        try {
+                            $updatedAtDate = new \DateTimeImmutable($updatedAt);
+                            $now = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
+                            $updatedAtTimestampMs = (float) $updatedAtDate->format('U.u') * 1000;
+                            $nowTimestampMs = (float) $now->format('U.u') * 1000;
+                            $delayMs = (int) \max(0, $nowTimestampMs - $updatedAtTimestampMs);
+
+                            $register->get('telemetry.deliveryDelayHistogram')->record($delayMs);
+                        } catch (\Throwable) {
+                            // Ignore invalid timestamp payloads.
+                        }
+                    }
 
                     $projectId = $event['project'] ?? null;
 
