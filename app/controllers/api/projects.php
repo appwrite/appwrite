@@ -71,202 +71,20 @@ Http::get('/v1/projects/:projectId')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-Http::patch('/v1/projects/:projectId/service')
-    ->desc('Update service status')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
-    ->label('sdk', new Method(
-        namespace: 'projects',
-        group: 'projects',
-        name: 'updateServiceStatus',
-        description: '/docs/references/projects/update-service-status.md',
-        auth: [AuthType::ADMIN],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_PROJECT,
-            )
-        ]
-    ))
-    ->param('projectId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForPlatform'])
-    ->param('service', '', new WhiteList(array_keys(array_filter(Config::getParam('services'), fn ($element) => $element['optional'])), true), 'Service name.')
-    ->param('status', null, new Boolean(), 'Service status.')
-    ->inject('response')
-    ->inject('dbForPlatform')
-    ->action(function (string $projectId, string $service, bool $status, Response $response, Database $dbForPlatform) {
-
-        $project = $dbForPlatform->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
-
-        $services = $project->getAttribute('services', []);
-        $services[$service] = $status;
-
-        $project = $dbForPlatform->updateDocument('projects', $project->getId(), $project->setAttribute('services', $services));
-
-        $response->dynamic($project, Response::MODEL_PROJECT);
-    });
-
 Http::patch('/v1/projects/:projectId/service/all')
     ->desc('Update all service status')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk', new Method(
-        namespace: 'projects',
-        group: 'projects',
-        name: 'updateServiceStatusAll',
-        description: '/docs/references/projects/update-service-status-all.md',
-        auth: [AuthType::ADMIN],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_PROJECT,
-            )
-        ]
-    ))
-    ->param('projectId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForPlatform'])
-    ->param('status', null, new Boolean(), 'Service status.')
-    ->inject('response')
-    ->inject('dbForPlatform')
-    ->action(function (string $projectId, bool $status, Response $response, Database $dbForPlatform) {
-
-        $project = $dbForPlatform->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
-
-        $allServices = array_keys(array_filter(Config::getParam('services'), fn ($element) => $element['optional']));
-
-        $services = [];
-        foreach ($allServices as $service) {
-            $services[$service] = $status;
-        }
-
-        $project = $dbForPlatform->updateDocument('projects', $project->getId(), $project->setAttribute('services', $services));
-
-        $response->dynamic($project, Response::MODEL_PROJECT);
-    });
-
-Http::patch('/v1/projects/:projectId/api')
-    ->desc('Update API status')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
-    ->label('sdk', [
-        new Method(
-            namespace: 'projects',
-            group: 'projects',
-            name: 'updateApiStatus',
-            description: '/docs/references/projects/update-api-status.md',
-            auth: [AuthType::ADMIN],
-            responses: [
-                new SDKResponse(
-                    code: Response::STATUS_CODE_OK,
-                    model: Response::MODEL_PROJECT,
-                )
-            ],
-            deprecated: new Deprecated(
-                since: '1.8.0',
-                replaceWith: 'projects.updateAPIStatus',
-            ),
-            public: false,
-        ),
-        new Method(
-            namespace: 'projects',
-            group: 'projects',
-            name: 'updateAPIStatus',
-            description: '/docs/references/projects/update-api-status.md',
-            auth: [AuthType::ADMIN],
-            responses: [
-                new SDKResponse(
-                    code: Response::STATUS_CODE_OK,
-                    model: Response::MODEL_PROJECT,
-                )
-            ]
-        )
-    ])
-    ->param('projectId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForPlatform'])
-    ->param('api', '', new WhiteList(array_keys(Config::getParam('apis')), true), 'API name.')
-    ->param('status', null, new Boolean(), 'API status.')
-    ->inject('response')
-    ->inject('dbForPlatform')
-    ->action(function (string $projectId, string $api, bool $status, Response $response, Database $dbForPlatform) {
-
-        $project = $dbForPlatform->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
-
-        $apis = $project->getAttribute('apis', []);
-        $apis[$api] = $status;
-
-        $project = $dbForPlatform->updateDocument('projects', $project->getId(), $project->setAttribute('apis', $apis));
-
-        $response->dynamic($project, Response::MODEL_PROJECT);
+    ->action(function () {
+        throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED, 'Bulk API no longer exists for services. Please change status individually.');
     });
 
 Http::patch('/v1/projects/:projectId/api/all')
     ->desc('Update all API status')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk', [
-        new Method(
-            namespace: 'projects',
-            group: 'projects',
-            name: 'updateApiStatusAll',
-            description: '/docs/references/projects/update-api-status-all.md',
-            auth: [AuthType::ADMIN],
-            responses: [
-                new SDKResponse(
-                    code: Response::STATUS_CODE_OK,
-                    model: Response::MODEL_PROJECT,
-                )
-            ],
-            deprecated: new Deprecated(
-                since: '1.8.0',
-                replaceWith: 'projects.updateAPIStatusAll',
-            ),
-            public: false,
-        ),
-        new Method(
-            namespace: 'projects',
-            group: 'projects',
-            name: 'updateAPIStatusAll',
-            description: '/docs/references/projects/update-api-status-all.md',
-            auth: [AuthType::ADMIN],
-            responses: [
-                new SDKResponse(
-                    code: Response::STATUS_CODE_OK,
-                    model: Response::MODEL_PROJECT,
-                )
-            ]
-        )
-    ])
-    ->param('projectId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForPlatform'])
-    ->param('status', null, new Boolean(), 'API status.')
-    ->inject('response')
-    ->inject('dbForPlatform')
-    ->action(function (string $projectId, bool $status, Response $response, Database $dbForPlatform) {
-
-        $project = $dbForPlatform->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
-
-        $allApis = array_keys(Config::getParam('apis'));
-
-        $apis = [];
-        foreach ($allApis as $api) {
-            $apis[$api] = $status;
-        }
-
-        $project = $dbForPlatform->updateDocument('projects', $project->getId(), $project->setAttribute('apis', $apis));
-
-        $response->dynamic($project, Response::MODEL_PROJECT);
+    ->action(function () {
+        throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED, 'Bulk API no longer exists for services. Please change status individually.');
     });
 
 Http::patch('/v1/projects/:projectId/oauth2')
@@ -1015,75 +833,8 @@ Http::post('/v1/projects/:projectId/smtp/tests')
         $response->noContent();
     });
 
-Http::get('/v1/projects/:projectId/templates/sms/:type/:locale')
-    ->desc('Get custom SMS template')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
-    ->label('sdk', [
-        new Method(
-            namespace: 'projects',
-            group: 'templates',
-            name: 'getSmsTemplate',
-            description: '/docs/references/projects/get-sms-template.md',
-            auth: [AuthType::ADMIN],
-            responses: [
-                new SDKResponse(
-                    code: Response::STATUS_CODE_OK,
-                    model: Response::MODEL_SMS_TEMPLATE,
-                )
-            ],
-            deprecated: new Deprecated(
-                since: '1.8.0',
-                replaceWith: 'projects.getSMSTemplate',
-            ),
-            public: false,
-        ),
-        new Method(
-            namespace: 'projects',
-            group: 'templates',
-            name: 'getSMSTemplate',
-            description: '/docs/references/projects/get-sms-template.md',
-            auth: [AuthType::ADMIN],
-            responses: [
-                new SDKResponse(
-                    code: Response::STATUS_CODE_OK,
-                    model: Response::MODEL_SMS_TEMPLATE,
-                )
-            ]
-        )
-    ])
-    ->param('projectId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForPlatform'])
-    ->param('type', '', new WhiteList(Config::getParam('locale-templates')['sms'] ?? [], true), 'Template type')
-    ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
-    ->inject('response')
-    ->inject('dbForPlatform')
-    ->action(function (string $projectId, string $type, string $locale, Response $response, Database $dbForPlatform) {
-
-        throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
-
-        $project = $dbForPlatform->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
-
-        $templates = $project->getAttribute('templates', []);
-        $template  = $templates['sms.' . $type . '-' . $locale] ?? null;
-
-        if (is_null($template)) {
-            $template = [
-                'message' => Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl')->render(),
-            ];
-        }
-
-        $template['type'] = $type;
-        $template['locale'] = $locale;
-
-        $response->dynamic(new Document($template), Response::MODEL_SMS_TEMPLATE);
-    });
-
-
-Http::get('/v1/projects/:projectId/templates/email/:type/:locale')
+Http::get('/v1/projects/:projectId/templates/email')
+    ->alias('/v1/projects/:projectId/templates/email/:type/:locale')
     ->desc('Get custom email template')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1102,10 +853,12 @@ Http::get('/v1/projects/:projectId/templates/email/:type/:locale')
     ))
     ->param('projectId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForPlatform'])
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? [], true), 'Template type')
-    ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
+    ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', true, ['localeCodes'])
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $projectId, string $type, string $locale, Response $response, Database $dbForPlatform) {
+    ->inject('locale')
+    ->action(function (string $projectId, string $type, string $locale, Response $response, Database $dbForPlatform, Locale $localeObject) {
+        $locale = $locale ?: $localeObject->default ?: $localeObject->fallback ?: System::getEnv('_APP_LOCALE', 'en');
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -1182,74 +935,8 @@ Http::get('/v1/projects/:projectId/templates/email/:type/:locale')
         $response->dynamic(new Document($template), Response::MODEL_EMAIL_TEMPLATE);
     });
 
-Http::patch('/v1/projects/:projectId/templates/sms/:type/:locale')
-    ->desc('Update custom SMS template')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
-    ->label('sdk', [
-        new Method(
-            namespace: 'projects',
-            group: 'templates',
-            name: 'updateSmsTemplate',
-            description: '/docs/references/projects/update-sms-template.md',
-            auth: [AuthType::ADMIN],
-            responses: [
-                new SDKResponse(
-                    code: Response::STATUS_CODE_OK,
-                    model: Response::MODEL_SMS_TEMPLATE,
-                )
-            ],
-            deprecated: new Deprecated(
-                since: '1.8.0',
-                replaceWith: 'projects.updateSMSTemplate',
-            ),
-            public: false,
-        ),
-        new Method(
-            namespace: 'projects',
-            group: 'templates',
-            name: 'updateSMSTemplate',
-            description: '/docs/references/projects/update-sms-template.md',
-            auth: [AuthType::ADMIN],
-            responses: [
-                new SDKResponse(
-                    code: Response::STATUS_CODE_OK,
-                    model: Response::MODEL_SMS_TEMPLATE,
-                )
-            ]
-        )
-    ])
-    ->param('projectId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForPlatform'])
-    ->param('type', '', new WhiteList(Config::getParam('locale-templates')['sms'] ?? [], true), 'Template type')
-    ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
-    ->param('message', '', new Text(0), 'Template message')
-    ->inject('response')
-    ->inject('dbForPlatform')
-    ->action(function (string $projectId, string $type, string $locale, string $message, Response $response, Database $dbForPlatform) {
-
-        throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
-
-        $project = $dbForPlatform->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
-
-        $templates = $project->getAttribute('templates', []);
-        $templates['sms.' . $type . '-' . $locale] = [
-            'message' => $message
-        ];
-
-        $project = $dbForPlatform->updateDocument('projects', $project->getId(), $project->setAttribute('templates', $templates));
-
-        $response->dynamic(new Document([
-            'message' => $message,
-            'type' => $type,
-            'locale' => $locale,
-        ]), Response::MODEL_SMS_TEMPLATE);
-    });
-
-Http::patch('/v1/projects/:projectId/templates/email/:type/:locale')
+Http::patch('/v1/projects/:projectId/templates/email')
+    ->alias('/v1/projects/:projectId/templates/email/:type/:locale')
     ->desc('Update custom email templates')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1268,7 +955,7 @@ Http::patch('/v1/projects/:projectId/templates/email/:type/:locale')
     ))
     ->param('projectId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForPlatform'])
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? [], true), 'Template type')
-    ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
+    ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', true, ['localeCodes'])
     ->param('subject', '', new Text(255), 'Email Subject')
     ->param('message', '', new Text(0), 'Template message')
     ->param('senderName', '', new Text(255, 0), 'Name of the email sender', true)
@@ -1276,7 +963,9 @@ Http::patch('/v1/projects/:projectId/templates/email/:type/:locale')
     ->param('replyTo', '', new Email(), 'Reply to email', true)
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $projectId, string $type, string $locale, string $subject, string $message, string $senderName, string $senderEmail, string $replyTo, Response $response, Database $dbForPlatform) {
+    ->inject('locale')
+    ->action(function (string $projectId, string $type, string $locale, string $subject, string $message, string $senderName, string $senderEmail, string $replyTo, Response $response, Database $dbForPlatform, Locale $localeObject) {
+        $locale = $locale ?: $localeObject->default ?: $localeObject->fallback ?: System::getEnv('_APP_LOCALE', 'en');
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -1306,79 +995,8 @@ Http::patch('/v1/projects/:projectId/templates/email/:type/:locale')
         ]), Response::MODEL_EMAIL_TEMPLATE);
     });
 
-Http::delete('/v1/projects/:projectId/templates/sms/:type/:locale')
-    ->desc('Reset custom SMS template')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
-    ->label('sdk', [
-        new Method(
-            namespace: 'projects',
-            group: 'templates',
-            name: 'deleteSmsTemplate',
-            description: '/docs/references/projects/delete-sms-template.md',
-            auth: [AuthType::ADMIN],
-            responses: [
-                new SDKResponse(
-                    code: Response::STATUS_CODE_OK,
-                    model: Response::MODEL_SMS_TEMPLATE,
-                )
-            ],
-            contentType: ContentType::JSON,
-            deprecated: new Deprecated(
-                since: '1.8.0',
-                replaceWith: 'projects.deleteSMSTemplate',
-            ),
-            public: false,
-        ),
-        new Method(
-            namespace: 'projects',
-            group: 'templates',
-            name: 'deleteSMSTemplate',
-            description: '/docs/references/projects/delete-sms-template.md',
-            auth: [AuthType::ADMIN],
-            responses: [
-                new SDKResponse(
-                    code: Response::STATUS_CODE_OK,
-                    model: Response::MODEL_SMS_TEMPLATE,
-                )
-            ],
-            contentType: ContentType::JSON
-        )
-    ])
-    ->param('projectId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForPlatform'])
-    ->param('type', '', new WhiteList(Config::getParam('locale-templates')['sms'] ?? [], true), 'Template type')
-    ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
-    ->inject('response')
-    ->inject('dbForPlatform')
-    ->action(function (string $projectId, string $type, string $locale, Response $response, Database $dbForPlatform) {
-
-        throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
-
-        $project = $dbForPlatform->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
-
-        $templates = $project->getAttribute('templates', []);
-        $template  = $templates['sms.' . $type . '-' . $locale] ?? null;
-
-        if (is_null($template)) {
-            throw new Exception(Exception::PROJECT_TEMPLATE_DEFAULT_DELETION);
-        }
-
-        unset($template['sms.' . $type . '-' . $locale]);
-
-        $project = $dbForPlatform->updateDocument('projects', $project->getId(), $project->setAttribute('templates', $templates));
-
-        $response->dynamic(new Document([
-            'type' => $type,
-            'locale' => $locale,
-            'message' => $template['message']
-        ]), Response::MODEL_SMS_TEMPLATE);
-    });
-
-Http::delete('/v1/projects/:projectId/templates/email/:type/:locale')
+Http::delete('/v1/projects/:projectId/templates/email')
+    ->alias('/v1/projects/:projectId/templates/email/:type/:locale')
     ->desc('Delete custom email template')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1398,10 +1016,12 @@ Http::delete('/v1/projects/:projectId/templates/email/:type/:locale')
     ))
     ->param('projectId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForPlatform'])
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? [], true), 'Template type')
-    ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
+    ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', true, ['localeCodes'])
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $projectId, string $type, string $locale, Response $response, Database $dbForPlatform) {
+    ->inject('locale')
+    ->action(function (string $projectId, string $type, string $locale, Response $response, Database $dbForPlatform, Locale $localeObject) {
+        $locale = $locale ?: $localeObject->default ?: $localeObject->fallback ?: System::getEnv('_APP_LOCALE', 'en');
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 

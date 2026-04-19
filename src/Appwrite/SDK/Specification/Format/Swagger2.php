@@ -322,11 +322,12 @@ class Swagger2 extends Format
                         }
                         $temp['responses'][(string)$response->getCode() ?? '500'] = [
                             'description' => $modelDescription,
-                            'schema' => [
+                            'schema' => \array_filter([
                                 'x-oneOf' => \array_map(function ($m) {
                                     return ['$ref' => '#/definitions/' . $m->getType()];
-                                }, $model)
-                            ],
+                                }, $model),
+                                'x-discriminator' => $this->getDiscriminator($model, '#/definitions/'),
+                            ]),
                         ];
                     } else {
                         // Response definition using one type
@@ -383,13 +384,22 @@ class Swagger2 extends Format
                 /** @var Validator $validator */
                 $validator = $this->getValidator($param);
 
+                $isNullable = $validator instanceof Nullable;
+
+                $parameter = $this->getRequestParameterConfig(
+                    $sdk->getNamespace() ?? '',
+                    $methodName,
+                    $name,
+                    $param['optional'],
+                    $isNullable,
+                    $param['default'],
+                );
+
                 $node = [
                     'name' => $name,
                     'description' => $param['description'],
-                    'required' => !$param['optional'],
+                    'required' => $parameter['required'],
                 ];
-
-                $isNullable = $validator instanceof Nullable;
 
                 if ($isNullable) {
                     /** @var Nullable $validator */
@@ -711,7 +721,7 @@ class Swagger2 extends Format
                         break;
                 }
 
-                if ($param['optional'] && !\is_null($param['default'])) { // Param has default value
+                if ($parameter['emitDefault']) { // Param has default value
                     $node['default'] = $param['default'];
                 }
 
@@ -729,7 +739,7 @@ class Swagger2 extends Format
                         continue;
                     }
 
-                    if (!$param['optional']) {
+                    if ($node['required']) {
                         $bodyRequired[] = $name;
                     }
 
@@ -755,7 +765,7 @@ class Swagger2 extends Format
                         $body['schema']['properties'][$name]['x-global'] = true;
                     }
 
-                    if ($isNullable) {
+                    if ($parameter['nullable']) {
                         $body['schema']['properties'][$name]['x-nullable'] = true;
                     }
 
@@ -871,14 +881,27 @@ class Swagger2 extends Format
                         $rule['type'] = ($rule['type']) ?: 'none';
 
                         if (\is_array($rule['type'])) {
+                            $resolvedModels = \array_map(function (string $type) {
+                                foreach ($this->models as $model) {
+                                    if ($model->getType() === $type) {
+                                        return $model;
+                                    }
+                                }
+
+                                throw new \RuntimeException("Unresolved model '{$type}'. Ensure the model is registered.");
+                            }, $rule['type']);
+                            $xDiscriminator = $this->getDiscriminator($resolvedModels, '#/definitions/');
+
                             if ($rule['array']) {
-                                $items = [
-                                    'x-anyOf' => \array_map(fn ($type) =>  ['$ref' => '#/definitions/' . $type], $rule['type'])
-                                ];
+                                $items = \array_filter([
+                                    'x-anyOf' => \array_map(fn ($type) =>  ['$ref' => '#/definitions/' . $type], $rule['type']),
+                                    'x-discriminator' => $xDiscriminator,
+                                ]);
                             } else {
-                                $items = [
-                                    'x-oneOf' => \array_map(fn ($type) => ['$ref' => '#/definitions/' . $type], $rule['type'])
-                                ];
+                                $items = \array_filter([
+                                    'x-oneOf' => \array_map(fn ($type) => ['$ref' => '#/definitions/' . $type], $rule['type']),
+                                    'x-discriminator' => $xDiscriminator,
+                                ]);
                             }
                         } else {
                             $items = [

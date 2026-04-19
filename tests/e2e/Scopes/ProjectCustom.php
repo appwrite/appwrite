@@ -216,7 +216,7 @@ trait ProjectCustom
                 'users.*'
             ],
             'url' => 'http://request-catcher-webhook:5000/',
-            'security' => false,
+            'tls' => false,
         ]);
 
         $this->assertEquals(201, $webhook['headers']['status-code']);
@@ -243,7 +243,7 @@ trait ProjectCustom
             'apiKey' => $key['body']['secret'],
             'devKey' => $devKey['body']['secret'],
             'webhookId' => $webhook['body']['$id'],
-            'signatureKey' => $webhook['body']['signatureKey'],
+            'signatureKey' => $webhook['body']['secret'],
         ];
     }
 

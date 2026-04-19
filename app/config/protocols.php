@@ -9,8 +9,8 @@ return [
         'key' => 'graphql',
         'name' => 'GraphQL',
     ],
-    'realtime' => [
-        'key' => 'realtime',
-        'name' => 'Realtime',
+    'websocket' => [
+        'key' => 'websocket',
+        'name' => 'Websocket',
     ],
 ];

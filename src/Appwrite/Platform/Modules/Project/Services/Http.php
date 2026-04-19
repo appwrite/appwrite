@@ -22,6 +22,8 @@ use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Web\Update as Updat
 use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Windows\Create as CreateWindowsPlatform;
 use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Windows\Update as UpdateWindowsPlatform;
 use Appwrite\Platform\Modules\Project\Http\Project\Platforms\XList as ListPlatforms;
+use Appwrite\Platform\Modules\Project\Http\Project\Protocols\Update as UpdateProjectProtocol;
+use Appwrite\Platform\Modules\Project\Http\Project\Services\Update as UpdateProjectService;
 use Appwrite\Platform\Modules\Project\Http\Project\Variables\Create as CreateVariable;
 use Appwrite\Platform\Modules\Project\Http\Project\Variables\Delete as DeleteVariable;
 use Appwrite\Platform\Modules\Project\Http\Project\Variables\Get as GetVariable;
@@ -40,6 +42,8 @@ class Http extends Service
 
         // Project
         $this->addAction(UpdateProjectLabels::getName(), new UpdateProjectLabels());
+        $this->addAction(UpdateProjectProtocol::getName(), new UpdateProjectProtocol());
+        $this->addAction(UpdateProjectService::getName(), new UpdateProjectService());
 
         // Variables
         $this->addAction(CreateVariable::getName(), new CreateVariable());

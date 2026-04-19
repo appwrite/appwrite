@@ -56,7 +56,7 @@ class Update extends Action
             ))
             ->param('platformId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Platform ID.', false, ['dbForPlatform'])
             ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
-            ->param('hostname', '', new Hostname(), 'Platform web hostname. Max length: 256 chars.', optional: true) // Optional for backwards compatibility
+            ->param('hostname', '', new Hostname(), 'Platform web hostname. Max length: 256 chars.', optional: true, example: 'app.example.com') // Optional for backwards compatibility
             ->param('key', '', new Text(256), 'Package name for Android or bundle ID for iOS or macOS. Max length: 256 chars.', optional: true, deprecated: true) // Exists for backwards compatibility
             ->inject('response')
             ->inject('queueForEvents')

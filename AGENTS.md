@@ -115,6 +115,10 @@ Common injections: `$response`, `$request`, `$dbForProject`, `$dbForPlatform`, `
 - Never hardcode credentials -- use environment variables.
 - Code changes may require container restart. No central log location -- check relevant containers.
 
+## Patch release process
+
+For bumping patch versions (e.g., `1.9.0` -> `1.9.1`), follow the checklist in `.claude/skills/patch-release-checklist/SKILL.md`. It covers the 4 files that must be updated, console image bumps, CHANGES.md updates, and common pitfalls to avoid.
+
 ## Cross-repo context
 
 Appwrite is the base server for `appwrite/cloud`. Changes to the Action pattern, module structure, DI system, or response models affect cloud. The `feat-dedicated-db` feature spans cloud, edge, and console.

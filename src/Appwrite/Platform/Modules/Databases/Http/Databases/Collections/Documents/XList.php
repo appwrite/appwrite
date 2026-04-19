@@ -145,7 +145,11 @@ class XList extends Action
                 $documentsField = $this->getListCacheField($collection, $roles, $queries, self::LIST_CACHE_FIELD_DOCUMENTS);
 
                 $documentsCacheHit = false;
-                $cachedDocuments = $dbForProject->getCache()->load($cacheKey, $ttl, $documentsField);
+                try {
+                    $cachedDocuments = $dbForProject->getCache()->load($cacheKey, $ttl, $documentsField);
+                } catch (\Throwable) {
+                    $cachedDocuments = null;
+                }
 
                 if ($cachedDocuments !== null &&
                     $cachedDocuments !== false &&
@@ -157,21 +161,30 @@ class XList extends Action
                 } else {
                     $documents = $find();
 
-                    // Convert Document objects to arrays for caching
                     $documentsArray = \array_map(function ($doc) {
                         return $doc->getArrayCopy();
                     }, $documents);
-                    $dbForProject->getCache()->save($cacheKey, $documentsArray, $documentsField);
+                    try {
+                        $dbForProject->getCache()->save($cacheKey, $documentsArray, $documentsField);
+                    } catch (\Throwable) {
+                    }
                 }
 
                 if ($includeTotal) {
                     $totalField = $this->getListCacheField($collection, $roles, $queries, self::LIST_CACHE_FIELD_TOTAL);
-                    $cachedTotal = $dbForProject->getCache()->load($cacheKey, $ttl, $totalField);
+                    try {
+                        $cachedTotal = $dbForProject->getCache()->load($cacheKey, $ttl, $totalField);
+                    } catch (\Throwable) {
+                        $cachedTotal = null;
+                    }
                     if ($cachedTotal !== null && $cachedTotal !== false) {
                         $total = $cachedTotal;
                     } else {
                         $total = $dbForDatabases->count($collectionTableId, $queries, APP_LIMIT_COUNT);
-                        $dbForProject->getCache()->save($cacheKey, $total, $totalField);
+                        try {
+                            $dbForProject->getCache()->save($cacheKey, $total, $totalField);
+                        } catch (\Throwable) {
+                        }
                     }
                 } else {
                     $total = 0;

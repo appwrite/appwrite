@@ -316,9 +316,10 @@ class OpenAPI3 extends Format
                             'description' => $modelDescription,
                             'content' => [
                                 $produces => [
-                                    'schema' => [
-                                        'oneOf' => \array_map(fn ($m) => ['$ref' => '#/components/schemas/' . $m->getType()], $model)
-                                    ],
+                                    'schema' => \array_filter([
+                                        'oneOf' => \array_map(fn ($m) => ['$ref' => '#/components/schemas/' . $m->getType()], $model),
+                                        'discriminator' => $this->getDiscriminator($model, '#/components/schemas/'),
+                                    ]),
                                 ],
                             ],
                         ];
@@ -381,13 +382,22 @@ class OpenAPI3 extends Format
                  */
                 $validator = $this->getValidator($param);
 
+                $isNullable = $validator instanceof Nullable;
+
+                $parameter = $this->getRequestParameterConfig(
+                    $sdk->getNamespace() ?? '',
+                    $methodName,
+                    $name,
+                    $param['optional'],
+                    $isNullable,
+                    $param['default'],
+                );
+
                 $node = [
                     'name' => $name,
                     'description' => $param['description'],
-                    'required' => !$param['optional'],
+                    'required' => $parameter['required'],
                 ];
-
-                $isNullable = $validator instanceof Nullable;
 
                 if ($isNullable) {
                     /** @var Nullable $validator */
@@ -735,7 +745,7 @@ class OpenAPI3 extends Format
                         break;
                 }
 
-                if ($param['optional'] && !\is_null($param['default'])) { // Param has default value
+                if ($parameter['emitDefault']) { // Param has default value
                     $node['schema']['default'] = $param['default'];
                 }
 
@@ -746,7 +756,7 @@ class OpenAPI3 extends Format
                     $node['in'] = 'query';
                     $temp['parameters'][] = $node;
                 } else { // Param is in payload
-                    if (!$param['optional']) {
+                    if ($node['required']) {
                         $bodyRequired[] = $name;
                     }
 
@@ -783,7 +793,7 @@ class OpenAPI3 extends Format
                         $body['content'][$consumes[0]]['schema']['properties'][$name]['x-global'] = true;
                     }
 
-                    if ($isNullable) {
+                    if ($parameter['nullable']) {
                         $body['content'][$consumes[0]]['schema']['properties'][$name]['x-nullable'] = true;
                     }
                 }
@@ -891,18 +901,30 @@ class OpenAPI3 extends Format
                         $rule['type'] = ($rule['type']) ? $rule['type'] : 'none';
 
                         if (\is_array($rule['type'])) {
+                            $resolvedModels = \array_map(function (string $type) {
+                                foreach ($this->models as $model) {
+                                    if ($model->getType() === $type) {
+                                        return $model;
+                                    }
+                                }
+
+                                throw new \RuntimeException("Unresolved model '{$type}'. Ensure the model is registered.");
+                            }, $rule['type']);
+
                             if ($rule['array']) {
-                                $items = [
+                                $items = \array_filter([
                                     'anyOf' => \array_map(function ($type) {
                                         return ['$ref' => '#/components/schemas/' . $type];
-                                    }, $rule['type'])
-                                ];
+                                    }, $rule['type']),
+                                    'discriminator' => $this->getDiscriminator($resolvedModels, '#/components/schemas/'),
+                                ]);
                             } else {
-                                $items = [
+                                $items = \array_filter([
                                     'oneOf' => \array_map(function ($type) {
                                         return ['$ref' => '#/components/schemas/' . $type];
-                                    }, $rule['type'])
-                                ];
+                                    }, $rule['type']),
+                                    'discriminator' => $this->getDiscriminator($resolvedModels, '#/components/schemas/'),
+                                ]);
                             }
                         } else {
                             $items = [
