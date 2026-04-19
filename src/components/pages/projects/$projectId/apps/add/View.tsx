@@ -7,12 +7,11 @@ import {
   Copy,
   ExternalLink,
   Loader2,
-  Sparkles,
 } from 'lucide-react'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -69,7 +68,15 @@ import {
 } from './_components/WizardProgress'
 import { ConfigureWizardAside } from './_components/ConfigureWizardAside'
 import { ConnectionAside } from './_components/ConnectionAside'
+import { FieldLabelWithInfo } from './_components/FieldLabelWithInfo'
+import {
+  getHostnameTooltip,
+  getKeyTooltip,
+  getNameTooltip,
+} from './_components/field-hints'
 import { PlatformKindCards } from './_components/PlatformKindCards'
+import { SelectedPlatformCard } from './_components/SelectedPlatformCard'
+import { SetupStep } from './_components/SetupStep'
 import { VariantTargetCards } from './_components/VariantTargetCards'
 import { WebFrameworkCards } from './_components/WebFrameworkCards'
 
@@ -637,33 +644,33 @@ APPWRITE_ENDPOINT="${endpoint}"`
           ) : null}
         </div>
       ) : step === 'configure' && configureStep === 'details' ? (
-        <div className="mx-auto w-full max-w-lg space-y-8">
+        <div className="mx-auto w-full max-w-2xl space-y-6">
+          <SelectedPlatformCard
+            kind={kind}
+            variant={resolvedVariant}
+            framework={framework}
+            disabled={createMutation.isPending}
+            onChange={() => updateSearch({ configureStep: 'platform' })}
+          />
           <form id="add-app-configure" onSubmit={handleSubmit} className="space-y-8">
             <section className="space-y-4">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-                <div className="min-w-0 flex-1">
-                  <h3 className="text-[15px] font-semibold text-foreground">
-                    App details
-                  </h3>
-                  <p className="mt-1 text-[13px] text-muted-foreground">
-                    These values are sent to Appwrite when you register this app.
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-9 w-full shrink-0 text-[13px] sm:mt-0.5 sm:w-auto"
-                  onClick={() => updateSearch({ configureStep: 'platform' })}
-                >
-                  Change platform
-                </Button>
+              <div>
+                <h3 className="text-[15px] font-semibold text-foreground">
+                  App details
+                </h3>
+                <p className="mt-1 text-[13px] text-muted-foreground">
+                  These values are sent to Appwrite when you register this app.
+                </p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="add-app-name" className="text-[12px] font-medium">
-                  Name <span className="text-destructive">*</span>
-                </Label>
+                <FieldLabelWithInfo
+                  htmlFor="add-app-name"
+                  required
+                  tooltip={getNameTooltip()}
+                >
+                  Name
+                </FieldLabelWithInfo>
                 <Input
                   id="add-app-name"
                   value={name}
@@ -683,12 +690,13 @@ APPWRITE_ENDPOINT="${endpoint}"`
 
               {variantNeedsHostname(resolvedVariant) && (
                 <div className="space-y-2">
-                  <Label
+                  <FieldLabelWithInfo
                     htmlFor="add-app-hostname"
-                    className="text-[12px] font-medium"
+                    required
+                    tooltip={getHostnameTooltip(resolvedVariant)}
                   >
-                    Hostname <span className="text-destructive">*</span>
-                  </Label>
+                    Hostname
+                  </FieldLabelWithInfo>
                   <Input
                     id="add-app-hostname"
                     value={hostname}
@@ -713,12 +721,15 @@ APPWRITE_ENDPOINT="${endpoint}"`
 
               {variantNeedsKey(resolvedVariant) && (
                 <div className="space-y-2">
-                  <Label htmlFor="add-app-key" className="text-[12px] font-medium">
+                  <FieldLabelWithInfo
+                    htmlFor="add-app-key"
+                    required
+                    tooltip={getKeyTooltip(resolvedVariant)}
+                  >
                     {resolvedVariant.includes('apple')
                       ? 'Bundle ID'
-                      : 'Package name'}{' '}
-                    <span className="text-destructive">*</span>
-                  </Label>
+                      : 'Package name'}
+                  </FieldLabelWithInfo>
                   <Input
                     id="add-app-key"
                     value={key}
@@ -745,45 +756,45 @@ APPWRITE_ENDPOINT="${endpoint}"`
       ) : (
         <div className="w-full space-y-6 pb-2">
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-            <div className="px-6 py-4">
-              <div className="flex items-start gap-3">
-                <span
-                  className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/10"
-                  aria-hidden
-                >
-                  <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                </span>
-                <div>
-                  <h3 className="text-[15px] font-semibold text-foreground">
-                    App registered
-                  </h3>
-                  <p className="mt-2 text-[13px] text-muted-foreground">
-                    Your project now accepts API traffic from this app. Clone the starter
-                    or open the AI prompt below to wire the SDK and send a ping to confirm
-                    the link.
-                  </p>
-                </div>
+            <div className="flex items-center gap-3 px-6 py-4">
+              <span
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/10"
+                aria-hidden
+              >
+                <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-[15px] font-semibold text-foreground">
+                  App registered
+                </h3>
+                <p className="mt-1 text-[13px] text-muted-foreground">
+                  Your project is ready to accept traffic from this app.
+                </p>
               </div>
             </div>
           </div>
 
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-            <div className="px-6 py-4 border-b border-border">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-primary" />
+            <div className="px-6 py-4">
+              <div className="flex flex-wrap items-center gap-2">
                 <h3 className="text-[15px] font-semibold text-foreground">
-                  Set up with AI (recommended)
+                  Set up with AI
                 </h3>
+                <Badge variant="success" className="text-[10px]">
+                  Recommended
+                </Badge>
               </div>
               <p className="mt-2 text-[13px] text-muted-foreground">
-                Hand off a ready-made prompt - including your endpoint and project ID - to
-                your favourite AI tool, or copy it to use anywhere.
+                Hand off a ready-made prompt with your endpoint and project ID to
+                your favourite AI tool, or copy it anywhere.
               </p>
             </div>
-            <div className="px-6 py-4 flex flex-wrap gap-2">
+            <div className="border-t border-border" />
+            <div className="flex flex-wrap gap-2 px-6 py-4">
               <Button
                 type="button"
-                className="text-[13px]"
+                size="sm"
+                className="h-9 text-[13px]"
                 disabled={!promptText}
                 onClick={() => void handleCopyPrompt()}
               >
@@ -795,7 +806,8 @@ APPWRITE_ENDPOINT="${endpoint}"`
                   <Button
                     type="button"
                     variant="outline"
-                    className="text-[13px]"
+                    size="sm"
+                    className="h-9 text-[13px]"
                     disabled={!promptText}
                   >
                     <BrainCircuit />
@@ -827,42 +839,56 @@ APPWRITE_ENDPOINT="${endpoint}"`
           </div>
 
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-            <div className="px-6 py-4 border-b border-border">
+            <div className="px-6 py-4">
               <h3 className="text-[15px] font-semibold text-foreground">
                 Manual setup
               </h3>
               <p className="mt-2 text-[13px] text-muted-foreground">
-                Prefer to wire it up yourself? Clone the starter, drop in your
-                credentials, run the app, and send a ping to confirm the link.
+                Clone the starter, drop in your credentials, then run the app and
+                send a ping to confirm the link.
               </p>
             </div>
-            <div className="px-6 py-4 space-y-2">
-              <CodeBlock
-                code={manualBlocks.clone}
-                language={manualBlocks.cloneLang}
-                label="1. Clone starter"
-              />
-              <CodeBlock
-                code={manualBlocks.config}
-                language={manualBlocks.configLang}
-                label={`2. ${manualBlocks.configLabel}`}
-              />
-              <div className="space-y-1">
+            <div className="border-t border-border" />
+            <div className="space-y-5 px-6 py-5">
+              <SetupStep number={1} label="Clone starter">
+                <CodeBlock
+                  code={manualBlocks.clone}
+                  language={manualBlocks.cloneLang}
+                  copyInside
+                />
+              </SetupStep>
+              <SetupStep number={2} label={manualBlocks.configLabel}>
+                <CodeBlock
+                  code={manualBlocks.config}
+                  language={manualBlocks.configLang}
+                  copyInside
+                />
+              </SetupStep>
+              <SetupStep number={3} label="Install and run">
                 <CodeBlock
                   code={manualBlocks.installRun}
                   language="bash"
-                  label="3. Install & run"
+                  copyInside
                 />
                 {manualBlocks.port > 0 && (
-                  <p className="pt-0.5 text-[12px] text-muted-foreground">
-                    Demo URL: http://localhost:{manualBlocks.port}
+                  <p className="text-[12px] text-muted-foreground">
+                    Demo URL:{' '}
+                    <a
+                      href={`http://localhost:${manualBlocks.port}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 font-medium text-foreground underline-offset-2 hover:underline"
+                    >
+                      http://localhost:{manualBlocks.port}
+                      <ExternalLink
+                        className="h-3 w-3 text-muted-foreground"
+                        aria-hidden
+                      />
+                    </a>
                   </p>
                 )}
-              </div>
-              <div>
-                <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                  4. Send a ping
-                </p>
+              </SetupStep>
+              <SetupStep number={4} label="Send a ping">
                 <div
                   className={cn(
                     'flex items-center gap-2 rounded-md border px-3 py-2 text-[13px]',
@@ -887,7 +913,7 @@ APPWRITE_ENDPOINT="${endpoint}"`
                       : 'Waiting for client.ping() from your app...'}
                   </span>
                 </div>
-              </div>
+              </SetupStep>
             </div>
           </div>
         </div>
