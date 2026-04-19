@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Project;
 
 use Tests\E2E\Client;
+use Utopia\Database\Query;
 
 trait TemplatesBase
 {
@@ -69,6 +70,208 @@ trait TemplatesBase
         $template = $this->getEmailTemplate('verification', 'en', false);
 
         $this->assertSame(401, $template['headers']['status-code']);
+    }
+
+    // =========================================================================
+    // List email templates tests
+    // =========================================================================
+
+    public function testListEmailTemplates(): void
+    {
+        $list = $this->listEmailTemplates(null, true);
+
+        $this->assertSame(200, $list['headers']['status-code']);
+        $this->assertIsArray($list['body']['templates']);
+        $this->assertGreaterThan(0, $list['body']['total']);
+        $this->assertGreaterThan(0, \count($list['body']['templates']));
+
+        foreach ($list['body']['templates'] as $template) {
+            $this->assertArrayHasKey('type', $template);
+            $this->assertArrayHasKey('locale', $template);
+            $this->assertArrayHasKey('custom', $template);
+            $this->assertArrayHasKey('subject', $template);
+            $this->assertArrayHasKey('message', $template);
+        }
+    }
+
+    public function testListEmailTemplatesWithLimit(): void
+    {
+        $list = $this->listEmailTemplates([
+            Query::limit(5)->toString(),
+        ], true);
+
+        $this->assertSame(200, $list['headers']['status-code']);
+        $this->assertCount(5, $list['body']['templates']);
+        $this->assertGreaterThanOrEqual(5, $list['body']['total']);
+    }
+
+    public function testListEmailTemplatesWithOffset(): void
+    {
+        $first = $this->listEmailTemplates([
+            Query::limit(2)->toString(),
+        ], true);
+        $this->assertSame(200, $first['headers']['status-code']);
+
+        $second = $this->listEmailTemplates([
+            Query::limit(2)->toString(),
+            Query::offset(2)->toString(),
+        ], true);
+        $this->assertSame(200, $second['headers']['status-code']);
+
+        $firstIds = \array_map(
+            fn ($t) => $t['type'] . '-' . $t['locale'],
+            $first['body']['templates']
+        );
+        $secondIds = \array_map(
+            fn ($t) => $t['type'] . '-' . $t['locale'],
+            $second['body']['templates']
+        );
+
+        $this->assertEmpty(\array_intersect($firstIds, $secondIds));
+    }
+
+    public function testListEmailTemplatesWithoutTotal(): void
+    {
+        $list = $this->listEmailTemplates(null, false);
+
+        $this->assertSame(200, $list['headers']['status-code']);
+        $this->assertSame(0, $list['body']['total']);
+        $this->assertGreaterThan(0, \count($list['body']['templates']));
+    }
+
+    public function testListEmailTemplatesFilterByType(): void
+    {
+        $list = $this->listEmailTemplates([
+            Query::equal('type', ['verification'])->toString(),
+        ], true);
+
+        $this->assertSame(200, $list['headers']['status-code']);
+        $this->assertGreaterThan(0, $list['body']['total']);
+
+        foreach ($list['body']['templates'] as $template) {
+            $this->assertSame('verification', $template['type']);
+        }
+    }
+
+    public function testListEmailTemplatesFilterByLocale(): void
+    {
+        $list = $this->listEmailTemplates([
+            Query::equal('locale', ['en'])->toString(),
+        ], true);
+
+        $this->assertSame(200, $list['headers']['status-code']);
+        $this->assertGreaterThan(0, $list['body']['total']);
+
+        foreach ($list['body']['templates'] as $template) {
+            $this->assertSame('en', $template['locale']);
+        }
+    }
+
+    public function testListEmailTemplatesFilterByCustom(): void
+    {
+        $update = $this->updateEmailTemplate('recovery', 'en', 'Recovery Subject', 'Recovery Body');
+        $this->assertSame(200, $update['headers']['status-code']);
+
+        $list = $this->listEmailTemplates([
+            Query::equal('custom', [true])->toString(),
+            Query::limit(100)->toString(),
+        ], true);
+
+        $this->assertSame(200, $list['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(1, $list['body']['total']);
+
+        $found = false;
+        foreach ($list['body']['templates'] as $template) {
+            $this->assertTrue($template['custom']);
+            if ($template['type'] === 'recovery' && $template['locale'] === 'en') {
+                $found = true;
+            }
+        }
+        $this->assertTrue($found, 'Customized template should appear in custom=true filter');
+
+        // Cleanup
+        $this->deleteEmailTemplate('recovery', 'en');
+    }
+
+    public function testListEmailTemplatesCombinedFilters(): void
+    {
+        $list = $this->listEmailTemplates([
+            Query::equal('type', ['verification'])->toString(),
+            Query::equal('locale', ['en'])->toString(),
+        ], true);
+
+        $this->assertSame(200, $list['headers']['status-code']);
+        $this->assertSame(1, $list['body']['total']);
+        $this->assertCount(1, $list['body']['templates']);
+        $this->assertSame('verification', $list['body']['templates'][0]['type']);
+        $this->assertSame('en', $list['body']['templates'][0]['locale']);
+    }
+
+    public function testListEmailTemplatesDefaultMatchesGet(): void
+    {
+        $get = $this->getEmailTemplate('verification', 'en');
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertFalse($get['body']['custom']);
+
+        $list = $this->listEmailTemplates([
+            Query::equal('type', ['verification'])->toString(),
+            Query::equal('locale', ['en'])->toString(),
+        ], true);
+
+        $this->assertSame(200, $list['headers']['status-code']);
+        $this->assertCount(1, $list['body']['templates']);
+
+        $listed = $list['body']['templates'][0];
+
+        $this->assertSame($get['body']['type'], $listed['type']);
+        $this->assertSame($get['body']['locale'], $listed['locale']);
+        $this->assertSame($get['body']['custom'], $listed['custom']);
+        $this->assertSame($get['body']['subject'], $listed['subject']);
+        $this->assertSame($get['body']['message'], $listed['message']);
+        $this->assertSame($get['body']['senderName'], $listed['senderName']);
+        $this->assertSame($get['body']['senderEmail'], $listed['senderEmail']);
+        $this->assertSame($get['body']['replyTo'], $listed['replyTo']);
+    }
+
+    public function testListEmailTemplatesOrderByType(): void
+    {
+        $asc = $this->listEmailTemplates([
+            Query::orderAsc('type')->toString(),
+            Query::limit(100)->toString(),
+        ], true);
+        $this->assertSame(200, $asc['headers']['status-code']);
+
+        $ascTypes = \array_map(fn ($t) => $t['type'], $asc['body']['templates']);
+        $sorted = $ascTypes;
+        \sort($sorted);
+        $this->assertSame($sorted, $ascTypes);
+
+        $desc = $this->listEmailTemplates([
+            Query::orderDesc('type')->toString(),
+            Query::limit(100)->toString(),
+        ], true);
+        $this->assertSame(200, $desc['headers']['status-code']);
+
+        $descTypes = \array_map(fn ($t) => $t['type'], $desc['body']['templates']);
+        $sorted = $descTypes;
+        \rsort($sorted);
+        $this->assertSame($sorted, $descTypes);
+    }
+
+    public function testListEmailTemplatesInvalidQuery(): void
+    {
+        $list = $this->listEmailTemplates([
+            Query::equal('notAnAttribute', ['foo'])->toString(),
+        ], true);
+
+        $this->assertSame(400, $list['headers']['status-code']);
+    }
+
+    public function testListEmailTemplatesWithoutAuthentication(): void
+    {
+        $list = $this->listEmailTemplates(null, true, false);
+
+        $this->assertSame(401, $list['headers']['status-code']);
     }
 
     // =========================================================================
@@ -302,6 +505,31 @@ trait TemplatesBase
         }
 
         return $this->client->call(Client::METHOD_GET, '/project/templates/email/' . $type, $headers, $params);
+    }
+
+    /**
+     * @param array<string>|null $queries
+     */
+    protected function listEmailTemplates(?array $queries, ?bool $total, bool $authenticated = true): mixed
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ];
+
+        if ($authenticated) {
+            $headers = \array_merge($headers, $this->getHeaders());
+        }
+
+        $params = [];
+        if ($queries !== null) {
+            $params['queries'] = $queries;
+        }
+        if ($total !== null) {
+            $params['total'] = $total;
+        }
+
+        return $this->client->call(Client::METHOD_GET, '/project/templates/email', $headers, $params);
     }
 
     protected function updateEmailTemplate(
