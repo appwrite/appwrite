@@ -13,10 +13,20 @@ function ContextMenu({
 }
 
 function ContextMenuTrigger({
+  className,
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.Trigger>) {
   return (
-    <ContextMenuPrimitive.Trigger data-slot="context-menu-trigger" {...props} />
+    <ContextMenuPrimitive.Trigger
+      data-slot="context-menu-trigger"
+      className={cn(
+        // Disable native text selection and the iOS callout on touch devices
+        // so a long-press opens the menu without grabbing surrounding text.
+        'pointer-coarse:[-webkit-touch-callout:none] pointer-coarse:[-webkit-user-select:none] pointer-coarse:select-none',
+        className,
+      )}
+      {...props}
+    />
   )
 }
 
