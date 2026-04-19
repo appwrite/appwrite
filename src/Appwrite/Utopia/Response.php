@@ -266,6 +266,7 @@ class Response extends SwooleResponse
     public const MODEL_VARIABLE_LIST = 'variableList';
     public const MODEL_VCS = 'vcs';
     public const MODEL_EMAIL_TEMPLATE = 'emailTemplate';
+    public const MODEL_EMAIL_TEMPLATE_LIST = 'emailTemplateList';
 
     // Health
     public const MODEL_HEALTH_STATUS = 'healthStatus';
