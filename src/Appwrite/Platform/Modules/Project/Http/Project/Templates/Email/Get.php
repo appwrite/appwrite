@@ -27,8 +27,8 @@ class Get extends Action
     public function __construct()
     {
         $this->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/project/templates/email/:type')
-            ->httpAlias('/v1/projects/:projectId/templates/email/:type/:locale')
+            ->setHttpPath('/v1/project/templates/email/:templateId')
+            ->httpAlias('/v1/projects/:projectId/templates/email/:templateId/:locale')
             ->desc('Get project email template')
             ->groups(['api', 'project'])
             ->label('scope', 'templates.read')
@@ -47,8 +47,8 @@ class Get extends Action
                     )
                 ]
             ))
-            ->param('type', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? [], true), 'Custom email template type. Can be one of: '.\implode(', ', Config::getParam('locale-templates')['email'] ?? []))
-            ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Custom email template locale.', optional: true, injections: ['localeCodes'])
+            ->param('templateId', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? [], true), 'Custom email template type. Can be one of: '.\implode(', ', Config::getParam('locale-templates')['email'] ?? []))
+            ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Custom email template locale. If left empty, the fallback locale (en) will be used.', optional: true, injections: ['localeCodes'])
             ->inject('response')
             ->inject('project')
             ->inject('locale')
@@ -56,16 +56,16 @@ class Get extends Action
     }
 
     public function action(
-        string $type,
+        string $templateId,
         string $locale,
         Response $response,
         Document $project,
         Locale $localeObject,
     ) {
-        $locale = $locale ?: $localeObject->default ?: $localeObject->fallback ?: System::getEnv('_APP_LOCALE', 'en');
+        $locale = $locale ?: System::getEnv('_APP_LOCALE', 'en');
 
         $templates = $project->getAttribute('templates', []);
-        $template  = $templates['email.' . $type . '-' . $locale] ?? null;
+        $template  = $templates['email.' . $templateId . '-' . $locale] ?? null;
 
         $localeObj = new Locale($locale);
         $localeObj->setFallback(System::getEnv('_APP_LOCALE', 'en'));
@@ -94,7 +94,7 @@ class Get extends Action
             ];
 
             // fallback to the base template.
-            $config = $templateConfigs[$type] ?? [
+            $config = $templateConfigs[$templateId] ?? [
                 'file' => 'email-inner-base.tpl',
                 'placeholders' => ['buttonText', 'body', 'footer']
             ];
@@ -107,21 +107,21 @@ class Get extends Action
             // Set type-specific parameters
             foreach ($config['placeholders'] as $param) {
                 $escapeHtml = !in_array($param, ['clientInfo', 'body', 'footer', 'description']);
-                $message->setParam("{{{$param}}}", $localeObj->getText("emails.{$type}.{$param}"), escapeHtml: $escapeHtml);
+                $message->setParam("{{{$param}}}", $localeObj->getText("emails.{$templateId}.{$param}"), escapeHtml: $escapeHtml);
             }
 
             $message
                 // common placeholders on all the templates
-                ->setParam('{{hello}}', $localeObj->getText("emails.{$type}.hello"))
-                ->setParam('{{thanks}}', $localeObj->getText("emails.{$type}.thanks"))
-                ->setParam('{{signature}}', $localeObj->getText("emails.{$type}.signature"));
+                ->setParam('{{hello}}', $localeObj->getText("emails.{$templateId}.hello"))
+                ->setParam('{{thanks}}', $localeObj->getText("emails.{$templateId}.thanks"))
+                ->setParam('{{signature}}', $localeObj->getText("emails.{$templateId}.signature"));
 
             // `useContent: false` will strip new lines!
             $message = $message->render(useContent: true);
 
             $template = [
                 'message' => $message,
-                'subject' => $localeObj->getText('emails.' . $type . '.subject'),
+                'subject' => $localeObj->getText('emails.' . $templateId . '.subject'),
                 'senderEmail' => '',
                 'senderName' => '',
                 'custom' => false,
@@ -130,7 +130,7 @@ class Get extends Action
             $template['custom'] = true;
         }
 
-        $template['type'] = $type;
+        $template['templateId'] = $templateId;
         $template['locale'] = $locale;
 
         $response->dynamic(new Document($template), Response::MODEL_EMAIL_TEMPLATE);

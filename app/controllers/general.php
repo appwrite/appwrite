@@ -26,6 +26,7 @@ use Appwrite\Utopia\Request\Filters\V19 as RequestV19;
 use Appwrite\Utopia\Request\Filters\V20 as RequestV20;
 use Appwrite\Utopia\Request\Filters\V21 as RequestV21;
 use Appwrite\Utopia\Request\Filters\V22 as RequestV22;
+use Appwrite\Utopia\Request\Filters\V23 as RequestV23;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filters\V16 as ResponseV16;
 use Appwrite\Utopia\Response\Filters\V17 as ResponseV17;
@@ -34,6 +35,7 @@ use Appwrite\Utopia\Response\Filters\V19 as ResponseV19;
 use Appwrite\Utopia\Response\Filters\V20 as ResponseV20;
 use Appwrite\Utopia\Response\Filters\V21 as ResponseV21;
 use Appwrite\Utopia\Response\Filters\V22 as ResponseV22;
+use Appwrite\Utopia\Response\Filters\V23 as ResponseV23;
 use Appwrite\Utopia\View;
 use Executor\Executor;
 use MaxMind\Db\Reader;
@@ -897,6 +899,9 @@ Http::init()
             if (version_compare($requestFormat, '1.9.1', '<')) {
                 $request->addFilter(new RequestV22());
             }
+            if (version_compare($requestFormat, '1.9.2', '<')) {
+                $request->addFilter(new RequestV23());
+            }
         }
 
         $localeParam = (string) $request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
@@ -921,6 +926,9 @@ Http::init()
          */
         $responseFormat = $request->getHeader('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
         if ($responseFormat) {
+            if (version_compare($responseFormat, '1.9.2', '<')) {
+                $response->addFilter(new ResponseV23());
+            }
             if (version_compare($responseFormat, '1.9.1', '<')) {
                 $response->addFilter(new ResponseV22());
             }

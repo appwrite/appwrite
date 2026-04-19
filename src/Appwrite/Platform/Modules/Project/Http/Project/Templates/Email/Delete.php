@@ -33,13 +33,13 @@ class Delete extends Action
         $this->setHttpMethod(Action::HTTP_REQUEST_METHOD_DELETE)
             ->setHttpPath('/v1/project/templates/email')
             ->httpAlias('/v1/projects/:projectId/templates/email')
-            ->httpAlias('/v1/projects/:projectId/templates/email/:type/:locale')
+            ->httpAlias('/v1/projects/:projectId/templates/email/:templateId/:locale')
             ->desc('Delete project email template')
             ->groups(['api', 'project'])
             ->label('scope', 'templates.write')
             ->label('event', 'templates.[templateType].delete')
             ->label('audits.event', 'project.template.delete')
-            ->label('audits.resource', 'project.template/{response.type}')
+            ->label('audits.resource', 'project.template/{response.templateId}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'templates',
@@ -56,8 +56,8 @@ class Delete extends Action
                 ],
                 contentType: ContentType::NONE
             ))
-            ->param('type', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? [], true), 'Custom email template type. Can be one of: '.\implode(', ', Config::getParam('locale-templates')['email'] ?? []))
-            ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Custom email template locale.', optional: true, injections: ['localeCodes'])
+            ->param('templateId', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? [], true), 'Custom email template type. Can be one of: '.\implode(', ', Config::getParam('locale-templates')['email'] ?? []))
+            ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Custom email template locale. If left empty, the fallback locale (en) will be used.', optional: true, injections: ['localeCodes'])
             ->inject('response')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
@@ -68,7 +68,7 @@ class Delete extends Action
     }
 
     public function action(
-        string $type,
+        string $templateId,
         string $locale,
         Response $response,
         QueueEvent $queueForEvents,
@@ -77,16 +77,16 @@ class Delete extends Action
         Document $project,
         Locale $localeObject,
     ) {
-        $locale = $locale ?: $localeObject->default ?: $localeObject->fallback ?: System::getEnv('_APP_LOCALE', 'en');
+        $locale = $locale ?: System::getEnv('_APP_LOCALE', 'en');
 
         $templates = $project->getAttribute('templates', []);
-        $template  = $templates['email.' . $type . '-' . $locale] ?? null;
+        $template  = $templates['email.' . $templateId . '-' . $locale] ?? null;
 
         if (is_null($template)) {
             throw new Exception(Exception::PROJECT_TEMPLATE_DEFAULT_DELETION);
         }
 
-        unset($templates['email.' . $type . '-' . $locale]);
+        unset($templates['email.' . $templateId . '-' . $locale]);
 
         $updates = new Document([
             'templates' => $templates,
@@ -94,7 +94,7 @@ class Delete extends Action
 
         $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
 
-        $queueForEvents->setParam('templateType', $type);
+        $queueForEvents->setParam('templateType', $templateId);
 
         $response->noContent();
     }

@@ -33,13 +33,13 @@ class Update extends Action
         $this->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
             ->setHttpPath('/v1/project/templates/email')
             ->httpAlias('/v1/projects/:projectId/templates/email')
-            ->httpAlias('/v1/projects/:projectId/templates/email/:type/:locale')
+            ->httpAlias('/v1/projects/:projectId/templates/email/:templateId/:locale')
             ->desc('Update project email template')
             ->groups(['api', 'project'])
             ->label('scope', 'templates.write')
             ->label('event', 'templates.[templateType].update')
             ->label('audits.event', 'project.template.update')
-            ->label('audits.resource', 'project.template/{response.type}')
+            ->label('audits.resource', 'project.template/{response.templateId}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'templates',
@@ -55,8 +55,8 @@ class Update extends Action
                     )
                 ]
             ))
-            ->param('type', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? [], true), 'Custom email template type. Can be one of: '.\implode(', ', Config::getParam('locale-templates')['email'] ?? []))
-            ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Custom email template locale.', optional: true, injections: ['localeCodes'])
+            ->param('templateId', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? [], true), 'Custom email template type. Can be one of: '.\implode(', ', Config::getParam('locale-templates')['email'] ?? []))
+            ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Custom email template locale. If left empty, the fallback locale (en) will be used.', optional: true, injections: ['localeCodes'])
             ->param('subject', '', new Text(255), 'Subject of the email template. Can be up to 255 characters.')
             ->param('message', '', new Text(10485760), 'Plain or HTML body of the email template message. Can be up to 10MB of content.')
             ->param('senderName', '', new Text(255, 0), 'Name of the email sender.', true)
@@ -72,7 +72,7 @@ class Update extends Action
     }
 
     public function action(
-        string $type,
+        string $templateId,
         string $locale,
         string $subject,
         string $message,
@@ -86,7 +86,7 @@ class Update extends Action
         Document $project,
         Locale $localeObject,
     ) {
-        $locale = $locale ?: $localeObject->default ?: $localeObject->fallback ?: System::getEnv('_APP_LOCALE', 'en');
+        $locale = $locale ?: System::getEnv('_APP_LOCALE', 'en');
 
         $template = [
             'senderName' => $senderName,
@@ -97,7 +97,7 @@ class Update extends Action
         ];
 
         $templates = $project->getAttribute('templates', []);
-        $templates['email.' . $type . '-' . $locale] = $template;
+        $templates['email.' . $templateId . '-' . $locale] = $template;
 
         $updates = new Document([
             'templates' => $templates,
@@ -105,10 +105,10 @@ class Update extends Action
 
         $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
 
-        $queueForEvents->setParam('templateType', $type);
+        $queueForEvents->setParam('templateType', $templateId);
 
         $response->dynamic(new Document([
-            'type' => $type,
+            'templateId' => $templateId,
             'locale' => $locale,
             'senderName' => $template['senderName'],
             'senderEmail' => $template['senderEmail'],
