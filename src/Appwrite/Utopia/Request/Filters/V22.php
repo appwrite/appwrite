@@ -73,10 +73,10 @@ class V22 extends Filter
     public function parse(array $content, string $model): array
     {
         switch ($model) {
-            case 'project.updateServiceStatus':
+            case 'project.updateService':
                 $content = $this->parseUpdateServiceStatus($content);
                 break;
-            case 'project.updateProtocolStatus':
+            case 'project.updateProtocol':
                 $content = $this->parseUpdateProtocolStatus($content);
                 break;
             case 'project.createKey':

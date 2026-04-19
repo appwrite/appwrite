@@ -1050,6 +1050,28 @@ trait StorageBase
         $this->assertEquals(404, $file['headers']['status-code']);
     }
 
+    public function testFilePreviewAvifPublic(): void
+    {
+        $data = $this->setupBucketFile();
+        $bucketId = $data['bucketId'];
+        $fileId = $data['fileId'];
+        $projectId = $this->getProject()['$id'];
+
+        // Matches the customer's URL pattern: no headers, project + output in query string only
+        $preview = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', [
+            'content-type' => 'application/json',
+        ], [
+            'project' => $projectId,
+            'width' => 1080,
+            'quality' => 40,
+            'output' => 'avif',
+        ]);
+
+        $this->assertEquals(200, $preview['headers']['status-code']);
+        $this->assertEquals('image/avif', $preview['headers']['content-type']);
+        $this->assertNotEmpty($preview['body']);
+    }
+
     public function testFilePreview(): void
     {
         $data = $this->setupBucketFile();
@@ -1069,6 +1091,49 @@ trait StorageBase
         $this->assertEquals(200, $preview['headers']['status-code']);
         $this->assertEquals('image/webp', $preview['headers']['content-type']);
         $this->assertNotEmpty($preview['body']);
+
+        // Preview PNG as avif
+        $avifPreview = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'width' => 1080,
+            'quality' => 40,
+            'output' => 'avif',
+        ]);
+
+        $this->assertEquals(200, $avifPreview['headers']['status-code']);
+        $this->assertEquals('image/avif', $avifPreview['headers']['content-type']);
+        $this->assertNotEmpty($avifPreview['body']);
+
+        // Preview JPEG as avif
+        $jpegFile = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/disk-a/kitten-1.jpg'), 'image/jpeg', 'kitten-1.jpg'),
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $jpegFile['headers']['status-code']);
+
+        $avifFromJpeg = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $jpegFile['body']['$id'] . '/preview', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'width' => 1080,
+            'quality' => 40,
+            'output' => 'avif',
+        ]);
+
+        $this->assertEquals(200, $avifFromJpeg['headers']['status-code']);
+        $this->assertEquals('image/avif', $avifFromJpeg['headers']['content-type']);
+        $this->assertNotEmpty($avifFromJpeg['body']);
     }
 
     public function testDeletePartiallyUploadedFile(): void
