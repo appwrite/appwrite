@@ -227,7 +227,7 @@ export function RepositoryConfigView({
         providerBranch: branch,
         providerSilentMode: silentMode,
         providerRootDirectory: rootDirectory || undefined,
-        specification: specification || undefined,
+        buildSpecification: specification || undefined,
       })
 
       await projectSdk.proxy.createFunctionRule({

@@ -421,9 +421,9 @@ export function View() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const specifications = specificationsData?.specifications || []
 
-  // Get specification info
+  // Get runtime specification info (used for executions)
   const specification = specifications.find(
-    (spec) => spec.slug === func?.specification,
+    (spec) => spec.slug === func?.runtimeSpecification,
   )
   const specificationText = specification
     ? `${specification.cpus} CPU, ${specification.memory}MB RAM`
@@ -435,7 +435,7 @@ export function View() {
   // Initialize selected specification when dialog opens
   useEffect(() => {
     if (runtimeLimitsDialogOpen && specifications.length > 0) {
-      const currentSpec = func?.specification
+      const currentSpec = func?.runtimeSpecification
       if (currentSpec) {
         const spec = specifications.find((s) => s.slug === currentSpec)
         if (spec && isSpecificationAllowedInPlan(spec)) {
@@ -449,7 +449,7 @@ export function View() {
         setSelectedSpecification(firstEnabled?.slug || '')
       }
     }
-  }, [runtimeLimitsDialogOpen, func?.specification, specifications])
+  }, [runtimeLimitsDialogOpen, func?.runtimeSpecification, specifications])
 
   // Update function specification mutation
   const updateSpecificationMutation = useMutation({
@@ -462,7 +462,7 @@ export function View() {
       return await projectSdk.functions.update({
         functionId,
         name: func.name,
-        specification: specificationSlug,
+        runtimeSpecification: specificationSlug,
       })
     },
     onSuccess: () => {
@@ -1989,7 +1989,7 @@ export function View() {
                 onClick={handleSaveSpecification}
                 disabled={
                   !selectedSpecification ||
-                  selectedSpecification === func?.specification ||
+                  selectedSpecification === func?.runtimeSpecification ||
                   updateSpecificationMutation.isPending
                 }
               >

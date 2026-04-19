@@ -121,7 +121,7 @@ export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
         enabled: true,
         entrypoint: entrypoint.trim() || undefined,
         commands: commands.trim() || undefined,
-        specification: specification || undefined,
+        buildSpecification: specification || undefined,
       })
 
       await projectSdk.proxy.createFunctionRule({

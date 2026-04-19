@@ -122,7 +122,8 @@ export function buildSiteUpdateParams(
     providerBranch: site.providerBranch,
     providerSilentMode: site.providerSilentMode,
     providerRootDirectory: site.providerRootDirectory,
-    specification: site.specification,
+    buildSpecification: site.buildSpecification,
+    runtimeSpecification: site.runtimeSpecification,
     ...updates,
   } as unknown as SiteUpdateParams
 }
@@ -1294,7 +1295,8 @@ export interface CreateSiteParams {
   providerBranch?: string
   providerSilentMode?: boolean
   providerRootDirectory?: string
-  specification?: string
+  buildSpecification?: string
+  runtimeSpecification?: string
 }
 
 /**

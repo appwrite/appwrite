@@ -144,7 +144,7 @@ export function DeployFromUrlView({
         entrypoint: entrypoint.trim() || undefined,
         commands: commands.trim() || undefined,
         providerSilentMode: true,
-        specification: specification || undefined,
+        buildSpecification: specification || undefined,
       })
 
       await projectSdk.proxy.createFunctionRule({

@@ -282,7 +282,7 @@ export function TemplateConfigView({
               providerSilentMode: false,
               providerRootDirectory: './',
             }),
-        specification: specification || undefined,
+        buildSpecification: specification || undefined,
       })
 
       await projectSdk.proxy.createFunctionRule({

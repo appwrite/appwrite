@@ -67,7 +67,8 @@ export function View() {
   const [logging, setLogging] = useState(true)
   const [schedule, setSchedule] = useState('')
   const [events, setEvents] = useState<string[]>([])
-  const [specification, setSpecification] = useState('')
+  const [buildSpecification, setBuildSpecification] = useState('')
+  const [runtimeSpecification, setRuntimeSpecification] = useState('')
   const [enabled, setEnabled] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [eventDialogOpen, setEventDialogOpen] = useState(false)
@@ -83,7 +84,8 @@ export function View() {
       setLogging(func.logging ?? true)
       setSchedule(func.schedule || '')
       setEvents(func.events || [])
-      setSpecification(func.specification || '')
+      setBuildSpecification(func.buildSpecification || '')
+      setRuntimeSpecification(func.runtimeSpecification || '')
       setEnabled(func.enabled !== false) // Default to true if not specified
     }
   }, [func])
@@ -154,18 +156,17 @@ export function View() {
     updateFunctionMutation.mutate({
       runtime,
       entrypoint,
-      specification: specification || undefined,
+      runtimeSpecification: runtimeSpecification || undefined,
       timeout,
+      logging,
     })
   }
 
-  const handleSaveCommands = () => {
-    updateFunctionMutation.mutate({ commands })
-  }
-
-  const handleToggleLogging = (enabled: boolean) => {
-    setLogging(enabled)
-    updateFunctionMutation.mutate({ logging: enabled })
+  const handleSaveBuild = () => {
+    updateFunctionMutation.mutate({
+      commands,
+      buildSpecification: buildSpecification || undefined,
+    })
   }
 
   // Update enabled mutation
@@ -377,34 +378,116 @@ export function View() {
             </div>
           )}
 
-          {/* Build Commands Card */}
+          {/* Git Repository Settings Card */}
+          {func && <GitSettingsCard func={func} />}
+
+          {/* Build Card */}
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
             <div className="px-6 py-4">
               <h3 className="text-[15px] font-semibold text-foreground">
-                Build Commands
+                Build
               </h3>
               <p className="text-[13px] text-muted-foreground mt-2">
-                Commands to run during function build
+                Commands and compute used when building and packaging your
+                function deployment.
               </p>
             </div>
             <div className="border-t border-border" />
             <div className="px-6 py-4">
-              <Input
-                value={commands}
-                onChange={(e) => setCommands(e.target.value)}
-                placeholder="npm install"
-                className="h-9 font-mono text-[13px]"
-              />
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="build-commands" className="text-[13px]">
+                    Commands
+                  </Label>
+                  <Input
+                    id="build-commands"
+                    value={commands}
+                    onChange={(e) => setCommands(e.target.value)}
+                    placeholder="npm install"
+                    className="mt-2 h-9 font-mono text-[13px]"
+                  />
+                  <p className="mt-1 text-[12px] text-muted-foreground">
+                    Commands to run during function build.
+                  </p>
+                </div>
+                {specifications.length > 0 && (
+                  <div>
+                    <Label
+                      htmlFor="build-specification"
+                      className="text-[13px]"
+                    >
+                      Specification
+                    </Label>
+                    <Select
+                      value={buildSpecification || undefined}
+                      onValueChange={setBuildSpecification}
+                    >
+                      <SelectTrigger
+                        id="build-specification"
+                        className="mt-2 h-9 border-border bg-background text-[13px]"
+                      >
+                        <SelectValue placeholder="Select specification" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {specifications
+                          .filter(
+                            (spec) => spec.slug && spec.slug.trim() !== '',
+                          )
+                          .map((spec) => (
+                            <SelectItem
+                              key={spec.slug}
+                              value={spec.slug}
+                              disabled={!isSpecificationAllowedInPlan(spec)}
+                            >
+                              {spec.cpus} CPU, {spec.memory}MB RAM
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="mt-1 text-[12px] text-muted-foreground">
+                      CPU and memory used when building and packaging your
+                      function deployment.
+                    </p>
+                    {hasUnavailableSpecifications(specifications) && (
+                      <div className="mt-3 rounded-lg border border-border bg-muted/30 px-3 py-2.5">
+                        <p className="text-[12px] text-muted-foreground">
+                          Need more resources?{' '}
+                          <a
+                            href="#"
+                            className="font-medium text-foreground underline hover:no-underline"
+                            onClick={(e) => {
+                              e.preventDefault()
+                            }}
+                          >
+                            Upgrade your plan
+                          </a>{' '}
+                          or{' '}
+                          <a
+                            href={CONTACT_SALES_URL}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-medium text-foreground underline hover:no-underline"
+                          >
+                            contact sales
+                          </a>{' '}
+                          to unlock additional specifications.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
             <div className="px-6 py-4 border-t border-border bg-muted/30">
               <Button
                 size="sm"
                 className="h-9 text-[13px]"
                 disabled={
-                  commands === func?.commands ||
+                  (commands === (func?.commands || '') &&
+                    buildSpecification === (func?.buildSpecification || '')) ||
                   updateFunctionMutation.isPending
                 }
-                onClick={handleSaveCommands}
+                onClick={handleSaveBuild}
               >
                 Update
               </Button>
@@ -418,7 +501,9 @@ export function View() {
                 Runtime
               </h3>
               <p className="text-[13px] text-muted-foreground mt-2">
-                Configure runtime execution settings for your function
+                Configure how your function runs after it's been built,
+                including the runtime, entrypoint, resources available at
+                execution time, and execution logging.
               </p>
             </div>
             <div className="border-t border-border" />
@@ -426,7 +511,7 @@ export function View() {
               <div className="space-y-3">
                 <div>
                   <Label htmlFor="runtime" className="text-[13px]">
-                    Runtime
+                    Version
                   </Label>
                   {runtimes.length > 0 ? (
                     <Select value={runtime} onValueChange={setRuntime}>
@@ -471,15 +556,18 @@ export function View() {
                 </div>
                 {specifications.length > 0 && (
                   <div>
-                    <Label htmlFor="specification" className="text-[13px]">
-                      Compute
+                    <Label
+                      htmlFor="runtime-specification"
+                      className="text-[13px]"
+                    >
+                      Specification
                     </Label>
                     <Select
-                      value={specification || undefined}
-                      onValueChange={setSpecification}
+                      value={runtimeSpecification || undefined}
+                      onValueChange={setRuntimeSpecification}
                     >
                       <SelectTrigger
-                        id="specification"
+                        id="runtime-specification"
                         className="mt-2 h-9 border-border bg-background text-[13px]"
                       >
                         <SelectValue placeholder="Select specification" />
@@ -501,7 +589,8 @@ export function View() {
                       </SelectContent>
                     </Select>
                     <p className="mt-1 text-[12px] text-muted-foreground">
-                      Select the runtime specification for your function
+                      CPU and memory available to each function execution at
+                      runtime.
                     </p>
                     {hasUnavailableSpecifications(specifications) && (
                       <div className="mt-3 rounded-lg border border-border bg-muted/30 px-3 py-2.5">
@@ -549,6 +638,22 @@ export function View() {
                     Maximum execution time in seconds (1-900)
                   </p>
                 </div>
+                <div className="flex items-center justify-between pt-2">
+                  <div>
+                    <Label htmlFor="logging" className="text-[13px]">
+                      Logging
+                    </Label>
+                    <p className="text-[12px] text-muted-foreground">
+                      Log function execution output
+                    </p>
+                  </div>
+                  <Switch
+                    id="logging"
+                    checked={logging}
+                    onCheckedChange={setLogging}
+                    disabled={updateFunctionMutation.isPending}
+                  />
+                </div>
               </div>
             </div>
             <div className="px-6 py-4 border-t border-border bg-muted/30">
@@ -558,8 +663,10 @@ export function View() {
                 disabled={
                   (runtime === func?.runtime &&
                     entrypoint === func?.entrypoint &&
-                    specification === func?.specification &&
-                    timeout === func?.timeout) ||
+                    runtimeSpecification ===
+                      (func?.runtimeSpecification || '') &&
+                    timeout === func?.timeout &&
+                    logging === (func?.logging ?? true)) ||
                   !runtime ||
                   !entrypoint.trim() ||
                   updateFunctionMutation.isPending
@@ -604,9 +711,6 @@ export function View() {
               </Button>
             </div>
           </div>
-
-          {/* Git Repository Settings Card */}
-          {func && <GitSettingsCard func={func} />}
 
           {/* Events Card */}
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
@@ -679,37 +783,6 @@ export function View() {
               >
                 Update
               </Button>
-            </div>
-          </div>
-
-          {/* Logging Card */}
-          <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-            <div className="px-6 py-4">
-              <h3 className="text-[15px] font-semibold text-foreground">
-                Logging
-              </h3>
-              <p className="text-[13px] text-muted-foreground mt-2">
-                Enable logging for function executions
-              </p>
-            </div>
-            <div className="border-t border-border" />
-            <div className="px-6 py-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="logging" className="text-[13px]">
-                    Enable logging
-                  </Label>
-                  <p className="text-[12px] text-muted-foreground">
-                    Log function execution output
-                  </p>
-                </div>
-                <Switch
-                  id="logging"
-                  checked={logging}
-                  onCheckedChange={handleToggleLogging}
-                  disabled={updateFunctionMutation.isPending}
-                />
-              </div>
             </div>
           </div>
 

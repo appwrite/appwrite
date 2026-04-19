@@ -252,7 +252,7 @@ export function BuildSettingsCard({
   const [buildCommand, setBuildCommand] = useState('')
   const [outputDirectory, setOutputDirectory] = useState('')
   const [fallbackFile, setFallbackFile] = useState('')
-  const [specification, setSpecification] = useState('')
+  const [buildSpecification, setBuildSpecification] = useState('')
 
   // Get current framework info
   const currentFramework = useMemo(
@@ -285,7 +285,7 @@ export function BuildSettingsCard({
       setBuildCommand(site.buildCommand || '')
       setOutputDirectory(site.outputDirectory || '')
       setFallbackFile(site.fallbackFile || '')
-      setSpecification(site.specification || '')
+      setBuildSpecification(site.buildSpecification || '')
     }
   }, [site])
 
@@ -337,7 +337,7 @@ export function BuildSettingsCard({
       buildCommand: buildCommand || undefined,
       outputDirectory: outputDirectory || undefined,
       fallbackFile: fallbackFile || undefined,
-      specification: specification || undefined,
+      buildSpecification: buildSpecification || undefined,
     })
   }
 
@@ -348,7 +348,7 @@ export function BuildSettingsCard({
     buildCommand !== site?.buildCommand ||
     outputDirectory !== site?.outputDirectory ||
     fallbackFile !== site?.fallbackFile ||
-    specification !== site?.specification
+    buildSpecification !== site?.buildSpecification
 
   const isStaticAdapter = adapter === 'static'
   const isInstallModified = installCommand !== frameworkDefaults.installCommand
@@ -359,7 +359,7 @@ export function BuildSettingsCard({
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">
-          Build Settings
+          Build
         </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
           Configure framework, adapter, and build commands for the site
@@ -456,18 +456,18 @@ export function BuildSettingsCard({
             </div>
           )}
 
-          {/* Specification (Cloud only) */}
+          {/* Build specification (Cloud only) */}
           {isCloud && specifications.length > 0 && (
             <div>
-              <Label htmlFor="specification" className="text-[13px]">
+              <Label htmlFor="build-specification" className="text-[13px]">
                 Specification
               </Label>
               <Select
-                value={specification || undefined}
-                onValueChange={setSpecification}
+                value={buildSpecification || undefined}
+                onValueChange={setBuildSpecification}
               >
                 <SelectTrigger
-                  id="specification"
+                  id="build-specification"
                   className="mt-2 h-9 border-border bg-background text-[13px]"
                 >
                   <SelectValue placeholder="Select specification" />
@@ -487,7 +487,8 @@ export function BuildSettingsCard({
                 </SelectContent>
               </Select>
               <p className="mt-1 text-[12px] text-muted-foreground">
-                Select the CPU and memory specification for your site
+                CPU and memory used when installing dependencies and building
+                your site for deployment.
               </p>
               {hasUnavailableSpecifications(specifications) && (
                 <div className="mt-3 rounded-lg border border-border bg-muted/30 px-3 py-2.5">
