@@ -1,8 +1,10 @@
 import { useState, useMemo } from 'react'
 import { getBaseEndpoint } from '@/lib/appwrite/sdk'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useConsoleVariables } from '@/lib/react-query/hooks/console-variables'
+import { getApexDomain } from '@/lib/utils/proxy-domains'
 import type { Models } from '@appwrite.io/console'
-import { Copy, Check, Loader2, ExternalLink } from 'lucide-react'
+import { Copy, Check, Loader2, ExternalLink, Info } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
@@ -26,6 +28,15 @@ interface VerifyDomainContentProps {
   compact?: boolean
   /** Omit card wrapper (e.g. when used inside a modal that provides its own container) */
   noCard?: boolean
+  /**
+   * Which resource the custom domain points to.
+   * - 'api' → use `_APP_DOMAIN_TARGET_CNAME` from console variables (project endpoint host).
+   * - 'function' / 'site' → when the active profile has `edgeNetwork` enabled,
+   *   use the edge network CNAME (`appwrite.network`) instead of the project
+   *   endpoint host. Falls back to console variables when edge network is off.
+   * Defaults to 'api' for backward compatibility.
+   */
+  resourceType?: 'api' | 'function' | 'site'
   onChange?: () => void
   onVerify?: () => void
   isVerifying?: boolean
@@ -122,6 +133,7 @@ export function VerifyDomainContent({
   region,
   compact,
   noCard,
+  resourceType = 'api',
   onChange,
   onVerify,
   isVerifying,
@@ -129,8 +141,15 @@ export function VerifyDomainContent({
   verificationError,
 }: VerifyDomainContentProps) {
   const [copiedField, setCopiedField] = useState<string | null>(null)
-  const { cname, a, aaaa, caa, nameservers, isLoading, error } =
-    useConsoleVariables(region)
+  const {
+    cname: rawCname,
+    a,
+    aaaa,
+    caa,
+    nameservers,
+    isLoading,
+    error,
+  } = useConsoleVariables(region)
 
   const isCloud = useMemo(() => {
     try {
@@ -139,6 +158,24 @@ export function VerifyDomainContent({
       return false
     }
   }, [])
+
+  const { features } = useConsoleProfile()
+  const edgeNetworkEnabled = features.edgeNetwork
+
+  // For Function and Site custom domains, when the active profile has the edge
+  // network enabled the CNAME must target the edge network host
+  // (`appwrite.network`) — not the project endpoint host returned by
+  // `_APP_DOMAIN_TARGET_CNAME` (which only applies to custom API domains).
+  // For region-pinned routing users can use `<region>.appwrite.run`.
+  const cname = useMemo(() => {
+    if (
+      edgeNetworkEnabled &&
+      (resourceType === 'function' || resourceType === 'site')
+    ) {
+      return 'appwrite.network'
+    }
+    return rawCname
+  }, [edgeNetworkEnabled, resourceType, rawCname])
 
   const handleCopy = (text: string, field: string) => {
     navigator.clipboard.writeText(text)
@@ -182,6 +219,35 @@ export function VerifyDomainContent({
     'Add the following record(s) to your DNS provider. Note that DNS changes may take up to 48 hours to propagate fully.'
   const nameserverNote =
     'Add the following nameservers on your DNS provider. Note that DNS changes may take up to 48 hours to propagate fully.'
+
+  const isApex = useMemo(() => {
+    const apex = getApexDomain(rule.domain)
+    return !!apex && apex === rule.domain.trim().toLowerCase()
+  }, [rule.domain])
+
+  const apexCnameNote = (
+    <Alert
+      variant="default"
+      className="border-border bg-muted/30 [&>svg]:text-muted-foreground"
+    >
+      <Info className="h-4 w-4" />
+      <AlertDescription className="text-[13px] text-muted-foreground">
+        <p className="leading-relaxed">
+          Since{' '}
+          <code className="rounded bg-muted px-1 py-0.5 font-mono text-foreground">
+            {rule.domain}
+          </code>{' '}
+          is an apex domain, CNAME records are not supported by every DNS
+          provider. If yours supports{' '}
+          <span className="font-medium text-foreground">CNAME flattening</span>{' '}
+          (also called ALIAS or ANAME - e.g. Cloudflare, DNSimple, Route 53),
+          you can keep the CNAME above. Otherwise, please verify using
+          {hasNameservers ? ' nameservers ' : ' an A or AAAA record '}
+          instead.
+        </p>
+      </AlertDescription>
+    </Alert>
+  )
 
   const getCnameRecordName = (domain: string): string => {
     const parts = domain.split('.')
@@ -233,12 +299,15 @@ export function VerifyDomainContent({
               {tabOptions[0].id === 'nameservers' ? nameserverNote : recordNote}
             </p>
             {tabOptions[0].id === 'cname' && (
-              <DnsRecordsTable
-                records={getCnameRecords()}
-                onCopy={handleCopy}
-                copiedField={copiedField}
-                showTtl={true}
-              />
+              <div className="space-y-3">
+                <DnsRecordsTable
+                  records={getCnameRecords()}
+                  onCopy={handleCopy}
+                  copiedField={copiedField}
+                  showTtl={true}
+                />
+                {isApex && apexCnameNote}
+              </div>
             )}
             {tabOptions[0].id === 'nameservers' && (
               <DnsRecordsTable
@@ -287,12 +356,15 @@ export function VerifyDomainContent({
                     {tab.id === 'nameservers' ? nameserverNote : recordNote}
                   </p>
                   {tab.id === 'cname' && (
-                    <DnsRecordsTable
-                      records={getCnameRecords()}
-                      onCopy={handleCopy}
-                      copiedField={copiedField}
-                      showTtl={true}
-                    />
+                    <div className="space-y-3">
+                      <DnsRecordsTable
+                        records={getCnameRecords()}
+                        onCopy={handleCopy}
+                        copiedField={copiedField}
+                        showTtl={true}
+                      />
+                      {isApex && apexCnameNote}
+                    </div>
                   )}
                   {tab.id === 'nameservers' && (
                     <DnsRecordsTable

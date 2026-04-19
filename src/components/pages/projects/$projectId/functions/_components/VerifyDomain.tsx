@@ -85,6 +85,7 @@ export function VerifyDomain({
         <div className="border-t border-border" />
         <div className="px-6 py-4 max-h-[70dvh] overflow-y-auto">
           <VerifyDomainContent
+            resourceType="function"
             rule={rule}
             region={region}
             noCard

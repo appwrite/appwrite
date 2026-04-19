@@ -223,6 +223,7 @@ export function AddDomainWizard() {
         <VerifyDomainContent
           rule={rule}
           region={project?.region}
+          resourceType="function"
           verificationError={verificationError}
         />
       </WizardLayout>

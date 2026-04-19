@@ -49,6 +49,12 @@ export type ConsoleProfileFeatures = {
   dedicatedDbsVectorsDB: boolean
   /** Multi-region support (region picker/labels in project UX). */
   multiRegion: boolean
+  /**
+   * Edge network for Functions/Sites custom domains. When enabled, the CNAME
+   * target shown in Add/Verify domain flows is the edge network host
+   * (`appwrite.network`) instead of the project endpoint host.
+   */
+  edgeNetwork: boolean
   /** Require console user email verification after signup (cloud: redirect to verify-email page; self-hosted: skip). */
   userVerification: boolean
 }
@@ -85,6 +91,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       dedicatedDbsDocumentsDB: false,
       dedicatedDbsVectorsDB: false,
       multiRegion: true,
+      edgeNetwork: true,
       userVerification: true,
     },
   },
@@ -112,6 +119,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       dedicatedDbsDocumentsDB: false,
       dedicatedDbsVectorsDB: false,
       multiRegion: false,
+      edgeNetwork: false,
       userVerification: false,
     },
   },

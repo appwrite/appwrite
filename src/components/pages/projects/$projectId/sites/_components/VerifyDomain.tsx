@@ -87,6 +87,7 @@ export function VerifyDomain({
           <VerifyDomainContent
             rule={rule}
             region={region}
+            resourceType="site"
             noCard
             verificationError={verificationError}
           />
