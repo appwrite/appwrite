@@ -20,10 +20,48 @@ import {
 } from '@/lib/react-query/hooks'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { toast } from 'sonner'
-import { Trash2, RefreshCw, ExternalLink } from 'lucide-react'
+import { Trash2, RefreshCw, ExternalLink, Copy, Check } from 'lucide-react'
 import { EventSelector } from './EventSelector'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { Models } from '@appwrite.io/console'
+
+function getWebhookSecret(webhook: Models.Webhook | null | undefined) {
+  if (!webhook) return ''
+  const record = webhook as unknown as Record<string, unknown>
+  return String(record.secret || webhook.signatureKey || '')
+}
+
+function CopyableSecret({ value }: { value: string }) {
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(value)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <div className="flex items-center gap-2 rounded-md border border-border bg-muted/40 px-3 py-2">
+      <code className="min-w-0 flex-1 truncate font-mono text-[12px] text-foreground">
+        {value}
+      </code>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="h-7 w-7 shrink-0"
+        onClick={handleCopy}
+        aria-label="Copy secret"
+      >
+        {copied ? (
+          <Check className="h-3.5 w-3.5 text-emerald-500" />
+        ) : (
+          <Copy className="h-3.5 w-3.5" />
+        )}
+      </Button>
+    </div>
+  )
+}
 
 interface WebhookDrawerProps {
   open: boolean
@@ -65,6 +103,12 @@ export function WebhookDrawer({
   const [httpPass, setHttpPass] = useState('')
   const [security, setSecurity] = useState(true)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [secretDialogOpen, setSecretDialogOpen] = useState(false)
+  const [secretDialogMode, setSecretDialogMode] = useState<'create' | 'rotate'>(
+    'rotate',
+  )
+  const [customSecret, setCustomSecret] = useState('')
+  const [revealedSecret, setRevealedSecret] = useState('')
 
   useEffect(() => {
     if (!open) {
@@ -77,6 +121,7 @@ export function WebhookDrawer({
       setSecurity(true)
       setErrors({})
       setDeleteConfirmOpen(false)
+      setCustomSecret('')
     } else if (webhook) {
       setName(webhook.name || '')
       setUrl(webhook.url || '')
@@ -86,6 +131,7 @@ export function WebhookDrawer({
       setHttpPass('')
       setSecurity(webhook.security ?? true)
       setErrors({})
+      setCustomSecret('')
     }
   }, [open, webhook])
 
@@ -99,18 +145,43 @@ export function WebhookDrawer({
     }
   }
 
-  const handleRegenerateSignature = () => {
+  const openRotateSecretDialog = () => {
     if (!webhook) return
-    regenerateSignatureMutation.mutate(webhook.$id, {
-      onSuccess: () => {
-        toast.success('Signature key has been regenerated')
-      },
-      onError: (error: Error) => {
-        toast.error(
-          getErrorMessage(error) || 'Failed to regenerate signature key',
-        )
-      },
-    })
+    setSecretDialogMode('rotate')
+    setCustomSecret('')
+    setRevealedSecret('')
+    setSecretDialogOpen(true)
+  }
+
+  const handleRotateSecret = async () => {
+    if (!webhook) return
+
+    try {
+      const updatedWebhook = await regenerateSignatureMutation.mutateAsync({
+        webhookId: webhook.$id,
+        secret: customSecret,
+      })
+      const secret = getWebhookSecret(updatedWebhook)
+      setRevealedSecret(secret)
+      toast.success(
+        customSecret.trim()
+          ? 'Webhook secret updated.'
+          : 'Webhook secret rotated.',
+      )
+    } catch (error) {
+      toast.error(getErrorMessage(error as Error, 'Failed to rotate secret'))
+    }
+  }
+
+  const handleSecretContinue = () => {
+    setSecretDialogOpen(false)
+    setCustomSecret('')
+    setRevealedSecret('')
+
+    if (secretDialogMode === 'create') {
+      handleOpenChange(false)
+      onSuccess?.()
+    }
   }
 
   const handleDelete = () => {
@@ -177,8 +248,22 @@ export function WebhookDrawer({
           httpPass: httpPass.trim() || undefined,
         },
         {
-          onSuccess: () => {
-            toast.success('Webhook has been created')
+          onSuccess: (createdWebhook) => {
+            const secret = getWebhookSecret(createdWebhook)
+            toast.success(
+              secret
+                ? 'Webhook created. Secret ready to copy.'
+                : 'Webhook has been created',
+            )
+
+            if (secret) {
+              setSecretDialogMode('create')
+              setCustomSecret('')
+              setRevealedSecret(secret)
+              setSecretDialogOpen(true)
+              return
+            }
+
             handleOpenChange(false)
             onSuccess?.()
           },
@@ -376,12 +461,12 @@ export function WebhookDrawer({
                     <div className="px-6 py-4 space-y-4">
                       <div className="space-y-2">
                         <Label className="text-[12px] font-medium text-muted-foreground">
-                          Signature key
+                          Webhook secret
                         </Label>
-                        {fullWebhook?.signatureKey ? (
+                        {getWebhookSecret(fullWebhook) ? (
                           <div className="flex items-center gap-2">
                             <CopyableId
-                              id={fullWebhook.signatureKey}
+                              id={getWebhookSecret(fullWebhook)}
                               size="sm"
                               maxWidth={240}
                             />
@@ -390,13 +475,13 @@ export function WebhookDrawer({
                               variant="outline"
                               size="sm"
                               className="h-9 text-[13px] shrink-0"
-                              onClick={handleRegenerateSignature}
+                              onClick={openRotateSecretDialog}
                               disabled={regenerateSignatureMutation.isPending}
                             >
                               <RefreshCw
                                 className={`mr-1.5 h-4 w-4 ${regenerateSignatureMutation.isPending ? 'animate-spin' : ''}`}
                               />
-                              Regenerate
+                              Rotate secret
                             </Button>
                           </div>
                         ) : (
@@ -406,9 +491,9 @@ export function WebhookDrawer({
                         )}
                       </div>
                       <p className="text-[13px] text-muted-foreground">
-                        Use this key to verify the authenticity of webhook
-                        payloads via the X-Appwrite-Webhook-Signature header
-                        (HMAC-SHA1).{' '}
+                        Used to validate incoming webhook payloads with the
+                        X-Appwrite-Webhook-Signature header. This secret is only
+                        shown once after webhook creation or secret rotation.{' '}
                         <a
                           href="https://appwrite.io/docs/advanced/platform/webhooks#verification"
                           target="_blank"
@@ -503,6 +588,93 @@ export function WebhookDrawer({
             >
               Delete
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={secretDialogOpen}
+        onOpenChange={(nextOpen) => {
+          if (!regenerateSignatureMutation.isPending) {
+            setSecretDialogOpen(nextOpen)
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md p-0">
+          <DialogHeader className="px-6 pt-6 pb-4 text-left">
+            <DialogTitle>
+              {revealedSecret
+                ? secretDialogMode === 'create'
+                  ? 'Webhook created'
+                  : 'Webhook secret rotated'
+                : 'Rotate webhook secret'}
+            </DialogTitle>
+            <DialogDescription className="text-[13px] mt-2">
+              {revealedSecret
+                ? 'This secret is only shown once after webhook creation or secret rotation. Copy it now.'
+                : 'Leave this empty to rotate the webhook secret automatically, or enter a value to set a custom secret.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="border-t border-border" />
+          <div className="px-6 py-4">
+            {revealedSecret ? (
+              <CopyableSecret value={revealedSecret} />
+            ) : (
+              <div className="space-y-2">
+                <Label
+                  htmlFor="webhook-secret"
+                  className="text-[12px] font-medium"
+                >
+                  Secret
+                </Label>
+                <Input
+                  id="webhook-secret"
+                  type="password"
+                  placeholder="Leave empty to auto-generate"
+                  value={customSecret}
+                  onChange={(e) => setCustomSecret(e.target.value)}
+                  disabled={regenerateSignatureMutation.isPending}
+                  autoComplete="new-password"
+                />
+                <p className="text-[12px] text-muted-foreground">
+                  Used to validate incoming webhook payloads.
+                </p>
+              </div>
+            )}
+          </div>
+          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            {revealedSecret ? (
+              <Button
+                type="button"
+                size="sm"
+                className="h-9 text-[13px]"
+                onClick={handleSecretContinue}
+              >
+                Continue
+              </Button>
+            ) : (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-9 text-[13px]"
+                  onClick={() => setSecretDialogOpen(false)}
+                  disabled={regenerateSignatureMutation.isPending}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  className="h-9 text-[13px]"
+                  onClick={handleRotateSecret}
+                  disabled={regenerateSignatureMutation.isPending}
+                >
+                  {customSecret.trim() ? 'Set custom secret' : 'Rotate secret'}
+                </Button>
+              </>
+            )}
           </div>
         </DialogContent>
       </Dialog>

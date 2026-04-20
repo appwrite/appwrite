@@ -10,7 +10,7 @@ import {
   useQueryClient,
   queryOptions,
 } from '@tanstack/react-query'
-import { ID } from '@appwrite.io/console'
+import { ID, type Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { Dependencies } from './dependencies'
 import { DEFAULT_STALE_TIME } from './constants'
@@ -220,17 +220,44 @@ export function useUpdateWebhookSignature(
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (webhookId: string) => {
+    mutationFn: async (
+      input: string | { webhookId: string; secret?: string },
+    ): Promise<Models.Webhook> => {
       if (!projectId) {
         throw new Error('Project ID is required')
       }
-      return await sdk.forProject(projectId).webhooks.updateSignature({
-        webhookId,
-      })
+
+      const webhookId = typeof input === 'string' ? input : input.webhookId
+      const secret =
+        typeof input === 'string'
+          ? undefined
+          : input.secret?.trim() || undefined
+
+      if (!secret) {
+        return await sdk.forProject(projectId).webhooks.updateSignature({
+          webhookId,
+        })
+      }
+
+      const projectSdk = sdk.forProject(projectId)
+      const uri = new URL(
+        `${projectSdk.client.config.endpoint}/webhooks/${webhookId}/signature`,
+      )
+
+      return await projectSdk.client.call(
+        'patch',
+        uri,
+        { 'content-type': 'application/json' },
+        { secret },
+      )
     },
-    onSuccess: (_, webhookId) => {
+    onSuccess: (_, input) => {
+      const webhookId = typeof input === 'string' ? input : input.webhookId
       queryClient.invalidateQueries({
         queryKey: ['webhook', 'project', projectId, webhookId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['webhooks', 'project', projectId],
       })
       queryClient.invalidateQueries({
         queryKey: Dependencies.WEBHOOK,

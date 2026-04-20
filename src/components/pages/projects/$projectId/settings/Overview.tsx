@@ -2,14 +2,9 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import {
   Loader2,
-  Plus,
   Code,
   Upload,
-  Eye,
-  EyeOff,
   Globe,
-  XCircle,
-  MoreHorizontal,
   AlertTriangle,
   Copy,
   Check,
@@ -34,7 +29,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { Badge } from '@/components/ui/badge'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import {
   Dialog,
@@ -63,21 +57,6 @@ import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
 import type { Models } from '@appwrite.io/console'
 import { ApiService } from '@appwrite.io/console'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Checkbox } from '@/components/ui/checkbox'
 import { GitConfigurationCard } from './GitConfigurationCard'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
@@ -131,6 +110,49 @@ enum Dependencies {
   PROJECT_INSTALLATIONS = 'project-installations',
 }
 
+type ProtocolId = 'rest' | 'graphql' | 'websocket'
+
+type ProjectProtocol = {
+  id: ProtocolId
+  label: string
+  description: string
+  projectField: string
+  icon: typeof Globe
+}
+
+const PROJECT_PROTOCOLS: ProjectProtocol[] = [
+  {
+    id: 'rest',
+    label: 'REST',
+    description: 'Standard HTTP API requests from client SDKs.',
+    projectField: 'protocolStatusForRest',
+    icon: Globe,
+  },
+  {
+    id: 'graphql',
+    label: 'GraphQL',
+    description: 'GraphQL API access for queries and mutations.',
+    projectField: 'protocolStatusForGraphql',
+    icon: Code,
+  },
+  {
+    id: 'websocket',
+    label: 'WebSocket',
+    description: 'Realtime subscriptions over WebSocket connections.',
+    projectField: 'protocolStatusForWebsocket',
+    icon: MessageSquare,
+  },
+]
+
+function removeAlertSearchParam(prev: unknown) {
+  const next: Record<string, string | undefined> =
+    prev && typeof prev === 'object'
+      ? { ...(prev as Record<string, string | undefined>) }
+      : {}
+  delete next.alert
+  return next
+}
+
 interface ProjectSettingsOverviewProps {
   projectId: string
 }
@@ -174,6 +196,20 @@ export function ProjectSettingsOverview({
     new Set(),
   )
   const [services, setServices] = useState<Record<string, boolean>>({})
+
+  // State for protocols
+  const [updatingProtocols, setUpdatingProtocols] = useState<Set<ProtocolId>>(
+    new Set(),
+  )
+  const [protocols, setProtocols] = useState<Record<ProtocolId, boolean>>({
+    rest: true,
+    graphql: true,
+    websocket: true,
+  })
+  const [protocolDialogOpen, setProtocolDialogOpen] = useState(false)
+  const [protocolBulkStatus, setProtocolBulkStatus] = useState<boolean | null>(
+    null,
+  )
 
   // State for git installations
   const [installationsPage, setInstallationsPage] = useState(0)
@@ -222,9 +258,17 @@ export function ProjectSettingsOverview({
           projectData.serviceStatusForDatabases !== undefined
             ? projectData.serviceStatusForDatabases
             : true,
+        tablesdb:
+          projectData.serviceStatusForTablesdb !== undefined
+            ? projectData.serviceStatusForTablesdb
+            : true,
         functions:
           projectData.serviceStatusForFunctions !== undefined
             ? projectData.serviceStatusForFunctions
+            : true,
+        graphql:
+          projectData.serviceStatusForGraphql !== undefined
+            ? projectData.serviceStatusForGraphql
             : true,
         locale:
           projectData.serviceStatusForLocale !== undefined
@@ -234,9 +278,25 @@ export function ProjectSettingsOverview({
           projectData.serviceStatusForMessaging !== undefined
             ? projectData.serviceStatusForMessaging
             : true,
+        migrations:
+          (projectData as unknown as Record<string, unknown>)
+            .serviceStatusForMigrations !== undefined
+            ? ((projectData as unknown as Record<string, unknown>)
+                .serviceStatusForMigrations as boolean)
+            : true,
+        project:
+          (projectData as unknown as Record<string, unknown>)
+            .serviceStatusForProject !== undefined
+            ? ((projectData as unknown as Record<string, unknown>)
+                .serviceStatusForProject as boolean)
+            : true,
         storage:
           projectData.serviceStatusForStorage !== undefined
             ? projectData.serviceStatusForStorage
+            : true,
+        sites:
+          projectData.serviceStatusForSites !== undefined
+            ? projectData.serviceStatusForSites
             : true,
         teams:
           projectData.serviceStatusForTeams !== undefined
@@ -245,6 +305,22 @@ export function ProjectSettingsOverview({
         users:
           projectData.serviceStatusForUsers !== undefined
             ? projectData.serviceStatusForUsers
+            : true,
+      })
+
+      const projectRecord = projectData as unknown as Record<string, unknown>
+      setProtocols({
+        rest:
+          typeof projectRecord.protocolStatusForRest === 'boolean'
+            ? projectRecord.protocolStatusForRest
+            : true,
+        graphql:
+          typeof projectRecord.protocolStatusForGraphql === 'boolean'
+            ? projectRecord.protocolStatusForGraphql
+            : true,
+        websocket:
+          typeof projectRecord.protocolStatusForWebsocket === 'boolean'
+            ? projectRecord.protocolStatusForWebsocket
             : true,
       })
     }
@@ -257,31 +333,13 @@ export function ProjectSettingsOverview({
     if (alert === 'installation-created') {
       toast.success('Git installation has imported to your project')
       navigate({
-        search: ((prev: unknown) => {
-          const o: Record<string, string | undefined> =
-            prev && typeof prev === 'object'
-              ? { ...(prev as Record<string, string | undefined>) }
-              : {}
-          delete o.alert
-          return o
-        }) as (
-          prev: Record<string, string | undefined>,
-        ) => Record<string, string | undefined>,
+        search: removeAlertSearchParam as never,
         replace: true,
       })
     } else if (alert === 'installation-updated') {
       toast.success('Git installation has been successfully updated')
       navigate({
-        search: ((prev: unknown) => {
-          const o: Record<string, string | undefined> =
-            prev && typeof prev === 'object'
-              ? { ...(prev as Record<string, string | undefined>) }
-              : {}
-          delete o.alert
-          return o
-        }) as (
-          prev: Record<string, string | undefined>,
-        ) => Record<string, string | undefined>,
+        search: removeAlertSearchParam as never,
         replace: true,
       })
     }
@@ -356,10 +414,15 @@ export function ProjectSettingsOverview({
         account: 'serviceStatusForAccount',
         avatars: 'serviceStatusForAvatars',
         databases: 'serviceStatusForDatabases',
+        tablesdb: 'serviceStatusForTablesdb',
         functions: 'serviceStatusForFunctions',
+        graphql: 'serviceStatusForGraphql',
         locale: 'serviceStatusForLocale',
         messaging: 'serviceStatusForMessaging',
+        migrations: 'serviceStatusForMigrations',
+        project: 'serviceStatusForProject',
         storage: 'serviceStatusForStorage',
+        sites: 'serviceStatusForSites',
         teams: 'serviceStatusForTeams',
         users: 'serviceStatusForUsers',
       }
@@ -437,9 +500,17 @@ export function ProjectSettingsOverview({
           projectData.serviceStatusForDatabases !== undefined
             ? projectData.serviceStatusForDatabases
             : status,
+        tablesdb:
+          projectData.serviceStatusForTablesdb !== undefined
+            ? projectData.serviceStatusForTablesdb
+            : status,
         functions:
           projectData.serviceStatusForFunctions !== undefined
             ? projectData.serviceStatusForFunctions
+            : status,
+        graphql:
+          projectData.serviceStatusForGraphql !== undefined
+            ? projectData.serviceStatusForGraphql
             : status,
         locale:
           projectData.serviceStatusForLocale !== undefined
@@ -449,9 +520,25 @@ export function ProjectSettingsOverview({
           projectData.serviceStatusForMessaging !== undefined
             ? projectData.serviceStatusForMessaging
             : status,
+        migrations:
+          (projectData as unknown as Record<string, unknown>)
+            .serviceStatusForMigrations !== undefined
+            ? ((projectData as unknown as Record<string, unknown>)
+                .serviceStatusForMigrations as boolean)
+            : status,
+        project:
+          (projectData as unknown as Record<string, unknown>)
+            .serviceStatusForProject !== undefined
+            ? ((projectData as unknown as Record<string, unknown>)
+                .serviceStatusForProject as boolean)
+            : status,
         storage:
           projectData.serviceStatusForStorage !== undefined
             ? projectData.serviceStatusForStorage
+            : status,
+        sites:
+          projectData.serviceStatusForSites !== undefined
+            ? projectData.serviceStatusForSites
             : status,
         teams:
           projectData.serviceStatusForTeams !== undefined
@@ -472,6 +559,159 @@ export function ProjectSettingsOverview({
     },
     onError: (error: Error) => {
       toast.error(getErrorMessage(error, 'Failed to update services'))
+    },
+  })
+
+  // Mutation to update protocol status
+  const updateProtocolMutation = useMutation({
+    mutationFn: async ({
+      protocol,
+      status,
+    }: {
+      protocol: ProtocolId
+      status: boolean
+    }) => {
+      const projectSdk = sdk.forProject(projectId)
+      const updateProtocolStatus = (
+        projectSdk.project as unknown as {
+          updateProtocolStatus?: (params: {
+            protocolId: ProtocolId
+            enabled: boolean
+          }) => Promise<Models.Project>
+        }
+      ).updateProtocolStatus
+
+      if (typeof updateProtocolStatus === 'function') {
+        return await updateProtocolStatus.call(projectSdk.project, {
+          protocolId: protocol,
+          enabled: status,
+        })
+      }
+
+      const uri = new URL(
+        `${projectSdk.client.config.endpoint}/project/protocol`,
+      )
+      return await projectSdk.client.call(
+        'patch',
+        uri,
+        { 'content-type': 'application/json' },
+        { protocolId: protocol, enabled: status },
+      )
+    },
+    onSuccess: async (projectData, variables) => {
+      const protocolConfig = PROJECT_PROTOCOLS.find(
+        (protocol) => protocol.id === variables.protocol,
+      )
+      const projectRecord = projectData as unknown as Record<string, unknown>
+      const nextValue = protocolConfig
+        ? projectRecord[protocolConfig.projectField]
+        : undefined
+
+      setProtocols((prev) => ({
+        ...prev,
+        [variables.protocol]:
+          typeof nextValue === 'boolean' ? nextValue : variables.status,
+      }))
+
+      toast.success(
+        `${protocolConfig?.label || 'Protocol'} protocol has been ${
+          variables.status ? 'enabled' : 'disabled'
+        }`,
+      )
+
+      await queryClient.refetchQueries({
+        queryKey: ['project', projectId],
+        exact: true,
+        type: 'all',
+      })
+      await queryClient.refetchQueries({
+        queryKey: [Dependencies.PROJECT, projectId],
+        exact: true,
+        type: 'all',
+      })
+    },
+    onError: (error: Error, variables) => {
+      toast.error(getErrorMessage(error, 'Failed to update protocol'))
+      setProtocols((prev) => ({
+        ...prev,
+        [variables.protocol]: !variables.status,
+      }))
+    },
+    onSettled: (_data, _error, variables) => {
+      setUpdatingProtocols((prev) => {
+        const next = new Set(prev)
+        next.delete(variables.protocol)
+        return next
+      })
+    },
+  })
+
+  // Mutation to update all protocols
+  const updateAllProtocolsMutation = useMutation({
+    mutationFn: async (status: boolean) => {
+      const projectSdk = sdk.forProject(projectId)
+      const updateProtocolStatus = (
+        projectSdk.project as unknown as {
+          updateProtocolStatus?: (params: {
+            protocolId: ProtocolId
+            enabled: boolean
+          }) => Promise<Models.Project>
+        }
+      ).updateProtocolStatus
+
+      for (const protocol of PROJECT_PROTOCOLS) {
+        if (protocols[protocol.id] === status) continue
+
+        if (typeof updateProtocolStatus === 'function') {
+          await updateProtocolStatus.call(projectSdk.project, {
+            protocolId: protocol.id,
+            enabled: status,
+          })
+          continue
+        }
+
+        const uri = new URL(
+          `${projectSdk.client.config.endpoint}/project/protocol`,
+        )
+        await projectSdk.client.call(
+          'patch',
+          uri,
+          { 'content-type': 'application/json' },
+          { protocolId: protocol.id, enabled: status },
+        )
+      }
+
+      return status
+    },
+    onSuccess: async (status) => {
+      setProtocols({
+        rest: status,
+        graphql: status,
+        websocket: status,
+      })
+      toast.success(
+        `All protocols for ${project?.name || 'project'} have been ${
+          status ? 'enabled.' : 'disabled.'
+        }`,
+      )
+
+      await queryClient.refetchQueries({
+        queryKey: ['project', projectId],
+        exact: true,
+        type: 'all',
+      })
+      await queryClient.refetchQueries({
+        queryKey: [Dependencies.PROJECT, projectId],
+        exact: true,
+        type: 'all',
+      })
+    },
+    onError: (error: Error) => {
+      toast.error(getErrorMessage(error, 'Failed to update protocols'))
+    },
+    onSettled: () => {
+      setProtocolDialogOpen(false)
+      setProtocolBulkStatus(null)
     },
   })
 
@@ -598,6 +838,18 @@ export function ProjectSettingsOverview({
     updateAllServicesMutation.mutate(status)
   }
 
+  // Handle protocol toggle
+  const handleProtocolToggle = (protocol: ProtocolId, checked: boolean) => {
+    setProtocols((prev) => ({ ...prev, [protocol]: checked }))
+    setUpdatingProtocols((prev) => new Set(prev).add(protocol))
+    updateProtocolMutation.mutate({ protocol, status: checked })
+  }
+
+  const openProtocolBulkDialog = (status: boolean) => {
+    setProtocolBulkStatus(status)
+    setProtocolDialogOpen(true)
+  }
+
   // Get all services are enabled/disabled
   const allServicesEnabled = useMemo(() => {
     const serviceValues = Object.values(services)
@@ -611,6 +863,19 @@ export function ProjectSettingsOverview({
 
   const anyServiceUpdating =
     updatingServices.size > 0 || updateAllServicesMutation.isPending
+
+  const allProtocolsEnabled = useMemo(() => {
+    const protocolValues = Object.values(protocols)
+    return protocolValues.length > 0 && protocolValues.every(Boolean)
+  }, [protocols])
+
+  const allProtocolsDisabled = useMemo(() => {
+    const protocolValues = Object.values(protocols)
+    return protocolValues.length > 0 && protocolValues.every((v) => !v)
+  }, [protocols])
+
+  const anyProtocolUpdating =
+    updatingProtocols.size > 0 || updateAllProtocolsMutation.isPending
 
   // Get organizations for transfer (excluding current)
   const { organizations: allOrganizations, isLoading: organizationsLoading } =
@@ -758,6 +1023,100 @@ export function ProjectSettingsOverview({
       {/* Conditional sections - only if canWriteProjects */}
       {canWriteProjects && (
         <>
+          {/* Update Protocols Section */}
+          <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+            <div className="px-6 py-4">
+              <h3 className="text-[15px] font-semibold text-foreground">
+                Protocols
+              </h3>
+            </div>
+            <div className="border-t border-border" />
+            <div className="px-6 py-4 @container">
+              <div className="flex gap-6 @[600px]:flex-row flex-col">
+                <div className="@[600px]:w-64 shrink-0">
+                  <p className="text-[13px] text-muted-foreground">
+                    Protocol settings control access through REST, GraphQL, and
+                    WebSocket APIs independently from service-level access.
+                  </p>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 text-[12px]"
+                      disabled={anyProtocolUpdating || allProtocolsEnabled}
+                      onClick={() => openProtocolBulkDialog(true)}
+                    >
+                      Enable all
+                    </Button>
+                    <Separator orientation="vertical" className="h-4" />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 text-[12px]"
+                      disabled={anyProtocolUpdating || allProtocolsDisabled}
+                      onClick={() => openProtocolBulkDialog(false)}
+                    >
+                      Disable all
+                    </Button>
+                  </div>
+
+                  <div className="rounded-lg border border-border bg-background">
+                    {PROJECT_PROTOCOLS.map((protocol, index) => {
+                      const Icon = protocol.icon
+                      const isUpdating = updatingProtocols.has(protocol.id)
+
+                      return (
+                        <div key={protocol.id}>
+                          <div
+                            className={cn(
+                              'flex items-center justify-between gap-4 px-4 py-3',
+                              isUpdating && 'opacity-75',
+                            )}
+                          >
+                            <div className="flex min-w-0 items-start gap-3">
+                              <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                                <Icon className="h-4 w-4" />
+                              </div>
+                              <div className="min-w-0">
+                                <Label
+                                  htmlFor={`protocol-${protocol.id}`}
+                                  className="text-[13px] font-medium text-foreground cursor-pointer"
+                                >
+                                  {protocol.label}
+                                </Label>
+                                <p className="mt-1 text-[12px] text-muted-foreground">
+                                  {protocol.description}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {isUpdating && (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+                              )}
+                              <Switch
+                                id={`protocol-${protocol.id}`}
+                                checked={protocols[protocol.id]}
+                                onCheckedChange={(checked) =>
+                                  handleProtocolToggle(protocol.id, checked)
+                                }
+                                disabled={isUpdating || anyProtocolUpdating}
+                              />
+                            </div>
+                          </div>
+                          {index < PROJECT_PROTOCOLS.length - 1 && (
+                            <div className="border-t border-border" />
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Update Services Section */}
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
             <div className="px-6 py-4">
@@ -815,10 +1174,15 @@ export function ProjectSettingsOverview({
                           'account',
                           'avatars',
                           'databases',
+                          'tablesdb',
                           'functions',
+                          'graphql',
                           'locale',
                           'messaging',
+                          'migrations',
+                          'project',
                           'storage',
+                          'sites',
                           'teams',
                           'users',
                         ].includes(service),
@@ -828,10 +1192,15 @@ export function ProjectSettingsOverview({
                           account: 'Account',
                           avatars: 'Avatars',
                           databases: 'Databases',
+                          tablesdb: 'TablesDB',
                           functions: 'Functions',
+                          graphql: 'GraphQL',
                           locale: 'Locale',
                           messaging: 'Messaging',
+                          migrations: 'Migrations',
+                          project: 'Project',
                           storage: 'Storage',
+                          sites: 'Sites',
                           teams: 'Teams',
                           users: 'Users',
                         }
@@ -839,10 +1208,15 @@ export function ProjectSettingsOverview({
                           account: User,
                           avatars: UserCircle,
                           databases: Database,
+                          tablesdb: Database,
                           functions: Zap,
+                          graphql: Code,
                           locale: Globe,
                           messaging: MessageSquare,
+                          migrations: Upload,
+                          project: Folder,
                           storage: Folder,
+                          sites: Globe,
                           teams: Building2,
                           users: Users,
                         }
@@ -926,6 +1300,54 @@ export function ProjectSettingsOverview({
             onDeleteDialogOpenChange={setDeleteDialogOpen}
             onDelete={deleteProjectMutation}
           />
+
+          <Dialog
+            open={protocolDialogOpen}
+            onOpenChange={setProtocolDialogOpen}
+          >
+            <DialogContent className="sm:max-w-md p-0">
+              <DialogHeader className="px-6 pt-6 pb-4 text-left">
+                <DialogTitle>
+                  {protocolBulkStatus
+                    ? 'Enable all protocols'
+                    : 'Disable all protocols'}
+                </DialogTitle>
+                <DialogDescription className="text-[13px] mt-2">
+                  {protocolBulkStatus
+                    ? 'All project protocols will be enabled.'
+                    : 'Are you sure you want to disable all protocols? This will disable client access over those protocols until they are re-enabled.'}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-9 text-[13px]"
+                  onClick={() => setProtocolDialogOpen(false)}
+                  disabled={updateAllProtocolsMutation.isPending}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  className="h-9 text-[13px]"
+                  onClick={() => {
+                    if (protocolBulkStatus !== null) {
+                      updateAllProtocolsMutation.mutate(protocolBulkStatus)
+                    }
+                  }}
+                  disabled={
+                    protocolBulkStatus === null ||
+                    updateAllProtocolsMutation.isPending
+                  }
+                >
+                  {protocolBulkStatus ? 'Enable all' : 'Disable all'}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </>
       )}
     </div>
