@@ -23,7 +23,6 @@ import {
   CheckCircle2,
   XCircle,
   Key,
-  AlertTriangle,
   AlertCircle,
   UserCog,
   Code,
@@ -250,36 +249,26 @@ function ProjectCardFooter({
       )}
     >
       {paused && (
-        <Badge variant="warning" className="gap-1.5 text-[10px] shrink-0">
+        <Badge variant="inactive" className="gap-1.5 text-[10px] shrink-0">
           <PauseCircle className="h-3 w-3" />
           Paused
         </Badge>
       )}
       {/* Platforms Label */}
-      {platformsCount > 0 ? (
-        <Badge variant="info" className="gap-1.5 text-[10px] shrink-0">
-          <Globe className="h-3 w-3" />
-          {platformsCount} app{platformsCount !== 1 ? 's' : ''}
-        </Badge>
-      ) : (
-        <Badge variant="warning" className="gap-1.5 text-[10px] shrink-0">
-          <AlertTriangle className="h-3 w-3" />
-          No apps
-        </Badge>
-      )}
+      <Badge variant="inactive" className="gap-1.5 text-[10px] shrink-0">
+        <Globe className="h-3 w-3" />
+        {platformsCount > 0
+          ? `${platformsCount} app${platformsCount !== 1 ? 's' : ''}`
+          : 'No apps'}
+      </Badge>
 
       {/* API Keys Label */}
-      {apiKeysCount > 0 ? (
-        <Badge variant="info" className="gap-1.5 text-[10px] shrink-0">
-          <Key className="h-3 w-3" />
-          {apiKeysCount} API key{apiKeysCount !== 1 ? 's' : ''}
-        </Badge>
-      ) : (
-        <Badge variant="warning" className="gap-1.5 text-[10px] shrink-0">
-          <AlertTriangle className="h-3 w-3" />
-          No API keys
-        </Badge>
-      )}
+      <Badge variant="inactive" className="gap-1.5 text-[10px] shrink-0">
+        <Key className="h-3 w-3" />
+        {apiKeysCount > 0
+          ? `${apiKeysCount} API key${apiKeysCount !== 1 ? 's' : ''}`
+          : 'No API keys'}
+      </Badge>
     </div>
   )
 }
