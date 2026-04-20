@@ -265,10 +265,6 @@ export function ProjectSettingsOverview({
           projectData.serviceStatusForFunctions !== undefined
             ? projectData.serviceStatusForFunctions
             : true,
-        graphql:
-          projectData.serviceStatusForGraphql !== undefined
-            ? projectData.serviceStatusForGraphql
-            : true,
         locale:
           projectData.serviceStatusForLocale !== undefined
             ? projectData.serviceStatusForLocale
@@ -446,7 +442,6 @@ export function ProjectSettingsOverview({
         databases: 'serviceStatusForDatabases',
         tablesdb: 'serviceStatusForTablesdb',
         functions: 'serviceStatusForFunctions',
-        graphql: 'serviceStatusForGraphql',
         locale: 'serviceStatusForLocale',
         messaging: 'serviceStatusForMessaging',
         migrations: 'serviceStatusForMigrations',
@@ -510,7 +505,6 @@ export function ProjectSettingsOverview({
         databases: status,
         tablesdb: status,
         functions: status,
-        graphql: status,
         locale: status,
         messaging: status,
         migrations: status,
@@ -527,7 +521,6 @@ export function ProjectSettingsOverview({
         serviceStatusForDatabases: status,
         serviceStatusForTablesdb: status,
         serviceStatusForFunctions: status,
-        serviceStatusForGraphql: status,
         serviceStatusForLocale: status,
         serviceStatusForMessaging: status,
         serviceStatusForMigrations: status,
@@ -1091,7 +1084,6 @@ export function ProjectSettingsOverview({
                           'databases',
                           'tablesdb',
                           'functions',
-                          'graphql',
                           'locale',
                           'messaging',
                           'migrations',
@@ -1109,7 +1101,6 @@ export function ProjectSettingsOverview({
                           databases: 'Databases',
                           tablesdb: 'TablesDB',
                           functions: 'Functions',
-                          graphql: 'GraphQL',
                           locale: 'Locale',
                           messaging: 'Messaging',
                           migrations: 'Migrations',
@@ -1125,7 +1116,6 @@ export function ProjectSettingsOverview({
                           databases: Database,
                           tablesdb: Database,
                           functions: Zap,
-                          graphql: Code,
                           locale: Globe,
                           messaging: MessageSquare,
                           migrations: Upload,
