@@ -119,6 +119,13 @@ type ProjectProtocol = {
   icon: typeof Globe
 }
 
+type ProjectService = {
+  id: string
+  label: string
+  projectField: string
+  icon: typeof User
+}
+
 const PROJECT_PROTOCOLS: ProjectProtocol[] = [
   {
     id: 'rest',
@@ -140,6 +147,87 @@ const PROJECT_PROTOCOLS: ProjectProtocol[] = [
     description: 'Realtime subscriptions over WebSocket connections.',
     projectField: 'protocolStatusForWebsocket',
     icon: MessageSquare,
+  },
+]
+
+const PROJECT_SERVICES: ProjectService[] = [
+  {
+    id: 'account',
+    label: 'Account',
+    projectField: 'serviceStatusForAccount',
+    icon: User,
+  },
+  {
+    id: 'avatars',
+    label: 'Avatars',
+    projectField: 'serviceStatusForAvatars',
+    icon: UserCircle,
+  },
+  {
+    id: 'databases',
+    label: 'Databases',
+    projectField: 'serviceStatusForDatabases',
+    icon: Database,
+  },
+  {
+    id: 'tablesdb',
+    label: 'TablesDB',
+    projectField: 'serviceStatusForTablesdb',
+    icon: Database,
+  },
+  {
+    id: 'functions',
+    label: 'Functions',
+    projectField: 'serviceStatusForFunctions',
+    icon: Zap,
+  },
+  {
+    id: 'locale',
+    label: 'Locale',
+    projectField: 'serviceStatusForLocale',
+    icon: Globe,
+  },
+  {
+    id: 'messaging',
+    label: 'Messaging',
+    projectField: 'serviceStatusForMessaging',
+    icon: MessageSquare,
+  },
+  {
+    id: 'migrations',
+    label: 'Migrations',
+    projectField: 'serviceStatusForMigrations',
+    icon: Upload,
+  },
+  {
+    id: 'project',
+    label: 'Project',
+    projectField: 'serviceStatusForProject',
+    icon: Folder,
+  },
+  {
+    id: 'storage',
+    label: 'Storage',
+    projectField: 'serviceStatusForStorage',
+    icon: Folder,
+  },
+  {
+    id: 'sites',
+    label: 'Sites',
+    projectField: 'serviceStatusForSites',
+    icon: Globe,
+  },
+  {
+    id: 'teams',
+    label: 'Teams',
+    projectField: 'serviceStatusForTeams',
+    icon: Building2,
+  },
+  {
+    id: 'users',
+    label: 'Users',
+    projectField: 'serviceStatusForUsers',
+    icon: Users,
   },
 ]
 
@@ -243,67 +331,18 @@ export function ProjectSettingsOverview({
   useEffect(() => {
     if (rawProjectData) {
       const projectData = rawProjectData as Models.Project
-      // Services are stored as serviceStatusFor{ServiceName} properties
-      setServices({
-        account:
-          projectData.serviceStatusForAccount !== undefined
-            ? projectData.serviceStatusForAccount
-            : true,
-        avatars:
-          projectData.serviceStatusForAvatars !== undefined
-            ? projectData.serviceStatusForAvatars
-            : true,
-        databases:
-          projectData.serviceStatusForDatabases !== undefined
-            ? projectData.serviceStatusForDatabases
-            : true,
-        tablesdb:
-          projectData.serviceStatusForTablesdb !== undefined
-            ? projectData.serviceStatusForTablesdb
-            : true,
-        functions:
-          projectData.serviceStatusForFunctions !== undefined
-            ? projectData.serviceStatusForFunctions
-            : true,
-        locale:
-          projectData.serviceStatusForLocale !== undefined
-            ? projectData.serviceStatusForLocale
-            : true,
-        messaging:
-          projectData.serviceStatusForMessaging !== undefined
-            ? projectData.serviceStatusForMessaging
-            : true,
-        migrations:
-          (projectData as unknown as Record<string, unknown>)
-            .serviceStatusForMigrations !== undefined
-            ? ((projectData as unknown as Record<string, unknown>)
-                .serviceStatusForMigrations as boolean)
-            : true,
-        project:
-          (projectData as unknown as Record<string, unknown>)
-            .serviceStatusForProject !== undefined
-            ? ((projectData as unknown as Record<string, unknown>)
-                .serviceStatusForProject as boolean)
-            : true,
-        storage:
-          projectData.serviceStatusForStorage !== undefined
-            ? projectData.serviceStatusForStorage
-            : true,
-        sites:
-          projectData.serviceStatusForSites !== undefined
-            ? projectData.serviceStatusForSites
-            : true,
-        teams:
-          projectData.serviceStatusForTeams !== undefined
-            ? projectData.serviceStatusForTeams
-            : true,
-        users:
-          projectData.serviceStatusForUsers !== undefined
-            ? projectData.serviceStatusForUsers
-            : true,
-      })
-
       const projectRecord = projectData as unknown as Record<string, unknown>
+      setServices(
+        Object.fromEntries(
+          PROJECT_SERVICES.map((service) => [
+            service.id,
+            typeof projectRecord[service.projectField] === 'boolean'
+              ? (projectRecord[service.projectField] as boolean)
+              : true,
+          ]),
+        ),
+      )
+
       setProtocols({
         rest:
           typeof projectRecord.protocolStatusForRest === 'boolean'
@@ -435,23 +474,9 @@ export function ProjectSettingsOverview({
         `${serviceLabel} service has been ${status ? 'enabled' : 'disabled'}`,
       )
 
-      // Services are stored as serviceStatusFor{ServiceName} properties
-      const servicePropertyMap: Record<string, string> = {
-        account: 'serviceStatusForAccount',
-        avatars: 'serviceStatusForAvatars',
-        databases: 'serviceStatusForDatabases',
-        tablesdb: 'serviceStatusForTablesdb',
-        functions: 'serviceStatusForFunctions',
-        locale: 'serviceStatusForLocale',
-        messaging: 'serviceStatusForMessaging',
-        migrations: 'serviceStatusForMigrations',
-        project: 'serviceStatusForProject',
-        storage: 'serviceStatusForStorage',
-        sites: 'serviceStatusForSites',
-        teams: 'serviceStatusForTeams',
-        users: 'serviceStatusForUsers',
-      }
-      const serviceProperty = servicePropertyMap[service]
+      const serviceProperty = PROJECT_SERVICES.find(
+        (item) => item.id === service,
+      )?.projectField
       setServices((prev) => ({
         ...prev,
         [service]: status,
@@ -487,9 +512,9 @@ export function ProjectSettingsOverview({
   const updateAllServicesMutation = useMutation({
     mutationFn: async (status: boolean) => {
       let response: Models.Project | null = null
-      for (const serviceId of Object.keys(services)) {
-        if (services[serviceId] === status) continue
-        response = await updateProjectService(serviceId, status)
+      for (const service of PROJECT_SERVICES) {
+        if (services[service.id] === status) continue
+        response = await updateProjectService(service.id, status)
       }
       return { response, status }
     },
@@ -499,37 +524,17 @@ export function ProjectSettingsOverview({
         `All services for ${project?.name || 'project'} has been ${status ? 'enabled' : 'disabled'}.`,
       )
 
-      setServices({
-        account: status,
-        avatars: status,
-        databases: status,
-        tablesdb: status,
-        functions: status,
-        locale: status,
-        messaging: status,
-        migrations: status,
-        project: status,
-        storage: status,
-        sites: status,
-        teams: status,
-        users: status,
-      })
+      setServices(
+        Object.fromEntries(
+          PROJECT_SERVICES.map((service) => [service.id, status]),
+        ),
+      )
 
-      patchCachedProject({
-        serviceStatusForAccount: status,
-        serviceStatusForAvatars: status,
-        serviceStatusForDatabases: status,
-        serviceStatusForTablesdb: status,
-        serviceStatusForFunctions: status,
-        serviceStatusForLocale: status,
-        serviceStatusForMessaging: status,
-        serviceStatusForMigrations: status,
-        serviceStatusForProject: status,
-        serviceStatusForStorage: status,
-        serviceStatusForSites: status,
-        serviceStatusForTeams: status,
-        serviceStatusForUsers: status,
-      })
+      patchCachedProject(
+        Object.fromEntries(
+          PROJECT_SERVICES.map((service) => [service.projectField, status]),
+        ),
+      )
       // Track analytics: Submit.ProjectService
     },
     onError: (error: Error) => {
@@ -735,12 +740,11 @@ export function ProjectSettingsOverview({
 
   // Handle bulk enable/disable
   const handleBulkServiceUpdate = (status: boolean) => {
-    // Update all services in state
-    const newServices: Record<string, boolean> = {}
-    Object.keys(services).forEach((key) => {
-      newServices[key] = status
-    })
-    setServices(newServices)
+    setServices(
+      Object.fromEntries(
+        PROJECT_SERVICES.map((service) => [service.id, status]),
+      ),
+    )
     updateAllServicesMutation.mutate(status)
   }
 
@@ -1076,95 +1080,46 @@ export function ProjectSettingsOverview({
 
                   {/* Service Cards */}
                   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {Object.entries(services)
-                      .filter(([service]) =>
-                        [
-                          'account',
-                          'avatars',
-                          'databases',
-                          'tablesdb',
-                          'functions',
-                          'locale',
-                          'messaging',
-                          'migrations',
-                          'project',
-                          'storage',
-                          'sites',
-                          'teams',
-                          'users',
-                        ].includes(service),
-                      )
-                      .map(([service, enabled]) => {
-                        const serviceLabels: Record<string, string> = {
-                          account: 'Account',
-                          avatars: 'Avatars',
-                          databases: 'Databases',
-                          tablesdb: 'TablesDB',
-                          functions: 'Functions',
-                          locale: 'Locale',
-                          messaging: 'Messaging',
-                          migrations: 'Migrations',
-                          project: 'Project',
-                          storage: 'Storage',
-                          sites: 'Sites',
-                          teams: 'Teams',
-                          users: 'Users',
-                        }
-                        const serviceIcons: Record<string, typeof User> = {
-                          account: User,
-                          avatars: UserCircle,
-                          databases: Database,
-                          tablesdb: Database,
-                          functions: Zap,
-                          locale: Globe,
-                          messaging: MessageSquare,
-                          migrations: Upload,
-                          project: Folder,
-                          storage: Folder,
-                          sites: Globe,
-                          teams: Building2,
-                          users: Users,
-                        }
-                        const Icon = serviceIcons[service] || User
-                        const isUpdating = updatingServices.has(service)
-                        return (
-                          <div
-                            key={service}
-                            className={cn(
-                              'rounded-lg border border-border bg-card/50 p-4 transition-colors',
-                              isUpdating && 'opacity-75',
-                              !isUpdating && 'hover:bg-card',
-                            )}
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <Icon className="h-4 w-4 text-muted-foreground" />
-                                <Label
-                                  htmlFor={service}
-                                  className="text-[13px] font-medium text-foreground cursor-pointer"
-                                >
-                                  {serviceLabels[service] ||
-                                    service.charAt(0).toUpperCase() +
-                                      service.slice(1)}
-                                </Label>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                {isUpdating && (
-                                  <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
-                                )}
-                                <Switch
-                                  id={service}
-                                  checked={enabled}
-                                  onCheckedChange={(checked) =>
-                                    handleServiceToggle(service, checked)
-                                  }
-                                  disabled={isUpdating}
-                                />
-                              </div>
+                    {PROJECT_SERVICES.map((service) => {
+                      const Icon = service.icon
+                      const enabled = services[service.id] ?? true
+                      const isUpdating = updatingServices.has(service.id)
+                      return (
+                        <div
+                          key={service.id}
+                          className={cn(
+                            'rounded-lg border border-border bg-card/50 p-4 transition-colors',
+                            isUpdating && 'opacity-75',
+                            !isUpdating && 'hover:bg-card',
+                          )}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Icon className="h-4 w-4 text-muted-foreground" />
+                              <Label
+                                htmlFor={service.id}
+                                className="text-[13px] font-medium text-foreground cursor-pointer"
+                              >
+                                {service.label}
+                              </Label>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {isUpdating && (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+                              )}
+                              <Switch
+                                id={service.id}
+                                checked={enabled}
+                                onCheckedChange={(checked) =>
+                                  handleServiceToggle(service.id, checked)
+                                }
+                                disabled={isUpdating}
+                              />
                             </div>
                           </div>
-                        )
-                      })}
+                        </div>
+                      )
+                    })}
                   </div>
                 </div>
               </div>
