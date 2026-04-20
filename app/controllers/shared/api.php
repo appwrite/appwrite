@@ -971,7 +971,8 @@ Http::shutdown()
         if ($useCache) {
             $resource = $resourceType = null;
             $data = $response->getPayload();
-            if (! empty($data['payload'])) {
+            $statusCode = $response->getStatusCode();
+            if (! empty($data['payload']) && $statusCode >= 200 && $statusCode < 300) {
                 $pattern = $route->getLabel('cache.resource', null);
                 if (! empty($pattern)) {
                     $resource = $parseLabel($pattern, $responsePayload, $requestParams, $user);

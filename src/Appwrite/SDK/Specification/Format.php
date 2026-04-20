@@ -771,16 +771,6 @@ abstract class Format
                                 return 'EmailTemplateLocale';
                         }
                         break;
-                    case 'getSmsTemplate':
-                    case 'updateSmsTemplate':
-                    case 'deleteSmsTemplate':
-                        switch ($param) {
-                            case 'type':
-                                return 'SmsTemplateType';
-                            case 'locale':
-                                return 'SmsTemplateLocale';
-                        }
-                        break;
                     case 'createPlatform':
                         switch ($param) {
                             case 'type':

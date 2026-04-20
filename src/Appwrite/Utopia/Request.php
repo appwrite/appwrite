@@ -238,6 +238,9 @@ class Request extends UtopiaRequest
         if ($allowedParams !== null) {
             $params = array_intersect_key($params, array_flip($allowedParams));
         }
+        if (!isset($params['project'])) {
+            $params['project'] = $this->getHeader('x-appwrite-project', '');
+        }
         ksort($params);
         return md5($this->getURI() . '*' . serialize($params) . '*' . APP_CACHE_BUSTER);
     }
