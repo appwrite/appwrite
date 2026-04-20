@@ -413,27 +413,19 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
         $projectCollections = $collections['projects'];
 
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-        $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
-        $sharedTablesV2 = \array_diff($sharedTables, $sharedTablesV1);
-
         $documentsSharedTables = \explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES', ''));
-        $documentsSharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES_V1', ''));
-        $documentsSharedTablesV2 = \array_diff($documentsSharedTables, $documentsSharedTablesV1);
-
         $vectorSharedTables = \explode(',', System::getEnv('_APP_DATABASE_VECTORSDB_SHARED_TABLES', ''));
-        $vectorSharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_VECTORSDB_SHARED_TABLES_V1', ''));
-        $vectorSharedTablesV2 = \array_diff($vectorSharedTables, $vectorSharedTablesV1);
 
         $cache = $app->getResource('cache');
 
-        // All shared tables V2 pools that need project metadata collections
-        $sharedTablesV2All = \array_values(\array_unique(\array_filter([
-            ...$sharedTablesV2,
-            ...$documentsSharedTablesV2,
-            ...$vectorSharedTablesV2,
+        // All shared tables pools that need project metadata collections
+        $allSharedTables = \array_values(\array_unique(\array_filter([
+            ...$sharedTables,
+            ...$documentsSharedTables,
+            ...$vectorSharedTables,
         ])));
 
-        foreach ($sharedTablesV2All as $hostname) {
+        foreach ($allSharedTables as $hostname) {
             Span::init('database.setup');
             Span::add('database.hostname', $hostname);
 

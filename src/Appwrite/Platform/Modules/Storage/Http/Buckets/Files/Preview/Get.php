@@ -54,7 +54,7 @@ class Get extends Action
             ->label('cache', true)
             ->label('cache.resourceType', 'bucket/{request.bucketId}')
             ->label('cache.resource', 'file/{request.fileId}')
-            ->label('cache.params', ['width', 'height', 'gravity', 'quality', 'borderWidth', 'borderColor', 'borderRadius', 'opacity', 'rotation', 'background', 'output'])
+            ->label('cache.params', ['width', 'height', 'gravity', 'quality', 'borderWidth', 'borderColor', 'borderRadius', 'opacity', 'rotation', 'background', 'output', 'project'])
             ->label('sdk', new Method(
                 namespace: 'storage',
                 group: 'files',
