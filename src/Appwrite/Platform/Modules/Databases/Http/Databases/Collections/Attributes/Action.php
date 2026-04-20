@@ -321,6 +321,7 @@ abstract class Action extends UtopiaAction
         $filters = $attribute->getAttribute('filters', []); // filters are hidden from the endpoint
         $default = $attribute->getAttribute('default');
         $options = $attribute->getAttribute('options', []);
+        $notes = $attribute->getAttribute('notes', '');
 
         if (in_array($type, Database::SPATIAL_TYPES) && !$dbForProject->getAdapter()->getSupportForSpatialAttributes()) {
             throw new Exception($this->getSpatialTypeNotSupportedException(), params: [$type]);
@@ -381,6 +382,7 @@ abstract class Action extends UtopiaAction
                 'formatOptions' => $formatOptions,
                 'filters' => $filters,
                 'options' => $options,
+                'notes' => $notes,
             ]);
 
             if (
@@ -437,6 +439,7 @@ abstract class Action extends UtopiaAction
                     'formatOptions' => $formatOptions,
                     'filters' => $filters,
                     'options' => $options,
+                    'notes' => $notes,
                 ]);
 
                 $dbForProject->checkAttribute($relatedCollection, $twoWayAttribute);
