@@ -7,6 +7,7 @@
 
 import {
   Account,
+  Activities,
   Assistant,
   Avatars,
   Backups,
@@ -333,6 +334,7 @@ export function createRegionalConsoleRealtime(projectId: string): Realtime {
 const sdkForProjectRaw = {
   client: clientProject,
   account: new Account(clientProject),
+  activities: new Activities(clientProject),
   avatars: new Avatars(clientProject),
   backups: new Backups(clientProject),
   functions: new Functions(clientProject),

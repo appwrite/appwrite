@@ -41,6 +41,7 @@ import {
 } from '@/lib/specifications'
 import { Trash2, Plus, X } from 'lucide-react'
 import { EventEditorModal } from '@/components/global/shared/EventEditor'
+import { DOCS_LINK as EVENTS_DOCS_LINK } from '@/lib/events-editor'
 
 const CONTACT_SALES_URL =
   import.meta.env.VITE_CONTACT_SALES_URL ||
@@ -720,7 +721,15 @@ export function View() {
               </h3>
               <p className="text-[13px] text-muted-foreground mt-2">
                 Set the events that will trigger your function. Maximum 100
-                events allowed.
+                events allowed.{' '}
+                <a
+                  href={EVENTS_DOCS_LINK}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary underline hover:no-underline"
+                >
+                  Learn more
+                </a>
               </p>
             </div>
             <div className="border-t border-border" />

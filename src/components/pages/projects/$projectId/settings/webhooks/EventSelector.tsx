@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { X, Plus } from 'lucide-react'
 import { EventEditorModal } from '@/components/global/shared/EventEditor'
+import { DOCS_LINK } from '@/lib/events-editor'
 
 interface EventSelectorProps {
   projectId?: string | null
@@ -36,7 +37,15 @@ export function EventSelector({
       <div>
         <p className="text-[13px] text-muted-foreground mb-2">
           Set the events that will trigger your webhook. Maximum {maxEvents}{' '}
-          events allowed.
+          events allowed.{' '}
+          <a
+            href={DOCS_LINK}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary underline hover:no-underline"
+          >
+            Learn more
+          </a>
         </p>
         {selectedEvents.length > 0 ? (
           <div className="flex flex-wrap gap-2">

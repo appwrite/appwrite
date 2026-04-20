@@ -855,11 +855,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     requestedProjectsData,
   ])
 
-  // Total count without search, without exclude - for plan limit checking (all org projects)
-  const { data: totalProjectsData } = useQuery(
-    activeProjectsQueryOptions(orgTeamId, 0, urlProjectsLimit, ''),
-  )
-
   // Reset pagination when search query changes
   useEffect(() => {
     setRequestedPage(1)
@@ -1147,8 +1142,20 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   // Pagination info (from search results)
   const activeProjectsTotal = activeProjectsData?.total || 0
 
-  // Total count of all projects (without search) - for limit checking
-  const totalProjectsCount = totalProjectsData?.total || 0
+  // Total count of all projects (without search) — for plan-limit checks.
+  // The active-projects listing excludes pinned ids, so when no search is
+  // active the unconditional total is just `listing total + pinned count`.
+  // We cache the last value seen while the search box was empty so the
+  // limit check stays accurate when the user starts typing a query (the
+  // listing's total is filtered by the search and would otherwise drift).
+  const lastUnfilteredTotalRef = useRef(0)
+  if (!searchQuery && activeProjectsData?.total != null) {
+    lastUnfilteredTotalRef.current =
+      activeProjectsData.total + pinnedIds.length
+  }
+  const totalProjectsCount = !searchQuery
+    ? (activeProjectsData?.total ?? 0) + pinnedIds.length
+    : lastUnfilteredTotalRef.current
 
   // Fetch organization plan to check if additional members are supported
   const { plan: organizationPlan } = useOrganizationPlan(orgId)

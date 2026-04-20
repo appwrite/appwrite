@@ -6,6 +6,7 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { useProject } from '@/lib/react-query/hooks'
 import { organizationPlanQueryOptions } from '@/lib/react-query/hooks/organizations'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useConsoleImpersonationRevision } from '@/hooks/use-console-impersonation-revision'
 
 const isSentryEnabled = () => !!import.meta.env.VITE_SENTRY_DSN
 
@@ -52,11 +53,12 @@ export function SentryContextProvider({
   children: React.ReactNode
 }) {
   const location = useLocation()
+  const consoleImpersonationRevision = useConsoleImpersonationRevision()
 
   // Use same query key as RequireAuth/useAuth so we share cache (one account fetch).
   // Do not swallow 401: rethrow so the shared cache has error state and RequireAuth can redirect.
   const { data: account } = useQuery({
-    queryKey: ['account', 'console'],
+    queryKey: ['account', 'console', consoleImpersonationRevision],
     queryFn: async () => {
       try {
         return await sdk.forConsole.account.get()

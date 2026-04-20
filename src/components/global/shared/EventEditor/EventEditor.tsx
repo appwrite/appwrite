@@ -69,7 +69,10 @@ export function EventEditor({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md p-0">
+      <DialogContent
+        className="sm:max-w-md p-0 z-[130]"
+        overlayClassName="z-[130]"
+      >
         <DialogHeader className="px-6 pt-6 pb-4 text-left">
           <DialogTitle>
             {initialValue ? 'Edit event' : 'Create event'}

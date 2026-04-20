@@ -80,10 +80,10 @@ export function CreateWebhookDialog({
         name: name.trim(),
         url: url.trim(),
         events,
-        security,
+        tls: security,
         enabled: true,
-        httpUser: httpUser.trim() || undefined,
-        httpPass: httpPass.trim() || undefined,
+        authUsername: httpUser.trim() || undefined,
+        authPassword: httpPass.trim() || undefined,
       })
       toast.success('Webhook has been created')
       onCreateSuccess(webhook.$id)

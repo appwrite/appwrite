@@ -16,7 +16,7 @@ import {
   useUpdateWebhook,
   useDeleteWebhook,
   useProjectWebhook,
-  useUpdateWebhookSignature,
+  useUpdateWebhookSecret,
 } from '@/lib/react-query/hooks'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { toast } from 'sonner'
@@ -45,7 +45,7 @@ export function WebhookDrawer({
   const createMutation = useCreateWebhook(projectId)
   const updateMutation = useUpdateWebhook(projectId)
   const deleteMutation = useDeleteWebhook(projectId)
-  const regenerateSignatureMutation = useUpdateWebhookSignature(projectId)
+  const regenerateSignatureMutation = useUpdateWebhookSecret(projectId)
   const { webhook: fullWebhook } = useProjectWebhook(
     projectId,
     isEditing ? webhook?.$id : null,
@@ -77,17 +77,20 @@ export function WebhookDrawer({
       setSecurity(true)
       setErrors({})
       setDeleteConfirmOpen(false)
-    } else if (webhook) {
-      setName(webhook.name || '')
-      setUrl(webhook.url || '')
-      setEvents(webhook.events || [])
-      setEnabled(webhook.enabled ?? true)
-      setHttpUser('')
+      return
+    }
+    const source = fullWebhook ?? webhook
+    if (source) {
+      setName(source.name || '')
+      setUrl(source.url || '')
+      setEvents(source.events || [])
+      setEnabled(source.enabled ?? true)
+      setHttpUser(source.authUsername || '')
       setHttpPass('')
-      setSecurity(webhook.security ?? true)
+      setSecurity(source.tls ?? true)
       setErrors({})
     }
-  }, [open, webhook])
+  }, [open, webhook, fullWebhook])
 
   const canSubmit =
     name.trim() && url.trim() && events.length > 0 && events.length <= 100
@@ -149,10 +152,10 @@ export function WebhookDrawer({
           name: name.trim(),
           url: url.trim(),
           events,
-          security,
+          tls: security,
           enabled,
-          httpUser: httpUser.trim() || undefined,
-          httpPass: httpPass.trim() || undefined,
+          authUsername: httpUser.trim() || undefined,
+          authPassword: httpPass.trim() || undefined,
         },
         {
           onSuccess: () => {
@@ -171,10 +174,10 @@ export function WebhookDrawer({
           name: name.trim(),
           url: url.trim(),
           events,
-          security,
+          tls: security,
           enabled: true,
-          httpUser: httpUser.trim() || undefined,
-          httpPass: httpPass.trim() || undefined,
+          authUsername: httpUser.trim() || undefined,
+          authPassword: httpPass.trim() || undefined,
         },
         {
           onSuccess: () => {
@@ -378,10 +381,10 @@ export function WebhookDrawer({
                         <Label className="text-[12px] font-medium text-muted-foreground">
                           Signature key
                         </Label>
-                        {fullWebhook?.signatureKey ? (
+                        {fullWebhook?.secret ? (
                           <div className="flex items-center gap-2">
                             <CopyableId
-                              id={fullWebhook.signatureKey}
+                              id={fullWebhook.secret}
                               size="sm"
                               maxWidth={240}
                             />

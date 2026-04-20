@@ -129,10 +129,10 @@ export function useCreateWebhook(projectId: string | null | undefined) {
       name: string
       events: string[]
       url: string
-      security: boolean
+      tls: boolean
       enabled?: boolean
-      httpUser?: string
-      httpPass?: string
+      authUsername?: string
+      authPassword?: string
     }) => {
       if (!projectId) {
         throw new Error('Project ID is required')
@@ -142,10 +142,10 @@ export function useCreateWebhook(projectId: string | null | undefined) {
         name: data.name,
         events: data.events,
         url: data.url,
-        security: data.security,
+        tls: data.tls,
         enabled: data.enabled ?? true,
-        httpUser: data.httpUser,
-        httpPass: data.httpPass,
+        authUsername: data.authUsername,
+        authPassword: data.authPassword,
       })
     },
     onSuccess: () => {
@@ -173,10 +173,10 @@ export function useUpdateWebhook(projectId: string | null | undefined) {
       name: string
       events: string[]
       url: string
-      security: boolean
+      tls: boolean
       enabled?: boolean
-      httpUser?: string
-      httpPass?: string
+      authUsername?: string
+      authPassword?: string
     }) => {
       if (!projectId) {
         throw new Error('Project ID is required')
@@ -186,10 +186,10 @@ export function useUpdateWebhook(projectId: string | null | undefined) {
         name: data.name,
         events: data.events,
         url: data.url,
-        security: data.security,
+        tls: data.tls,
         enabled: data.enabled,
-        httpUser: data.httpUser,
-        httpPass: data.httpPass,
+        authUsername: data.authUsername,
+        authPassword: data.authPassword,
       })
     },
     onSuccess: (_, variables) => {
@@ -210,13 +210,11 @@ export function useUpdateWebhook(projectId: string | null | undefined) {
 }
 
 /**
- * Hook to update webhook signature key
+ * Hook to regenerate the webhook signing secret
  *
  * @param projectId - The project ID
  */
-export function useUpdateWebhookSignature(
-  projectId: string | null | undefined,
-) {
+export function useUpdateWebhookSecret(projectId: string | null | undefined) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -224,7 +222,7 @@ export function useUpdateWebhookSignature(
       if (!projectId) {
         throw new Error('Project ID is required')
       }
-      return await sdk.forProject(projectId).webhooks.updateSignature({
+      return await sdk.forProject(projectId).webhooks.updateSecret({
         webhookId,
       })
     },
