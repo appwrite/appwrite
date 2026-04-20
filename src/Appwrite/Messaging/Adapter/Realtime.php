@@ -114,14 +114,24 @@ class Realtime extends MessagingAdapter
             }
         }
 
-        // Keep userId from onOpen/authentication when provided.
-        // Fallback to existing stored value for subsequent subscribe upserts.
-        $this->connections[$identifier] = [
+        // Union channels/roles across all subscriptions on the connection; overwriting would
+        // leave getSubscriptionMetadata and full unsubscribe operating on stale state.
+        $existing = $this->connections[$identifier] ?? [];
+        $existingChannels = $existing['channels'] ?? [];
+        $existingRoles = $existing['roles'] ?? [];
+
+        $entry = [
             'projectId' => $projectId,
-            'roles' => $roles,
-            'userId' => $userId ?? ($this->connections[$identifier]['userId'] ?? ''),
-            'channels' => $channels
+            'roles' => \array_values(\array_unique(\array_merge($existingRoles, $roles))),
+            'userId' => $userId ?? ($existing['userId'] ?? ''),
+            'channels' => \array_values(\array_unique(\array_merge($existingChannels, $channels))),
         ];
+
+        if (\array_key_exists('authorization', $existing)) {
+            $entry['authorization'] = $existing['authorization'];
+        }
+
+        $this->connections[$identifier] = $entry;
     }
 
     /**
@@ -204,6 +214,87 @@ class Realtime extends MessagingAdapter
         if (isset($this->connections[$connection])) {
             unset($this->connections[$connection]);
         }
+    }
+
+    /**
+     * Removes a single subscription from a connection, keeping the connection alive so
+     * the client can resubscribe. Idempotent — returns true only when something was removed.
+     *
+     * @param mixed $connection
+     * @param string $subscriptionId
+     * @return bool
+     */
+    public function unsubscribeSubscription(mixed $connection, string $subscriptionId): bool
+    {
+        $projectId = $this->connections[$connection]['projectId'] ?? '';
+        if ($projectId === '' || !isset($this->subscriptions[$projectId])) {
+            return false;
+        }
+
+        $removed = false;
+
+        foreach ($this->subscriptions[$projectId] as $role => $byChannel) {
+            foreach ($byChannel as $channel => $byConnection) {
+                if (!isset($byConnection[$connection][$subscriptionId])) {
+                    continue;
+                }
+
+                unset($this->subscriptions[$projectId][$role][$channel][$connection][$subscriptionId]);
+                $removed = true;
+
+                if (empty($this->subscriptions[$projectId][$role][$channel][$connection])) {
+                    unset($this->subscriptions[$projectId][$role][$channel][$connection]);
+                }
+                if (empty($this->subscriptions[$projectId][$role][$channel])) {
+                    unset($this->subscriptions[$projectId][$role][$channel]);
+                }
+            }
+            if (empty($this->subscriptions[$projectId][$role])) {
+                unset($this->subscriptions[$projectId][$role]);
+            }
+        }
+
+        if (empty($this->subscriptions[$projectId])) {
+            unset($this->subscriptions[$projectId]);
+        }
+
+        if ($removed) {
+            $this->recomputeConnectionState($connection);
+        }
+
+        return $removed;
+    }
+
+    /**
+     * Recomputes the cached channels on the connection entry from the subscriptions tree.
+     * Called after per-subscription removal so stale channel entries do not linger for later reads.
+     *
+     * Roles are deliberately NOT recomputed here. They represent the connection's authorization
+     * context (set at onOpen, replaced on `authentication` / permission-change) and must survive
+     * per-subscription removal — otherwise a client that unsubscribes every subscription and then
+     * resubscribes would subscribe with an empty roles array and silently receive nothing.
+     *
+     * @param mixed $connection
+     * @return void
+     */
+    private function recomputeConnectionState(mixed $connection): void
+    {
+        if (!isset($this->connections[$connection])) {
+            return;
+        }
+
+        $projectId = $this->connections[$connection]['projectId'] ?? '';
+        $channels = [];
+
+        foreach ($this->subscriptions[$projectId] ?? [] as $byChannel) {
+            foreach ($byChannel as $channel => $byConnection) {
+                if (isset($byConnection[$connection])) {
+                    $channels[$channel] = true;
+                }
+            }
+        }
+
+        $this->connections[$connection]['channels'] = \array_keys($channels);
     }
 
     /**
