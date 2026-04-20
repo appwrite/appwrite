@@ -249,7 +249,7 @@ function ProjectCardFooter({
       )}
     >
       {paused && (
-        <Badge variant="inactive" className="gap-1.5 text-[10px] shrink-0">
+        <Badge variant="error" className="gap-1.5 text-[10px] shrink-0">
           <PauseCircle className="h-3 w-3" />
           Paused
         </Badge>
