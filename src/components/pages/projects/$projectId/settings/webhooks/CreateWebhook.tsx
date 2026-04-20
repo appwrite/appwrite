@@ -50,7 +50,7 @@ function CopyableSecret({ value }: { value: string }) {
 
 function getWebhookSecret(webhook: unknown) {
   const record = webhook as Record<string, unknown>
-  return String(record?.secret || record?.signatureKey || '')
+  return String(record?.secret || '')
 }
 
 interface CreateWebhookDialogProps {
@@ -73,9 +73,9 @@ export function CreateWebhookDialog({
   const [name, setName] = useState('')
   const [url, setUrl] = useState('')
   const [events, setEvents] = useState<string[]>([])
-  const [httpUser, setHttpUser] = useState('')
-  const [httpPass, setHttpPass] = useState('')
-  const [security, setSecurity] = useState(true)
+  const [authUsername, setAuthUsername] = useState('')
+  const [authPassword, setAuthPassword] = useState('')
+  const [tls, setTls] = useState(true)
   const [createdWebhookId, setCreatedWebhookId] = useState('')
   const [createdSecret, setCreatedSecret] = useState('')
   const [showSecretDialog, setShowSecretDialog] = useState(false)
@@ -87,9 +87,9 @@ export function CreateWebhookDialog({
       setName('')
       setUrl('')
       setEvents([])
-      setHttpUser('')
-      setHttpPass('')
-      setSecurity(true)
+      setAuthUsername('')
+      setAuthPassword('')
+      setTls(true)
       setCreatedWebhookId('')
       setCreatedSecret('')
     }
@@ -130,10 +130,10 @@ export function CreateWebhookDialog({
         name: name.trim(),
         url: url.trim(),
         events,
-        security,
+        tls,
         enabled: true,
-        httpUser: httpUser.trim() || undefined,
-        httpPass: httpPass.trim() || undefined,
+        authUsername: authUsername.trim() || undefined,
+        authPassword: authPassword.trim() || undefined,
       })
       const secret = getWebhookSecret(webhook)
       toast.success(
@@ -215,36 +215,42 @@ export function CreateWebhookDialog({
             {currentStep === 'security' && (
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="httpUser" className="text-[12px] font-medium">
+                  <Label
+                    htmlFor="authUsername"
+                    className="text-[12px] font-medium"
+                  >
                     User
                   </Label>
                   <Input
-                    id="httpUser"
+                    id="authUsername"
                     placeholder="Enter username"
-                    value={httpUser}
-                    onChange={(e) => setHttpUser(e.target.value)}
+                    value={authUsername}
+                    onChange={(e) => setAuthUsername(e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="httpPass" className="text-[12px] font-medium">
+                  <Label
+                    htmlFor="authPassword"
+                    className="text-[12px] font-medium"
+                  >
                     Password
                   </Label>
                   <Input
-                    id="httpPass"
+                    id="authPassword"
                     type="password"
                     placeholder="Enter password"
-                    value={httpPass}
-                    onChange={(e) => setHttpPass(e.target.value)}
+                    value={authPassword}
+                    onChange={(e) => setAuthPassword(e.target.value)}
                   />
                 </div>
                 <div className="flex items-center space-x-2">
                   <Checkbox
-                    id="security"
-                    checked={security}
-                    onCheckedChange={(checked) => setSecurity(checked === true)}
+                    id="tls"
+                    checked={tls}
+                    onCheckedChange={(checked) => setTls(checked === true)}
                   />
                   <Label
-                    htmlFor="security"
+                    htmlFor="tls"
                     className="text-[13px] font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                   >
                     Certificate verification (SSL/TLS)

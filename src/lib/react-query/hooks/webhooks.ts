@@ -129,10 +129,10 @@ export function useCreateWebhook(projectId: string | null | undefined) {
       name: string
       events: string[]
       url: string
-      security: boolean
+      tls: boolean
       enabled?: boolean
-      httpUser?: string
-      httpPass?: string
+      authUsername?: string
+      authPassword?: string
     }) => {
       if (!projectId) {
         throw new Error('Project ID is required')
@@ -142,10 +142,10 @@ export function useCreateWebhook(projectId: string | null | undefined) {
         name: data.name,
         events: data.events,
         url: data.url,
-        security: data.security,
+        tls: data.tls,
         enabled: data.enabled ?? true,
-        httpUser: data.httpUser,
-        httpPass: data.httpPass,
+        authUsername: data.authUsername,
+        authPassword: data.authPassword,
       })
     },
     onSuccess: () => {
@@ -173,10 +173,10 @@ export function useUpdateWebhook(projectId: string | null | undefined) {
       name: string
       events: string[]
       url: string
-      security: boolean
+      tls: boolean
       enabled?: boolean
-      httpUser?: string
-      httpPass?: string
+      authUsername?: string
+      authPassword?: string
     }) => {
       if (!projectId) {
         throw new Error('Project ID is required')
@@ -186,10 +186,10 @@ export function useUpdateWebhook(projectId: string | null | undefined) {
         name: data.name,
         events: data.events,
         url: data.url,
-        security: data.security,
+        tls: data.tls,
         enabled: data.enabled,
-        httpUser: data.httpUser,
-        httpPass: data.httpPass,
+        authUsername: data.authUsername,
+        authPassword: data.authPassword,
       })
     },
     onSuccess: (_, variables) => {
@@ -233,23 +233,10 @@ export function useUpdateWebhookSignature(
           ? undefined
           : input.secret?.trim() || undefined
 
-      if (!secret) {
-        return await sdk.forProject(projectId).webhooks.updateSignature({
-          webhookId,
-        })
-      }
-
-      const projectSdk = sdk.forProject(projectId)
-      const uri = new URL(
-        `${projectSdk.client.config.endpoint}/webhooks/${webhookId}/signature`,
-      )
-
-      return await projectSdk.client.call(
-        'patch',
-        uri,
-        { 'content-type': 'application/json' },
-        { secret },
-      )
+      return await sdk.forProject(projectId).webhooks.updateSecret({
+        webhookId,
+        secret,
+      })
     },
     onSuccess: (_, input) => {
       const webhookId = typeof input === 'string' ? input : input.webhookId
@@ -283,8 +270,8 @@ export function useDeleteWebhook(projectId: string | null | undefined) {
         webhookId,
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
         queryKey: ['webhooks', 'project', projectId],
       })
       queryClient.invalidateQueries({
