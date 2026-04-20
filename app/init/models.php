@@ -210,6 +210,7 @@ Response::setModel(new BaseList('Currencies List', Response::MODEL_CURRENCY_LIST
 Response::setModel(new BaseList('Phones List', Response::MODEL_PHONE_LIST, 'phones', Response::MODEL_PHONE));
 Response::setModel(new BaseList('Metric List', Response::MODEL_METRIC_LIST, 'metrics', Response::MODEL_METRIC, true, false));
 Response::setModel(new BaseList('Variables List', Response::MODEL_VARIABLE_LIST, 'variables', Response::MODEL_VARIABLE));
+Response::setModel(new BaseList('Email Templates List', Response::MODEL_EMAIL_TEMPLATE_LIST, 'templates', Response::MODEL_EMAIL_TEMPLATE));
 Response::setModel(new BaseList('Status List', Response::MODEL_HEALTH_STATUS_LIST, 'statuses', Response::MODEL_HEALTH_STATUS));
 Response::setModel(new BaseList('Rule List', Response::MODEL_PROXY_RULE_LIST, 'rules', Response::MODEL_PROXY_RULE));
 Response::setModel(new BaseList('Schedules List', Response::MODEL_SCHEDULE_LIST, 'schedules', Response::MODEL_SCHEDULE));
