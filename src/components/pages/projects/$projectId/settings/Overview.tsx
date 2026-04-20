@@ -55,8 +55,7 @@ import {
 } from '@/components/ui/tooltip'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
-import type { Models } from '@appwrite.io/console'
-import { ApiService } from '@appwrite.io/console'
+import type { Models, ServiceId } from '@appwrite.io/console'
 import { GitConfigurationCard } from './GitConfigurationCard'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
@@ -351,6 +350,43 @@ export function ProjectSettingsOverview({
     [project?.region],
   )
 
+  const projectRegion = useMemo(
+    () => rawProjectData?.region || project?.region,
+    [rawProjectData?.region, project?.region],
+  )
+
+  const updateProjectService = async (
+    serviceId: string,
+    enabled: boolean,
+  ): Promise<Models.Project> => {
+    return await sdk
+      .forProject(projectId, projectRegion)
+      .project.updateService({
+        serviceId: serviceId as ServiceId,
+        enabled,
+      })
+  }
+
+  const updateProjectProtocol = async (
+    protocolId: ProtocolId,
+    enabled: boolean,
+  ): Promise<Models.Project> => {
+    return await sdk
+      .forProject(projectId, projectRegion)
+      .project.updateProtocol({
+        protocolId,
+        enabled,
+      })
+  }
+
+  const patchCachedProject = (patch: Record<string, boolean>) => {
+    queryClient.setQueryData<Models.Project | undefined>(
+      ['project', projectId],
+      (current) =>
+        current ? ({ ...current, ...patch } as Models.Project) : current,
+    )
+  }
+
   // Navigate to API keys page
   const handleViewApiKeys = () => {
     navigate({
@@ -393,11 +429,7 @@ export function ProjectSettingsOverview({
       service: string
       status: boolean
     }) => {
-      const response = await sdk.forConsole.projects.updateServiceStatus({
-        projectId,
-        service: service as ApiService,
-        status,
-      })
+      const response = await updateProjectService(service, status)
       return { response, service, status }
     },
     onSuccess: (data) => {
@@ -407,8 +439,6 @@ export function ProjectSettingsOverview({
         `${serviceLabel} service has been ${status ? 'enabled' : 'disabled'}`,
       )
 
-      // Update services state from response
-      const projectData = data.response as Models.Project
       // Services are stored as serviceStatusFor{ServiceName} properties
       const servicePropertyMap: Record<string, string> = {
         account: 'serviceStatusForAccount',
@@ -427,25 +457,14 @@ export function ProjectSettingsOverview({
         users: 'serviceStatusForUsers',
       }
       const serviceProperty = servicePropertyMap[service]
-      const projectDataRecord = projectData as Record<string, unknown>
-      if (serviceProperty && projectDataRecord[serviceProperty] !== undefined) {
-        setServices((prev) => ({
-          ...prev,
-          [service]: projectDataRecord[serviceProperty] as boolean,
-        }))
-      } else {
-        // Fallback to the status we just set
-        setServices((prev) => ({
-          ...prev,
-          [service]: status,
-        }))
-      }
+      setServices((prev) => ({
+        ...prev,
+        [service]: status,
+      }))
 
-      // Invalidate queries to refresh project data
-      queryClient.invalidateQueries({ queryKey: ['project', projectId] })
-      queryClient.invalidateQueries({
-        queryKey: [Dependencies.PROJECT, projectId],
-      })
+      if (serviceProperty) {
+        patchCachedProject({ [serviceProperty]: status })
+      }
 
       setUpdatingServices((prev) => {
         const next = new Set(prev)
@@ -472,10 +491,11 @@ export function ProjectSettingsOverview({
   // Mutation to update all services
   const updateAllServicesMutation = useMutation({
     mutationFn: async (status: boolean) => {
-      const response = await sdk.forConsole.projects.updateServiceStatusAll({
-        projectId,
-        status,
-      })
+      let response: Models.Project | null = null
+      for (const serviceId of Object.keys(services)) {
+        if (services[serviceId] === status) continue
+        response = await updateProjectService(serviceId, status)
+      }
       return { response, status }
     },
     onSuccess: (data) => {
@@ -484,76 +504,38 @@ export function ProjectSettingsOverview({
         `All services for ${project?.name || 'project'} has been ${status ? 'enabled' : 'disabled'}.`,
       )
 
-      // Update all services state from response
-      const projectData = data.response as Models.Project
-      // Services are stored as serviceStatusFor{ServiceName} properties
       setServices({
-        account:
-          projectData.serviceStatusForAccount !== undefined
-            ? projectData.serviceStatusForAccount
-            : status,
-        avatars:
-          projectData.serviceStatusForAvatars !== undefined
-            ? projectData.serviceStatusForAvatars
-            : status,
-        databases:
-          projectData.serviceStatusForDatabases !== undefined
-            ? projectData.serviceStatusForDatabases
-            : status,
-        tablesdb:
-          projectData.serviceStatusForTablesdb !== undefined
-            ? projectData.serviceStatusForTablesdb
-            : status,
-        functions:
-          projectData.serviceStatusForFunctions !== undefined
-            ? projectData.serviceStatusForFunctions
-            : status,
-        graphql:
-          projectData.serviceStatusForGraphql !== undefined
-            ? projectData.serviceStatusForGraphql
-            : status,
-        locale:
-          projectData.serviceStatusForLocale !== undefined
-            ? projectData.serviceStatusForLocale
-            : status,
-        messaging:
-          projectData.serviceStatusForMessaging !== undefined
-            ? projectData.serviceStatusForMessaging
-            : status,
-        migrations:
-          (projectData as unknown as Record<string, unknown>)
-            .serviceStatusForMigrations !== undefined
-            ? ((projectData as unknown as Record<string, unknown>)
-                .serviceStatusForMigrations as boolean)
-            : status,
-        project:
-          (projectData as unknown as Record<string, unknown>)
-            .serviceStatusForProject !== undefined
-            ? ((projectData as unknown as Record<string, unknown>)
-                .serviceStatusForProject as boolean)
-            : status,
-        storage:
-          projectData.serviceStatusForStorage !== undefined
-            ? projectData.serviceStatusForStorage
-            : status,
-        sites:
-          projectData.serviceStatusForSites !== undefined
-            ? projectData.serviceStatusForSites
-            : status,
-        teams:
-          projectData.serviceStatusForTeams !== undefined
-            ? projectData.serviceStatusForTeams
-            : status,
-        users:
-          projectData.serviceStatusForUsers !== undefined
-            ? projectData.serviceStatusForUsers
-            : status,
+        account: status,
+        avatars: status,
+        databases: status,
+        tablesdb: status,
+        functions: status,
+        graphql: status,
+        locale: status,
+        messaging: status,
+        migrations: status,
+        project: status,
+        storage: status,
+        sites: status,
+        teams: status,
+        users: status,
       })
 
-      // Invalidate queries to refresh project data
-      queryClient.invalidateQueries({ queryKey: ['project', projectId] })
-      queryClient.invalidateQueries({
-        queryKey: [Dependencies.PROJECT, projectId],
+      patchCachedProject({
+        serviceStatusForAccount: status,
+        serviceStatusForAvatars: status,
+        serviceStatusForDatabases: status,
+        serviceStatusForTablesdb: status,
+        serviceStatusForFunctions: status,
+        serviceStatusForGraphql: status,
+        serviceStatusForLocale: status,
+        serviceStatusForMessaging: status,
+        serviceStatusForMigrations: status,
+        serviceStatusForProject: status,
+        serviceStatusForStorage: status,
+        serviceStatusForSites: status,
+        serviceStatusForTeams: status,
+        serviceStatusForUsers: status,
       })
       // Track analytics: Submit.ProjectService
     },
@@ -571,64 +553,26 @@ export function ProjectSettingsOverview({
       protocol: ProtocolId
       status: boolean
     }) => {
-      const projectSdk = sdk.forProject(projectId)
-      const updateProtocolStatus = (
-        projectSdk.project as unknown as {
-          updateProtocolStatus?: (params: {
-            protocolId: ProtocolId
-            enabled: boolean
-          }) => Promise<Models.Project>
-        }
-      ).updateProtocolStatus
-
-      if (typeof updateProtocolStatus === 'function') {
-        return await updateProtocolStatus.call(projectSdk.project, {
-          protocolId: protocol,
-          enabled: status,
-        })
-      }
-
-      const uri = new URL(
-        `${projectSdk.client.config.endpoint}/project/protocol`,
-      )
-      return await projectSdk.client.call(
-        'patch',
-        uri,
-        { 'content-type': 'application/json' },
-        { protocolId: protocol, enabled: status },
-      )
+      return await updateProjectProtocol(protocol, status)
     },
-    onSuccess: async (projectData, variables) => {
+    onSuccess: async (_projectData, variables) => {
       const protocolConfig = PROJECT_PROTOCOLS.find(
         (protocol) => protocol.id === variables.protocol,
       )
-      const projectRecord = projectData as unknown as Record<string, unknown>
-      const nextValue = protocolConfig
-        ? projectRecord[protocolConfig.projectField]
-        : undefined
 
       setProtocols((prev) => ({
         ...prev,
-        [variables.protocol]:
-          typeof nextValue === 'boolean' ? nextValue : variables.status,
+        [variables.protocol]: variables.status,
       }))
+      if (protocolConfig) {
+        patchCachedProject({ [protocolConfig.projectField]: variables.status })
+      }
 
       toast.success(
         `${protocolConfig?.label || 'Protocol'} protocol has been ${
           variables.status ? 'enabled' : 'disabled'
         }`,
       )
-
-      await queryClient.refetchQueries({
-        queryKey: ['project', projectId],
-        exact: true,
-        type: 'all',
-      })
-      await queryClient.refetchQueries({
-        queryKey: [Dependencies.PROJECT, projectId],
-        exact: true,
-        type: 'all',
-      })
     },
     onError: (error: Error, variables) => {
       toast.error(getErrorMessage(error, 'Failed to update protocol'))
@@ -649,36 +593,9 @@ export function ProjectSettingsOverview({
   // Mutation to update all protocols
   const updateAllProtocolsMutation = useMutation({
     mutationFn: async (status: boolean) => {
-      const projectSdk = sdk.forProject(projectId)
-      const updateProtocolStatus = (
-        projectSdk.project as unknown as {
-          updateProtocolStatus?: (params: {
-            protocolId: ProtocolId
-            enabled: boolean
-          }) => Promise<Models.Project>
-        }
-      ).updateProtocolStatus
-
       for (const protocol of PROJECT_PROTOCOLS) {
         if (protocols[protocol.id] === status) continue
-
-        if (typeof updateProtocolStatus === 'function') {
-          await updateProtocolStatus.call(projectSdk.project, {
-            protocolId: protocol.id,
-            enabled: status,
-          })
-          continue
-        }
-
-        const uri = new URL(
-          `${projectSdk.client.config.endpoint}/project/protocol`,
-        )
-        await projectSdk.client.call(
-          'patch',
-          uri,
-          { 'content-type': 'application/json' },
-          { protocolId: protocol.id, enabled: status },
-        )
+        await updateProjectProtocol(protocol.id, status)
       }
 
       return status
@@ -689,22 +606,16 @@ export function ProjectSettingsOverview({
         graphql: status,
         websocket: status,
       })
+      patchCachedProject({
+        protocolStatusForRest: status,
+        protocolStatusForGraphql: status,
+        protocolStatusForWebsocket: status,
+      })
       toast.success(
         `All protocols for ${project?.name || 'project'} have been ${
           status ? 'enabled.' : 'disabled.'
         }`,
       )
-
-      await queryClient.refetchQueries({
-        queryKey: ['project', projectId],
-        exact: true,
-        type: 'all',
-      })
-      await queryClient.refetchQueries({
-        queryKey: [Dependencies.PROJECT, projectId],
-        exact: true,
-        type: 'all',
-      })
     },
     onError: (error: Error) => {
       toast.error(getErrorMessage(error, 'Failed to update protocols'))
@@ -813,15 +724,17 @@ export function ProjectSettingsOverview({
 
   // Handle service toggle
   const handleServiceToggle = (service: string, checked: boolean) => {
+    const nextChecked =
+      services[service] === undefined ? checked : !services[service]
     // Optimistically update UI
-    setServices((prev) => ({ ...prev, [service]: checked }))
+    setServices((prev) => ({ ...prev, [service]: nextChecked }))
     setUpdatingServices((prev) => new Set(prev).add(service))
     updateServiceMutation.mutate(
-      { service, status: checked },
+      { service, status: nextChecked },
       {
         onError: () => {
           // Revert on error
-          setServices((prev) => ({ ...prev, [service]: !checked }))
+          setServices((prev) => ({ ...prev, [service]: !nextChecked }))
         },
       },
     )
@@ -840,9 +753,11 @@ export function ProjectSettingsOverview({
 
   // Handle protocol toggle
   const handleProtocolToggle = (protocol: ProtocolId, checked: boolean) => {
-    setProtocols((prev) => ({ ...prev, [protocol]: checked }))
+    const nextChecked =
+      protocols[protocol] === undefined ? checked : !protocols[protocol]
+    setProtocols((prev) => ({ ...prev, [protocol]: nextChecked }))
     setUpdatingProtocols((prev) => new Set(prev).add(protocol))
-    updateProtocolMutation.mutate({ protocol, status: checked })
+    updateProtocolMutation.mutate({ protocol, status: nextChecked })
   }
 
   const openProtocolBulkDialog = (status: boolean) => {

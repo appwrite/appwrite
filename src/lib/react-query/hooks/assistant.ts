@@ -5,7 +5,7 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query'
-import { ContentType, ID, Query } from '@appwrite.io/console'
+import { ID, Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { getProjectRegion, sdk } from '@/lib/appwrite/sdk'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
@@ -185,7 +185,7 @@ export function useCreateAssistantMessage() {
       return await sdk.forConsole.assistant.createMessage({
         conversationId: params.conversationId,
         contentText: params.contentText,
-        contentType: ContentType.Text,
+        contentType: 'text',
         contextTeamId: params.context?.contextTeamId,
         contextProjectId: params.context?.contextProjectId,
         contextOrganizationId: params.context?.contextOrganizationId,
