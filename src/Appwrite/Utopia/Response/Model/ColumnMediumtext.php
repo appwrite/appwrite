@@ -25,6 +25,13 @@ class ColumnMediumtext extends Column
                 'required' => false,
                 'example' => false,
             ])
+            ->addRule('notes', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Notes for the column.',
+                'default' => null,
+                'required' => false,
+                'example' => 'Used for storing user names',
+            ])
         ;
     }
 

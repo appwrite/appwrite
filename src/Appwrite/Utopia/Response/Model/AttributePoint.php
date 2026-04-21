@@ -18,6 +18,13 @@ class AttributePoint extends Attribute
                 'required' => false,
                 'example' => [0, 0]
             ])
+            ->addRule('notes', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Notes for the attribute.',
+                'default' => '',
+                'required' => false,
+                'example' => 'Used for storing user names',
+            ])
         ;
     }
 

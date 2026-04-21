@@ -31,6 +31,13 @@ class AttributeVarchar extends Attribute
                 'required' => false,
                 'example' => false,
             ])
+            ->addRule('notes', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Notes for the attribute.',
+                'default' => '',
+                'required' => false,
+                'example' => 'Used for storing user names',
+            ])
         ;
     }
 

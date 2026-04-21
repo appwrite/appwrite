@@ -38,6 +38,13 @@ class AttributeDatetime extends Attribute
                 'array' => false,
                 'required' => false,
             ])
+            ->addRule('notes', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Notes for the attribute.',
+                'default' => '',
+                'required' => false,
+                'example' => 'Used for storing user names',
+            ])
         ;
     }
 

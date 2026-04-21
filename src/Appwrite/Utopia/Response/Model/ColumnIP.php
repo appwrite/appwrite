@@ -36,6 +36,13 @@ class ColumnIP extends Column
                 'required' => false,
                 'example' => '192.0.2.0',
             ])
+            ->addRule('notes', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Notes for the column.',
+                'default' => null,
+                'required' => false,
+                'example' => 'Used for storing user names',
+            ])
         ;
     }
 
