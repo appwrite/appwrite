@@ -281,7 +281,7 @@ return [
                 'size' => 256,
                 'signed' => true,
                 'required' => false,
-                'default' => '',
+                'default' => null,
                 'array' => false,
                 'filters' => [],
                 'format' => ''
