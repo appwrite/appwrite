@@ -19,7 +19,8 @@ import {
 import {
   useCreateWebhook,
   useUpdateWebhook,
-  useUpdateWebhookSignature,
+  useProjectWebhook,
+  useUpdateWebhookSecret,
 } from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
 import {
@@ -93,7 +94,11 @@ export function WebhookDrawer({
 
   const createMutation = useCreateWebhook(projectId)
   const updateMutation = useUpdateWebhook(projectId)
-  const regenerateSignatureMutation = useUpdateWebhookSignature(projectId)
+  const regenerateSignatureMutation = useUpdateWebhookSecret(projectId)
+  const { webhook: fullWebhook } = useProjectWebhook(
+    projectId,
+    isEditing ? webhook?.$id : null,
+  )
   const isPending =
     createMutation.isPending ||
     updateMutation.isPending ||
@@ -125,18 +130,21 @@ export function WebhookDrawer({
       setTls(true)
       setErrors({})
       setCustomSecret('')
-    } else if (webhook) {
-      setName(webhook.name || '')
-      setUrl(webhook.url || '')
-      setEvents(webhook.events || [])
-      setEnabled(webhook.enabled ?? true)
-      setAuthUsername(webhook.authUsername || '')
+      return
+    }
+    const source = fullWebhook ?? webhook
+    if (source) {
+      setName(source.name || '')
+      setUrl(source.url || '')
+      setEvents(source.events || [])
+      setEnabled(source.enabled ?? true)
+      setAuthUsername(source.authUsername || '')
       setAuthPassword('')
-      setTls(webhook.tls ?? true)
+      setTls(source.tls ?? true)
       setErrors({})
       setCustomSecret('')
     }
-  }, [open, webhook])
+  }, [open, webhook, fullWebhook])
 
   const canSubmit = !!name.trim() && !!url.trim()
   const submitDisabledReason = !name.trim()

@@ -210,13 +210,11 @@ export function useUpdateWebhook(projectId: string | null | undefined) {
 }
 
 /**
- * Hook to update webhook signature key
+ * Hook to regenerate the webhook signing secret
  *
  * @param projectId - The project ID
  */
-export function useUpdateWebhookSignature(
-  projectId: string | null | undefined,
-) {
+export function useUpdateWebhookSecret(projectId: string | null | undefined) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -232,7 +230,6 @@ export function useUpdateWebhookSignature(
         typeof input === 'string'
           ? undefined
           : input.secret?.trim() || undefined
-
       return await sdk.forProject(projectId).webhooks.updateSecret({
         webhookId,
         secret,

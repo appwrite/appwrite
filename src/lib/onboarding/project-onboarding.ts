@@ -3,17 +3,6 @@
  * Products are grouped under Build and Deploy (sidebar-aligned).
  */
 
-import { fetchApiKeys, fetchPlatforms } from '@/lib/react-query/hooks/projects'
-import { fetchProjectBuckets } from '@/lib/react-query/hooks/storage'
-import { fetchProjectDatabases } from '@/lib/react-query/hooks/databases'
-import { fetchProjectFunctions } from '@/lib/react-query/hooks/functions'
-import { fetchProjectUsers, fetchProjectTeams } from '@/lib/react-query/hooks/users'
-import { fetchProjectSites } from '@/lib/react-query/hooks/sites'
-import {
-  fetchProjectProviders,
-  fetchProjectTopics,
-} from '@/lib/react-query/hooks/messaging'
-
 export type ProductNavCategoryId = 'build' | 'deploy'
 
 export type ProductGroupId =
@@ -75,7 +64,7 @@ export const ONBOARDING_CONNECT: OnboardingConnectStepDef[] = [
     id: 'app',
     label: 'Register your app platform',
     hint: "Map your app's hostname or bundle ID so the SDK can reach this project.",
-    cta: 'Register platform',
+    cta: 'Add platform',
     ctaDone: 'Manage apps',
     to: '/projects/$projectId/apps',
     debug: 'Done when `listPlatforms` total (or platforms length) > 0.',
@@ -85,7 +74,7 @@ export const ONBOARDING_CONNECT: OnboardingConnectStepDef[] = [
     id: 'apiKey',
     label: 'Create a server API key',
     hint: 'Add a scoped secret for servers and CI; client apps use sessions instead.',
-    cta: 'Create API key',
+    cta: 'Add API key',
     ctaDone: 'Manage keys',
     to: '/projects/$projectId/api-keys',
     debug: 'Done when `listKeys` returns at least one key.',
@@ -329,90 +318,34 @@ export interface ProjectOnboardingSnapshot {
   siteTotal: number
 }
 
-function settledTotal<T extends { total?: number }>(
-  result: PromiseSettledResult<T>,
-): number {
-  if (result.status !== 'fulfilled') return 0
-  return result.value.total ?? 0
-}
-
-function settledCountKeys(result: PromiseSettledResult<{ keys?: unknown[] }>): number {
-  if (result.status !== 'fulfilled') return 0
-  const keys = result.value.keys
-  return Array.isArray(keys) ? keys.length : 0
-}
-
 /**
- * Single batched read of resource totals for onboarding progress.
- * Failures are treated as zero so partial permissions still show the checklist.
+ * Mocked onboarding snapshot.
+ *
+ * The previous implementation fired one `list` call per resource type
+ * (`users`, `teams`, `databases`, `buckets`, `functions`, `topics`,
+ * `providers`, `sites`) with `limit=1` purely to read the `total` field —
+ * which produced a burst of API calls on every project page (and again on
+ * every window focus). That has been removed pending a proper aggregated
+ * endpoint that returns all of these counts in a single call.
+ *
+ * For now we return zeros so the checklist renders in its initial state.
+ * `projectId` is intentionally unused — kept on the signature so the
+ * eventual real implementation slots in without touching callers.
  */
 export async function fetchProjectOnboardingSnapshot(
-  projectId: string,
+  _projectId: string,
 ): Promise<ProjectOnboardingSnapshot> {
-  if (!projectId) {
-    return {
-      platformTotal: 0,
-      apiKeyCount: 0,
-      userTotal: 0,
-      teamTotal: 0,
-      databaseTotal: 0,
-      bucketTotal: 0,
-      functionTotal: 0,
-      topicTotal: 0,
-      providerTotal: 0,
-      siteTotal: 0,
-    }
-  }
-
-  const results = await Promise.allSettled([
-    fetchPlatforms(projectId),
-    fetchApiKeys(projectId),
-    fetchProjectUsers(projectId, 0, 1),
-    fetchProjectTeams(projectId, 0, 1),
-    fetchProjectDatabases(projectId, 0, 1),
-    fetchProjectBuckets(projectId, 0, 1),
-    fetchProjectFunctions(projectId, 0, 1),
-    fetchProjectTopics(projectId, 0, 1),
-    fetchProjectProviders(projectId, 0, 1),
-    fetchProjectSites(projectId, 0, 1),
-  ])
-
-  const [
-    platformsR,
-    keysR,
-    usersR,
-    teamsR,
-    databasesR,
-    bucketsR,
-    functionsR,
-    topicsR,
-    providersR,
-    sitesR,
-  ] = results
-
-  const platformTotal =
-    platformsR.status === 'fulfilled'
-      ? (platformsR.value.total ??
-        platformsR.value.platforms?.length ??
-        0)
-      : 0
-
-  const topicTotal = settledTotal(topicsR as PromiseSettledResult<{ total?: number }>)
-  const providerTotal = settledTotal(
-    providersR as PromiseSettledResult<{ total?: number }>,
-  )
-
   return {
-    platformTotal,
-    apiKeyCount: settledCountKeys(keysR as PromiseSettledResult<{ keys?: unknown[] }>),
-    userTotal: settledTotal(usersR as PromiseSettledResult<{ total?: number }>),
-    teamTotal: settledTotal(teamsR as PromiseSettledResult<{ total?: number }>),
-    databaseTotal: settledTotal(databasesR as PromiseSettledResult<{ total?: number }>),
-    bucketTotal: settledTotal(bucketsR as PromiseSettledResult<{ total?: number }>),
-    functionTotal: settledTotal(functionsR as PromiseSettledResult<{ total?: number }>),
-    topicTotal,
-    providerTotal,
-    siteTotal: settledTotal(sitesR as PromiseSettledResult<{ total?: number }>),
+    platformTotal: 0,
+    apiKeyCount: 0,
+    userTotal: 0,
+    teamTotal: 0,
+    databaseTotal: 0,
+    bucketTotal: 0,
+    functionTotal: 0,
+    topicTotal: 0,
+    providerTotal: 0,
+    siteTotal: 0,
   }
 }
 

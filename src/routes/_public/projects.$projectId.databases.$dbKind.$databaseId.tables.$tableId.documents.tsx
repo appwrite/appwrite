@@ -8,6 +8,7 @@ import {
   projectQueryOptions,
   organizationPlanQueryOptions,
 } from '@/lib/react-query/hooks'
+import { ROWS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import {
   listSearchSchema,
   getSearch,
@@ -20,7 +21,6 @@ import { pageTitle } from '@/lib/utils/page-title'
 import { throwRedirectCollectionsDbFromTablesChild } from '@/lib/database-route-redirects'
 
 const TABLES_PER_PAGE = 100
-const ROWS_PER_PAGE = 25
 const DEFAULT_PAGE = 1
 
 export const Route = createFileRoute(
@@ -33,11 +33,9 @@ export const Route = createFileRoute(
       },
     ],
   }),
-  pendingComponent: () => (
-    <div className="flex h-full items-center justify-center">
-      <div className="text-muted-foreground">Loading documents...</div>
-    </div>
-  ),
+  // No pendingComponent: keep the previous page visible until the loader's
+  // prefetch is done, then transition with data already in cache. See
+  // AGENTS.md → "Loading & Navigation" / "List & tab pages: never use pendingComponent".
   validateSearch: listSearchSchema,
   loader: async ({ params, context, location }) => {
     if (typeof window === 'undefined') return
@@ -114,7 +112,7 @@ export const Route = createFileRoute(
       )
       const search = getSearch(url)
       const page = getPage(url, DEFAULT_PAGE)
-      const limit = getLimit(url, ROWS_PER_PAGE)
+      const limit = getLimit(url, ROWS_DEFAULT_PAGE_SIZE)
       const queryParam = getQueryParam(url)
       const filterMap = queryParamToMap(queryParam)
       const filterQueries =

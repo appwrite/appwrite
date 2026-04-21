@@ -20,6 +20,7 @@ import {
   AlertCircle,
   Info,
 } from '@/lib/icons'
+import type { Models } from '@appwrite.io/console'
 import { ServiceHeader } from '../shared/ServiceHeader'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Pagination } from '@/components/global/shared/Pagination'
@@ -37,6 +38,7 @@ import {
 } from '@/components/ui/table'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { ACTIVITY_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { useProjectActivities } from '@/lib/react-query/hooks/activities'
 
 import {
   Select,
@@ -120,8 +122,12 @@ const resourceIcons: Record<ResourceType, React.ReactNode> = {
   project: <Server className="h-3.5 w-3.5" />,
 }
 
-// Mock activity data
-interface MockActivity {
+/**
+ * Display-shaped activity row derived from `Models.ActivityEvent`.
+ * The API returns raw audit events (e.g. `users.[ID].sessions.create`); we
+ * normalize them into the action/resource-type buckets the UI is built around.
+ */
+interface DisplayActivity {
   $id: string
   userId: string
   userName: string
@@ -131,168 +137,93 @@ interface MockActivity {
   resourceId: string
   resourceName: string
   description: string | null
-  metadata: string | null
   ipAddress: string | null
   timestamp: string
+  rawEvent: string
 }
 
-// Generate mock activities
-const generateMockActivities = (): MockActivity[] => {
-  const users = [
-    {
-      id: '507f1f77bcf86cd7994390a0',
-      name: 'Alex Morgan',
-      email: 'alex@appwrite.io',
-    },
-    {
-      id: '507f1f77bcf86cd7994390a1',
-      name: 'Sarah Chen',
-      email: 'sarah@example.com',
-    },
-    {
-      id: '507f1f77bcf86cd7994390a2',
-      name: 'Mike Johnson',
-      email: 'mike@example.com',
-    },
-    {
-      id: '507f1f77bcf86cd7994390a3',
-      name: 'Emily Davis',
-      email: 'emily@example.com',
-    },
-    {
-      id: '507f1f77bcf86cd7994390a4',
-      name: 'System',
-      email: 'system@appwrite.io',
-    },
-  ]
-
-  const activities: MockActivity[] = []
-  const now = Date.now()
-
-  // Generate activities over the past 30 days
-  const activityTemplates = [
-    {
-      action: 'create' as ActionType,
-      resourceType: 'document' as ResourceType,
-      resourceName: 'Order #28751',
-      description: 'New order created',
-    },
-    {
-      action: 'upload' as ActionType,
-      resourceType: 'file' as ResourceType,
-      resourceName: 'product-hero.jpg',
-      description: 'File uploaded to Product Images bucket',
-    },
-    {
-      action: 'execute' as ActionType,
-      resourceType: 'function' as ResourceType,
-      resourceName: 'send-notification',
-      description: 'Function executed successfully',
-    },
-    {
-      action: 'update' as ActionType,
-      resourceType: 'document' as ResourceType,
-      resourceName: 'Product SKU-1234',
-      description: 'Price updated from $29.99 to $24.99',
-    },
-    {
-      action: 'login' as ActionType,
-      resourceType: 'user' as ResourceType,
-      resourceName: 'mike@example.com',
-      description: 'User logged in from Chrome on macOS',
-    },
-    {
-      action: 'delete' as ActionType,
-      resourceType: 'file' as ResourceType,
-      resourceName: 'old-banner.png',
-      description: 'File deleted from Marketing bucket',
-    },
-    {
-      action: 'create' as ActionType,
-      resourceType: 'collection' as ResourceType,
-      resourceName: 'reviews',
-      description: 'New collection created in Production database',
-    },
-    {
-      action: 'execute' as ActionType,
-      resourceType: 'function' as ResourceType,
-      resourceName: 'process-payment',
-      description: 'Payment processed for order #28750',
-    },
-    {
-      action: 'update' as ActionType,
-      resourceType: 'user' as ResourceType,
-      resourceName: 'john@example.com',
-      description: 'User profile updated',
-    },
-    {
-      action: 'create' as ActionType,
-      resourceType: 'database' as ResourceType,
-      resourceName: 'Analytics',
-      description: 'New database created',
-    },
-    {
-      action: 'logout' as ActionType,
-      resourceType: 'user' as ResourceType,
-      resourceName: 'sarah@example.com',
-      description: 'User logged out',
-    },
-    {
-      action: 'view' as ActionType,
-      resourceType: 'document' as ResourceType,
-      resourceName: 'User #12450',
-      description: 'Document viewed',
-    },
-    {
-      action: 'create' as ActionType,
-      resourceType: 'bucket' as ResourceType,
-      resourceName: 'Backups',
-      description: 'New storage bucket created',
-    },
-    {
-      action: 'update' as ActionType,
-      resourceType: 'function' as ResourceType,
-      resourceName: 'generate-report',
-      description: 'Function code updated',
-    },
-    {
-      action: 'delete' as ActionType,
-      resourceType: 'document' as ResourceType,
-      resourceName: 'Draft #892',
-      description: 'Draft document deleted',
-    },
-  ]
-
-  // Generate 100 activities
-  for (let i = 0; i < 100; i++) {
-    const template = activityTemplates[i % activityTemplates.length]
-    const user = users[Math.floor(Math.random() * users.length)]
-    const hoursAgo = Math.floor(Math.random() * 720) // Up to 30 days
-    const timestamp = new Date(now - hoursAgo * 60 * 60 * 1000).toISOString()
-
-    activities.push({
-      $id: `507f1f77bcf86cd799439${String(200 + i).padStart(3, '0')}`,
-      userId: user.id,
-      userName: user.name,
-      userEmail: user.email,
-      action: template.action,
-      resourceType: template.resourceType,
-      resourceId: `res_${String(Math.floor(Math.random() * 10000)).padStart(5, '0')}`,
-      resourceName: template.resourceName,
-      description: template.description,
-      metadata: null,
-      ipAddress: `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
-      timestamp,
-    })
+/** Maps an event string like `users.[ID].sessions.create` to a UI action bucket. */
+function eventToActionType(event: string): ActionType {
+  const parts = event.split('.')
+  if (parts.includes('sessions')) {
+    if (parts.includes('create')) return 'login'
+    if (parts.includes('delete')) return 'logout'
   }
-
-  // Sort by timestamp descending
-  return activities.sort(
-    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
-  )
+  if (parts.includes('executions') && parts.includes('create')) return 'execute'
+  if (parts.includes('files') && parts.includes('create')) return 'upload'
+  if (parts.includes('create')) return 'create'
+  if (parts.includes('update')) return 'update'
+  if (parts.includes('delete')) return 'delete'
+  return 'view'
 }
 
-const mockActivities = generateMockActivities()
+/** Maps the API `resourceType`/`event` to a UI resource-type bucket. */
+function eventToResourceType(
+  resourceType: string,
+  event: string,
+): ResourceType {
+  const normalized = resourceType.toLowerCase()
+  const eventParts = event.split('.')
+  if (normalized.startsWith('document') || eventParts.includes('documents'))
+    return 'document'
+  if (normalized.startsWith('collection') || eventParts.includes('collections'))
+    return 'collection'
+  if (normalized.startsWith('database') || eventParts.includes('databases'))
+    return 'database'
+  if (normalized.startsWith('file') || eventParts.includes('files'))
+    return 'file'
+  if (normalized.startsWith('bucket') || eventParts.includes('buckets'))
+    return 'bucket'
+  if (normalized.startsWith('function') || eventParts.includes('functions'))
+    return 'function'
+  if (normalized.startsWith('team') || eventParts.includes('teams')) return 'team'
+  if (normalized.startsWith('user') || eventParts.includes('users')) return 'user'
+  return 'project'
+}
+
+/**
+ * Build a human-readable resource label from the raw event string when the
+ * API doesn't provide a dedicated name (most audit events do not).
+ * Example: `databases.[DB_ID].collections.[COL_ID].documents.[DOC_ID].create`
+ *   → resourceType `documents`, label `[DOC_ID]`.
+ */
+function resourceLabelFromEvent(activity: Models.ActivityEvent): string {
+  if (activity.resourceId) return activity.resourceId
+  const segments = activity.event.split('.')
+  // Last id-like segment (anything that isn't a known verb) tends to be the
+  // resource id; fall back to the full event string.
+  const verbs = new Set([
+    'create',
+    'update',
+    'delete',
+    'read',
+    'list',
+    'createSession',
+    'deleteSession',
+  ])
+  for (let i = segments.length - 1; i >= 0; i--) {
+    const seg = segments[i]
+    if (!verbs.has(seg) && seg && !/^[a-z]+$/.test(seg)) return seg
+  }
+  return activity.event
+}
+
+function toDisplayActivity(event: Models.ActivityEvent): DisplayActivity {
+  return {
+    $id: event.$id,
+    userId: event.userId,
+    userName: event.userName || event.userEmail || 'Unknown',
+    userEmail: event.userEmail || '',
+    action: eventToActionType(event.event),
+    resourceType: eventToResourceType(event.resourceType, event.event),
+    resourceId: event.resourceId || '',
+    resourceName: resourceLabelFromEvent(event),
+    description: event.event,
+    ipAddress: event.ip || null,
+    timestamp: event.time,
+    rawEvent: event.event,
+  }
+}
 
 // Plan time limits
 const PLAN_TIME_LIMITS: Record<PlanType, { label: string; hours: number }> = {
@@ -326,39 +257,55 @@ const resourceTypeOptions = [
 ]
 
 interface ViewProps {
+  projectId: string
   plan?: PlanType
 }
 
-export function View({ plan = 'pro' }: ViewProps) {
+export function View({ projectId, plan = 'pro' }: ViewProps) {
   const [searchValue, setSearchValue] = useState('')
   const [actionFilter, setActionFilter] = useState<string>('')
   const [resourceTypeFilter, setResourceTypeFilter] = useState<string>('')
   const [showFilters, setShowFilters] = useState(false)
 
-  // Pagination state
+  // Pagination state (1-indexed in UI, 0-indexed for the API)
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(ACTIVITY_DEFAULT_PAGE_SIZE)
 
-  // Calculate cutoff date based on plan
+  // Plan-based retention window. We pass this to the API as a `since`
+  // filter so the server only returns events within the plan's window.
   const planLimit = PLAN_TIME_LIMITS[plan]
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const cutoffDate = new Date(Date.now() - planLimit.hours * 60 * 60 * 1000)
+  const since = useMemo(
+    () => new Date(Date.now() - planLimit.hours * 60 * 60 * 1000).toISOString(),
+    [planLimit.hours],
+  )
 
-  // Filter activities
+  const {
+    events,
+    total,
+    isLoading,
+    isFetching,
+    refetch,
+  } = useProjectActivities({
+    projectId,
+    page: currentPage - 1,
+    limit: pageSize,
+    resourceType: resourceTypeFilter || undefined,
+    since,
+  })
+
+  // Convert API events to the display shape the table expects.
+  const displayedActivities = useMemo(
+    () => events.map(toDisplayActivity),
+    [events],
+  )
+
+  // Action filter and free-text search are applied client-side to the current
+  // page (the API doesn't expose a single "action" filter — `event` strings
+  // are highly granular and don't map 1:1 to UI buckets).
   const filteredActivities = useMemo(() => {
-    return mockActivities.filter((activity) => {
-      // Check if within plan time limit
-      const activityDate = new Date(activity.timestamp)
-      if (activityDate < cutoffDate) return false
-
-      // Action filter
+    return displayedActivities.filter((activity) => {
       if (actionFilter && activity.action !== actionFilter) return false
 
-      // Resource type filter
-      if (resourceTypeFilter && activity.resourceType !== resourceTypeFilter)
-        return false
-
-      // Search filter
       if (searchValue) {
         const search = searchValue.toLowerCase()
         return (
@@ -371,18 +318,10 @@ export function View({ plan = 'pro' }: ViewProps) {
 
       return true
     })
-  }, [actionFilter, resourceTypeFilter, searchValue, cutoffDate])
+  }, [displayedActivities, actionFilter, searchValue])
 
-  // Paginated activities
-  const paginatedActivities = useMemo(() => {
-    const start = (currentPage - 1) * pageSize
-    return filteredActivities.slice(start, start + pageSize)
-  }, [filteredActivities, currentPage, pageSize])
-
-  // Reset page when filters change
   const handleSearchChange = (value: string) => {
     setSearchValue(value)
-    setCurrentPage(1)
   }
 
   const clearFilters = () => {
@@ -391,7 +330,7 @@ export function View({ plan = 'pro' }: ViewProps) {
     setCurrentPage(1)
   }
 
-  const hasActiveFilters = actionFilter || resourceTypeFilter
+  const hasActiveFilters = Boolean(actionFilter || resourceTypeFilter)
 
   return (
     <div className="flex flex-col">
@@ -404,7 +343,10 @@ export function View({ plan = 'pro' }: ViewProps) {
           showFilters
           onFilterClick={() => setShowFilters(!showFilters)}
           showRefresh
-          onRefresh={() => {}}
+          onRefresh={() => {
+            void refetch()
+          }}
+          isRefreshing={isFetching}
           showExport
           onExport={() => {}}
           fullWidthBorder
@@ -570,7 +512,7 @@ export function View({ plan = 'pro' }: ViewProps) {
           </div>
         )}
 
-        {paginatedActivities.length > 0 ? (
+        {filteredActivities.length > 0 ? (
           <>
             <Table>
               <TableHeader>
@@ -594,7 +536,7 @@ export function View({ plan = 'pro' }: ViewProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginatedActivities.map((activity) => (
+                {filteredActivities.map((activity) => (
                   <TableRow
                     key={activity.$id}
                     className="cursor-pointer"
@@ -719,7 +661,7 @@ export function View({ plan = 'pro' }: ViewProps) {
             <div className="sticky bottom-0 z-20 h-[54px] shrink-0 border-t border-border bg-background px-4 sm:px-6">
               <Pagination
                 currentPage={currentPage}
-                totalItems={filteredActivities.length}
+                totalItems={total}
                 pageSize={pageSize}
                 pageSizeOptions={[10, 25, 50, 100]}
                 onPageChange={setCurrentPage}
@@ -732,10 +674,18 @@ export function View({ plan = 'pro' }: ViewProps) {
               />
             </div>
           </>
+        ) : isLoading ? (
+          <div className="rounded-lg border border-border bg-card py-12 text-center">
+            <p className="text-[13px] text-muted-foreground">
+              Loading activities...
+            </p>
+          </div>
         ) : (
           <EmptyState
             icon={Activity}
-            title="No activities found"
+            title={
+              hasActiveFilters || searchValue ? undefined : 'No activities yet'
+            }
             description={
               hasActiveFilters || searchValue
                 ? undefined
@@ -743,7 +693,7 @@ export function View({ plan = 'pro' }: ViewProps) {
             }
             isEmpty={!hasActiveFilters && !searchValue}
             hasFilters={hasActiveFilters || !!searchValue}
-            variant="centered"
+            variant="card"
           />
         )}
       </div>

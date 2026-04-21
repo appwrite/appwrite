@@ -5,6 +5,7 @@ import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { PausedProjectCurtain } from '@/components/global/layout/PausedProjectCurtain'
 import { KeyboardShortcutsProvider } from '@/components/global/providers/KeyboardShortcuts'
 import { RealtimeProvider } from '@/components/global/providers/RealtimeProvider'
+import { BuildNotificationsProvider } from '@/components/global/providers/BuildNotificationsProvider'
 import { RequireAuth } from '@/components/global/auth/RequireAuth'
 import { CsvExportBox, CsvImportBox } from '@/components/global/csv-migrations'
 import { SessionMigrationsProvider } from '@/components/global/providers/SessionMigrationsContext'
@@ -329,6 +330,7 @@ function ProjectLayout() {
       )}
       <SessionMigrationsProvider>
         <RealtimeProvider projectId={projectId}>
+          <BuildNotificationsProvider projectId={projectId} />
           <KeyboardShortcutsProvider projectId={projectId}>
             <ConsoleLayout
               sidebar={{

@@ -35,19 +35,21 @@ export function useFavicon() {
       return
     }
 
-    // Find existing favicon link or create a new one
-    let faviconLink = document.querySelector(
-      "link[rel='icon']",
-    ) as HTMLLinkElement
+    // Browsers (Chrome especially) cache favicons aggressively and frequently
+    // ignore in-place `link.href` mutations - the new icon only shows up after
+    // an unrelated update like a tab title change. Removing all existing
+    // <link rel="icon"> elements and inserting a fresh one (with a cache-
+    // busting query string) reliably forces an immediate refresh.
+    const existing = document.querySelectorAll(
+      "link[rel='icon'], link[rel='shortcut icon']",
+    )
+    existing.forEach((node) => node.parentNode?.removeChild(node))
 
-    if (!faviconLink) {
-      faviconLink = document.createElement('link')
-      faviconLink.rel = 'icon'
-      faviconLink.type = 'image/svg+xml'
-      document.head.appendChild(faviconLink)
-    }
-
-    faviconLink.href = faviconPath
+    const link = document.createElement('link')
+    link.rel = 'icon'
+    link.type = 'image/svg+xml'
+    link.href = `${faviconPath}?v=${Date.now()}`
+    document.head.appendChild(link)
   }, [])
 
   const getCurrentFavicon = useCallback((): FaviconVariant | null => {
@@ -59,7 +61,12 @@ export function useFavicon() {
     if (!faviconLink) return null
 
     const currentPath = faviconLink.href
-    const pathname = new URL(currentPath).pathname
+    let pathname: string
+    try {
+      pathname = new URL(currentPath).pathname
+    } catch {
+      pathname = currentPath
+    }
 
     // Find which variant matches the current path
     for (const [variant, path] of Object.entries(FAVICON_MAP)) {

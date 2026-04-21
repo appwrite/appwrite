@@ -23,7 +23,6 @@ import {
   CheckCircle2,
   XCircle,
   Key,
-  AlertTriangle,
   AlertCircle,
   UserCog,
   Code,
@@ -250,36 +249,26 @@ function ProjectCardFooter({
       )}
     >
       {paused && (
-        <Badge variant="warning" className="gap-1.5 text-[10px] shrink-0">
+        <Badge variant="error" className="gap-1.5 text-[10px] shrink-0">
           <PauseCircle className="h-3 w-3" />
           Paused
         </Badge>
       )}
       {/* Platforms Label */}
-      {platformsCount > 0 ? (
-        <Badge variant="info" className="gap-1.5 text-[10px] shrink-0">
-          <Globe className="h-3 w-3" />
-          {platformsCount} app{platformsCount !== 1 ? 's' : ''}
-        </Badge>
-      ) : (
-        <Badge variant="warning" className="gap-1.5 text-[10px] shrink-0">
-          <AlertTriangle className="h-3 w-3" />
-          No apps
-        </Badge>
-      )}
+      <Badge variant="inactive" className="gap-1.5 text-[10px] shrink-0">
+        <Globe className="h-3 w-3" />
+        {platformsCount > 0
+          ? `${platformsCount} app${platformsCount !== 1 ? 's' : ''}`
+          : 'No apps'}
+      </Badge>
 
       {/* API Keys Label */}
-      {apiKeysCount > 0 ? (
-        <Badge variant="info" className="gap-1.5 text-[10px] shrink-0">
-          <Key className="h-3 w-3" />
-          {apiKeysCount} API key{apiKeysCount !== 1 ? 's' : ''}
-        </Badge>
-      ) : (
-        <Badge variant="warning" className="gap-1.5 text-[10px] shrink-0">
-          <AlertTriangle className="h-3 w-3" />
-          No API keys
-        </Badge>
-      )}
+      <Badge variant="inactive" className="gap-1.5 text-[10px] shrink-0">
+        <Key className="h-3 w-3" />
+        {apiKeysCount > 0
+          ? `${apiKeysCount} API key${apiKeysCount !== 1 ? 's' : ''}`
+          : 'No API keys'}
+      </Badge>
     </div>
   )
 }
@@ -855,11 +844,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     requestedProjectsData,
   ])
 
-  // Total count without search, without exclude - for plan limit checking (all org projects)
-  const { data: totalProjectsData } = useQuery(
-    activeProjectsQueryOptions(orgTeamId, 0, urlProjectsLimit, ''),
-  )
-
   // Reset pagination when search query changes
   useEffect(() => {
     setRequestedPage(1)
@@ -1147,8 +1131,20 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   // Pagination info (from search results)
   const activeProjectsTotal = activeProjectsData?.total || 0
 
-  // Total count of all projects (without search) - for limit checking
-  const totalProjectsCount = totalProjectsData?.total || 0
+  // Total count of all projects (without search) — for plan-limit checks.
+  // The active-projects listing excludes pinned ids, so when no search is
+  // active the unconditional total is just `listing total + pinned count`.
+  // We cache the last value seen while the search box was empty so the
+  // limit check stays accurate when the user starts typing a query (the
+  // listing's total is filtered by the search and would otherwise drift).
+  const lastUnfilteredTotalRef = useRef(0)
+  if (!searchQuery && activeProjectsData?.total != null) {
+    lastUnfilteredTotalRef.current =
+      activeProjectsData.total + pinnedIds.length
+  }
+  const totalProjectsCount = !searchQuery
+    ? (activeProjectsData?.total ?? 0) + pinnedIds.length
+    : lastUnfilteredTotalRef.current
 
   // Fetch organization plan to check if additional members are supported
   const { plan: organizationPlan } = useOrganizationPlan(orgId)

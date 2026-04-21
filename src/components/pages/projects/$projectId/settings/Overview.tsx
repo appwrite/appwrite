@@ -59,6 +59,7 @@ import type { Models, ServiceId } from '@appwrite.io/console'
 import { GitConfigurationCard } from './GitConfigurationCard'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useScrollToCard } from '@/hooks/use-scroll-to-card'
 
 // Copyable Input Component
 interface CopyableInputProps {
@@ -250,6 +251,7 @@ export function ProjectSettingsOverview({
   const { features } = useConsoleProfile()
   const supportsMultiRegion = features.multiRegion
   const navigate = useNavigate()
+  useScrollToCard()
   const queryClient = useQueryClient()
   const search = useSearch({ from: '/_public/projects/$projectId/settings' })
 
@@ -837,7 +839,10 @@ export function ProjectSettingsOverview({
     <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-4 sm:px-6">
       {/* Update Name Section - only if canWriteProjects */}
       {canWriteProjects && (
-        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+        <div
+          data-card-id="project-name"
+          className="rounded-xl border border-border bg-card/50 overflow-hidden"
+        >
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">Name</h3>
           </div>
@@ -887,7 +892,10 @@ export function ProjectSettingsOverview({
       )}
 
       {/* API Credentials Section - Always visible */}
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+      <div
+        data-card-id="api-credentials"
+        className="rounded-xl border border-border bg-card/50 overflow-hidden"
+      >
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
             API credentials
@@ -1030,7 +1038,10 @@ export function ProjectSettingsOverview({
           </div>
 
           {/* Update Services Section */}
-          <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+          <div
+            data-card-id="services"
+            className="rounded-xl border border-border bg-card/50 overflow-hidden"
+          >
             <div className="px-6 py-4">
               <h3 className="text-[15px] font-semibold text-foreground">
                 Services
@@ -1244,7 +1255,10 @@ function ChangeOrganizationSection({
 
   return (
     <>
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+      <div
+        data-card-id="transfer-project"
+        className="rounded-xl border border-border bg-card/50 overflow-hidden"
+      >
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
             Transfer project
@@ -1446,7 +1460,10 @@ function DeleteProjectSection({
 }: DeleteProjectSectionProps) {
   return (
     <>
-      <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden">
+      <div
+        data-card-id="delete-project"
+        className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden"
+      >
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
             Delete project

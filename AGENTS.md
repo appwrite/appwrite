@@ -407,6 +407,19 @@ Example (DNS records on domain detail): `src/lib/table-filters/filter-configs/dn
 - **Stay on current page** - Until next page is ready to prevent layout shifts
 - **Prefetch crucial data** - All critical API calls at route level
 - **List pages: same default limit in loader and View** - Route and View must use the same default limit (same constant) so prefetched query key matches and no loading flash occurs. See "Route Prefetching" → "List pages: loader and View must use the same default limit".
+- **Never define `pendingComponent` on list / tab / detail routes that prefetch data** - TanStack Router shows the pending UI as soon as navigation starts, replacing the previous page with "Loading…" even when the loader is fast or the cache is warm. This breaks the "stay on current page" rule and creates a flash of loading state. Omit `pendingComponent` so the **previous page stays visible** until the loader resolves, then the new page mounts with data already in the React Query cache. Only use `pendingComponent` for **standalone wizards** (e.g. `sites/create`, `functions/create`) where there is no previous page to keep visible.
+
+#### Why "Loading rows…" (or any loader flash) appears on a tab/list route
+
+Symptoms: clicking into a row/document/tab shows a "Loading rows…" / "Loading…" message instead of staying on the current page until data is ready.
+
+Checklist (in this order):
+
+1. **`pendingComponent` is defined on the route.** Remove it. The route should rely on the loader + cached data for the next view's first paint. (See rule above.)
+2. **Loader and View use different default page sizes.** The loader prefetches `tableRowsQueryOptions(..., page-1, LIMIT_A, ...)` but the View calls `useProjectTableRows(..., page-1, LIMIT_B, ...)` with a different default. Different limits → different query keys → cache miss → loading spinner. **Fix:** import the **same shared constant** from `@/lib/react-query/hooks/constants` (e.g. `ROWS_DEFAULT_PAGE_SIZE`, `DEFAULT_PAGE_SIZE`) in both the route file and the View — never re-declare a local `const ROWS_PER_PAGE = 25` in the route; that's how route and View silently drift out of sync.
+3. **Loader and View pass different sort/filter/search defaults.** The query key includes `search`, `order`, `sortBy`, and `filterQueries`. If the loader passes `'desc' / '$createdAt' / undefined` but the View first reads URL state and passes something else (or `null` vs `undefined`, or an empty array vs `undefined`), the keys won't match. **Fix:** normalize on both sides (e.g. `search?.trim() || undefined`, `filterMap.size > 0 ? Array.from(filterMap.values()) : undefined`) and use the **same default sort constants** in both the route and the View.
+4. **Loader uses `fetchQuery` instead of `ensureQueryData`.** `fetchQuery` always re-fetches and ignores the cache, which can race with the View's hook. Use `ensureQueryData` (or `prefetchQuery`) so warm cache hits return instantly.
+5. **Confirm with React Query devtools** that the query key the **View** subscribes to is **byte-identical** to the key the loader prefetched. If they differ, fix whichever side is wrong.
 
 ### Form Behavior
 
@@ -677,7 +690,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/storage/')({
   - **Route:** `getLimit(url, DEFAULT_PAGE_SIZE)` (or the chosen constant) and in `queryOptions(projectId, page - 1, limit, ...)`.
   - **View:** `getLimit(url, DEFAULT_PAGE_SIZE)` (or same constant) and `urlLimit = listParams?.limit ?? DEFAULT_PAGE_SIZE`, and pass that `urlLimit` into the hook.
 - **Do not** define a local constant in the route (e.g. `const SITES_PER_PAGE = 25`) unless the View uses the exact same value for its default limit; otherwise prefer a shared constant from `constants.ts` so route and View cannot drift.
-- **Optional:** Omit `pendingComponent` on list index routes so the previous page stays visible until the loader completes; then the list renders with data and no intermediate loading UI.
+- **Required:** Do **not** define `pendingComponent` on list/tab routes. With prefetching in place, the previous page must stay visible until the loader completes; the new list then renders with data already in cache and no intermediate "Loading…" UI. `pendingComponent` defeats this and forces a loader flash on every navigation. (See "Loading & Navigation" → "Why 'Loading rows…' appears" for the full troubleshooting checklist.)
 
 **When to Use QueryOptions:**
 
@@ -1008,6 +1021,7 @@ Follow the modal structure pattern above. For no-content modals, skip content se
 | Icon spacing           | `mr-1.5` or `gap-1.5`                                                                                                                                                                                                                     |
 | Date display           | Always include DateTooltip                                                                                                                                                                                                                |
 | Route prefetch         | All crucial data at route level                                                                                                                                                                                                           |
+| List/tab loading flash | Never set `pendingComponent` on list/tab/detail routes that prefetch (it shows "Loading…" instead of keeping the current page). Match query keys exactly between loader and View — same shared constant for default limit/sort/search/filter normalization. See "Loading & Navigation" → "Why 'Loading rows…' appears". |
 | Detail page (no flash) | Loader returns data; route passes `initialData` to View; View uses `initialData` for first paint (see "Detail page: no loading flash")                                                                                                    |
 | Models types           | Always `Models.*` from `@appwrite.io/console`                                                                                                                                                                                             |
 | Table header           | `hover:bg-transparent border-b border-border` on row, `px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider` on head                                                                                        |

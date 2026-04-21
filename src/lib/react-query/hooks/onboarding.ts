@@ -13,17 +13,16 @@ import {
   ONBOARDING_PRODUCT_CATEGORIES,
   type ProjectOnboardingSnapshot,
 } from '@/lib/onboarding/project-onboarding'
-import { DEFAULT_STALE_TIME } from './constants'
 
 export function onboardingSnapshotQueryOptions(projectId: string | null | undefined) {
   return queryOptions({
     queryKey: ['onboarding', 'snapshot', 'project', projectId],
     queryFn: () => fetchProjectOnboardingSnapshot(projectId!),
     enabled: !!projectId,
-    staleTime: DEFAULT_STALE_TIME,
+    staleTime: Infinity,
     retry: false,
     refetchOnMount: false,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
