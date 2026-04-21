@@ -27,7 +27,20 @@ export const Route = createFileRoute(
   head: ({ loaderData }) => ({
     meta: [
       {
-        title: pageTitle(loaderData?.database?.name ?? 'Database', 'Databases'),
+        title: pageTitle(
+          (
+            loaderData as
+              | {
+                  database?: { name?: string }
+                  table?: { name?: string }
+                }
+              | undefined
+          )?.table?.name ??
+            (loaderData as { database?: { name?: string } } | undefined)
+              ?.database?.name ??
+            'Database',
+          'Databases',
+        ),
       },
     ],
   }),
@@ -97,7 +110,10 @@ export const Route = createFileRoute(
     const database = queryClient.getQueryData<{ name?: string }>(
       databaseQueryOptions(projectId, databaseId).queryKey,
     )
-    return { database }
+    const table = queryClient.getQueryData<{ name?: string }>(
+      tableQueryOptions(projectId, databaseId, tableId).queryKey,
+    )
+    return { database, table }
   },
   component: IndexesPage,
 })
