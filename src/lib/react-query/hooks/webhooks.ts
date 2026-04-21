@@ -10,7 +10,7 @@ import {
   useQueryClient,
   queryOptions,
 } from '@tanstack/react-query'
-import { ID } from '@appwrite.io/console'
+import { ID, type Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { Dependencies } from './dependencies'
 import { DEFAULT_STALE_TIME } from './constants'
@@ -218,17 +218,30 @@ export function useUpdateWebhookSecret(projectId: string | null | undefined) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (webhookId: string) => {
+    mutationFn: async (
+      input: string | { webhookId: string; secret?: string },
+    ): Promise<Models.Webhook> => {
       if (!projectId) {
         throw new Error('Project ID is required')
       }
+
+      const webhookId = typeof input === 'string' ? input : input.webhookId
+      const secret =
+        typeof input === 'string'
+          ? undefined
+          : input.secret?.trim() || undefined
       return await sdk.forProject(projectId).webhooks.updateSecret({
         webhookId,
+        secret,
       })
     },
-    onSuccess: (_, webhookId) => {
+    onSuccess: (_, input) => {
+      const webhookId = typeof input === 'string' ? input : input.webhookId
       queryClient.invalidateQueries({
         queryKey: ['webhook', 'project', projectId, webhookId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['webhooks', 'project', projectId],
       })
       queryClient.invalidateQueries({
         queryKey: Dependencies.WEBHOOK,
@@ -254,8 +267,8 @@ export function useDeleteWebhook(projectId: string | null | undefined) {
         webhookId,
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
         queryKey: ['webhooks', 'project', projectId],
       })
       queryClient.invalidateQueries({

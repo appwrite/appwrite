@@ -6,6 +6,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetDescription,
   SheetClose,
 } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
@@ -14,6 +15,7 @@ export interface BaseDrawerProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   title?: string
+  description?: string
   children: React.ReactNode
   headerActions?: React.ReactNode
   contentClassName?: string
@@ -26,6 +28,7 @@ export function BaseDrawer({
   open,
   onOpenChange,
   title,
+  description,
   children,
   headerActions,
   contentClassName,
@@ -34,6 +37,22 @@ export function BaseDrawer({
   disableAutoFocus = false,
 }: BaseDrawerProps) {
   const contentRef = React.useRef<HTMLDivElement>(null)
+
+  const blurActiveElement = React.useCallback(() => {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur()
+    }
+  }, [])
+
+  const handleSheetOpenChange = React.useCallback(
+    (newOpen: boolean) => {
+      if (!newOpen) {
+        blurActiveElement()
+      }
+      onOpenChange(newOpen)
+    },
+    [blurActiveElement, onOpenChange],
+  )
 
   // Blur the drawer container when it opens and auto-focus is disabled
   React.useEffect(() => {
@@ -52,17 +71,15 @@ export function BaseDrawer({
             sheetContent.blur()
           }
           // Also blur any focused element inside
-          if (document.activeElement instanceof HTMLElement) {
-            document.activeElement.blur()
-          }
+          blurActiveElement()
         })
       })
       return () => cancelAnimationFrame(rafId)
     }
-  }, [disableAutoFocus, open])
+  }, [blurActiveElement, disableAutoFocus, open])
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={handleSheetOpenChange}>
       <SheetContent
         className={cn(
           'flex w-full flex-col p-0 overflow-hidden',
@@ -96,14 +113,12 @@ export function BaseDrawer({
                 }
               }
         }
-        onCloseAutoFocus={
-          disableAutoFocus
-            ? (e) => {
-                // Prevent focus restoration when closing
-                e.preventDefault()
-              }
-            : undefined
-        }
+        onCloseAutoFocus={(e) => {
+          // Prevent Radix from restoring focus into an element that is about
+          // to be hidden by another modal opening immediately after close.
+          e.preventDefault()
+          blurActiveElement()
+        }}
       >
         <SheetHeader className="!p-0 !gap-0 shrink-0">
           <div className="flex items-center justify-between gap-4 w-full px-6 pt-4 pb-2">
@@ -112,6 +127,9 @@ export function BaseDrawer({
                 {title}
               </SheetTitle>
             )}
+            <SheetDescription className="sr-only">
+              {description || title || 'Drawer'}
+            </SheetDescription>
             {!title && <div className="flex-1" />}
             <div className="flex items-center gap-2 shrink-0">
               {headerActions}

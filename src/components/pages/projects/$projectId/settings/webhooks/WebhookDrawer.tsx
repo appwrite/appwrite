@@ -3,6 +3,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
 import {
   Dialog,
@@ -14,16 +19,59 @@ import {
 import {
   useCreateWebhook,
   useUpdateWebhook,
-  useDeleteWebhook,
   useProjectWebhook,
   useUpdateWebhookSecret,
 } from '@/lib/react-query/hooks'
-import { CopyableId } from '@/components/global/shared/CopyableId'
 import { toast } from 'sonner'
-import { Trash2, RefreshCw, ExternalLink } from 'lucide-react'
+import {
+  Trash2,
+  RefreshCw,
+  ExternalLink,
+  Copy,
+  Check,
+  Info,
+} from 'lucide-react'
 import { EventSelector } from './EventSelector'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { Models } from '@appwrite.io/console'
+
+function getWebhookSecret(webhook: Models.Webhook | null | undefined) {
+  if (!webhook) return ''
+  const record = webhook as unknown as Record<string, unknown>
+  return String(record.secret || '')
+}
+
+function CopyableSecret({ value }: { value: string }) {
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(value)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <div className="flex min-w-0 items-center gap-2 rounded-md border border-border bg-muted/40 px-3 py-2">
+      <code className="min-w-0 flex-1 break-all font-mono text-[12px] leading-5 text-foreground">
+        {value}
+      </code>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="h-7 w-7 shrink-0"
+        onClick={handleCopy}
+        aria-label="Copy secret"
+      >
+        {copied ? (
+          <Check className="h-3.5 w-3.5 text-emerald-500" />
+        ) : (
+          <Copy className="h-3.5 w-3.5" />
+        )}
+      </Button>
+    </div>
+  )
+}
 
 interface WebhookDrawerProps {
   open: boolean
@@ -31,6 +79,7 @@ interface WebhookDrawerProps {
   projectId: string
   webhook?: Models.Webhook | null
   onSuccess?: () => void
+  onDelete?: (webhook: Models.Webhook) => void
 }
 
 export function WebhookDrawer({
@@ -39,12 +88,12 @@ export function WebhookDrawer({
   projectId,
   webhook,
   onSuccess,
+  onDelete,
 }: WebhookDrawerProps) {
   const isEditing = !!webhook
 
   const createMutation = useCreateWebhook(projectId)
   const updateMutation = useUpdateWebhook(projectId)
-  const deleteMutation = useDeleteWebhook(projectId)
   const regenerateSignatureMutation = useUpdateWebhookSecret(projectId)
   const { webhook: fullWebhook } = useProjectWebhook(
     projectId,
@@ -53,18 +102,22 @@ export function WebhookDrawer({
   const isPending =
     createMutation.isPending ||
     updateMutation.isPending ||
-    deleteMutation.isPending ||
     regenerateSignatureMutation.isPending
 
   const [name, setName] = useState('')
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [url, setUrl] = useState('')
   const [events, setEvents] = useState<string[]>([])
   const [enabled, setEnabled] = useState(true)
-  const [httpUser, setHttpUser] = useState('')
-  const [httpPass, setHttpPass] = useState('')
-  const [security, setSecurity] = useState(true)
+  const [authUsername, setAuthUsername] = useState('')
+  const [authPassword, setAuthPassword] = useState('')
+  const [tls, setTls] = useState(true)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [secretDialogOpen, setSecretDialogOpen] = useState(false)
+  const [secretDialogMode, setSecretDialogMode] = useState<'create' | 'rotate'>(
+    'rotate',
+  )
+  const [customSecret, setCustomSecret] = useState('')
+  const [revealedSecret, setRevealedSecret] = useState('')
 
   useEffect(() => {
     if (!open) {
@@ -72,11 +125,11 @@ export function WebhookDrawer({
       setUrl('')
       setEvents([])
       setEnabled(true)
-      setHttpUser('')
-      setHttpPass('')
-      setSecurity(true)
+      setAuthUsername('')
+      setAuthPassword('')
+      setTls(true)
       setErrors({})
-      setDeleteConfirmOpen(false)
+      setCustomSecret('')
       return
     }
     const source = fullWebhook ?? webhook
@@ -85,50 +138,70 @@ export function WebhookDrawer({
       setUrl(source.url || '')
       setEvents(source.events || [])
       setEnabled(source.enabled ?? true)
-      setHttpUser(source.authUsername || '')
-      setHttpPass('')
-      setSecurity(source.tls ?? true)
+      setAuthUsername(source.authUsername || '')
+      setAuthPassword('')
+      setTls(source.tls ?? true)
       setErrors({})
+      setCustomSecret('')
     }
   }, [open, webhook, fullWebhook])
 
-  const canSubmit =
-    name.trim() && url.trim() && events.length > 0 && events.length <= 100
+  const canSubmit = !!name.trim() && !!url.trim()
+  const submitDisabledReason = !name.trim()
+    ? 'Enter a webhook name.'
+    : !url.trim()
+      ? 'Enter a webhook URL.'
+      : undefined
 
   const handleOpenChange = (newOpen: boolean) => {
     if (!isPending) {
       onOpenChange(newOpen)
-      if (!newOpen) setDeleteConfirmOpen(false)
     }
   }
 
-  const handleRegenerateSignature = () => {
+  const openRotateSecretDialog = () => {
     if (!webhook) return
-    regenerateSignatureMutation.mutate(webhook.$id, {
-      onSuccess: () => {
-        toast.success('Signature key has been regenerated')
-      },
-      onError: (error: Error) => {
-        toast.error(
-          getErrorMessage(error) || 'Failed to regenerate signature key',
-        )
-      },
-    })
+    setSecretDialogMode('rotate')
+    setCustomSecret('')
+    setRevealedSecret('')
+    setSecretDialogOpen(true)
   }
 
-  const handleDelete = () => {
+  const handleRotateSecret = async () => {
     if (!webhook) return
-    deleteMutation.mutate(webhook.$id, {
-      onSuccess: () => {
-        toast.success('Webhook has been deleted')
-        setDeleteConfirmOpen(false)
-        handleOpenChange(false)
-        onSuccess?.()
-      },
-      onError: (error: Error) => {
-        toast.error(getErrorMessage(error) || 'Failed to delete webhook')
-      },
-    })
+
+    try {
+      const updatedWebhook = await regenerateSignatureMutation.mutateAsync({
+        webhookId: webhook.$id,
+        secret: customSecret,
+      })
+      const secret = getWebhookSecret(updatedWebhook)
+      setRevealedSecret(secret)
+      toast.success(
+        customSecret.trim()
+          ? 'Webhook secret updated.'
+          : 'Webhook secret rotated.',
+      )
+    } catch (error) {
+      toast.error(getErrorMessage(error as Error, 'Failed to rotate secret'))
+    }
+  }
+
+  const handleSecretContinue = () => {
+    setSecretDialogOpen(false)
+    setCustomSecret('')
+    setRevealedSecret('')
+
+    if (secretDialogMode === 'create') {
+      handleOpenChange(false)
+      onSuccess?.()
+    }
+  }
+
+  const handleRequestDelete = () => {
+    if (!webhook || !onDelete || isPending) return
+    handleOpenChange(false)
+    window.setTimeout(() => onDelete(webhook), 0)
   }
 
   const validate = (): boolean => {
@@ -152,10 +225,10 @@ export function WebhookDrawer({
           name: name.trim(),
           url: url.trim(),
           events,
-          tls: security,
+          tls,
           enabled,
-          authUsername: httpUser.trim() || undefined,
-          authPassword: httpPass.trim() || undefined,
+          authUsername: authUsername.trim() || undefined,
+          authPassword: authPassword.trim() || undefined,
         },
         {
           onSuccess: () => {
@@ -174,14 +247,32 @@ export function WebhookDrawer({
           name: name.trim(),
           url: url.trim(),
           events,
-          tls: security,
+          tls,
           enabled: true,
-          authUsername: httpUser.trim() || undefined,
-          authPassword: httpPass.trim() || undefined,
+          authUsername: authUsername.trim() || undefined,
+          authPassword: authPassword.trim() || undefined,
         },
         {
-          onSuccess: () => {
-            toast.success('Webhook has been created')
+          onSuccess: (createdWebhook) => {
+            const secret = getWebhookSecret(createdWebhook)
+            toast.success(
+              secret
+                ? 'Webhook created. Secret ready to copy.'
+                : 'Webhook has been created',
+            )
+
+            if (secret) {
+              setSecretDialogMode('create')
+              setCustomSecret('')
+              setRevealedSecret(secret)
+              onOpenChange(false)
+              if (document.activeElement instanceof HTMLElement) {
+                document.activeElement.blur()
+              }
+              window.setTimeout(() => setSecretDialogOpen(true), 0)
+              return
+            }
+
             handleOpenChange(false)
             onSuccess?.()
           },
@@ -311,50 +402,48 @@ export function WebhookDrawer({
                   <div className="px-6 py-4 space-y-4">
                     <div className="space-y-2">
                       <Label
-                        htmlFor="webhook-httpUser"
+                        htmlFor="webhook-authUsername"
                         className="text-[12px] font-medium text-muted-foreground"
                       >
                         User
                       </Label>
                       <Input
-                        id="webhook-httpUser"
+                        id="webhook-authUsername"
                         placeholder="Enter username"
-                        value={httpUser}
-                        onChange={(e) => setHttpUser(e.target.value)}
+                        value={authUsername}
+                        onChange={(e) => setAuthUsername(e.target.value)}
                         disabled={isPending}
                       />
                     </div>
                     <div className="space-y-2">
                       <Label
-                        htmlFor="webhook-httpPass"
+                        htmlFor="webhook-authPassword"
                         className="text-[12px] font-medium text-muted-foreground"
                       >
                         Password
                       </Label>
                       <Input
-                        id="webhook-httpPass"
+                        id="webhook-authPassword"
                         type="password"
                         placeholder={
                           isEditing
                             ? 'Leave blank to keep existing'
                             : 'Enter password'
                         }
-                        value={httpPass}
-                        onChange={(e) => setHttpPass(e.target.value)}
+                        value={authPassword}
+                        onChange={(e) => setAuthPassword(e.target.value)}
                         disabled={isPending}
                       />
                     </div>
                     <div className="flex items-center space-x-2">
                       <Checkbox
-                        id="webhook-security"
-                        checked={security}
-                        onCheckedChange={(checked) =>
-                          setSecurity(checked === true)
-                        }
+                        id="webhook-tls"
+                        checked={tls}
+                        onCheckedChange={(checked) => setTls(checked === true)}
                         disabled={isPending}
                       />
                       <Label
-                        htmlFor="webhook-security"
+                        htmlFor="webhook-tls"
                         className="text-[13px] font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                       >
                         Certificate verification (SSL/TLS)
@@ -372,46 +461,11 @@ export function WebhookDrawer({
                   <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
                     <div className="px-6 py-4">
                       <h3 className="text-[15px] font-semibold text-foreground">
-                        Verification
+                        Webhook secret
                       </h3>
-                    </div>
-                    <div className="border-t border-border" />
-                    <div className="px-6 py-4 space-y-4">
-                      <div className="space-y-2">
-                        <Label className="text-[12px] font-medium text-muted-foreground">
-                          Signature key
-                        </Label>
-                        {fullWebhook?.secret ? (
-                          <div className="flex items-center gap-2">
-                            <CopyableId
-                              id={fullWebhook.secret}
-                              size="sm"
-                              maxWidth={240}
-                            />
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              className="h-9 text-[13px] shrink-0"
-                              onClick={handleRegenerateSignature}
-                              disabled={regenerateSignatureMutation.isPending}
-                            >
-                              <RefreshCw
-                                className={`mr-1.5 h-4 w-4 ${regenerateSignatureMutation.isPending ? 'animate-spin' : ''}`}
-                              />
-                              Regenerate
-                            </Button>
-                          </div>
-                        ) : (
-                          <p className="text-[13px] text-muted-foreground">
-                            Loading…
-                          </p>
-                        )}
-                      </div>
-                      <p className="text-[13px] text-muted-foreground">
-                        Use this key to verify the authenticity of webhook
-                        payloads via the X-Appwrite-Webhook-Signature header
-                        (HMAC-SHA1).{' '}
+                      <p className="mt-2 text-[13px] text-muted-foreground">
+                        Used to validate incoming webhook payloads with the
+                        X-Appwrite-Webhook-Signature header.{' '}
                         <a
                           href="https://appwrite.io/docs/advanced/platform/webhooks#verification"
                           target="_blank"
@@ -423,10 +477,35 @@ export function WebhookDrawer({
                         </a>
                       </p>
                     </div>
+                    <div className="border-t border-border" />
+                    <div className="px-6 py-4">
+                      <div className="flex min-w-0 items-start gap-3 rounded-md border border-border bg-muted/20 px-3 py-2.5 text-[13px] text-muted-foreground">
+                        <Info className="mt-0.5 h-4 w-4 shrink-0" />
+                        <p>
+                          This secret is only shown once after webhook creation
+                          or secret rotation.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex justify-end px-6 py-4 border-t border-border bg-muted/30">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-9 text-[13px]"
+                        onClick={openRotateSecretDialog}
+                        disabled={regenerateSignatureMutation.isPending}
+                      >
+                        <RefreshCw
+                          className={`mr-1.5 h-4 w-4 ${regenerateSignatureMutation.isPending ? 'animate-spin' : ''}`}
+                        />
+                        Rotate secret
+                      </Button>
+                    </div>
                   </div>
                 )}
 
-                {isEditing && (
+                {isEditing && onDelete && (
                   <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden mt-6">
                     <div className="px-6 py-4">
                       <h3 className="text-[15px] font-semibold text-foreground">
@@ -446,7 +525,7 @@ export function WebhookDrawer({
                         variant="destructive"
                         size="sm"
                         className="h-9 text-[13px]"
-                        onClick={() => setDeleteConfirmOpen(true)}
+                        onClick={handleRequestDelete}
                         disabled={isPending}
                       >
                         <Trash2 className="mr-1.5 h-4 w-4" />
@@ -459,9 +538,31 @@ export function WebhookDrawer({
             </div>
 
             <div className="flex-shrink-0 flex items-center justify-start gap-2 border-t border-border bg-muted/30 px-6 py-4">
-              <Button type="submit" disabled={!canSubmit || isPending}>
-                {isEditing ? 'Update' : 'Create webhook'}
-              </Button>
+              {!canSubmit && submitDisabledReason ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex">
+                      <Button
+                        type="submit"
+                        disabled
+                        aria-describedby="webhook-submit-disabled-reason"
+                      >
+                        {isEditing ? 'Update' : 'Create webhook'}
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    id="webhook-submit-disabled-reason"
+                    side="top"
+                  >
+                    {submitDisabledReason}
+                  </TooltipContent>
+                </Tooltip>
+              ) : (
+                <Button type="submit" disabled={isPending}>
+                  {isEditing ? 'Update' : 'Create webhook'}
+                </Button>
+              )}
               <Button
                 type="button"
                 variant="outline"
@@ -475,37 +576,92 @@ export function WebhookDrawer({
         </>
       </BaseDrawer>
 
-      <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-        <DialogContent className="sm:max-w-md p-0">
+      <Dialog
+        open={secretDialogOpen}
+        onOpenChange={(nextOpen) => {
+          if (!regenerateSignatureMutation.isPending) {
+            setSecretDialogOpen(nextOpen)
+          }
+        }}
+      >
+        <DialogContent
+          className="sm:max-w-md p-0 z-[130] overflow-hidden"
+          overlayClassName="z-[130]"
+        >
           <DialogHeader className="px-6 pt-6 pb-4 text-left">
-            <DialogTitle>Delete webhook</DialogTitle>
+            <DialogTitle>
+              {revealedSecret
+                ? secretDialogMode === 'create'
+                  ? 'Webhook created'
+                  : 'Webhook secret rotated'
+                : 'Rotate webhook secret'}
+            </DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete{' '}
-              <strong>{webhook?.name || 'this webhook'}</strong>? It will stop
-              receiving events immediately. This action cannot be undone.
+              {revealedSecret
+                ? 'This secret is only shown once after webhook creation or secret rotation. Copy it now.'
+                : 'Leave this empty to rotate the webhook secret automatically, or enter a value to set a custom secret.'}
             </DialogDescription>
           </DialogHeader>
+          <div className="border-t border-border" />
+          <div className="min-w-0 px-6 py-4">
+            {revealedSecret ? (
+              <CopyableSecret value={revealedSecret} />
+            ) : (
+              <div className="space-y-2">
+                <Label
+                  htmlFor="webhook-secret"
+                  className="text-[12px] font-medium"
+                >
+                  Secret
+                </Label>
+                <Input
+                  id="webhook-secret"
+                  type="password"
+                  placeholder="Leave empty to auto-generate"
+                  value={customSecret}
+                  onChange={(e) => setCustomSecret(e.target.value)}
+                  disabled={regenerateSignatureMutation.isPending}
+                  autoComplete="new-password"
+                />
+                <p className="text-[12px] text-muted-foreground">
+                  Used to validate incoming webhook payloads.
+                </p>
+              </div>
+            )}
+          </div>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-9 text-[13px]"
-              onClick={() => setDeleteConfirmOpen(false)}
-              disabled={deleteMutation.isPending}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              size="sm"
-              className="h-9 text-[13px]"
-              onClick={handleDelete}
-              disabled={deleteMutation.isPending}
-            >
-              Delete
-            </Button>
+            {revealedSecret ? (
+              <Button
+                type="button"
+                size="sm"
+                className="h-9 text-[13px]"
+                onClick={handleSecretContinue}
+              >
+                Continue
+              </Button>
+            ) : (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-9 text-[13px]"
+                  onClick={() => setSecretDialogOpen(false)}
+                  disabled={regenerateSignatureMutation.isPending}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  className="h-9 text-[13px]"
+                  onClick={handleRotateSecret}
+                  disabled={regenerateSignatureMutation.isPending}
+                >
+                  {customSecret.trim() ? 'Set custom secret' : 'Rotate secret'}
+                </Button>
+              </>
+            )}
           </div>
         </DialogContent>
       </Dialog>

@@ -2,14 +2,9 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import {
   Loader2,
-  Plus,
   Code,
   Upload,
-  Eye,
-  EyeOff,
   Globe,
-  XCircle,
-  MoreHorizontal,
   AlertTriangle,
   Copy,
   Check,
@@ -34,7 +29,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { Badge } from '@/components/ui/badge'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import {
   Dialog,
@@ -61,23 +55,7 @@ import {
 } from '@/components/ui/tooltip'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
-import type { Models } from '@appwrite.io/console'
-import { ApiService } from '@appwrite.io/console'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Checkbox } from '@/components/ui/checkbox'
+import type { Models, ServiceId } from '@appwrite.io/console'
 import { GitConfigurationCard } from './GitConfigurationCard'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
@@ -132,6 +110,137 @@ enum Dependencies {
   PROJECT_INSTALLATIONS = 'project-installations',
 }
 
+type ProtocolId = 'rest' | 'graphql' | 'websocket'
+
+type ProjectProtocol = {
+  id: ProtocolId
+  label: string
+  description: string
+  projectField: string
+  icon: typeof Globe
+}
+
+type ProjectService = {
+  id: string
+  label: string
+  projectField: string
+  icon: typeof User
+}
+
+const PROJECT_PROTOCOLS: ProjectProtocol[] = [
+  {
+    id: 'rest',
+    label: 'REST',
+    description: 'Standard HTTP API requests from client SDKs.',
+    projectField: 'protocolStatusForRest',
+    icon: Globe,
+  },
+  {
+    id: 'graphql',
+    label: 'GraphQL',
+    description: 'GraphQL API access for queries and mutations.',
+    projectField: 'protocolStatusForGraphql',
+    icon: Code,
+  },
+  {
+    id: 'websocket',
+    label: 'WebSocket',
+    description: 'Realtime subscriptions over WebSocket connections.',
+    projectField: 'protocolStatusForWebsocket',
+    icon: MessageSquare,
+  },
+]
+
+const PROJECT_SERVICES: ProjectService[] = [
+  {
+    id: 'account',
+    label: 'Account',
+    projectField: 'serviceStatusForAccount',
+    icon: User,
+  },
+  {
+    id: 'avatars',
+    label: 'Avatars',
+    projectField: 'serviceStatusForAvatars',
+    icon: UserCircle,
+  },
+  {
+    id: 'databases',
+    label: 'Databases',
+    projectField: 'serviceStatusForDatabases',
+    icon: Database,
+  },
+  {
+    id: 'tablesdb',
+    label: 'TablesDB',
+    projectField: 'serviceStatusForTablesdb',
+    icon: Database,
+  },
+  {
+    id: 'functions',
+    label: 'Functions',
+    projectField: 'serviceStatusForFunctions',
+    icon: Zap,
+  },
+  {
+    id: 'locale',
+    label: 'Locale',
+    projectField: 'serviceStatusForLocale',
+    icon: Globe,
+  },
+  {
+    id: 'messaging',
+    label: 'Messaging',
+    projectField: 'serviceStatusForMessaging',
+    icon: MessageSquare,
+  },
+  {
+    id: 'migrations',
+    label: 'Migrations',
+    projectField: 'serviceStatusForMigrations',
+    icon: Upload,
+  },
+  {
+    id: 'project',
+    label: 'Project',
+    projectField: 'serviceStatusForProject',
+    icon: Folder,
+  },
+  {
+    id: 'storage',
+    label: 'Storage',
+    projectField: 'serviceStatusForStorage',
+    icon: Folder,
+  },
+  {
+    id: 'sites',
+    label: 'Sites',
+    projectField: 'serviceStatusForSites',
+    icon: Globe,
+  },
+  {
+    id: 'teams',
+    label: 'Teams',
+    projectField: 'serviceStatusForTeams',
+    icon: Building2,
+  },
+  {
+    id: 'users',
+    label: 'Users',
+    projectField: 'serviceStatusForUsers',
+    icon: Users,
+  },
+]
+
+function removeAlertSearchParam(prev: unknown) {
+  const next: Record<string, string | undefined> =
+    prev && typeof prev === 'object'
+      ? { ...(prev as Record<string, string | undefined>) }
+      : {}
+  delete next.alert
+  return next
+}
+
 interface ProjectSettingsOverviewProps {
   projectId: string
 }
@@ -177,6 +286,20 @@ export function ProjectSettingsOverview({
   )
   const [services, setServices] = useState<Record<string, boolean>>({})
 
+  // State for protocols
+  const [updatingProtocols, setUpdatingProtocols] = useState<Set<ProtocolId>>(
+    new Set(),
+  )
+  const [protocols, setProtocols] = useState<Record<ProtocolId, boolean>>({
+    rest: true,
+    graphql: true,
+    websocket: true,
+  })
+  const [protocolDialogOpen, setProtocolDialogOpen] = useState(false)
+  const [protocolBulkStatus, setProtocolBulkStatus] = useState<boolean | null>(
+    null,
+  )
+
   // State for git installations
   const [installationsPage, setInstallationsPage] = useState(0)
   const installationsLimit = 25
@@ -210,43 +333,30 @@ export function ProjectSettingsOverview({
   useEffect(() => {
     if (rawProjectData) {
       const projectData = rawProjectData as Models.Project
-      // Services are stored as serviceStatusFor{ServiceName} properties
-      setServices({
-        account:
-          projectData.serviceStatusForAccount !== undefined
-            ? projectData.serviceStatusForAccount
+      const projectRecord = projectData as unknown as Record<string, unknown>
+      setServices(
+        Object.fromEntries(
+          PROJECT_SERVICES.map((service) => [
+            service.id,
+            typeof projectRecord[service.projectField] === 'boolean'
+              ? (projectRecord[service.projectField] as boolean)
+              : true,
+          ]),
+        ),
+      )
+
+      setProtocols({
+        rest:
+          typeof projectRecord.protocolStatusForRest === 'boolean'
+            ? projectRecord.protocolStatusForRest
             : true,
-        avatars:
-          projectData.serviceStatusForAvatars !== undefined
-            ? projectData.serviceStatusForAvatars
+        graphql:
+          typeof projectRecord.protocolStatusForGraphql === 'boolean'
+            ? projectRecord.protocolStatusForGraphql
             : true,
-        databases:
-          projectData.serviceStatusForDatabases !== undefined
-            ? projectData.serviceStatusForDatabases
-            : true,
-        functions:
-          projectData.serviceStatusForFunctions !== undefined
-            ? projectData.serviceStatusForFunctions
-            : true,
-        locale:
-          projectData.serviceStatusForLocale !== undefined
-            ? projectData.serviceStatusForLocale
-            : true,
-        messaging:
-          projectData.serviceStatusForMessaging !== undefined
-            ? projectData.serviceStatusForMessaging
-            : true,
-        storage:
-          projectData.serviceStatusForStorage !== undefined
-            ? projectData.serviceStatusForStorage
-            : true,
-        teams:
-          projectData.serviceStatusForTeams !== undefined
-            ? projectData.serviceStatusForTeams
-            : true,
-        users:
-          projectData.serviceStatusForUsers !== undefined
-            ? projectData.serviceStatusForUsers
+        websocket:
+          typeof projectRecord.protocolStatusForWebsocket === 'boolean'
+            ? projectRecord.protocolStatusForWebsocket
             : true,
       })
     }
@@ -259,31 +369,13 @@ export function ProjectSettingsOverview({
     if (alert === 'installation-created') {
       toast.success('Git installation has imported to your project')
       navigate({
-        search: ((prev: unknown) => {
-          const o: Record<string, string | undefined> =
-            prev && typeof prev === 'object'
-              ? { ...(prev as Record<string, string | undefined>) }
-              : {}
-          delete o.alert
-          return o
-        }) as (
-          prev: Record<string, string | undefined>,
-        ) => Record<string, string | undefined>,
+        search: removeAlertSearchParam as never,
         replace: true,
       })
     } else if (alert === 'installation-updated') {
       toast.success('Git installation has been successfully updated')
       navigate({
-        search: ((prev: unknown) => {
-          const o: Record<string, string | undefined> =
-            prev && typeof prev === 'object'
-              ? { ...(prev as Record<string, string | undefined>) }
-              : {}
-          delete o.alert
-          return o
-        }) as (
-          prev: Record<string, string | undefined>,
-        ) => Record<string, string | undefined>,
+        search: removeAlertSearchParam as never,
         replace: true,
       })
     }
@@ -294,6 +386,43 @@ export function ProjectSettingsOverview({
     () => getApiEndpoint(project?.region),
     [project?.region],
   )
+
+  const projectRegion = useMemo(
+    () => rawProjectData?.region || project?.region,
+    [rawProjectData?.region, project?.region],
+  )
+
+  const updateProjectService = async (
+    serviceId: string,
+    enabled: boolean,
+  ): Promise<Models.Project> => {
+    return await sdk
+      .forProject(projectId, projectRegion)
+      .project.updateService({
+        serviceId: serviceId as ServiceId,
+        enabled,
+      })
+  }
+
+  const updateProjectProtocol = async (
+    protocolId: ProtocolId,
+    enabled: boolean,
+  ): Promise<Models.Project> => {
+    return await sdk
+      .forProject(projectId, projectRegion)
+      .project.updateProtocol({
+        protocolId,
+        enabled,
+      })
+  }
+
+  const patchCachedProject = (patch: Record<string, boolean>) => {
+    queryClient.setQueryData<Models.Project | undefined>(
+      ['project', projectId],
+      (current) =>
+        current ? ({ ...current, ...patch } as Models.Project) : current,
+    )
+  }
 
   // Navigate to API keys page
   const handleViewApiKeys = () => {
@@ -337,11 +466,7 @@ export function ProjectSettingsOverview({
       service: string
       status: boolean
     }) => {
-      const response = await sdk.forConsole.projects.updateServiceStatus({
-        projectId,
-        service: service as ApiService,
-        status,
-      })
+      const response = await updateProjectService(service, status)
       return { response, service, status }
     },
     onSuccess: (data) => {
@@ -351,40 +476,17 @@ export function ProjectSettingsOverview({
         `${serviceLabel} service has been ${status ? 'enabled' : 'disabled'}`,
       )
 
-      // Update services state from response
-      const projectData = data.response as Models.Project
-      // Services are stored as serviceStatusFor{ServiceName} properties
-      const servicePropertyMap: Record<string, string> = {
-        account: 'serviceStatusForAccount',
-        avatars: 'serviceStatusForAvatars',
-        databases: 'serviceStatusForDatabases',
-        functions: 'serviceStatusForFunctions',
-        locale: 'serviceStatusForLocale',
-        messaging: 'serviceStatusForMessaging',
-        storage: 'serviceStatusForStorage',
-        teams: 'serviceStatusForTeams',
-        users: 'serviceStatusForUsers',
-      }
-      const serviceProperty = servicePropertyMap[service]
-      const projectDataRecord = projectData as Record<string, unknown>
-      if (serviceProperty && projectDataRecord[serviceProperty] !== undefined) {
-        setServices((prev) => ({
-          ...prev,
-          [service]: projectDataRecord[serviceProperty] as boolean,
-        }))
-      } else {
-        // Fallback to the status we just set
-        setServices((prev) => ({
-          ...prev,
-          [service]: status,
-        }))
-      }
+      const serviceProperty = PROJECT_SERVICES.find(
+        (item) => item.id === service,
+      )?.projectField
+      setServices((prev) => ({
+        ...prev,
+        [service]: status,
+      }))
 
-      // Invalidate queries to refresh project data
-      queryClient.invalidateQueries({ queryKey: ['project', projectId] })
-      queryClient.invalidateQueries({
-        queryKey: [Dependencies.PROJECT, projectId],
-      })
+      if (serviceProperty) {
+        patchCachedProject({ [serviceProperty]: status })
+      }
 
       setUpdatingServices((prev) => {
         const next = new Set(prev)
@@ -411,10 +513,11 @@ export function ProjectSettingsOverview({
   // Mutation to update all services
   const updateAllServicesMutation = useMutation({
     mutationFn: async (status: boolean) => {
-      const response = await sdk.forConsole.projects.updateServiceStatusAll({
-        projectId,
-        status,
-      })
+      let response: Models.Project | null = null
+      for (const service of PROJECT_SERVICES) {
+        if (services[service.id] === status) continue
+        response = await updateProjectService(service.id, status)
+      }
       return { response, status }
     },
     onSuccess: (data) => {
@@ -423,57 +526,103 @@ export function ProjectSettingsOverview({
         `All services for ${project?.name || 'project'} has been ${status ? 'enabled' : 'disabled'}.`,
       )
 
-      // Update all services state from response
-      const projectData = data.response as Models.Project
-      // Services are stored as serviceStatusFor{ServiceName} properties
-      setServices({
-        account:
-          projectData.serviceStatusForAccount !== undefined
-            ? projectData.serviceStatusForAccount
-            : status,
-        avatars:
-          projectData.serviceStatusForAvatars !== undefined
-            ? projectData.serviceStatusForAvatars
-            : status,
-        databases:
-          projectData.serviceStatusForDatabases !== undefined
-            ? projectData.serviceStatusForDatabases
-            : status,
-        functions:
-          projectData.serviceStatusForFunctions !== undefined
-            ? projectData.serviceStatusForFunctions
-            : status,
-        locale:
-          projectData.serviceStatusForLocale !== undefined
-            ? projectData.serviceStatusForLocale
-            : status,
-        messaging:
-          projectData.serviceStatusForMessaging !== undefined
-            ? projectData.serviceStatusForMessaging
-            : status,
-        storage:
-          projectData.serviceStatusForStorage !== undefined
-            ? projectData.serviceStatusForStorage
-            : status,
-        teams:
-          projectData.serviceStatusForTeams !== undefined
-            ? projectData.serviceStatusForTeams
-            : status,
-        users:
-          projectData.serviceStatusForUsers !== undefined
-            ? projectData.serviceStatusForUsers
-            : status,
-      })
+      setServices(
+        Object.fromEntries(
+          PROJECT_SERVICES.map((service) => [service.id, status]),
+        ),
+      )
 
-      // Invalidate queries to refresh project data
-      queryClient.invalidateQueries({ queryKey: ['project', projectId] })
-      queryClient.invalidateQueries({
-        queryKey: [Dependencies.PROJECT, projectId],
-      })
+      patchCachedProject(
+        Object.fromEntries(
+          PROJECT_SERVICES.map((service) => [service.projectField, status]),
+        ),
+      )
       // Track analytics: Submit.ProjectService
     },
     onError: (error: Error) => {
       toast.error(getErrorMessage(error, 'Failed to update services'))
+    },
+  })
+
+  // Mutation to update protocol status
+  const updateProtocolMutation = useMutation({
+    mutationFn: async ({
+      protocol,
+      status,
+    }: {
+      protocol: ProtocolId
+      status: boolean
+    }) => {
+      return await updateProjectProtocol(protocol, status)
+    },
+    onSuccess: async (_projectData, variables) => {
+      const protocolConfig = PROJECT_PROTOCOLS.find(
+        (protocol) => protocol.id === variables.protocol,
+      )
+
+      setProtocols((prev) => ({
+        ...prev,
+        [variables.protocol]: variables.status,
+      }))
+      if (protocolConfig) {
+        patchCachedProject({ [protocolConfig.projectField]: variables.status })
+      }
+
+      toast.success(
+        `${protocolConfig?.label || 'Protocol'} protocol has been ${
+          variables.status ? 'enabled' : 'disabled'
+        }`,
+      )
+    },
+    onError: (error: Error, variables) => {
+      toast.error(getErrorMessage(error, 'Failed to update protocol'))
+      setProtocols((prev) => ({
+        ...prev,
+        [variables.protocol]: !variables.status,
+      }))
+    },
+    onSettled: (_data, _error, variables) => {
+      setUpdatingProtocols((prev) => {
+        const next = new Set(prev)
+        next.delete(variables.protocol)
+        return next
+      })
+    },
+  })
+
+  // Mutation to update all protocols
+  const updateAllProtocolsMutation = useMutation({
+    mutationFn: async (status: boolean) => {
+      for (const protocol of PROJECT_PROTOCOLS) {
+        if (protocols[protocol.id] === status) continue
+        await updateProjectProtocol(protocol.id, status)
+      }
+
+      return status
+    },
+    onSuccess: async (status) => {
+      setProtocols({
+        rest: status,
+        graphql: status,
+        websocket: status,
+      })
+      patchCachedProject({
+        protocolStatusForRest: status,
+        protocolStatusForGraphql: status,
+        protocolStatusForWebsocket: status,
+      })
+      toast.success(
+        `All protocols for ${project?.name || 'project'} have been ${
+          status ? 'enabled.' : 'disabled.'
+        }`,
+      )
+    },
+    onError: (error: Error) => {
+      toast.error(getErrorMessage(error, 'Failed to update protocols'))
+    },
+    onSettled: () => {
+      setProtocolDialogOpen(false)
+      setProtocolBulkStatus(null)
     },
   })
 
@@ -575,15 +724,17 @@ export function ProjectSettingsOverview({
 
   // Handle service toggle
   const handleServiceToggle = (service: string, checked: boolean) => {
+    const nextChecked =
+      services[service] === undefined ? checked : !services[service]
     // Optimistically update UI
-    setServices((prev) => ({ ...prev, [service]: checked }))
+    setServices((prev) => ({ ...prev, [service]: nextChecked }))
     setUpdatingServices((prev) => new Set(prev).add(service))
     updateServiceMutation.mutate(
-      { service, status: checked },
+      { service, status: nextChecked },
       {
         onError: () => {
           // Revert on error
-          setServices((prev) => ({ ...prev, [service]: !checked }))
+          setServices((prev) => ({ ...prev, [service]: !nextChecked }))
         },
       },
     )
@@ -591,13 +742,26 @@ export function ProjectSettingsOverview({
 
   // Handle bulk enable/disable
   const handleBulkServiceUpdate = (status: boolean) => {
-    // Update all services in state
-    const newServices: Record<string, boolean> = {}
-    Object.keys(services).forEach((key) => {
-      newServices[key] = status
-    })
-    setServices(newServices)
+    setServices(
+      Object.fromEntries(
+        PROJECT_SERVICES.map((service) => [service.id, status]),
+      ),
+    )
     updateAllServicesMutation.mutate(status)
+  }
+
+  // Handle protocol toggle
+  const handleProtocolToggle = (protocol: ProtocolId, checked: boolean) => {
+    const nextChecked =
+      protocols[protocol] === undefined ? checked : !protocols[protocol]
+    setProtocols((prev) => ({ ...prev, [protocol]: nextChecked }))
+    setUpdatingProtocols((prev) => new Set(prev).add(protocol))
+    updateProtocolMutation.mutate({ protocol, status: nextChecked })
+  }
+
+  const openProtocolBulkDialog = (status: boolean) => {
+    setProtocolBulkStatus(status)
+    setProtocolDialogOpen(true)
   }
 
   // Get all services are enabled/disabled
@@ -613,6 +777,19 @@ export function ProjectSettingsOverview({
 
   const anyServiceUpdating =
     updatingServices.size > 0 || updateAllServicesMutation.isPending
+
+  const allProtocolsEnabled = useMemo(() => {
+    const protocolValues = Object.values(protocols)
+    return protocolValues.length > 0 && protocolValues.every(Boolean)
+  }, [protocols])
+
+  const allProtocolsDisabled = useMemo(() => {
+    const protocolValues = Object.values(protocols)
+    return protocolValues.length > 0 && protocolValues.every((v) => !v)
+  }, [protocols])
+
+  const anyProtocolUpdating =
+    updatingProtocols.size > 0 || updateAllProtocolsMutation.isPending
 
   // Get organizations for transfer (excluding current)
   const { organizations: allOrganizations, isLoading: organizationsLoading } =
@@ -766,6 +943,100 @@ export function ProjectSettingsOverview({
       {/* Conditional sections - only if canWriteProjects */}
       {canWriteProjects && (
         <>
+          {/* Update Protocols Section */}
+          <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+            <div className="px-6 py-4">
+              <h3 className="text-[15px] font-semibold text-foreground">
+                Protocols
+              </h3>
+            </div>
+            <div className="border-t border-border" />
+            <div className="px-6 py-4 @container">
+              <div className="flex gap-6 @[600px]:flex-row flex-col">
+                <div className="@[600px]:w-64 shrink-0">
+                  <p className="text-[13px] text-muted-foreground">
+                    Protocol settings control access through REST, GraphQL, and
+                    WebSocket APIs independently from service-level access.
+                  </p>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 text-[12px]"
+                      disabled={anyProtocolUpdating || allProtocolsEnabled}
+                      onClick={() => openProtocolBulkDialog(true)}
+                    >
+                      Enable all
+                    </Button>
+                    <Separator orientation="vertical" className="h-4" />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 text-[12px]"
+                      disabled={anyProtocolUpdating || allProtocolsDisabled}
+                      onClick={() => openProtocolBulkDialog(false)}
+                    >
+                      Disable all
+                    </Button>
+                  </div>
+
+                  <div className="rounded-lg border border-border bg-background">
+                    {PROJECT_PROTOCOLS.map((protocol, index) => {
+                      const Icon = protocol.icon
+                      const isUpdating = updatingProtocols.has(protocol.id)
+
+                      return (
+                        <div key={protocol.id}>
+                          <div
+                            className={cn(
+                              'flex items-center justify-between gap-4 px-4 py-3',
+                              isUpdating && 'opacity-75',
+                            )}
+                          >
+                            <div className="flex min-w-0 items-start gap-3">
+                              <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                                <Icon className="h-4 w-4" />
+                              </div>
+                              <div className="min-w-0">
+                                <Label
+                                  htmlFor={`protocol-${protocol.id}`}
+                                  className="text-[13px] font-medium text-foreground cursor-pointer"
+                                >
+                                  {protocol.label}
+                                </Label>
+                                <p className="mt-1 text-[12px] text-muted-foreground">
+                                  {protocol.description}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {isUpdating && (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+                              )}
+                              <Switch
+                                id={`protocol-${protocol.id}`}
+                                checked={protocols[protocol.id]}
+                                onCheckedChange={(checked) =>
+                                  handleProtocolToggle(protocol.id, checked)
+                                }
+                                disabled={isUpdating || anyProtocolUpdating}
+                              />
+                            </div>
+                          </div>
+                          {index < PROJECT_PROTOCOLS.length - 1 && (
+                            <div className="border-t border-border" />
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Update Services Section */}
           <div
             data-card-id="services"
@@ -820,83 +1091,46 @@ export function ProjectSettingsOverview({
 
                   {/* Service Cards */}
                   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {Object.entries(services)
-                      .filter(([service]) =>
-                        [
-                          'account',
-                          'avatars',
-                          'databases',
-                          'functions',
-                          'locale',
-                          'messaging',
-                          'storage',
-                          'teams',
-                          'users',
-                        ].includes(service),
-                      )
-                      .map(([service, enabled]) => {
-                        const serviceLabels: Record<string, string> = {
-                          account: 'Account',
-                          avatars: 'Avatars',
-                          databases: 'Databases',
-                          functions: 'Functions',
-                          locale: 'Locale',
-                          messaging: 'Messaging',
-                          storage: 'Storage',
-                          teams: 'Teams',
-                          users: 'Users',
-                        }
-                        const serviceIcons: Record<string, typeof User> = {
-                          account: User,
-                          avatars: UserCircle,
-                          databases: Database,
-                          functions: Zap,
-                          locale: Globe,
-                          messaging: MessageSquare,
-                          storage: Folder,
-                          teams: Building2,
-                          users: Users,
-                        }
-                        const Icon = serviceIcons[service] || User
-                        const isUpdating = updatingServices.has(service)
-                        return (
-                          <div
-                            key={service}
-                            className={cn(
-                              'rounded-lg border border-border bg-card/50 p-4 transition-colors',
-                              isUpdating && 'opacity-75',
-                              !isUpdating && 'hover:bg-card',
-                            )}
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <Icon className="h-4 w-4 text-muted-foreground" />
-                                <Label
-                                  htmlFor={service}
-                                  className="text-[13px] font-medium text-foreground cursor-pointer"
-                                >
-                                  {serviceLabels[service] ||
-                                    service.charAt(0).toUpperCase() +
-                                      service.slice(1)}
-                                </Label>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                {isUpdating && (
-                                  <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
-                                )}
-                                <Switch
-                                  id={service}
-                                  checked={enabled}
-                                  onCheckedChange={(checked) =>
-                                    handleServiceToggle(service, checked)
-                                  }
-                                  disabled={isUpdating}
-                                />
-                              </div>
+                    {PROJECT_SERVICES.map((service) => {
+                      const Icon = service.icon
+                      const enabled = services[service.id] ?? true
+                      const isUpdating = updatingServices.has(service.id)
+                      return (
+                        <div
+                          key={service.id}
+                          className={cn(
+                            'rounded-lg border border-border bg-card/50 p-4 transition-colors',
+                            isUpdating && 'opacity-75',
+                            !isUpdating && 'hover:bg-card',
+                          )}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Icon className="h-4 w-4 text-muted-foreground" />
+                              <Label
+                                htmlFor={service.id}
+                                className="text-[13px] font-medium text-foreground cursor-pointer"
+                              >
+                                {service.label}
+                              </Label>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {isUpdating && (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+                              )}
+                              <Switch
+                                id={service.id}
+                                checked={enabled}
+                                onCheckedChange={(checked) =>
+                                  handleServiceToggle(service.id, checked)
+                                }
+                                disabled={isUpdating}
+                              />
                             </div>
                           </div>
-                        )
-                      })}
+                        </div>
+                      )
+                    })}
                   </div>
                 </div>
               </div>
@@ -937,6 +1171,54 @@ export function ProjectSettingsOverview({
             onDeleteDialogOpenChange={setDeleteDialogOpen}
             onDelete={deleteProjectMutation}
           />
+
+          <Dialog
+            open={protocolDialogOpen}
+            onOpenChange={setProtocolDialogOpen}
+          >
+            <DialogContent className="sm:max-w-md p-0">
+              <DialogHeader className="px-6 pt-6 pb-4 text-left">
+                <DialogTitle>
+                  {protocolBulkStatus
+                    ? 'Enable all protocols'
+                    : 'Disable all protocols'}
+                </DialogTitle>
+                <DialogDescription className="text-[13px] mt-2">
+                  {protocolBulkStatus
+                    ? 'All project protocols will be enabled.'
+                    : 'Are you sure you want to disable all protocols? This will disable client access over those protocols until they are re-enabled.'}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-9 text-[13px]"
+                  onClick={() => setProtocolDialogOpen(false)}
+                  disabled={updateAllProtocolsMutation.isPending}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  className="h-9 text-[13px]"
+                  onClick={() => {
+                    if (protocolBulkStatus !== null) {
+                      updateAllProtocolsMutation.mutate(protocolBulkStatus)
+                    }
+                  }}
+                  disabled={
+                    protocolBulkStatus === null ||
+                    updateAllProtocolsMutation.isPending
+                  }
+                >
+                  {protocolBulkStatus ? 'Enable all' : 'Disable all'}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </>
       )}
     </div>

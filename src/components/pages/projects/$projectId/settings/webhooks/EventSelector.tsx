@@ -32,6 +32,13 @@ export function EventSelector({
     onEventsChange(selectedEvents.filter((e) => e !== event))
   }
 
+  const handleOpenEventDialog = () => {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur()
+    }
+    window.setTimeout(() => setEventDialogOpen(true), 0)
+  }
+
   return (
     <div className="space-y-4">
       <div>
@@ -75,7 +82,7 @@ export function EventSelector({
         type="button"
         variant="outline"
         size="sm"
-        onClick={() => setEventDialogOpen(true)}
+        onClick={handleOpenEventDialog}
         disabled={selectedEvents.length >= maxEvents}
       >
         <Plus className="mr-1.5 h-4 w-4" />
