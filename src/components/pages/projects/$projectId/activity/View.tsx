@@ -675,16 +675,17 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
             </div>
           </>
         ) : isLoading ? (
-          <EmptyState
-            icon={Activity}
-            title="Loading activities..."
-            isEmpty
-            variant="centered"
-          />
+          <div className="rounded-lg border border-border bg-card py-12 text-center">
+            <p className="text-[13px] text-muted-foreground">
+              Loading activities...
+            </p>
+          </div>
         ) : (
           <EmptyState
             icon={Activity}
-            title="No activities found"
+            title={
+              hasActiveFilters || searchValue ? undefined : 'No activities yet'
+            }
             description={
               hasActiveFilters || searchValue
                 ? undefined
@@ -692,7 +693,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
             }
             isEmpty={!hasActiveFilters && !searchValue}
             hasFilters={hasActiveFilters || !!searchValue}
-            variant="centered"
+            variant="card"
           />
         )}
       </div>

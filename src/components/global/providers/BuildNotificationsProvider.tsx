@@ -325,8 +325,11 @@ export function BuildNotificationsProvider({
       if (inForeground) return
       if (Notification.permission !== 'granted') {
         // Permission was never granted - nudge the user to enable it (this
-        // becomes a no-op after the first nudge).
-        maybeShowEnableToast()
+        // becomes a no-op after the first nudge). Only surface the prompt on
+        // build-relevant pages so users in unrelated sections aren't pinged.
+        if (isRelevantRouteRef.current) {
+          maybeShowEnableToast()
+        }
         return
       }
       try {
@@ -377,8 +380,11 @@ export function BuildNotificationsProvider({
         clearResetTimer()
         applyDesiredFavicon('theme-orange')
         // First time we see this build start, nudge the user to enable browser
-        // notifications so they hear about completion.
-        if (isNew) {
+        // notifications so they hear about completion - but only if they're
+        // currently on a build-relevant page (Sites / Functions). Asking from
+        // an unrelated section (Databases, Auth, etc.) would be confusing
+        // since they have no visual context for what build is happening.
+        if (isNew && isRelevantRouteRef.current) {
           maybeShowEnableToast()
         }
         return
