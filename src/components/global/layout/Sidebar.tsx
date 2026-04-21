@@ -176,6 +176,7 @@ const getNavItems = (projectId: string) => {
           label: 'Analytics',
           icon: BarChart2,
           path: `/projects/${projectId}/analytics`,
+          comingSoon: true,
         },
         {
           id: 'errors',

@@ -63,12 +63,12 @@ export function ConsoleFooter() {
   })
 
   return (
-    <footer className="@container flex h-[54px] shrink-0 items-center border-t border-border px-3">
-      <div className="mx-auto w-full max-w-7xl flex items-center justify-between gap-2 overflow-visible">
+    <footer className="@container flex h-[54px] shrink-0 items-center border-t border-border">
+      <div className="mx-auto w-full max-w-7xl flex items-center justify-between gap-2 overflow-visible px-4 sm:px-6">
         {/* Left section: Logo, Resource Links, and Social Icons */}
         <div className="flex items-center gap-2 min-w-0 flex-shrink">
           {/* Logo - inline SVG with currentColor so theme (black/white) works on Safari/iOS */}
-          <div className="flex items-center px-2.5 py-1.5 flex-shrink-0 text-foreground opacity-60">
+          <div className="flex items-center ps-0 pe-2.5 py-1.5 flex-shrink-0 text-foreground opacity-60">
             <svg
               width="16"
               height="16"
@@ -178,7 +178,7 @@ export function ConsoleFooter() {
           <div className="hidden h-4 w-px flex-shrink-0 bg-border @[520px]:block" />
 
           {/* Copyright */}
-          <span className="px-2.5 py-1.5 text-[13px] text-muted-foreground whitespace-nowrap">
+          <span className="ps-2.5 pe-0 py-1.5 text-[13px] text-muted-foreground whitespace-nowrap">
             © {currentYear} Appwrite
           </span>
         </div>
