@@ -175,6 +175,27 @@ trait UsersBase
         $this->assertEquals($res['body']['hashOptions']['signerKey'], 'XyEKE9RcTDeLEsL/RjwPDBv/RqDl8fb3gpYEOQaPihbxf1ZAtSOHCjuAAa7Q3oHpCYhXSN9tizHgVOwn6krflQ==');
         $this->assertEquals($res['body']['hashOptions']['saltSeparator'], 'Bw==');
 
+        /**
+         * Test for SUCCESS with null name (regression test for #8785)
+         *
+         * Previously, sending an explicit `null` for the optional `name` parameter
+         * caused a vague 500 server error because the closure signature expected a
+         * string. It should now succeed and store an empty string for the name.
+         */
+        $res = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => ID::unique(),
+            'email' => 'null-name@appwrite.io',
+            'password' => 'password',
+            'name' => null,
+        ]);
+
+        $this->assertEquals(201, $res['headers']['status-code']);
+        $this->assertSame('', $res['body']['name']);
+        $this->assertEquals('null-name@appwrite.io', $res['body']['email']);
+
         return ['userId' => $body['$id']];
     }
 
