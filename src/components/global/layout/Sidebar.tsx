@@ -430,18 +430,56 @@ export function ConsoleSidebar({
 
   return (
     <TooltipProvider>
-      {/* Desktop Sidebar - GPU layer + width-only transition to reduce lag */}
-      <aside
+      {/* Desktop Sidebar wrapper - the toggle is rendered as a sibling of
+          <aside> so it lives outside the GPU layer below. Keeping the
+          translateZ/backface-visibility hack on the aside (not on the wrapper)
+          stops iOS Safari from clipping the half of the toggle that overflows
+          the sidebar's right edge. */}
+      <div
         className={cn(
-          'relative hidden flex-col border-r border-border bg-background @[1024px]:flex',
-          'h-full flex-shrink-0 overflow-visible',
+          'relative hidden h-full flex-shrink-0 @[1024px]:block',
           'transition-[width] duration-150 ease-out',
-          '[transform:translateZ(0)] [backface-visibility:hidden]',
           collapsed ? 'w-[60px]' : 'w-[220px]',
           className,
         )}
       >
-        {/* Collapse Toggle - positioned on the border; overflow-visible on aside so it isn't clipped */}
+        <aside
+          className={cn(
+            'flex h-full w-full flex-col overflow-hidden border-r border-border bg-background',
+            '[transform:translateZ(0)] [backface-visibility:hidden]',
+          )}
+        >
+          {/* Main Navigation */}
+          <nav
+            ref={navRef}
+            className="flex-1 space-y-6 overflow-y-auto px-3 py-4"
+            onKeyDown={handleKeyDown}
+            role="navigation"
+            aria-label="Main navigation"
+          >
+            {/* Onboarding Card - only owners and developers */}
+            {showGetStarted && (
+              <OnboardingCard projectId={projectId} collapsed={collapsed} />
+            )}
+
+            {/* Overview */}
+            {showOverview && (
+              <div className="space-y-0.5">{renderNavItem(overviewItem)}</div>
+            )}
+
+            {visibleCategories.map((category) => renderCategory(category))}
+          </nav>
+
+          {/* Settings */}
+          {showSettings && (
+            <div className="flex h-[54px] w-full items-center border-t border-border px-3">
+              <div className="w-full">{renderNavItem(settingsItem)}</div>
+            </div>
+          )}
+        </aside>
+
+        {/* Collapse Toggle - sibling of <aside>, positioned against the
+            wrapper so it isn't clipped by the aside's GPU layer on iOS. */}
         <button
           onClick={() => setCollapsed(!collapsed)}
           className="absolute right-0 top-1/2 z-10 flex h-6 w-6 shrink-0 -translate-y-1/2 translate-x-1/2 cursor-pointer items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -454,35 +492,7 @@ export function ConsoleSidebar({
             )}
           />
         </button>
-
-        {/* Main Navigation */}
-        <nav
-          ref={navRef}
-          className="flex-1 space-y-6 overflow-y-auto px-3 py-4"
-          onKeyDown={handleKeyDown}
-          role="navigation"
-          aria-label="Main navigation"
-        >
-          {/* Onboarding Card - only owners and developers */}
-          {showGetStarted && (
-            <OnboardingCard projectId={projectId} collapsed={collapsed} />
-          )}
-
-          {/* Overview */}
-          {showOverview && (
-            <div className="space-y-0.5">{renderNavItem(overviewItem)}</div>
-          )}
-
-          {visibleCategories.map((category) => renderCategory(category))}
-        </nav>
-
-        {/* Settings */}
-        {showSettings && (
-          <div className="flex h-[54px] w-full items-center border-t border-border px-3">
-            <div className="w-full">{renderNavItem(settingsItem)}</div>
-          </div>
-        )}
-      </aside>
+      </div>
 
       {/* Mobile Sidebar - GPU-accelerated transform; inert when closed so it's skipped in tab order */}
       <aside
