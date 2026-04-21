@@ -395,14 +395,14 @@ class Functions extends Action
         /** Check if deployment exists */
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
-        if ($deployment->getAttribute('resourceId') !== $functionId) {
+        if ($deployment->isEmpty()) {
             $errorMessage = 'The execution could not be completed because a corresponding deployment was not found. A function deployment needs to be created before it can be executed. Please create a deployment for your function and try again.';
             $this->fail($errorMessage, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event);
             return;
         }
 
-        if ($deployment->isEmpty()) {
-            $errorMessage = 'The execution could not be completed because a corresponding deployment was not found. A function deployment needs to be created before it can be executed. Please create a deployment for your function and try again.';
+        if ($deployment->getAttribute('resourceId') !== $functionId) {
+            $errorMessage = 'The execution could not be completed because the deployment does not belong to this function. Please ensure the correct deployment ID is used and try again.';
             $this->fail($errorMessage, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event);
             return;
         }
@@ -599,10 +599,12 @@ class Functions extends Action
             $logs = $executionResponse['logs'] ?? '';
 
             if (\is_string($logs) && \strlen($logs) > $maxLogLength) {
+                $separator = "\n";
                 $warningMessage = "[WARNING] Logs truncated. The output exceeded {$maxLogLength} characters.\n";
-                $warningLength = \strlen($warningMessage);
-                $maxContentLength = $maxLogLength - $warningLength;
-                $logs = $warningMessage . \substr($logs, -$maxContentLength);
+                // BUG-03 fix: subtract separator length so total never exceeds $maxLogLength.
+                // Without this: content(limit-W) + separator(1) + warning(W) = limit+1 — off by one.
+                $maxContentLength = max(0, $maxLogLength - \strlen($warningMessage) - \strlen($separator));
+                $logs = \substr($logs, 0, $maxContentLength) . $separator . $warningMessage;
             }
 
             // Truncate errors if they exceed the limit
@@ -610,10 +612,11 @@ class Functions extends Action
             $errors = $executionResponse['errors'] ?? '';
 
             if (\is_string($errors) && \strlen($errors) > $maxErrorLength) {
+                $separator = "\n";
                 $warningMessage = "[WARNING] Errors truncated. The output exceeded {$maxErrorLength} characters.\n";
-                $warningLength = \strlen($warningMessage);
-                $maxContentLength = $maxErrorLength - $warningLength;
-                $errors = $warningMessage . \substr($errors, -$maxContentLength);
+                // BUG-03 fix: subtract separator length so total never exceeds $maxErrorLength.
+                $maxContentLength = max(0, $maxErrorLength - \strlen($warningMessage) - \strlen($separator));
+                $errors = \substr($errors, 0, $maxContentLength) . $separator . $warningMessage;
             }
 
             /** Update execution status */

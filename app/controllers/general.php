@@ -677,10 +677,11 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             $logs = $executionResponse['logs'] ?? '';
 
             if (\is_string($logs) && \strlen($logs) > $maxLogLength) {
+                $separator = "\n";
                 $warningMessage = "[WARNING] Logs truncated. The output exceeded {$maxLogLength} characters.\n";
-                $warningLength = \strlen($warningMessage);
-                $maxContentLength = max(0, $maxLogLength - $warningLength);
-                $logs = $warningMessage . ($maxContentLength > 0 ? \substr($logs, -$maxContentLength) : '');
+                // BUG-03 fix: subtract separator length so total never exceeds $maxLogLength.
+                $maxContentLength = max(0, $maxLogLength - \strlen($warningMessage) - \strlen($separator));
+                $logs = \substr($logs, 0, $maxContentLength) . $separator . $warningMessage;
             }
 
             // Truncate errors if they exceed the limit
@@ -688,10 +689,11 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             $errors = $executionResponse['errors'] ?? '';
 
             if (\is_string($errors) && \strlen($errors) > $maxErrorLength) {
+                $separator = "\n";
                 $warningMessage = "[WARNING] Errors truncated. The output exceeded {$maxErrorLength} characters.\n";
-                $warningLength = \strlen($warningMessage);
-                $maxContentLength = max(0, $maxErrorLength - $warningLength);
-                $errors = $warningMessage . ($maxContentLength > 0 ? \substr($errors, -$maxContentLength) : '');
+                // BUG-03 fix: subtract separator length so total never exceeds $maxErrorLength.
+                $maxContentLength = max(0, $maxErrorLength - \strlen($warningMessage) - \strlen($separator));
+                $errors = \substr($errors, 0, $maxContentLength) . $separator . $warningMessage;
             }
             /** Update execution status */
             $status = $executionResponse['statusCode'] >= 500 ? 'failed' : 'completed';
