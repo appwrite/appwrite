@@ -11,6 +11,7 @@ import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
 import { cn } from '@/lib/utils'
 import { useKeyboardShortcut } from '@/hooks/use-keyboard-shortcuts'
+import { useScrollToCard } from '@/hooks/use-scroll-to-card'
 
 const BASE_TABS: Tab[] = [
   {
@@ -39,6 +40,8 @@ export function View({ activeTab: tabProp }: ViewProps) {
   const { account, signOut } = useAuth()
   const { features } = useConsoleProfile()
   const [commandCenterOpen, setCommandCenterOpen] = useState(false)
+
+  useScrollToCard()
 
   const tabs = useMemo(
     () =>
@@ -208,6 +211,7 @@ export function View({ activeTab: tabProp }: ViewProps) {
       <CommandCenter
         open={commandCenterOpen}
         onOpenChange={setCommandCenterOpen}
+        context="account"
       />
     </>
   )
