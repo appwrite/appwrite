@@ -38,8 +38,6 @@ import { PROJECT_CHANNELS } from '@/lib/realtime/constants'
 /** localStorage key for remembering that the user explicitly opted out of the prompt. */
 const OPT_OUT_STORAGE_KEY = 'appwrite.buildNotifications.optedOut'
 
-type DeploymentResource = 'site' | 'function'
-
 interface ActiveBuild {
   deploymentId: string
   resourceId: string
@@ -51,14 +49,67 @@ interface ActiveBuild {
 const TERMINAL_FAVICON_RESET_MS = 10_000
 
 /**
- * Pages where it makes sense to indicate build status via the favicon. We scope
- * the favicon swap to Sites and Functions sections so users working in
- * unrelated areas (Databases, Auth, Storage, Settings, etc.) aren't visually
- * pinged about a build they don't care about. Notifications still fire from
- * any page since the whole point is to alert you when you're elsewhere.
+ * What the user is currently looking at, used to decide whether a deployment
+ * event should affect the favicon / surface a permission prompt. We want to be
+ * strict here so the favicon never flips orange because of a build for a
+ * resource the user can't see on the page they're on.
+ *
+ * Shape:
+ *  - `type: null`            → not on Sites/Functions at all (Databases, Auth, etc.)
+ *  - `type: 'site' | 'function', resourceId: null`  → on the section index/list
+ *  - `type, resourceId: string` → on a specific site/function detail page
+ *
+ * Notifications still fire globally for builds we already started tracking —
+ * the whole point is to alert you when you're elsewhere — but we only *start*
+ * tracking a build (and only swap the favicon) when its resource matches the
+ * page you're currently working on.
  */
-function isBuildRelevantPath(pathname: string): boolean {
-  return /\/projects\/[^/]+\/(sites|functions)(\/|$)/.test(pathname)
+type DeploymentResource = 'site' | 'function'
+
+interface RelevanceContext {
+  type: DeploymentResource | null
+  resourceId: string | null
+}
+
+/**
+ * URL segments that look like a `$siteId` / `$functionId` slot but are
+ * actually sibling routes (create wizards, listing utilities, etc.). These
+ * should fall back to "section index" relevance, not "resource detail".
+ */
+const RESERVED_SECTION_SEGMENTS = new Set([
+  'create',
+  'usage',
+  'templates',
+  'editor',
+  'index',
+])
+
+function parseRelevance(pathname: string): RelevanceContext {
+  const sites = pathname.match(/\/projects\/[^/]+\/sites(?:\/([^/]+))?/)
+  if (sites) {
+    const seg = sites[1] ?? null
+    const resourceId = seg && !RESERVED_SECTION_SEGMENTS.has(seg) ? seg : null
+    return { type: 'site', resourceId }
+  }
+  const fns = pathname.match(/\/projects\/[^/]+\/functions(?:\/([^/]+))?/)
+  if (fns) {
+    const seg = fns[1] ?? null
+    const resourceId = seg && !RESERVED_SECTION_SEGMENTS.has(seg) ? seg : null
+    return { type: 'function', resourceId }
+  }
+  return { type: null, resourceId: null }
+}
+
+function isUpdateRelevant(
+  ctx: RelevanceContext,
+  update: { resourceType: DeploymentResource; resourceId: string },
+): boolean {
+  if (ctx.type === null) return false
+  if (ctx.type !== update.resourceType) return false
+  if (ctx.resourceId !== null && ctx.resourceId !== update.resourceId) {
+    return false
+  }
+  return true
 }
 
 function isInProgressStatus(status: string): boolean {
@@ -216,7 +267,10 @@ export function BuildNotificationsProvider({
   const { setFavicon, getCurrentFavicon } = useFavicon()
   const queryClient = useQueryClient()
   const location = useLocation()
-  const isRelevantRoute = isBuildRelevantPath(location.pathname)
+  const relevanceCtx = parseRelevance(location.pathname)
+  // Stringified context so the route-change effect re-runs whenever the
+  // user navigates between sections OR between specific resources.
+  const relevanceKey = `${relevanceCtx.type ?? ''}::${relevanceCtx.resourceId ?? ''}`
 
   // Stable refs so the realtime handler always sees the latest state.
   const activeBuildsRef = useRef<Map<string, ActiveBuild>>(new Map())
@@ -245,8 +299,8 @@ export function BuildNotificationsProvider({
   setFaviconRef.current = setFavicon
   const getCurrentFaviconRef = useRef(getCurrentFavicon)
   getCurrentFaviconRef.current = getCurrentFavicon
-  const isRelevantRouteRef = useRef(isRelevantRoute)
-  isRelevantRouteRef.current = isRelevantRoute
+  const relevanceCtxRef = useRef<RelevanceContext>(relevanceCtx)
+  relevanceCtxRef.current = relevanceCtx
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -272,7 +326,9 @@ export function BuildNotificationsProvider({
      */
     function applyDesiredFavicon(target: FaviconVariant | null): void {
       lastDesiredFaviconRef.current = target
-      if (!isRelevantRouteRef.current) return
+      // Only paint when the user is on a Sites/Functions page; otherwise the
+      // navigation effect below will paint when they come back.
+      if (relevanceCtxRef.current.type === null) return
       if (target === null) {
         const original = originalFaviconRef.current ?? 'default'
         setFaviconRef.current(original)
@@ -327,7 +383,7 @@ export function BuildNotificationsProvider({
         // Permission was never granted - nudge the user to enable it (this
         // becomes a no-op after the first nudge). Only surface the prompt on
         // build-relevant pages so users in unrelated sections aren't pinged.
-        if (isRelevantRouteRef.current) {
+        if (relevanceCtxRef.current.type !== null) {
           maybeShowEnableToast()
         }
         return
@@ -373,6 +429,16 @@ export function BuildNotificationsProvider({
 
       if (isInProgressStatus(update.status)) {
         const isNew = !builds.has(update.deploymentId)
+        // Strict relevance gate: a brand new build only counts if it belongs
+        // to the resource the user is currently looking at. This prevents the
+        // favicon from going orange for builds the user can't see on screen
+        // (e.g. Site B's build while they're on Site A, or any function build
+        // while they're on the Sites overview). Builds we already started
+        // tracking continue through to completion, so navigating away mid-
+        // build doesn't make us lose interest.
+        if (isNew && !isUpdateRelevant(relevanceCtxRef.current, update)) {
+          return
+        }
         // Re-arm dedupe if the same deployment ID restarts (rare, but harmless).
         notifiedTerminalRef.current.delete(update.deploymentId)
         builds.set(update.deploymentId, { ...update })
@@ -380,11 +446,9 @@ export function BuildNotificationsProvider({
         clearResetTimer()
         applyDesiredFavicon('theme-orange')
         // First time we see this build start, nudge the user to enable browser
-        // notifications so they hear about completion - but only if they're
-        // currently on a build-relevant page (Sites / Functions). Asking from
-        // an unrelated section (Databases, Auth, etc.) would be confusing
-        // since they have no visual context for what build is happening.
-        if (isNew && isRelevantRouteRef.current) {
+        // notifications so they hear about completion. Already gated by the
+        // relevance check above, so we know we're on the right page.
+        if (isNew) {
           maybeShowEnableToast()
         }
         return
@@ -527,6 +591,17 @@ export function BuildNotificationsProvider({
           const resId = (dep as { resourceId?: string }).resourceId
           if (!depId || !resId) continue
           if (activeBuildsRef.current.has(depId)) continue
+          // Same relevance gate as live events - only seed builds the user is
+          // currently looking at, otherwise reloading mid-build on (e.g.) the
+          // Databases page would still flip the favicon orange.
+          if (
+            !isUpdateRelevant(relevanceCtxRef.current, {
+              resourceType,
+              resourceId: resId,
+            })
+          ) {
+            continue
+          }
           activeBuildsRef.current.set(depId, {
             deploymentId: depId,
             resourceId: resId,
@@ -602,32 +677,41 @@ export function BuildNotificationsProvider({
     }
   }, [projectId])
 
-  // Re-sync the favicon whenever the user navigates between relevant and
-  // irrelevant sections. Realtime tracking keeps running globally, but the
-  // visible favicon swap is gated to Sites / Functions pages.
+  // Re-sync the favicon whenever the user navigates between sections (or
+  // between specific resources within a section). Realtime tracking keeps
+  // running globally for already-tracked builds, but the visible favicon swap
+  // is gated to the resource the user is currently looking at - so navigating
+  // from Site A to Site B while A is building should drop A's orange icon,
+  // and a build started on Site A should not show on Site B.
   useEffect(() => {
     if (typeof window === 'undefined') return
-    if (isRelevantRoute) {
-      // Just walked into a relevant section - restore whatever favicon state
-      // matches the current build situation (active builds → orange, recently
-      // finished → keep showing the success/failure flash, otherwise leave it).
-      const desired = lastDesiredFaviconRef.current
-      if (desired) {
-        if (!originalFaviconRef.current) {
-          const current = getCurrentFaviconRef.current()
-          originalFaviconRef.current = current ?? 'default'
-        }
-        setFaviconRef.current(desired)
+    const ctx = relevanceCtxRef.current
+    // Are any currently-tracked builds relevant to the page we just landed on?
+    let hasRelevantActive = false
+    activeBuildsRef.current.forEach((b) => {
+      if (
+        isUpdateRelevant(ctx, {
+          resourceType: b.resourceType,
+          resourceId: b.resourceId,
+        })
+      ) {
+        hasRelevantActive = true
       }
-    } else {
-      // Walked away - put the favicon back to whatever it was before we
-      // started indicating builds, so the user isn't pinged about Sites /
-      // Functions while working in (e.g.) Databases.
-      if (originalFaviconRef.current) {
-        setFaviconRef.current(originalFaviconRef.current)
+    })
+
+    if (ctx.type !== null && hasRelevantActive) {
+      if (!originalFaviconRef.current) {
+        const current = getCurrentFaviconRef.current()
+        originalFaviconRef.current = current ?? 'default'
       }
+      setFaviconRef.current('theme-orange')
+    } else if (originalFaviconRef.current) {
+      // Either we walked away from Sites/Functions entirely, or there's
+      // nothing on this specific page that's still building - put the favicon
+      // back so the user isn't visually pinged about something they can't see.
+      setFaviconRef.current(originalFaviconRef.current)
     }
-  }, [isRelevantRoute])
+  }, [relevanceKey])
 
   return null
 }
