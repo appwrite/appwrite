@@ -62,6 +62,7 @@ class Update extends VarcharUpdate
             ->param('default', null, new Nullable(new Text(0, 0)), 'Default value for column when not provided. Cannot be set when column is required.')
             ->param('size', null, new Nullable(new Range(1, 16381, Validator::TYPE_INTEGER)), 'Maximum size of the varchar column.', true)
             ->param('newKey', null, new Nullable(new Key()), 'New Column Key.', true)
+            ->param('notes', null, new Nullable(new Text(256, 0)), 'Notes for the column.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')

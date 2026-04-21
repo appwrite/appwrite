@@ -14,6 +14,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 
 class Update extends URLUpdate
@@ -60,6 +61,7 @@ class Update extends URLUpdate
             ->param('required', null, new Boolean(), 'Is column required?')
             ->param('default', null, new Nullable(new URL()), 'Default value for column when not provided. Cannot be set when column is required.')
             ->param('newKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'New Column Key.', true, ['dbForProject'])
+            ->param('notes', null, new Nullable(new Text(256, 0)), 'Notes for the column.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
