@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Tasks;
 use Appwrite\SDK\Language\AgentSkills;
 use Appwrite\SDK\Language\Android;
 use Appwrite\SDK\Language\Apple;
+use Appwrite\SDK\Language\ClaudePlugin;
 use Appwrite\SDK\Language\CLI;
 use Appwrite\SDK\Language\CursorPlugin;
 use Appwrite\SDK\Language\Dart;
@@ -450,6 +451,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         break;
                     case 'cursor-plugin':
                         $config = new CursorPlugin();
+                        break;
+                    case 'claude-plugin':
+                        $config = new ClaudePlugin();
                         break;
                     default:
                         throw new \Exception('Language "' . $language['key'] . '" not supported');
