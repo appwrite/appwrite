@@ -652,27 +652,28 @@ export function useSidebarCollapsed(
 
   const updateMutation = useMutation({
     mutationFn: async (value: boolean) => {
-      const currentAccount = queryClient.getQueryData<{
-        prefs?: Record<string, unknown>
-      }>(['account', 'console'])
-      if (!currentAccount) {
+      if (!account) {
         throw new Error('Account data not available')
       }
       return await updateAccountPrefs({
-        ...currentAccount.prefs,
+        ...account.prefs,
         sidebarCollapsed: value,
       })
     },
+    // The auth query key includes consoleImpersonationRevision, so an exact
+    // ['account', 'console'] lookup misses it. Use prefix matching to update
+    // every cached variant optimistically.
     onMutate: async (value) => {
-      const currentAccount = queryClient.getQueryData<{
-        prefs?: Record<string, unknown>
-      }>(['account', 'console'])
-      if (currentAccount) {
-        queryClient.setQueryData(['account', 'console'], {
-          ...currentAccount,
-          prefs: { ...currentAccount.prefs, sidebarCollapsed: value },
-        })
-      }
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: { ...current.prefs, sidebarCollapsed: value },
+              }
+            : current,
+      )
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
