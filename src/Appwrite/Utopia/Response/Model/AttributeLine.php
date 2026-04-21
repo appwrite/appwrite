@@ -18,6 +18,13 @@ class AttributeLine extends Attribute
                 'required' => false,
                 'example' => [[0, 0], [1, 1]]
             ])
+            ->addRule('notes', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Notes for the attribute.',
+                'default' => '',
+                'required' => false,
+                'example' => 'Used for storing user names',
+            ])
         ;
     }
 

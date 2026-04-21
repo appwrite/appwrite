@@ -38,6 +38,13 @@ class ColumnDatetime extends Column
                 'array' => false,
                 'required' => false,
             ])
+            ->addRule('notes', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Notes for the column.',
+                'default' => null,
+                'required' => false,
+                'example' => 'Used for storing user names',
+            ])
         ;
     }
 

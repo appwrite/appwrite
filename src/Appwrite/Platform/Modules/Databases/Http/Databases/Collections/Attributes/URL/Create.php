@@ -16,9 +16,10 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
-use Utopia\Validator\Boolean;
-use Utopia\Validator\Nullable;
 use Utopia\Validator\URL;
+use Utopia\Validator\Nullable;
+use Utopia\Validator\Boolean;
+use Utopia\Validator\Text;
 
 class Create extends Action
 {
@@ -67,6 +68,7 @@ class Create extends Action
             ->param('required', null, new Boolean(), 'Is attribute required?')
             ->param('default', null, new Nullable(new URL()), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
             ->param('array', false, new Boolean(), 'Is attribute an array?', true)
+            ->param('notes', null, new Nullable(new Text(256, 0)), 'Notes for the attribute.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForDatabase')
@@ -82,7 +84,7 @@ class Create extends Action
         ?bool          $required,
         ?string        $default,
         bool           $array,
-        UtopiaResponse $response,
+        ?string $notes, UtopiaResponse $response,
         Database       $dbForProject,
         EventDatabase  $queueForDatabase,
         Event          $queueForEvents,
@@ -96,6 +98,7 @@ class Create extends Action
             'default' => $default,
             'array' => $array,
             'format' => APP_DATABASE_ATTRIBUTE_URL,
+            'notes' => $notes,
         ]), $response, $dbForProject, $queueForDatabase, $queueForEvents, $authorization);
 
         $response

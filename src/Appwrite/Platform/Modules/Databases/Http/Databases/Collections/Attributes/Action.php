@@ -321,6 +321,7 @@ abstract class Action extends UtopiaAction
         $filters = $attribute->getAttribute('filters', []); // filters are hidden from the endpoint
         $default = $attribute->getAttribute('default');
         $options = $attribute->getAttribute('options', []);
+        $notes = $attribute->getAttribute('notes', '');
 
         if (in_array($type, Database::SPATIAL_TYPES) && !$dbForProject->getAdapter()->getSupportForSpatialAttributes()) {
             throw new Exception($this->getSpatialTypeNotSupportedException(), params: [$type]);
@@ -381,6 +382,7 @@ abstract class Action extends UtopiaAction
                 'formatOptions' => $formatOptions,
                 'filters' => $filters,
                 'options' => $options,
+                'notes' => $notes,
             ]);
 
             if (
@@ -437,6 +439,7 @@ abstract class Action extends UtopiaAction
                     'formatOptions' => $formatOptions,
                     'filters' => $filters,
                     'options' => $options,
+                    'notes' => $notes,
                 ]);
 
                 $dbForProject->checkAttribute($relatedCollection, $twoWayAttribute);
@@ -488,7 +491,7 @@ abstract class Action extends UtopiaAction
         return $attribute;
     }
 
-    protected function updateAttribute(string $databaseId, string $collectionId, string $key, Database $dbForProject, Event $queueForEvents, Authorization $authorization, string $type, ?int $size = null, ?string $filter = null, string|bool|int|float|array|null $default = null, ?bool $required = null, int|float|null $min = null, int|float|null $max = null, ?array $elements = null, array $options = [], ?string $newKey = null): Document
+    protected function updateAttribute(string $databaseId, string $collectionId, string $key, Database $dbForProject, Event $queueForEvents, Authorization $authorization, string $type, ?int $size = null, ?string $filter = null, string|bool|int|float|array|null $default = null, ?bool $required = null, int|float|null $min = null, int|float|null $max = null, ?array $elements = null, array $options = [], ?string $newKey = null, ?string $notes = null): Document
     {
         $db = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -532,7 +535,8 @@ abstract class Action extends UtopiaAction
 
         $attribute
             ->setAttribute('default', $default)
-            ->setAttribute('required', $required);
+            ->setAttribute('required', $required)
+            ->setAttribute('notes', $notes);
 
         if (!empty($size)) {
             $attribute->setAttribute('size', $size);

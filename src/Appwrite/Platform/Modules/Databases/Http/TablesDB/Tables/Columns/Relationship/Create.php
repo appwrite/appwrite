@@ -14,6 +14,7 @@ use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\WhiteList;
+use Utopia\Validator\Text;
 
 class Create extends RelationshipCreate
 {
@@ -69,6 +70,7 @@ class Create extends RelationshipCreate
                 Database::RELATION_MUTATE_RESTRICT,
                 Database::RELATION_MUTATE_SET_NULL
             ], true), 'Constraints option', true)
+            ->param('notes', null, new Nullable(new Text(256, 0)), 'Notes for the column.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForDatabase')

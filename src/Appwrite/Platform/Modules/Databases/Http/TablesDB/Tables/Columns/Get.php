@@ -11,7 +11,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
-
 class Get extends AttributesGet
 {
     public static function getName(): string

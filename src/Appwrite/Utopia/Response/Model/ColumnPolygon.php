@@ -18,6 +18,13 @@ class ColumnPolygon extends Column
                 'required' => false,
                 'example' => [[[0, 0], [0, 10]], [[10, 10], [0, 0]]]
             ])
+            ->addRule('notes', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Notes for the column.',
+                'default' => null,
+                'required' => false,
+                'example' => 'Used for storing user names',
+            ])
         ;
     }
 

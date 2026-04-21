@@ -48,6 +48,13 @@ class AttributeRelationship extends Attribute
                 'default' => '',
                 'example' => 'parent|child',
             ])
+            ->addRule('notes', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Notes for the attribute.',
+                'default' => '',
+                'required' => false,
+                'example' => 'Used for storing user names',
+            ])
         ;
     }
 

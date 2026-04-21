@@ -46,6 +46,13 @@ class AttributeInteger extends Attribute
                 'required' => false,
                 'example' => 10,
             ])
+            ->addRule('notes', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Notes for the attribute.',
+                'default' => '',
+                'required' => false,
+                'example' => 'Used for storing user names',
+            ])
         ;
     }
 

@@ -73,6 +73,7 @@ class Create extends Action
             ->param('default', null, new Nullable(new Text(0, 0)), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
             ->param('array', false, new Boolean(), 'Is attribute an array?', true)
             ->param('encrypt', false, new Boolean(), 'Toggle encryption for the attribute. Encryption enhances security by not storing any plain text values in the database. However, encrypted attributes cannot be queried.', true)
+            ->param('notes', null, new Nullable(new Text(256, 0)), 'Notes for the column.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForDatabase')
@@ -91,6 +92,7 @@ class Create extends Action
         ?string        $default,
         bool           $array,
         bool           $encrypt,
+        ?string        $notes,
         UtopiaResponse $response,
         Database       $dbForProject,
         EventDatabase  $queueForDatabase,
@@ -131,6 +133,7 @@ class Create extends Action
                 'default' => $default,
                 'array' => $array,
                 'filters' => $filters,
+                'notes' => $notes
             ]),
             $response,
             $dbForProject,

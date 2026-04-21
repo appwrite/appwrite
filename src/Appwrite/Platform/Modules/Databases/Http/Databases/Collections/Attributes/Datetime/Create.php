@@ -19,6 +19,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Text;
 
 class Create extends Action
 {
@@ -67,6 +68,7 @@ class Create extends Action
             ->param('required', null, new Boolean(), 'Is attribute required?')
             ->param('default', null, fn (Database $dbForProject) => new Nullable(new DatetimeValidator($dbForProject->getAdapter()->getMinDateTime(), $dbForProject->getAdapter()->getMaxDateTime())), 'Default value for the attribute in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. Cannot be set when attribute is required.', true, ['dbForProject'])
             ->param('array', false, new Boolean(), 'Is attribute an array?', true)
+            ->param('notes', null, new Nullable(new Text(256, 0)), 'Notes for the attribute.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForDatabase')
@@ -75,7 +77,7 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, ?string $notes, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $authorization): void
     {
         $attribute = $this->createAttribute(
             $databaseId,
@@ -88,6 +90,7 @@ class Create extends Action
                 'default' => $default,
                 'array' => $array,
                 'filters' => ['datetime'],
+            'notes' => $notes,
             ]),
             $response,
             $dbForProject,

@@ -17,9 +17,10 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
-use Utopia\Validator\Boolean;
-use Utopia\Validator\Nullable;
 use Utopia\Validator\WhiteList;
+use Utopia\Validator\Nullable;
+use Utopia\Validator\Boolean;
+use Utopia\Validator\Text;
 
 class Create extends Action
 {
@@ -79,6 +80,7 @@ class Create extends Action
                 Database::RELATION_MUTATE_RESTRICT,
                 Database::RELATION_MUTATE_SET_NULL
             ], true), 'Constraints option', true)
+            ->param('notes', null, new Nullable(new Text(256, 0)), 'Notes for the attribute.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForDatabase')
@@ -87,7 +89,7 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $relatedCollectionId, string $type, bool $twoWay, ?string $key, ?string $twoWayKey, string $onDelete, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, string $relatedCollectionId, string $type, bool $twoWay, ?string $key, ?string $twoWayKey, string $onDelete, ?string $notes, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $authorization): void
     {
         if (!$dbForProject->getAdapter()->getSupportForRelationships()) {
             throw new Exception(Exception::GENERAL_FEATURE_UNSUPPORTED, 'Relationships are not supported by this database.');
@@ -152,6 +154,7 @@ class Create extends Action
             'default' => null,
             'array' => false,
             'filters' => [],
+            'notes' => $notes,
             'options' => [
                 'relatedCollection' => $relatedCollectionId,
                 'relationType' => $type,

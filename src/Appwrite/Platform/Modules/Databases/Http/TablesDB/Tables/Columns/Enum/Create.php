@@ -60,6 +60,7 @@ class Create extends EnumCreate
             ->param('required', null, new Boolean(), 'Is column required?')
             ->param('default', null, new Nullable(new Text(0)), 'Default value for column when not provided. Cannot be set when column is required.', true)
             ->param('array', false, new Boolean(), 'Is column an array?', true)
+            ->param('notes', null, new Nullable(new Text(256, 0)), 'Notes for the column.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForDatabase')

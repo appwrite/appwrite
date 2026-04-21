@@ -14,6 +14,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Text;
 
 class Create extends PolygonCreate
 {
@@ -57,6 +58,7 @@ class Create extends PolygonCreate
             ->param('key', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Column Key.', false, ['dbForProject'])
             ->param('required', null, new Boolean(), 'Is column required?')
             ->param('default', null, new Nullable(new Spatial(Database::VAR_POLYGON)), 'Default value for column when not provided, three-dimensional array where the outer array holds one or more linear rings, [[[longitude, latitude], …], …], the first ring is the exterior boundary, any additional rings are interior holes, and each ring must start and end with the same coordinate pair. Cannot be set when column is required.', true)
+            ->param('notes', null, new Nullable(new Text(256, 0)), 'Notes for the column.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForDatabase')

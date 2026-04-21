@@ -70,6 +70,7 @@ class Update extends Action
             ->param('default', null, new Nullable(new Text(0, 0)), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
             ->param('size', null, new Nullable(new Range(1, APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH, Validator::TYPE_INTEGER)), 'Maximum size of the string attribute.', true)
             ->param('newKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'New Attribute Key.', true, ['dbForProject'])
+            ->param('notes', null, new Nullable(new Text(256, 0)), 'Notes for the attribute.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
@@ -85,6 +86,7 @@ class Update extends Action
         ?string        $default,
         ?int           $size,
         ?string        $newKey,
+        ?string        $notes,
         UtopiaResponse $response,
         Database       $dbForProject,
         Event          $queueForEvents,
@@ -101,7 +103,8 @@ class Update extends Action
             size: $size,
             default: $default,
             required: $required,
-            newKey: $newKey
+            newKey: $newKey,
+            notes: $notes
         );
 
         $response

@@ -36,6 +36,13 @@ class AttributeURL extends Attribute
                 'required' => false,
                 'example' => 'http://example.com',
             ])
+            ->addRule('notes', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Notes for the attribute.',
+                'default' => '',
+                'required' => false,
+                'example' => 'Used for storing user names',
+            ])
         ;
     }
 

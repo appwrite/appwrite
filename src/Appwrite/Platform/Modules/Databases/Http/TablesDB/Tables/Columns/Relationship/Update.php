@@ -13,6 +13,7 @@ use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
 class Update extends RelationshipUpdate
@@ -62,6 +63,7 @@ class Update extends RelationshipUpdate
                 Database::RELATION_MUTATE_SET_NULL
             ], true)), 'Constraints option', true)
             ->param('newKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'New Column Key.', true, ['dbForProject'])
+            ->param('notes', null, new Nullable(new Text(256, 0)), 'Notes for the column.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')

@@ -275,6 +275,17 @@ return [
                 'array' => false,
                 'filters' => ['json'],
             ],
+            [
+                '$id' => ID::custom('notes'),
+                'type' => Database::VAR_STRING,
+                'size' => 256,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+                'format' => ''
+            ]
         ],
         'indexes' => [
             [

@@ -17,6 +17,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 
 class Update extends Action
@@ -67,6 +68,7 @@ class Update extends Action
             ->param('required', null, new Boolean(), 'Is attribute required?')
             ->param('default', null, new Nullable(new URL()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
             ->param('newKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'New Attribute Key.', true, ['dbForProject'])
+            ->param('notes', null, new Nullable(new Text(256, 0)), 'Notes for the attribute.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
@@ -81,6 +83,7 @@ class Update extends Action
         ?bool          $required,
         ?string        $default,
         ?string        $newKey,
+        ?string        $notes,
         UtopiaResponse $response,
         Database       $dbForProject,
         Event          $queueForEvents,
@@ -97,7 +100,8 @@ class Update extends Action
             filter: APP_DATABASE_ATTRIBUTE_URL,
             default: $default,
             required: $required,
-            newKey: $newKey
+            newKey: $newKey,
+            notes: $notes
         );
 
         $response

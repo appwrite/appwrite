@@ -14,6 +14,7 @@ use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Text;
 
 class Create extends IntegerCreate
 {
@@ -60,6 +61,7 @@ class Create extends IntegerCreate
             ->param('max', null, new Nullable(new Integer(false, 64)), 'Maximum value', true)
             ->param('default', null, new Nullable(new Integer(false, 64)), 'Default value. Cannot be set when column is required.', true)
             ->param('array', false, new Boolean(), 'Is column an array?', true)
+            ->param('notes', null, new Nullable(new Text(256, 0)), 'Notes for the column.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForDatabase')

@@ -15,6 +15,7 @@ use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\FloatValidator;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Text;
 
 class Update extends FloatUpdate
 {
@@ -62,6 +63,7 @@ class Update extends FloatUpdate
             ->param('max', null, new Nullable(new FloatValidator()), 'Maximum value', true)
             ->param('default', null, new Nullable(new FloatValidator()), 'Default value. Cannot be set when required.')
             ->param('newKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'New Column Key.', true, ['dbForProject'])
+            ->param('notes', null, new Nullable(new Text(256, 0)), 'Notes for the column.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
