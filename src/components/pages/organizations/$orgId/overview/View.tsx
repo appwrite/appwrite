@@ -151,6 +151,7 @@ import {
   type CanonicalPlanId,
 } from '@/lib/utils/plan-filter'
 import { BillingTab } from '../billing/BillingTab'
+import { ReadonlyOrgBanner } from '../billing/ReadonlyOrgBanner'
 import { ComplianceTab } from '../settings/ComplianceTab'
 import { View as DomainsView } from '../domains/View'
 import { EnterpriseSuccessManager } from '@/components/pages/projects/$projectId/shared/EnterpriseSuccessManager'
@@ -415,7 +416,12 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
   // Top-level tab vs role: default index is "projects" in the URL, but hidden tabs (e.g. billing-only) must land on first allowed tab
   useEffect(() => {
-    if (!features.orgRoles || !orgId || activeTab === null || orgScopesLoading) {
+    if (
+      !features.orgRoles ||
+      !orgId ||
+      activeTab === null ||
+      orgScopesLoading
+    ) {
       return
     }
 
@@ -945,9 +951,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
   const canPinProjectsResult = canPinProjects(access, features)
   const canReorderPinned =
-    canPinProjectsResult &&
-    !searchQuery.trim() &&
-    pinnedProjects.length > 1
+    canPinProjectsResult && !searchQuery.trim() && pinnedProjects.length > 1
   const canManageProjects = canCreateProject(access, features)
   const showProjectSettingsTab = canShowProjectSettings(access, features)
 
@@ -1038,11 +1042,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     e.preventDefault()
     setPinnedDragOverIndex(null)
     setPinnedDraggingIndex(null)
-    if (
-      !canReorderPinned ||
-      !orgTeamId ||
-      updateTeamPrefsMutation.isPending
-    )
+    if (!canReorderPinned || !orgTeamId || updateTeamPrefsMutation.isPending)
       return
     const raw = e.dataTransfer.getData('application/json')
     if (!raw) return
@@ -1139,8 +1139,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   // listing's total is filtered by the search and would otherwise drift).
   const lastUnfilteredTotalRef = useRef(0)
   if (!searchQuery && activeProjectsData?.total != null) {
-    lastUnfilteredTotalRef.current =
-      activeProjectsData.total + pinnedIds.length
+    lastUnfilteredTotalRef.current = activeProjectsData.total + pinnedIds.length
   }
   const totalProjectsCount = !searchQuery
     ? (activeProjectsData?.total ?? 0) + pinnedIds.length
@@ -1810,6 +1809,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
             return null
           })()}
 
+        {/* Read-only organization banner (unpaid invoices, suspended, etc.) */}
+        <ReadonlyOrgBanner orgId={orgId} />
+
         {/* Main Content */}
         <div className="flex-1">
           <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6">
@@ -1976,9 +1978,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                       <ProjectContextMenu
                                         key={project.$id}
                                         project={project}
-                                        showSettingsTab={
-                                          showProjectSettingsTab
-                                        }
+                                        showSettingsTab={showProjectSettingsTab}
                                         canDeleteProject={canManageProjects}
                                         onProjectDeleted={handleProjectDeleted}
                                       >
@@ -1996,10 +1996,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                           onDragOver={
                                             canReorderPinned
                                               ? (e) =>
-                                                  handlePinnedDragOver(
-                                                    e,
-                                                    index,
-                                                  )
+                                                  handlePinnedDragOver(e, index)
                                               : undefined
                                           }
                                           onDragLeave={
@@ -2099,8 +2096,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                           handlePinnedDragStart(
                                                             e,
                                                             index,
-                                                            project.name ??
-                                                              '',
+                                                            project.name ?? '',
                                                           )
                                                         }
                                                         onDragEnd={
@@ -2739,250 +2735,193 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                         </TableRow>
                                       </TableHeader>
                                       <TableBody>
-                                        {memberships.map((member: TeamMember) => {
-                                          const {
-                                            Icon: RoleIcon,
-                                            label: roleLabel,
-                                          } = orgMembershipRoleDisplay(member.role)
-                                          return (
-                                            <TableRow
-                                              key={member.$id}
-                                              className="border-b border-border/50 hover:bg-muted/30 transition-colors"
-                                            >
-                                              <TableCell className="px-4 py-3">
-                                                <div className="flex items-center gap-3 min-w-0">
-                                                  <InitialsAvatar
-                                                    name={
-                                                      member.userName ||
-                                                      member.userEmail
-                                                    }
-                                                    size="sm"
-                                                    className="shrink-0"
-                                                  />
-                                                  <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2 flex-wrap">
-                                                      <p className="truncate text-[13px] font-medium text-foreground">
-                                                        {member.userName ||
-                                                          member.userEmail}
-                                                      </p>
-                                                      {member.status ===
-                                                        'pending' && (
-                                                        <Badge
-                                                          variant="secondary"
-                                                          className="text-[11px] font-medium border px-2 py-0.5 shrink-0"
-                                                        >
-                                                          Pending
-                                                        </Badge>
-                                                      )}
-                                                    </div>
-                                                    <div className="mt-0.5">
-                                                      <p className="truncate text-[12px] text-muted-foreground">
-                                                        {member.userEmail}
-                                                      </p>
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                              </TableCell>
-                                              {features.orgRoles && (
+                                        {memberships.map(
+                                          (member: TeamMember) => {
+                                            const {
+                                              Icon: RoleIcon,
+                                              label: roleLabel,
+                                            } = orgMembershipRoleDisplay(
+                                              member.role,
+                                            )
+                                            return (
+                                              <TableRow
+                                                key={member.$id}
+                                                className="border-b border-border/50 hover:bg-muted/30 transition-colors"
+                                              >
                                                 <TableCell className="px-4 py-3">
-                                                  <div className="flex items-center justify-center">
-                                                    <Badge
-                                                      variant="secondary"
-                                                      className={cn(
-                                                        'inline-flex items-center gap-1 text-[11px] font-medium border px-2 py-0.5',
-                                                      )}
-                                                    >
-                                                      <RoleIcon
-                                                        className="h-3 w-3 shrink-0"
-                                                        aria-hidden
-                                                      />
-                                                      {roleLabel}
-                                                    </Badge>
+                                                  <div className="flex items-center gap-3 min-w-0">
+                                                    <InitialsAvatar
+                                                      name={
+                                                        member.userName ||
+                                                        member.userEmail
+                                                      }
+                                                      size="sm"
+                                                      className="shrink-0"
+                                                    />
+                                                    <div className="flex-1 min-w-0">
+                                                      <div className="flex items-center gap-2 flex-wrap">
+                                                        <p className="truncate text-[13px] font-medium text-foreground">
+                                                          {member.userName ||
+                                                            member.userEmail}
+                                                        </p>
+                                                        {member.status ===
+                                                          'pending' && (
+                                                          <Badge
+                                                            variant="secondary"
+                                                            className="text-[11px] font-medium border px-2 py-0.5 shrink-0"
+                                                          >
+                                                            Pending
+                                                          </Badge>
+                                                        )}
+                                                      </div>
+                                                      <div className="mt-0.5">
+                                                        <p className="truncate text-[12px] text-muted-foreground">
+                                                          {member.userEmail}
+                                                        </p>
+                                                      </div>
+                                                    </div>
                                                   </div>
                                                 </TableCell>
-                                              )}
-                                              {features.accountMfa && (
+                                                {features.orgRoles && (
+                                                  <TableCell className="px-4 py-3">
+                                                    <div className="flex items-center justify-center">
+                                                      <Badge
+                                                        variant="secondary"
+                                                        className={cn(
+                                                          'inline-flex items-center gap-1 text-[11px] font-medium border px-2 py-0.5',
+                                                        )}
+                                                      >
+                                                        <RoleIcon
+                                                          className="h-3 w-3 shrink-0"
+                                                          aria-hidden
+                                                        />
+                                                        {roleLabel}
+                                                      </Badge>
+                                                    </div>
+                                                  </TableCell>
+                                                )}
+                                                {features.accountMfa && (
+                                                  <TableCell className="px-4 py-3 hidden sm:table-cell">
+                                                    <div className="flex items-center justify-center">
+                                                      {member.status ===
+                                                      'pending' ? (
+                                                        <span className="text-muted-foreground/50 text-[12px]">
+                                                          -
+                                                        </span>
+                                                      ) : member.mfaEnabled ? (
+                                                        <Tooltip>
+                                                          <TooltipTrigger
+                                                            asChild
+                                                          >
+                                                            <div className="flex items-center justify-center">
+                                                              <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                                            </div>
+                                                          </TooltipTrigger>
+                                                          <TooltipContent>
+                                                            <p className="text-xs">
+                                                              Multi-factor
+                                                              authentication
+                                                              enabled
+                                                            </p>
+                                                          </TooltipContent>
+                                                        </Tooltip>
+                                                      ) : (
+                                                        <Tooltip>
+                                                          <TooltipTrigger
+                                                            asChild
+                                                          >
+                                                            <div className="flex items-center justify-center">
+                                                              <XCircle className="h-4 w-4 text-muted-foreground/40" />
+                                                            </div>
+                                                          </TooltipTrigger>
+                                                          <TooltipContent>
+                                                            <p className="text-xs">
+                                                              Multi-factor
+                                                              authentication not
+                                                              enabled
+                                                            </p>
+                                                          </TooltipContent>
+                                                        </Tooltip>
+                                                      )}
+                                                    </div>
+                                                  </TableCell>
+                                                )}
                                                 <TableCell className="px-4 py-3 hidden sm:table-cell">
-                                                  <div className="flex items-center justify-center">
+                                                  <div className="text-right">
                                                     {member.status ===
                                                     'pending' ? (
-                                                      <span className="text-muted-foreground/50 text-[12px]">
-                                                         - 
+                                                      <span className="text-[12px] text-muted-foreground/70 italic">
+                                                        Invited
                                                       </span>
-                                                    ) : member.mfaEnabled ? (
-                                                      <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                          <div className="flex items-center justify-center">
-                                                            <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
-                                                          </div>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>
-                                                          <p className="text-xs">
-                                                            Multi-factor
-                                                            authentication
-                                                            enabled
-                                                          </p>
-                                                        </TooltipContent>
-                                                      </Tooltip>
                                                     ) : (
-                                                      <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                          <div className="flex items-center justify-center">
-                                                            <XCircle className="h-4 w-4 text-muted-foreground/40" />
-                                                          </div>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>
-                                                          <p className="text-xs">
-                                                            Multi-factor
-                                                            authentication not
-                                                            enabled
-                                                          </p>
-                                                        </TooltipContent>
-                                                      </Tooltip>
+                                                      <DateTooltip
+                                                        date={
+                                                          new Date(
+                                                            member.joinedAt,
+                                                          )
+                                                        }
+                                                        className="text-[12px] text-muted-foreground font-mono"
+                                                      />
                                                     )}
                                                   </div>
                                                 </TableCell>
-                                              )}
-                                              <TableCell className="px-4 py-3 hidden sm:table-cell">
-                                                <div className="text-right">
-                                                  {member.status ===
-                                                  'pending' ? (
-                                                    <span className="text-[12px] text-muted-foreground/70 italic">
-                                                      Invited
-                                                    </span>
-                                                  ) : (
-                                                    <DateTooltip
-                                                      date={
-                                                        new Date(
-                                                          member.joinedAt,
-                                                        )
-                                                      }
-                                                      className="text-[12px] text-muted-foreground font-mono"
-                                                    />
-                                                  )}
-                                                </div>
-                                              </TableCell>
-                                              <TableCell className="px-4 py-3">
-                                                <div className="flex items-center justify-end">
-                                                  {member.status ===
-                                                  'pending' ? (
-                                                    <DropdownMenu>
-                                                      <DropdownMenuTrigger
-                                                        asChild
-                                                      >
-                                                        <button className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
-                                                          <MoreHorizontal className="h-4 w-4" />
-                                                        </button>
-                                                      </DropdownMenuTrigger>
-                                                      <DropdownMenuContent
-                                                        align="end"
-                                                        className="w-48"
-                                                      >
-                                                        <DropdownMenuItem
-                                                          onClick={async () => {
-                                                            try {
-                                                              const roles =
-                                                                member.roles &&
-                                                                member.roles
-                                                                  .length > 0
-                                                                  ? member.roles
-                                                                  : [
-                                                                      member.role,
-                                                                    ]
-                                                              await resendInviteMutation.mutateAsync(
-                                                                {
-                                                                  membershipId:
-                                                                    member.membershipId ||
-                                                                    member.$id,
-                                                                  email:
-                                                                    member.userEmail,
-                                                                  roles,
-                                                                },
-                                                              )
-                                                              toast.success(
-                                                                'Invitation resent successfully',
-                                                              )
-                                                            } catch (error: unknown) {
-                                                              toast.error(
-                                                                error?.message ||
-                                                                  'Failed to resend invitation',
-                                                              )
+                                                <TableCell className="px-4 py-3">
+                                                  <div className="flex items-center justify-end">
+                                                    {member.status ===
+                                                    'pending' ? (
+                                                      <DropdownMenu>
+                                                        <DropdownMenuTrigger
+                                                          asChild
+                                                        >
+                                                          <button className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
+                                                            <MoreHorizontal className="h-4 w-4" />
+                                                          </button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent
+                                                          align="end"
+                                                          className="w-48"
+                                                        >
+                                                          <DropdownMenuItem
+                                                            onClick={async () => {
+                                                              try {
+                                                                const roles =
+                                                                  member.roles &&
+                                                                  member.roles
+                                                                    .length > 0
+                                                                    ? member.roles
+                                                                    : [
+                                                                        member.role,
+                                                                      ]
+                                                                await resendInviteMutation.mutateAsync(
+                                                                  {
+                                                                    membershipId:
+                                                                      member.membershipId ||
+                                                                      member.$id,
+                                                                    email:
+                                                                      member.userEmail,
+                                                                    roles,
+                                                                  },
+                                                                )
+                                                                toast.success(
+                                                                  'Invitation resent successfully',
+                                                                )
+                                                              } catch (error: unknown) {
+                                                                toast.error(
+                                                                  error?.message ||
+                                                                    'Failed to resend invitation',
+                                                                )
+                                                              }
+                                                            }}
+                                                            disabled={
+                                                              resendInviteMutation.isPending
                                                             }
-                                                          }}
-                                                          disabled={
-                                                            resendInviteMutation.isPending
-                                                          }
-                                                        >
-                                                          <Mail className="mr-2 h-4 w-4" />
-                                                          {resendInviteMutation.isPending
-                                                            ? 'Resending...'
-                                                            : 'Resend invitation'}
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuSeparator />
-                                                        <DropdownMenuItem
-                                                          onClick={() => {
-                                                            setSelectedMember(
-                                                              member,
-                                                            )
-                                                            setRemoveMemberDialogOpen(
-                                                              true,
-                                                            )
-                                                          }}
-                                                          className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
-                                                        >
-                                                          <Trash2 className="mr-2 h-4 w-4" />
-                                                          Remove from team
-                                                        </DropdownMenuItem>
-                                                      </DropdownMenuContent>
-                                                    </DropdownMenu>
-                                                  ) : (
-                                                    <DropdownMenu>
-                                                      <DropdownMenuTrigger
-                                                        asChild
-                                                      >
-                                                        <button className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
-                                                          <MoreHorizontal className="h-4 w-4" />
-                                                        </button>
-                                                      </DropdownMenuTrigger>
-                                                      <DropdownMenuContent
-                                                        align="end"
-                                                        className="w-48"
-                                                      >
-                                                        {canInviteOrgMember(
-                                                          access,
-                                                          features,
-                                                        ) && (
-                                                          <>
-                                                            <DropdownMenuItem
-                                                              onClick={() => {
-                                                                setSelectedMember(
-                                                                  member,
-                                                                )
-                                                                const role =
-                                                                  member.role as
-                                                                    | 'owner'
-                                                                    | 'developer'
-                                                                    | 'editor'
-                                                                    | 'analyst'
-                                                                    | 'billing'
-                                                                setSelectedRole(
-                                                                  role,
-                                                                )
-                                                                setUpdateRoleDialogOpen(
-                                                                  true,
-                                                                )
-                                                              }}
-                                                            >
-                                                              <UserCog className="mr-2 h-4 w-4" />
-                                                              Update role
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuSeparator />
-                                                          </>
-                                                        )}
-                                                        {canInviteOrgMember(
-                                                          access,
-                                                          features,
-                                                        ) && (
+                                                          >
+                                                            <Mail className="mr-2 h-4 w-4" />
+                                                            {resendInviteMutation.isPending
+                                                              ? 'Resending...'
+                                                              : 'Resend invitation'}
+                                                          </DropdownMenuItem>
+                                                          <DropdownMenuSeparator />
                                                           <DropdownMenuItem
                                                             onClick={() => {
                                                               setSelectedMember(
@@ -2997,15 +2936,80 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                             <Trash2 className="mr-2 h-4 w-4" />
                                                             Remove from team
                                                           </DropdownMenuItem>
-                                                        )}
-                                                      </DropdownMenuContent>
-                                                    </DropdownMenu>
-                                                  )}
-                                                </div>
-                                              </TableCell>
-                                            </TableRow>
-                                          )
-                                        })}
+                                                        </DropdownMenuContent>
+                                                      </DropdownMenu>
+                                                    ) : (
+                                                      <DropdownMenu>
+                                                        <DropdownMenuTrigger
+                                                          asChild
+                                                        >
+                                                          <button className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
+                                                            <MoreHorizontal className="h-4 w-4" />
+                                                          </button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent
+                                                          align="end"
+                                                          className="w-48"
+                                                        >
+                                                          {canInviteOrgMember(
+                                                            access,
+                                                            features,
+                                                          ) && (
+                                                            <>
+                                                              <DropdownMenuItem
+                                                                onClick={() => {
+                                                                  setSelectedMember(
+                                                                    member,
+                                                                  )
+                                                                  const role =
+                                                                    member.role as
+                                                                      | 'owner'
+                                                                      | 'developer'
+                                                                      | 'editor'
+                                                                      | 'analyst'
+                                                                      | 'billing'
+                                                                  setSelectedRole(
+                                                                    role,
+                                                                  )
+                                                                  setUpdateRoleDialogOpen(
+                                                                    true,
+                                                                  )
+                                                                }}
+                                                              >
+                                                                <UserCog className="mr-2 h-4 w-4" />
+                                                                Update role
+                                                              </DropdownMenuItem>
+                                                              <DropdownMenuSeparator />
+                                                            </>
+                                                          )}
+                                                          {canInviteOrgMember(
+                                                            access,
+                                                            features,
+                                                          ) && (
+                                                            <DropdownMenuItem
+                                                              onClick={() => {
+                                                                setSelectedMember(
+                                                                  member,
+                                                                )
+                                                                setRemoveMemberDialogOpen(
+                                                                  true,
+                                                                )
+                                                              }}
+                                                              className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
+                                                            >
+                                                              <Trash2 className="mr-2 h-4 w-4" />
+                                                              Remove from team
+                                                            </DropdownMenuItem>
+                                                          )}
+                                                        </DropdownMenuContent>
+                                                      </DropdownMenu>
+                                                    )}
+                                                  </div>
+                                                </TableCell>
+                                              </TableRow>
+                                            )
+                                          },
+                                        )}
                                       </TableBody>
                                     </Table>
                                   </div>
