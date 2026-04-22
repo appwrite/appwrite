@@ -114,7 +114,14 @@ export interface Invoice {
   invoiceNumber: string
   dueDate: string
   paidDate?: string
-  status: 'paid' | 'pending' | 'overdue' | 'failed' | 'requires_authentication'
+  status:
+    | 'paid'
+    | 'pending'
+    | 'due'
+    | 'overdue'
+    | 'failed'
+    | 'cancelled'
+    | 'requires_authentication'
   amount: number
   currency: string
   downloadUrl?: string

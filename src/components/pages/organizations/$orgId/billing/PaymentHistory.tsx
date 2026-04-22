@@ -48,24 +48,37 @@ const ITEMS_PER_PAGE = 5
  * Map API Invoice model to component Invoice interface
  */
 function mapApiInvoiceToComponent(apiInvoice: Models.Invoice): Invoice {
-  // Map API status to component status
-  // API status can be: 'succeeded', 'pending', 'failed', 'overdue',
-  // 'requires_authentication', 'requires_action', etc.
-  let status: Invoice['status'] = 'pending'
+  // API statuses: succeeded, pending, due, requires_authentication, failed,
+  // cancelled. 'paid' and 'requires_action' are accepted aliases from older
+  // responses / Stripe naming. 'overdue' is not returned by the API but is
+  // kept as a valid component status for UI-derived overdue rendering.
+  let status: Invoice['status']
   const apiStatus = apiInvoice.status?.toLowerCase() || ''
-  if (apiStatus === 'succeeded' || apiStatus === 'paid') {
-    status = 'paid'
-  } else if (
-    apiStatus === 'requires_authentication' ||
-    apiStatus === 'requires_action'
-  ) {
-    status = 'requires_authentication'
-  } else if (apiStatus === 'failed') {
-    status = 'failed'
-  } else if (apiStatus === 'overdue') {
-    status = 'overdue'
-  } else {
-    status = 'pending'
+  switch (apiStatus) {
+    case 'succeeded':
+    case 'paid':
+      status = 'paid'
+      break
+    case 'requires_authentication':
+    case 'requires_action':
+      status = 'requires_authentication'
+      break
+    case 'failed':
+      status = 'failed'
+      break
+    case 'cancelled':
+      status = 'cancelled'
+      break
+    case 'due':
+      status = 'due'
+      break
+    case 'overdue':
+      status = 'overdue'
+      break
+    case 'pending':
+    default:
+      status = 'pending'
+      break
   }
 
   // Generate invoice number from aggregationId or $id
