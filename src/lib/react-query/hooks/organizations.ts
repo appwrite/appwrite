@@ -940,24 +940,7 @@ export async function validateOrganization(
   if (!organizationId) {
     throw new Error('Organization ID is required')
   }
-  try {
-    // Try billing service first (if it exists)
-    if ((sdk.forConsole as unknown).billing?.validateOrganization) {
-      return await (sdk.forConsole as unknown).billing.validateOrganization(
-        organizationId,
-        invites,
-      )
-    }
-    // Fallback to organizations service
-    if ((sdk.forConsole.organizations as unknown).validateOrganization) {
-      return await (
-        sdk.forConsole.organizations as unknown
-      ).validateOrganization(organizationId, invites)
-    }
-    throw new Error('validateOrganization method not available')
-  } catch (error) {
-    throw error
-  }
+  return sdk.forConsole.organizations.validatePayment(organizationId, invites)
 }
 
 /**
@@ -1654,7 +1637,12 @@ export function organizationPaymentMethodQueryOptions(
   paymentMethodId: string | null | undefined,
 ) {
   return queryOptions({
-    queryKey: ['payment-method', 'organization', organizationId, paymentMethodId],
+    queryKey: [
+      'payment-method',
+      'organization',
+      organizationId,
+      paymentMethodId,
+    ],
     queryFn: () =>
       fetchOrganizationPaymentMethod(organizationId!, paymentMethodId!),
     enabled: !!organizationId && !!paymentMethodId,
@@ -1663,8 +1651,7 @@ export function organizationPaymentMethodQueryOptions(
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
-    gcTime:
-      organizationId && paymentMethodId ? 5 * 60 * 1000 : 0,
+    gcTime: organizationId && paymentMethodId ? 5 * 60 * 1000 : 0,
   })
 }
 
