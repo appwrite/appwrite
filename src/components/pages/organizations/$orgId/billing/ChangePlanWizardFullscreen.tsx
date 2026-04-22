@@ -406,31 +406,11 @@ export function ChangePlanWizardFullscreen() {
         })
       }
 
-      // Validate the organization after payment (needed regardless of 3DS).
-      //
-      // On the 3DS path there's a brief window where Stripe has accepted the
-      // authentication but our backend hasn't processed the webhook yet —
-      // /validate sees the invoice still pending and rejects with "unable to
-      // validate payment". Retry a couple of times with a short backoff so
-      // the happy path keeps working without user action.
-      const validateDelays = needsAction ? [0, 1000, 2000, 3000] : [0]
-      let validateError: unknown = null
-      for (let i = 0; i < validateDelays.length; i++) {
-        if (validateDelays[i] > 0) {
-          await new Promise((resolve) => setTimeout(resolve, validateDelays[i]))
-        }
-        try {
-          await validateOrganizationMutation.mutateAsync({
-            organizationId: orgId,
-            invites: [],
-          })
-          validateError = null
-          break
-        } catch (err) {
-          validateError = err
-        }
-      }
-      if (validateError) throw validateError
+      // Validate the organization after payment (needed regardless of 3DS)
+      await validateOrganizationMutation.mutateAsync({
+        organizationId: orgId,
+        invites: [],
+      })
 
       toast.success('Plan updated successfully')
       navigate({
