@@ -92,12 +92,13 @@ export function getStripeAppearanceFromTheme(theme: string | undefined) {
 }
 
 /**
- * Handle 3DS or other customer actions for a PaymentIntent that was already
- * confirmed server-side (`confirm: true`).
+ * Drive a PaymentIntent that needs customer action to completion.
  *
- * The backend always returns a clientSecret, but the PI may or may not need
- * customer action (3DS). We retrieve the PI status first and only call
- * `handleNextAction` when the PI is actually in `requires_action`.
+ * The backend may return a clientSecret with the PI in either
+ * `requires_confirmation` (server didn't pre-confirm) or `requires_action`
+ * (server confirmed, needs 3DS). `stripe.confirmCardPayment` handles both —
+ * it confirms the PI with its already-attached payment method if needed and
+ * runs the 3DS challenge inline. If the PI is already settled we do nothing.
  */
 export async function confirmPayment(config: {
   clientSecret: string
@@ -116,7 +117,6 @@ export async function confirmPayment(config: {
   )
   if (!stripe) throw new Error('Stripe not available')
 
-  // Check if the PI actually needs a customer action (e.g. 3DS)
   const { paymentIntent, error: retrieveError } =
     await stripe.retrievePaymentIntent(config.clientSecret)
   if (retrieveError) {
@@ -125,20 +125,42 @@ export async function confirmPayment(config: {
     )
   }
 
-  if (paymentIntent?.status === 'requires_action') {
+  const status = paymentIntent?.status
+  if (
+    status === 'succeeded' ||
+    status === 'processing' ||
+    status === 'requires_capture'
+  ) {
+    return
+  }
+
+  if (status === 'requires_confirmation' || status === 'requires_action') {
     const { error, paymentIntent: updatedIntent } =
-      await stripe.handleNextAction({
-        clientSecret: config.clientSecret,
-      })
+      await stripe.confirmCardPayment(config.clientSecret)
     if (error) throw new Error(error.message ?? 'Payment confirmation failed')
 
-    // If the user dismissed the 3DS modal the PI reverts to requires_payment_method
-    // without surfacing an error - detect this and throw an actionable message.
+    // If the user dismissed the 3DS modal the PI reverts to
+    // requires_payment_method without surfacing an error in `error` — detect
+    // this and throw an actionable message.
     if (updatedIntent?.status === 'requires_payment_method') {
       throw new Error(
         'Authentication was cancelled. Please try again or use a different payment method.',
       )
     }
+    if (
+      updatedIntent &&
+      updatedIntent.status !== 'succeeded' &&
+      updatedIntent.status !== 'processing' &&
+      updatedIntent.status !== 'requires_capture'
+    ) {
+      throw new Error(
+        `Payment did not complete (status: ${updatedIntent.status}).`,
+      )
+    }
+    return
   }
-  // If already requires_capture or succeeded, nothing to do client-side
+
+  throw new Error(
+    `Payment cannot be completed in its current state (${status ?? 'unknown'}).`,
+  )
 }
