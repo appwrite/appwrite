@@ -366,48 +366,8 @@ export function ChangePlanWizardFullscreen() {
   const handleUpgrade = async () => {
     if (!orgId || !selectedPlan || !paymentMethodId) return
 
-    // When the payment needs 3DS the backend surfaces it as a 4xx with
-    // { message: "Your payment requires authentication", clientSecret, ... }
-    // in the body — the SDK turns that into an AppwriteException whose
-    // `response` holds the JSON string. Pull the clientSecret out so the
-    // catch block can complete the auth inline instead of just surfacing
-    // the raw error to the user.
-    const extractClientSecret = (err: unknown): string | null => {
-      if (!err || typeof err !== 'object') return null
-      const maybeDirect = (err as { clientSecret?: unknown }).clientSecret
-      if (typeof maybeDirect === 'string' && maybeDirect) return maybeDirect
-      const rawResponse = (err as { response?: unknown }).response
-      if (typeof rawResponse !== 'string' || !rawResponse) return null
-      try {
-        const parsed = JSON.parse(rawResponse) as { clientSecret?: unknown }
-        return typeof parsed.clientSecret === 'string' && parsed.clientSecret
-          ? parsed.clientSecret
-          : null
-      } catch {
-        return null
-      }
-    }
-
-    const finishUpgrade = async () => {
-      await queryClient.invalidateQueries({
-        queryKey: ['organization', orgId],
-      })
-      await queryClient.invalidateQueries({
-        queryKey: ['invoices', 'organization', orgId],
-      })
-      await validateOrganizationMutation.mutateAsync({
-        organizationId: orgId,
-        invites: [],
-      })
-      toast.success('Plan updated successfully')
-      navigate({
-        to: '/organizations/$orgId/settings/billing',
-        params: { orgId },
-      })
-    }
-
     try {
-      await updatePlanMutation.mutateAsync({
+      const result = await updatePlanMutation.mutateAsync({
         organizationId: orgId,
         billingPlan: selectedPlan,
         paymentMethodId,
@@ -418,24 +378,46 @@ export function ChangePlanWizardFullscreen() {
         taxId: taxId || null,
       })
 
-      // Non-3DS path: backend charged successfully — go straight to validate.
-      await finishUpgrade()
-    } catch (error) {
-      const clientSecret = extractClientSecret(error)
-      if (clientSecret) {
-        try {
-          await confirmPayment({ clientSecret })
-          await finishUpgrade()
-          return
-        } catch (scaError) {
-          toast.error(
-            scaError instanceof Error
-              ? scaError.message
-              : 'Failed to authenticate payment',
-          )
-          return
-        }
+      // Payment authentication required (e.g. 3DS): handle inline via handleNextAction.
+      // The backend may return either a bare clientSecret or an object whose
+      // `status` indicates `requires_action` / `requires_authentication`.
+      const resultObj = result as {
+        clientSecret?: string
+        status?: string | number
       }
+      const needsAction =
+        !!resultObj?.clientSecret ||
+        (typeof resultObj?.status === 'string' &&
+          (resultObj.status === 'requires_action' ||
+            resultObj.status === 'requires_authentication'))
+
+      if (needsAction && resultObj?.clientSecret) {
+        await confirmPayment({
+          clientSecret: resultObj.clientSecret,
+        })
+        // Refresh org + invoice state now that the payment intent has been
+        // authenticated; otherwise subsequent reads see the stale
+        // requires_action state.
+        await queryClient.invalidateQueries({
+          queryKey: ['organization', orgId],
+        })
+        await queryClient.invalidateQueries({
+          queryKey: ['invoices', 'organization', orgId],
+        })
+      }
+
+      // Validate the organization after payment (needed regardless of 3DS)
+      await validateOrganizationMutation.mutateAsync({
+        organizationId: orgId,
+        invites: [],
+      })
+
+      toast.success('Plan updated successfully')
+      navigate({
+        to: '/organizations/$orgId/settings/billing',
+        params: { orgId },
+      })
+    } catch (error) {
       toast.error(
         error instanceof Error ? error.message : 'Failed to update plan',
       )
