@@ -43,6 +43,7 @@ import {
   Pencil,
   Search,
   Braces,
+  Brackets,
   Redo2,
   Undo2,
   Activity,
@@ -6757,10 +6758,6 @@ function RowEditDrawer({
                           fieldType === 'array'
                             ? ((currentValue as unknown[]) || []).length
                             : 0
-                        const displayLabel =
-                          fieldType === 'array' && arrayLength > 0
-                            ? `${key} (${arrayLength})`
-                            : key
 
                         return (
                           <div key={key} className="space-y-1.5">
@@ -6768,7 +6765,18 @@ function RowEditDrawer({
                               htmlFor={key}
                               className="text-[12px] font-medium text-foreground flex items-center gap-1.5"
                             >
-                              {displayLabel}
+                              <span>{key}</span>
+                              {fieldType === 'array' && (
+                                <span className="inline-flex items-center gap-1 rounded border border-border bg-muted/50 px-1.5 py-px text-[10px] font-medium text-muted-foreground">
+                                  <Brackets className="h-2.5 w-2.5" />
+                                  Array
+                                  {arrayLength > 0 && (
+                                    <span className="tabular-nums">
+                                      · {arrayLength}
+                                    </span>
+                                  )}
+                                </span>
+                              )}
                               {isRequired && (
                                 <span
                                   className="text-destructive text-[12px] font-semibold ml-0.5"
@@ -6865,10 +6873,10 @@ function RowEditDrawer({
                                 )}
                               </div>
                             ) : fieldType === 'array' ? (
-                              <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
+                              <div className="overflow-hidden rounded-md border border-border bg-card">
                                 {((currentValue as unknown[]) || []).length >
                                   0 ? (
-                                  <div className="space-y-2">
+                                  <div className="divide-y divide-foreground/10">
                                     {((currentValue as unknown[]) || []).map(
                                       (item, index) => {
                                         const columnInfo = getColumnInfo(key)
@@ -6945,200 +6953,214 @@ function RowEditDrawer({
                                         const isDateTimeType =
                                           colType === 'datetime' ||
                                           colType === 'date'
+                                        const showFooter =
+                                          !isBoolType &&
+                                          !isEnumType &&
+                                          (hasLimit || showNullCheckbox)
 
                                         return (
                                           <div
                                             key={index}
-                                            className="flex items-start gap-2 rounded-md border border-border bg-background px-2 py-1.5"
+                                            className={cn(
+                                              'group flex items-stretch',
+                                              index % 2 === 0
+                                                ? 'bg-background'
+                                                : 'bg-muted/20',
+                                            )}
                                           >
-                                            <div className="relative flex-1 min-w-0">
-                                              {isNumericType ? (
-                                                <Input
-                                                  type="number"
-                                                  value={
-                                                    isNull
-                                                      ? ''
-                                                      : String(item ?? '')
-                                                  }
-                                                  ref={(el) => setRef(el)}
-                                                  autoFocus={
-                                                    shouldFocus && index === 0
-                                                  }
-                                                  disabled={isNull}
-                                                  onFocus={focusGuard}
-                                                  onChange={(e) => {
-                                                    const v = e.target.value
-                                                    handleArrayItemChange(
-                                                      key,
-                                                      index,
-                                                      v === ''
-                                                        ? null
-                                                        : colType ===
-                                                          'integer' ||
-                                                          colType === 'int'
-                                                          ? parseInt(v, 10)
-                                                          : parseFloat(v),
-                                                    )
-                                                  }}
-                                                  step={
-                                                    colType === 'double' ||
-                                                      colType === 'float'
-                                                      ? 0.1
-                                                      : 1
-                                                  }
-                                                  placeholder={`Item ${index + 1}`}
-                                                  className="h-9 text-[13px] border-0 bg-transparent px-0"
-                                                />
-                                              ) : isBoolType ? (
-                                                <div className="flex items-center gap-2 py-1">
-                                                  <Switch
-                                                    checked={item === true}
-                                                    onCheckedChange={(
-                                                      checked,
-                                                    ) =>
+                                            <div className="flex w-9 shrink-0 select-none items-center justify-center border-r border-foreground/10 bg-muted/40 text-[11px] font-mono tabular-nums text-muted-foreground">
+                                              {index + 1}
+                                            </div>
+                                            <div className="flex min-w-0 flex-1 flex-col">
+                                              <div className="min-w-0 flex-1">
+                                                {isNumericType ? (
+                                                  <Input
+                                                    type="number"
+                                                    value={
+                                                      isNull
+                                                        ? ''
+                                                        : String(item ?? '')
+                                                    }
+                                                    ref={(el) => setRef(el)}
+                                                    autoFocus={
+                                                      shouldFocus && index === 0
+                                                    }
+                                                    disabled={isNull}
+                                                    onFocus={focusGuard}
+                                                    onChange={(e) => {
+                                                      const v = e.target.value
                                                       handleArrayItemChange(
                                                         key,
                                                         index,
-                                                        checked,
+                                                        v === ''
+                                                          ? null
+                                                          : colType ===
+                                                            'integer' ||
+                                                            colType === 'int'
+                                                            ? parseInt(v, 10)
+                                                            : parseFloat(v),
                                                       )
+                                                    }}
+                                                    step={
+                                                      colType === 'double' ||
+                                                        colType === 'float'
+                                                        ? 0.1
+                                                        : 1
                                                     }
+                                                    placeholder={`Item ${index + 1}`}
+                                                    className="h-9 rounded-none border-0 bg-transparent px-3 text-[13px] focus-visible:ring-0 focus-visible:ring-offset-0"
                                                   />
-                                                  <span className="text-[12px] text-muted-foreground">
-                                                    {item === true
-                                                      ? 'True'
-                                                      : 'False'}
-                                                  </span>
-                                                </div>
-                                              ) : isEnumType ? (
-                                                <Select
-                                                  value={
-                                                    isNull
-                                                      ? 'null'
-                                                      : String(item ?? '')
-                                                  }
-                                                  onValueChange={(val) =>
-                                                    handleArrayItemChange(
-                                                      key,
-                                                      index,
-                                                      val === 'null'
-                                                        ? null
-                                                        : val,
-                                                    )
-                                                  }
-                                                >
-                                                  <SelectTrigger
-                                                    className="h-9 text-[13px] border-0 bg-transparent px-0"
-                                                    ref={(el) => setRef(el)}
-                                                  >
-                                                    <SelectValue
-                                                      placeholder={
-                                                        isRequired
-                                                          ? undefined
-                                                          : 'NULL'
+                                                ) : isBoolType ? (
+                                                  <div className="flex h-9 items-center gap-2 px-3">
+                                                    <Switch
+                                                      checked={item === true}
+                                                      onCheckedChange={(
+                                                        checked,
+                                                      ) =>
+                                                        handleArrayItemChange(
+                                                          key,
+                                                          index,
+                                                          checked,
+                                                        )
                                                       }
                                                     />
-                                                  </SelectTrigger>
-                                                  <SelectContent>
-                                                    {!isRequired && (
-                                                      <SelectItem value="null">
-                                                        NULL
-                                                      </SelectItem>
-                                                    )}
-                                                    {getEnumOptions(
-                                                      columnInfo,
-                                                    ).map((option) => (
-                                                      <SelectItem
-                                                        key={option}
-                                                        value={option}
-                                                      >
-                                                        {option}
-                                                      </SelectItem>
-                                                    ))}
-                                                  </SelectContent>
-                                                </Select>
-                                              ) : isDateTimeType ? (
-                                                <Input
-                                                  type="datetime-local"
-                                                  value={
-                                                    isNull || !item
-                                                      ? ''
-                                                      : formatDateTimeLocalForInput(
-                                                        new Date(
-                                                          item as string,
-                                                        ),
+                                                    <span className="text-[12px] text-muted-foreground">
+                                                      {item === true
+                                                        ? 'True'
+                                                        : 'False'}
+                                                    </span>
+                                                  </div>
+                                                ) : isEnumType ? (
+                                                  <Select
+                                                    value={
+                                                      isNull
+                                                        ? 'null'
+                                                        : String(item ?? '')
+                                                    }
+                                                    onValueChange={(val) =>
+                                                      handleArrayItemChange(
+                                                        key,
+                                                        index,
+                                                        val === 'null'
+                                                          ? null
+                                                          : val,
                                                       )
-                                                  }
-                                                  ref={(el) => setRef(el)}
-                                                  autoFocus={
-                                                    shouldFocus && index === 0
-                                                  }
-                                                  disabled={isNull}
-                                                  onFocus={focusGuard}
-                                                  onChange={(e) =>
-                                                    handleArrayItemChange(
-                                                      key,
-                                                      index,
-                                                      e.target.value
-                                                        ? new Date(
-                                                          e.target.value,
-                                                        ).toISOString()
-                                                        : null,
-                                                    )
-                                                  }
-                                                  placeholder={`Item ${index + 1}`}
-                                                  className="h-9 text-[13px] border-0 bg-transparent px-0"
-                                                />
-                                              ) : (
-                                                <Textarea
-                                                  value={stringValue}
-                                                  onChange={(e) => {
-                                                    e.stopPropagation()
-                                                    handleArrayItemChange(
-                                                      key,
-                                                      index,
-                                                      e.target.value,
-                                                    )
-                                                  }}
-                                                  onFocus={focusGuard}
-                                                  ref={(el) => setRef(el)}
-                                                  autoFocus={
-                                                    shouldFocus && index === 0
-                                                  }
-                                                  disabled={isNull}
-                                                  dir={
-                                                    isRTLContent ? 'rtl' : 'ltr'
-                                                  }
-                                                  maxLength={
-                                                    hasLimit ? size : undefined
-                                                  }
-                                                  className={cn(
-                                                    'min-h-[32px] max-h-[600px] text-[13px] flex-1 border-0 bg-transparent px-0 py-1.5 resize-none focus-visible:ring-0 focus-visible:ring-offset-0',
-                                                    isNull &&
-                                                    'opacity-50 cursor-not-allowed',
-                                                    showNullCheckbox
-                                                      ? 'pb-7'
-                                                      : 'pb-1',
-                                                  )}
-                                                  placeholder={`Item ${index + 1}`}
-                                                  rows={1}
-                                                />
-                                              )}
-                                              {!isBoolType && !isEnumType && (
-                                                <div className="absolute bottom-1 right-1 flex items-center gap-1.5 pointer-events-none">
+                                                    }
+                                                  >
+                                                    <SelectTrigger
+                                                      className="h-9 rounded-none border-0 bg-transparent px-3 text-[13px] focus:ring-0 focus:ring-offset-0"
+                                                      ref={(el) => setRef(el)}
+                                                    >
+                                                      <SelectValue
+                                                        placeholder={
+                                                          isRequired
+                                                            ? undefined
+                                                            : 'NULL'
+                                                        }
+                                                      />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                      {!isRequired && (
+                                                        <SelectItem value="null">
+                                                          NULL
+                                                        </SelectItem>
+                                                      )}
+                                                      {getEnumOptions(
+                                                        columnInfo,
+                                                      ).map((option) => (
+                                                        <SelectItem
+                                                          key={option}
+                                                          value={option}
+                                                        >
+                                                          {option}
+                                                        </SelectItem>
+                                                      ))}
+                                                    </SelectContent>
+                                                  </Select>
+                                                ) : isDateTimeType ? (
+                                                  <Input
+                                                    type="datetime-local"
+                                                    value={
+                                                      isNull || !item
+                                                        ? ''
+                                                        : formatDateTimeLocalForInput(
+                                                          new Date(
+                                                            item as string,
+                                                          ),
+                                                        )
+                                                    }
+                                                    ref={(el) => setRef(el)}
+                                                    autoFocus={
+                                                      shouldFocus && index === 0
+                                                    }
+                                                    disabled={isNull}
+                                                    onFocus={focusGuard}
+                                                    onChange={(e) =>
+                                                      handleArrayItemChange(
+                                                        key,
+                                                        index,
+                                                        e.target.value
+                                                          ? new Date(
+                                                            e.target.value,
+                                                          ).toISOString()
+                                                          : null,
+                                                      )
+                                                    }
+                                                    placeholder={`Item ${index + 1}`}
+                                                    className="h-9 rounded-none border-0 bg-transparent px-3 text-[13px] focus-visible:ring-0 focus-visible:ring-offset-0"
+                                                  />
+                                                ) : (
+                                                  <Textarea
+                                                    value={stringValue}
+                                                    onChange={(e) => {
+                                                      e.stopPropagation()
+                                                      handleArrayItemChange(
+                                                        key,
+                                                        index,
+                                                        e.target.value,
+                                                      )
+                                                    }}
+                                                    onFocus={focusGuard}
+                                                    ref={(el) => setRef(el)}
+                                                    autoFocus={
+                                                      shouldFocus && index === 0
+                                                    }
+                                                    disabled={isNull}
+                                                    dir={
+                                                      isRTLContent ? 'rtl' : 'ltr'
+                                                    }
+                                                    maxLength={
+                                                      hasLimit ? size : undefined
+                                                    }
+                                                    className={cn(
+                                                      'min-h-[36px] max-h-[600px] resize-none rounded-none border-0 bg-transparent px-3 py-2 text-[13px] focus-visible:ring-0 focus-visible:ring-offset-0',
+                                                      isNull &&
+                                                      'cursor-not-allowed opacity-50',
+                                                    )}
+                                                    placeholder={`Item ${index + 1}`}
+                                                    rows={1}
+                                                  />
+                                                )}
+                                              </div>
+                                              {showFooter && (
+                                                <div className="flex items-center justify-end gap-3 border-t border-foreground/10 bg-muted/30 px-3 py-1">
                                                   {hasLimit && (
                                                     <span
                                                       className={cn(
-                                                        'text-[10px] px-1 py-0.5 rounded pointer-events-auto whitespace-nowrap',
+                                                        'text-[10px] tabular-nums whitespace-nowrap',
                                                         charCount > size
-                                                          ? 'text-destructive bg-destructive/10'
-                                                          : 'text-muted-foreground bg-muted/80',
+                                                          ? 'font-medium text-destructive'
+                                                          : 'text-muted-foreground',
                                                       )}
                                                     >
                                                       {charCount}/{size}
                                                     </span>
                                                   )}
                                                   {showNullCheckbox && (
-                                                    <div className="pointer-events-auto flex items-center gap-1">
+                                                    <label
+                                                      htmlFor={`${key}-${index}-null`}
+                                                      className="flex cursor-pointer select-none items-center gap-1.5 text-[10px] text-muted-foreground"
+                                                    >
                                                       <Checkbox
                                                         id={`${key}-${index}-null`}
                                                         checked={isNull}
@@ -7159,25 +7181,19 @@ function RowEditDrawer({
                                                         onClick={(e) =>
                                                           e.stopPropagation()
                                                         }
-                                                        className="h-3.5 w-3.5"
+                                                        className="h-3 w-3 cursor-pointer"
                                                         disabled={false}
                                                       />
-                                                      <label
-                                                        htmlFor={`${key}-${index}-null`}
-                                                        className="text-[10px] text-muted-foreground cursor-pointer select-none"
-                                                      >
-                                                        Null
-                                                      </label>
-                                                    </div>
+                                                      Null
+                                                    </label>
                                                   )}
                                                 </div>
                                               )}
                                             </div>
-                                            <Button
+                                            <button
                                               type="button"
-                                              variant="ghost"
-                                              size="icon"
-                                              className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive mt-0.5"
+                                              aria-label={`Remove item ${index + 1}`}
+                                              className="flex w-9 shrink-0 cursor-pointer items-center justify-center border-l border-foreground/10 text-muted-foreground transition-colors hover:bg-muted/40 hover:text-destructive"
                                               onClick={() =>
                                                 handleRemoveArrayItem(
                                                   key,
@@ -7186,23 +7202,26 @@ function RowEditDrawer({
                                               }
                                             >
                                               <X className="h-3.5 w-3.5" />
-                                            </Button>
+                                            </button>
                                           </div>
                                         )
                                       },
                                     )}
                                   </div>
                                 ) : (
-                                  <p className="text-[12px] text-muted-foreground py-2 text-center">
-                                    No items. Click the button below to add one.
-                                  </p>
+                                  <div className="flex flex-col items-center justify-center gap-1.5 px-3 py-6 text-center">
+                                    <Brackets className="h-4 w-4 text-muted-foreground/60" />
+                                    <p className="text-[12px] text-muted-foreground">
+                                      No items in this array yet
+                                    </p>
+                                  </div>
                                 )}
                                 <Button
                                   type="button"
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => handleAddArrayItem(key)}
-                                  className="h-8 w-full text-[12px] text-muted-foreground hover:text-foreground"
+                                  className="h-9 w-full cursor-pointer justify-center rounded-none border-t border-foreground/10 bg-muted/30 text-[12px] text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                                 >
                                   <Plus className="mr-1.5 h-3.5 w-3.5" />
                                   Add item
