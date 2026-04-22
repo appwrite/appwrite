@@ -94,14 +94,20 @@ export function getStripeAppearanceFromTheme(theme: string | undefined) {
 /**
  * Drive a PaymentIntent that needs customer action to completion.
  *
- * The backend may return a clientSecret with the PI in either
- * `requires_confirmation` (server didn't pre-confirm) or `requires_action`
- * (server confirmed, needs 3DS). `stripe.confirmCardPayment` handles both —
- * it confirms the PI with its already-attached payment method if needed and
- * runs the 3DS challenge inline. If the PI is already settled we do nothing.
+ * The backend may return a clientSecret with the PI in
+ * `requires_payment_method` (no PM attached yet), `requires_confirmation`
+ * (server didn't pre-confirm), or `requires_action` (server confirmed, needs
+ * 3DS). `stripe.confirmCardPayment` handles all three — it attaches the
+ * payment method if provided, confirms the PI, and runs the 3DS challenge
+ * inline. If the PI is already settled we do nothing.
+ *
+ * Pass `paymentMethod` (Stripe `pm_...` id) to attach/re-attach the card
+ * when the PI has no PM bound to it (e.g. on retry after a previous
+ * authentication failure).
  */
 export async function confirmPayment(config: {
   clientSecret: string
+  paymentMethod?: string
   publishableKey?: string
 }): Promise<void> {
   const envKey =
@@ -134,9 +140,21 @@ export async function confirmPayment(config: {
     return
   }
 
-  if (status === 'requires_confirmation' || status === 'requires_action') {
+  if (
+    status === 'requires_payment_method' ||
+    status === 'requires_confirmation' ||
+    status === 'requires_action'
+  ) {
+    if (status === 'requires_payment_method' && !config.paymentMethod) {
+      throw new Error(
+        'The card must be re-entered to complete this payment. Please try again with a different payment method.',
+      )
+    }
+    const confirmData = config.paymentMethod
+      ? { payment_method: config.paymentMethod }
+      : undefined
     const { error, paymentIntent: updatedIntent } =
-      await stripe.confirmCardPayment(config.clientSecret)
+      await stripe.confirmCardPayment(config.clientSecret, confirmData)
     if (error) throw new Error(error.message ?? 'Payment confirmation failed')
 
     // If the user dismissed the 3DS modal the PI reverts to

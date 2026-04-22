@@ -392,8 +392,14 @@ export function ChangePlanWizardFullscreen() {
             resultObj.status === 'requires_authentication'))
 
       if (needsAction && resultObj?.clientSecret) {
+        // Grab the Stripe provider id so confirmPayment can attach the card
+        // if the PaymentIntent still needs a payment method.
+        const selectedMethod = paymentMethods.find(
+          (pm) => pm.$id === paymentMethodId,
+        )
         await confirmPayment({
           clientSecret: resultObj.clientSecret,
+          paymentMethod: selectedMethod?.providerMethodId || undefined,
         })
         // Refresh org + invoice state now that the payment intent has been
         // authenticated; otherwise subsequent reads see the stale
