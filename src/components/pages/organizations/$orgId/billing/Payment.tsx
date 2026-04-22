@@ -120,6 +120,7 @@ export function PaymentModal({
   const [error, setError] = useState<string | null>(null)
   const [paymentMethodId, setPaymentMethodId] = useState<string | null>(null)
   const [clientSecret, setClientSecret] = useState<string | null>(null)
+  const [providerMethodId, setProviderMethodId] = useState<string | null>(null)
 
   const stripeRef = useRef<Stripe | null>(null)
   const elementsRef = useRef<StripeElements | null>(null)
@@ -306,6 +307,7 @@ export function PaymentModal({
       setError(null)
       setPaymentMethodId(null)
       setClientSecret(null)
+      setProviderMethodId(null)
       setIsStripeLoading(true)
 
       // Note: Stripe Elements cleanup is handled in the initialization effect's cleanup
@@ -326,12 +328,7 @@ export function PaymentModal({
       return
     }
 
-    if (
-      !stripeRef.current ||
-      !elementsRef.current ||
-      !clientSecret ||
-      !paymentMethodId
-    ) {
+    if (!paymentMethodId) {
       setError('Payment form not ready. Please try again.')
       return
     }
@@ -339,80 +336,95 @@ export function PaymentModal({
     try {
       setError(null)
 
-      // Submit Stripe Elements
-      await elementsRef.current.submit()
+      // If we already confirmed the card with Stripe on a previous submit
+      // (state-picker flow), the setup intent is consumed — skip the Stripe
+      // step entirely and just finish by submitting the state to our backend.
+      let resolvedProviderMethodId = providerMethodId
 
-      // Confirm setup intent
-      const { setupIntent, error: stripeError } =
-        await stripeRef.current.confirmSetup({
-          elements: elementsRef.current,
-          clientSecret,
-          confirmParams: {
-            return_url:
-              typeof window !== 'undefined'
-                ? `${window.location.origin}${window.location.pathname}`
-                : '',
-            payment_method_data: {
-              billing_details: {
-                name: cardholderName.trim(),
-              },
-            },
-            expand: ['payment_method'],
-          },
-          redirect: 'if_required',
-        })
-
-      if (stripeError) {
-        throw new Error(stripeError.message)
-      }
-
-      // For SCA/3DS cards the SDK may hand control back with
-      // status=requires_action if the inline modal couldn't complete — run
-      // handleNextAction explicitly and pick up the resulting intent.
-      let finalIntent = setupIntent
-      if (finalIntent?.status === 'requires_action') {
-        const { setupIntent: next, error: actionError } =
-          await stripeRef.current.handleNextAction({ clientSecret })
-        if (actionError) {
-          throw new Error(actionError.message ?? 'Authentication failed')
+      if (!resolvedProviderMethodId) {
+        if (!stripeRef.current || !elementsRef.current || !clientSecret) {
+          setError('Payment form not ready. Please try again.')
+          return
         }
-        finalIntent = next ?? finalIntent
-      }
 
-      if (!finalIntent || finalIntent.status !== 'succeeded') {
-        const reason =
-          finalIntent?.last_setup_error?.message ??
-          (finalIntent?.status === 'requires_payment_method'
-            ? 'The card was declined or authentication was cancelled. Please try again or use a different card.'
-            : `Payment setup did not complete (status: ${finalIntent?.status ?? 'unknown'}).`)
-        throw new Error(reason)
-      }
+        // Submit Stripe Elements
+        await elementsRef.current.submit()
 
-      const stripePaymentMethod = finalIntent.payment_method
-      if (!stripePaymentMethod) {
-        throw new Error('Invalid payment method response')
-      }
+        // Confirm setup intent
+        const { setupIntent, error: stripeError } =
+          await stripeRef.current.confirmSetup({
+            elements: elementsRef.current,
+            clientSecret,
+            confirmParams: {
+              return_url:
+                typeof window !== 'undefined'
+                  ? `${window.location.origin}${window.location.pathname}`
+                  : '',
+              payment_method_data: {
+                billing_details: {
+                  name: cardholderName.trim(),
+                },
+              },
+              expand: ['payment_method'],
+            },
+            redirect: 'if_required',
+          })
 
-      // After handleNextAction the payment_method is a bare id string (no
-      // expand) — only the confirmSetup path has the full card object.
-      const pmCard =
-        typeof stripePaymentMethod === 'object'
-          ? stripePaymentMethod.card
-          : null
+        if (stripeError) {
+          throw new Error(stripeError.message)
+        }
 
-      // Check if US card requires state (skipped when we only have an id)
-      if (pmCard?.country === 'US' && !showStatePicker) {
-        setShowStatePicker(true)
-        return
+        // For SCA/3DS cards the SDK may hand control back with
+        // status=requires_action if the inline modal couldn't complete — run
+        // handleNextAction explicitly and pick up the resulting intent.
+        let finalIntent = setupIntent
+        if (finalIntent?.status === 'requires_action') {
+          const { setupIntent: next, error: actionError } =
+            await stripeRef.current.handleNextAction({ clientSecret })
+          if (actionError) {
+            throw new Error(actionError.message ?? 'Authentication failed')
+          }
+          finalIntent = next ?? finalIntent
+        }
+
+        if (!finalIntent || finalIntent.status !== 'succeeded') {
+          const reason =
+            finalIntent?.last_setup_error?.message ??
+            (finalIntent?.status === 'requires_payment_method'
+              ? 'The card was declined or authentication was cancelled. Please try again or use a different card.'
+              : `Payment setup did not complete (status: ${finalIntent?.status ?? 'unknown'}).`)
+          throw new Error(reason)
+        }
+
+        const stripePaymentMethod = finalIntent.payment_method
+        if (!stripePaymentMethod) {
+          throw new Error('Invalid payment method response')
+        }
+
+        // After handleNextAction the payment_method is a bare id string (no
+        // expand) — only the confirmSetup path has the full card object.
+        resolvedProviderMethodId =
+          typeof stripePaymentMethod === 'string'
+            ? stripePaymentMethod
+            : stripePaymentMethod.id
+        const pmCard =
+          typeof stripePaymentMethod === 'object'
+            ? stripePaymentMethod.card
+            : null
+
+        // Check if US card requires state — pause, keep the confirmed provider
+        // id so the next submit only updates state via our backend, not Stripe.
+        if (pmCard?.country === 'US' && !showStatePicker) {
+          setProviderMethodId(resolvedProviderMethodId)
+          setShowStatePicker(true)
+          return
+        }
       }
 
       // Link payment method to Appwrite
       await setPaymentMethodProviderMutation.mutateAsync({
         paymentMethodId,
-        providerMethodId:
-          typeof stripePaymentMethod === 'object'
-            ? stripePaymentMethod.id
-            : stripePaymentMethod,
+        providerMethodId: resolvedProviderMethodId,
         name: cardholderName.trim(),
         state: selectedState || undefined,
       })
