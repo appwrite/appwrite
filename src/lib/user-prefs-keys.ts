@@ -85,6 +85,59 @@ export function buildSavedFiltersPrefs(
 }
 
 // ---------------------------------------------------------------------------
+// Databases: tables sidebar width (single shared setting across all databases)
+// ---------------------------------------------------------------------------
+
+/**
+ * Full key: `console.databases.sidebarWidth` - JSON-encoded number representing
+ * the percentage (0–100) of the resizable group occupied by the tables sidebar
+ * inside the database detail view. Shared across all databases and tables.
+ */
+export const USER_PREFS_KEY_DATABASES_SIDEBAR_WIDTH =
+  'console.databases.sidebarWidth'
+
+/** Default percent for the tables sidebar pane (matches previous defaultSize). */
+export const DATABASES_SIDEBAR_WIDTH_DEFAULT_PERCENT = 20
+
+/** Hard clamp so a corrupted/foreign value can never break the layout. */
+export const DATABASES_SIDEBAR_WIDTH_MIN_PERCENT = 5
+export const DATABASES_SIDEBAR_WIDTH_MAX_PERCENT = 60
+
+export function parseDatabasesSidebarWidthPercent(
+  prefs: UserPrefs | null | undefined,
+): number | null {
+  if (!prefs) return null
+  const raw = prefs[USER_PREFS_KEY_DATABASES_SIDEBAR_WIDTH]
+  let value: number | null = null
+  if (typeof raw === 'number' && Number.isFinite(raw)) {
+    value = raw
+  } else if (typeof raw === 'string' && raw.length > 0) {
+    const parsed = Number(raw)
+    if (Number.isFinite(parsed)) value = parsed
+  }
+  if (value === null) return null
+  return Math.min(
+    DATABASES_SIDEBAR_WIDTH_MAX_PERCENT,
+    Math.max(DATABASES_SIDEBAR_WIDTH_MIN_PERCENT, value),
+  )
+}
+
+export function buildDatabasesSidebarWidthPrefs(percent: number): UserPrefs {
+  const clamped = Math.min(
+    DATABASES_SIDEBAR_WIDTH_MAX_PERCENT,
+    Math.max(DATABASES_SIDEBAR_WIDTH_MIN_PERCENT, percent),
+  )
+  // Store as a string for consistency with other JSON-encoded prefs (saved
+  // filters, recent impersonation users) – the prefs API treats values as
+  // strings.
+  return {
+    [USER_PREFS_KEY_DATABASES_SIDEBAR_WIDTH]: String(
+      Math.round(clamped * 100) / 100,
+    ),
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Console operator impersonation - recent targets (quick access in picker)
 // ---------------------------------------------------------------------------
 

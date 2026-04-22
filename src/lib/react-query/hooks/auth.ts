@@ -13,7 +13,10 @@ import {
 } from '@tanstack/react-query'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
+  buildDatabasesSidebarWidthPrefs,
   buildSavedFiltersPrefs,
+  DATABASES_SIDEBAR_WIDTH_DEFAULT_PERCENT,
+  parseDatabasesSidebarWidthPercent,
   parseSavedFilters,
   MAX_SAVED_FILTER_NAME_LENGTH,
   clearRecentImpersonationSessionList,
@@ -689,6 +692,74 @@ export function useSidebarCollapsed(
   )
 
   return { collapsed, setCollapsed }
+}
+
+// ============================================================================
+// DATABASES SIDEBAR WIDTH PREFERENCE
+// ============================================================================
+
+/**
+ * Hook to manage the persisted width (percent) of the tables sidebar inside
+ * the database detail view. Persisted in `account.prefs` under
+ * `console.databases.sidebarWidth` so the value follows the user across
+ * devices and browsers and is shared across all databases/tables.
+ *
+ * Reads synchronously from the cached account, writes asynchronously through
+ * `account.updatePrefs` with optimistic cache updates (matches the pattern of
+ * `useSidebarCollapsed`).
+ *
+ * Must be used within RequireAuth (or where the account query is loaded).
+ */
+export function useDatabasesSidebarWidth(
+  account: { prefs?: Record<string, unknown> } | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  const widthPercent =
+    parseDatabasesSidebarWidthPercent(account?.prefs) ??
+    DATABASES_SIDEBAR_WIDTH_DEFAULT_PERCENT
+
+  const updateMutation = useMutation({
+    mutationFn: async (value: number) => {
+      if (!account) {
+        throw new Error('Account data not available')
+      }
+      return await updateAccountPrefs({
+        ...account.prefs,
+        ...buildDatabasesSidebarWidthPrefs(value),
+      })
+    },
+    // The auth query key includes consoleImpersonationRevision, so an exact
+    // ['account', 'console'] lookup misses it. Use prefix matching to update
+    // every cached variant optimistically.
+    onMutate: async (value) => {
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: {
+                  ...current.prefs,
+                  ...buildDatabasesSidebarWidthPrefs(value),
+                },
+              }
+            : current,
+      )
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    },
+  })
+
+  const setWidthPercent = useCallback(
+    (value: number) => {
+      updateMutation.mutate(value)
+    },
+    [updateMutation],
+  )
+
+  return { widthPercent, setWidthPercent }
 }
 
 // ============================================================================

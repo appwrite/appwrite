@@ -86,6 +86,7 @@ import {
   tableColumnsQueryOptions,
   tableRowsQueryOptions,
   databaseQueryOptions,
+  invalidateDatabaseModel,
   type TablesSortBy,
 } from '@/lib/react-query/hooks'
 import {
@@ -751,6 +752,7 @@ export function View() {
           projectSdk.tablesDB.delete({ databaseId }),
         ),
       )
+      databaseIds.forEach((id) => invalidateDatabaseModel(projectId, id))
     },
     onSuccess: async () => {
       // Refetch databases list so the UI updates (list uses refetchOnMount: false)
@@ -4114,6 +4116,7 @@ export function DatabaseOverview({
     },
     onSuccess: () => {
       // Invalidate database query to refetch with updated name
+      invalidateDatabaseModel(projectId, databaseId)
       queryClient.invalidateQueries({
         queryKey: ['database', 'project', projectId, databaseId],
       })
@@ -4141,6 +4144,7 @@ export function DatabaseOverview({
     },
     onSuccess: () => {
       toast.success(`Database has been ${enabled ? 'enabled' : 'disabled'}`)
+      invalidateDatabaseModel(projectId, databaseId)
       queryClient.invalidateQueries({
         queryKey: ['database', 'project', projectId, databaseId],
       })
@@ -4168,6 +4172,7 @@ export function DatabaseOverview({
       await projectSdk.tablesDB.delete({ databaseId })
     },
     onSuccess: async () => {
+      invalidateDatabaseModel(projectId, databaseId)
       // Refetch databases list so the list view shows updated data (uses refetchOnMount: false)
       await queryClient.refetchQueries({
         queryKey: ['databases', 'project', projectId],
