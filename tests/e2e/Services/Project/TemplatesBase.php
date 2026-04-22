@@ -685,7 +685,7 @@ trait TemplatesBase
                 'x-appwrite-project' => 'console',
                 'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             ],
-            ['alerts' => true],
+            ['enabled' => true],
         );
         $this->assertSame(200, $alertsResponse['headers']['status-code'], 'failed to enable session alerts');
 
