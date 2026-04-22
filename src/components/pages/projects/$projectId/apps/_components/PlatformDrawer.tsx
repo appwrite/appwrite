@@ -133,8 +133,7 @@ export function PlatformDrawer({
       'bundleIdentifier' in displayPlatform ||
       'packageName' in displayPlatform ||
       'packageIdentifierName' in displayPlatform)
-  const showHostname =
-    !!displayPlatform && 'hostname' in displayPlatform
+  const showHostname = !!displayPlatform && 'hostname' in displayPlatform
 
   if (!platform && !platformId) return null
 
@@ -242,7 +241,8 @@ export function PlatformDrawer({
                           htmlFor="platform-key"
                           className="text-[12px] font-medium"
                         >
-                          {displayPlatform && 'bundleIdentifier' in displayPlatform
+                          {displayPlatform &&
+                          'bundleIdentifier' in displayPlatform
                             ? 'Bundle ID'
                             : displayPlatform &&
                                 'applicationId' in displayPlatform
@@ -312,7 +312,10 @@ export function PlatformDrawer({
       </BaseDrawer>
 
       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-        <DialogContent className="sm:max-w-md p-0">
+        <DialogContent
+          className="sm:max-w-md p-0 z-[130]"
+          overlayClassName="z-[130]"
+        >
           <DialogHeader className="px-6 pt-6 pb-4 text-left">
             <DialogTitle>Delete app</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
