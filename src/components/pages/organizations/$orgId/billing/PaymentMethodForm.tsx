@@ -217,6 +217,11 @@ export function PaymentMethodForm({
           const pmCard = typeof pm === 'object' && pm !== null ? pm.card : null
           if (pmId) {
             setProviderMethodId(pmId)
+            // stripe.retrieveSetupIntent doesn't expand payment_method, so
+            // pmCard is usually null here. The Appwrite PM record also stays
+            // empty until setPaymentMethodProvider lands, so in recovery
+            // flows the preview will often be missing — that's expected and
+            // the view degrades to a "card was entered previously" message.
             if (pmCard?.last4) {
               setAddedCardPreview({
                 brand: pmCard.brand ?? '',
@@ -593,7 +598,7 @@ export function PaymentMethodForm({
         </>
       ) : (
         <div className="space-y-4">
-          {addedCardPreview && (
+          {addedCardPreview ? (
             <div className="rounded-md border border-border bg-muted/30 px-3 py-2.5">
               <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
                 Card added
@@ -610,21 +615,40 @@ export function PaymentMethodForm({
                   </p>
                 )}
             </div>
+          ) : (
+            <div className="rounded-md border border-border bg-muted/30 px-3 py-2.5">
+              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+                Card added
+              </p>
+              <p className="text-[13px] text-foreground mt-1">
+                A card was entered in a previous attempt. Complete the details
+                below to finish adding it.
+              </p>
+            </div>
           )}
+
+          {/* Card-form is skipped on the recovery path, so ask for the
+              cardholder name here so the backend link has a value to store. */}
+          {stateOptional && (
+            <div className="space-y-2">
+              <Label htmlFor="cardholder-name-recover" className="text-[13px]">
+                Cardholder name
+              </Label>
+              <Input
+                id="cardholder-name-recover"
+                value={cardholderName}
+                onChange={(e) => setCardholderName(e.target.value)}
+                placeholder="John Doe"
+                className="h-9 text-[13px]"
+                disabled={isLoading}
+              />
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="state" className="text-[13px]">
-              State
-              {stateOptional && (
-                <span className="text-muted-foreground font-normal ml-1">
-                  (only for US cards)
-                </span>
-              )}
+              State {stateOptional ? '(optional)' : ''}
             </Label>
-            <p className="text-[12px] text-muted-foreground">
-              {stateOptional
-                ? 'Your card was saved. If this is a US card, select its billing state; otherwise continue.'
-                : 'Your card was saved. Select the state on the billing address to finish adding it.'}
-            </p>
             <Select
               value={selectedState}
               onValueChange={setSelectedState}
@@ -680,7 +704,7 @@ export function PaymentMethodForm({
             (showStatePicker && !selectedState && !stateOptional)
           }
         >
-          Add
+          {showStatePicker ? 'Save' : 'Add'}
         </Button>
       </div>
     </form>
