@@ -191,6 +191,26 @@ export function InlinePaymentForm({
 
         stripeRef.current = stripe
 
+        // If a previous attempt already completed Stripe-side for this
+        // clientSecret (Appwrite PM exists with clientSecret but no
+        // providerMethodId because the backend link never landed), skip the
+        // card form: surface the state picker in optional mode so the user
+        // can just confirm + link without re-entering card details.
+        const { setupIntent: existingIntent } =
+          await stripe.retrieveSetupIntent(secret)
+        if (!mounted) return
+        if (existingIntent?.status === 'succeeded') {
+          const pm = existingIntent.payment_method
+          const pmId = typeof pm === 'string' ? pm : (pm?.id ?? null)
+          if (pmId) {
+            setProviderMethodId(pmId)
+            setStateOptional(true)
+            setShowStatePicker(true)
+            setIsStripeLoading(false)
+            return
+          }
+        }
+
         // Create Elements (compute appearance inside effect so we don't depend on a new object ref every render)
         const elements = stripe.elements({
           clientSecret: secret,
