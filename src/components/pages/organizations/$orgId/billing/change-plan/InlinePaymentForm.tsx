@@ -301,44 +301,56 @@ export function InlinePaymentForm({
           return
         }
 
-        // Submit Stripe Elements
-        await elementsRef.current.submit()
+        // A previous submit (e.g. one that failed AFTER Stripe but before we
+        // could persist providerMethodId) may have already driven the
+        // SetupIntent to succeeded. Calling confirmSetup again on a finished
+        // intent returns `setup_intent_unexpected_state`. Check current state
+        // first and reuse the PM if Stripe already has it.
+        const { setupIntent: existingIntent } =
+          await stripeRef.current.retrieveSetupIntent(clientSecret)
 
-        // Confirm setup intent
-        const { setupIntent, error: stripeError } =
-          await stripeRef.current.confirmSetup({
-            elements: elementsRef.current,
-            clientSecret,
-            confirmParams: {
-              return_url:
-                typeof window !== 'undefined'
-                  ? `${window.location.origin}${window.location.pathname}`
-                  : '',
-              payment_method_data: {
-                billing_details: {
-                  name: cardholderName.trim(),
+        let finalIntent = existingIntent ?? null
+
+        if (finalIntent?.status !== 'succeeded') {
+          // Submit Stripe Elements
+          await elementsRef.current.submit()
+
+          // Confirm setup intent
+          const { setupIntent, error: stripeError } =
+            await stripeRef.current.confirmSetup({
+              elements: elementsRef.current,
+              clientSecret,
+              confirmParams: {
+                return_url:
+                  typeof window !== 'undefined'
+                    ? `${window.location.origin}${window.location.pathname}`
+                    : '',
+                payment_method_data: {
+                  billing_details: {
+                    name: cardholderName.trim(),
+                  },
                 },
+                expand: ['payment_method'],
               },
-              expand: ['payment_method'],
-            },
-            redirect: 'if_required',
-          })
+              redirect: 'if_required',
+            })
 
-        if (stripeError) {
-          throw new Error(stripeError.message)
-        }
-
-        // For SCA/3DS cards the SDK may hand control back with
-        // status=requires_action if the inline modal couldn't complete — run
-        // handleNextAction explicitly and pick up the resulting intent.
-        let finalIntent = setupIntent
-        if (finalIntent?.status === 'requires_action') {
-          const { setupIntent: next, error: actionError } =
-            await stripeRef.current.handleNextAction({ clientSecret })
-          if (actionError) {
-            throw new Error(actionError.message ?? 'Authentication failed')
+          if (stripeError) {
+            throw new Error(stripeError.message)
           }
-          finalIntent = next ?? finalIntent
+
+          // For SCA/3DS cards the SDK may hand control back with
+          // status=requires_action if the inline modal couldn't complete — run
+          // handleNextAction explicitly and pick up the resulting intent.
+          finalIntent = setupIntent
+          if (finalIntent?.status === 'requires_action') {
+            const { setupIntent: next, error: actionError } =
+              await stripeRef.current.handleNextAction({ clientSecret })
+            if (actionError) {
+              throw new Error(actionError.message ?? 'Authentication failed')
+            }
+            finalIntent = next ?? finalIntent
+          }
         }
 
         if (!finalIntent || finalIntent.status !== 'succeeded') {
