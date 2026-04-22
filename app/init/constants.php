@@ -139,6 +139,7 @@ const TOKEN_TYPE_PHONE = 6;
 const TOKEN_TYPE_OAUTH2 = 7;
 const TOKEN_TYPE_GENERIC = 8;
 const TOKEN_TYPE_EMAIL = 9; // OTP
+const TOKEN_TYPE_OTP_RECOVERY = 10; // OTP-based password recovery
 
 /**
  * Session Providers.
