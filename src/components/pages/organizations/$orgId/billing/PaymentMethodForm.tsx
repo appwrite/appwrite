@@ -1,0 +1,688 @@
+import { useEffect, useRef, useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
+import type { Stripe, StripeElements, PaymentElement } from '@stripe/stripe-js'
+import { cn } from '@/lib/utils'
+import {
+  getStripeInstance,
+  getStripeAppearanceFromTheme,
+} from '@/lib/utils/stripe'
+import { useTheme } from 'next-themes'
+import {
+  useCreatePaymentMethod,
+  useSetPaymentMethodProvider,
+  useSetOrganizationDefaultPaymentMethod,
+  useSetOrganizationBackupPaymentMethod,
+  usePaymentMethods,
+} from '@/lib/react-query/hooks'
+import type { Models } from '@appwrite.io/console'
+import { maskCardNumber } from './utils'
+
+export interface PaymentMethodFormProps {
+  /** Whether the enclosing surface (dialog or inline panel) is visible.
+   * Init runs when this becomes true; state resets when it becomes false. */
+  open: boolean
+  organizationId?: string
+  isBackup?: boolean
+  onSuccess?: () => void
+  onCancel?: () => void
+  /** Adjusts button sizing and footer layout for the two call sites. */
+  variant?: 'dialog' | 'inline'
+}
+
+const US_STATES = [
+  { value: 'AL', label: 'Alabama' },
+  { value: 'AK', label: 'Alaska' },
+  { value: 'AZ', label: 'Arizona' },
+  { value: 'AR', label: 'Arkansas' },
+  { value: 'CA', label: 'California' },
+  { value: 'CO', label: 'Colorado' },
+  { value: 'CT', label: 'Connecticut' },
+  { value: 'DE', label: 'Delaware' },
+  { value: 'FL', label: 'Florida' },
+  { value: 'GA', label: 'Georgia' },
+  { value: 'HI', label: 'Hawaii' },
+  { value: 'ID', label: 'Idaho' },
+  { value: 'IL', label: 'Illinois' },
+  { value: 'IN', label: 'Indiana' },
+  { value: 'IA', label: 'Iowa' },
+  { value: 'KS', label: 'Kansas' },
+  { value: 'KY', label: 'Kentucky' },
+  { value: 'LA', label: 'Louisiana' },
+  { value: 'ME', label: 'Maine' },
+  { value: 'MD', label: 'Maryland' },
+  { value: 'MA', label: 'Massachusetts' },
+  { value: 'MI', label: 'Michigan' },
+  { value: 'MN', label: 'Minnesota' },
+  { value: 'MS', label: 'Mississippi' },
+  { value: 'MO', label: 'Missouri' },
+  { value: 'MT', label: 'Montana' },
+  { value: 'NE', label: 'Nebraska' },
+  { value: 'NV', label: 'Nevada' },
+  { value: 'NH', label: 'New Hampshire' },
+  { value: 'NJ', label: 'New Jersey' },
+  { value: 'NM', label: 'New Mexico' },
+  { value: 'NY', label: 'New York' },
+  { value: 'NC', label: 'North Carolina' },
+  { value: 'ND', label: 'North Dakota' },
+  { value: 'OH', label: 'Ohio' },
+  { value: 'OK', label: 'Oklahoma' },
+  { value: 'OR', label: 'Oregon' },
+  { value: 'PA', label: 'Pennsylvania' },
+  { value: 'RI', label: 'Rhode Island' },
+  { value: 'SC', label: 'South Carolina' },
+  { value: 'SD', label: 'South Dakota' },
+  { value: 'TN', label: 'Tennessee' },
+  { value: 'TX', label: 'Texas' },
+  { value: 'UT', label: 'Utah' },
+  { value: 'VT', label: 'Vermont' },
+  { value: 'VA', label: 'Virginia' },
+  { value: 'WA', label: 'Washington' },
+  { value: 'WV', label: 'West Virginia' },
+  { value: 'WI', label: 'Wisconsin' },
+  { value: 'WY', label: 'Wyoming' },
+]
+
+interface CardPreview {
+  brand: string
+  last4: string
+  expMonth: number
+  expYear: number
+}
+
+export function PaymentMethodForm({
+  open,
+  organizationId,
+  isBackup = false,
+  onSuccess,
+  onCancel,
+  variant = 'dialog',
+}: PaymentMethodFormProps) {
+  const [cardholderName, setCardholderName] = useState('')
+  const [selectedState, setSelectedState] = useState<string>('')
+  const [showStatePicker, setShowStatePicker] = useState(false)
+  const [isStripeLoading, setIsStripeLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [paymentMethodId, setPaymentMethodId] = useState<string | null>(null)
+  const [clientSecret, setClientSecret] = useState<string | null>(null)
+  const [providerMethodId, setProviderMethodId] = useState<string | null>(null)
+  const [stateOptional, setStateOptional] = useState(false)
+  const [addedCardPreview, setAddedCardPreview] = useState<CardPreview | null>(
+    null,
+  )
+
+  const stripeRef = useRef<Stripe | null>(null)
+  const elementsRef = useRef<StripeElements | null>(null)
+  const paymentElementRef = useRef<PaymentElement | null>(null)
+  const stripeContainerRef = useRef<HTMLDivElement>(null)
+  const createPaymentMethodMutationRef = useRef(
+    null as ReturnType<typeof useCreatePaymentMethod> | null,
+  )
+  // Tracks the currently in-flight submit so we can abort it when the user
+  // closes/cancels the form mid-way. Stripe.js calls don't accept signals,
+  // so aborting only prevents post-await state updates — but that's enough
+  // to stop "form reset" races and stale error toasts.
+  const submitAbortRef = useRef<AbortController | null>(null)
+
+  const createPaymentMethodMutation = useCreatePaymentMethod()
+  createPaymentMethodMutationRef.current = createPaymentMethodMutation
+  const setPaymentMethodProviderMutation = useSetPaymentMethodProvider()
+  const setDefaultPaymentMethodMutation =
+    useSetOrganizationDefaultPaymentMethod()
+  const setBackupPaymentMethodMutation = useSetOrganizationBackupPaymentMethod()
+  const { paymentMethods: allPaymentMethods } = usePaymentMethods()
+
+  const { theme } = useTheme()
+
+  const stripePublishableKey =
+    typeof window !== 'undefined'
+      ? import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ||
+        (window as Window & { __STRIPE_PUBLISHABLE_KEY__?: string })
+          .__STRIPE_PUBLISHABLE_KEY__
+      : undefined
+  const hasStripePublicKey = !!stripePublishableKey
+
+  // Initialize Stripe on open / mount.
+  useEffect(() => {
+    if (!open || !hasStripePublicKey) {
+      if (paymentElementRef.current) paymentElementRef.current = null
+      if (elementsRef.current) elementsRef.current = null
+      return
+    }
+
+    let mounted = true
+    let currentPaymentElement: PaymentElement | null = null
+    let hasInitialized = false
+    let containerForCleanup: HTMLDivElement | null = null
+
+    async function initializeStripe() {
+      if (hasInitialized) return
+      hasInitialized = true
+
+      try {
+        setIsStripeLoading(true)
+        setError(null)
+
+        // Read the list once — depending on it in effect deps would re-init the
+        // form every time the query invalidates.
+        const existingIncomplete = allPaymentMethods?.find(
+          (method: Models.PaymentMethod) =>
+            method.clientSecret && !method.providerMethodId,
+        )
+
+        let paymentMethod: Models.PaymentMethod
+        let secret: string
+
+        if (existingIncomplete) {
+          paymentMethod = existingIncomplete
+          secret = existingIncomplete.clientSecret!
+        } else {
+          paymentMethod =
+            await createPaymentMethodMutationRef.current!.mutateAsync()
+          secret = paymentMethod.clientSecret!
+        }
+        if (!mounted) return
+
+        setPaymentMethodId(paymentMethod.$id)
+        setClientSecret(secret)
+
+        const stripe = await getStripeInstance(stripePublishableKey)
+        if (!stripe || !mounted) {
+          setIsStripeLoading(false)
+          return
+        }
+        stripeRef.current = stripe
+
+        // If a previous attempt already drove the SetupIntent to succeeded
+        // (Appwrite PM exists with clientSecret but no providerMethodId
+        // because the backend link never landed), skip the card form: surface
+        // the state picker in optional mode so the user can just confirm +
+        // link without re-entering card details.
+        const { setupIntent: existingIntent } =
+          await stripe.retrieveSetupIntent(secret)
+        if (!mounted) return
+        if (existingIntent?.status === 'succeeded') {
+          const pm = existingIntent.payment_method
+          const pmId = typeof pm === 'string' ? pm : (pm?.id ?? null)
+          const pmCard = typeof pm === 'object' && pm !== null ? pm.card : null
+          if (pmId) {
+            setProviderMethodId(pmId)
+            if (pmCard?.last4) {
+              setAddedCardPreview({
+                brand: pmCard.brand ?? '',
+                last4: pmCard.last4,
+                expMonth: pmCard.exp_month ?? 0,
+                expYear: pmCard.exp_year ?? 0,
+              })
+            }
+            setStateOptional(true)
+            setShowStatePicker(true)
+            setIsStripeLoading(false)
+            return
+          }
+        }
+
+        const elements = stripe.elements({
+          clientSecret: secret,
+          appearance: getStripeAppearanceFromTheme(theme),
+        })
+        elementsRef.current = elements
+
+        const paymentElement = elements.create('payment')
+        currentPaymentElement = paymentElement
+        paymentElementRef.current = paymentElement
+
+        // Wait for the container ref to be attached by React.
+        await new Promise((resolve) => setTimeout(resolve, 50))
+        const container = stripeContainerRef.current
+        if (!mounted || !container) {
+          setIsStripeLoading(false)
+          return
+        }
+        containerForCleanup = container
+
+        try {
+          paymentElement.mount(container)
+          if (mounted) setIsStripeLoading(false)
+        } catch (mountError) {
+          if (mounted) {
+            setError('Failed to mount payment form. Please try again.')
+            setIsStripeLoading(false)
+            console.error('Stripe mount error:', mountError)
+          }
+        }
+      } catch (err) {
+        if (mounted) {
+          setError(
+            err instanceof Error
+              ? err.message
+              : 'Failed to initialize payment form',
+          )
+          setIsStripeLoading(false)
+          console.error('Stripe initialization error:', err)
+        }
+      }
+    }
+
+    const timeoutId = setTimeout(initializeStripe, 100)
+
+    return () => {
+      clearTimeout(timeoutId)
+      hasInitialized = false
+      mounted = false
+      requestAnimationFrame(() => {
+        if (currentPaymentElement && containerForCleanup?.parentNode) {
+          try {
+            currentPaymentElement.unmount()
+          } catch {
+            // React may have already cleaned up the node.
+          }
+        }
+        currentPaymentElement = null
+        containerForCleanup = null
+        paymentElementRef.current = null
+        if (elementsRef.current) elementsRef.current = null
+      })
+    }
+    // See comment above — we intentionally exclude allPaymentMethods and the
+    // mutation object to keep the Stripe form from reloading when the list
+    // refetches.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, hasStripePublicKey, stripePublishableKey, theme])
+
+  // Reset internal state when the enclosing surface closes. Also abort any
+  // in-flight submit so its continuation doesn't fire setError / toast /
+  // onSuccess against a closed form.
+  useEffect(() => {
+    if (!open) {
+      submitAbortRef.current?.abort()
+      submitAbortRef.current = null
+      setCardholderName('')
+      setSelectedState('')
+      setShowStatePicker(false)
+      setError(null)
+      setPaymentMethodId(null)
+      setClientSecret(null)
+      setProviderMethodId(null)
+      setStateOptional(false)
+      setAddedCardPreview(null)
+      setIsStripeLoading(true)
+    }
+  }, [open])
+
+  // Abort any pending submit on unmount too (covers components that don't
+  // flip `open` — e.g. InlinePaymentForm removed from the tree).
+  useEffect(() => {
+    return () => {
+      submitAbortRef.current?.abort()
+      submitAbortRef.current = null
+    }
+  }, [])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!cardholderName.trim()) {
+      setError('Please enter a cardholder name')
+      return
+    }
+    if (showStatePicker && !selectedState && !stateOptional) {
+      setError('Please select a state')
+      return
+    }
+    if (!paymentMethodId) {
+      setError('Payment form not ready. Please try again.')
+      return
+    }
+
+    submitAbortRef.current?.abort()
+    const controller = new AbortController()
+    submitAbortRef.current = controller
+    const { signal } = controller
+    const aborted = () => signal.aborted
+
+    try {
+      setError(null)
+
+      // If a previous submit already confirmed the card with Stripe (state
+      // picker flow, or a post-Stripe backend failure), the setup intent is
+      // consumed — skip Stripe entirely and only send the state to our backend.
+      let resolvedProviderMethodId = providerMethodId
+
+      if (!resolvedProviderMethodId) {
+        if (!stripeRef.current || !elementsRef.current || !clientSecret) {
+          setError('Payment form not ready. Please try again.')
+          return
+        }
+
+        // Calling confirmSetup on an already-succeeded intent returns
+        // setup_intent_unexpected_state. Check current state first and reuse
+        // the PM if Stripe already has it.
+        const { setupIntent: existingIntent } =
+          await stripeRef.current.retrieveSetupIntent(clientSecret)
+        if (aborted()) return
+
+        let finalIntent = existingIntent ?? null
+
+        if (finalIntent?.status !== 'succeeded') {
+          await elementsRef.current.submit()
+          if (aborted()) return
+
+          const { setupIntent, error: stripeError } =
+            await stripeRef.current.confirmSetup({
+              elements: elementsRef.current,
+              clientSecret,
+              confirmParams: {
+                return_url:
+                  typeof window !== 'undefined'
+                    ? `${window.location.origin}${window.location.pathname}`
+                    : '',
+                payment_method_data: {
+                  billing_details: { name: cardholderName.trim() },
+                },
+                expand: ['payment_method'],
+              },
+              redirect: 'if_required',
+            })
+          if (aborted()) return
+
+          if (stripeError) throw new Error(stripeError.message)
+
+          // If Stripe couldn't complete the SCA inline it hands control back
+          // with status=requires_action — run handleNextAction explicitly.
+          finalIntent = setupIntent
+          if (finalIntent?.status === 'requires_action') {
+            const { setupIntent: next, error: actionError } =
+              await stripeRef.current.handleNextAction({ clientSecret })
+            if (aborted()) return
+            if (actionError) {
+              throw new Error(actionError.message ?? 'Authentication failed')
+            }
+            finalIntent = next ?? finalIntent
+          }
+        }
+
+        if (!finalIntent || finalIntent.status !== 'succeeded') {
+          throw new Error(
+            finalIntent?.last_setup_error?.message ??
+              (finalIntent?.status === 'requires_payment_method'
+                ? 'The card was declined or authentication was cancelled. Please try again or use a different card.'
+                : `Payment setup did not complete (status: ${finalIntent?.status ?? 'unknown'}).`),
+          )
+        }
+
+        const stripePaymentMethod = finalIntent.payment_method
+        if (!stripePaymentMethod) {
+          throw new Error('Invalid payment method response')
+        }
+
+        // After handleNextAction / retrieveSetupIntent the payment_method is a
+        // bare id string. Only the confirmSetup + expand path has the card.
+        resolvedProviderMethodId =
+          typeof stripePaymentMethod === 'string'
+            ? stripePaymentMethod
+            : stripePaymentMethod.id
+        const pmCard =
+          typeof stripePaymentMethod === 'object'
+            ? stripePaymentMethod.card
+            : null
+
+        // Cache the card preview for the state picker view whenever we have
+        // expanded card info, so every path (US + recovery) shows the user
+        // which card they're attaching the state to.
+        if (pmCard?.last4) {
+          setAddedCardPreview({
+            brand: pmCard.brand ?? '',
+            last4: pmCard.last4,
+            expMonth: pmCard.exp_month ?? 0,
+            expYear: pmCard.exp_year ?? 0,
+          })
+        }
+
+        if (pmCard?.country === 'US' && !showStatePicker) {
+          setProviderMethodId(resolvedProviderMethodId)
+          setShowStatePicker(true)
+          return
+        }
+
+        // No card object available (recovery path). Offer state as optional
+        // so US users can still attach one without blocking non-US users.
+        if (!pmCard && !showStatePicker) {
+          setProviderMethodId(resolvedProviderMethodId)
+          setStateOptional(true)
+          setShowStatePicker(true)
+          return
+        }
+      }
+
+      await setPaymentMethodProviderMutation.mutateAsync({
+        paymentMethodId,
+        providerMethodId: resolvedProviderMethodId,
+        name: cardholderName.trim(),
+        state: selectedState || undefined,
+      })
+      if (aborted()) return
+
+      if (organizationId) {
+        if (isBackup) {
+          await setBackupPaymentMethodMutation.mutateAsync({
+            organizationId,
+            paymentMethodId,
+          })
+        } else {
+          await setDefaultPaymentMethodMutation.mutateAsync({
+            organizationId,
+            paymentMethodId,
+          })
+        }
+        if (aborted()) return
+      }
+
+      toast.success(
+        organizationId
+          ? 'Payment method has been added to your organization'
+          : 'A new payment method has been added to your account',
+      )
+      onSuccess?.()
+    } catch (err) {
+      if (aborted()) return
+      setError(
+        err instanceof Error ? err.message : 'Failed to add payment method',
+      )
+    } finally {
+      if (submitAbortRef.current === controller) {
+        submitAbortRef.current = null
+      }
+    }
+  }
+
+  const isLoading =
+    isStripeLoading ||
+    createPaymentMethodMutation.isPending ||
+    setPaymentMethodProviderMutation.isPending ||
+    setDefaultPaymentMethodMutation.isPending ||
+    setBackupPaymentMethodMutation.isPending
+
+  if (!hasStripePublicKey) {
+    return (
+      <div
+        className={cn(
+          'space-y-4',
+          variant === 'dialog' ? 'px-6 pb-4' : undefined,
+        )}
+      >
+        <div className="rounded-md bg-yellow-500/10 border border-yellow-500/20 px-3 py-2">
+          <p className="text-[12px] text-yellow-600 dark:text-yellow-400">
+            Stripe payment processing is not configured. Please ensure
+            VITE_STRIPE_PUBLISHABLE_KEY is set in your environment.
+          </p>
+        </div>
+        {onCancel && (
+          <div
+            className={cn(
+              'flex justify-end gap-2',
+              variant === 'dialog' &&
+                '-mx-6 -mb-4 px-6 py-4 border-t border-border bg-muted/30',
+            )}
+          >
+            <Button
+              type="button"
+              variant="outline"
+              size={variant === 'inline' ? 'sm' : undefined}
+              onClick={onCancel}
+            >
+              Close
+            </Button>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  const buttonSize = variant === 'inline' ? 'sm' : undefined
+  const buttonClass = variant === 'inline' ? 'h-8 text-[13px]' : undefined
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className={cn(
+        'space-y-4',
+        variant === 'dialog' ? 'px-6 pb-4' : undefined,
+      )}
+    >
+      {!showStatePicker ? (
+        <>
+          <div className="space-y-2">
+            <Label htmlFor="cardholder-name" className="text-[13px]">
+              Cardholder name
+            </Label>
+            <Input
+              id="cardholder-name"
+              value={cardholderName}
+              onChange={(e) => setCardholderName(e.target.value)}
+              placeholder="John Doe"
+              className="h-9 text-[13px]"
+              disabled={isLoading}
+            />
+          </div>
+
+          <div
+            key={open ? `stripe-${paymentMethodId || 'new'}` : 'stripe-closed'}
+            className="min-h-[200px] relative"
+          >
+            <div ref={stripeContainerRef} className="min-h-[200px]" />
+            {isStripeLoading && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background/80">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                <p className="text-[12px] text-muted-foreground">
+                  Loading payment form...
+                </p>
+              </div>
+            )}
+          </div>
+        </>
+      ) : (
+        <div className="space-y-4">
+          {addedCardPreview && (
+            <div className="rounded-md border border-border bg-muted/30 px-3 py-2.5">
+              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+                Card added
+              </p>
+              <p className="text-[13px] text-foreground mt-1 capitalize">
+                {addedCardPreview.brand}{' '}
+                {maskCardNumber(addedCardPreview.last4)}
+              </p>
+              {addedCardPreview.expMonth > 0 &&
+                addedCardPreview.expYear > 0 && (
+                  <p className="text-[12px] text-muted-foreground mt-0.5">
+                    Expires {String(addedCardPreview.expMonth).padStart(2, '0')}
+                    /{String(addedCardPreview.expYear).slice(-2)}
+                  </p>
+                )}
+            </div>
+          )}
+          <div className="space-y-2">
+            <Label htmlFor="state" className="text-[13px]">
+              State
+              {stateOptional && (
+                <span className="text-muted-foreground font-normal ml-1">
+                  (only for US cards)
+                </span>
+              )}
+            </Label>
+            <p className="text-[12px] text-muted-foreground">
+              {stateOptional
+                ? 'Your card was saved. If this is a US card, select its billing state; otherwise continue.'
+                : 'Your card was saved. Select the state on the billing address to finish adding it.'}
+            </p>
+            <Select
+              value={selectedState}
+              onValueChange={setSelectedState}
+              disabled={isLoading}
+            >
+              <SelectTrigger id="state" className="h-9 text-[13px]">
+                <SelectValue placeholder="Select a state" />
+              </SelectTrigger>
+              <SelectContent>
+                {US_STATES.map((state) => (
+                  <SelectItem key={state.value} value={state.value}>
+                    {state.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      )}
+
+      {error && (
+        <div className="rounded-md bg-red-500/10 border border-red-500/20 px-3 py-2">
+          <p className="text-[12px] text-red-600 dark:text-red-400">{error}</p>
+        </div>
+      )}
+
+      <div
+        className={cn(
+          'flex items-center justify-end gap-2',
+          variant === 'dialog' &&
+            '-mx-6 -mb-4 px-6 py-4 border-t border-border bg-muted/30 flex-col-reverse sm:flex-row sm:justify-end',
+        )}
+      >
+        {onCancel && (
+          <Button
+            type="button"
+            variant="outline"
+            size={buttonSize}
+            className={buttonClass}
+            onClick={onCancel}
+            disabled={isLoading}
+          >
+            Cancel
+          </Button>
+        )}
+        <Button
+          type="submit"
+          size={buttonSize}
+          className={buttonClass}
+          disabled={
+            isLoading ||
+            !cardholderName.trim() ||
+            (showStatePicker && !selectedState && !stateOptional)
+          }
+        >
+          Add
+        </Button>
+      </div>
+    </form>
+  )
+}
