@@ -4052,13 +4052,14 @@ Http::post('/v1/account/recovery/email')
             $project->getAttribute('templates', [])['email.otpRecovery-' . $locale->default] ??
             $project->getAttribute('templates', [])['email.otpRecovery-' . $locale->fallback] ?? [];
 
-        $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-otp-recovery.tpl');
+        $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-otp.tpl');
         $message
             ->setParam('{{hello}}', $locale->getText("emails.otpRecovery.hello"))
             ->setParam('{{description}}', $locale->getText("emails.otpRecovery.description"))
-            ->setParam('{{footer}}', $locale->getText("emails.otpRecovery.footer"))
+            ->setParam('{{clientInfo}}', $locale->getText("emails.otpRecovery.footer"))
             ->setParam('{{thanks}}', $locale->getText("emails.otpRecovery.thanks"))
-            ->setParam('{{signature}}', $locale->getText("emails.otpRecovery.signature"));
+            ->setParam('{{signature}}', $locale->getText("emails.otpRecovery.signature"))
+            ->setParam('{{securityPhrase}}', '');
         $body = $message->render();
 
         $smtp = $project->getAttribute('smtp', []);
