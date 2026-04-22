@@ -866,6 +866,46 @@ class SitesCustomServerTest extends Scope
     //     // TODO: Implement testCreateDeploymentFromCLI() later
     // }
 
+    public function testCreateDeploymentWithSingleContentRangeChunk(): void
+    {
+        $siteId = $this->setupSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Test Site Single Chunk Range',
+            'outputDirectory' => './',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+
+        $code = $this->packageSite('static-single-file');
+        $size = \filesize($code->getFilename());
+
+        $deployment = $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/deployments', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'content-range' => 'bytes 0-' . ($size - 1) . '/' . $size,
+        ], $this->getHeaders()), [
+            'code' => $code,
+            'activate' => true,
+        ]);
+
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $this->assertNotEmpty($deployment['body']['$id']);
+
+        $deploymentId = $deployment['body']['$id'];
+
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $deployment = $this->getDeployment($siteId, $deploymentId);
+
+            $this->assertEquals(200, $deployment['headers']['status-code']);
+            $this->assertEquals('ready', $deployment['body']['status']);
+        }, 120000, 500);
+
+        $this->cleanupSite($siteId);
+    }
+
     public function testCreateDeployment()
     {
         $siteId = $this->setupSite([
