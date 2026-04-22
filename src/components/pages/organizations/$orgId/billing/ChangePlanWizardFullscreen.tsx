@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams, useNavigate, useSearch, Link } from '@tanstack/react-router'
+import { useQueryClient } from '@tanstack/react-query'
 import {
   BillingPlanTier,
   type BillingPlanTier as BillingPlanTierType,
@@ -58,6 +59,7 @@ export function ChangePlanWizardFullscreen() {
   const navigate = useNavigate()
   const search = useSearch({ strict: false })
   const orgId = params.orgId as string | undefined
+  const queryClient = useQueryClient()
 
   // Smart navigation for cancel/close actions
   // No fallbackPath - uses internal console history or root
@@ -376,11 +378,31 @@ export function ChangePlanWizardFullscreen() {
         taxId: taxId || null,
       })
 
-      // Payment authentication required (e.g. 3DS): handle inline via handleNextAction
-      const resultObj = result as { clientSecret?: string; status?: number }
-      if (resultObj?.clientSecret) {
+      // Payment authentication required (e.g. 3DS): handle inline via handleNextAction.
+      // The backend may return either a bare clientSecret or an object whose
+      // `status` indicates `requires_action` / `requires_authentication`.
+      const resultObj = result as {
+        clientSecret?: string
+        status?: string | number
+      }
+      const needsAction =
+        !!resultObj?.clientSecret ||
+        (typeof resultObj?.status === 'string' &&
+          (resultObj.status === 'requires_action' ||
+            resultObj.status === 'requires_authentication'))
+
+      if (needsAction && resultObj?.clientSecret) {
         await confirmPayment({
           clientSecret: resultObj.clientSecret,
+        })
+        // Refresh org + invoice state now that the payment intent has been
+        // authenticated; otherwise subsequent reads see the stale
+        // requires_action state.
+        await queryClient.invalidateQueries({
+          queryKey: ['organization', orgId],
+        })
+        await queryClient.invalidateQueries({
+          queryKey: ['invoices', 'organization', orgId],
         })
       }
 
