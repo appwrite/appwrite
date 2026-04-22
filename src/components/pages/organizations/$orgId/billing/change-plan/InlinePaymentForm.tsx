@@ -23,6 +23,7 @@ import {
   getStripeInstance,
   getStripeAppearanceFromTheme,
 } from '@/lib/utils/stripe'
+import { maskCardNumber } from '../utils'
 import { useTheme } from 'next-themes'
 import {
   useCreatePaymentMethod,
@@ -105,6 +106,12 @@ export function InlinePaymentForm({
   const [paymentMethodId, setPaymentMethodId] = useState<string | null>(null)
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [providerMethodId, setProviderMethodId] = useState<string | null>(null)
+  const [addedCardPreview, setAddedCardPreview] = useState<{
+    brand: string
+    last4: string
+    expMonth: number
+    expYear: number
+  } | null>(null)
 
   const stripeRef = useRef<Stripe | null>(null)
   const elementsRef = useRef<StripeElements | null>(null)
@@ -336,6 +343,15 @@ export function InlinePaymentForm({
         // so the second submit only updates state via our backend, not Stripe.
         if (stripePaymentMethod.card?.country === 'US' && !showStatePicker) {
           setProviderMethodId(resolvedProviderMethodId)
+          const card = stripePaymentMethod.card
+          if (card?.last4) {
+            setAddedCardPreview({
+              brand: card.brand ?? '',
+              last4: card.last4,
+              expMonth: card.exp_month ?? 0,
+              expYear: card.exp_year ?? 0,
+            })
+          }
           setShowStatePicker(true)
           return
         }
@@ -371,6 +387,7 @@ export function InlinePaymentForm({
       setPaymentMethodId(null)
       setClientSecret(null)
       setProviderMethodId(null)
+      setAddedCardPreview(null)
 
       onSuccess?.()
     } catch (err) {
@@ -451,26 +468,51 @@ export function InlinePaymentForm({
             </div>
           </>
         ) : (
-          <div className="space-y-2">
-            <Label htmlFor="state" className="text-[13px]">
-              State
-            </Label>
-            <Select
-              value={selectedState}
-              onValueChange={setSelectedState}
-              disabled={isLoading}
-            >
-              <SelectTrigger id="state" className="h-9 text-[13px]">
-                <SelectValue placeholder="Select a state" />
-              </SelectTrigger>
-              <SelectContent>
-                {US_STATES.map((state) => (
-                  <SelectItem key={state.value} value={state.value}>
-                    {state.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="space-y-4">
+            {addedCardPreview && (
+              <div className="rounded-md border border-border bg-muted/30 px-3 py-2.5">
+                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+                  Card added
+                </p>
+                <p className="text-[13px] text-foreground mt-1 capitalize">
+                  {addedCardPreview.brand}{' '}
+                  {maskCardNumber(addedCardPreview.last4)}
+                </p>
+                {addedCardPreview.expMonth > 0 &&
+                  addedCardPreview.expYear > 0 && (
+                    <p className="text-[12px] text-muted-foreground mt-0.5">
+                      Expires{' '}
+                      {String(addedCardPreview.expMonth).padStart(2, '0')}/
+                      {String(addedCardPreview.expYear).slice(-2)}
+                    </p>
+                  )}
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="state" className="text-[13px]">
+                State
+              </Label>
+              <p className="text-[12px] text-muted-foreground">
+                Your card was saved. Select the state on the billing address to
+                finish adding it.
+              </p>
+              <Select
+                value={selectedState}
+                onValueChange={setSelectedState}
+                disabled={isLoading}
+              >
+                <SelectTrigger id="state" className="h-9 text-[13px]">
+                  <SelectValue placeholder="Select a state" />
+                </SelectTrigger>
+                <SelectContent>
+                  {US_STATES.map((state) => (
+                    <SelectItem key={state.value} value={state.value}>
+                      {state.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         )}
 
