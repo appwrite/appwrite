@@ -121,6 +121,7 @@ export function PaymentModal({
   const [paymentMethodId, setPaymentMethodId] = useState<string | null>(null)
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [providerMethodId, setProviderMethodId] = useState<string | null>(null)
+  const [stateOptional, setStateOptional] = useState(false)
 
   const stripeRef = useRef<Stripe | null>(null)
   const elementsRef = useRef<StripeElements | null>(null)
@@ -308,6 +309,7 @@ export function PaymentModal({
       setPaymentMethodId(null)
       setClientSecret(null)
       setProviderMethodId(null)
+      setStateOptional(false)
       setIsStripeLoading(true)
 
       // Note: Stripe Elements cleanup is handled in the initialization effect's cleanup
@@ -323,7 +325,7 @@ export function PaymentModal({
       return
     }
 
-    if (showStatePicker && !selectedState) {
+    if (showStatePicker && !selectedState && !stateOptional) {
       setError('Please select a state')
       return
     }
@@ -428,6 +430,18 @@ export function PaymentModal({
         // id so the next submit only updates state via our backend, not Stripe.
         if (pmCard?.country === 'US' && !showStatePicker) {
           setProviderMethodId(resolvedProviderMethodId)
+          setShowStatePicker(true)
+          return
+        }
+
+        // If we recovered a pre-succeeded SetupIntent (retrieveSetupIntent
+        // path), Stripe.js returns the payment_method as a bare id and we
+        // cannot see the card's country. Show the state picker optionally so
+        // US cards can still have a state attached; non-US users may submit
+        // with no state selected.
+        if (!pmCard && !showStatePicker) {
+          setProviderMethodId(resolvedProviderMethodId)
+          setStateOptional(true)
           setShowStatePicker(true)
           return
         }
@@ -562,7 +576,18 @@ export function PaymentModal({
                 <div className="space-y-2">
                   <Label htmlFor="state" className="text-[13px]">
                     State
+                    {stateOptional && (
+                      <span className="text-muted-foreground font-normal ml-1">
+                        (only for US cards)
+                      </span>
+                    )}
                   </Label>
+                  {stateOptional && (
+                    <p className="text-[12px] text-muted-foreground">
+                      Your card was saved. If this is a US card, select its
+                      billing state; otherwise continue.
+                    </p>
+                  )}
                   <Select
                     value={selectedState}
                     onValueChange={setSelectedState}

@@ -112,6 +112,7 @@ export function InlinePaymentForm({
     expMonth: number
     expYear: number
   } | null>(null)
+  const [stateOptional, setStateOptional] = useState(false)
 
   const stripeRef = useRef<Stripe | null>(null)
   const elementsRef = useRef<StripeElements | null>(null)
@@ -278,7 +279,7 @@ export function InlinePaymentForm({
       return
     }
 
-    if (showStatePicker && !selectedState) {
+    if (showStatePicker && !selectedState && !stateOptional) {
       setError('Please select a state')
       return
     }
@@ -393,6 +394,17 @@ export function InlinePaymentForm({
           setShowStatePicker(true)
           return
         }
+
+        // If we recovered a pre-succeeded SetupIntent (retrieve path), Stripe
+        // returns the payment_method as a bare id so we cannot see the card
+        // country. Show the state picker optionally so US cards can still
+        // have a state attached; non-US users may submit with no state.
+        if (!pmCard && !showStatePicker) {
+          setProviderMethodId(resolvedProviderMethodId)
+          setStateOptional(true)
+          setShowStatePicker(true)
+          return
+        }
       }
 
       // Link payment method to Appwrite
@@ -426,6 +438,7 @@ export function InlinePaymentForm({
       setClientSecret(null)
       setProviderMethodId(null)
       setAddedCardPreview(null)
+      setStateOptional(false)
 
       onSuccess?.()
     } catch (err) {
@@ -529,10 +542,16 @@ export function InlinePaymentForm({
             <div className="space-y-2">
               <Label htmlFor="state" className="text-[13px]">
                 State
+                {stateOptional && (
+                  <span className="text-muted-foreground font-normal ml-1">
+                    (only for US cards)
+                  </span>
+                )}
               </Label>
               <p className="text-[12px] text-muted-foreground">
-                Your card was saved. Select the state on the billing address to
-                finish adding it.
+                {stateOptional
+                  ? 'Your card was saved. If this is a US card, select its billing state; otherwise continue.'
+                  : 'Your card was saved. Select the state on the billing address to finish adding it.'}
               </p>
               <Select
                 value={selectedState}
