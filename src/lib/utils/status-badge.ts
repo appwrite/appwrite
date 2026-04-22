@@ -83,7 +83,12 @@ export function getStatusColor(status: StatusType): string {
 /**
  * Invoice status types
  */
-export type InvoiceStatus = 'paid' | 'pending' | 'overdue' | 'failed'
+export type InvoiceStatus =
+  | 'paid'
+  | 'pending'
+  | 'overdue'
+  | 'failed'
+  | 'requires_authentication'
 
 /**
  * Get invoice status badge color classes
@@ -93,6 +98,8 @@ export function getInvoiceStatusColor(status: InvoiceStatus): string {
     case 'paid':
       return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
     case 'pending':
+      return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+    case 'requires_authentication':
       return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
     case 'overdue':
     case 'failed':

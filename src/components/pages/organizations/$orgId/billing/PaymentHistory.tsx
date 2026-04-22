@@ -1,14 +1,27 @@
 import { useState, useMemo, useEffect } from 'react'
-import { Download, Eye, ChevronLeft, ChevronRight } from 'lucide-react'
+import {
+  Download,
+  Eye,
+  ChevronLeft,
+  ChevronRight,
+  ShieldCheck,
+  RotateCw,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { type Invoice } from '@/lib/utils/mock-data'
 import { formatCurrency, formatDate, getStatusColor } from './utils'
 import { cn } from '@/lib/utils'
-import { useOrganizationInvoices } from '@/lib/react-query/hooks'
+import {
+  useOrganizationInvoices,
+  useOrganizationById,
+  useRetryInvoicePayment,
+} from '@/lib/react-query/hooks'
 import { useParams } from '@tanstack/react-router'
+import { useQueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { toast } from 'sonner'
+import { confirmPayment } from '@/lib/utils/stripe'
 
 /**
  * PaymentHistory Component
@@ -36,11 +49,17 @@ const ITEMS_PER_PAGE = 5
  */
 function mapApiInvoiceToComponent(apiInvoice: Models.Invoice): Invoice {
   // Map API status to component status
-  // API status can be: 'succeeded', 'pending', 'failed', 'overdue', etc.
-  let status: 'paid' | 'pending' | 'overdue' | 'failed' = 'pending'
+  // API status can be: 'succeeded', 'pending', 'failed', 'overdue',
+  // 'requires_authentication', 'requires_action', etc.
+  let status: Invoice['status'] = 'pending'
   const apiStatus = apiInvoice.status?.toLowerCase() || ''
   if (apiStatus === 'succeeded' || apiStatus === 'paid') {
     status = 'paid'
+  } else if (
+    apiStatus === 'requires_authentication' ||
+    apiStatus === 'requires_action'
+  ) {
+    status = 'requires_authentication'
   } else if (apiStatus === 'failed') {
     status = 'failed'
   } else if (apiStatus === 'overdue') {
@@ -86,6 +105,8 @@ function mapApiInvoiceToComponent(apiInvoice: Models.Invoice): Invoice {
     amount: apiInvoice.grossAmount || apiInvoice.amount,
     currency: apiInvoice.currency || 'USD',
     downloadUrl: undefined, // API doesn't provide downloadUrl directly
+    clientSecret: apiInvoice.clientSecret || undefined,
+    lastError: apiInvoice.lastError || undefined,
   }
 }
 
@@ -107,6 +128,62 @@ export function PaymentHistory() {
   const orgId = params.orgId as string | undefined
   const [requestedPage, setRequestedPage] = useState(0)
   const [displayedPage, setDisplayedPage] = useState(0)
+
+  const queryClient = useQueryClient()
+  const { organization } = useOrganizationById(orgId)
+  const retryPaymentMutation = useRetryInvoicePayment()
+
+  const handleAuthorizeInvoice = async (invoice: Invoice) => {
+    if (!invoice.clientSecret) {
+      toast.error('This invoice is missing authentication details.')
+      return
+    }
+    try {
+      await confirmPayment({ clientSecret: invoice.clientSecret })
+      toast.success('Payment authorized')
+      if (orgId) {
+        await queryClient.invalidateQueries({
+          queryKey: ['invoices', 'organization', orgId],
+        })
+        await queryClient.invalidateQueries({
+          queryKey: ['organization', orgId],
+        })
+      }
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to authorize payment',
+      )
+    }
+  }
+
+  const handleRetryInvoice = async (invoice: Invoice) => {
+    if (!orgId) return
+    const paymentMethodId =
+      organization?.paymentMethodId || organization?.backupPaymentMethodId
+    if (!paymentMethodId) {
+      // Fall back to Stripe authorize if a clientSecret is present.
+      if (invoice.clientSecret) {
+        await handleAuthorizeInvoice(invoice)
+        return
+      }
+      toast.error(
+        'No payment method available. Please add a payment method first.',
+      )
+      return
+    }
+    try {
+      await retryPaymentMutation.mutateAsync({
+        organizationId: orgId,
+        invoiceId: invoice.$id,
+        paymentMethodId,
+      })
+      toast.success('Payment retry initiated')
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to retry payment',
+      )
+    }
+  }
 
   // Fetch invoices for requested page (user intent)
   const {
@@ -247,6 +324,9 @@ export function PaymentHistory() {
                 key={invoice.$id}
                 invoice={invoice}
                 orgId={orgId}
+                onAuthorize={() => handleAuthorizeInvoice(invoice)}
+                onRetry={() => handleRetryInvoice(invoice)}
+                isRetrying={retryPaymentMutation.isPending}
                 onViewInvoice={async (invoiceId: string) => {
                   if (!orgId) return
                   try {
@@ -398,6 +478,9 @@ interface InvoiceRowProps {
   orgId?: string
   onViewInvoice: (invoiceId: string) => Promise<void>
   onDownloadInvoice: (invoiceId: string) => Promise<void>
+  onAuthorize: () => Promise<void>
+  onRetry: () => Promise<void>
+  isRetrying: boolean
 }
 
 function InvoiceRow({
@@ -405,9 +488,30 @@ function InvoiceRow({
   orgId,
   onViewInvoice,
   onDownloadInvoice,
+  onAuthorize,
+  onRetry,
+  isRetrying,
 }: InvoiceRowProps) {
   const [isViewing, setIsViewing] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
+  const [isAuthorizing, setIsAuthorizing] = useState(false)
+
+  const handleAuthorize = async () => {
+    setIsAuthorizing(true)
+    try {
+      await onAuthorize()
+    } finally {
+      setIsAuthorizing(false)
+    }
+  }
+
+  const statusLabel =
+    invoice.status === 'requires_authentication'
+      ? 'Action required'
+      : invoice.status
+  const showAuthorize =
+    invoice.status === 'requires_authentication' && !!invoice.clientSecret
+  const showRetry = invoice.status === 'failed' || invoice.status === 'overdue'
 
   const handleView = async () => {
     if (!orgId) return
@@ -448,7 +552,7 @@ function InvoiceRow({
             getStatusColor(invoice.status),
           )}
         >
-          {invoice.status}
+          {statusLabel}
         </span>
       </td>
       <td className="px-6 py-3 text-right">
@@ -458,6 +562,31 @@ function InvoiceRow({
       </td>
       <td className="px-6 py-3 text-right">
         <div className="flex items-center justify-end gap-1">
+          {showAuthorize && (
+            <Button
+              size="sm"
+              className="h-8 gap-1.5 px-2.5 text-[12px]"
+              title="Authorize payment"
+              onClick={handleAuthorize}
+              disabled={!orgId || isAuthorizing}
+            >
+              <ShieldCheck className="h-3.5 w-3.5" />
+              {isAuthorizing ? 'Authorizing...' : 'Authorize'}
+            </Button>
+          )}
+          {showRetry && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 gap-1.5 px-2.5 text-[12px]"
+              title="Retry payment"
+              onClick={onRetry}
+              disabled={!orgId || isRetrying}
+            >
+              <RotateCw className="h-3.5 w-3.5" />
+              {isRetrying ? 'Retrying...' : 'Retry payment'}
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="sm"

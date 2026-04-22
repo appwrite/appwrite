@@ -51,7 +51,7 @@ import {
  * @returns Tailwind CSS classes for the badge
  */
 export function getStatusColor(
-  status: 'paid' | 'pending' | 'overdue' | 'failed',
+  status: 'paid' | 'pending' | 'overdue' | 'failed' | 'requires_authentication',
 ): string {
   return getInvoiceStatusColorUtil(status as InvoiceStatus)
 }
