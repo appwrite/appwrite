@@ -96,6 +96,7 @@
     "emails.certificate.thanks": "Thanks,",
     "emails.certificate.signature": "{{project}} team",
     "sms.verification.body": "{{secret}}",
+    "sms.recovery.body": "Your {{project}} password reset code is {{secret}}. Valid for 15 minutes.",
     "locale.country.unknown": "Unknown",
     "countries.af": "Afghanistan",
     "countries.ao": "Angola",
