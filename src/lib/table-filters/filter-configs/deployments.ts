@@ -14,6 +14,7 @@ const DEPLOYMENT_STATUS_ELEMENTS = [
 ]
 
 export const deploymentsFilterColumns: FilterColumn[] = [
+  { id: '$id', title: '$id', type: 'string' },
   {
     id: 'status',
     title: 'Status',

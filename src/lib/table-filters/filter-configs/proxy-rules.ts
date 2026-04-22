@@ -12,6 +12,7 @@ const PROXY_RULE_STATUS_ELEMENTS = [
 ]
 
 export const proxyRulesFilterColumns: FilterColumn[] = [
+  { id: '$id', title: '$id', type: 'string' },
   { id: 'domain', title: 'Domain', type: 'string' },
   {
     id: 'status',

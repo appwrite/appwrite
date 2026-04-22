@@ -18,6 +18,7 @@ const DNS_RECORD_TYPES = [
 ]
 
 export const dnsRecordsFilterColumns: FilterColumn[] = [
+  { id: '$id', title: '$id', type: 'string' },
   { id: 'name', title: 'Name', type: 'string' },
   {
     id: 'type',
