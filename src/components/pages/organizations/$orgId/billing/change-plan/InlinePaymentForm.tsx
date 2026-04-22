@@ -328,28 +328,54 @@ export function InlinePaymentForm({
           throw new Error(stripeError.message)
         }
 
-        if (!setupIntent || setupIntent.status !== 'succeeded') {
-          throw new Error('Payment setup failed')
+        // For SCA/3DS cards the SDK may hand control back with
+        // status=requires_action if the inline modal couldn't complete — run
+        // handleNextAction explicitly and pick up the resulting intent.
+        let finalIntent = setupIntent
+        if (finalIntent?.status === 'requires_action') {
+          const { setupIntent: next, error: actionError } =
+            await stripeRef.current.handleNextAction({ clientSecret })
+          if (actionError) {
+            throw new Error(actionError.message ?? 'Authentication failed')
+          }
+          finalIntent = next ?? finalIntent
         }
 
-        const stripePaymentMethod = setupIntent.payment_method
-        if (!stripePaymentMethod || typeof stripePaymentMethod === 'string') {
+        if (!finalIntent || finalIntent.status !== 'succeeded') {
+          const reason =
+            finalIntent?.last_setup_error?.message ??
+            (finalIntent?.status === 'requires_payment_method'
+              ? 'The card was declined or authentication was cancelled. Please try again or use a different card.'
+              : `Payment setup did not complete (status: ${finalIntent?.status ?? 'unknown'}).`)
+          throw new Error(reason)
+        }
+
+        const stripePaymentMethod = finalIntent.payment_method
+        if (!stripePaymentMethod) {
           throw new Error('Invalid payment method response')
         }
 
-        resolvedProviderMethodId = stripePaymentMethod.id
+        // After handleNextAction the payment_method is a bare id string (no
+        // expand) — only the confirmSetup path has the full card object.
+        resolvedProviderMethodId =
+          typeof stripePaymentMethod === 'string'
+            ? stripePaymentMethod
+            : stripePaymentMethod.id
+        const pmCard =
+          typeof stripePaymentMethod === 'object'
+            ? stripePaymentMethod.card
+            : null
 
         // Check if US card requires state — pause here, keep the provider id
         // so the second submit only updates state via our backend, not Stripe.
-        if (stripePaymentMethod.card?.country === 'US' && !showStatePicker) {
+        if (pmCard?.country === 'US' && !showStatePicker) {
           setProviderMethodId(resolvedProviderMethodId)
-          const card = stripePaymentMethod.card
-          if (card?.last4) {
+          if (pmCard.last4) {
             setAddedCardPreview({
-              brand: card.brand ?? '',
-              last4: card.last4,
-              expMonth: card.exp_month ?? 0,
-              expYear: card.exp_year ?? 0,
+              brand: pmCard.brand ?? '',
+              last4: pmCard.last4,
+              expMonth: pmCard.exp_month ?? 0,
+              expYear: pmCard.exp_year ?? 0,
             })
           }
           setShowStatePicker(true)
