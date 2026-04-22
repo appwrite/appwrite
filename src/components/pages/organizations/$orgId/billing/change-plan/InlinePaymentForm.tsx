@@ -104,6 +104,7 @@ export function InlinePaymentForm({
   const [error, setError] = useState<string | null>(null)
   const [paymentMethodId, setPaymentMethodId] = useState<string | null>(null)
   const [clientSecret, setClientSecret] = useState<string | null>(null)
+  const [providerMethodId, setProviderMethodId] = useState<string | null>(null)
 
   const stripeRef = useRef<Stripe | null>(null)
   const elementsRef = useRef<StripeElements | null>(null)
@@ -275,12 +276,7 @@ export function InlinePaymentForm({
       return
     }
 
-    if (
-      !stripeRef.current ||
-      !elementsRef.current ||
-      !clientSecret ||
-      !paymentMethodId
-    ) {
+    if (!paymentMethodId) {
       setError('Payment form not ready. Please try again.')
       return
     }
@@ -288,55 +284,67 @@ export function InlinePaymentForm({
     try {
       setError(null)
 
-      // Submit Stripe Elements
-      await elementsRef.current.submit()
+      // If we already have a confirmed provider method id (state picker flow),
+      // skip the Stripe confirmSetup step and just submit the state to our backend.
+      let resolvedProviderMethodId = providerMethodId
 
-      // Confirm setup intent
-      const { setupIntent, error: stripeError } =
-        await stripeRef.current.confirmSetup({
-          elements: elementsRef.current,
-          clientSecret,
-          confirmParams: {
-            return_url:
-              typeof window !== 'undefined'
-                ? `${window.location.origin}${window.location.pathname}`
-                : '',
-            payment_method_data: {
-              billing_details: {
-                name: cardholderName.trim(),
+      if (!resolvedProviderMethodId) {
+        if (!stripeRef.current || !elementsRef.current || !clientSecret) {
+          setError('Payment form not ready. Please try again.')
+          return
+        }
+
+        // Submit Stripe Elements
+        await elementsRef.current.submit()
+
+        // Confirm setup intent
+        const { setupIntent, error: stripeError } =
+          await stripeRef.current.confirmSetup({
+            elements: elementsRef.current,
+            clientSecret,
+            confirmParams: {
+              return_url:
+                typeof window !== 'undefined'
+                  ? `${window.location.origin}${window.location.pathname}`
+                  : '',
+              payment_method_data: {
+                billing_details: {
+                  name: cardholderName.trim(),
+                },
               },
+              expand: ['payment_method'],
             },
-            expand: ['payment_method'],
-          },
-          redirect: 'if_required',
-        })
+            redirect: 'if_required',
+          })
 
-      if (stripeError) {
-        throw new Error(stripeError.message)
-      }
+        if (stripeError) {
+          throw new Error(stripeError.message)
+        }
 
-      if (!setupIntent || setupIntent.status !== 'succeeded') {
-        throw new Error('Payment setup failed')
-      }
+        if (!setupIntent || setupIntent.status !== 'succeeded') {
+          throw new Error('Payment setup failed')
+        }
 
-      const stripePaymentMethod = setupIntent.payment_method
-      if (!stripePaymentMethod || typeof stripePaymentMethod === 'string') {
-        throw new Error('Invalid payment method response')
-      }
+        const stripePaymentMethod = setupIntent.payment_method
+        if (!stripePaymentMethod || typeof stripePaymentMethod === 'string') {
+          throw new Error('Invalid payment method response')
+        }
 
-      // Check if US card requires state
-      if (stripePaymentMethod.card?.country === 'US' && !showStatePicker) {
-        setShowStatePicker(true)
-        return
+        resolvedProviderMethodId = stripePaymentMethod.id
+
+        // Check if US card requires state — pause here, keep the provider id
+        // so the second submit only updates state via our backend, not Stripe.
+        if (stripePaymentMethod.card?.country === 'US' && !showStatePicker) {
+          setProviderMethodId(resolvedProviderMethodId)
+          setShowStatePicker(true)
+          return
+        }
       }
 
       // Link payment method to Appwrite
       await setPaymentMethodProviderMutation.mutateAsync({
         paymentMethodId,
-        providerMethodId:
-          typeof stripePaymentMethod === 'object'
-            ? stripePaymentMethod.id
-            : stripePaymentMethod,
+        providerMethodId: resolvedProviderMethodId,
         name: cardholderName.trim(),
         state: selectedState || undefined,
       })
@@ -362,6 +370,7 @@ export function InlinePaymentForm({
       setError(null)
       setPaymentMethodId(null)
       setClientSecret(null)
+      setProviderMethodId(null)
 
       onSuccess?.()
     } catch (err) {
