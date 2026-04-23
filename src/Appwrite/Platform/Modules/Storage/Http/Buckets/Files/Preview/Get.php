@@ -173,6 +173,7 @@ class Get extends Action
         $algorithm = $file->getAttribute('algorithm', Compression::NONE);
         $cipher = $file->getAttribute('openSSLCipher');
         $mime = $file->getAttribute('mimeType');
+        $isLogoFallback = false;
         if (!\in_array($mime, $inputs) || $file->getAttribute('sizeActual') > (int) System::getEnv('_APP_STORAGE_PREVIEW_LIMIT', APP_STORAGE_READ_BUFFER)) {
             if (!\in_array($mime, $inputs)) {
                 $path = (\array_key_exists($mime, $fileLogos)) ? $fileLogos[$mime] : $fileLogos['default'];
@@ -186,6 +187,7 @@ class Get extends Action
             $background = (empty($background)) ? 'eceff1' : $background;
             $type = \strtolower(\pathinfo($path, PATHINFO_EXTENSION));
             $deviceForFiles = $deviceForLocal;
+            $isLogoFallback = true;
         }
 
         if (!$deviceForFiles->exists($path)) {
@@ -209,6 +211,16 @@ class Get extends Action
         $source = $deviceForFiles->read($path);
 
         $downloadTime = \microtime(true) - $startTime;
+
+        // Guard against transient backend failures that return a short/empty body
+        // instead of throwing. Without this check, partial bytes can still parse as
+        // a valid (but wrong) image downstream and get persisted to the cache.
+        if (!$isLogoFallback) {
+            $expectedSize = (int) $file->getAttribute('sizeActual', 0);
+            if ($expectedSize > 0 && \strlen($source) !== $expectedSize) {
+                throw new Exception(Exception::STORAGE_FILE_NOT_FOUND, 'Unexpected source size when reading file');
+            }
+        }
 
         if (!empty($cipher)) { // Decrypt
             $source = OpenSSL::decrypt(
@@ -266,6 +278,15 @@ class Get extends Action
 
         $data = $image->output($output, $quality);
 
+        // Defend against Imagick producing a malformed or empty buffer from a
+        // partial/corrupted source. The shutdown hook caches any 2xx response
+        // with an image content-type, so a degenerate payload would poison the
+        // cache for the full TTL. Verify the magic bytes match the declared
+        // output format before handing the blob off to the response.
+        if (!self::hasExpectedMagicBytes($data, $output)) {
+            throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, 'Rendered preview failed integrity check');
+        }
+
         $renderingTime = \microtime(true) - $startTime - $downloadTime - $decryptionTime - $decompressionTime;
 
         $totalTime = \microtime(true) - $startTime;
@@ -301,5 +322,23 @@ class Get extends Action
             ->file($data);
 
         unset($image);
+    }
+
+    private static function hasExpectedMagicBytes(string $data, string $output): bool
+    {
+        if (\strlen($data) < 12) {
+            return false;
+        }
+
+        $format = \strtolower($output);
+        return match ($format) {
+            'jpg', 'jpeg' => \str_starts_with($data, "\xFF\xD8\xFF"),
+            'png' => \str_starts_with($data, "\x89PNG\r\n\x1A\n"),
+            'gif' => \str_starts_with($data, 'GIF87a') || \str_starts_with($data, 'GIF89a'),
+            'webp' => \str_starts_with($data, 'RIFF') && \substr($data, 8, 4) === 'WEBP',
+            // Unknown/unsupported output formats — skip the check rather than
+            // reject, so new formats added to storage-outputs don't silently fail.
+            default => true,
+        };
     }
 }
