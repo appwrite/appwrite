@@ -631,11 +631,14 @@ Http::init()
             $isImageTransformation = $route->getPath() === '/v1/storage/buckets/:bucketId/files/:fileId/preview';
             $isDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && ! $user->isPrivileged($authorization->getRoles());
 
-            // Allow clients/operators to bypass a poisoned cache entry by sending
-            // `Cache-Control: no-cache`. The save path still runs on success and
-            // overwrites the existing entry with the freshly rendered response.
+            // Allow privileged callers (API key / admin / server-side) to bypass a
+            // poisoned cache entry by sending `Cache-Control: no-cache`. Restricted
+            // to privileged callers so public traffic cannot force-miss the cache
+            // and overload the underlying pipeline (e.g. Imagick transformations).
+            // The save path still runs on success and overwrites the stored entry.
             $cacheControl = \strtolower($request->getHeader('cache-control', ''));
-            $bypassCache = \str_contains($cacheControl, 'no-cache') || \str_contains($cacheControl, 'no-store');
+            $bypassRequested = \str_contains($cacheControl, 'no-cache') || \str_contains($cacheControl, 'no-store');
+            $bypassCache = $bypassRequested && ($isAppUser || $user->isPrivileged($authorization->getRoles()));
 
             $key = $request->cacheIdentifier();
             Span::add('storage.cache.key', $key);
@@ -988,13 +991,14 @@ Http::shutdown()
             $resource = $resourceType = null;
             $data = $response->getPayload();
             $statusCode = $response->getStatusCode();
-            // All routes that opt into label('cache', true) produce binary images
-            // via Response::file(). Refuse to cache anything else — this stops
-            // error pages, JSON error bodies, or partial/empty outputs from being
-            // persisted and served back on subsequent requests.
-            $contentType = (string) $response->getContentType();
-            $isImagePayload = \str_starts_with(\strtolower($contentType), 'image/');
-            if ($isImagePayload && ! empty($data['payload']) && $statusCode >= 200 && $statusCode < 300) {
+            // Routes may declare a `cache.contentType` prefix (e.g. `image/`) that
+            // the response must match to be cacheable. This stops error pages,
+            // fallback bodies, or partial outputs that slipped through with a 2xx
+            // status from being persisted and served back on later requests.
+            $contentTypePrefix = $route->getLabel('cache.contentType', '');
+            $contentType = \strtolower((string) $response->getContentType());
+            $contentTypeOk = empty($contentTypePrefix) || \str_starts_with($contentType, \strtolower($contentTypePrefix));
+            if ($contentTypeOk && ! empty($data['payload']) && $statusCode >= 200 && $statusCode < 300) {
                 $pattern = $route->getLabel('cache.resource', null);
                 if (! empty($pattern)) {
                     $resource = $parseLabel($pattern, $responsePayload, $requestParams, $user);

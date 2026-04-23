@@ -52,6 +52,7 @@ class Get extends Action
             ->label('scope', 'files.read')
             ->label('resourceType', RESOURCE_TYPE_BUCKETS)
             ->label('cache', true)
+            ->label('cache.contentType', 'image/')
             ->label('cache.resourceType', 'bucket/{request.bucketId}')
             ->label('cache.resource', 'file/{request.fileId}')
             ->label('cache.params', ['width', 'height', 'gravity', 'quality', 'borderWidth', 'borderColor', 'borderRadius', 'opacity', 'rotation', 'background', 'output', 'project'])

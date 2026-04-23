@@ -36,6 +36,7 @@ class Get extends Action
             ->groups(['api', 'avatars'])
             ->label('scope', 'avatars.read')
             ->label('cache', true)
+            ->label('cache.contentType', 'image/')
             ->label('cache.resourceType', 'cards/cloud')
             ->label('cache.resource', 'card/{request.userId}')
             ->label('docs', false)

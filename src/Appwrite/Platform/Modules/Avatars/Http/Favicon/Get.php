@@ -40,6 +40,7 @@ class Get extends Action
             ->groups(['api', 'avatars'])
             ->label('scope', 'avatars.read')
             ->label('cache', true)
+            ->label('cache.contentType', 'image/')
             ->label('cache.resource', 'avatar/favicon')
             ->label('sdk', new Method(
                 namespace: 'avatars',
