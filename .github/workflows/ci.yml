@@ -20,73 +20,12 @@ on:
         default: ''
 
 jobs:
-  dependencies:
-    name: Checks / Dependencies
-    if: github.event_name == 'pull_request'
-    permissions:
-      actions: read
-      security-events: write
-      contents: read
-    uses: "google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@v2.3.3"
-
-  security:
-    name: Checks / Image
-    if: github.event_name == 'pull_request'
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
     permissions:
       contents: read
       security-events: write
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-          submodules: 'recursive'
-
-      - name: Build the Docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: false
-          load: true
-          tags: pr_image:${{ github.sha }}
-          target: production
-
-      - name: Run Trivy vulnerability scanner on image
-        uses: aquasecurity/trivy-action@0.35.0
-        with:
-          image-ref: 'pr_image:${{ github.sha }}'
-          format: 'sarif'
-          output: 'trivy-image-results.sarif'
-          severity: 'CRITICAL,HIGH'
-
-      - name: Run Trivy vulnerability scanner on source code
-        uses: aquasecurity/trivy-action@0.35.0
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'sarif'
-          output: 'trivy-fs-results.sarif'
-          severity: 'CRITICAL,HIGH'
-          skip-setup-trivy: true
-
-      - name: Upload image scan results
-        uses: github/codeql-action/upload-sarif@v4
-        if: always() && hashFiles('trivy-image-results.sarif') != ''
-        with:
-          sarif_file: 'trivy-image-results.sarif'
-          category: 'trivy-image'
-
-      - name: Upload source code scan results
-        uses: github/codeql-action/upload-sarif@v4
-        if: always() && hashFiles('trivy-fs-results.sarif') != ''
-        with:
-          sarif_file: 'trivy-fs-results.sarif'
-          category: 'trivy-source'
-
-  composer:
-    name: Checks / Composer
-    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -95,8 +34,14 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
+          extensions: swoole
           tools: composer:v2
           coverage: none
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
 
       - name: Validate
         run: composer validate
@@ -109,48 +54,6 @@ jobs:
           COMPOSER_NO_AUDIT: 0
         run: composer audit
 
-  format:
-    name: Checks / Format
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 2
-
-      - run: git checkout HEAD^2
-        if: github.event_name == 'pull_request'
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.3'
-          tools: composer:v2
-          coverage: none
-
-      - name: Install dependencies
-        run: composer install --prefer-dist --no-progress --ignore-platform-reqs
-
-      - name: Run Linter
-        run: composer lint
-
-  analyze:
-    name: Checks / Analyze
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out the repo
-        uses: actions/checkout@v6
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.3'
-          tools: composer:v2
-          coverage: none
-
-      - name: Install dependencies
-        run: composer install --prefer-dist --no-progress --ignore-platform-reqs
-
       - name: Cache PHPStan result cache
         uses: actions/cache@v4
         with:
@@ -162,41 +65,30 @@ jobs:
       - name: Run PHPStan
         run: composer analyze -- --no-progress
 
-  specs:
-    name: Checks / Specs
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out the repo
-        uses: actions/checkout@v6
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.3'
-          extensions: swoole
-          tools: composer:v2
-          coverage: none
-
-      - name: Install dependencies
-        run: composer install --prefer-dist --no-progress --ignore-platform-reqs
-
       - name: Generate specs
         run: _APP_STORAGE_LIMIT=5368709120 php app/cli.php specs --version=latest --git=no
 
-  locale:
-    name: Checks / Locale
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out the repo
-        uses: actions/checkout@v6
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-
       - name: Run Locale check
         run: node .github/workflows/static-analysis/locale/index.js
+
+      - name: Run Pint
+        run: composer format:check
+
+      - name: Run Trivy vulnerability scanner on source code
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-fs-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload source code scan results
+        uses: github/codeql-action/upload-sarif@v4
+        if: always() && hashFiles('trivy-fs-results.sarif') != ''
+        with:
+          sarif_file: 'trivy-fs-results.sarif'
+          category: 'trivy-source'
 
   matrix:
     name: Tests / Matrix
@@ -246,6 +138,9 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -271,11 +166,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           outputs: type=docker,dest=/tmp/${{ env.IMAGE }}.tar
-          target: development
-          build-args: |
-            DEBUG=false
-            TESTING=true
-            VERSION=dev
+          target: production
 
       - name: Upload Docker Image
         uses: actions/upload-artifact@v7
@@ -283,6 +174,21 @@ jobs:
           name: ${{ env.IMAGE }}
           path: /tmp/${{ env.IMAGE }}.tar
           retention-days: 1
+
+      - name: Run Trivy vulnerability scanner on image
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          input: /tmp/${{ env.IMAGE }}.tar
+          format: 'sarif'
+          output: 'trivy-image-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload image scan results
+        uses: github/codeql-action/upload-sarif@v4
+        if: always() && hashFiles('trivy-image-results.sarif') != ''
+        with:
+          sarif_file: 'trivy-image-results.sarif'
+          category: 'trivy-image'
 
   unit:
     name: Tests / Unit
@@ -331,15 +237,20 @@ jobs:
             -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
             appwrite test /usr/src/code/tests/unit
 
-  e2e_general:
-    name: Tests / E2E / General
+  e2e:
+    name: Tests / E2E / ${{ matrix.database }} (${{ matrix.mode }})
     runs-on: ubuntu-latest
-    needs: build
+    needs: [build, matrix]
     permissions:
       contents: read
       pull-requests: write
+    strategy:
+      fail-fast: false
+      matrix:
+        database: ${{ fromJSON(needs.matrix.outputs.databases) }}
+        mode: ${{ fromJSON(needs.matrix.outputs.modes) }}
     steps:
-      - name: checkout
+      - name: Checkout repository
         uses: actions/checkout@v6
 
       - name: Download Docker Image
@@ -347,6 +258,25 @@ jobs:
         with:
           name: ${{ env.IMAGE }}
           path: /tmp
+
+      - name: Set database environment
+        run: |
+          if [ "${{ matrix.database }}" = "MariaDB" ]; then
+            echo "COMPOSE_PROFILES=mariadb" >> $GITHUB_ENV
+            echo "_APP_DB_ADAPTER=mariadb" >> $GITHUB_ENV
+            echo "_APP_DB_HOST=mariadb" >> $GITHUB_ENV
+            echo "_APP_DB_PORT=3306" >> $GITHUB_ENV
+          elif [ "${{ matrix.database }}" = "MongoDB" ]; then
+            echo "COMPOSE_PROFILES=mongodb" >> $GITHUB_ENV
+            echo "_APP_DB_ADAPTER=mongodb" >> $GITHUB_ENV
+            echo "_APP_DB_HOST=mongodb" >> $GITHUB_ENV
+            echo "_APP_DB_PORT=27017" >> $GITHUB_ENV
+          elif [ "${{ matrix.database }}" = "PostgreSQL" ]; then
+            echo "COMPOSE_PROFILES=postgresql" >> $GITHUB_ENV
+            echo "_APP_DB_ADAPTER=postgresql" >> $GITHUB_ENV
+            echo "_APP_DB_HOST=postgresql" >> $GITHUB_ENV
+            echo "_APP_DB_PORT=5432" >> $GITHUB_ENV
+          fi
 
       - name: Login to Docker Hub
         uses: docker/login-action@v4
@@ -356,6 +286,14 @@ jobs:
 
       - name: Load and Start Appwrite
         timeout-minutes: 5
+        env:
+          _APP_BROWSER_HOST: http://invalid-browser/v1
+          _APP_DATABASE_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'database_db_main' || '' }}
+          _APP_DATABASE_SHARED_TABLES_V1: ${{ matrix.mode == 'shared_v1' && 'database_db_main' || '' }}
+          _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'documentsdb_db_main' || '' }}
+          _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES_V1: ${{ matrix.mode == 'shared_v1' && 'documentsdb_db_main' || '' }}
+          _APP_DATABASE_VECTORSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'vectorsdb_db_main' || '' }}
+          _APP_DATABASE_VECTORSDB_SHARED_TABLES_V1: ${{ matrix.mode == 'shared_v1' && 'vectorsdb_db_main' || '' }}
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose pull --quiet --ignore-buildable
@@ -369,19 +307,15 @@ jobs:
             sleep 1
           done
 
-      - name: Run General Tests
-        uses: itznotabug/php-retry@v3
-        with:
-          max_attempts: 2
-          retry_wait_seconds: 60
-          timeout_minutes: 15
-          job_id: ${{ job.check_run_id }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          test_dir: tests/e2e/General
-          command: >-
-            docker compose exec -T
-            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
-            appwrite test /usr/src/code/tests/e2e/General
+      - name: Run Tests
+        timeout-minutes: 60
+        run: >-
+          docker compose exec -T
+          -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
+          appwrite vendor/bin/paratest --processes $(($(nproc) * 2)) --functional
+          --configuration /usr/src/code/phpunit.xml
+          --testsuite e2e
+          --exclude-group abuseEnabled --exclude-group screenshots
 
       - name: Failure Logs
         if: failure()
@@ -402,30 +336,14 @@ jobs:
         database: ${{ fromJSON(needs.matrix.outputs.databases) }}
         mode: ${{ fromJSON(needs.matrix.outputs.modes) }}
         service: [
-          Account,
-          Avatars,
-          Console,
           Databases,
           TablesDB,
           Functions,
           FunctionsSchedule,
           GraphQL,
-          Health,
-          Locale,
-          Projects,
           Realtime,
           Sites,
-          Proxy,
-          Storage,
-          Tokens,
-          Teams,
-          Users,
-          ProjectWebhooks,
-          Webhooks,
-          VCS,
-          Messaging,
           Migrations,
-          Project
         ]
         include:
           - service: Databases
@@ -435,8 +353,6 @@ jobs:
           - service: Sites
             runner: blacksmith-4vcpu-ubuntu-2404
           - service: Functions
-            runner: blacksmith-4vcpu-ubuntu-2404
-          - service: Avatars
             runner: blacksmith-4vcpu-ubuntu-2404
           - service: Realtime
             runner: blacksmith-4vcpu-ubuntu-2404
