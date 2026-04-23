@@ -433,6 +433,10 @@ class Migrations extends Action
             throw new \Exception('_APP_MIGRATION_HOST is not set');
         }
 
+        // Strip any accidental protocol prefix from the host to avoid constructing
+        // malformed URLs like http://http://hostname which cause DNS resolution failures.
+        $host = preg_replace('#^https?://#', '', rtrim($host, '/'));
+
         $endpoint = 'http://' . $host . '/v1';
 
         try {
