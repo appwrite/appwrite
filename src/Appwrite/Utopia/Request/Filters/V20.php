@@ -58,7 +58,7 @@ class V20 extends Filter
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $selections = Query::groupByType($parsed)['selections'] ?? [];
+        $selections = Query::groupByType($parsed)['selections'];
 
         // Check if we need to add wildcard + relationships
         // This happens when:

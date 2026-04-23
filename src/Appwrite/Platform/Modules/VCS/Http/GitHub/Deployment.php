@@ -107,7 +107,7 @@ trait Deployment
                     $activate = true;
                 }
 
-                $owner = $github->getOwnerName($providerInstallationId) ?? '';
+                $owner = $github->getOwnerName($providerInstallationId);
                 try {
                     $repositoryName = $github->getRepositoryName($providerRepositoryId);
                 } catch (RepositoryNotFound $e) {

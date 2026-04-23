@@ -20,6 +20,8 @@ use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Storage\Device;
 use Utopia\System\System;
+use Utopia\Telemetry\Adapter as Telemetry;
+use Utopia\Telemetry\Counter;
 
 use function Swoole\Coroutine\batch;
 
@@ -44,6 +46,7 @@ class Screenshots extends Action
             ->inject('dbForProject')
             ->inject('project')
             ->inject('deviceForFiles')
+            ->inject('telemetry')
             ->callback($this->action(...));
     }
 
@@ -53,17 +56,19 @@ class Screenshots extends Action
         Database $dbForPlatform,
         Database $dbForProject,
         Document $project,
-        Device $deviceForFiles
+        Device $deviceForFiles,
+        Telemetry $telemetry
     ): void {
         Console::log('Screenshot action started');
 
-        $payload = $message->getPayload() ?? [];
+        $payload = $message->getPayload();
 
         if (empty($payload)) {
             throw new \Exception('Missing payload');
         }
 
         $screenshotMessage = Screenshot::fromArray($payload);
+        $counter = $telemetry->createCounter('worker.screenshots.capture');
 
         Console::log('Site screenshot started');
 
@@ -162,7 +167,7 @@ class Screenshots extends Action
                     try {
                         $config = $configs[$key];
 
-                        $config['headers'] = \array_merge($config['headers'] ?? [], [
+                        $config['headers'] = \array_merge($config['headers'], [
                             'x-appwrite-key' => API_KEY_DYNAMIC . '_' . $apiKey
                         ]);
                         $config['sleep'] = 3000;
@@ -268,7 +273,23 @@ class Screenshots extends Action
             $date = \date('H:i:s');
             $this->appendToLogs($dbForProject, $deployment->getId(), $queueForRealtime, "[90m[$date] [90m[[0mappwrite[90m][33m Screenshot capturing failed. Deployment will continue. [0m\n");
 
+            $this->recordTelemetry($counter, 'failure');
+
             throw $th;
+        }
+
+        $this->recordTelemetry($counter, 'success');
+    }
+
+    protected function recordTelemetry(Counter $counter, string $result): void
+    {
+        try {
+            $counter->add(1, [
+                'resourceType' => RESOURCE_TYPE_SITES,
+                'result' => $result,
+            ]);
+        } catch (\Throwable) {
+            // Telemetry should never affect screenshot processing.
         }
     }
 

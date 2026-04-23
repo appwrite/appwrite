@@ -101,7 +101,7 @@ trait RealtimeQueryBase
             $data = $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $client->close();
@@ -206,7 +206,7 @@ trait RealtimeQueryBase
             $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $client->close();
@@ -304,7 +304,7 @@ trait RealtimeQueryBase
             $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $client->close();
@@ -398,7 +398,7 @@ trait RealtimeQueryBase
             $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $client->close();
@@ -492,7 +492,7 @@ trait RealtimeQueryBase
             $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $client->close();
@@ -604,7 +604,7 @@ trait RealtimeQueryBase
             $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $client->close();
@@ -716,7 +716,7 @@ trait RealtimeQueryBase
             $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $client->close();
@@ -810,7 +810,7 @@ trait RealtimeQueryBase
             $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $client->close();
@@ -903,7 +903,7 @@ trait RealtimeQueryBase
             $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $client->close();
@@ -1019,7 +1019,7 @@ trait RealtimeQueryBase
             $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         // Create document with priority > 5 but status != 'active' - should NOT receive event
@@ -1041,7 +1041,7 @@ trait RealtimeQueryBase
             $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $client->close();
@@ -1157,7 +1157,7 @@ trait RealtimeQueryBase
             $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $client->close();
@@ -1296,7 +1296,7 @@ trait RealtimeQueryBase
             $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         // Create document with score >= 80 but category != 'premium' or 'vip' - should NOT receive event
@@ -1318,7 +1318,7 @@ trait RealtimeQueryBase
             $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $client->close();
@@ -1511,7 +1511,7 @@ trait RealtimeQueryBase
             $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered for scoped channel query');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $client->close();
@@ -1583,7 +1583,7 @@ trait RealtimeQueryBase
             $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $client->close();
@@ -1692,7 +1692,7 @@ trait RealtimeQueryBase
             $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered (neither query matches)');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         // Create document with matching ID but wrong status - should NOT receive event (only one query matches)
@@ -1713,7 +1713,7 @@ trait RealtimeQueryBase
             $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered (ID matches but status does not)');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $client->close();
@@ -1870,7 +1870,7 @@ trait RealtimeQueryBase
             $clientQ2->receive();
             $this->fail('Expected TimeoutException - event should be filtered for clientQ2 (active document)');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         // clientComplex: should receive event, subscriptions should not be empty (query matched)
@@ -1912,7 +1912,7 @@ trait RealtimeQueryBase
             $clientQ1->receive();
             $this->fail('Expected TimeoutException - event should be filtered for clientQ1 (pending document)');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         // clientQ2: should receive event, subscriptions should not be empty (query matched)
@@ -1929,7 +1929,7 @@ trait RealtimeQueryBase
             $clientComplex->receive();
             $this->fail('Expected TimeoutException - event should be filtered for complex subscription (pending document)');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $clientAll->close();
@@ -2043,7 +2043,7 @@ trait RealtimeQueryBase
             $clientQ2->receive();
             $this->fail('Expected TimeoutException - clientQ2 should not receive active document');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         // 2) pending document -> only queryStatusPending subscription should see it
@@ -2073,7 +2073,7 @@ trait RealtimeQueryBase
             $clientQ1->receive();
             $this->fail('Expected TimeoutException - clientQ1 should not receive pending document');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $clientQ1->close();
@@ -2252,7 +2252,7 @@ trait RealtimeQueryBase
             $data = $client->receive();
             $this->fail('Expected TimeoutException - document does not match query after permission change');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         // Create a NEW document with a different ID - should NOT receive event
@@ -2279,7 +2279,7 @@ trait RealtimeQueryBase
             $data = $client->receive();
             $this->fail('Expected TimeoutException - new document does not match original query after permission change');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         // Create a document with the ORIGINAL matching ID - should receive event
@@ -2439,7 +2439,7 @@ trait RealtimeQueryBase
             $clientWithNonMatchingQuery->receive();
             $this->fail('Expected TimeoutException - client with non-matching query should not receive event');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $clientNoQuery->close();

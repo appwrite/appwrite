@@ -12,7 +12,7 @@ abstract class Action extends DatabasesAction
     /**
      * The current API context (either 'table' or 'collection').
      */
-    private ?string $context = COLLECTIONS;
+    private string $context = COLLECTIONS;
 
     /**
      * Get the response model used in the SDK and HTTP responses.

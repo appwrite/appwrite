@@ -66,15 +66,10 @@ class Get extends Base
 
         $variable = $dbForProject->getDocument('variables', $variableId);
         if (
-            $variable === false ||
             $variable->isEmpty() ||
             $variable->getAttribute('resourceInternalId') !== $function->getSequence() ||
             $variable->getAttribute('resourceType') !== 'function'
         ) {
-            throw new Exception(Exception::VARIABLE_NOT_FOUND);
-        }
-
-        if ($variable === false || $variable->isEmpty()) {
             throw new Exception(Exception::VARIABLE_NOT_FOUND);
         }
 

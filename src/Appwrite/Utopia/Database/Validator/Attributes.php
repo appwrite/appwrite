@@ -188,13 +188,13 @@ class Attributes extends Validator
             }
 
             // Validate required and default conflict
-            if (isset($attribute['required']) && $attribute['required'] === true && isset($attribute['default']) && $attribute['default'] !== null) {
+            if (isset($attribute['required']) && $attribute['required'] === true && isset($attribute['default'])) {
                 $this->message = "Attribute '" . $attribute['key'] . "' cannot have a default value when required is true";
                 return false;
             }
 
             // Validate array and default conflict
-            if (isset($attribute['array']) && $attribute['array'] === true && isset($attribute['default']) && $attribute['default'] !== null) {
+            if (isset($attribute['array']) && $attribute['array'] === true && isset($attribute['default'])) {
                 $this->message = "Attribute '" . $attribute['key'] . "' cannot have a default value when array is true";
                 return false;
             }
@@ -331,7 +331,7 @@ class Attributes extends Validator
                 }
 
                 // Validate default exists in elements
-                if (isset($attribute['default']) && $attribute['default'] !== null) {
+                if (isset($attribute['default'])) {
                     if (!in_array($attribute['default'], $attribute['elements'], true)) {
                         $this->message = "Default value for enum attribute '" . $attribute['key'] . "' must be one of the provided elements";
                         return false;

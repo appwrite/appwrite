@@ -368,7 +368,7 @@ return function (Container $container): void {
 
                 $log->addTag('code', $error->getCode());
                 $log->addTag('verboseType', \get_class($error));
-                $log->addTag('projectId', $project->getId() ?? '');
+                $log->addTag('projectId', $project->getId());
 
                 $log->addExtra('file', $error->getFile());
                 $log->addExtra('line', $error->getLine());

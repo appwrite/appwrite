@@ -143,11 +143,12 @@ class XList extends Action
                 });
 
                 foreach ($stats as $stat) {
-                    $bucket = $bucketByStatsId[$stat->getId()];
-
-                    if ($bucket) {
-                        $bucket->setAttribute('totalSize', $stat->getAttribute('value', 0));
+                    if (!isset($bucketByStatsId[$stat->getId()])) {
+                        continue;
                     }
+
+                    $bucket = $bucketByStatsId[$stat->getId()];
+                    $bucket->setAttribute('totalSize', $stat->getAttribute('value', 0));
                 }
             } catch (\Throwable) {
                 // Stats may not be available, default to 0

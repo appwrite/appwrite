@@ -1605,8 +1605,6 @@ class UsageTest extends Scope
             'siteId' => ID::unique()
         ]);
 
-        $this->assertNotNull($siteId);
-
         $deployment = $this->createDeploymentSite($siteId, [
             'siteId' => $siteId,
             'code' => $this->packageSite('static'),

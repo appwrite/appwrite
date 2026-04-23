@@ -37,8 +37,8 @@ class Delete extends Action
             ->label('event', 'users.[userId].delete.mfa')
             ->label('scope', 'account')
             ->label('audits.event', 'user.update')
-            ->label('audits.resource', 'user/{response.$id}')
-            ->label('audits.userId', '{response.$id}')
+            ->label('audits.resource', 'user/{user.$id}')
+            ->label('audits.userId', '{user.$id}')
             ->label('sdk', [
                 new Method(
                     namespace: 'account',

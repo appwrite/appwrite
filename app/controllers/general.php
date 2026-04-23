@@ -26,6 +26,7 @@ use Appwrite\Utopia\Request\Filters\V19 as RequestV19;
 use Appwrite\Utopia\Request\Filters\V20 as RequestV20;
 use Appwrite\Utopia\Request\Filters\V21 as RequestV21;
 use Appwrite\Utopia\Request\Filters\V22 as RequestV22;
+use Appwrite\Utopia\Request\Filters\V23 as RequestV23;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filters\V16 as ResponseV16;
 use Appwrite\Utopia\Response\Filters\V17 as ResponseV17;
@@ -34,6 +35,7 @@ use Appwrite\Utopia\Response\Filters\V19 as ResponseV19;
 use Appwrite\Utopia\Response\Filters\V20 as ResponseV20;
 use Appwrite\Utopia\Response\Filters\V21 as ResponseV21;
 use Appwrite\Utopia\Response\Filters\V22 as ResponseV22;
+use Appwrite\Utopia\Response\Filters\V23 as ResponseV23;
 use Appwrite\Utopia\View;
 use Executor\Executor;
 use MaxMind\Db\Reader;
@@ -67,7 +69,7 @@ Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
 function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Event $queueForEvents, Bus $bus, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, Authorization $authorization, ?Key $apiKey, DeleteEvent $queueForDeletes, int $executionsRetentionCount)
 {
-    $host = $request->getHostname() ?? '';
+    $host = $request->getHostname();
     if (!empty($previewHostname)) {
         $host = $previewHostname;
     }
@@ -200,12 +202,6 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             $deployment = $authorization->skip(fn () => $dbForProject->getDocument('deployments', $activeDeploymentId));
         }
 
-        if ($deployment->getAttribute('resourceType', '') === 'functions') {
-            $type = 'function';
-        } elseif ($deployment->getAttribute('resourceType', '') === 'sites') {
-            $type = 'site';
-        }
-
         if ($deployment->isEmpty()) {
             $resourceType = $rule->getAttribute('deploymentResourceType', '');
             $resourceId = $rule->getAttribute('deploymentResourceId', '');
@@ -213,6 +209,14 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             $exception = new AppwriteException(AppwriteException::DEPLOYMENT_NOT_FOUND, view: $errorView);
             $exception->addCTA('View deployments', $url . '/console/project-' . $project->getAttribute('region', 'default') . '-' . $projectId . '/' . $type . '/' . $resourceType . '-' . $resourceId);
             throw $exception;
+        }
+
+        if ($deployment->getAttribute('resourceType', '') === 'functions') {
+            $type = 'function';
+        } elseif ($deployment->getAttribute('resourceType', '') === 'sites') {
+            $type = 'site';
+        } else {
+            throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Unknown deployment resource type', view: $errorView);
         }
 
         $resource = $type === 'function' ?
@@ -302,13 +306,13 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             }
         }
 
-        $body = $swooleRequest->getContent() ?? '';
+        $body = $swooleRequest->getContent() ?: '';
         $method = $swooleRequest->server['request_method'];
 
         $requestHeaders = $request->getHeaders();
 
         if ($resource->isEmpty() || !$resource->getAttribute('enabled')) {
-            if ($type === 'functions') {
+            if ($type === 'function') {
                 throw new AppwriteException(AppwriteException::FUNCTION_NOT_FOUND, view: $errorView);
             } else {
                 throw new AppwriteException(AppwriteException::SITE_NOT_FOUND, view: $errorView);
@@ -330,7 +334,6 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         $runtime = match ($type) {
             'function' => $runtimes[$resource->getAttribute('runtime')] ?? null,
             'site' => $runtimes[$resource->getAttribute('buildRuntime')] ?? null,
-            default => null
         };
 
         // Static site enforced runtime
@@ -459,10 +462,10 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         // V2 vars
         if ($version === 'v2') {
             $vars = \array_merge($vars, [
-                'APPWRITE_FUNCTION_TRIGGER' => $headers['x-appwrite-trigger'] ?? '',
+                'APPWRITE_FUNCTION_TRIGGER' => $headers['x-appwrite-trigger'],
                 'APPWRITE_FUNCTION_DATA' => $body,
-                'APPWRITE_FUNCTION_USER_ID' => $headers['x-appwrite-user-id'] ?? '',
-                'APPWRITE_FUNCTION_JWT' => $headers['x-appwrite-user-jwt'] ?? ''
+                'APPWRITE_FUNCTION_USER_ID' => $headers['x-appwrite-user-id'],
+                'APPWRITE_FUNCTION_JWT' => $headers['x-appwrite-user-jwt']
             ]);
         }
 
@@ -678,9 +681,8 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
             if (\is_string($logs) && \strlen($logs) > $maxLogLength) {
                 $warningMessage = "[WARNING] Logs truncated. The output exceeded {$maxLogLength} characters.\n";
-                $warningLength = \strlen($warningMessage);
-                $maxContentLength = max(0, $maxLogLength - $warningLength);
-                $logs = $warningMessage . ($maxContentLength > 0 ? \substr($logs, -$maxContentLength) : '');
+                $maxContentLength = $maxLogLength - \strlen($warningMessage);
+                $logs = $warningMessage . \substr($logs, -$maxContentLength);
             }
 
             // Truncate errors if they exceed the limit
@@ -689,9 +691,8 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
             if (\is_string($errors) && \strlen($errors) > $maxErrorLength) {
                 $warningMessage = "[WARNING] Errors truncated. The output exceeded {$maxErrorLength} characters.\n";
-                $warningLength = \strlen($warningMessage);
-                $maxContentLength = max(0, $maxErrorLength - $warningLength);
-                $errors = $warningMessage . ($maxContentLength > 0 ? \substr($errors, -$maxContentLength) : '');
+                $maxContentLength = $maxErrorLength - \strlen($warningMessage);
+                $errors = $warningMessage . \substr($errors, -$maxContentLength);
             }
             /** Update execution status */
             $status = $executionResponse['statusCode'] >= 500 ? 'failed' : 'completed';
@@ -719,14 +720,12 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 throw $th;
             }
         } finally {
-            if ($type === 'function' || $type === 'site') {
-                $bus->dispatch(new ExecutionCompleted(
-                    execution: $execution->getArrayCopy(),
-                    project: $project->getArrayCopy(),
-                    spec: $spec,
-                    resource: $resource->getArrayCopy(),
-                ));
-            }
+            $bus->dispatch(new ExecutionCompleted(
+                execution: $execution->getArrayCopy(),
+                project: $project->getArrayCopy(),
+                spec: $spec,
+                resource: $resource->getArrayCopy(),
+            ));
         }
 
         $execution->setAttribute('logs', '');
@@ -852,7 +851,7 @@ Http::init()
         /*
         * Appwrite Router
         */
-        $hostname = $request->getHostname() ?? '';
+        $hostname = $request->getHostname();
         $platformHostnames = $platform['hostnames'] ?? [];
         // Only run Router when external domain
         if (!\in_array($hostname, $platformHostnames) || !empty($previewHostname)) {
@@ -897,6 +896,9 @@ Http::init()
             if (version_compare($requestFormat, '1.9.1', '<')) {
                 $request->addFilter(new RequestV22());
             }
+            if (version_compare($requestFormat, '1.9.2', '<')) {
+                $request->addFilter(new RequestV23());
+            }
         }
 
         $localeParam = (string) $request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
@@ -921,6 +923,9 @@ Http::init()
          */
         $responseFormat = $request->getHeader('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
         if ($responseFormat) {
+            if (version_compare($responseFormat, '1.9.2', '<')) {
+                $response->addFilter(new ResponseV23());
+            }
             if (version_compare($responseFormat, '1.9.1', '<')) {
                 $response->addFilter(new ResponseV22());
             }
@@ -1499,9 +1504,9 @@ Http::error()
                 ->setParam('development', Http::isDevelopment())
                 ->setParam('projectName', $project->getAttribute('name'))
                 ->setParam('projectURL', $project->getAttribute('url'))
-                ->setParam('message', $output['message'] ?? '')
-                ->setParam('type', $output['type'] ?? '')
-                ->setParam('code', $output['code'] ?? '')
+                ->setParam('message', $output['message'])
+                ->setParam('type', $output['type'])
+                ->setParam('code', $output['code'])
                 ->setParam('trace', $output['trace'] ?? [])
                 ->setParam('exception', $error);
 
@@ -1616,7 +1621,7 @@ Http::get('/.well-known/acme-challenge/*')
             throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND, 'Unknown path');
         }
 
-        if (!\substr($absolute, 0, \strlen($base)) === $base) {
+        if (\substr($absolute, 0, \strlen($base)) !== $base) {
             throw new AppwriteException(AppwriteException::GENERAL_UNAUTHORIZED_SCOPE, 'Invalid path');
         }
 
@@ -1695,7 +1700,7 @@ Http::get('/_appwrite/authorize')
     ->inject('previewHostname')
     ->action(function (Request $request, Response $response, string $previewHostname) {
 
-        $host = $request->getHostname() ?? '';
+        $host = $request->getHostname();
         if (!empty($previewHostname)) {
             $host = $previewHostname;
         }

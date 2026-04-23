@@ -68,7 +68,7 @@ class Base extends Action
         $owner = $github->getOwnerName($providerInstallationId);
         $providerRepositoryId = $function->getAttribute('providerRepositoryId', '');
         try {
-            $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+            $repositoryName = $github->getRepositoryName($providerRepositoryId);
             if (empty($repositoryName)) {
                 throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
             }
@@ -169,7 +169,7 @@ class Base extends Action
         $owner = $github->getOwnerName($providerInstallationId);
         $providerRepositoryId = $site->getAttribute('providerRepositoryId', '');
         try {
-            $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+            $repositoryName = $github->getRepositoryName($providerRepositoryId);
             if (empty($repositoryName)) {
                 throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
             }
