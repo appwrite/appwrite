@@ -158,6 +158,7 @@ class FunctionsScheduleTest extends Scope
             'scheduledAt' => (new \DateTime("2100-12-08 16:12:02"))->format(\DateTime::ATOM)
         ]);
         $this->assertEquals(400, $execution['headers']['status-code']);
+        $this->assertEquals('Execution schedule must be a valid date, and at least 1 minute from now', $execution['body']['message']);
 
         // Execution with milliseconds precision
         $execution = $this->createExecution($functionId, [
@@ -165,10 +166,14 @@ class FunctionsScheduleTest extends Scope
             'scheduledAt' => (new \DateTime("2100-12-08 16:12:02.255"))->format(\DateTime::ATOM)
         ]);
         $this->assertEquals(400, $execution['headers']['status-code']);
+        $this->assertEquals('Execution schedule must be a valid date, and at least 1 minute from now', $execution['body']['message']);
 
-        // Execution with minute precision but less than 1 minute in the future
-        $tooSoonTime = (new \DateTime())->modify('+1 minute');
-        $tooSoonTime->setTime((int) $tooSoonTime->format('H'), (int) $tooSoonTime->format('i'), 0, 0);
+        // Minute precision still fails when the execution is not more than 1 minute ahead.
+        $now = new \DateTimeImmutable();
+        $tooSoonTime = $now->modify('+1 minute');
+        $tooSoonTime = $tooSoonTime->setTime((int) $tooSoonTime->format('H'), (int) $tooSoonTime->format('i'), 0, 0);
+
+        $this->assertLessThanOrEqual(60, $tooSoonTime->getTimestamp() - $now->getTimestamp());
 
         $execution = $this->createExecution($functionId, [
             'async' => true,
