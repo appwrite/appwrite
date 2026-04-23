@@ -6,7 +6,7 @@
  */
 
 import { buildFilterQueryString } from './operators'
-import type { CompactFilterKey } from './types'
+import type { CompactFilterKey, FilterMap } from './types'
 
 const PARAM_SEARCH = 'search'
 const PARAM_QUERY = 'query'
@@ -39,6 +39,38 @@ export function getLimit(url: URL, defaultLimit: number): number {
 /** Read raw query param (encoded filter map). */
 export function getQueryParam(url: URL): string | null {
   return url.searchParams.get(PARAM_QUERY)
+}
+
+/**
+ * Value equality for compact keys. Map keys are objects, so `Map.has` / `Map.delete`
+ * only match by reference; use this after `queryParamToMap` rebuilds the map.
+ */
+export function compactFilterKeysEqual(
+  a: CompactFilterKey,
+  b: CompactFilterKey,
+): boolean {
+  if (a.c !== b.c || a.o !== b.o) return false
+  const av = a.v
+  const bv = b.v
+  if (av === bv) return true
+  if (av === undefined && bv === undefined) return true
+  if (av === undefined || bv === undefined) return false
+  if (Array.isArray(av) && Array.isArray(bv)) {
+    if (av.length !== bv.length) return false
+    return av.every((x, i) => x === bv[i])
+  }
+  return av === bv
+}
+
+/** Returns the key object actually stored in the map (for Map.delete), or undefined. */
+export function findCompactFilterKeyInMap(
+  map: FilterMap,
+  key: CompactFilterKey,
+): CompactFilterKey | undefined {
+  for (const k of map.keys()) {
+    if (compactFilterKeysEqual(k, key)) return k
+  }
+  return undefined
 }
 
 /**

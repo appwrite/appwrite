@@ -243,6 +243,7 @@ import {
   type CodeEditorRef,
 } from '@/components/global/shared/CodeEditor'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { DateTimePicker } from '@/components/global/shared/DateTimePicker'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { SampleDataModal } from './tables/SampleData'
 import { generateSampleRows, type Column } from '@/lib/utils/sample-data'
@@ -7078,36 +7079,32 @@ function RowEditDrawer({
                                                     </SelectContent>
                                                   </Select>
                                                 ) : isDateTimeType ? (
-                                                  <Input
-                                                    type="datetime-local"
+                                                  <DateTimePicker
                                                     value={
-                                                      isNull || !item
-                                                        ? ''
-                                                        : formatDateTimeLocalForInput(
-                                                          new Date(
-                                                            item as string,
-                                                          ),
-                                                        )
+                                                      isNull
+                                                        ? null
+                                                        : (item as
+                                                          | string
+                                                          | null)
                                                     }
-                                                    ref={(el) => setRef(el)}
-                                                    autoFocus={
-                                                      shouldFocus && index === 0
-                                                    }
-                                                    disabled={isNull}
-                                                    onFocus={focusGuard}
-                                                    onChange={(e) =>
+                                                    onChange={(val) =>
                                                       handleArrayItemChange(
                                                         key,
                                                         index,
-                                                        e.target.value
-                                                          ? new Date(
-                                                            e.target.value,
-                                                          ).toISOString()
-                                                          : null,
+                                                        val,
                                                       )
                                                     }
+                                                    triggerRef={(el) =>
+                                                      setRef(el)
+                                                    }
+                                                    autoFocus={
+                                                      shouldFocus && index === 0
+                                                    }
+                                                    onFocus={focusGuard}
+                                                    disabled={isNull}
+                                                    clearable={!isRequired}
                                                     placeholder={`Item ${index + 1}`}
-                                                    className="h-9 rounded-none border-0 bg-transparent px-3 text-[13px] focus-visible:ring-0 focus-visible:ring-offset-0"
+                                                    className="h-9 rounded-none border-0 bg-transparent px-3 text-[13px] hover:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
                                                   />
                                                 ) : (
                                                   <Textarea
@@ -7228,28 +7225,20 @@ function RowEditDrawer({
                                 </Button>
                               </div>
                             ) : fieldType === 'datetime' ? (
-                              <Input
+                              <DateTimePicker
                                 id={key}
-                                type="datetime-local"
-                                value={
-                                  currentValue
-                                    ? formatDateTimeLocalForInput(
-                                      new Date(currentValue as string),
-                                    )
-                                    : ''
-                                }
-                                ref={(el) => {
+                                value={(currentValue as string | null) ?? null}
+                                onChange={(val) => handleFieldChange(key, val)}
+                                triggerRef={(el) => {
                                   fieldRefs.current[key] = el
                                 }}
                                 autoFocus={shouldFocus}
-                                onChange={(e) => {
-                                  const val = e.target.value
-                                    ? new Date(e.target.value).toISOString()
-                                    : null
-                                  handleFieldChange(key, val)
-                                }}
-                                placeholder={isRequired ? undefined : 'NULL'}
-                                className="h-9 text-[13px]"
+                                clearable={!isRequired}
+                                placeholder={
+                                  isRequired
+                                    ? 'Select date & time'
+                                    : 'NULL'
+                                }
                               />
                             ) : fieldType === 'email' ? (
                               <Input

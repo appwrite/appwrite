@@ -10,6 +10,7 @@ import {
   useQuery,
   useQueryClient,
   queryOptions,
+  type QueryClient,
 } from '@tanstack/react-query'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
@@ -29,6 +30,24 @@ import {
 import type { SavedFilter } from '@/lib/user-prefs-keys'
 import { DEFAULT_STALE_TIME } from './constants'
 import { useConsoleTeam, useUpdateConsoleTeamPrefs } from './teams'
+
+type ConsoleAccountCache = { prefs?: Record<string, unknown> }
+
+/**
+ * Account is cached under `['account', 'console', consoleImpersonationRevision]`.
+ * `getQueryData(['account', 'console'])` never matches — use prefix query (see useSidebarCollapsed).
+ */
+function getConsoleAccountFromCache(
+  queryClient: QueryClient,
+): ConsoleAccountCache | undefined {
+  const rows = queryClient.getQueriesData<ConsoleAccountCache>({
+    queryKey: ['account', 'console'],
+  })
+  for (const [, data] of rows) {
+    if (data) return data
+  }
+  return undefined
+}
 
 // ============================================================================
 // AUTH SECURITY FEATURES
@@ -589,8 +608,8 @@ export function useToggleFeatureNotification() {
 
   return useMutation({
     mutationFn: async (featureId: string) => {
-      // Get current account data from cache
-      const account = queryClient.getQueryData<unknown>(['account', 'console'])
+      // Get current account data from cache (key includes consoleImpersonationRevision)
+      const account = getConsoleAccountFromCache(queryClient)
 
       if (!account) {
         throw new Error('Account data not available')
@@ -802,9 +821,7 @@ export function useSavedFilters(
       query: string
       sort?: string
     }) => {
-      const currentAccount = queryClient.getQueryData<{
-        prefs?: Record<string, unknown>
-      }>(['account', 'console'])
+      const currentAccount = getConsoleAccountFromCache(queryClient)
       if (!currentAccount || !scope) {
         throw new Error('Account or filter scope not available')
       }
@@ -871,9 +888,7 @@ export function useSavedFilters(
 
   const deleteUserMutation = useMutation({
     mutationFn: async (id: string) => {
-      const currentAccount = queryClient.getQueryData<{
-        prefs?: Record<string, unknown>
-      }>(['account', 'console'])
+      const currentAccount = getConsoleAccountFromCache(queryClient)
       if (!currentAccount || !scope) {
         throw new Error('Account or filter scope not available')
       }
@@ -916,9 +931,7 @@ export function useSavedFilters(
 
   const reorderUserMutation = useMutation({
     mutationFn: async (orderedFilters: SavedFilter[]) => {
-      const currentAccount = queryClient.getQueryData<{
-        prefs?: Record<string, unknown>
-      }>(['account', 'console'])
+      const currentAccount = getConsoleAccountFromCache(queryClient)
       if (!currentAccount || !scope) {
         throw new Error('Account or filter scope not available')
       }
@@ -992,9 +1005,7 @@ export function useSavedFilters(
 
   const updateUserFilterMutation = useMutation({
     mutationFn: async ({ id, name }: { id: string; name: string }) => {
-      const currentAccount = queryClient.getQueryData<{
-        prefs?: Record<string, unknown>
-      }>(['account', 'console'])
+      const currentAccount = getConsoleAccountFromCache(queryClient)
       if (!currentAccount || !scope) {
         throw new Error('Account or filter scope not available')
       }
