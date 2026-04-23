@@ -117,7 +117,9 @@ class FunctionsScheduleTest extends Scope
         $executionId = $execution['body']['$id'];
 
         $this->assertEquals(202, $execution['headers']['status-code']);
+        $this->assertEquals('schedule', $execution['body']['trigger']);
         $this->assertEquals('scheduled', $execution['body']['status']);
+        $this->assertEquals($futureTime->format(\DateTime::ATOM), (new \DateTime($execution['body']['scheduledAt']))->format(\DateTime::ATOM));
         $this->assertEquals('PATCH', $execution['body']['requestMethod']);
         $this->assertEquals('/custom-path', $execution['body']['requestPath']);
         $this->assertCount(1, $execution['body']['requestHeaders']);
@@ -148,6 +150,7 @@ class FunctionsScheduleTest extends Scope
             'scheduledAt' =>  $futureTime->format(\DateTime::ATOM),
         ]);
         $this->assertEquals(400, $execution['headers']['status-code']);
+        $this->assertEquals('Scheduled executions must run asynchronously. Set scheduledAt to a future date, or set async to true.', $execution['body']['message']);
 
         // Execution with seconds precision
         $execution = $this->createExecution($functionId, [
@@ -163,12 +166,16 @@ class FunctionsScheduleTest extends Scope
         ]);
         $this->assertEquals(400, $execution['headers']['status-code']);
 
-        // Execution too soon
+        // Execution with minute precision but less than 1 minute in the future
+        $tooSoonTime = (new \DateTime())->modify('+1 minute');
+        $tooSoonTime->setTime((int) $tooSoonTime->format('H'), (int) $tooSoonTime->format('i'), 0, 0);
+
         $execution = $this->createExecution($functionId, [
             'async' => true,
-            'scheduledAt' => (new \DateTime())->add(new \DateInterval('PT1S'))->format(\DateTime::ATOM)
+            'scheduledAt' => $tooSoonTime->format(\DateTime::ATOM)
         ]);
         $this->assertEquals(400, $execution['headers']['status-code']);
+        $this->assertEquals('Execution schedule must be a valid date, and at least 1 minute from now', $execution['body']['message']);
 
         $this->cleanupFunction($functionId);
     }
