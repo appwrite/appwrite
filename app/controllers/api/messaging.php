@@ -480,7 +480,6 @@ Http::post('/v1/messaging/providers/msg91')
             $enabled === true
             && \array_key_exists('senderId', $credentials)
             && \array_key_exists('authKey', $credentials)
-            && \array_key_exists('from', $options)
         ) {
             $enabled = true;
         } else {
@@ -3184,10 +3183,6 @@ Http::post('/v1/messaging/messages/email')
             throw new Exception(Exception::MESSAGE_MISSING_TARGET);
         }
 
-        if ($status === MessageStatus::SCHEDULED && \is_null($scheduledAt)) {
-            throw new Exception(Exception::MESSAGE_MISSING_SCHEDULE);
-        }
-
         $mergedTargets = \array_merge($targets, $cc, $bcc);
 
         if (!empty($mergedTargets)) {
@@ -3363,10 +3358,6 @@ Http::post('/v1/messaging/messages/sms')
             throw new Exception(Exception::MESSAGE_MISSING_TARGET);
         }
 
-        if ($status === MessageStatus::SCHEDULED && \is_null($scheduledAt)) {
-            throw new Exception(Exception::MESSAGE_MISSING_SCHEDULE);
-        }
-
         if (!empty($targets)) {
             $foundTargets = $dbForProject->find('targets', [
                 Query::equal('$id', $targets),
@@ -3502,10 +3493,6 @@ Http::post('/v1/messaging/messages/push')
 
         if ($status !== MessageStatus::DRAFT && \count($topics) === 0 && \count($users) === 0 && \count($targets) === 0) {
             throw new Exception(Exception::MESSAGE_MISSING_TARGET);
-        }
-
-        if ($status === MessageStatus::SCHEDULED && \is_null($scheduledAt)) {
-            throw new Exception(Exception::MESSAGE_MISSING_SCHEDULE);
         }
 
         if (!empty($targets)) {
@@ -4630,7 +4617,7 @@ Http::delete('/v1/messaging/messages/:messageId')
                 if (!empty($scheduleId)) {
                     try {
                         $dbForPlatform->deleteDocument('schedules', $scheduleId);
-                    } catch (Exception) {
+                    } catch (\Throwable) {
                         // Ignore
                     }
                 }

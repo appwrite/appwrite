@@ -112,7 +112,7 @@ class StorageClientTest extends Scope
     public function testCreateFile(): void
     {
         $file = $this->setupFile();
-        $this->assertIsArray($file);
+        $this->assertNotEmpty($file);
     }
 
     /**

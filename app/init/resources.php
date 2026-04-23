@@ -266,7 +266,7 @@ function getDevice(string $root, string $connection = ''): Device
                 return new Local($root);
         }
     } else {
-        switch (strtolower(System::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) ?? '')) {
+        switch (strtolower(System::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL))) {
             case Storage::DEVICE_LOCAL:
             default:
                 return new Local($root);

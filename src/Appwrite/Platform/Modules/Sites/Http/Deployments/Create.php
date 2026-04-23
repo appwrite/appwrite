@@ -208,6 +208,12 @@ class Create extends Action
             if ($chunk === -1) {
                 $chunk = $chunks;
             }
+        } else {
+            // Guard against manually setting range header for single chunk upload
+            if ($chunks === -1) {
+                $chunks = 1;
+                $chunk = 1;
+            }
         }
 
         $chunksUploaded = $deviceForSites->upload($fileTmpName, $path, $chunk, $chunks, $metadata);

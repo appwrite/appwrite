@@ -297,10 +297,10 @@ class Executor
      * @param array $params
      * @param array $headers
      * @param bool $decode
-     * @return array|string
+     * @return array
      * @throws Exception
      */
-    private function call(string $endpoint, string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, int $timeout = 15, ?callable $callback = null)
+    private function call(string $endpoint, string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, int $timeout = 15, ?callable $callback = null): array
     {
         $headers            = array_merge($this->headers, $headers);
         $ch                 = curl_init($endpoint . $path . (($method == self::METHOD_GET && !empty($params)) ? '?' . http_build_query($params) : ''));
@@ -392,7 +392,7 @@ class Executor
             $strpos = \is_bool($strpos) ? \strlen($responseType) : $strpos;
             switch (substr($responseType, 0, $strpos)) {
                 case 'multipart/form-data':
-                    $boundary = \explode('boundary=', $responseHeaders['content-type'] ?? '')[1] ?? '';
+                    $boundary = \explode('boundary=', $responseHeaders['content-type'])[1] ?? '';
                     $multipartResponse = new BodyMultipart($boundary);
                     $multipartResponse->load(\is_bool($responseBody) ? '' : $responseBody);
 

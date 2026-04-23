@@ -293,16 +293,6 @@ class Create extends Action
                 throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
             }
 
-            if ($permission === Database::PERMISSION_UPDATE) {
-                $validDocument = $authorization->isValid(
-                    new Input($permission, $document->getUpdate())
-                );
-                $valid = $validCollection || $validDocument;
-                if ($documentSecurity && !$valid) {
-                    throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
-                }
-            }
-
             $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
                 fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP

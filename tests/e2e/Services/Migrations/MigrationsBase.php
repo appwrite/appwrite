@@ -4207,7 +4207,9 @@ trait MigrationsBase
         }, 30_000, 500);
 
         // Check that email was sent with download link
-        $lastEmail = $this->getLastEmail();
+        $lastEmail = $this->getLastEmail(probe: function ($email) {
+            $this->assertEquals('Your JSON export is ready', $email['subject']);
+        });
         $this->assertNotEmpty($lastEmail);
         $this->assertEquals('Your JSON export is ready', $lastEmail['subject']);
         $this->assertStringContainsStringIgnoringCase('Your data export has been completed successfully', $lastEmail['text']);

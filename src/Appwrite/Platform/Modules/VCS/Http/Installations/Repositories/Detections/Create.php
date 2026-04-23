@@ -121,7 +121,7 @@ class Create extends Action
 
         $owner = $github->getOwnerName($providerInstallationId);
         try {
-            $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+            $repositoryName = $github->getRepositoryName($providerRepositoryId);
             if (empty($repositoryName)) {
                 throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
             }

@@ -184,7 +184,7 @@ class FunctionsClientTest extends Scope
     public function testCreateFunction(): void
     {
         $function = $this->setupFunction();
-        $this->assertIsArray($function);
+        $this->assertNotEmpty($function);
     }
 
     /**
@@ -194,7 +194,7 @@ class FunctionsClientTest extends Scope
     public function testCreateDeployment(): void
     {
         $deployment = $this->setupDeployment();
-        $this->assertIsArray($deployment);
+        $this->assertNotEmpty($deployment);
     }
 
     /**
@@ -204,7 +204,7 @@ class FunctionsClientTest extends Scope
     public function testCreateExecution(): void
     {
         $execution = $this->setupExecution();
-        $this->assertIsArray($execution);
+        $this->assertNotEmpty($execution);
     }
 
     /**

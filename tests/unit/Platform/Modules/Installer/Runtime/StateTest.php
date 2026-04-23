@@ -19,14 +19,7 @@ class StateTest extends TestCase
         $this->tempDir = sys_get_temp_dir() . '/appwrite-installer-test-' . uniqid();
         mkdir($this->tempDir, 0755, true);
 
-        $root = dirname(__DIR__, 6);
-        $this->state = new State([
-            'public' => $root . '/public',
-            'init' => $root . '/app/init.php',
-            'views' => $root . '/app/views/install',
-            'vendor' => $root . '/vendor/autoload.php',
-            'installPhp' => $root . '/src/Appwrite/Platform/Tasks/Install.php',
-        ]);
+        $this->state = new State();
 
         // Preserve env state
         $env = getenv('APPWRITE_INSTALLER_CONFIG');
@@ -273,7 +266,6 @@ class StateTest extends TestCase
     public function testReadProgressFileReturnsDefaultForMissing(): void
     {
         $data = $this->state->readProgressFile('nonexistent-id-' . uniqid());
-        $this->assertIsArray($data);
         $this->assertArrayHasKey('installId', $data);
         $this->assertArrayHasKey('steps', $data);
         $this->assertEmpty($data['steps']);
@@ -291,7 +283,6 @@ class StateTest extends TestCase
         ]);
 
         $data = $this->state->readProgressFile($installId);
-        $this->assertIsArray($data);
         $this->assertArrayHasKey('steps', $data);
         $this->assertArrayHasKey(Server::STEP_ENV_VARS, $data['steps']);
         $this->assertEquals(Server::STATUS_IN_PROGRESS, $data['steps'][Server::STEP_ENV_VARS]['status']);
@@ -604,7 +595,6 @@ class StateTest extends TestCase
         file_put_contents($path, 'not valid json {{{');
 
         $data = $this->state->readProgressFile($installId);
-        $this->assertIsArray($data);
         $this->assertArrayHasKey('installId', $data);
         $this->assertArrayHasKey('steps', $data);
         $this->assertEmpty($data['steps']);
@@ -618,7 +608,6 @@ class StateTest extends TestCase
         file_put_contents($path, '');
 
         $data = $this->state->readProgressFile($installId);
-        $this->assertIsArray($data);
         $this->assertArrayHasKey('installId', $data);
         $this->assertEmpty($data['steps']);
     }
@@ -631,7 +620,6 @@ class StateTest extends TestCase
         file_put_contents($path, '"just a string"');
 
         $data = $this->state->readProgressFile($installId);
-        $this->assertIsArray($data);
         $this->assertEmpty($data['steps']);
     }
 

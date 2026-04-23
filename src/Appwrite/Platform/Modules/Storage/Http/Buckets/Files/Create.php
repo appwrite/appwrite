@@ -384,14 +384,11 @@ class Create extends Action
                     ->setAttribute('chunksUploaded', $chunksUploaded);
 
                 /**
-                 * Validate create permission and skip authorization in updateDocument
-                 * Without this, the file creation will fail when user doesn't have update permission
+                 * Skip authorization in updateDocument.
+                 * Without this, the file creation will fail when user doesn't have update permission.
                  * However as with chunk upload even if we are updating, we are essentially creating a file
-                 * adding it's new chunk so we validate create permission instead of update
+                 * adding it's new chunk so we rely on the create-permission check performed earlier.
                  */
-                if (!$authorization->isValid(new Input(Database::PERMISSION_CREATE, $bucket->getCreate()))) {
-                    throw new Exception(Exception::USER_UNAUTHORIZED);
-                }
                 $file = $authorization->skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $fileId, $file));
             }
 
@@ -431,15 +428,11 @@ class Create extends Action
                     ->setAttribute('metadata', $metadata);
 
                 /**
-                 * Validate create permission and skip authorization in updateDocument
-                 * Without this, the file creation will fail when user doesn't have update permission
+                 * Skip authorization in updateDocument.
+                 * Without this, the file creation will fail when user doesn't have update permission.
                  * However as with chunk upload even if we are updating, we are essentially creating a file
-                 * adding it's new chunk so we validate create permission instead of update
+                 * adding it's new chunk so we rely on the create-permission check performed earlier.
                  */
-                if (!$authorization->isValid(new Input(Database::PERMISSION_CREATE, $bucket->getCreate()))) {
-                    throw new Exception(Exception::USER_UNAUTHORIZED);
-                }
-
                 try {
                     $file = $authorization->skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $fileId, $file));
                 } catch (NotFoundException) {
@@ -468,8 +461,5 @@ class Create extends Action
      */
     protected function afterCreateSuccess(Document $file)
     {
-        if (!($file instanceof Document)) {
-            throw new Exception('file must be an instance of document');
-        }
     }
 }

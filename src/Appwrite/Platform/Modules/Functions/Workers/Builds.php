@@ -102,7 +102,7 @@ class Builds extends Action
     ): void {
         Console::log('Build action started');
 
-        $payload = $message->getPayload() ?? [];
+        $payload = $message->getPayload();
 
         if (empty($payload)) {
             throw new \Exception('Missing payload');
@@ -206,7 +206,7 @@ class Builds extends Action
             throw new \Exception('Resource not found');
         }
 
-        if ($isResourceBlocked($project, $resourceKey === 'functions' ? RESOURCE_TYPE_FUNCTIONS : RESOURCE_TYPE_SITES, $resource->getId())) {
+        if ($isResourceBlocked($project, $resource->getCollection() === 'functions' ? RESOURCE_TYPE_FUNCTIONS : RESOURCE_TYPE_SITES, $resource->getId())) {
             throw new \Exception('Resource is blocked');
         }
 
@@ -225,10 +225,6 @@ class Builds extends Action
         $runtime = $this->getRuntime($resource, $version);
 
         $spec = Config::getParam('specifications')[$resource->getAttribute('buildSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
-
-        if ($resource->getCollection() === 'functions' && \is_null($runtime)) {
-            throw new \Exception('Runtime "' . $resource->getAttribute('runtime', '') . '" is not supported');
-        }
 
         // Realtime preparation
         $event = "{$resource->getCollection()}.[{$resourceKey}].deployments.[deploymentId].update";
@@ -829,7 +825,8 @@ class Builds extends Action
 
             Console::log('Runtime creation finished');
 
-            if ($dbForProject->getDocument('deployments', $deploymentId)->getAttribute('status') === 'canceled') {
+            $latestDeployment = $dbForProject->getDocument('deployments', $deploymentId);
+            if ($latestDeployment->getAttribute('status') === 'canceled') {
                 $this->cancelDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
 
                 return;
@@ -1259,21 +1256,6 @@ class Builds extends Action
      */
     protected function afterBuildSuccess(Realtime $queueForRealtime, Database $dbForProject, Document &$deployment, array $runtime, ?string $adapter): void
     {
-        if (! ($queueForRealtime instanceof Realtime)) {
-            throw new Exception('queueForRealtime must be an instance of Realtime');
-        }
-        if (! ($dbForProject instanceof Database)) {
-            throw new Exception('dbForProject must be an instance of Database');
-        }
-        if (! ($deployment instanceof Document)) {
-            throw new Exception('deployment must be an instance of Document');
-        }
-        if (! is_array($runtime)) {
-            throw new Exception('runtime must be an array');
-        }
-        if (! is_string($adapter) && ! is_null($adapter)) {
-            throw new Exception('adapter must be a string or null');
-        }
     }
 
     /**
@@ -1283,13 +1265,6 @@ class Builds extends Action
         Document $project,
         Document $deployment,
     ): void {
-        if (! ($project instanceof Document)) {
-            throw new Exception('project must be an instance of Document');
-        }
-
-        if (! ($deployment instanceof Document)) {
-            throw new Exception('deployment must be an instance of Document');
-        }
     }
 
     protected function getRuntime(Document $resource, string $version): array
@@ -1313,6 +1288,7 @@ class Builds extends Action
         return match ($resource->getCollection()) {
             'functions' => $resource->getAttribute('version', 'v2'),
             'sites' => 'v5',
+            default => throw new \Exception('Unsupported resource type "' . $resource->getCollection() . '".'),
         };
     }
 
@@ -1445,11 +1421,10 @@ class Builds extends Action
                     ]);
 
                     $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-                    $previewUrl = match ($resource->getCollection()) {
-                        'functions' => '',
-                        'sites' => !$rule->isEmpty() ? ("{$protocol}://" . $rule->getAttribute('domain', '')) : '',
-                        default => throw new \Exception('Invalid resource type')
-                    };
+                    $previewUrl = '';
+                    if ($resource->getCollection() === 'sites' && !$rule->isEmpty()) {
+                        $previewUrl = "{$protocol}://" . $rule->getAttribute('domain', '');
+                    }
 
                     $comment = new Comment($platform);
                     $comment->parseComment($github->getComment($owner, $repositoryName, $commentId));

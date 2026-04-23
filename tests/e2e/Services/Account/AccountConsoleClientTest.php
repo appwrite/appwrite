@@ -203,7 +203,7 @@ class AccountConsoleClientTest extends Scope
 
         // Find 6 concurrent digits in email text - OTP
         preg_match_all("/\b\d{6}\b/", $lastEmail['text'], $matches);
-        $code = ($matches[0] ?? [])[0] ?? '';
+        $code = $matches[0][0] ?? '';
 
         $this->assertNotEmpty($code);
 

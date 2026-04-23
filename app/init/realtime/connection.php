@@ -85,7 +85,7 @@ return function (Container $container): void {
 
             return $dbForPlatform->findOne('rules', [
                 Query::equal('domain', [$domain]),
-            ]) ?? new Document();
+            ]);
         });
 
         $permitsCurrentProject = $rule->getAttribute('projectInternalId', '') === $project->getSequence();
@@ -139,7 +139,7 @@ return function (Container $container): void {
         $sdkValidator = new WhiteList($servers, true);
         $sdk = \strtolower($request->getHeader('x-sdk-name', 'UNKNOWN'));
 
-        if ($sdk !== 'UNKNOWN' && $sdkValidator->isValid($sdk)) {
+        if ($sdk !== 'unknown' && $sdkValidator->isValid($sdk)) {
             $sdks = $key->getAttribute('sdks', []);
 
             if (!\in_array($sdk, $sdks, true)) {

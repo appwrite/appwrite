@@ -94,9 +94,9 @@ class XList extends Action
             $os = $detector->getOS();
             $client = $detector->getClient();
             $device = $detector->getDevice();
-            $deviceName = \is_array($device) ? ($device['deviceName'] ?? '') : '';
-            $deviceBrand = \is_array($device) ? ($device['deviceBrand'] ?? '') : '';
-            $deviceModel = \is_array($device) ? ($device['deviceModel'] ?? '') : '';
+            $deviceName = $device['deviceName'] ?? '';
+            $deviceBrand = $device['deviceBrand'] ?? '';
+            $deviceModel = $device['deviceModel'] ?? '';
 
             $output[$i] = new Document([
                 'event' => $log['event'],

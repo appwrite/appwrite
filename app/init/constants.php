@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Platform\Modules\Compute\Specification;
+use Utopia\System\System;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -24,9 +25,6 @@ const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
 const APP_LIMIT_COUNT = 5000;
 const APP_LIMIT_USERS = 10_000;
-const APP_LIMIT_USER_PASSWORD_HISTORY = 20;
-const APP_LIMIT_USER_SESSIONS_MAX = 100;
-const APP_LIMIT_USER_SESSIONS_DEFAULT = 10;
 const APP_LIMIT_ANTIVIRUS = 20_000_000; //20MB
 const APP_LIMIT_ENCRYPTION = 20_000_000; //20MB
 const APP_LIMIT_COMPRESSION = 20_000_000; //20MB
@@ -46,8 +44,8 @@ const APP_PROJECT_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_RESOURCE_TOKEN_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_FILE_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 4322;
-const APP_VERSION_STABLE = '1.9.1';
+const APP_CACHE_BUSTER = 4323;
+const APP_VERSION_STABLE = '1.9.2';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -190,7 +188,7 @@ const BUILD_TYPE_RETRY = 'retry';
 
 // Deletion Types
 
-const ENABLE_EXECUTIONS_LIMIT_ON_ROUTE = false;
+\define('ENABLE_EXECUTIONS_LIMIT_ON_ROUTE', System::getEnv('_APP_EXECUTIONS_LIMIT_ON_ROUTE', 'disabled') === 'enabled');
 
 const DELETE_TYPE_DATABASES = 'databases';
 const DELETE_TYPE_DOCUMENT = 'document';
