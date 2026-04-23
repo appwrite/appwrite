@@ -145,21 +145,8 @@ class Create extends Base
             }
         }
 
-        /**
-         * @var array<string, mixed> $headers
-         */
-        $assocParams = ['headers'];
-        foreach ($assocParams as $assocParam) {
-            if (!empty('headers') && !is_array($$assocParam)) {
-                $$assocParam = \json_decode($$assocParam, true);
-            }
-        }
-
-        $booleanParams = ['async'];
-        foreach ($booleanParams as $booleamParam) {
-            if (!empty($$booleamParam) && !is_bool($$booleamParam)) {
-                $$booleamParam = $$booleamParam === "true" ? true : false;
-            }
+        if (!is_array($headers)) {
+            $headers = \json_decode($headers, true);
         }
 
         // 'headers' validator
@@ -370,10 +357,10 @@ class Create extends Base
         // V2 vars
         if ($version === 'v2') {
             $vars = \array_merge($vars, [
-                'APPWRITE_FUNCTION_TRIGGER' => $headers['x-appwrite-trigger'] ?? '',
+                'APPWRITE_FUNCTION_TRIGGER' => $headers['x-appwrite-trigger'],
                 'APPWRITE_FUNCTION_DATA' => $body,
-                'APPWRITE_FUNCTION_USER_ID' => $headers['x-appwrite-user-id'] ?? '',
-                'APPWRITE_FUNCTION_JWT' => $headers['x-appwrite-user-jwt'] ?? ''
+                'APPWRITE_FUNCTION_USER_ID' => $headers['x-appwrite-user-id'],
+                'APPWRITE_FUNCTION_JWT' => $headers['x-appwrite-user-jwt']
             ]);
         }
 

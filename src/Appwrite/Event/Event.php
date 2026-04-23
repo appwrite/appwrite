@@ -459,7 +459,7 @@ class Event
         /**
          * Identify all sections of the pattern.
          */
-        $type = $parts[0] ?? false;
+        $type = $parts[0];
         $resource = $parts[1] ?? false;
         $hasSubResource = $count > 3 && \str_starts_with($parts[3], '[');
         $hasSubSubResource = $count > 5 && \str_starts_with($parts[5], '[') && $hasSubResource;

@@ -71,7 +71,7 @@ $register->set('logger', function () {
 
         $providerConfig = match ($providerName) {
             'sentry' => [ 'key' => $configChunks[0], 'projectId' => $configChunks[1] ?? '', 'host' => '',],
-            'logowl' => ['ticket' => $configChunks[0] ?? '', 'host' => ''],
+            'logowl' => ['ticket' => $configChunks[0], 'host' => ''],
             default => ['key' => $providerConfig],
         };
     }
@@ -249,11 +249,11 @@ $register->set('pools', function () {
     $poolSize = max(1, (int)($instanceConnections / $workerCount));
 
     foreach ($connections as $key => $connection) {
-        $type = $connection['type'] ?? '';
-        $multiple = $connection['multiple'] ?? false;
-        $schemes = $connection['schemes'] ?? [];
+        $type = $connection['type'];
+        $multiple = $connection['multiple'];
+        $schemes = $connection['schemes'];
         $config = [];
-        $dsns = explode(',', $connection['dsns'] ?? '');
+        $dsns = explode(',', $connection['dsns']);
         foreach ($dsns as &$dsn) {
             $dsn = explode('=', $dsn);
             $name = ($multiple) ? $key . '_' . $dsn[0] : $key;
@@ -318,7 +318,7 @@ $register->set('pools', function () {
                         ));
                     });
                 },
-                'redis' => function () use ($dsnHost, $dsnPort, $dsnPass) {
+                default => function () use ($dsnHost, $dsnPort, $dsnPass) {
                     $redis = new \Redis();
                     @$redis->pconnect($dsnHost, (int)$dsnPort);
                     if ($dsnPass) {
@@ -328,7 +328,6 @@ $register->set('pools', function () {
 
                     return $redis;
                 },
-                default => throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Invalid scheme'),
             };
 
             $poolAdapter = System::getEnv('_APP_POOL_ADAPTER', default: 'stack') === 'swoole' ? new SwoolePool() : new StackPool();

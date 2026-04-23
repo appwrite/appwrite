@@ -210,7 +210,7 @@ jobs:
         with:
           script: |
             const allDatabases = ['MariaDB', 'PostgreSQL', 'MongoDB'];
-            const allModes = ['dedicated', 'shared_v1', 'shared_v2'];
+            const allModes = ['dedicated', 'shared'];
 
             const defaultDatabases = ['MongoDB'];
             const defaultModes = ['dedicated'];
@@ -429,6 +429,8 @@ jobs:
         include:
           - service: Databases
             runner: blacksmith-4vcpu-ubuntu-2404
+            paratest_processes: 3
+            timeout_minutes: 30
           - service: Sites
             runner: blacksmith-4vcpu-ubuntu-2404
           - service: Functions
@@ -439,6 +441,10 @@ jobs:
             runner: blacksmith-4vcpu-ubuntu-2404
           - service: TablesDB
             runner: blacksmith-4vcpu-ubuntu-2404
+            paratest_processes: 3
+            timeout_minutes: 30
+          - service: Migrations
+            paratest_processes: 1
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -479,11 +485,8 @@ jobs:
         env:
           _APP_BROWSER_HOST: http://invalid-browser/v1
           _APP_DATABASE_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'database_db_main' || '' }}
-          _APP_DATABASE_SHARED_TABLES_V1: ${{ matrix.mode == 'shared_v1' && 'database_db_main' || '' }}
           _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'documentsdb_db_main' || '' }}
-          _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES_V1: ${{ matrix.mode == 'shared_v1' && 'documentsdb_db_main' || '' }}
           _APP_DATABASE_VECTORSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'vectorsdb_db_main' || '' }}
-          _APP_DATABASE_VECTORSDB_SHARED_TABLES_V1: ${{ matrix.mode == 'shared_v1' && 'vectorsdb_db_main' || '' }}
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose pull --quiet --ignore-buildable
@@ -502,7 +505,7 @@ jobs:
         with:
           max_attempts: 2
           retry_wait_seconds: 60
-          timeout_minutes: 20
+          timeout_minutes: ${{ matrix.timeout_minutes || 20 }}
           job_id: ${{ job.check_run_id }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           test_dir: tests/e2e/Services/${{ matrix.service }}
@@ -515,9 +518,14 @@ jobs:
               Databases|TablesDB|Functions|Realtime|GraphQL|ProjectWebhooks) FUNCTIONAL_FLAG="" ;;
             esac
 
+            PARATEST_PROCESSES="${{ matrix.paratest_processes }}"
+            if [ -z "$PARATEST_PROCESSES" ]; then
+              PARATEST_PROCESSES="$(nproc)"
+            fi
+
             docker compose exec -T \
               -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
-              appwrite vendor/bin/paratest --processes $(nproc) $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --log-junit tests/e2e/Services/${{ matrix.service }}/junit.xml
+              appwrite vendor/bin/paratest --processes "$PARATEST_PROCESSES" $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --log-junit tests/e2e/Services/${{ matrix.service }}/junit.xml
 
       - name: Failure Logs
         if: failure()
@@ -557,11 +565,8 @@ jobs:
         env:
           _APP_OPTIONS_ABUSE: enabled
           _APP_DATABASE_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'database_db_main' || '' }}
-          _APP_DATABASE_SHARED_TABLES_V1: ${{ matrix.mode == 'shared_v1' && 'database_db_main' || '' }}
           _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'documentsdb_db_main' || '' }}
-          _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES_V1: ${{ matrix.mode == 'shared_v1' && 'documentsdb_db_main' || '' }}
           _APP_DATABASE_VECTORSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'vectorsdb_db_main' || '' }}
-          _APP_DATABASE_VECTORSDB_SHARED_TABLES_V1: ${{ matrix.mode == 'shared_v1' && 'vectorsdb_db_main' || '' }}
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose pull --quiet --ignore-buildable
@@ -618,11 +623,8 @@ jobs:
         timeout-minutes: 5
         env:
           _APP_DATABASE_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'database_db_main' || '' }}
-          _APP_DATABASE_SHARED_TABLES_V1: ${{ matrix.mode == 'shared_v1' && 'database_db_main' || '' }}
           _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'documentsdb_db_main' || '' }}
-          _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES_V1: ${{ matrix.mode == 'shared_v1' && 'documentsdb_db_main' || '' }}
           _APP_DATABASE_VECTORSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'vectorsdb_db_main' || '' }}
-          _APP_DATABASE_VECTORSDB_SHARED_TABLES_V1: ${{ matrix.mode == 'shared_v1' && 'vectorsdb_db_main' || '' }}
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose pull --quiet --ignore-buildable
@@ -701,10 +703,11 @@ jobs:
 
       - name: Installing latest version
         run: |
-          rm docker-compose.yml
           rm .env
-          curl https://appwrite.io/install/compose -o docker-compose.yml
-          curl https://appwrite.io/install/env -o .env
+          LATEST_TAG=$(curl -fsSL -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/repos/appwrite/appwrite/releases/latest | jq -r .tag_name)
+          echo "Latest release tag: $LATEST_TAG"
+          curl -fsSL "https://raw.githubusercontent.com/appwrite/appwrite/${LATEST_TAG}/docker-compose.yml" -o docker-compose.yml
+          curl -fsSL "https://raw.githubusercontent.com/appwrite/appwrite/${LATEST_TAG}/.env" -o .env
           sed -i 's/_APP_OPTIONS_ABUSE=enabled/_APP_OPTIONS_ABUSE=disabled/g' .env
           docker compose up -d
           sleep 10

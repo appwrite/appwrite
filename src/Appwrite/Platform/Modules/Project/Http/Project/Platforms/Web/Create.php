@@ -139,7 +139,7 @@ class Create extends Action
         if (empty($key) && empty($type)) {
             // Modern request, validate hostname
             if (empty($hostname)) {
-                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Param "hostname" is not optional.');
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Param "hostname" is not optional.');
             }
         }
 

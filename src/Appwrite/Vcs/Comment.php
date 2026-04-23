@@ -148,6 +148,7 @@ class Comment
                         'building' => $this->generatImage($pathLight, $pathDark, 'Building', 85) . ' _Building_',
                         'ready' => $this->generatImage($pathLight, $pathDark, 'Ready', 85) . ' _Ready_',
                         'failed' => $this->generatImage($pathLight, $pathDark, 'Failed', 85) . ' _Failed_',
+                        default => '',
                     };
 
                     if ($site['action']['type'] === 'logs') {
@@ -195,6 +196,7 @@ class Comment
                         'building' => $this->generatImage($pathLight, $pathDark, 'Building', 85) . ' _Building_',
                         'ready' => $this->generatImage($pathLight, $pathDark, 'Ready', 85) . ' _Ready_',
                         'failed' => $this->generatImage($pathLight, $pathDark, 'Failed', 85) . ' _Failed_',
+                        default => '',
                     };
 
                     if ($function['action']['type'] === 'logs') {
@@ -245,7 +247,7 @@ class Comment
 
     public function parseComment(string $comment): self
     {
-        $state = \explode("\n", $comment)[0] ?? '';
+        $state = \explode("\n", $comment)[0];
         $state = substr($state, strlen($this->statePrefix));
 
         $json = \base64_decode($state);

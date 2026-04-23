@@ -105,7 +105,7 @@ class Get extends Action
         $client->addHeader('content-type', Client::CONTENT_TYPE_APPLICATION_JSON);
 
         // Convert indexed array to empty array (should not happen due to Assoc validator)
-        if (is_array($headers) && count($headers) > 0 && array_keys($headers) === range(0, count($headers) - 1)) {
+        if (count($headers) > 0 && array_keys($headers) === range(0, count($headers) - 1)) {
             $headers = [];
         }
 

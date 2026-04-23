@@ -130,7 +130,7 @@ class Update extends Action
         }
 
         if (\is_null($permissions)) {
-            $permissions = $file->getPermissions() ?? [];
+            $permissions = $file->getPermissions();
         }
 
         $file->setAttribute('$permissions', $permissions);

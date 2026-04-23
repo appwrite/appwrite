@@ -21,8 +21,6 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\UID;
 use Utopia\DSN\DSN;
 use Utopia\Platform\Scope\HTTP;
@@ -109,7 +107,7 @@ class Create extends Action
         $auth = Config::getParam('auth', []);
         $auths = [
             'limit' => 0,
-            'maxSessions' => APP_LIMIT_USER_SESSIONS_DEFAULT,
+            'maxSessions' => 0,
             'passwordHistory' => 0,
             'passwordDictionary' => false,
             'duration' => TOKEN_EXPIRATION_LOGIN_LONG,
@@ -122,6 +120,8 @@ class Create extends Action
             'membershipsUserName' => false,
             'membershipsUserEmail' => false,
             'membershipsMfa' => false,
+            'membershipsUserId' => false,
+            'membershipsUserPhone' => false,
             'invalidateSessions' => true
         ];
 
@@ -209,32 +209,16 @@ class Create extends Action
         }
 
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-        $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
         $projectTables = !\in_array($dsn->getHost(), $sharedTables);
-        $sharedTablesV1 = \in_array($dsn->getHost(), $sharedTablesV1);
-        $sharedTablesV2 = !$projectTables && !$sharedTablesV1;
-        $sharedTables = $sharedTablesV1 || $sharedTablesV2;
 
-        if (!$sharedTablesV2) {
+        if ($projectTables) {
             $adapter = new DatabasePool($pools->get($dsn->getHost()));
             $dbForProject = new Database($adapter, $cache);
-            $dbForProject->setDatabase(APP_DATABASE);
-
-            if ($sharedTables) {
-                $tenant = null;
-                if ($sharedTablesV1) {
-                    $tenant = $project->getSequence();
-                }
-                $dbForProject
-                    ->setSharedTables(true)
-                    ->setTenant($tenant)
-                    ->setNamespace($dsn->getParam('namespace'));
-            } else {
-                $dbForProject
-                    ->setSharedTables(false)
-                    ->setTenant(null)
-                    ->setNamespace('_' . $project->getSequence());
-            }
+            $dbForProject
+                ->setDatabase(APP_DATABASE)
+                ->setSharedTables(false)
+                ->setTenant(null)
+                ->setNamespace('_' . $project->getSequence());
 
             $create = true;
 
@@ -244,27 +228,11 @@ class Create extends Action
                 $create = false;
             }
 
-            if ($create || $projectTables) {
-                $adapter = new AdapterDatabase($dbForProject);
-                $audit = new Audit($adapter);
-                $audit->setup();
-            }
+            $adapter = new AdapterDatabase($dbForProject);
+            $audit = new Audit($adapter);
+            $audit->setup();
 
-            if (!$create && $sharedTablesV1) {
-                $adapter = new AdapterDatabase($dbForProject);
-                $attributes = $adapter->getAttributeDocuments();
-                $indexes = $adapter->getIndexDocuments();
-                $dbForProject->createDocument(Database::METADATA, new Document([
-                    '$id' => ID::custom('audit'),
-                    '$permissions' => [Permission::create(Role::any())],
-                    'name' => 'audit',
-                    'attributes' => $attributes,
-                    'indexes' => $indexes,
-                    'documentSecurity' => true
-                ]));
-            }
-
-            if ($create || $sharedTablesV1) {
+            if ($create) {
                 /** @var array $collections */
                 $collections = Config::getParam('collections', [])['projects'] ?? [];
 
@@ -279,37 +247,7 @@ class Create extends Action
                     try {
                         $dbForProject->createCollection($key, $attributes, $indexes);
                     } catch (Duplicate) {
-                        try {
-                            $dbForProject->createDocument(Database::METADATA, new Document([
-                                '$id' => ID::custom($key),
-                                '$permissions' => [Permission::create(Role::any())],
-                                'name' => $key,
-                                'attributes' => $attributes,
-                                'indexes' => $indexes,
-                                'documentSecurity' => true
-                            ]));
-                        } catch (Duplicate) {
-                            // Metadata already exists from concurrent creation
-                        }
-                    } catch (\Throwable $e) {
-                        // PostgreSQL adapter may throw a non-Duplicate exception when
-                        // a table or index already exists during concurrent project
-                        // creation in shared mode. Treat as duplicate if metadata
-                        // can be created successfully.
-                        try {
-                            $dbForProject->createDocument(Database::METADATA, new Document([
-                                '$id' => ID::custom($key),
-                                '$permissions' => [Permission::create(Role::any())],
-                                'name' => $key,
-                                'attributes' => $attributes,
-                                'indexes' => $indexes,
-                                'documentSecurity' => true
-                            ]));
-                        } catch (Duplicate) {
-                            // Metadata already exists from concurrent creation
-                        } catch (\Throwable) {
-                            throw $e; // Rethrow original if metadata creation also fails
-                        }
+                        // Collection already exists
                     }
                 }
             }

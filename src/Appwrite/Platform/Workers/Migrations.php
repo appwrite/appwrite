@@ -56,7 +56,7 @@ class Migrations extends Action
     protected ?Device $deviceForFiles;
     protected ?Document $project;
 
-    protected Document $sourceProject;
+    protected ?Document $sourceProject = null;
 
     /**
      * @var callable
@@ -74,7 +74,6 @@ class Migrations extends Action
      */
     protected array $sourceReport = [];
 
-    private string $source;
     /**
      * @var callable|null
      */
@@ -130,7 +129,7 @@ class Migrations extends Action
         array $plan,
         Authorization $authorization,
     ): void {
-        $migrationMessage = Migration::fromArray($message->getPayload() ?? []);
+        $migrationMessage = Migration::fromArray($message->getPayload());
         $this->getDatabasesDB = $getDatabasesDB;
         $this->getProjectDB = $getProjectDB;
 
@@ -195,9 +194,25 @@ class Migrations extends Action
         $migrationOptions = $migration->getAttribute('options');
         /** @var Database|null $projectDB */
         $projectDB = null;
-        if ($credentials['projectId']) {
+        $useAppwriteApiSource = false;
+        if ($source === SourceAppwrite::getName() && empty($credentials['projectId'])) {
+            throw new \Exception('Source projectId is required for Appwrite migrations');
+        }
+
+        if (! empty($credentials['projectId'])) {
             $this->sourceProject = $this->dbForPlatform->getDocument('projects', $credentials['projectId']);
-            $projectDB = call_user_func($this->getProjectDB, $this->sourceProject);
+            if ($this->sourceProject->isEmpty()) {
+                throw new \Exception('Source project not found for provided projectId');
+            }
+
+            $sourceRegion = $this->sourceProject->getAttribute('region', 'default');
+            $destinationRegion = $this->project->getAttribute('region', 'default');
+            $useAppwriteApiSource = $source === SourceAppwrite::getName()
+                && $destination === DestinationAppwrite::getName()
+                && $sourceRegion !== $destinationRegion;
+            if (! $useAppwriteApiSource) {
+                $projectDB = call_user_func($this->getProjectDB, $this->sourceProject);
+            }
         }
         $getDatabasesDB = fn (Document $database): Database =>
                 $this->getDatabasesDBForProject($database);
@@ -233,7 +248,7 @@ class Migrations extends Action
                 $credentials['endpoint'],
                 $credentials['apiKey'],
                 $getDatabasesDB,
-                SourceAppwrite::SOURCE_DATABASE,
+                $useAppwriteApiSource ? SourceAppwrite::SOURCE_API : SourceAppwrite::SOURCE_DATABASE,
                 $projectDB,
                 $queries
             ),
@@ -376,6 +391,9 @@ class Migrations extends Action
                 'keys.write',
                 'platforms.read',
                 'platforms.write',
+                'policies.write',
+                'templates.read',
+                'templates.write',
             ]
         ]);
 
@@ -578,9 +596,10 @@ class Migrations extends Action
 
     protected function getDatabasesDBForProject(Document $database)
     {
-        if ($this->sourceProject) {
+        if (isset($this->sourceProject) && ! $this->sourceProject->isEmpty()) {
             return ($this->getDatabasesDB)($database, $this->sourceProject);
         }
+
         return ($this->getDatabasesDB)($database);
     }
 

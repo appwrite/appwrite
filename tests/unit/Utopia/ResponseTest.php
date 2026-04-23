@@ -26,7 +26,6 @@ class ResponseTest extends TestCase
     public function testFilters(): void
     {
         $this->assertFalse($this->response->hasFilters());
-        $this->assertIsArray($this->response->getFilters());
         $this->assertEmpty($this->response->getFilters());
 
         $this->response->addFilter(new First());

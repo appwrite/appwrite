@@ -46,7 +46,7 @@ use Utopia\Validator\WhiteList;
 
 $parseLabel = function (string $label, array $responsePayload, array $requestParams, User $user) {
     preg_match_all('/{(.*?)}/', $label, $matches);
-    foreach ($matches[1] ?? [] as $pos => $match) {
+    foreach ($matches[1] as $pos => $match) {
         $find = $matches[0][$pos];
         $parts = explode('.', $match);
 
@@ -54,8 +54,8 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
             throw new Exception(Exception::GENERAL_SERVER_ERROR, "The server encountered an error while parsing the label: $label. Please create an issue on GitHub to allow us to investigate further https://github.com/appwrite/appwrite/issues/new/choose");
         }
 
-        $namespace = $parts[0] ?? '';
-        $replace = $parts[1] ?? '';
+        $namespace = $parts[0];
+        $replace = $parts[1];
 
         $params = match ($namespace) {
             'user' => (array) $user,
@@ -263,8 +263,7 @@ Http::init()
                 $userClone->setAttribute('type', match ($apiKey->getType()) {
                     API_KEY_STANDARD => ACTIVITY_TYPE_KEY_PROJECT,
                     API_KEY_ACCOUNT => ACTIVITY_TYPE_KEY_ACCOUNT,
-                    API_KEY_ORGANIZATION => ACTIVITY_TYPE_KEY_ORGANIZATION,
-                    default => ACTIVITY_TYPE_KEY_PROJECT,
+                    default => ACTIVITY_TYPE_KEY_ORGANIZATION,
                 });
                 $auditContext->user = $userClone;
             }
@@ -385,7 +384,7 @@ Http::init()
         }
 
         // Step 6: Update project and user last activity
-        if (! $project->isEmpty() && $project->getId() !== 'console') {
+        if ($project->getId() !== 'console') {
             $accessedAt = $project->getAttribute('accessedAt', 0);
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
                 $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
@@ -415,9 +414,6 @@ Http::init()
         }
 
         // Steps 7-9: Access Control - Method, Namespace and Scope Validation
-        /**
-         * @var ?Method $method
-         */
         $method = $route->getLabel('sdk', false);
 
         // Take the first method if there's more than one,
@@ -646,7 +642,7 @@ Http::init()
 
             if (! empty($data) && ! $cacheLog->isEmpty()) {
                 $parts = explode('/', $cacheLog->getAttribute('resourceType', ''));
-                $type = $parts[0] ?? null;
+                $type = $parts[0];
 
                 if ($type === 'bucket' && (! $isImageTransformation || ! $isDisabled)) {
                     $bucketId = $parts[1] ?? null;
@@ -757,7 +753,12 @@ Http::shutdown()
     ->inject('project')
     ->inject('dbForProject')
     ->action(function (Http $utopia, Request $request, Response $response, Document $project, Database $dbForProject) {
-        $sessionLimit = $project->getAttribute('auths', [])['maxSessions'] ?? APP_LIMIT_USER_SESSIONS_DEFAULT;
+        $sessionLimit = $project->getAttribute('auths', [])['maxSessions'] ?? 0;
+
+        if ($sessionLimit === 0) {
+            return;
+        }
+
         $session = $response->getPayload();
         $userId = $session['userId'] ?? '';
         if (empty($userId)) {
@@ -937,7 +938,7 @@ Http::shutdown()
         }
 
         $auditUser = $auditContext->user;
-        if (! empty($auditContext->resource) && ! \is_null($auditUser) && ! $auditUser->isEmpty()) {
+        if (! empty($auditContext->resource) && ! $auditUser->isEmpty()) {
             /**
              * audits.payload is switched to default true
              * in order to auto audit payload for all endpoints

@@ -151,7 +151,7 @@ class StatsUsage extends Action
     {
         $this->getLogsDB = $getLogsDB;
         $this->register = $register;
-        $payload = $message->getPayload() ?? [];
+        $payload = $message->getPayload();
         if (empty($payload)) {
             throw new Exception('Missing payload');
         }

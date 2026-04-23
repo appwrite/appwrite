@@ -68,7 +68,7 @@ class Functions extends Action
         Executor $executor,
         callable $isResourceBlocked
     ): void {
-        $payload = $message->getPayload() ?? [];
+        $payload = $message->getPayload();
 
         if (empty($payload)) {
             throw new AppwriteException(
@@ -258,7 +258,7 @@ class Functions extends Action
                     jwt: $jwt,
                     event: null,
                     eventData: null,
-                    executionId: $execution->getId() ?? null
+                    executionId: $execution->getId()
                 );
                 break;
         }
@@ -437,7 +437,7 @@ class Functions extends Action
         $headers['x-appwrite-key'] = API_KEY_DYNAMIC . '_' . $apiKey;
         $headers['x-appwrite-trigger'] = $trigger;
         $headers['x-appwrite-event'] = $event ?? '';
-        $headers['x-appwrite-user-id'] = $user->getId() ?? '';
+        $headers['x-appwrite-user-id'] = $user->getId();
         $headers['x-appwrite-user-jwt'] = $jwt ?? '';
         $headers['x-appwrite-country-code'] = '';
         $headers['x-appwrite-continent-code'] = '';
@@ -488,12 +488,12 @@ class Functions extends Action
         // V2 vars
         if ($version === 'v2') {
             $vars = \array_merge($vars, [
-                'APPWRITE_FUNCTION_TRIGGER' => $headers['x-appwrite-trigger'] ?? '',
+                'APPWRITE_FUNCTION_TRIGGER' => $headers['x-appwrite-trigger'],
                 'APPWRITE_FUNCTION_DATA' => $body,
                 'APPWRITE_FUNCTION_EVENT_DATA' => $body,
-                'APPWRITE_FUNCTION_EVENT' => $headers['x-appwrite-event'] ?? '',
-                'APPWRITE_FUNCTION_USER_ID' => $headers['x-appwrite-user-id'] ?? '',
-                'APPWRITE_FUNCTION_JWT' => $headers['x-appwrite-user-jwt'] ?? ''
+                'APPWRITE_FUNCTION_EVENT' => $headers['x-appwrite-event'],
+                'APPWRITE_FUNCTION_USER_ID' => $headers['x-appwrite-user-id'],
+                'APPWRITE_FUNCTION_JWT' => $headers['x-appwrite-user-jwt']
             ]);
         }
 
@@ -688,7 +688,7 @@ class Functions extends Action
         if (!empty($error)) {
             throw new AppwriteException(
                 AppwriteException::GENERAL_SERVER_ERROR,
-                'Function execution failed: ' . ($error ?: 'No error message provided'),
+                'Function execution failed: ' . $error,
                 $errorCode
             );
         }
