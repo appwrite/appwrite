@@ -803,7 +803,7 @@ class RealtimeCustomClientQueryTestWithMessage extends Scope
             $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered by updated query');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $client->close();

@@ -169,6 +169,9 @@ trait ProjectCustom
                     'keys.write',
                     'platforms.read',
                     'platforms.write',
+                    'policies.write',
+                    'templates.read',
+                    'templates.write',
                 ],
             ]);
 

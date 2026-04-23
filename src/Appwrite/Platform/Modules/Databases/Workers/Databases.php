@@ -54,7 +54,7 @@ class Databases extends Action
      */
     public function action(Message $message, Document $project, Database $dbForPlatform, Database $dbForProject, callable $getDatabasesDB, Realtime $queueForRealtime, Log $log): void
     {
-        $payload = $message->getPayload() ?? [];
+        $payload = $message->getPayload();
 
         if (empty($payload)) {
             throw new Exception('Missing payload');

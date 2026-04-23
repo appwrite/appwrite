@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Databases;
 
 use Tests\E2E\Client;
+use Tests\E2E\Scopes\ApiVectorsDB;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
@@ -16,6 +17,7 @@ class VectorsDBCustomClientTest extends Scope
     use DatabasesBase;
     use ProjectCustom;
     use SideClient;
+    use ApiVectorsDB;
 
     public function testAllowedPermissions(): void
     {

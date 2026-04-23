@@ -133,9 +133,6 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     });
 
     $provider = match ($verifiedToken->getAttribute('type')) {
-        TOKEN_TYPE_VERIFICATION,
-        TOKEN_TYPE_RECOVERY,
-        TOKEN_TYPE_INVITE => SESSION_PROVIDER_EMAIL,
         TOKEN_TYPE_MAGIC_URL => SESSION_PROVIDER_MAGIC_URL,
         TOKEN_TYPE_PHONE => SESSION_PROVIDER_PHONE,
         TOKEN_TYPE_OAUTH2 => $oauthProvider,
@@ -335,15 +332,15 @@ Http::post('/v1/account')
             throw new Exception(Exception::GENERAL_INVALID_EMAIL);
         }
 
-        if (($plan['supportsDisposableEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && ($emailMetadata['emailIsDisposable'] ?? false)) {
+        if (($plan['supportsDisposableEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && $emailMetadata['emailIsDisposable']) {
             throw new Exception(Exception::USER_EMAIL_DISPOSABLE);
         }
 
-        if (($plan['supportsCanonicalEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && ($emailMetadata['emailIsCanonical'] ?? true) === false) {
+        if (($plan['supportsCanonicalEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false) {
             throw new Exception(Exception::USER_EMAIL_NOT_CANONICAL);
         }
 
-        if (($plan['supportsFreeEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && ($emailMetadata['emailIsFree'] ?? false)) {
+        if (($plan['supportsFreeEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
             throw new Exception(Exception::USER_EMAIL_FREE);
         }
 
@@ -453,7 +450,7 @@ Http::delete('/v1/account')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('audits.event', 'user.delete')
-    ->label('audits.resource', 'user/{response.$id}')
+    ->label('audits.resource', 'user/{user.$id}')
     ->label('sdk', new Method(
         namespace: 'account',
         group: 'account',
@@ -837,7 +834,7 @@ Http::patch('/v1/account/sessions/:sessionId')
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
-        if (!empty($provider) && $className !== null && \class_exists($className)) {
+        if (!empty($provider) && \class_exists($className)) {
             $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
             $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
 
@@ -1604,7 +1601,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             }
         }
 
-        if ($user === false || $user->isEmpty()) { // No user logged in or with OAuth2 provider ID, create new one or connect with account with same email
+        if ($user->isEmpty()) { // No user logged in or with OAuth2 provider ID, create new one or connect with account with same email
             if (empty($email)) {
                 $failureRedirect(Exception::USER_UNAUTHORIZED, 'OAuth provider failed to return email.');
             }
@@ -1621,7 +1618,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             }
 
             // If user is not found, check if there is a user with the same email
-            if ($user === false || $user->isEmpty()) {
+            if ($user->isEmpty()) {
                 $userWithEmail = $dbForProject->findOne('users', [
                     Query::equal('email', [$email]),
                 ]);
@@ -1634,7 +1631,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             }
 
             // If user is not found, check if there is an identity with the same email
-            if ($user === false || $user->isEmpty()) {
+            if ($user->isEmpty()) {
                 $identityWithMatchingEmail = $dbForProject->findOne('identities', [
                     Query::equal('providerEmail', [$email]),
                 ]);
@@ -1646,7 +1643,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 }
             }
 
-            if ($user === false || $user->isEmpty()) { // Last option -> create the user
+            if ($user->isEmpty()) { // Last option -> create the user
                 $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
                 if ($limit !== 0) {
@@ -1679,15 +1676,15 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     $failureRedirect(Exception::GENERAL_INVALID_EMAIL);
                 }
 
-                if (($plan['supportsDisposableEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && ($emailMetadata['emailIsDisposable'] ?? false)) {
+                if (($plan['supportsDisposableEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && $emailMetadata['emailIsDisposable']) {
                     $failureRedirect(Exception::USER_EMAIL_DISPOSABLE);
                 }
 
-                if (($plan['supportsCanonicalEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && ($emailMetadata['emailIsCanonical'] ?? true) === false) {
+                if (($plan['supportsCanonicalEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false) {
                     $failureRedirect(Exception::USER_EMAIL_NOT_CANONICAL);
                 }
 
-                if (($plan['supportsFreeEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && ($emailMetadata['emailIsFree'] ?? false)) {
+                if (($plan['supportsFreeEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
                     $failureRedirect(Exception::USER_EMAIL_FREE);
                 }
 
@@ -1820,15 +1817,15 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $failureRedirect(Exception::GENERAL_INVALID_EMAIL);
             }
 
-            if (($plan['supportsDisposableEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && ($emailMetadata['emailIsDisposable'] ?? false)) {
+            if (($plan['supportsDisposableEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && $emailMetadata['emailIsDisposable']) {
                 $failureRedirect(Exception::USER_EMAIL_DISPOSABLE);
             }
 
-            if (($plan['supportsCanonicalEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && ($emailMetadata['emailIsCanonical'] ?? true) === false) {
+            if (($plan['supportsCanonicalEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false) {
                 $failureRedirect(Exception::USER_EMAIL_NOT_CANONICAL);
             }
 
-            if (($plan['supportsFreeEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && ($emailMetadata['emailIsFree'] ?? false)) {
+            if (($plan['supportsFreeEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
                 $failureRedirect(Exception::USER_EMAIL_FREE);
             }
 
@@ -1954,7 +1951,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 ->addCookie($store->getKey(), $encoded, (new \DateTime($expire))->getTimestamp(), '/', $cookieDomain, ('https' == $protocol), true, Config::getParam('cookieSamesite'));
         }
 
-        if (isset($sessionUpgrade) && $sessionUpgrade && isset($session)) {
+        if (isset($sessionUpgrade) && isset($session)) {
             foreach ($user->getAttribute('targets', []) as $target) {
                 if ($target->getAttribute('providerType') !== MESSAGE_TYPE_PUSH) {
                     continue;
@@ -2178,15 +2175,15 @@ Http::post('/v1/account/tokens/magic-url')
                 throw new Exception(Exception::GENERAL_INVALID_EMAIL);
             }
 
-            if (($plan['supportsDisposableEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && ($emailMetadata['emailIsDisposable'] ?? false)) {
+            if (($plan['supportsDisposableEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && $emailMetadata['emailIsDisposable']) {
                 throw new Exception(Exception::USER_EMAIL_DISPOSABLE);
             }
 
-            if (($plan['supportsCanonicalEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && ($emailMetadata['emailIsCanonical'] ?? true) === false) {
+            if (($plan['supportsCanonicalEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false) {
                 throw new Exception(Exception::USER_EMAIL_NOT_CANONICAL);
             }
 
-            if (($plan['supportsFreeEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && ($emailMetadata['emailIsFree'] ?? false)) {
+            if (($plan['supportsFreeEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
                 throw new Exception(Exception::USER_EMAIL_FREE);
             }
 
@@ -2305,8 +2302,8 @@ Http::post('/v1/account/tokens/magic-url')
 
         $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
         $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
-
-        $replyTo = "";
+        $replyToEmail = '';
+        $replyToName = '';
 
         if ($smtpEnabled) {
             if (!empty($smtp['senderEmail'])) {
@@ -2315,8 +2312,13 @@ Http::post('/v1/account/tokens/magic-url')
             if (!empty($smtp['senderName'])) {
                 $senderName = $smtp['senderName'];
             }
-            if (!empty($smtp['replyTo'])) {
-                $replyTo = $smtp['replyTo'];
+            // Includes backwards compatibility: fall back to legacy `replyTo` key
+            $smtpReplyToEmail = $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? '';
+            if (!empty($smtpReplyToEmail)) {
+                $replyToEmail = $smtpReplyToEmail;
+            }
+            if (!empty($smtp['replyToName'])) {
+                $replyToName = $smtp['replyToName'];
             }
 
             $queueForMails
@@ -2333,8 +2335,13 @@ Http::post('/v1/account/tokens/magic-url')
                 if (!empty($customTemplate['senderName'])) {
                     $senderName = $customTemplate['senderName'];
                 }
-                if (!empty($customTemplate['replyTo'])) {
-                    $replyTo = $customTemplate['replyTo'];
+                // Includes backwards compatibility: fall back to legacy `replyTo` key
+                $customReplyToEmail = $customTemplate['replyToEmail'] ?? $customTemplate['replyTo'] ?? '';
+                if (!empty($customReplyToEmail)) {
+                    $replyToEmail = $customReplyToEmail;
+                }
+                if (!empty($customTemplate['replyToName'])) {
+                    $replyToName = $customTemplate['replyToName'];
                 }
 
                 $body = $customTemplate['message'] ?? '';
@@ -2342,7 +2349,8 @@ Http::post('/v1/account/tokens/magic-url')
             }
 
             $queueForMails
-                ->setSmtpReplyTo($replyTo)
+                ->setSmtpReplyToEmail($replyToEmail)
+                ->setSmtpReplyToName($replyToName)
                 ->setSmtpSenderEmail($senderEmail)
                 ->setSmtpSenderName($senderName);
         }
@@ -2488,15 +2496,15 @@ Http::post('/v1/account/tokens/email')
                 throw new Exception(Exception::GENERAL_INVALID_EMAIL);
             }
 
-            if (($plan['supportsDisposableEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && ($emailMetadata['emailIsDisposable'] ?? false)) {
+            if (($plan['supportsDisposableEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && $emailMetadata['emailIsDisposable']) {
                 throw new Exception(Exception::USER_EMAIL_DISPOSABLE);
             }
 
-            if (($plan['supportsCanonicalEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && ($emailMetadata['emailIsCanonical'] ?? true) === false) {
+            if (($plan['supportsCanonicalEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false) {
                 throw new Exception(Exception::USER_EMAIL_NOT_CANONICAL);
             }
 
-            if (($plan['supportsFreeEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && ($emailMetadata['emailIsFree'] ?? false)) {
+            if (($plan['supportsFreeEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
                 throw new Exception(Exception::USER_EMAIL_FREE);
             }
 
@@ -2623,7 +2631,8 @@ Http::post('/v1/account/tokens/email')
 
         $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
         $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
-        $replyTo = "";
+        $replyToEmail = '';
+        $replyToName = '';
 
         if ($smtpEnabled) {
             if (!empty($smtp['senderEmail'])) {
@@ -2632,8 +2641,13 @@ Http::post('/v1/account/tokens/email')
             if (!empty($smtp['senderName'])) {
                 $senderName = $smtp['senderName'];
             }
-            if (!empty($smtp['replyTo'])) {
-                $replyTo = $smtp['replyTo'];
+            // Includes backwards compatibility: fall back to legacy `replyTo` key
+            $smtpReplyToEmail = $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? '';
+            if (!empty($smtpReplyToEmail)) {
+                $replyToEmail = $smtpReplyToEmail;
+            }
+            if (!empty($smtp['replyToName'])) {
+                $replyToName = $smtp['replyToName'];
             }
 
             $queueForMails
@@ -2650,8 +2664,13 @@ Http::post('/v1/account/tokens/email')
                 if (!empty($customTemplate['senderName'])) {
                     $senderName = $customTemplate['senderName'];
                 }
-                if (!empty($customTemplate['replyTo'])) {
-                    $replyTo = $customTemplate['replyTo'];
+                // Includes backwards compatibility: fall back to legacy `replyTo` key
+                $customReplyToEmail = $customTemplate['replyToEmail'] ?? $customTemplate['replyTo'] ?? '';
+                if (!empty($customReplyToEmail)) {
+                    $replyToEmail = $customReplyToEmail;
+                }
+                if (!empty($customTemplate['replyToName'])) {
+                    $replyToName = $customTemplate['replyToName'];
                 }
 
                 $body = $customTemplate['message'] ?? '';
@@ -2659,7 +2678,8 @@ Http::post('/v1/account/tokens/email')
             }
 
             $queueForMails
-                ->setSmtpReplyTo($replyTo)
+                ->setSmtpReplyToEmail($replyToEmail)
+                ->setSmtpReplyToName($replyToName)
                 ->setSmtpSenderEmail($senderEmail)
                 ->setSmtpSenderName($senderName);
         }
@@ -3274,7 +3294,7 @@ Http::patch('/v1/account/password')
             }
 
             $history[] = $newPassword;
-            $history = array_slice($history, (count($history) - $historyLimit), $historyLimit);
+            $history = array_slice($history, -$historyLimit);
         }
 
         if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
@@ -3397,15 +3417,15 @@ Http::patch('/v1/account/email')
             throw new Exception(Exception::GENERAL_INVALID_EMAIL);
         }
 
-        if (($plan['supportsDisposableEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && ($emailMetadata['emailIsDisposable'] ?? false)) {
+        if (($plan['supportsDisposableEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && $emailMetadata['emailIsDisposable']) {
             throw new Exception(Exception::USER_EMAIL_DISPOSABLE);
         }
 
-        if (($plan['supportsCanonicalEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && ($emailMetadata['emailIsCanonical'] ?? true) === false) {
+        if (($plan['supportsCanonicalEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false) {
             throw new Exception(Exception::USER_EMAIL_NOT_CANONICAL);
         }
 
-        if (($plan['supportsFreeEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && ($emailMetadata['emailIsFree'] ?? false)) {
+        if (($plan['supportsFreeEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
             throw new Exception(Exception::USER_EMAIL_FREE);
         }
 
@@ -3437,9 +3457,6 @@ Http::patch('/v1/account/email')
 
         try {
             $user = $dbForProject->updateDocument('users', $user->getId(), $user);
-            /**
-             * @var Document $oldTarget
-             */
             $oldTarget = $user->find('identifier', $oldEmail, 'targets');
 
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
@@ -3526,9 +3543,6 @@ Http::patch('/v1/account/phone')
 
         try {
             $user = $dbForProject->updateDocument('users', $user->getId(), $user);
-            /**
-             * @var Document $oldTarget
-             */
             $oldTarget = $user->find('identifier', $oldPhone, 'targets');
 
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
@@ -3752,7 +3766,8 @@ Http::post('/v1/account/recovery')
 
         $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
         $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
-        $replyTo = "";
+        $replyToEmail = '';
+        $replyToName = '';
 
         if ($smtpEnabled) {
             if (!empty($smtp['senderEmail'])) {
@@ -3761,8 +3776,13 @@ Http::post('/v1/account/recovery')
             if (!empty($smtp['senderName'])) {
                 $senderName = $smtp['senderName'];
             }
-            if (!empty($smtp['replyTo'])) {
-                $replyTo = $smtp['replyTo'];
+            // Includes backwards compatibility: fall back to legacy `replyTo` key
+            $smtpReplyToEmail = $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? '';
+            if (!empty($smtpReplyToEmail)) {
+                $replyToEmail = $smtpReplyToEmail;
+            }
+            if (!empty($smtp['replyToName'])) {
+                $replyToName = $smtp['replyToName'];
             }
 
             $queueForMails
@@ -3779,8 +3799,13 @@ Http::post('/v1/account/recovery')
                 if (!empty($customTemplate['senderName'])) {
                     $senderName = $customTemplate['senderName'];
                 }
-                if (!empty($customTemplate['replyTo'])) {
-                    $replyTo = $customTemplate['replyTo'];
+                // Includes backwards compatibility: fall back to legacy `replyTo` key
+                $customReplyToEmail = $customTemplate['replyToEmail'] ?? $customTemplate['replyTo'] ?? '';
+                if (!empty($customReplyToEmail)) {
+                    $replyToEmail = $customReplyToEmail;
+                }
+                if (!empty($customTemplate['replyToName'])) {
+                    $replyToName = $customTemplate['replyToName'];
                 }
 
                 $body = $customTemplate['message'] ?? '';
@@ -3788,7 +3813,8 @@ Http::post('/v1/account/recovery')
             }
 
             $queueForMails
-                ->setSmtpReplyTo($replyTo)
+                ->setSmtpReplyToEmail($replyToEmail)
+                ->setSmtpReplyToName($replyToName)
                 ->setSmtpSenderEmail($senderEmail)
                 ->setSmtpSenderName($senderName);
         }
@@ -4071,7 +4097,8 @@ Http::post('/v1/account/verifications/email')
 
         $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
         $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
-        $replyTo = "";
+        $replyToEmail = '';
+        $replyToName = '';
 
         if ($smtpEnabled) {
             if (!empty($smtp['senderEmail'])) {
@@ -4080,8 +4107,13 @@ Http::post('/v1/account/verifications/email')
             if (!empty($smtp['senderName'])) {
                 $senderName = $smtp['senderName'];
             }
-            if (!empty($smtp['replyTo'])) {
-                $replyTo = $smtp['replyTo'];
+            // Includes backwards compatibility: fall back to legacy `replyTo` key
+            $smtpReplyToEmail = $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? '';
+            if (!empty($smtpReplyToEmail)) {
+                $replyToEmail = $smtpReplyToEmail;
+            }
+            if (!empty($smtp['replyToName'])) {
+                $replyToName = $smtp['replyToName'];
             }
 
             $queueForMails
@@ -4098,8 +4130,13 @@ Http::post('/v1/account/verifications/email')
                 if (!empty($customTemplate['senderName'])) {
                     $senderName = $customTemplate['senderName'];
                 }
-                if (!empty($customTemplate['replyTo'])) {
-                    $replyTo = $customTemplate['replyTo'];
+                // Includes backwards compatibility: fall back to legacy `replyTo` key
+                $customReplyToEmail = $customTemplate['replyToEmail'] ?? $customTemplate['replyTo'] ?? '';
+                if (!empty($customReplyToEmail)) {
+                    $replyToEmail = $customReplyToEmail;
+                }
+                if (!empty($customTemplate['replyToName'])) {
+                    $replyToName = $customTemplate['replyToName'];
                 }
 
                 $body = $customTemplate['message'] ?? '';
@@ -4107,7 +4144,8 @@ Http::post('/v1/account/verifications/email')
             }
 
             $queueForMails
-                ->setSmtpReplyTo($replyTo)
+                ->setSmtpReplyToEmail($replyToEmail)
+                ->setSmtpReplyToName($replyToName)
                 ->setSmtpSenderEmail($senderEmail)
                 ->setSmtpSenderName($senderName);
         }
@@ -4618,7 +4656,7 @@ Http::delete('/v1/account/targets/:targetId/push')
     ->groups(['api', 'account'])
     ->label('scope', 'targets.write')
     ->label('audits.event', 'target.delete')
-    ->label('audits.resource', 'target/response.$id')
+    ->label('audits.resource', 'target/{request.targetId}')
     ->label('event', 'users.[userId].targets.[targetId].delete')
     ->label('sdk', new Method(
         namespace: 'account',

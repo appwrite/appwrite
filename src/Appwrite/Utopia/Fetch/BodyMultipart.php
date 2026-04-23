@@ -64,7 +64,7 @@ class BodyMultipart
 
                 $partHeaderArray = \explode(':', $partHeader, 2);
 
-                $partHeaderName = \strtolower($partHeaderArray[0] ?? '');
+                $partHeaderName = \strtolower($partHeaderArray[0]);
                 $partHeaderValue = $partHeaderArray[1] ?? '';
                 if ($partHeaderName == "content-disposition") {
                     $dispositionChunks = \explode("; ", $partHeaderValue);
@@ -92,7 +92,7 @@ class BodyMultipart
      */
     public function getParts(): array
     {
-        return $this->parts ?? [];
+        return $this->parts;
     }
 
     public function getPart(string $key, mixed $default = ''): mixed

@@ -60,7 +60,6 @@ class Get extends Action
 
     public function action(string $text, int $size, int $margin, bool $download, Response $response)
     {
-        $download = ($download === '1' || $download === 'true' || $download === 1 || $download === true);
         $options = new QROptions([
             'addQuietzone' => true,
             'quietzoneSize' => $margin,

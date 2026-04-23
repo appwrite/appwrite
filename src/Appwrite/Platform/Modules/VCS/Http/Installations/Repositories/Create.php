@@ -152,7 +152,7 @@ class Create extends Action
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Provider Error: ' . $repository['message']);
         }
 
-        $repository['id'] = \strval($repository['id']) ?? '';
+        $repository['id'] = \strval($repository['id']);
         $repository['pushedAt'] = $repository['pushed_at'] ?? '';
         $repository['organization'] = $installation->getAttribute('organization', '');
         $repository['provider'] = $installation->getAttribute('provider', '');

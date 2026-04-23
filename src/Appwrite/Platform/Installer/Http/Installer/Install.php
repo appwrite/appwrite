@@ -240,9 +240,7 @@ class Install extends Action
                             $inputValue = trim($inputValue);
                         }
                         if ($storedValue !== $inputValue) {
-                            if ($installId !== '') {
-                                $state->updateGlobalLock($installId, Server::STATUS_ERROR);
-                            }
+                            $state->updateGlobalLock($installId, Server::STATUS_ERROR);
                             $this->sendBadRequest($response, $swooleResponse, $wantsStream, 'Installation payload mismatch');
                             return;
                         }
@@ -262,16 +260,12 @@ class Install extends Action
                     $incomingHash = $state->hashSensitiveValue($incomingValue);
                     if (isset($stored[$hashField])) {
                         if (!hash_equals((string) $stored[$hashField], $incomingHash)) {
-                            if ($installId !== '') {
-                                $state->updateGlobalLock($installId, Server::STATUS_ERROR);
-                            }
+                            $state->updateGlobalLock($installId, Server::STATUS_ERROR);
                             $this->sendBadRequest($response, $swooleResponse, $wantsStream, 'Installation payload mismatch');
                             return;
                         }
                     } elseif (isset($stored[$field]) && $incomingValue !== '' && (string) $stored[$field] !== $incomingValue) {
-                        if ($installId !== '') {
-                            $state->updateGlobalLock($installId, Server::STATUS_ERROR);
-                        }
+                        $state->updateGlobalLock($installId, Server::STATUS_ERROR);
                         $this->sendBadRequest($response, $swooleResponse, $wantsStream, 'Installation payload mismatch');
                         return;
                     }
@@ -430,7 +424,7 @@ class Install extends Action
     private function deriveNameFromEmail(string $email): string
     {
         $parts = explode('@', $email);
-        $username = $parts[0] ?? '';
+        $username = $parts[0];
         $cleaned = preg_replace('/[^a-zA-Z0-9]/', '', $username);
         return ucfirst($cleaned);
     }

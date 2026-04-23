@@ -1,1 +1,0 @@
-Update the status of a specific service. Use this endpoint to enable or disable a service in your project. 

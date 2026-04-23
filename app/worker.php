@@ -129,7 +129,7 @@ $worker
             $log->setAction('appwrite-queue-' . $queueName);
             $log->addTag('verboseType', get_class($error));
             $log->addTag('code', $error->getCode());
-            $log->addTag('projectId', $project->getId() ?? 'n/a');
+            $log->addTag('projectId', $project->getId());
             $log->addExtra('file', $error->getFile());
             $log->addExtra('line', $error->getLine());
             $log->addExtra('trace', $error->getTraceAsString());
