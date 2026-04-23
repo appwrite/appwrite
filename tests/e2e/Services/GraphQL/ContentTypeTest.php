@@ -7,6 +7,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\Config\Config;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -43,6 +44,28 @@ class ContentTypeTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
+        $this->assertIsArray($response['body']['data']);
+        $this->assertArrayNotHasKey('errors', $response['body']);
+        $response = $response['body']['data']['localeListCountries'];
+        $this->assertEquals(197, $response['total']);
+    }
+
+    public function testSingleQueryJSONContentTypeIncludesCorsHeaders()
+    {
+        $projectId = $this->getProject()['$id'];
+        $query = 'query { localeListCountries { total countries { code } } }';
+        $graphQLPayload = ['query' => $query];
+        $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $graphQLPayload);
+
+        $corsConfig = Config::getParam('cors');
+
+        $this->assertEquals('http://localhost', $response['headers']['access-control-allow-origin'] ?? null);
+        $this->assertEquals('true', $response['headers']['access-control-allow-credentials'] ?? null);
+        $this->assertEquals(\implode(', ', $corsConfig['exposedHeaders']), $response['headers']['access-control-expose-headers'] ?? null);
         $this->assertIsArray($response['body']['data']);
         $this->assertArrayNotHasKey('errors', $response['body']);
         $response = $response['body']['data']['localeListCountries'];
