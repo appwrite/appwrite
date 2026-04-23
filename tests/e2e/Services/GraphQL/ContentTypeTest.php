@@ -63,9 +63,11 @@ class ContentTypeTest extends Scope
 
         $corsConfig = Config::getParam('cors');
 
+        $this->assertNotNull($corsConfig, 'CORS configuration was not loaded in the test environment.');
+
         $this->assertEquals('http://localhost', $response['headers']['access-control-allow-origin'] ?? null);
         $this->assertEquals('true', $response['headers']['access-control-allow-credentials'] ?? null);
-        $this->assertEquals(\implode(', ', $corsConfig['exposedHeaders']), $response['headers']['access-control-expose-headers'] ?? null);
+        $this->assertEquals(\implode(', ', $corsConfig['exposedHeaders'] ?? []), $response['headers']['access-control-expose-headers'] ?? null);
         $this->assertIsArray($response['body']['data']);
         $this->assertArrayNotHasKey('errors', $response['body']);
         $response = $response['body']['data']['localeListCountries'];
