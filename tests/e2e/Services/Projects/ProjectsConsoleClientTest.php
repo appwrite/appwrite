@@ -5104,7 +5104,6 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $data['projectId'],
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
-            'variableId' => 'unique()',
             'key' => 'APP_TEST_CREATE',
             'value' => 'TESTINGVALUE',
             'secret' => false
