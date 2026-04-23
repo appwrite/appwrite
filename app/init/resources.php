@@ -323,15 +323,6 @@ function getDevice(string $root, string $connection = ''): Device
     }
 }
 
-$container->set('geodb', function ($register) {
-    /** @var Utopia\Registry\Registry $register */
-    try {
-        return $register->get('geodb');
-    } catch (\Throwable) {
-        return;
-    }
-}, ['register']);
-
 $container->set('passwordsDictionary', function ($register) {
     /** @var Utopia\Registry\Registry $register */
     return $register->get('passwordsDictionary');

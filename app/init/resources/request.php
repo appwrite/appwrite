@@ -1466,10 +1466,10 @@ return function (Container $container): void {
         return $getGeoForIp($ip);
     }, ['request', 'getGeoForIp']);
 
-    $container->set('getGeoForIp', function (Locale $locale, $geodb) {
+    $container->set('getGeoForIp', function (Locale $locale) {
         $cache = [];
 
-        return function (string $ip) use ($locale, $geodb, &$cache): GeoRecord {
+        return function (string $ip) use ($locale, &$cache): GeoRecord {
             if (isset($cache[$ip])) {
                 return $cache[$ip];
             }
@@ -1478,7 +1478,6 @@ return function (Container $container): void {
             $geoEndpoint = System::getEnv('_APP_GEO_ENDPOINT', '');
             $geoSecret = System::getEnv('_APP_GEO_SECRET', '');
 
-            // Try the geo service first (used in Docker/Cloud deployments)
             if (!empty($geoEndpoint) && !empty($geoSecret) && filter_var($ip, FILTER_VALIDATE_IP)) {
                 try {
                     $client = new Client();
@@ -1494,21 +1493,6 @@ return function (Container $container): void {
                     }
                 } catch (\Throwable $th) {
                     Console::warning('Geo service unavailable: ' . $th->getMessage());
-                }
-            }
-
-            // Fallback to local MaxMind DB for self-hosted deployments
-            if (empty($record) && $geodb !== null) {
-                try {
-                    $dbRecord = $geodb->get($ip);
-                    if ($dbRecord) {
-                        $record = [
-                            'countryCode' => $dbRecord['country']['iso_code'] ?? '--',
-                            'continentCode' => $dbRecord['continent']['code'] ?? '--',
-                        ];
-                    }
-                } catch (\Throwable $th) {
-                    Console::warning('Local geodb lookup failed: ' . $th->getMessage());
                 }
             }
 
@@ -1541,5 +1525,5 @@ return function (Container $container): void {
 
             return $geoRecord;
         };
-    }, ['locale', 'geodb']);
+    }, ['locale']);
 };
