@@ -29,13 +29,15 @@ class FunctionsCustomServerTest extends Scope
     protected function getScheduledExecutionTimeLessThanOneMinute(): string
     {
         $timezone = new \DateTimeZone('UTC');
-        $now = new \DateTimeImmutable('now', $timezone);
-
         // Avoid the exact 60-second boundary to keep the test deterministic.
-        if ($now->format('s') === '00') {
-            \sleep(1);
+        do {
             $now = new \DateTimeImmutable('now', $timezone);
-        }
+            if ($now->format('s') !== '00') {
+                break;
+            }
+
+            \sleep(1);
+        } while (true);
 
         $nextMinute = $now->modify('+1 minute');
         $nextMinute = $nextMinute->setTime(
@@ -1590,6 +1592,14 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals('schedule', $execution['body']['trigger']);
         $this->assertEquals('scheduled', $execution['body']['status']);
         $this->assertEquals($scheduledAt, $execution['body']['scheduledAt']);
+
+        $execution = $this->client->call(Client::METHOD_DELETE, '/functions/' . $data['functionId'] . '/executions/' . $execution['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $execution['headers']['status-code']);
+        $this->assertEmpty($execution['body']);
     }
 
     public function testGetExecution(): void
