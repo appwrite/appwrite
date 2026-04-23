@@ -440,7 +440,7 @@ abstract class Format
                     case 'createRedirectRule':
                         switch ($param) {
                             case 'resourceType':
-                                return 'ProxyResourceType';
+                                return null;
                         }
                         break;
                 }
