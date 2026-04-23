@@ -631,15 +631,6 @@ Http::init()
             $isImageTransformation = $route->getPath() === '/v1/storage/buckets/:bucketId/files/:fileId/preview';
             $isDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && ! $user->isPrivileged($authorization->getRoles());
 
-            // Allow privileged callers (API key / admin / server-side) to bypass a
-            // poisoned cache entry by sending `Cache-Control: no-cache`. Restricted
-            // to privileged callers so public traffic cannot force-miss the cache
-            // and overload the underlying pipeline (e.g. Imagick transformations).
-            // The save path still runs on success and overwrites the stored entry.
-            $cacheControl = \strtolower($request->getHeader('cache-control', ''));
-            $bypassRequested = \str_contains($cacheControl, 'no-cache') || \str_contains($cacheControl, 'no-store');
-            $bypassCache = $bypassRequested && ($isAppUser || $user->isPrivileged($authorization->getRoles()));
-
             $key = $request->cacheIdentifier();
             Span::add('storage.cache.key', $key);
             $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
@@ -647,18 +638,9 @@ Http::init()
                 new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
             );
             $timestamp = 60 * 60 * 24 * 180; // Temporarily increase the TTL to 180 day to ensure files in the cache are still fetched.
-            $data = $bypassCache ? false : $cache->load($key, $timestamp);
+            $data = $cache->load($key, $timestamp);
 
-            if ($bypassCache) {
-                $storageCacheOperationsCounter->add(1, ['result' => 'bypass']);
-                Span::add('storage.cache.hit', false);
-                Span::add('storage.cache.bypass', true);
-                $response
-                    ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
-                    ->addHeader('Pragma', 'no-cache')
-                    ->addHeader('Expires', '0')
-                    ->addHeader('X-Appwrite-Cache', 'bypass');
-            } elseif (! empty($data) && ! $cacheLog->isEmpty()) {
+            if (! empty($data) && ! $cacheLog->isEmpty()) {
                 $parts = explode('/', $cacheLog->getAttribute('resourceType', ''));
                 $type = $parts[0];
 
