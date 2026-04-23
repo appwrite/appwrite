@@ -631,6 +631,12 @@ Http::init()
             $isImageTransformation = $route->getPath() === '/v1/storage/buckets/:bucketId/files/:fileId/preview';
             $isDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && ! $user->isPrivileged($authorization->getRoles());
 
+            // Allow clients/operators to bypass a poisoned cache entry by sending
+            // `Cache-Control: no-cache`. The save path still runs on success and
+            // overwrites the existing entry with the freshly rendered response.
+            $cacheControl = \strtolower($request->getHeader('cache-control', ''));
+            $bypassCache = \str_contains($cacheControl, 'no-cache') || \str_contains($cacheControl, 'no-store');
+
             $key = $request->cacheIdentifier();
             Span::add('storage.cache.key', $key);
             $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
@@ -638,9 +644,18 @@ Http::init()
                 new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
             );
             $timestamp = 60 * 60 * 24 * 180; // Temporarily increase the TTL to 180 day to ensure files in the cache are still fetched.
-            $data = $cache->load($key, $timestamp);
+            $data = $bypassCache ? false : $cache->load($key, $timestamp);
 
-            if (! empty($data) && ! $cacheLog->isEmpty()) {
+            if ($bypassCache) {
+                $storageCacheOperationsCounter->add(1, ['result' => 'bypass']);
+                Span::add('storage.cache.hit', false);
+                Span::add('storage.cache.bypass', true);
+                $response
+                    ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+                    ->addHeader('Pragma', 'no-cache')
+                    ->addHeader('Expires', '0')
+                    ->addHeader('X-Appwrite-Cache', 'bypass');
+            } elseif (! empty($data) && ! $cacheLog->isEmpty()) {
                 $parts = explode('/', $cacheLog->getAttribute('resourceType', ''));
                 $type = $parts[0];
 
@@ -973,7 +988,13 @@ Http::shutdown()
             $resource = $resourceType = null;
             $data = $response->getPayload();
             $statusCode = $response->getStatusCode();
-            if (! empty($data['payload']) && $statusCode >= 200 && $statusCode < 300) {
+            // All routes that opt into label('cache', true) produce binary images
+            // via Response::file(). Refuse to cache anything else — this stops
+            // error pages, JSON error bodies, or partial/empty outputs from being
+            // persisted and served back on subsequent requests.
+            $contentType = (string) $response->getContentType();
+            $isImagePayload = \str_starts_with(\strtolower($contentType), 'image/');
+            if ($isImagePayload && ! empty($data['payload']) && $statusCode >= 200 && $statusCode < 300) {
                 $pattern = $route->getLabel('cache.resource', null);
                 if (! empty($pattern)) {
                     $resource = $parseLabel($pattern, $responsePayload, $requestParams, $user);
