@@ -3138,3 +3138,7 @@
 
 - Changed auth service 'redirect' param to 'confirm' for better clarity
 - Updated all SDKs to sync with API changes
+<!-- Tanisha contribution -->
+# APPWRITE_FUNCTION_EVENT consistency.
+<!-- Tanisha contribution -->
+# new contru

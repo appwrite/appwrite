@@ -133,6 +133,7 @@ class Functions extends Action
         }
 
         if (!empty($events)) {
+            $primaryEvent = $this->selectPrimaryEvent($events);
             $limit = 100;
             $sum = 100;
             $offset = 0;
@@ -189,11 +190,11 @@ class Functions extends Action
                         data: null,
                         user: $user,
                         jwt: null,
-                        event: $events[0],
+                        event: $primaryEvent,
                         eventData: \is_string($eventData) ? $eventData : \json_encode($eventData),
                         executionId: null,
                     );
-                    Console::success('Triggered function: ' . $events[0]);
+                    Console::success('Triggered function: ' . $primaryEvent);
                 }
             }
             return;
@@ -692,5 +693,38 @@ class Functions extends Action
                 $errorCode
             );
         }
+    }
+
+    /**
+     * Select a single "primary" event name to expose to the function runtime.
+     *
+     * The functions worker receives an array of generated events that include both concrete
+     * and wildcard patterns (e.g. `users.{id}.update`, `users.*.update`, `users.{id}.update.name`).
+     * For function context, we want the most specific concrete event when available.
+     */
+    private function selectPrimaryEvent(array $events): string
+    {
+        $events = \array_values(\array_filter($events, fn ($e) => \is_string($e) && $e !== ''));
+
+        if (empty($events)) {
+            return '';
+        }
+
+        $best = null;
+        $bestSegments = -1;
+
+        foreach ($events as $event) {
+            if (\str_contains($event, '*')) {
+                continue;
+            }
+
+            $segments = \substr_count($event, '.') + 1;
+            if ($segments > $bestSegments) {
+                $best = $event;
+                $bestSegments = $segments;
+            }
+        }
+
+        return $best ?? $events[0];
     }
 }
