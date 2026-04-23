@@ -640,6 +640,21 @@ Http::init()
             $timestamp = 60 * 60 * 24 * 180; // Temporarily increase the TTL to 180 day to ensure files in the cache are still fetched.
             $data = $cache->load($key, $timestamp);
 
+            // Integrity check: the filesystem blob and the cache document are
+            // two separate stores. If one drifts (partial write, disk corruption,
+            // a bad entry that slipped past the save-time content-type guard),
+            // the md5 we signed at save time will no longer match. Treat as a
+            // miss and purge so the action re-runs and writes a fresh entry.
+            if (! empty($data) && ! $cacheLog->isEmpty()) {
+                $storedSignature = $cacheLog->getAttribute('signature', '');
+                if (! empty($storedSignature) && \md5($data) !== $storedSignature) {
+                    $cache->purge($key);
+                    $storageCacheOperationsCounter->add(1, ['result' => 'corrupt']);
+                    Span::add('storage.cache.corrupt', true);
+                    $data = false;
+                }
+            }
+
             if (! empty($data) && ! $cacheLog->isEmpty()) {
                 $parts = explode('/', $cacheLog->getAttribute('resourceType', ''));
                 $type = $parts[0];

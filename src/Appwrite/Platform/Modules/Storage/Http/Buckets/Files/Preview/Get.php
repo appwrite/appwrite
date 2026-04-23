@@ -278,15 +278,6 @@ class Get extends Action
 
         $data = $image->output($output, $quality);
 
-        // Defend against Imagick producing a malformed or empty buffer from a
-        // partial/corrupted source. The shutdown hook caches any 2xx response
-        // with an image content-type, so a degenerate payload would poison the
-        // cache for the full TTL. Verify the magic bytes match the declared
-        // output format before handing the blob off to the response.
-        if (!self::hasExpectedMagicBytes($data, $output)) {
-            throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, 'Rendered preview failed integrity check');
-        }
-
         $renderingTime = \microtime(true) - $startTime - $downloadTime - $decryptionTime - $decompressionTime;
 
         $totalTime = \microtime(true) - $startTime;
@@ -322,23 +313,5 @@ class Get extends Action
             ->file($data);
 
         unset($image);
-    }
-
-    private static function hasExpectedMagicBytes(string $data, string $output): bool
-    {
-        if (\strlen($data) < 12) {
-            return false;
-        }
-
-        $format = \strtolower($output);
-        return match ($format) {
-            'jpg', 'jpeg' => \str_starts_with($data, "\xFF\xD8\xFF"),
-            'png' => \str_starts_with($data, "\x89PNG\r\n\x1A\n"),
-            'gif' => \str_starts_with($data, 'GIF87a') || \str_starts_with($data, 'GIF89a'),
-            'webp' => \str_starts_with($data, 'RIFF') && \substr($data, 8, 4) === 'WEBP',
-            // Unknown/unsupported output formats — skip the check rather than
-            // reject, so new formats added to storage-outputs don't silently fail.
-            default => true,
-        };
     }
 }
