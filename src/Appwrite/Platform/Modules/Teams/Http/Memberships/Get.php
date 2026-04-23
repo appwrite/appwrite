@@ -70,12 +70,13 @@ class Get extends Action
             throw new Exception(Exception::MEMBERSHIP_NOT_FOUND);
         }
 
+        // Default should be "false", but existing projects already rely on this being "true"
         $membershipsPrivacy =  [
-            'userName' => $project->getAttribute('auths', [])['membershipsUserName'] ?? false,
-            'userEmail' => $project->getAttribute('auths', [])['membershipsUserEmail'] ?? false,
-            'mfa' => $project->getAttribute('auths', [])['membershipsMfa'] ?? false,
-            'userId' => $project->getAttribute('auths', [])['membershipsUserId'] ?? false,
-            'userPhone' => $project->getAttribute('auths', [])['membershipsUserPhone'] ?? false,
+            'userName' => $project->getAttribute('auths', [])['membershipsUserName'] ?? true,
+            'userEmail' => $project->getAttribute('auths', [])['membershipsUserEmail'] ?? true,
+            'mfa' => $project->getAttribute('auths', [])['membershipsMfa'] ?? true,
+            'userId' => $project->getAttribute('auths', [])['membershipsUserId'] ?? true,
+            'userPhone' => $project->getAttribute('auths', [])['membershipsUserPhone'] ?? true,
         ];
 
         $roles = $authorization->getRoles();

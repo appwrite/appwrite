@@ -254,6 +254,7 @@ class Response extends SwooleResponse
     public const MODEL_DEV_KEY = 'devKey';
     public const MODEL_DEV_KEY_LIST = 'devKeyList';
     public const MODEL_MOCK_NUMBER = 'mockNumber';
+    public const MODEL_MOCK_NUMBER_LIST = 'mockNumberList';
     public const MODEL_AUTH_PROVIDER = 'authProvider';
     public const MODEL_AUTH_PROVIDER_LIST = 'authProviderList';
     public const MODEL_PLATFORM_APPLE = 'platformApple';
@@ -266,6 +267,7 @@ class Response extends SwooleResponse
     public const MODEL_VARIABLE_LIST = 'variableList';
     public const MODEL_VCS = 'vcs';
     public const MODEL_EMAIL_TEMPLATE = 'emailTemplate';
+    public const MODEL_EMAIL_TEMPLATE_LIST = 'emailTemplateList';
 
     // Health
     public const MODEL_HEALTH_STATUS = 'healthStatus';

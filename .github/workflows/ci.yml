@@ -7,6 +7,7 @@ concurrency:
 env:
   COMPOSE_FILE: docker-compose.yml
   IMAGE: appwrite-dev
+  K6_VERSION: '0.53.0'
 
 on:
   pull_request:
@@ -429,6 +430,8 @@ jobs:
         include:
           - service: Databases
             runner: blacksmith-4vcpu-ubuntu-2404
+            paratest_processes: 3
+            timeout_minutes: 30
           - service: Sites
             runner: blacksmith-4vcpu-ubuntu-2404
           - service: Functions
@@ -439,6 +442,10 @@ jobs:
             runner: blacksmith-4vcpu-ubuntu-2404
           - service: TablesDB
             runner: blacksmith-4vcpu-ubuntu-2404
+            paratest_processes: 3
+            timeout_minutes: 30
+          - service: Migrations
+            paratest_processes: 1
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -499,7 +506,7 @@ jobs:
         with:
           max_attempts: 2
           retry_wait_seconds: 60
-          timeout_minutes: 20
+          timeout_minutes: ${{ matrix.timeout_minutes || 20 }}
           job_id: ${{ job.check_run_id }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           test_dir: tests/e2e/Services/${{ matrix.service }}
@@ -512,9 +519,14 @@ jobs:
               Databases|TablesDB|Functions|Realtime|GraphQL|ProjectWebhooks) FUNCTIONAL_FLAG="" ;;
             esac
 
+            PARATEST_PROCESSES="${{ matrix.paratest_processes }}"
+            if [ -z "$PARATEST_PROCESSES" ]; then
+              PARATEST_PROCESSES="$(nproc)"
+            fi
+
             docker compose exec -T \
               -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
-              appwrite vendor/bin/paratest --processes $(nproc) $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --log-junit tests/e2e/Services/${{ matrix.service }}/junit.xml
+              appwrite vendor/bin/paratest --processes "$PARATEST_PROCESSES" $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --log-junit tests/e2e/Services/${{ matrix.service }}/junit.xml
 
       - name: Failure Logs
         if: failure()
@@ -536,6 +548,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
 
       - name: Download Docker Image
         uses: actions/download-artifact@v7
@@ -649,13 +663,19 @@ jobs:
 
   benchmark:
     name: Benchmark
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     needs: build
     permissions:
+      actions: read
+      contents: read
+      issues: write
       pull-requests: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
 
       - name: Download Docker Image
         uses: actions/download-artifact@v7
@@ -669,80 +689,145 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Load and Start Appwrite
+      - name: Load Appwrite image
         run: |
-          sed -i 's/traefik/localhost/g' .env
           docker load --input /tmp/${{ env.IMAGE }}.tar
-          docker compose up -d
-          sleep 10
+          docker tag ${{ env.IMAGE }} ${{ env.IMAGE }}:after
 
-      - name: Install Oha
+      - name: Setup k6
+        uses: grafana/setup-k6-action@ffe7d7290dfa715e48c2ccc924d068444c94bde2
+        with:
+          k6-version: ${{ env.K6_VERSION }}
+
+      - name: Prepare benchmark before
+        id: benchmark_before_prepare
+        continue-on-error: true
         run: |
-          echo "deb [signed-by=/usr/share/keyrings/azlux-archive-keyring.gpg] http://packages.azlux.fr/debian/ stable main" | sudo tee /etc/apt/sources.list.d/azlux.list
-          sudo wget -O /usr/share/keyrings/azlux-archive-keyring.gpg https://azlux.fr/repo.gpg
-          sudo apt update
-          sudo apt install oha
-          oha --version
+          git fetch --depth=1 origin ${{ github.event.pull_request.base.sha }}
+          git worktree add --detach /tmp/appwrite-benchmark-before ${{ github.event.pull_request.base.sha }}
+          docker build \
+            --cache-from ${{ env.IMAGE }}:after \
+            --target development \
+            --build-arg DEBUG=false \
+            --build-arg TESTING=true \
+            --build-arg VERSION=dev \
+            --tag ${{ env.IMAGE }}:before \
+            /tmp/appwrite-benchmark-before
 
-      - name: Benchmark PR
-        run: 'oha -z 180s http://localhost/v1/health/version --output-format json > benchmark.json'
-
-      - name: Cleaning
-        run: docker compose down -v
-
-      - name: Installing latest version
+      - name: Start before Appwrite
+        id: benchmark_before_start
+        if: steps.benchmark_before_prepare.outcome == 'success'
+        continue-on-error: true
+        working-directory: /tmp/appwrite-benchmark-before
+        env:
+          _APP_DOMAIN: localhost
+          _APP_CONSOLE_DOMAIN: localhost
+          _APP_DOMAIN_FUNCTIONS: functions.localhost
+          _APP_OPTIONS_ABUSE: disabled
         run: |
-          rm .env
-          LATEST_TAG=$(curl -fsSL -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/repos/appwrite/appwrite/releases/latest | jq -r .tag_name)
-          echo "Latest release tag: $LATEST_TAG"
-          curl -fsSL "https://raw.githubusercontent.com/appwrite/appwrite/${LATEST_TAG}/docker-compose.yml" -o docker-compose.yml
-          curl -fsSL "https://raw.githubusercontent.com/appwrite/appwrite/${LATEST_TAG}/.env" -o .env
-          sed -i 's/_APP_OPTIONS_ABUSE=enabled/_APP_OPTIONS_ABUSE=disabled/g' .env
-          docker compose up -d
-          sleep 10
+          docker tag ${{ env.IMAGE }}:before ${{ env.IMAGE }}
+          docker compose up -d --wait --no-build
 
-      - name: Benchmark Latest
-        run: oha -z 180s http://localhost/v1/health/version --output-format json > benchmark-latest.json
+      - name: Prepare benchmark files
+        run: rm -f benchmark-before-summary.json benchmark-after-summary.json benchmark-before-samples.json benchmark-after-samples.json
 
-      - name: Prepare comment
+      - name: Benchmark before
+        if: steps.benchmark_before_start.outcome == 'success'
+        continue-on-error: true
+        uses: grafana/run-k6-action@a15e2072ede004e8d46141e33d7f7dad8ad08d9d
+        env:
+          APPWRITE_ENDPOINT: 'http://localhost/v1'
+          APPWRITE_BENCHMARK_ITERATIONS: '5'
+          APPWRITE_BENCHMARK_VUS: '1'
+          APPWRITE_WORKER_TIMEOUT_MS: '120000'
+          APPWRITE_BENCHMARK_SUMMARY_PATH: 'benchmark-before-summary.json'
+        with:
+          path: tests/benchmarks/http.js
+          flags: --quiet --out json=benchmark-before-samples.json
+          cloud-comment-on-pr: false
+          debug: true
+
+      - name: Stop before Appwrite
+        if: always()
         run: |
-          echo '## :sparkles: Benchmark results' > benchmark.txt
-          echo ' ' >> benchmark.txt
-          echo "- Requests per second: $(jq -r '.summary.requestsPerSec|tonumber?|floor|tostring|[while(length>0;.[:-3])|.[-3:]]|reverse|join(",")' benchmark.json)" >> benchmark.txt
-          echo "- Requests with 200 status code: $(jq -r '.statusCodeDistribution."200"|tostring|[while(length>0;.[:-3])|.[-3:]]|reverse|join(",")' benchmark.json)" >> benchmark.txt
-          echo "- P99 latency: $(jq -r '.latencyPercentiles.p99' benchmark.json )" >> benchmark.txt
-          echo " " >> benchmark.txt
-          echo " " >> benchmark.txt
-          echo "## :zap:  Benchmark Comparison" >> benchmark.txt
-          echo " " >> benchmark.txt
-          echo "| Metric | This PR | Latest version | "  >> benchmark.txt
-          echo "| --- | --- | --- | "  >> benchmark.txt
-          echo "| RPS | $(jq -r '.summary.requestsPerSec|tonumber?|floor|tostring|[while(length>0;.[:-3])|.[-3:]]|reverse|join(",")' benchmark.json) | $(jq -r '.summary.requestsPerSec|tonumber|floor|tostring|[while(length>0;.[:-3])|.[-3:]]|reverse|join(",")' benchmark-latest.json) | "  >> benchmark.txt
-          echo "| 200 | $(jq -r '.statusCodeDistribution."200"|tostring|[while(length>0;.[:-3])|.[-3:]]|reverse|join(",")' benchmark.json) | $(jq -r '.statusCodeDistribution."200"|tostring|[while(length>0;.[:-3])|.[-3:]]|reverse|join(",")' benchmark-latest.json) | "  >> benchmark.txt
-          echo "| P99 | $(jq -r '.latencyPercentiles.p99' benchmark.json ) | $(jq -r '.latencyPercentiles.p99' benchmark-latest.json ) | "  >> benchmark.txt
+          if [ -d /tmp/appwrite-benchmark-before ]; then
+            cd /tmp/appwrite-benchmark-before
+            docker compose down -v || true
+          fi
+
+      - name: Wait for benchmark ports
+        if: always()
+        run: |
+          for port in 80 443 8080 9503; do
+            for attempt in $(seq 1 30); do
+              if ! ss -ltn | awk '{print $4}' | grep -Eq "[:.]${port}$"; then
+                break
+              fi
+              sleep 1
+            done
+
+            if ss -ltn | awk '{print $4}' | grep -Eq "[:.]${port}$"; then
+              echo "Port ${port} is still in use after stopping the before stack"
+              ss -ltn
+              exit 1
+            fi
+          done
+
+      - name: Start after Appwrite
+        env:
+          _APP_DOMAIN: localhost
+          _APP_CONSOLE_DOMAIN: localhost
+          _APP_DOMAIN_FUNCTIONS: functions.localhost
+          _APP_OPTIONS_ABUSE: disabled
+        run: |
+          docker tag ${{ env.IMAGE }}:after ${{ env.IMAGE }}
+          docker compose up -d --wait --no-build
+
+      - name: Benchmark after
+        id: benchmark_after
+        continue-on-error: true
+        uses: grafana/run-k6-action@a15e2072ede004e8d46141e33d7f7dad8ad08d9d
+        env:
+          APPWRITE_ENDPOINT: 'http://localhost/v1'
+          APPWRITE_BENCHMARK_ITERATIONS: '5'
+          APPWRITE_BENCHMARK_VUS: '1'
+          APPWRITE_WORKER_TIMEOUT_MS: '120000'
+          APPWRITE_BENCHMARK_PREVIOUS_SUMMARY_PATH: '../../benchmark-before-summary.json'
+          APPWRITE_BENCHMARK_SUMMARY_PATH: 'benchmark-after-summary.json'
+        with:
+          path: tests/benchmarks/http.js
+          flags: --quiet --out json=benchmark-after-samples.json
+          cloud-comment-on-pr: false
+          debug: true
+
+      - name: Stop after Appwrite
+        if: always()
+        run: docker compose down -v || true
+
+      - name: Comment on PR
+        if: always()
+        uses: actions/github-script@v8
+        env:
+          BENCHMARK_BASE_REF: ${{ github.event.pull_request.base.ref }}
+          BENCHMARK_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        with:
+          script: |
+            const comment = require('./.github/workflows/benchmark-comment.js');
+            await comment({ github, context, core });
 
       - name: Save results
         uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
-          name: benchmark.json
-          path: benchmark.json
+          name: benchmark-results
+          path: |
+            benchmark-comment.txt
+            benchmark-before-summary.json
+            benchmark-after-summary.json
+            benchmark-before-samples.json
+            benchmark-after-samples.json
           retention-days: 7
 
-      - name: Find Comment
-        if: github.event.pull_request.head.repo.full_name == github.repository
-        uses: peter-evans/find-comment@v3
-        id: fc
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: 'github-actions[bot]'
-          body-includes: Benchmark results
-
-      - name: Comment on PR
-        if: github.event.pull_request.head.repo.full_name == github.repository
-        uses: peter-evans/create-or-update-comment@v4
-        with:
-          comment-id: ${{ steps.fc.outputs.comment-id }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body-path: benchmark.txt
-          edit-mode: replace
+      - name: Fail benchmark
+        if: always() && steps.benchmark_after.outcome != 'success'
+        run: exit 1

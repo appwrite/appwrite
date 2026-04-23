@@ -1408,4 +1408,19 @@ return [
         'description' => 'When using project API key, make sure to pass x-appwrite-project header with your project ID.',
         'code' => 403,
     ],
+    Exception::MOCK_NUMBER_ALREADY_EXISTS => [
+        'name' => Exception::MOCK_NUMBER_ALREADY_EXISTS,
+        'description' => 'Mock number with the requested number already exists. Try again with a different number. or update OTP of existing mock number.',
+        'code' => 409,
+    ],
+    Exception::MOCK_NUMBER_NOT_FOUND => [
+        'name' => Exception::MOCK_NUMBER_NOT_FOUND,
+        'description' => 'Mock number with the requested number could not be found.',
+        'code' => 404,
+    ],
+    Exception::MOCK_NUMBER_LIMIT_EXCEEDED => [
+        'name' => Exception::MOCK_NUMBER_LIMIT_EXCEEDED,
+        'description' => 'The maximum number of mock phones for this project has been reached.',
+        'code' => 400,
+    ],
 ];

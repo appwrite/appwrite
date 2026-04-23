@@ -2,11 +2,31 @@
 
 namespace Tests\E2E\Services\Project;
 
+use PHPUnit\Framework\Attributes\Before;
 use Tests\E2E\Client;
 use Utopia\Database\Helpers\ID;
 
 trait SMTPBase
 {
+    // The ProjectCustom trait reuses the same project across tests in a class.
+    // Since the SMTP PATCH endpoint is additive (unset fields are preserved),
+    // state leaks across tests. Reset to a known-good, maildev-compatible
+    // configuration before each test so tests that don't specify credentials
+    // still connect cleanly.
+    #[Before(priority: -1)]
+    protected function resetProjectSMTP(): void
+    {
+        $this->updateSMTP(
+            senderName: 'Test Sender',
+            senderEmail: 'sender@example.com',
+            host: 'maildev',
+            port: 1025,
+            username: 'user',
+            password: 'password',
+            enabled: false,
+        );
+    }
+
     // Update SMTP status tests
 
     public function testUpdateSMTPStatusEnable(): void
