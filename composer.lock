@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c5ae97637fd0ec0a950044d1c33677ea",
+    "content-hash": "847532ec8f650852450fec3d6e806f4e",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4271,21 +4271,20 @@
         },
         {
             "name": "utopia-php/http",
-            "version": "0.34.21",
+            "version": "dev-refactor/coroutine-safe-dispatch",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "49a6bd3ea0d2966aa19cf707255d442675288a24"
+                "reference": "4f5d41aac517ec43c1319598c00c90adc6d5407c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/49a6bd3ea0d2966aa19cf707255d442675288a24",
-                "reference": "49a6bd3ea0d2966aa19cf707255d442675288a24",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/4f5d41aac517ec43c1319598c00c90adc6d5407c",
+                "reference": "4f5d41aac517ec43c1319598c00c90adc6d5407c",
                 "shasum": ""
             },
             "require": {
-                "ext-swoole": "*",
-                "php": ">=8.2",
+                "php": ">=8.3",
                 "utopia-php/compression": "0.1.*",
                 "utopia-php/di": "0.3.*",
                 "utopia-php/servers": "0.3.*",
@@ -4295,10 +4294,13 @@
             "require-dev": {
                 "doctrine/instantiator": "^1.5",
                 "laravel/pint": "1.*",
-                "phpbench/phpbench": "^1.2",
-                "phpstan/phpstan": "1.*",
-                "phpunit/phpunit": "^9.5.25",
+                "phpstan/phpstan": "^2.1",
+                "phpunit/phpunit": "^12.0",
+                "rector/rector": "^2.4",
                 "swoole/ide-helper": "4.8.3"
+            },
+            "suggest": {
+                "ext-swoole": "Required to use the Swoole server adapter (\\Utopia\\Http\\Adapter\\Swoole\\Server)."
             },
             "type": "library",
             "autoload": {
@@ -4319,9 +4321,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/0.34.21"
+                "source": "https://github.com/utopia-php/http/tree/refactor/coroutine-safe-dispatch"
             },
-            "time": "2026-04-19T19:44:04+00:00"
+            "time": "2026-04-24T14:01:56+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -8441,9 +8443,18 @@
             "time": "2024-11-07T12:36:22+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/http",
+            "version": "dev-refactor/coroutine-safe-dispatch",
+            "alias": "0.34.99",
+            "alias_normalized": "0.34.99.0"
+        }
+    ],
     "minimum-stability": "dev",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/http": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
