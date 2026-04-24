@@ -525,38 +525,30 @@ Http::get('/v1/account/sessions')
         ],
         contentType: ContentType::JSON,
     ))
-    ->param('currentOnly', false, new Boolean(), 'Set to true to return only the current session.', true)
     ->inject('response')
     ->inject('user')
     ->inject('locale')
     ->inject('store')
     ->inject('proofForToken')
-    ->action(function (bool $currentOnly, Response $response, User $user, Locale $locale, Store $store, ProofsToken $proofForToken) {
+    ->action(function (Response $response, User $user, Locale $locale, Store $store, ProofsToken $proofForToken) {
 
 
         $sessions = $user->getAttribute('sessions', []);
         $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
 
-        $result = [];
         foreach ($sessions as $key => $session) {/** @var Document $session */
-            $isCurrent = ($current == $session->getId()) ? true : false;
-            
-            if ($currentOnly && !$isCurrent) {
-                continue;
-            }
-
             $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
             $session->setAttribute('countryName', $countryName);
-            $session->setAttribute('current', $isCurrent);
+            $session->setAttribute('current', ($current == $session->getId()) ? true : false);
             $session->setAttribute('secret', $session->getAttribute('secret', ''));
 
-            $result[] = $session;
+            $sessions[$key] = $session;
         }
 
         $response->dynamic(new Document([
-            'sessions' => $result,
-            'total' => count($result),
+            'sessions' => $sessions,
+            'total' => count($sessions),
         ]), Response::MODEL_SESSION_LIST);
     });
 
@@ -636,6 +628,77 @@ Http::delete('/v1/account/sessions')
             $queueForEvents
                 ->setParam('userId', $user->getId())
                 ->setParam('sessionId', $currentSession->getId());
+        }
+
+        $response->noContent();
+    });
+
+Http::delete('/v1/account/sessions/others')
+    ->desc('Delete other sessions')
+    ->groups(['api', 'account'])
+    ->label('scope', 'account')
+    ->label('event', 'users.[userId].sessions.[sessionId].delete')
+    ->label('audits.event', 'session.delete')
+    ->label('audits.resource', 'user/{user.$id}')
+    ->label('sdk', new Method(
+        namespace: 'account',
+        group: 'sessions',
+        name: 'deleteOtherSessions',
+        description: '/docs/references/account/delete-other-sessions.md',
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::NONE
+    ))
+    ->label('abuse-limit', 100)
+    ->inject('response')
+    ->inject('user')
+    ->inject('dbForProject')
+    ->inject('locale')
+    ->inject('queueForEvents')
+    ->inject('queueForDeletes')
+    ->inject('store')
+    ->inject('proofForToken')
+    ->action(function (Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Delete $queueForDeletes, Store $store, ProofsToken $proofForToken) {
+        $sessions = $user->getAttribute('sessions', []);
+        $currentSessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+
+        if (!$currentSessionId) {
+            throw new Exception(Exception::USER_SESSION_NOT_FOUND);
+        }
+
+        $lastDeletedSession = null;
+        foreach ($sessions as $key => $session) {
+            /** @var Document $session */
+            if ($session->getId() === $currentSessionId) {
+                continue;
+            }
+
+            $dbForProject->deleteDocument('sessions', $session->getId());
+
+            $session
+                ->setAttribute('current', false)
+                ->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')));
+
+            $lastDeletedSession = $session;
+
+            $queueForDeletes
+                ->setType(DELETE_TYPE_SESSION_TARGETS)
+                ->setDocument($session)
+                ->trigger();
+        }
+
+        $dbForProject->purgeCachedDocument('users', $user->getId());
+
+        if ($lastDeletedSession instanceof Document) {
+            $queueForEvents
+                ->setParam('userId', $user->getId())
+                ->setParam('sessionId', $lastDeletedSession->getId())
+                ->setPayload($response->output($lastDeletedSession, Response::MODEL_SESSION));
         }
 
         $response->noContent();
