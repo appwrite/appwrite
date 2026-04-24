@@ -10,7 +10,10 @@ import { ComposeBlock } from './ComposeBlock'
 import { TargetBar } from './TargetBar'
 import { UserStatusPanel } from './UserStatusPanel'
 
-type ImpersonatorAccount = Models.User & { impersonator?: boolean }
+type ImpersonatorAccount = Models.User & {
+  impersonator?: boolean
+  impersonatorUserId?: string
+}
 
 export function BlocksConsoleView() {
   const { account: rawAccount } = useAuth()
@@ -26,7 +29,11 @@ export function BlocksConsoleView() {
 
   useEffect(() => {
     if (!account) return
-    if (account.impersonator !== true) {
+    // Match the BlocksConsoleLink gate: allow operators (impersonator flag)
+    // and anyone already inside an impersonation session.
+    const allowed =
+      account.impersonator === true || !!account.impersonatorUserId
+    if (!allowed) {
       navigate({ to: '/account', replace: true })
     }
   }, [account, navigate])

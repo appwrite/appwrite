@@ -245,14 +245,16 @@ export function BlocksList({ projectId }: { projectId: string | null }) {
         </div>
       ) : (
         <ul className="divide-y divide-border">
-          {filtered.map((b, idx) => {
+          {filtered.map((b) => {
             const isDeleting =
               !!pendingDelete &&
               pendingDelete.resourceType === b.resourceType &&
               pendingDelete.resourceId === b.resourceId &&
               deleteMutation.isPending
             return (
-              <Fragment key={`${b.resourceType}-${b.resourceId || '*'}-${idx}`}>
+              <Fragment
+                key={`${b.resourceType}-${b.resourceId || '*'}-${b.$createdAt}`}
+              >
                 <li>
                   <BlockCard
                     block={b}
