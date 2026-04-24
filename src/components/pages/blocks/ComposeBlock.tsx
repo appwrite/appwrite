@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { Loader2, ShieldAlert } from 'lucide-react'
 import { ResourceType } from '@appwrite.io/console'
-import { useCreateBlock } from '@/lib/react-query/hooks/manager'
+import { useBlocks, useCreateBlock } from '@/lib/react-query/hooks/manager'
 import { DateTimePicker } from '@/components/global/shared/DateTimePicker'
 import {
   Dialog,
@@ -50,6 +50,10 @@ export function ComposeBlock({ projectId }: { projectId: string | null }) {
   const [confirmOpen, setConfirmOpen] = useState(false)
 
   const createMutation = useCreateBlock()
+  // Reuses the cached list query populated by BlocksList — gives us the
+  // project + org metadata for a friendlier confirm message.
+  const { data: blocksData } = useBlocks(projectId)
+  const meta = blocksData?.blocks?.[0]
 
   useEffect(() => {
     if (!projectId) {
@@ -236,22 +240,44 @@ export function ComposeBlock({ projectId }: { projectId: string | null }) {
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent
           className="sm:max-w-md"
-          overlayClassName="bg-background/85 backdrop-blur-md"
+          overlayClassName="bg-black/60 backdrop-blur-sm"
         >
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <ShieldAlert className="h-4 w-4 text-destructive" />
               Create block
             </DialogTitle>
-            <DialogDescription>
-              This will immediately block{' '}
-              <span className="font-medium text-foreground">
-                {resourceId.trim()
-                  ? 'the selected resource'
-                  : `all ${typeMeta.label}`}
-              </span>{' '}
-              on project{' '}
-              <span className="font-medium text-foreground">{projectId}</span>.
+            <DialogDescription asChild>
+              <p>
+                Block{' '}
+                {resourceId.trim() ? (
+                  <>
+                    <span className="font-medium text-foreground">
+                      {typeMeta.label}
+                    </span>{' '}
+                    <code className="rounded bg-muted px-1 py-0.5 text-[11.5px] text-foreground">
+                      {resourceId.trim()}
+                    </code>
+                  </>
+                ) : (
+                  <span className="font-medium text-foreground">
+                    all {typeMeta.label}
+                  </span>
+                )}{' '}
+                in{' '}
+                <span className="font-medium text-foreground">
+                  {meta?.projectName || projectId}
+                </span>
+                {meta?.organizationName && (
+                  <>
+                    {' '}
+                    <span className="text-muted-foreground">
+                      ({meta.organizationName})
+                    </span>
+                  </>
+                )}
+                ?
+              </p>
             </DialogDescription>
           </DialogHeader>
 
