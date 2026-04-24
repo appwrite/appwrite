@@ -1547,7 +1547,6 @@ $server->onClose(function (int $connection) use ($server, $realtime, $stats, $re
                     $consoleDB = getConsoleDB();
                     $project = $consoleDB->getAuthorization()->skip(fn () => $consoleDB->getDocument('projects', $projectId));
 
-                    // todo: have a bulk delete
                     if (!$project->isEmpty()) {
                         $dbForProject = getProjectDB($project);
                         $presences = $dbForProject->find('presenceLogs', [
