@@ -234,7 +234,10 @@ export function ComposeBlock({ projectId }: { projectId: string | null }) {
       </div>
 
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent
+          className="sm:max-w-md"
+          overlayClassName="bg-background/85 backdrop-blur-md"
+        >
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <ShieldAlert className="h-4 w-4 text-destructive" />

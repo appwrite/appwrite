@@ -134,8 +134,9 @@ export function BlockCard({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-40">
           <DropdownMenuItem
+            variant="destructive"
             onClick={onDelete}
-            className="cursor-pointer gap-2 text-[13px] text-destructive focus:text-destructive"
+            className="cursor-pointer gap-2 text-[13px] dark:!text-destructive-foreground dark:focus:!text-destructive-foreground dark:[&_svg]:!text-destructive-foreground"
           >
             <Trash2 className="h-3.5 w-3.5" />
             Revoke block

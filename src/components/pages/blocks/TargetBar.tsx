@@ -1,9 +1,9 @@
 import { useRef } from 'react'
-import { FolderGit2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { CopyableId } from '@/components/global/shared/CopyableId'
+import { Badge } from '@/components/ui/badge'
+import { useBlocks } from '@/lib/react-query/hooks/manager'
 
 export function TargetBar({
   draft,
@@ -20,6 +20,11 @@ export function TargetBar({
 }) {
   const inputRef = useRef<HTMLInputElement | null>(null)
 
+  // Reads from the same react-query cache that BlocksList populates —
+  // deduped by the shared query key so this does not trigger a separate fetch.
+  const { data } = useBlocks(focusedProjectId)
+  const meta = data?.blocks?.[0]
+
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
@@ -29,7 +34,7 @@ export function TargetBar({
         </p>
       </div>
       <div className="border-t border-border" />
-      <div className="px-6 py-4 space-y-3">
+      <div className="px-6 py-4 space-y-4">
         <div className="flex items-end gap-2">
           <div className="flex-1 space-y-2">
             <Label htmlFor="blocks-project-id">Project ID</Label>
@@ -72,14 +77,38 @@ export function TargetBar({
           )}
         </div>
 
-        {focusedProjectId && (
-          <div className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-background px-3 py-2">
-            <FolderGit2 className="h-4 w-4 text-muted-foreground" />
-            <span className="text-[13px] font-medium text-foreground">
-              Project
-            </span>
-            <CopyableId id={focusedProjectId} size="sm" maxWidth={240} />
-          </div>
+        {meta?.projectName && (
+          <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 rounded-md border border-border bg-background px-4 py-3 text-[13px]">
+            <dt className="text-muted-foreground">Project</dt>
+            <dd className="flex flex-wrap items-center gap-2 font-medium text-foreground">
+              <span>{meta.projectName}</span>
+              {meta.region && (
+                <Badge
+                  variant="secondary"
+                  className="h-5 px-1.5 text-[11px] font-normal uppercase tracking-wide"
+                >
+                  {meta.region}
+                </Badge>
+              )}
+            </dd>
+
+            {meta.organizationName && (
+              <>
+                <dt className="text-muted-foreground">Organization</dt>
+                <dd className="flex flex-wrap items-center gap-2 font-medium text-foreground">
+                  <span>{meta.organizationName}</span>
+                  {meta.billingPlan && (
+                    <Badge
+                      variant="outline"
+                      className="h-5 px-1.5 text-[11px] font-normal capitalize"
+                    >
+                      {meta.billingPlan} plan
+                    </Badge>
+                  )}
+                </dd>
+              </>
+            )}
+          </dl>
         )}
       </div>
     </div>
