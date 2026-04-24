@@ -1,0 +1,592 @@
+import { useState, useCallback } from 'react'
+import { Browser, Flag, type Models } from '@appwrite.io/console'
+import { toast } from 'sonner'
+import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
+import { CodeBlock } from '@/components/global/shared/CodeBlock'
+import { CopyableId } from '@/components/global/shared/CopyableId'
+import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { cn } from '@/lib/utils'
+import {
+  hasHumanEmail,
+  userTypeBadge,
+} from '@/components/pages/projects/$projectId/activity/activity-utils'
+import { sdk } from '@/lib/appwrite/sdk'
+import { UserTypeAvatar } from '@/components/pages/projects/$projectId/activity/UserTypeAvatar'
+import { Button } from '@/components/ui/button'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import {
+  Activity,
+  Database,
+  FileText,
+  Globe,
+  Link2,
+  LogIn,
+  LogOut,
+  Monitor,
+  Pencil,
+  Plus,
+  Server,
+  Trash2,
+  Upload,
+  User,
+  Zap,
+} from '@/lib/icons'
+
+type ActionType =
+  | 'create'
+  | 'update'
+  | 'delete'
+  | 'execute'
+  | 'upload'
+  | 'login'
+  | 'logout'
+  | 'view'
+
+type ResourceType =
+  | 'document'
+  | 'collection'
+  | 'database'
+  | 'file'
+  | 'bucket'
+  | 'function'
+  | 'user'
+  | 'team'
+  | 'project'
+
+export interface ActivityDrawerDisplay {
+  action: ActionType
+  resourceType: ResourceType
+  resourceName: string
+}
+
+interface ActivityLogDrawerProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  event: Models.ActivityEvent | null
+  display: ActivityDrawerDisplay | null
+}
+
+const actionLabels: Record<ActionType, string> = {
+  create: 'Created',
+  update: 'Updated',
+  delete: 'Deleted',
+  execute: 'Executed',
+  upload: 'Uploaded',
+  login: 'Logged in',
+  logout: 'Logged out',
+  view: 'Viewed',
+}
+
+const actionIcons: Record<ActionType, React.ReactNode> = {
+  create: <Plus className="h-4 w-4" />,
+  update: <Pencil className="h-4 w-4" />,
+  delete: <Trash2 className="h-4 w-4" />,
+  execute: <Zap className="h-4 w-4" />,
+  upload: <Upload className="h-4 w-4" />,
+  login: <LogIn className="h-4 w-4" />,
+  logout: <LogOut className="h-4 w-4" />,
+  view: <Activity className="h-4 w-4" />,
+}
+
+const actionColors: Record<ActionType, string> = {
+  create: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+  update: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
+  delete: 'bg-muted text-muted-foreground',
+  execute: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+  upload: 'bg-violet-500/10 text-violet-600 dark:text-violet-400',
+  login: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400',
+  logout: 'bg-slate-500/10 text-slate-600 dark:text-slate-400',
+  view: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400',
+}
+
+const resourceIcons: Record<ResourceType, React.ReactNode> = {
+  document: <FileText className="h-4 w-4" />,
+  collection: <Database className="h-4 w-4" />,
+  database: <Database className="h-4 w-4" />,
+  file: <FileText className="h-4 w-4" />,
+  bucket: <Database className="h-4 w-4" />,
+  function: <Zap className="h-4 w-4" />,
+  user: <User className="h-4 w-4" />,
+  team: <User className="h-4 w-4" />,
+  project: <Server className="h-4 w-4" />,
+}
+
+function DetailSection({
+  title,
+  children,
+  bodyClassName,
+}: {
+  title: string
+  children: React.ReactNode
+  /** Override default `px-4 py-3` body padding (e.g. `p-0` for flush code blocks). */
+  bodyClassName?: string
+}) {
+  return (
+    <section className="rounded-xl border border-border bg-card/40 overflow-hidden">
+      <div className="border-b border-border bg-muted/20 px-4 py-2.5">
+        <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          {title}
+        </h3>
+      </div>
+      <div className={cn('px-4 py-3', bodyClassName)}>{children}</div>
+    </section>
+  )
+}
+
+function DetailField({
+  label,
+  children,
+  className,
+}: {
+  label: string
+  children: React.ReactNode
+  className?: string
+}) {
+  return (
+    <div className={cn('min-w-0', className)}>
+      <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+        {label}
+      </p>
+      <div className="mt-1">{children}</div>
+    </div>
+  )
+}
+
+function formatValue(value: string | undefined | null): string {
+  const v = value?.trim()
+  return v && v.length > 0 ? v : '—'
+}
+
+/** Console avatars (flags, browsers): one frame size + chrome everywhere. */
+const AVATAR_SERVICE_FRAME =
+  'flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/50 bg-muted/30'
+
+const AVATAR_SERVICE_IMG = 'h-full w-full object-contain p-0.5'
+
+const AVATAR_SERVICE_FETCH_PX = 40
+
+function ActivityBrowserIcon({ code }: { code: string }) {
+  const [failed, setFailed] = useState(false)
+  const trimmed = code.trim()
+  if (!trimmed || failed) {
+    return (
+      <div className={AVATAR_SERVICE_FRAME} aria-hidden>
+        <Monitor className="h-3.5 w-3.5 text-muted-foreground" />
+      </div>
+    )
+  }
+  return (
+    <div className={AVATAR_SERVICE_FRAME}>
+      <img
+        src={sdk.forConsole.avatars.getBrowser({
+          code: trimmed as Browser,
+          width: AVATAR_SERVICE_FETCH_PX,
+          height: AVATAR_SERVICE_FETCH_PX,
+        })}
+        alt=""
+        className={AVATAR_SERVICE_IMG}
+        onError={() => setFailed(true)}
+      />
+    </div>
+  )
+}
+
+function ActivityHostnameFavicon({ hostname }: { hostname: string }) {
+  const [failed, setFailed] = useState(false)
+  const h = hostname.trim()
+  if (!h || failed || !h.includes('.')) {
+    return <Globe className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+  }
+  return (
+    <div className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded border border-border/50 bg-background">
+      <img
+        src={sdk.forConsole.avatars.getFavicon({ url: `https://${h}` })}
+        alt=""
+        className="h-full w-full object-contain p-0.5"
+        onError={() => setFailed(true)}
+      />
+    </div>
+  )
+}
+
+export function ActivityLogDrawer({
+  open,
+  onOpenChange,
+  event,
+  display,
+}: ActivityLogDrawerProps) {
+  const handleCopyActivityPermalink = useCallback(() => {
+    const id = event?.$id
+    if (!id) return
+    const url = new URL(window.location.href)
+    url.searchParams.set('event', id)
+    void navigator.clipboard.writeText(url.toString()).then(
+      () => {
+        toast.success('Link to this activity copied')
+      },
+      () => {
+        toast.error('Could not copy link')
+      },
+    )
+  }, [event?.$id])
+
+  if (!event || !display) return null
+
+  const badge = userTypeBadge(event.userType)
+  const action = display.action
+  const resourceType = display.resourceType
+
+  const secondaryLine = hasHumanEmail(event.userType)
+    ? formatValue(event.userEmail)
+    : formatValue(event.userId)
+
+  const rawJson = JSON.stringify(event, null, 2)
+
+  const clientSummary = [
+    event.clientName,
+    event.clientVersion ? `v${event.clientVersion}` : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
+
+  const osSummary = [
+    event.osName || event.osCode,
+    event.osVersion ? `(${event.osVersion})` : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
+
+  const deviceSummary = [
+    event.deviceBrand,
+    event.deviceModel || event.deviceName,
+  ]
+    .filter(Boolean)
+    .join(' · ')
+
+  const countryNameLine = event.countryName?.trim() ?? ''
+  const countryCodeLine = event.countryCode?.trim().toUpperCase() ?? ''
+
+  const countryCode = event.countryCode?.trim().toLowerCase() ?? ''
+  const flagUrl =
+    countryCode.length === 2
+      ? sdk.forConsole.avatars.getFlag({
+          code: countryCode as Flag,
+          width: AVATAR_SERVICE_FETCH_PX,
+          height: AVATAR_SERVICE_FETCH_PX,
+          quality: 100,
+        })
+      : null
+
+  const flagAlt = event.countryName?.trim()
+    ? `${event.countryName} flag`
+    : countryCode
+      ? `${countryCode.toUpperCase()} flag`
+      : 'Location unknown'
+
+  return (
+    <BaseDrawer
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Activity log"
+      description={`Details for activity ${event.$id}`}
+      maxWidth="sm:max-w-xl"
+      side="right"
+      headerActions={
+        <TooltipProvider delayDuration={0}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 shrink-0 p-0"
+                onClick={handleCopyActivityPermalink}
+              >
+                <Link2 className="h-4 w-4" />
+                <span className="sr-only">Copy link to this activity</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">Copy link to this activity</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      }
+    >
+      <>
+        <div className="border-t border-border shrink-0" />
+        <div className="flex flex-1 flex-col min-h-0">
+          <div className="flex-1 overflow-y-auto">
+            <div className="space-y-5 px-6 py-6">
+              {/* Hero summary */}
+              <div className="rounded-xl border border-border bg-gradient-to-br from-muted/40 via-background to-background p-4">
+                <div className="flex flex-wrap items-start gap-4">
+                  <div
+                    className={cn(
+                      'flex h-12 w-12 shrink-0 items-center justify-center rounded-lg',
+                      actionColors[action],
+                    )}
+                  >
+                    {actionIcons[action]}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-[16px] font-semibold tracking-tight text-foreground">
+                        {actionLabels[action]}
+                      </span>
+                      <span className="rounded-md border border-border bg-background/80 px-2 py-0.5 font-mono text-[11px] text-muted-foreground">
+                        {event.event}
+                      </span>
+                    </div>
+                    <p className="mt-1.5 text-[13px] text-muted-foreground">
+                      <span className="font-medium text-foreground">
+                        {display.resourceName}
+                      </span>
+                      <span className="mx-1.5 text-border">·</span>
+                      <span className="capitalize">{resourceType}</span>
+                    </p>
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <span
+                        className={cn(
+                          'rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider',
+                          badge.tone,
+                        )}
+                      >
+                        {badge.label}
+                      </span>
+                      <span className="text-[12px] text-muted-foreground">
+                        <DateTooltip
+                          date={event.time}
+                          showFormattedDate
+                          className="text-[12px]"
+                        />
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <DetailSection title="Actor">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <DetailField label="Name">
+                    <div className="flex items-center gap-3">
+                      <UserTypeAvatar
+                        userType={event.userType}
+                        userName={
+                          event.userName?.trim() ||
+                          event.userEmail?.trim() ||
+                          'Unknown'
+                        }
+                      />
+                      <p className="min-w-0 truncate text-[13px] font-medium text-foreground">
+                        {formatValue(event.userName)}
+                      </p>
+                    </div>
+                  </DetailField>
+                  <DetailField label={hasHumanEmail(event.userType) ? 'Email' : 'Actor ID'}>
+                    <p
+                      className={cn(
+                        'truncate text-[13px] text-muted-foreground',
+                        !hasHumanEmail(event.userType) && 'font-mono',
+                      )}
+                    >
+                      {secondaryLine}
+                    </p>
+                  </DetailField>
+                  <DetailField label="User type">
+                    <span
+                      className={cn(
+                        'inline-flex rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider',
+                        badge.tone,
+                      )}
+                    >
+                      {formatValue(event.userType)}
+                    </span>
+                  </DetailField>
+                  <DetailField label="User ID">
+                    {event.userId?.trim() ? (
+                      <CopyableId id={event.userId} size="xs" maxWidth={220} />
+                    ) : (
+                      <p className="font-mono text-[12px] text-muted-foreground">
+                        —
+                      </p>
+                    )}
+                  </DetailField>
+                </div>
+              </DetailSection>
+
+              <DetailSection title="Resource">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <DetailField label="Resource" className="sm:col-span-2">
+                    <div className="flex min-w-0 items-start gap-2.5">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                        {resourceIcons[resourceType]}
+                      </div>
+                      <div className="min-w-0 flex-1 flex flex-col gap-2">
+                        <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                          <span className="shrink-0 text-[11px] font-medium capitalize text-muted-foreground">
+                            {resourceType}
+                          </span>
+                          {event.resourceId?.trim() ? (
+                            <CopyableId
+                              id={event.resourceId}
+                              size="xs"
+                              maxWidth={280}
+                            />
+                          ) : (
+                            <span className="font-mono text-[12px] text-muted-foreground">
+                              —
+                            </span>
+                          )}
+                        </div>
+                        {event.resourceType?.trim() ? (
+                          <p className="font-mono text-[11px] text-muted-foreground">
+                            {event.resourceType}
+                          </p>
+                        ) : null}
+                        <p className="break-words text-[13px] font-medium leading-relaxed text-foreground">
+                          {display.resourceName}
+                        </p>
+                      </div>
+                    </div>
+                  </DetailField>
+                  <DetailField label="Resource path" className="sm:col-span-2">
+                    <p className="break-all rounded-md border border-border bg-muted/30 px-2.5 py-2 font-mono text-[11px] leading-relaxed text-muted-foreground">
+                      {formatValue(event.resource)}
+                    </p>
+                  </DetailField>
+                  <DetailField label="Resource parent" className="sm:col-span-2">
+                    <p className="break-all rounded-md border border-border bg-muted/30 px-2.5 py-2 font-mono text-[11px] leading-relaxed text-muted-foreground">
+                      {formatValue(event.resourceParent)}
+                    </p>
+                  </DetailField>
+                </div>
+              </DetailSection>
+
+              <DetailSection title="Request context">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <DetailField label="IP address">
+                    <p className="font-mono text-[12px] text-foreground">
+                      {formatValue(event.ip)}
+                    </p>
+                  </DetailField>
+                  <DetailField label="Hostname">
+                    <div className="flex items-center gap-2">
+                      <ActivityHostnameFavicon hostname={event.hostname} />
+                      <p className="min-w-0 break-all font-mono text-[12px] text-muted-foreground">
+                        {formatValue(event.hostname)}
+                      </p>
+                    </div>
+                  </DetailField>
+                  <DetailField label="User agent" className="sm:col-span-2">
+                    <p className="break-all rounded-md border border-border bg-muted/30 px-2.5 py-2 font-mono text-[11px] leading-relaxed text-muted-foreground">
+                      {formatValue(event.userAgent)}
+                    </p>
+                  </DetailField>
+                </div>
+              </DetailSection>
+
+              <DetailSection title="Client & device">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <DetailField label="Client">
+                    <div className="flex items-start gap-2">
+                      <ActivityBrowserIcon code={event.clientCode} />
+                      <div className="min-w-0">
+                        <p className="text-[13px] text-foreground">
+                          {clientSummary || '—'}
+                        </p>
+                        <p className="mt-0.5 font-mono text-[11px] text-muted-foreground">
+                          {event.clientType || event.clientCode
+                            ? [event.clientType, event.clientCode]
+                                .filter(Boolean)
+                                .join(' · ')
+                            : '—'}
+                        </p>
+                      </div>
+                    </div>
+                  </DetailField>
+                  <DetailField label="Engine">
+                    <p className="font-mono text-[12px] text-muted-foreground">
+                      {[event.clientEngine, event.clientEngineVersion]
+                        .filter((s) => s?.trim())
+                        .join(' ') || '—'}
+                    </p>
+                  </DetailField>
+                  <DetailField label="Operating system">
+                    <p className="text-[13px] text-foreground">{osSummary || '—'}</p>
+                  </DetailField>
+                  <DetailField label="Device">
+                    <p className="text-[13px] text-foreground">
+                      {deviceSummary || '—'}
+                    </p>
+                  </DetailField>
+                  <DetailField label="Location" className="sm:col-span-2">
+                    <div className="flex items-start gap-2.5">
+                      {flagUrl ? (
+                        <div
+                          className={AVATAR_SERVICE_FRAME}
+                          role="img"
+                          aria-label={flagAlt}
+                        >
+                          <img
+                            src={flagUrl}
+                            alt=""
+                            className={AVATAR_SERVICE_IMG}
+                          />
+                        </div>
+                      ) : (
+                        <div className={AVATAR_SERVICE_FRAME} aria-hidden>
+                          <Globe className="h-3.5 w-3.5 text-muted-foreground" />
+                        </div>
+                      )}
+                      <div className="min-w-0 flex flex-col gap-0.5">
+                        {countryNameLine ? (
+                          <p className="text-[13px] text-foreground">
+                            {countryNameLine}
+                          </p>
+                        ) : !countryCodeLine ? (
+                          <p className="text-[13px] text-foreground">—</p>
+                        ) : null}
+                        {countryCodeLine ? (
+                          <p className="font-mono text-[11px] font-medium tracking-wide text-muted-foreground">
+                            {countryCodeLine}
+                          </p>
+                        ) : null}
+                      </div>
+                    </div>
+                  </DetailField>
+                </div>
+              </DetailSection>
+
+              <DetailSection title="Scope">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <DetailField label="Project ID">
+                    <CopyableId id={event.projectId} size="xs" maxWidth={220} />
+                  </DetailField>
+                  <DetailField label="Team ID">
+                    <CopyableId id={event.teamId} size="xs" maxWidth={220} />
+                  </DetailField>
+                  <DetailField label="Event ID" className="sm:col-span-2">
+                    <CopyableId id={event.$id} size="xs" maxWidth={280} />
+                  </DetailField>
+                </div>
+              </DetailSection>
+
+              <DetailSection title="Raw payload" bodyClassName="p-0">
+                <CodeBlock
+                  code={rawJson}
+                  language="json"
+                  variant="headless"
+                  copyInside
+                />
+              </DetailSection>
+            </div>
+          </div>
+        </div>
+      </>
+    </BaseDrawer>
+  )
+}

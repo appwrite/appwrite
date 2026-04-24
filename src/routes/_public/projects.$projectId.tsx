@@ -209,6 +209,7 @@ function ProjectLayout() {
     isDatabaseSpreadsheetView ||
     isDatabaseVisualizerView ||
     activeSection === 'usage' ||
+    activeSection === 'activity' ||
     isFunctionsEditorView
 
   // Check if we're on the function executions tab

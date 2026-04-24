@@ -38,7 +38,10 @@ import {
   type IDEConfig,
 } from '@/lib/config/ide'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
-import { BuildLogsView } from '@/components/global/shared/BuildLogsView'
+import {
+  BuildLogsView,
+  stripAnsiForClipboard,
+} from '@/components/global/shared/BuildLogsView'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DeploymentInfo } from '@/components/global/shared/DeploymentInfo'
@@ -66,7 +69,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { toast } from 'sonner'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useNavigate, useLocation, useSearch } from '@tanstack/react-router'
+import { useNavigate, useLocation } from '@tanstack/react-router'
 import { ImageFormat, type Models } from '@appwrite.io/console'
 import {
   useDeploymentProxyRules,
@@ -451,9 +454,14 @@ export function DeploymentDetailView({
 }: DeploymentDetailViewConfig) {
   const navigate = useNavigate()
   const location = useLocation()
-  const search = useSearch({ strict: false })
   const queryClient = useQueryClient()
   const [logsSearch, setLogsSearch] = useState('')
+  /** Selected build log line numbers (1-based, original file lines). */
+  const [selectedLogLines, setSelectedLogLines] = useState<Set<number>>(
+    () => new Set(),
+  )
+  const lineAnchorRef = useRef<number | null>(null)
+  const prevHydratedDeploymentIdRef = useRef<string | undefined>(undefined)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [cancelBuildDialogOpen, setCancelBuildDialogOpen] = useState(false)
   const [redeployDialogOpen, setRedeployDialogOpen] = useState(false)
@@ -486,28 +494,22 @@ export function DeploymentDetailView({
     return () => clearInterval(interval)
   }, [deployment?.$createdAt, deployment?.status])
 
-  // Get selected line from URL query params
-  const selectedLine = useMemo(() => {
-    // Handle both object and string search params
-    if (typeof search === 'object' && search !== null && 'line' in search) {
-      const lineParam = search.line
-      if (typeof lineParam === 'number') {
-        return lineParam
-      }
-      if (typeof lineParam === 'string') {
-        const parsed = parseInt(lineParam, 10)
-        return isNaN(parsed) ? null : parsed
-      }
-      return null
-    }
+  // Hydrate log line selection from the URL when the deployment changes (not on every search change).
+  useEffect(() => {
+    const depId = deployment?.$id
+    if (depId === undefined) return
+    if (prevHydratedDeploymentIdRef.current === depId) return
+    prevHydratedDeploymentIdRef.current = depId
 
-    // Fallback to string parsing
     const searchParams = new URLSearchParams(
       typeof location.search === 'string' ? location.search : '',
     )
     const lineParam = searchParams.get('line')
-    return lineParam ? parseInt(lineParam, 10) : null
-  }, [search, location.search])
+    const parsed = lineParam ? parseInt(lineParam, 10) : NaN
+    const line = !isNaN(parsed) ? parsed : null
+    setSelectedLogLines(line != null ? new Set([line]) : new Set())
+    lineAnchorRef.current = line
+  }, [deployment?.$id])
 
   // Determine if this is a site or function deployment (needed for navigation)
   const isSiteDeployment =
@@ -1156,20 +1158,113 @@ export function DeploymentDetailView({
     onDownloadBuild(projectId, resourceId, deploymentId)
   }
 
-  // Handle copy logs
-  const handleCopyLogs = async () => {
+  const syncLineSearchUrl = useCallback(
+    (next: Set<number>) => {
+      if (next.size === 0) {
+        navigate({
+          to: location.pathname,
+          search: (prev: unknown) => {
+            const newSearch = { ...(prev || {}) }
+            delete newSearch.line
+            return Object.keys(newSearch).length === 0 ? {} : newSearch
+          },
+          replace: true,
+        })
+      } else if (next.size === 1) {
+        const only = [...next][0]!
+        navigate({
+          to: location.pathname,
+          search: (prev: unknown) => ({ ...(prev || {}), line: only }),
+          replace: true,
+        })
+      } else {
+        navigate({
+          to: location.pathname,
+          search: (prev: unknown) => {
+            const newSearch = { ...(prev || {}) }
+            delete newSearch.line
+            return Object.keys(newSearch).length === 0 ? {} : newSearch
+          },
+          replace: true,
+        })
+      }
+    },
+    [navigate, location.pathname],
+  )
+
+  const getLogsTextForClipboard = useCallback(() => {
+    if (!buildLogs) return ''
+    if (selectedLogLines.size === 0) return buildLogs
+    const lines = buildLogs.split('\n')
+    const ordered = [...selectedLogLines].sort((a, b) => a - b)
+    return ordered
+      .map((n) => lines[n - 1] ?? '')
+      .map(stripAnsiForClipboard)
+      .join('\n')
+  }, [buildLogs, selectedLogLines])
+
+  const performCopyLogs = useCallback(async () => {
     if (!buildLogs) {
       toast.error('No logs to copy')
       return
     }
 
     try {
-      await navigator.clipboard.writeText(buildLogs)
-      toast.success('Logs copied to clipboard')
+      await navigator.clipboard.writeText(getLogsTextForClipboard())
+      const n = selectedLogLines.size
+      if (n === 0) {
+        toast.success('Logs copied to clipboard')
+      } else if (n === 1) {
+        const line = Math.min(...selectedLogLines)
+        toast.success(`Copied line ${line}`)
+      } else {
+        toast.success(`Copied ${n} lines`)
+      }
     } catch {
       toast.error('Failed to copy logs')
     }
+  }, [buildLogs, getLogsTextForClipboard, selectedLogLines])
+
+  const handleCopyLogs = () => {
+    void performCopyLogs()
   }
+
+  useEffect(() => {
+    if (selectedLogLines.size === 0 || !buildLogs) return
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || e.key !== 'c') return
+      const target = e.target
+      if (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target instanceof HTMLSelectElement
+      ) {
+        return
+      }
+      if (target instanceof HTMLElement && target.isContentEditable) return
+
+      const logsEl = logsContainerRef.current
+      const active = document.activeElement
+      if (
+        logsEl &&
+        active instanceof Node &&
+        active !== logsEl &&
+        !logsEl.contains(active)
+      ) {
+        return
+      }
+
+      const selectionText = window.getSelection()?.toString().trim()
+      if (selectionText && selectionText.length > 0) return
+
+      e.preventDefault()
+      void performCopyLogs()
+    }
+
+    window.addEventListener('keydown', onKeyDown, true)
+    return () => window.removeEventListener('keydown', onKeyDown, true)
+  }, [selectedLogLines, buildLogs, performCopyLogs])
 
   // Handle download logs
   const handleDownloadLogs = () => {
@@ -1248,9 +1343,14 @@ export function DeploymentDetailView({
     }
   }, [buildLogs, isAtBottom, getScrollContainer])
 
-  // Scroll to selected line when it changes
+  const scrollTargetLine = useMemo(() => {
+    if (selectedLogLines.size !== 1) return null
+    return Math.min(...selectedLogLines)
+  }, [selectedLogLines])
+
+  // Scroll to the sole selected line when it changes (e.g. deep link or single-line selection)
   useEffect(() => {
-    if (selectedLine === null) return
+    if (scrollTargetLine === null) return
     if (!buildLogs) return // Wait for logs to be available
 
     // Retry mechanism to ensure DOM has updated with refs
@@ -1258,7 +1358,7 @@ export function DeploymentDetailView({
     const maxRetries = 10
 
     const tryScroll = () => {
-      const lineElement = lineRefs.current.get(selectedLine)
+      const lineElement = lineRefs.current.get(scrollTargetLine)
       if (!lineElement) {
         // Retry if element not found yet
         if (retryCount < maxRetries) {
@@ -1288,7 +1388,7 @@ export function DeploymentDetailView({
     const timeoutId = setTimeout(tryScroll, 100)
 
     return () => clearTimeout(timeoutId)
-  }, [selectedLine, getScrollContainer, buildLogs])
+  }, [scrollTargetLine, getScrollContainer, buildLogs])
 
   // Scroll handlers for logs
   const handleScrollToTop = () => {
@@ -1308,29 +1408,38 @@ export function DeploymentDetailView({
     }
   }
 
-  // Line click: toggle URL line param (selection only; copy uses row button)
+  // Line click: toggle line in selection; Shift+click adds every line in the anchor–click range.
   const handleLineClick = useCallback(
-    (lineNumber: number) => {
-      const isSelected = selectedLine === lineNumber
-      if (isSelected) {
-        navigate({
-          to: location.pathname,
-          search: (prev: unknown) => {
-            const newSearch = { ...(prev || {}) }
-            delete newSearch.line
-            return Object.keys(newSearch).length === 0 ? {} : newSearch
-          },
-          replace: true,
-        })
-      } else {
-        navigate({
-          to: location.pathname,
-          search: (prev: unknown) => ({ ...(prev || {}), line: lineNumber }),
-          replace: true,
-        })
+    (lineNumber: number, event: React.MouseEvent<HTMLDivElement>) => {
+      const focusLogsPane = () => {
+        logsContainerRef.current?.focus({ preventScroll: true })
       }
+
+      if (event.shiftKey) {
+        const anchor =
+          lineAnchorRef.current ??
+          (selectedLogLines.size > 0
+            ? Math.min(...selectedLogLines)
+            : lineNumber)
+        const start = Math.min(anchor, lineNumber)
+        const end = Math.max(anchor, lineNumber)
+        const next = new Set(selectedLogLines)
+        for (let i = start; i <= end; i++) next.add(i)
+        setSelectedLogLines(next)
+        syncLineSearchUrl(next)
+        focusLogsPane()
+        return
+      }
+
+      const next = new Set(selectedLogLines)
+      if (next.has(lineNumber)) next.delete(lineNumber)
+      else next.add(lineNumber)
+      lineAnchorRef.current = lineNumber
+      setSelectedLogLines(next)
+      syncLineSearchUrl(next)
+      focusLogsPane()
     },
-    [selectedLine, navigate, location.pathname],
+    [selectedLogLines, syncLineSearchUrl],
   )
 
   // Extract route params for navigation
@@ -1779,7 +1888,11 @@ export function DeploymentDetailView({
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Copy logs</p>
+                      <p>
+                        {selectedLogLines.size > 0
+                          ? `Copy ${selectedLogLines.size} selected line${selectedLogLines.size === 1 ? '' : 's'} (⌘C / Ctrl+C)`
+                          : 'Copy logs'}
+                      </p>
                     </TooltipContent>
                   </TooltipPrimitive.Root>
                 </div>
@@ -1787,13 +1900,14 @@ export function DeploymentDetailView({
             </div>
             <div
               ref={logsContainerRef}
-              className="flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-y-auto overflow-x-hidden"
+              tabIndex={-1}
+              className="flex min-h-0 min-w-0 w-full flex-1 select-none flex-col overflow-y-auto overflow-x-hidden outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               <div className="min-h-full min-w-0 pl-6 pr-4 sm:pr-5">
                 <BuildLogsView
                   buildLogs={buildLogs}
                   searchTerm={logsSearch}
-                  selectedLine={selectedLine}
+                  selectedLines={selectedLogLines}
                   onLineClick={handleLineClick}
                   lineRefs={lineRefs}
                   emptyMessage="No build logs available."

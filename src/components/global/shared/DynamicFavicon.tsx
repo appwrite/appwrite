@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { usesThemeAwareFaviconHost } from '@/lib/utils/theme-favicon-host'
 
 export function DynamicFavicon() {
   const [mounted, setMounted] = useState(false)
@@ -8,15 +9,10 @@ export function DynamicFavicon() {
   }, [])
 
   useEffect(() => {
-    // Only update favicon on localhost
+    // Theme-aware favicon only where we use `/logo-theme.svg` as the base
     if (typeof window === 'undefined' || !mounted) return
 
-    const isLocalhost =
-      window.location.hostname === 'localhost' ||
-      window.location.hostname === '127.0.0.1' ||
-      import.meta.env.DEV
-
-    if (!isLocalhost) return
+    if (!usesThemeAwareFaviconHost()) return
 
     // Find existing favicon link or create a new one
     let faviconLink = document.querySelector(

@@ -37,7 +37,7 @@ export function RegionFlag({
     return (
       <div
         className={cn(
-          'flex shrink-0 items-center justify-center rounded border border-border/50 bg-muted/30',
+          'flex shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/50 bg-muted/30',
           className || 'h-4 w-4',
         )}
       >
@@ -51,7 +51,7 @@ export function RegionFlag({
   return (
     <div
       className={cn(
-        'flex shrink-0 items-center justify-center overflow-hidden rounded border border-border/50 bg-background',
+        'flex shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/50 bg-background',
         className || 'h-4 w-4',
       )}
     >

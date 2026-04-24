@@ -6050,17 +6050,64 @@ function RowEditDrawer({
     }
   }, [focusedField, open, initialTab])
 
-  // Focus the requested field when drawer opens
+  // Focus the requested field when drawer opens, then place the caret at the
+  // end of the existing value. The input's value is hydrated by a separate
+  // effect watching `row?.$id`, so the value may arrive a tick after mount —
+  // we poll a few frames until it's there before placing the caret.
+  const lastFocusedSessionRef = useRef<string | null>(null)
   useEffect(() => {
     if (!open || !focusedField) return
-    const el = fieldRefs.current[focusedField]
-    if (el) {
-      // Defer twice to run after focus trap mounts children
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => el.focus())
-      })
+    // A "session" is one focus request: drawer-open + focusedField + row.
+    // Once we've placed the caret for this session, don't re-run on re-renders.
+    const sessionKey = `${row?.$id ?? 'create'}::${focusedField}`
+    if (lastFocusedSessionRef.current === sessionKey) return
+
+    let cancelled = false
+    let attempt = 0
+    const MAX_ATTEMPTS = 6
+
+    const tryPlaceCaret = () => {
+      if (cancelled) return
+      const el = fieldRefs.current[focusedField]
+      if (!el) {
+        if (attempt++ < MAX_ATTEMPTS) requestAnimationFrame(tryPlaceCaret)
+        return
+      }
+      el.focus({ preventScroll: true })
+      if (
+        el instanceof HTMLInputElement ||
+        el instanceof HTMLTextAreaElement
+      ) {
+        const len = el.value.length
+        if (len === 0 && attempt++ < MAX_ATTEMPTS) {
+          // Value hasn't been hydrated by the `row?.$id` effect yet; retry.
+          requestAnimationFrame(tryPlaceCaret)
+          return
+        }
+        if (len > 0) {
+          try {
+            el.setSelectionRange(len, len)
+          } catch {
+            // Number/email/etc. may reject selection APIs; ignore.
+          }
+        }
+      }
+      lastFocusedSessionRef.current = sessionKey
     }
-  }, [open, focusedField])
+
+    const rafId = requestAnimationFrame(() => {
+      requestAnimationFrame(tryPlaceCaret)
+    })
+    return () => {
+      cancelled = true
+      cancelAnimationFrame(rafId)
+    }
+  }, [open, focusedField, row?.$id])
+
+  // Reset the session marker so reopening the same field places the caret again.
+  useEffect(() => {
+    if (!open) lastFocusedSessionRef.current = null
+  }, [open])
 
   // Focus newly added array item
   useEffect(() => {

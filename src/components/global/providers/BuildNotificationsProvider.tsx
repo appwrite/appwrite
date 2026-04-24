@@ -31,6 +31,7 @@ import { toast } from 'sonner'
 import { Bell } from 'lucide-react'
 import type { RealtimeResponseEvent, Models } from '@appwrite.io/console'
 import { useFavicon, type FaviconVariant } from '@/hooks/use-favicon'
+import { usesThemeAwareFaviconHost } from '@/lib/utils/theme-favicon-host'
 import { registerConsoleRealtimeListener } from '@/lib/realtime/console-hub'
 import { registerRegionalConsoleRealtimeListener } from '@/lib/realtime/regional-console-hub'
 import { PROJECT_CHANNELS } from '@/lib/realtime/constants'
@@ -131,6 +132,19 @@ function isFailureStatus(status: string): boolean {
   return (
     status === 'failed' || status === 'canceled' || status === 'cancelled'
   )
+}
+
+/** Match base favicon: theme variants in dev/local, flat logo colors in prod. */
+function buildInProgressFavicon(): FaviconVariant {
+  return usesThemeAwareFaviconHost() ? 'theme-orange' : 'orange'
+}
+
+function buildSuccessFavicon(): FaviconVariant {
+  return usesThemeAwareFaviconHost() ? 'theme-green' : 'green'
+}
+
+function buildFailureFavicon(): FaviconVariant {
+  return usesThemeAwareFaviconHost() ? 'theme-red' : 'red'
 }
 
 let permissionPromptShown = false
@@ -444,7 +458,7 @@ export function BuildNotificationsProvider({
         builds.set(update.deploymentId, { ...update })
         tracked.add(update.deploymentId)
         clearResetTimer()
-        applyDesiredFavicon('theme-orange')
+        applyDesiredFavicon(buildInProgressFavicon())
         // First time we see this build start, nudge the user to enable browser
         // notifications so they hear about completion. Already gated by the
         // relevance check above, so we know we're on the right page.
@@ -502,12 +516,12 @@ export function BuildNotificationsProvider({
           // Canceling is a user action, not an error - just go back to normal.
           applyDesiredFavicon(null)
         } else {
-          applyDesiredFavicon(failed ? 'theme-red' : 'theme-green')
+          applyDesiredFavicon(failed ? buildFailureFavicon() : buildSuccessFavicon())
           scheduleFaviconReset()
         }
       } else {
         // Other builds still running - keep the in-progress favicon.
-        applyDesiredFavicon('theme-orange')
+        applyDesiredFavicon(buildInProgressFavicon())
       }
     }
 
@@ -616,7 +630,7 @@ export function BuildNotificationsProvider({
 
       if (activeBuildsRef.current.size > 0) {
         clearResetTimer()
-        applyDesiredFavicon('theme-orange')
+        applyDesiredFavicon(buildInProgressFavicon())
       }
     }
 
@@ -704,7 +718,7 @@ export function BuildNotificationsProvider({
         const current = getCurrentFaviconRef.current()
         originalFaviconRef.current = current ?? 'default'
       }
-      setFaviconRef.current('theme-orange')
+      setFaviconRef.current(buildInProgressFavicon())
     } else if (originalFaviconRef.current) {
       // Either we walked away from Sites/Functions entirely, or there's
       // nothing on this specific page that's still building - put the favicon

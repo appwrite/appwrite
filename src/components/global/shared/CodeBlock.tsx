@@ -160,14 +160,25 @@ function loadLanguage(lang: string): Promise<void> {
   })
 }
 
+export type CodeBlockVariant = 'default' | 'headless'
+
 export interface CodeBlockProps {
   code: string
   language: CodeBlockLanguage
+  /**
+   * `default`: framed block with border and rounded corners.
+   * `headless`: no outer border; full width — use flush inside a parent card.
+   */
+  variant?: CodeBlockVariant
   /** Show copy button (default true) */
   showCopy?: boolean
   /** Render copy button inside the code frame (top-right) instead of above */
   copyInside?: boolean
-  /** Fixed height for the code frame (e.g. "280px"); content scrolls when longer */
+  /**
+   * Fixed height for the code frame (e.g. "280px"); when set, content scrolls
+   * vertically inside the block. Omit to size the block to the code (no inner
+   * vertical scroll; wide lines still scroll horizontally).
+   */
   fixedHeight?: string
   className?: string
   /** Optional label above the block (e.g. "Code") */
@@ -181,6 +192,7 @@ export interface CodeBlockProps {
 export function CodeBlock({
   code,
   language,
+  variant = 'default',
   showCopy = true,
   copyInside = false,
   fixedHeight,
@@ -241,6 +253,8 @@ export function CodeBlock({
     ? themes.vsDark
     : themes.vsLight
 
+  const isHeadless = variant === 'headless'
+
   const renderCopyButton = () => {
     if (!showCopy) return null
     return (
@@ -276,7 +290,12 @@ export function CodeBlock({
   }
 
   return (
-    <div className={cn('space-y-1.5', className)}>
+    <div
+      className={cn(
+        isHeadless ? 'w-full space-y-0' : 'space-y-1.5',
+        className,
+      )}
+    >
       {!copyInside && (label || showCopy || showFullscreen) && (
         <div
           className={cn(
@@ -297,14 +316,24 @@ export function CodeBlock({
       )}
       <div
         className={cn(
-          'relative rounded-xl border border-border overflow-hidden flex flex-col',
+          'relative flex w-full flex-col overflow-hidden',
+          isHeadless
+            ? 'rounded-none border-0 shadow-none'
+            : 'rounded-xl border border-border',
           transparentBackground ? 'bg-transparent' : 'bg-background',
           fixedHeight && 'min-h-0',
         )}
         style={fixedHeight ? { height: fixedHeight } : undefined}
       >
         {copyInside && (showCopy || showFullscreen) && (
-          <div className="flex h-10 shrink-0 items-center justify-between border-b border-border px-3">
+          <div
+            className={cn(
+              'flex h-10 shrink-0 items-center justify-between px-3',
+              isHeadless
+                ? 'border-0 bg-muted/20'
+                : 'border-b border-border',
+            )}
+          >
             <span className="text-[11px] font-medium text-muted-foreground">
               {getLanguageLabel(language)}
             </span>
@@ -326,9 +355,9 @@ export function CodeBlock({
               ref={preRef}
               onWheel={handleWheel}
               className={cn(
-                'rounded-none overflow-x-auto overflow-y-auto p-4 text-[12px] font-mono',
+                'rounded-none overflow-x-auto p-4 text-[12px] font-mono',
+                fixedHeight && 'min-h-0 flex-1 overflow-y-auto',
                 transparentBackground ? '!bg-transparent' : '!bg-background',
-                fixedHeight && 'min-h-0 flex-1',
                 preClassName,
               )}
               style={{
