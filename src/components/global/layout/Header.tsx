@@ -66,6 +66,7 @@ import { useOrganizationPlan } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { ImpersonateConsoleUserPopover } from '@/components/global/shared/ImpersonateConsoleUserPopover'
+import { BlocksConsoleLink } from '@/components/global/shared/BlocksConsoleLink'
 import { openCreateOrganizationFlow } from '@/lib/open-create-organization-flow'
 import { useTheme } from 'next-themes'
 import { getConsoleHeaderLogoClass } from '@/lib/html-theme'
@@ -663,6 +664,11 @@ export function ConsoleHeader({
           {/* Console impersonation (operators) - same control style as Support / Assistant */}
           <div className="hidden @[900px]:flex shrink-0">
             <ImpersonateConsoleUserPopover />
+          </div>
+
+          {/* Blocks console (operators) - same visibility gate as impersonation */}
+          <div className="hidden @[900px]:flex shrink-0">
+            <BlocksConsoleLink />
           </div>
 
           {/* Help/Assistant - hidden on small containers; enabled by profile or experimental override */}

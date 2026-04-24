@@ -1,0 +1,316 @@
+import { useEffect, useMemo, useState } from 'react'
+import { toast } from 'sonner'
+import { Loader2, ShieldAlert } from 'lucide-react'
+import { ResourceType } from '@appwrite.io/console'
+import { useCreateBlock } from '@/lib/react-query/hooks/manager'
+import { DateTimePicker } from '@/components/global/shared/DateTimePicker'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
+import {
+  ORDERED_RESOURCE_TYPES,
+  RESOURCE_TYPE_META,
+} from './resource-type-meta'
+
+type Expiry =
+  | { kind: 'never' }
+  | { kind: 'preset'; hours: number; label: string }
+  | { kind: 'custom'; iso: string | null }
+
+const PRESETS: { hours: number; label: string }[] = [
+  { hours: 1, label: '1h' },
+  { hours: 24, label: '24h' },
+  { hours: 24 * 7, label: '7d' },
+  { hours: 24 * 30, label: '30d' },
+]
+
+function expiryToIso(e: Expiry): string | undefined {
+  if (e.kind === 'never') return undefined
+  if (e.kind === 'preset')
+    return new Date(Date.now() + e.hours * 3600 * 1000).toISOString()
+  if (e.kind === 'custom' && e.iso) return e.iso
+  return undefined
+}
+
+export function ComposeBlock({ projectId }: { projectId: string | null }) {
+  const [type, setType] = useState<ResourceType>(ResourceType.Projects)
+  const [resourceId, setResourceId] = useState('')
+  const [reason, setReason] = useState('')
+  const [expiry, setExpiry] = useState<Expiry>({ kind: 'never' })
+  const [confirmOpen, setConfirmOpen] = useState(false)
+
+  const createMutation = useCreateBlock()
+
+  useEffect(() => {
+    if (!projectId) {
+      setResourceId('')
+      setReason('')
+    }
+  }, [projectId])
+
+  const payload = useMemo(() => {
+    if (!projectId) return null
+    return {
+      projectId,
+      resourceType: type,
+      resourceId: resourceId.trim() || undefined,
+      reason: reason.trim() || undefined,
+      expiredAt: expiryToIso(expiry),
+    }
+  }, [projectId, type, resourceId, reason, expiry])
+
+  const canSubmit = !!projectId && !createMutation.isPending
+
+  const handleConfirm = () => {
+    if (!payload) return
+    createMutation.mutate(payload, {
+      onSuccess: () => {
+        toast.success('Block created')
+        setResourceId('')
+        setReason('')
+        setExpiry({ kind: 'never' })
+        setConfirmOpen(false)
+      },
+      onError: (e) => {
+        toast.error('Could not create block', {
+          description: e instanceof Error ? e.message : String(e),
+        })
+      },
+    })
+  }
+
+  const typeMeta = RESOURCE_TYPE_META[type]
+
+  return (
+    <section className="rounded-xl border border-border bg-card/50 overflow-hidden">
+      <div className="px-6 py-4">
+        <h3 className="text-[15px] font-semibold text-foreground">
+          Create block
+        </h3>
+        <p className="mt-1 text-[13px] text-muted-foreground">
+          Block a resource for the selected project.
+        </p>
+      </div>
+      <div className="border-t border-border" />
+
+      <form
+        className="px-6 py-4 space-y-4"
+        onSubmit={(e) => {
+          e.preventDefault()
+          if (canSubmit) setConfirmOpen(true)
+        }}
+      >
+        <div className="space-y-2">
+          <Label>Resource type</Label>
+          <div className="grid grid-cols-3 gap-1.5">
+            {ORDERED_RESOURCE_TYPES.map((rt) => {
+              const meta = RESOURCE_TYPE_META[rt]
+              const Icon = meta.icon
+              const active = type === rt
+              return (
+                <button
+                  key={rt}
+                  type="button"
+                  onClick={() => setType(rt)}
+                  disabled={!projectId}
+                  className={cn(
+                    'flex items-center gap-1.5 rounded-md border px-2 py-1.5 text-[12px] text-left transition-colors disabled:opacity-50',
+                    active
+                      ? 'border-foreground/30 bg-accent text-foreground'
+                      : 'border-border bg-background text-muted-foreground hover:bg-accent hover:text-foreground',
+                  )}
+                  title={meta.description}
+                >
+                  <Icon className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">{meta.label}</span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="resource-id">Resource ID</Label>
+            {!resourceId.trim() && (
+              <Badge
+                variant="secondary"
+                className="h-5 px-1.5 text-[10.5px] font-normal"
+              >
+                All resources
+              </Badge>
+            )}
+          </div>
+          <Input
+            id="resource-id"
+            value={resourceId}
+            onChange={(e) => setResourceId(e.target.value)}
+            disabled={!projectId}
+            placeholder="Leave empty to block all"
+            spellCheck={false}
+            autoComplete="off"
+            className="h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="reason">Reason (optional)</Label>
+          <Textarea
+            id="reason"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            rows={2}
+            disabled={!projectId}
+            placeholder="Why is this being blocked?"
+            className="resize-none border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Expiry</Label>
+          <div className="flex flex-wrap gap-1.5">
+            <ExpiryChip
+              active={expiry.kind === 'never'}
+              label="Never"
+              onClick={() => setExpiry({ kind: 'never' })}
+              disabled={!projectId}
+            />
+            {PRESETS.map((p) => (
+              <ExpiryChip
+                key={p.label}
+                active={expiry.kind === 'preset' && expiry.hours === p.hours}
+                label={p.label}
+                onClick={() =>
+                  setExpiry({ kind: 'preset', hours: p.hours, label: p.label })
+                }
+                disabled={!projectId}
+              />
+            ))}
+            <ExpiryChip
+              active={expiry.kind === 'custom'}
+              label="Custom"
+              onClick={() =>
+                setExpiry({
+                  kind: 'custom',
+                  iso: new Date(Date.now() + 86400000).toISOString(),
+                })
+              }
+              disabled={!projectId}
+            />
+          </div>
+          {expiry.kind === 'custom' && (
+            <DateTimePicker
+              value={expiry.iso}
+              onChange={(v) => setExpiry({ kind: 'custom', iso: v })}
+              clearable={false}
+              size="sm"
+              className="w-full"
+            />
+          )}
+        </div>
+      </form>
+
+      <div className="px-6 py-4 border-t border-border bg-muted/30 flex items-center justify-end gap-2">
+        <Button
+          type="button"
+          size="sm"
+          variant="destructive"
+          className="h-9 text-[13px]"
+          disabled={!canSubmit}
+          onClick={() => setConfirmOpen(true)}
+        >
+          Create block
+        </Button>
+      </div>
+
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ShieldAlert className="h-4 w-4 text-destructive" />
+              Create block
+            </DialogTitle>
+            <DialogDescription>
+              This will immediately block{' '}
+              <span className="font-medium text-foreground">
+                {resourceId.trim()
+                  ? 'the selected resource'
+                  : `all ${typeMeta.label}`}
+              </span>{' '}
+              on project{' '}
+              <span className="font-medium text-foreground">{projectId}</span>.
+            </DialogDescription>
+          </DialogHeader>
+
+          <pre className="mt-2 max-h-48 overflow-auto rounded-md border border-border bg-muted/40 p-3 text-[11.5px] leading-relaxed text-foreground/90 whitespace-pre-wrap break-all">
+            {JSON.stringify(payload ?? {}, null, 2)}
+          </pre>
+
+          <div className="flex justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-9 text-[13px]"
+              onClick={() => setConfirmOpen(false)}
+              disabled={createMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              className="h-9 text-[13px]"
+              onClick={handleConfirm}
+              disabled={createMutation.isPending}
+            >
+              {createMutation.isPending && (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              )}
+              Create block
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </section>
+  )
+}
+
+function ExpiryChip({
+  active,
+  label,
+  onClick,
+  disabled,
+}: {
+  active: boolean
+  label: string
+  onClick: () => void
+  disabled?: boolean
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={cn(
+        'rounded-md border px-2.5 py-1 text-[12px] transition-colors disabled:opacity-50',
+        active
+          ? 'border-foreground/30 bg-accent text-foreground'
+          : 'border-border bg-background text-muted-foreground hover:bg-accent hover:text-foreground',
+      )}
+    >
+      {label}
+    </button>
+  )
+}
