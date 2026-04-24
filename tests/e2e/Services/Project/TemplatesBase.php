@@ -4,6 +4,7 @@ namespace Tests\E2E\Services\Project;
 
 use Tests\E2E\Client;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Query;
 
 trait TemplatesBase
 {
@@ -579,6 +580,295 @@ trait TemplatesBase
         }
     }
 
+    // List email template tests
+
+    public function testListEmailTemplatesReturnsSeededTemplate(): void
+    {
+        $this->ensureSMTPEnabled();
+
+        $subject = 'List subject ' . \uniqid();
+        $seed = $this->updateEmailTemplate(
+            templateId: 'verification',
+            locale: 'en',
+            subject: $subject,
+            message: 'List body',
+        );
+        $this->assertSame(200, $seed['headers']['status-code']);
+
+        $response = $this->listEmailTemplates();
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertArrayHasKey('templates', $response['body']);
+        $this->assertArrayHasKey('total', $response['body']);
+        $this->assertIsArray($response['body']['templates']);
+        $this->assertIsInt($response['body']['total']);
+        $this->assertGreaterThanOrEqual(1, $response['body']['total']);
+
+        $found = null;
+        foreach ($response['body']['templates'] as $template) {
+            if (
+                $template['templateId'] === 'verification'
+                && $template['locale'] === 'en'
+                && $template['subject'] === $subject
+            ) {
+                $found = $template;
+                break;
+            }
+        }
+        $this->assertNotNull($found, 'seeded verification/en template must appear in the list');
+    }
+
+    public function testListEmailTemplatesResponseModel(): void
+    {
+        $this->ensureSMTPEnabled();
+
+        $seed = $this->updateEmailTemplate(
+            templateId: 'invitation',
+            locale: 'en',
+            subject: 'Shape subject ' . \uniqid(),
+            message: 'Shape body',
+            senderName: 'Shape Sender',
+            senderEmail: 'shape@appwrite.io',
+            replyToEmail: 'shape-reply@appwrite.io',
+            replyToName: 'Shape Reply',
+        );
+        $this->assertSame(200, $seed['headers']['status-code']);
+
+        $response = $this->listEmailTemplates();
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['templates']);
+
+        foreach ($response['body']['templates'] as $template) {
+            $this->assertArrayHasKey('templateId', $template);
+            $this->assertArrayHasKey('locale', $template);
+            $this->assertArrayHasKey('subject', $template);
+            $this->assertArrayHasKey('message', $template);
+            $this->assertArrayHasKey('senderName', $template);
+            $this->assertArrayHasKey('senderEmail', $template);
+            $this->assertArrayHasKey('replyToEmail', $template);
+            $this->assertArrayHasKey('replyToName', $template);
+        }
+    }
+
+    public function testListEmailTemplatesSeparatesLocales(): void
+    {
+        $this->ensureSMTPEnabled();
+
+        $runId = \uniqid();
+        $enSubject = "Multi-locale EN {$runId}";
+        $frSubject = "Multi-locale FR {$runId}";
+
+        $this->assertSame(200, $this->updateEmailTemplate(
+            templateId: 'recovery',
+            locale: 'en',
+            subject: $enSubject,
+            message: 'EN body',
+        )['headers']['status-code']);
+
+        $this->assertSame(200, $this->updateEmailTemplate(
+            templateId: 'recovery',
+            locale: 'fr',
+            subject: $frSubject,
+            message: 'FR body',
+        )['headers']['status-code']);
+
+        $response = $this->listEmailTemplates();
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        $foundEn = false;
+        $foundFr = false;
+        foreach ($response['body']['templates'] as $template) {
+            if ($template['templateId'] === 'recovery' && $template['locale'] === 'en' && $template['subject'] === $enSubject) {
+                $foundEn = true;
+            }
+            if ($template['templateId'] === 'recovery' && $template['locale'] === 'fr' && $template['subject'] === $frSubject) {
+                $foundFr = true;
+            }
+        }
+
+        $this->assertTrue($foundEn, 'recovery/en must appear in the list');
+        $this->assertTrue($foundFr, 'recovery/fr must appear in the list');
+    }
+
+    public function testListEmailTemplatesUpdateDoesNotDuplicate(): void
+    {
+        $this->ensureSMTPEnabled();
+
+        $runId = \uniqid();
+        $firstSubject = "First {$runId}";
+        $secondSubject = "Second {$runId}";
+
+        $this->assertSame(200, $this->updateEmailTemplate(
+            templateId: 'mfaChallenge',
+            locale: 'en',
+            subject: $firstSubject,
+            message: 'Body',
+        )['headers']['status-code']);
+
+        $before = $this->listEmailTemplates();
+        $this->assertSame(200, $before['headers']['status-code']);
+        $beforeTotal = $before['body']['total'];
+
+        $this->assertSame(200, $this->updateEmailTemplate(
+            templateId: 'mfaChallenge',
+            locale: 'en',
+            subject: $secondSubject,
+            message: 'Body',
+        )['headers']['status-code']);
+
+        $after = $this->listEmailTemplates();
+        $this->assertSame(200, $after['headers']['status-code']);
+
+        // Same templateId/locale must remain a single entry, not accumulate.
+        $this->assertSame($beforeTotal, $after['body']['total']);
+
+        $matches = \array_values(\array_filter(
+            $after['body']['templates'],
+            fn ($t) => $t['templateId'] === 'mfaChallenge' && $t['locale'] === 'en',
+        ));
+        $this->assertCount(1, $matches);
+        $this->assertSame($secondSubject, $matches[0]['subject']);
+    }
+
+    public function testListEmailTemplatesTotalFalse(): void
+    {
+        $this->ensureSMTPEnabled();
+
+        // Ensure at least one template exists so `templates` is non-empty.
+        $this->assertSame(200, $this->updateEmailTemplate(
+            templateId: 'verification',
+            locale: 'en',
+            subject: 'Total-false subject',
+            message: 'Body',
+        )['headers']['status-code']);
+
+        $response = $this->listEmailTemplates(total: false);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertIsInt($response['body']['total']);
+        $this->assertSame(0, $response['body']['total']);
+        $this->assertNotEmpty($response['body']['templates']);
+    }
+
+    public function testListEmailTemplatesTotalMatchesCount(): void
+    {
+        $this->ensureSMTPEnabled();
+
+        $this->assertSame(200, $this->updateEmailTemplate(
+            templateId: 'verification',
+            locale: 'en',
+            subject: 'Match subject',
+            message: 'Body',
+        )['headers']['status-code']);
+
+        $response = $this->listEmailTemplates();
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(\count($response['body']['templates']), $response['body']['total']);
+    }
+
+    public function testListEmailTemplatesWithLimit(): void
+    {
+        $this->ensureSMTPEnabled();
+
+        $runId = \uniqid();
+
+        $this->assertSame(200, $this->updateEmailTemplate(
+            templateId: 'verification',
+            locale: 'en',
+            subject: "Limit verification {$runId}",
+            message: 'Body',
+        )['headers']['status-code']);
+
+        $this->assertSame(200, $this->updateEmailTemplate(
+            templateId: 'recovery',
+            locale: 'en',
+            subject: "Limit recovery {$runId}",
+            message: 'Body',
+        )['headers']['status-code']);
+
+        $response = $this->listEmailTemplates([
+            Query::limit(1)->toString(),
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertCount(1, $response['body']['templates']);
+        $this->assertGreaterThanOrEqual(2, $response['body']['total']);
+    }
+
+    public function testListEmailTemplatesWithOffset(): void
+    {
+        $this->ensureSMTPEnabled();
+
+        $runId = \uniqid();
+
+        $this->assertSame(200, $this->updateEmailTemplate(
+            templateId: 'magicSession',
+            locale: 'en',
+            subject: "Offset magic {$runId}",
+            message: 'Body',
+        )['headers']['status-code']);
+
+        $this->assertSame(200, $this->updateEmailTemplate(
+            templateId: 'sessionAlert',
+            locale: 'en',
+            subject: "Offset session {$runId}",
+            message: 'Body',
+        )['headers']['status-code']);
+
+        $listAll = $this->listEmailTemplates();
+        $this->assertSame(200, $listAll['headers']['status-code']);
+        $totalAll = \count($listAll['body']['templates']);
+
+        $listOffset = $this->listEmailTemplates([
+            Query::offset(1)->toString(),
+        ]);
+
+        $this->assertSame(200, $listOffset['headers']['status-code']);
+        $this->assertCount($totalAll - 1, $listOffset['body']['templates']);
+        $this->assertSame($listAll['body']['total'], $listOffset['body']['total']);
+    }
+
+    public function testListEmailTemplatesOnlyReturnsCustomizedTemplates(): void
+    {
+        $this->ensureSMTPEnabled();
+
+        // Seed exactly one template so we have a stable marker to count against.
+        $marker = 'Customized-only ' . \uniqid();
+        $this->assertSame(200, $this->updateEmailTemplate(
+            templateId: 'otpSession',
+            locale: 'en',
+            subject: $marker,
+            message: 'Body',
+        )['headers']['status-code']);
+
+        $response = $this->listEmailTemplates();
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        // Every returned entry must be a real stored template (has templateId+locale set,
+        // not a synthesized default row for every possible type).
+        foreach ($response['body']['templates'] as $template) {
+            $this->assertNotEmpty($template['templateId']);
+            $this->assertNotEmpty($template['locale']);
+        }
+
+        // A `(templateId, locale)` pair that has never been customized in this test
+        // run must NOT show up. 'otpSession'/'pt-br' has no writer anywhere in the file.
+        $uncustomized = \array_filter(
+            $response['body']['templates'],
+            fn ($t) => $t['templateId'] === 'otpSession' && $t['locale'] === 'pt-br',
+        );
+        $this->assertEmpty($uncustomized, 'uncustomized (templateId, locale) pairs must not appear');
+    }
+
+    public function testListEmailTemplatesWithoutAuthentication(): void
+    {
+        $response = $this->listEmailTemplates(authenticated: false);
+
+        $this->assertSame(401, $response['headers']['status-code']);
+    }
+
     // Backwards compatibility (x-appwrite-response-format: 1.9.1)
 
     public function testGetEmailTemplateLegacyResponseFormat(): void
@@ -802,6 +1092,28 @@ trait TemplatesBase
         }
 
         return $this->client->call(Client::METHOD_GET, '/project/templates/email/' . $templateId, $headers, $params);
+    }
+
+    protected function listEmailTemplates(?array $queries = null, ?bool $total = null, bool $authenticated = true): mixed
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ];
+
+        if ($authenticated) {
+            $headers = \array_merge($headers, $this->getHeaders());
+        }
+
+        $params = [];
+        if ($queries !== null) {
+            $params['queries'] = $queries;
+        }
+        if ($total !== null) {
+            $params['total'] = $total;
+        }
+
+        return $this->client->call(Client::METHOD_GET, '/project/templates/email', $headers, $params);
     }
 
     protected function updateEmailTemplate(

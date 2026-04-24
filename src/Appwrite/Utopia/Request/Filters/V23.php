@@ -32,6 +32,9 @@ class V23 extends Filter
             case 'project.updateSessionLimitPolicy':
                 $content = $this->parseLimitToTotal($content);
                 break;
+            case 'project.updateAuthMethod':
+                $content = $this->parseUpdateAuthMethod($content);
+                break;
         }
 
         return $content;
@@ -55,6 +58,21 @@ class V23 extends Filter
         if (isset($content['alerts'])) {
             $content['enabled'] = $content['alerts'];
             unset($content['alerts']);
+        }
+
+        return $content;
+    }
+
+    protected function parseUpdateAuthMethod(array $content): array
+    {
+        if (isset($content['status'])) {
+            $content['enabled'] = $content['status'];
+            unset($content['status']);
+        }
+
+        if (isset($content['method'])) {
+            $content['methodId'] = $content['method'];
+            unset($content['method']);
         }
 
         return $content;

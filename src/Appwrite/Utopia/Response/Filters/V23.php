@@ -16,8 +16,22 @@ class V23 extends Filter
             Response::MODEL_PROJECT => $this->parseProject($content),
             Response::MODEL_PROJECT_LIST => $this->handleList($content, 'projects', fn ($item) => $this->parseProject($item)),
             Response::MODEL_EMAIL_TEMPLATE => $this->parseEmailTemplate($content),
+            Response::MODEL_MOCK_NUMBER => $this->parseMockNumber($content),
             default => $content,
         };
+    }
+
+    private function parseMockNumber(array $content): array
+    {
+        unset($content['$createdAt']);
+        unset($content['$updatedAt']);
+
+        if (isset($content['number'])) {
+            $content['phone'] = $content['number'];
+            unset($content['number']);
+        }
+
+        return $content;
     }
 
     private function parseMembership(array $content): array

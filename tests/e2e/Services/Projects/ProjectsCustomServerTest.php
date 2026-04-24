@@ -10,6 +10,7 @@ use Utopia\System\System;
 
 class ProjectsCustomServerTest extends Scope
 {
+    use ProjectsBase;
     use ProjectCustom;
     use SideServer;
 

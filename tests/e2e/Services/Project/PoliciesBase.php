@@ -3,9 +3,264 @@
 namespace Tests\E2E\Services\Project;
 
 use Tests\E2E\Client;
+use Utopia\Database\Query;
 
 trait PoliciesBase
 {
+    // =========================================================================
+    // Get Policy
+    // =========================================================================
+
+    public function testGetPolicy(): void
+    {
+        $expectedFields = [
+            'password-dictionary' => ['enabled'],
+            'password-history' => ['total'],
+            'password-personal-data' => ['enabled'],
+            'session-alert' => ['enabled'],
+            'session-duration' => ['duration'],
+            'session-invalidation' => ['enabled'],
+            'session-limit' => ['total'],
+            'user-limit' => ['total'],
+            'membership-privacy' => ['userId', 'userEmail', 'userPhone', 'userName', 'userMFA'],
+        ];
+
+        foreach ($expectedFields as $policyId => $fields) {
+            $response = $this->getPolicy($policyId);
+
+            $this->assertSame(200, $response['headers']['status-code']);
+            $this->assertSame($policyId, $response['body']['$id']);
+
+            foreach ($fields as $field) {
+                $this->assertArrayHasKey($field, $response['body']);
+            }
+        }
+    }
+
+    public function testGetPolicyMatchesListPolicies(): void
+    {
+        $list = $this->listPolicies();
+
+        $this->assertSame(200, $list['headers']['status-code']);
+
+        $byId = [];
+        foreach ($list['body']['policies'] as $policy) {
+            $byId[$policy['$id']] = $policy;
+        }
+
+        foreach (\array_keys($byId) as $policyId) {
+            $response = $this->getPolicy($policyId);
+
+            $this->assertSame(200, $response['headers']['status-code']);
+            $this->assertSame($byId[$policyId], $response['body']);
+        }
+    }
+
+    public function testGetPolicyReflectsUpdates(): void
+    {
+        $this->updatePasswordDictionaryPolicy(true);
+        $this->updatePasswordHistoryPolicy(5);
+        $this->updateSessionDurationPolicy(3600);
+        $this->updateMembershipPrivacyPolicy([
+            'userId' => true,
+            'userEmail' => true,
+            'userPhone' => false,
+            'userName' => true,
+            'userMFA' => true,
+        ]);
+
+        $passwordDictionary = $this->getPolicy('password-dictionary');
+        $passwordHistory = $this->getPolicy('password-history');
+        $sessionDuration = $this->getPolicy('session-duration');
+        $membershipPrivacy = $this->getPolicy('membership-privacy');
+
+        $this->assertSame(200, $passwordDictionary['headers']['status-code']);
+        $this->assertSame(true, $passwordDictionary['body']['enabled']);
+
+        $this->assertSame(200, $passwordHistory['headers']['status-code']);
+        $this->assertSame(5, $passwordHistory['body']['total']);
+
+        $this->assertSame(200, $sessionDuration['headers']['status-code']);
+        $this->assertSame(3600, $sessionDuration['body']['duration']);
+
+        $this->assertSame(200, $membershipPrivacy['headers']['status-code']);
+        $this->assertSame(true, $membershipPrivacy['body']['userId']);
+        $this->assertSame(true, $membershipPrivacy['body']['userEmail']);
+        $this->assertSame(false, $membershipPrivacy['body']['userPhone']);
+        $this->assertSame(true, $membershipPrivacy['body']['userName']);
+        $this->assertSame(true, $membershipPrivacy['body']['userMFA']);
+
+        // Cleanup
+        $this->updatePasswordDictionaryPolicy(false);
+        $this->updatePasswordHistoryPolicy(null);
+        $this->updateSessionDurationPolicy(31536000);
+        $this->updateMembershipPrivacyPolicy([
+            'userId' => false,
+            'userEmail' => false,
+            'userPhone' => false,
+            'userName' => false,
+            'userMFA' => false,
+        ]);
+    }
+
+    public function testGetPolicyWithoutAuthentication(): void
+    {
+        $response = $this->getPolicy('password-dictionary', authenticated: false);
+
+        $this->assertSame(401, $response['headers']['status-code']);
+    }
+
+    public function testGetPolicyInvalidPolicyId(): void
+    {
+        $response = $this->getPolicy('invalid-policy');
+
+        $this->assertSame(400, $response['headers']['status-code']);
+    }
+
+    // =========================================================================
+    // List Policies
+    // =========================================================================
+
+    public function testListPolicies(): void
+    {
+        $response = $this->listPolicies();
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertArrayHasKey('policies', $response['body']);
+        $this->assertArrayHasKey('total', $response['body']);
+        $this->assertIsArray($response['body']['policies']);
+        $this->assertIsInt($response['body']['total']);
+        $this->assertSame(9, $response['body']['total']);
+        $this->assertCount(9, $response['body']['policies']);
+
+        $policyIds = \array_column($response['body']['policies'], '$id');
+
+        $this->assertContains('password-dictionary', $policyIds);
+        $this->assertContains('password-history', $policyIds);
+        $this->assertContains('password-personal-data', $policyIds);
+        $this->assertContains('session-alert', $policyIds);
+        $this->assertContains('session-duration', $policyIds);
+        $this->assertContains('session-invalidation', $policyIds);
+        $this->assertContains('session-limit', $policyIds);
+        $this->assertContains('user-limit', $policyIds);
+        $this->assertContains('membership-privacy', $policyIds);
+    }
+
+    public function testListPoliciesResponseModel(): void
+    {
+        $response = $this->listPolicies();
+
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        foreach ($response['body']['policies'] as $policy) {
+            $this->assertArrayHasKey('$id', $policy);
+        }
+
+        $byId = [];
+        foreach ($response['body']['policies'] as $policy) {
+            $byId[$policy['$id']] = $policy;
+        }
+
+        $this->assertArrayHasKey('enabled', $byId['password-dictionary']);
+        $this->assertArrayHasKey('total', $byId['password-history']);
+        $this->assertArrayHasKey('enabled', $byId['password-personal-data']);
+        $this->assertArrayHasKey('enabled', $byId['session-alert']);
+        $this->assertArrayHasKey('duration', $byId['session-duration']);
+        $this->assertArrayHasKey('enabled', $byId['session-invalidation']);
+        $this->assertArrayHasKey('total', $byId['session-limit']);
+        $this->assertArrayHasKey('total', $byId['user-limit']);
+        $this->assertArrayHasKey('userId', $byId['membership-privacy']);
+        $this->assertArrayHasKey('userEmail', $byId['membership-privacy']);
+        $this->assertArrayHasKey('userPhone', $byId['membership-privacy']);
+        $this->assertArrayHasKey('userName', $byId['membership-privacy']);
+        $this->assertArrayHasKey('userMFA', $byId['membership-privacy']);
+    }
+
+    public function testListPoliciesReflectsUpdates(): void
+    {
+        $this->updatePasswordDictionaryPolicy(true);
+        $this->updatePasswordHistoryPolicy(5);
+        $this->updateSessionDurationPolicy(3600);
+        $this->updateMembershipPrivacyPolicy([
+            'userId' => true,
+            'userEmail' => true,
+            'userPhone' => false,
+            'userName' => true,
+            'userMFA' => true,
+        ]);
+
+        $response = $this->listPolicies();
+
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        $byId = [];
+        foreach ($response['body']['policies'] as $policy) {
+            $byId[$policy['$id']] = $policy;
+        }
+
+        $this->assertSame(true, $byId['password-dictionary']['enabled']);
+        $this->assertSame(5, $byId['password-history']['total']);
+        $this->assertSame(3600, $byId['session-duration']['duration']);
+        $this->assertSame(true, $byId['membership-privacy']['userId']);
+        $this->assertSame(true, $byId['membership-privacy']['userEmail']);
+        $this->assertSame(false, $byId['membership-privacy']['userPhone']);
+        $this->assertSame(true, $byId['membership-privacy']['userName']);
+        $this->assertSame(true, $byId['membership-privacy']['userMFA']);
+
+        // Cleanup
+        $this->updatePasswordDictionaryPolicy(false);
+        $this->updatePasswordHistoryPolicy(null);
+        $this->updateSessionDurationPolicy(31536000);
+        $this->updateMembershipPrivacyPolicy([
+            'userId' => false,
+            'userEmail' => false,
+            'userPhone' => false,
+            'userName' => false,
+            'userMFA' => false,
+        ]);
+    }
+
+    public function testListPoliciesTotalFalse(): void
+    {
+        $response = $this->listPolicies(total: false);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(0, $response['body']['total']);
+        $this->assertCount(9, $response['body']['policies']);
+    }
+
+    public function testListPoliciesWithLimit(): void
+    {
+        $response = $this->listPolicies([
+            Query::limit(1)->toString(),
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertCount(1, $response['body']['policies']);
+        $this->assertSame(9, $response['body']['total']);
+    }
+
+    public function testListPoliciesWithOffset(): void
+    {
+        $listAll = $this->listPolicies();
+        $this->assertSame(200, $listAll['headers']['status-code']);
+
+        $listOffset = $this->listPolicies([
+            Query::offset(1)->toString(),
+        ]);
+
+        $this->assertSame(200, $listOffset['headers']['status-code']);
+        $this->assertCount(\count($listAll['body']['policies']) - 1, $listOffset['body']['policies']);
+        $this->assertSame($listAll['body']['total'], $listOffset['body']['total']);
+    }
+
+    public function testListPoliciesWithoutAuthentication(): void
+    {
+        $response = $this->listPolicies(authenticated: false);
+
+        $this->assertSame(401, $response['headers']['status-code']);
+    }
+
     // =========================================================================
     // Password Dictionary Policy
     // =========================================================================
@@ -840,6 +1095,26 @@ trait PoliciesBase
             'x-appwrite-project' => 'console',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]);
+    }
+
+    protected function listPolicies(?array $queries = null, ?bool $total = null, bool $authenticated = true): mixed
+    {
+        $params = [];
+
+        if ($queries !== null) {
+            $params['queries'] = $queries;
+        }
+
+        if ($total !== null) {
+            $params['total'] = $total;
+        }
+
+        return $this->client->call(Client::METHOD_GET, '/project/policies', $this->buildHeaders($authenticated), $params);
+    }
+
+    protected function getPolicy(string $policyId, bool $authenticated = true): mixed
+    {
+        return $this->client->call(Client::METHOD_GET, '/project/policies/' . $policyId, $this->buildHeaders($authenticated));
     }
 
     protected function updatePasswordDictionaryPolicy(bool $enabled, bool $authenticated = true): mixed

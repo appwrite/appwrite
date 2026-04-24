@@ -1764,6 +1764,7 @@ class ProjectsConsoleClientTest extends Scope
             $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/' . $index, array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-response-format' => '1.9.1',
             ], $this->getHeaders()), [
                 'status' => false,
             ]);
@@ -1860,6 +1861,7 @@ class ProjectsConsoleClientTest extends Scope
             $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/' . $index, array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-response-format' => '1.9.1',
             ], $this->getHeaders()), [
                 'status' => true,
             ]);
@@ -2632,120 +2634,6 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(false, $response['body']['authPersonalDataCheck']);
-    }
-
-    public function testUpdateProjectServicesAll(): void
-    {
-        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-        ]), [
-            'teamId' => ID::unique(),
-            'name' => 'Project Test',
-        ]);
-
-        $this->assertEquals(201, $team['headers']['status-code']);
-        $this->assertNotEmpty($team['body']['$id']);
-
-        $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-        ]), [
-            'projectId' => ID::unique(),
-            'name' => 'Project Test',
-            'teamId' => $team['body']['$id'],
-            'region' => System::getEnv('_APP_REGION', 'default')
-        ]);
-
-        $this->assertEquals(201, $project['headers']['status-code']);
-        $this->assertNotEmpty($project['body']['$id']);
-
-        $id = $project['body']['$id'];
-
-        // Bulk disable should no longer work
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/service/all', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-response-format' => '1.9.0',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-        ]), [
-            'status' => false,
-        ]);
-
-        $this->assertEquals(405, $response['headers']['status-code']);
-        $this->assertEquals('general_not_implemented', $response['body']['type']);
-
-        // Bulk enable should no longer work
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/service/all', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-response-format' => '1.9.0',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-        ]), [
-            'status' => true,
-        ]);
-
-        $this->assertEquals(405, $response['headers']['status-code']);
-        $this->assertEquals('general_not_implemented', $response['body']['type']);
-    }
-
-    public function testUpdateProjectApisAll(): void
-    {
-        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-        ]), [
-            'teamId' => ID::unique(),
-            'name' => 'Project Test',
-        ]);
-
-        $this->assertEquals(201, $team['headers']['status-code']);
-        $this->assertNotEmpty($team['body']['$id']);
-
-        $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-        ]), [
-            'projectId' => ID::unique(),
-            'name' => 'Project Test',
-            'teamId' => $team['body']['$id'],
-            'region' => System::getEnv('_APP_REGION', 'default')
-        ]);
-
-        $this->assertEquals(201, $project['headers']['status-code']);
-        $this->assertNotEmpty($project['body']['$id']);
-
-        $id = $project['body']['$id'];
-
-        // Bulk disable should no longer work
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/api/all', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-response-format' => '1.9.0',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-        ]), [
-            'status' => false,
-        ]);
-
-        $this->assertEquals(405, $response['headers']['status-code']);
-        $this->assertEquals('general_not_implemented', $response['body']['type']);
-
-        // Bulk enable should no longer work
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/api/all', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-response-format' => '1.9.0',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-        ]), [
-            'status' => true,
-        ]);
-
-        $this->assertEquals(405, $response['headers']['status-code']);
-        $this->assertEquals('general_not_implemented', $response['body']['type']);
     }
 
     public function testUpdateProjectApiStatus(): void
@@ -4051,58 +3939,6 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(204, $response['headers']['status-code']);
         $this->assertEmpty($response['body']);
-    }
-
-    // JWT Keys
-
-    public function testJWTKey(): void
-    {
-        $data = $this->setupProjectData();
-        $id = $data['projectId'];
-
-        // Create JWT key
-        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/jwts', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'duration' => 5,
-            'scopes' => ['users.read'],
-        ]);
-
-        $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['jwt']);
-
-        $jwt = $response['body']['jwt'];
-
-        // Ensure JWT key works
-        $response = $this->client->call(Client::METHOD_GET, '/users', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $id,
-            'x-appwrite-key' => $jwt,
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertArrayHasKey('users', $response['body']);
-
-        // Ensure JWT key respect scopes
-        $response = $this->client->call(Client::METHOD_GET, '/functions', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $id,
-            'x-appwrite-key' => $jwt,
-        ]);
-
-        $this->assertEquals(401, $response['headers']['status-code']);
-
-        // Ensure JWT key expires
-        \sleep(10);
-
-        $response = $this->client->call(Client::METHOD_GET, '/users', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $id,
-            'x-appwrite-key' => $jwt,
-        ]);
-
-        $this->assertEquals(401, $response['headers']['status-code']);
     }
 
     // Platforms
