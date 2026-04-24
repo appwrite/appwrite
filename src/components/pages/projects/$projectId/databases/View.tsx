@@ -47,6 +47,7 @@ import {
   Redo2,
   Undo2,
   Activity,
+  GripVertical,
 } from 'lucide-react'
 import {
   databases,
@@ -55,7 +56,31 @@ import {
   type Collection,
   type Database as DatabaseType,
 } from '@/lib/utils/mock-data'
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+  type ReactNode,
+} from 'react'
+import {
+  DndContext,
+  type DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import {
@@ -5558,6 +5583,61 @@ function buildInlineDocumentJsonObjectForCreate(
 
 import { PointEditor, LineEditor, PolygonEditor } from './tables/spatial'
 
+function arrayFieldSortableId(fieldKey: string, index: number) {
+  return `${fieldKey}::__arr__::${index}`
+}
+
+function RowEditArraySortableRow({
+  id,
+  index,
+  children,
+}: {
+  id: string
+  index: number
+  children: ReactNode
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id,
+    // Avoid post-drop “double motion”: default sortable tweens layout while React
+    // already re-rendered the new order, which reads as items sliding twice.
+    animateLayoutChanges: () => false,
+    transition: null,
+  })
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  }
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        'group flex items-stretch',
+        index % 2 === 0 ? 'bg-background' : 'bg-muted/20',
+        isDragging && 'relative z-20 ring-1 ring-border/70',
+      )}
+    >
+      <button
+        type="button"
+        className="flex w-8 shrink-0 cursor-grab touch-none items-center justify-center border-r border-foreground/10 bg-muted/30 text-muted-foreground hover:bg-muted/45 active:cursor-grabbing"
+        aria-label="Drag to reorder"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="h-4 w-4 shrink-0" />
+      </button>
+      {children}
+    </div>
+  )
+}
+
 // Row Update Drawer Component
 interface RowEditDrawerProps {
   open: boolean
@@ -5956,6 +6036,15 @@ function RowEditDrawer({
   const [jsonEditorCanRedo, setJsonEditorCanRedo] = useState(false)
   const documentJsonUndoRedoDisposeRef = useRef<(() => void) | null>(null)
 
+  const arrayDragSensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  )
+
   // When drawer opens with initialTab (e.g. from "Update permissions" context menu), switch to that tab
   useEffect(() => {
     if (open && initialTab) {
@@ -6209,6 +6298,27 @@ function RowEditDrawer({
     const newArray = currentArray.filter((_, i) => i !== index)
     handleFieldChange(key, newArray)
   }
+
+  const handleArrayItemsDragEnd = useCallback(
+    (fieldKey: string, event: DragEndEvent) => {
+      const { active, over } = event
+      if (!over || active.id === over.id) return
+      const activeId = String(active.id)
+      const overId = String(over.id)
+      setFormData((prev) => {
+        const arr = (prev[fieldKey] as unknown[]) || []
+        const sortIds = arr.map((_, i) => arrayFieldSortableId(fieldKey, i))
+        const oldIndex = sortIds.indexOf(activeId)
+        const newIndex = sortIds.indexOf(overId)
+        if (oldIndex < 0 || newIndex < 0 || oldIndex === newIndex) return prev
+        return {
+          ...prev,
+          [fieldKey]: arrayMove(arr, oldIndex, newIndex),
+        }
+      })
+    },
+    [],
+  )
 
   const handlePrettifyDocumentJson = () => {
     try {
@@ -6816,7 +6926,7 @@ function RowEditDrawer({
                               <span>{key}</span>
                               {fieldType === 'array' && (
                                 <span className="inline-flex items-center gap-1 rounded border border-border bg-muted/50 px-1.5 py-px text-[10px] font-medium text-muted-foreground">
-                                  <Brackets className="h-2.5 w-2.5" />
+                                  <Brackets className="h-3.5 w-3.5 shrink-0 opacity-70" />
                                   Array
                                   {arrayLength > 0 && (
                                     <span className="tabular-nums">
@@ -6924,9 +7034,39 @@ function RowEditDrawer({
                               <div className="overflow-hidden rounded-md border border-border bg-card">
                                 {((currentValue as unknown[]) || []).length >
                                   0 ? (
-                                  <div className="divide-y divide-foreground/10">
-                                    {((currentValue as unknown[]) || []).map(
-                                      (item, index) => {
+                                  <DndContext
+                                    sensors={arrayDragSensors}
+                                    collisionDetection={closestCenter}
+                                    onDragEnd={(e) =>
+                                      handleArrayItemsDragEnd(key, e)
+                                    }
+                                  >
+                                    <SortableContext
+                                      items={(
+                                        (currentValue as unknown[]) || []
+                                      ).map((_, i) =>
+                                        arrayFieldSortableId(key, i),
+                                      )}
+                                      strategy={
+                                        verticalListSortingStrategy
+                                      }
+                                    >
+                                      <div className="divide-y divide-foreground/10">
+                                        {(
+                                          (currentValue as unknown[]) || []
+                                        ).map((item, index) => (
+                                        <RowEditArraySortableRow
+                                          key={arrayFieldSortableId(
+                                            key,
+                                            index,
+                                          )}
+                                          id={arrayFieldSortableId(
+                                            key,
+                                            index,
+                                          )}
+                                          index={index}
+                                        >
+                                          {(() => {
                                         const columnInfo = getColumnInfo(key)
                                         const size = columnInfo?.size || null
                                         const rawType = ((
@@ -7006,16 +7146,8 @@ function RowEditDrawer({
                                           !isEnumType &&
                                           (hasLimit || showNullCheckbox)
 
-                                        return (
-                                          <div
-                                            key={index}
-                                            className={cn(
-                                              'group flex items-stretch',
-                                              index % 2 === 0
-                                                ? 'bg-background'
-                                                : 'bg-muted/20',
-                                            )}
-                                          >
+                                            return (
+                                              <>
                                             <div className="flex w-9 shrink-0 select-none items-center justify-center border-r border-foreground/10 bg-muted/40 text-[11px] font-mono tabular-nums text-muted-foreground">
                                               {index + 1}
                                             </div>
@@ -7247,11 +7379,14 @@ function RowEditDrawer({
                                             >
                                               <X className="h-3.5 w-3.5" />
                                             </button>
-                                          </div>
-                                        )
-                                      },
-                                    )}
-                                  </div>
+                                              </>
+                                            )
+                                          })()}
+                                        </RowEditArraySortableRow>
+                                        ))}
+                                      </div>
+                                    </SortableContext>
+                                  </DndContext>
                                 ) : (
                                   <div className="flex flex-col items-center justify-center gap-1.5 px-3 py-6 text-center">
                                     <Brackets className="h-4 w-4 text-muted-foreground/60" />

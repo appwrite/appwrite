@@ -116,15 +116,15 @@ type ResourceType =
   | 'project'
 
 const resourceIcons: Record<ResourceType, React.ReactNode> = {
-  document: <FileText className="h-3.5 w-3.5" />,
-  collection: <Folder className="h-3.5 w-3.5" />,
-  database: <Database className="h-3.5 w-3.5" />,
-  file: <FileText className="h-3.5 w-3.5" />,
-  bucket: <Folder className="h-3.5 w-3.5" />,
-  function: <Zap className="h-3.5 w-3.5" />,
-  user: <Users className="h-3.5 w-3.5" />,
-  team: <Users className="h-3.5 w-3.5" />,
-  project: <Server className="h-3.5 w-3.5" />,
+  document: <FileText className="h-4 w-4" />,
+  collection: <Folder className="h-4 w-4" />,
+  database: <Database className="h-4 w-4" />,
+  file: <FileText className="h-4 w-4" />,
+  bucket: <Folder className="h-4 w-4" />,
+  function: <Zap className="h-4 w-4" />,
+  user: <Users className="h-4 w-4" />,
+  team: <Users className="h-4 w-4" />,
+  project: <Server className="h-4 w-4" />,
 }
 
 /**
@@ -711,18 +711,20 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
                         </div>
                       </TableCell>
                       <TableCell className="whitespace-normal px-4 py-3 align-top">
-                        <div className="flex min-w-0 flex-col gap-1.5">
-                          <div className="flex items-center gap-2">
-                            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-muted text-muted-foreground">
-                              {resourceIcons[activity.resourceType]}
-                            </div>
+                        <div className="flex min-w-0 items-center gap-2.5">
+                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                            {resourceIcons[activity.resourceType]}
+                          </div>
+                          <div className="min-w-0 flex flex-col gap-1">
+                            <p className="break-words text-[13px] font-medium leading-snug text-foreground">
+                              {activity.resourceId?.trim() ||
+                                activity.resourceName ||
+                                '—'}
+                            </p>
                             <p className="text-[11px] capitalize text-muted-foreground">
                               {activity.resourceType}
                             </p>
                           </div>
-                          <p className="break-words text-[13px] font-medium leading-snug text-foreground">
-                            {activity.resourceName}
-                          </p>
                         </div>
                       </TableCell>
                       <TableCell className="px-4 py-3">
@@ -730,6 +732,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
                           <UserTypeAvatar
                             userType={activity.userType}
                             userName={activity.userName}
+                            className="shadow-none"
                           />
                           <div className="min-w-0">
                             <p className="truncate text-[13px] font-medium text-foreground">
