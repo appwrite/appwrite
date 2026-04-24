@@ -32,6 +32,9 @@ interface ConsoleLayoutProps {
     onCreateOrganization?: () => void
   }
 
+  /** Optional strip below impersonation / cloud status, above the main header bar (e.g. {@link HeaderAlertBar}) */
+  headerBanner?: ReactNode
+
   /** Whether to show the footer */
   showFooter?: boolean
 
@@ -84,6 +87,7 @@ export function ConsoleLayout({
   children,
   sidebar,
   header,
+  headerBanner,
   showFooter = true,
   fixedLayout = false,
   containerClassName,
@@ -106,10 +110,11 @@ export function ConsoleLayout({
     >
       {/* Sticky header section - takes space in flex layout */}
       {/* z-[110]: above PausedProjectCurtain (z-100) so alerts / exit impersonation stay reachable */}
-      <div className="sticky top-0 z-[110] flex shrink-0 flex-col bg-background">
+      <div className="sticky top-0 z-[110] flex shrink-0 flex-col overflow-visible bg-background">
         {showNativeAppBar && <NativeAppBar />}
         <CloudStatusBanner />
         <ConsoleImpersonationBanner />
+        {headerBanner}
         <ConsoleHeader
           onMenuClick={sidebar?.onMenuClick}
           projectId={header?.projectId}

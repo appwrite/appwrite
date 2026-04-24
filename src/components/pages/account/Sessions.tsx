@@ -382,7 +382,7 @@ export function AccountSessions() {
                             {isCurrent && (
                               <Badge
                                 variant="success"
-                                className="text-[10px] font-medium px-1.5 py-0 h-4"
+                                className="text-[10px] font-medium shrink-0 px-1.5 py-0 h-4"
                               >
                                 Current
                               </Badge>
@@ -390,9 +390,13 @@ export function AccountSessions() {
                             {hasMFA && (
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <div className="flex items-center justify-center h-4 w-4 rounded bg-muted/50">
-                                    <Shield className="h-2.5 w-2.5 text-muted-foreground" />
-                                  </div>
+                                  <Badge
+                                    variant="info"
+                                    className="h-4 shrink-0 gap-0.5 px-1 py-0 text-[10px] font-medium"
+                                  >
+                                    <Shield className="h-2.5 w-2.5" />
+                                    MFA
+                                  </Badge>
                                 </TooltipTrigger>
                                 <TooltipContent>
                                   <p className="text-xs">
@@ -409,7 +413,10 @@ export function AccountSessions() {
                               </span>
                             )}
                             {session.provider && (
-                              <div className="flex items-center gap-1.5">
+                              <Badge
+                                variant="info"
+                                className="text-[10px] shrink-0 gap-1.5 font-medium"
+                              >
                                 {providerIcon ? (
                                   <img
                                     src={`/icons/${providerIcon}`}
@@ -420,12 +427,10 @@ export function AccountSessions() {
                                     }}
                                   />
                                 ) : (
-                                  <Key className="h-3 w-3 text-muted-foreground/60" />
+                                  <Key className="h-3 w-3 opacity-70" />
                                 )}
-                                <span className="text-[11px] text-muted-foreground/80 font-medium">
-                                  {getProviderName(session.provider)}
-                                </span>
-                              </div>
+                                {getProviderName(session.provider)}
+                              </Badge>
                             )}
                           </div>
                         </div>

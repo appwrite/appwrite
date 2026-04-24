@@ -10,12 +10,15 @@ import { RequireAuth } from '@/components/global/auth/RequireAuth'
 import { CsvExportBox, CsvImportBox } from '@/components/global/csv-migrations'
 import { SessionMigrationsProvider } from '@/components/global/providers/SessionMigrationsContext'
 import { GlobalUploadProgress } from '@/components/global/shared/GlobalUploadProgress'
+import { OrganizationFailedInvoiceHeaderBanner } from '@/components/global/shared/OrganizationFailedInvoiceHeaderBanner'
 import {
   fetchProject,
   organizationPlanQueryOptions,
+  organizationFailedInvoicePresenceQueryOptions,
   organizationScopesQueryOptions,
   organizationsQueryOptions,
   useProject,
+  useOrganizationFailedInvoicePresence,
 } from '@/lib/react-query/hooks'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { consoleVariablesQueryOptions } from '@/lib/react-query/hooks/console-variables'
@@ -129,6 +132,13 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
           await queryClient
             .ensureQueryData(organizationPlanQueryOptions(projectData.teamId))
             .catch(() => {})
+          await queryClient
+            .ensureQueryData(
+              organizationFailedInvoicePresenceQueryOptions(
+                projectData.teamId,
+              ),
+            )
+            .catch(() => {})
         }
         if (features.orgRoles) {
           await queryClient
@@ -172,6 +182,13 @@ function ProjectLayout() {
     error: projectError,
   } = useProject(projectId)
   const { features } = useConsoleProfile()
+
+  const teamIdForBilling =
+    project?.teamId ?? loaderData?.project?.teamId ?? undefined
+  const { data: failedInvoicePresence } =
+    useOrganizationFailedInvoicePresence(teamIdForBilling)
+  const showFailedInvoiceBanner =
+    features.billing && failedInvoicePresence?.hasFailedInvoice === true
 
   // Use loader data for first paint so paused curtain shows immediately (no layout shift)
   const projectForPaused =
@@ -342,6 +359,12 @@ function ProjectLayout() {
                 onMenuClick: () => setSidebarOpen(true),
               }}
               header={{ projectId }}
+              headerBanner={
+                <OrganizationFailedInvoiceHeaderBanner
+                  organizationId={teamIdForBilling}
+                  show={showFailedInvoiceBanner}
+                />
+              }
               showFooter={!hideFooter}
               fixedLayout={isFixedLayoutView}
             >

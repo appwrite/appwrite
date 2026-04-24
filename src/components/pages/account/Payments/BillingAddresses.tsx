@@ -29,6 +29,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import {
   useBillingAddresses,
@@ -277,9 +278,9 @@ export function AccountBillingAddresses() {
                             </PopoverContent>
                           </Popover>
                         ) : (
-                          <span className="text-[12px] text-muted-foreground">
+                          <Badge variant="inactive" className="text-[10px] shrink-0">
                             Not linked
-                          </span>
+                          </Badge>
                         )}
                       </TableCell>
                       <TableCell className="px-4 py-3 text-right">
