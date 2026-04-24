@@ -4275,12 +4275,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "4f5d41aac517ec43c1319598c00c90adc6d5407c"
+                "reference": "07087af8f0e8976a143507e3fd8123ae065cc91a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/4f5d41aac517ec43c1319598c00c90adc6d5407c",
-                "reference": "4f5d41aac517ec43c1319598c00c90adc6d5407c",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/07087af8f0e8976a143507e3fd8123ae065cc91a",
+                "reference": "07087af8f0e8976a143507e3fd8123ae065cc91a",
                 "shasum": ""
             },
             "require": {
@@ -4323,7 +4323,7 @@
                 "issues": "https://github.com/utopia-php/http/issues",
                 "source": "https://github.com/utopia-php/http/tree/refactor/coroutine-safe-dispatch"
             },
-            "time": "2026-04-24T14:01:56+00:00"
+            "time": "2026-04-24T15:49:39+00:00"
         },
         {
             "name": "utopia-php/image",
