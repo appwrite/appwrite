@@ -22,6 +22,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Http\Http;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
@@ -80,10 +81,11 @@ class XList extends Action
             ->inject('usage')
             ->inject('transactionState')
             ->inject('authorization')
+            ->inject('utopia')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, bool $includeTotal, int $ttl, UtopiaResponse $response, Database $dbForProject, User $user, callable $getDatabasesDB, Context $usage, TransactionState $transactionState, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, bool $includeTotal, int $ttl, UtopiaResponse $response, Database $dbForProject, User $user, callable $getDatabasesDB, Context $usage, TransactionState $transactionState, Authorization $authorization, ?Http $utopia = null): void
     {
         $isAPIKey = $user->isApp($authorization->getRoles());
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
@@ -126,8 +128,10 @@ class XList extends Action
             $cursor->setValue($cursorDocument);
         }
 
+        $dbStart = \microtime(true);
+
         try {
-            $hasSelects = ! empty(Query::groupByType($queries)['selections'] ?? []);
+            $hasSelects = ! empty(Query::groupByType($queries)['selections']);
             $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
             // When there are no select queries, relationship loading is skipped on the
             // underlying find() to avoid pulling related documents the caller did not ask for.
@@ -178,7 +182,7 @@ class XList extends Action
                         $cachedTotal = null;
                     }
                     if ($cachedTotal !== null && $cachedTotal !== false) {
-                        $total = $cachedTotal;
+                        $total = (int) $cachedTotal;
                     } else {
                         $total = $dbForDatabases->count($collectionTableId, $queries, APP_LIMIT_COUNT);
                         try {
@@ -206,6 +210,8 @@ class XList extends Action
             throw new Exception(Exception::DATABASE_TIMEOUT);
         }
 
+        $dbDurationMs = (\microtime(true) - $dbStart) * 1000;
+
         $operations = 0;
         $collectionsCache = [];
         foreach ($documents as $document) {
@@ -229,5 +235,20 @@ class XList extends Action
             // rows or documents
             $this->getSDKGroup() => $documents,
         ]), $this->getResponseModel());
+
+        try {
+            $this->afterQuery($dbDurationMs, $database, $collection, $queries, $utopia);
+        } catch (\Throwable) {
+            // Observers must never break the response.
+        }
+    }
+
+    /**
+     * After query hook.
+     *
+     * @param array<Query> $queries
+     */
+    protected function afterQuery(float $dbDurationMs, Document $database, Document $collection, array $queries, ?Http $utopia): void
+    {
     }
 }

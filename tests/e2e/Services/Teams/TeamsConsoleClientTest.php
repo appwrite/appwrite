@@ -14,6 +14,65 @@ class TeamsConsoleClientTest extends Scope
     use ProjectConsole;
     use SideClient;
 
+    public function testConsoleMembershipPrivacyDefaults(): void
+    {
+        $teamData = $this->createTeamHelper();
+        $membershipData = $this->createAndAcceptMembershipHelper($teamData['teamUid'], $teamData['teamName']);
+
+        $teamUid = $teamData['teamUid'];
+        $projectId = $this->getProject()['$id'];
+        $owner = $this->getUser();
+        $memberHeaders = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $membershipData['session'],
+        ];
+
+        $ownerMemberships = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $ownerMemberships['headers']['status-code']);
+        $this->assertEquals(2, $ownerMemberships['body']['total']);
+
+        $ownerMembershipsByUser = [];
+        foreach ($ownerMemberships['body']['memberships'] as $membership) {
+            $ownerMembershipsByUser[$membership['userId']] = $membership;
+        }
+
+        $this->assertArrayHasKey($owner['$id'], $ownerMembershipsByUser);
+        $this->assertContains('owner', $ownerMembershipsByUser[$owner['$id']]['roles']);
+
+        $this->assertArrayHasKey($membershipData['userUid'], $ownerMembershipsByUser);
+        $this->assertNotContains('owner', $ownerMembershipsByUser[$membershipData['userUid']]['roles']);
+        $this->assertSame($membershipData['userUid'], $ownerMembershipsByUser[$membershipData['userUid']]['userId']);
+        $this->assertSame($membershipData['name'], $ownerMembershipsByUser[$membershipData['userUid']]['userName']);
+        $this->assertSame($membershipData['email'], $ownerMembershipsByUser[$membershipData['userUid']]['userEmail']);
+        $this->assertFalse($ownerMembershipsByUser[$membershipData['userUid']]['mfa']);
+
+        $memberMemberships = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', $memberHeaders);
+
+        $this->assertEquals(200, $memberMemberships['headers']['status-code']);
+        $this->assertEquals(2, $memberMemberships['body']['total']);
+
+        $memberMembershipsByUser = [];
+        foreach ($memberMemberships['body']['memberships'] as $membership) {
+            $memberMembershipsByUser[$membership['userId']] = $membership;
+        }
+
+        $this->assertArrayHasKey($owner['$id'], $memberMembershipsByUser);
+        $this->assertSame($owner['$id'], $memberMembershipsByUser[$owner['$id']]['userId']);
+        $this->assertSame($owner['name'], $memberMembershipsByUser[$owner['$id']]['userName']);
+        $this->assertSame($owner['email'], $memberMembershipsByUser[$owner['$id']]['userEmail']);
+        $this->assertFalse($memberMembershipsByUser[$owner['$id']]['mfa']);
+        $this->assertContains('owner', $memberMembershipsByUser[$owner['$id']]['roles']);
+
+        $this->assertArrayHasKey($membershipData['userUid'], $memberMembershipsByUser);
+        $this->assertNotContains('owner', $memberMembershipsByUser[$membershipData['userUid']]['roles']);
+    }
+
     public function testTeamCreateMembershipConsole(): void
     {
         $teamData = $this->createTeamHelper();

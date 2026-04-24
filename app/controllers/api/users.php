@@ -1535,7 +1535,7 @@ Http::patch('/v1/users/:userId/email')
                 Query::equal('identifier', [$email]),
             ]);
 
-            if ($target instanceof Document && !$target->isEmpty()) {
+            if (!$target->isEmpty()) {
                 throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
             }
         }
@@ -1595,9 +1595,6 @@ Http::patch('/v1/users/:userId/email')
                 'emailIsDisposable' => $user->getAttribute('emailIsDisposable'),
                 'emailIsFree' => $user->getAttribute('emailIsFree'),
             ]));
-            /**
-             * @var Document $oldTarget
-             */
             $oldTarget = $user->find('identifier', $oldEmail, 'targets');
 
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
@@ -1681,7 +1678,7 @@ Http::patch('/v1/users/:userId/phone')
                 Query::equal('identifier', [$number]),
             ]);
 
-            if ($target instanceof Document && !$target->isEmpty()) {
+            if (!$target->isEmpty()) {
                 throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
             }
         }
@@ -1691,9 +1688,6 @@ Http::patch('/v1/users/:userId/phone')
                 'phone' => $phoneValue,
                 'phoneVerification' => $user->getAttribute('phoneVerification'),
             ]));
-            /**
-             * @var Document $oldTarget
-             */
             $oldTarget = $user->find('identifier', $oldPhone, 'targets');
 
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
@@ -2252,8 +2246,8 @@ Http::delete('/v1/users/:userId/mfa/authenticators/:type')
     ->label('event', 'users.[userId].delete.mfa')
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.update')
-    ->label('audits.resource', 'user/{response.$id}')
-    ->label('audits.userId', '{response.$id}')
+    ->label('audits.resource', 'user/{request.userId}')
+    ->label('audits.userId', '{request.userId}')
     ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk', [
         new Method(
@@ -2842,6 +2836,7 @@ Http::get('/v1/users/usage')
         $format = match ($days['period']) {
             '1h' => 'Y-m-d\TH:00:00.000P',
             '1d' => 'Y-m-d\T00:00:00.000P',
+            default => throw new \LogicException('Unsupported period: ' . $days['period']),
         };
 
         foreach ($metrics as $metric) {

@@ -96,7 +96,7 @@ class Deletes extends Action
         DeleteEvent $queueForDeletes,
         callable $getAudit,
     ): void {
-        $payload = $message->getPayload() ?? [];
+        $payload = $message->getPayload();
 
         if (empty($payload)) {
             throw new Exception('Missing payload');
@@ -305,7 +305,8 @@ class Deletes extends Action
                 $collectionId = match ($document->getAttribute('resourceType')) {
                     'function' => 'functions',
                     'execution' => 'executions',
-                    'message' => 'messages'
+                    'message' => 'messages',
+                    default => throw new \Exception('Unknown resource type: ' . $document->getAttribute('resourceType')),
                 };
 
                 try {
@@ -652,11 +653,8 @@ class Deletes extends Action
             ];
 
             $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-            $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
 
             $projectTables = !\in_array($dsn->getHost(), $sharedTables);
-            $sharedTablesV1 = \in_array($dsn->getHost(), $sharedTablesV1);
-            $sharedTablesV2 = !$projectTables && !$sharedTablesV1;
 
             $allDatabases = [
                 new Document([
@@ -759,23 +757,7 @@ class Deletes extends Action
                         ),
                     $databasesToClean
                 ));
-            } elseif ($sharedTablesV1) {
-                /**
-                 * Temporary disabling deletes for internal collections
-                 */
-                $queries = \array_map(
-                    fn ($id) => Query::notEqual('$id', $id),
-                    $projectCollectionIds
-                );
-
-                $queries[] = Query::orderAsc();
-
-                $this->deleteByGroup(
-                    Database::METADATA,
-                    $queries,
-                    $dbForProject
-                );
-            } elseif ($sharedTablesV2) {
+            } else {
                 $queries = \array_map(
                     fn ($id) => Query::notEqual('$id', $id),
                     $projectCollectionIds

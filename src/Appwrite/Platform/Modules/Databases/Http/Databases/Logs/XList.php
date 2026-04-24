@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Logs;
 
+use Appwrite\Detector\Detector;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -9,7 +10,6 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
-use DeviceDetector\DeviceDetector as Detector;
 use MaxMind\Db\Reader;
 use Utopia\Audit\Audit;
 use Utopia\Database\Database;
@@ -103,9 +103,9 @@ class XList extends Action
             $os = $detector->getOS();
             $client = $detector->getClient();
             $device = $detector->getDevice();
-            $deviceName = \is_array($device) ? ($device['deviceName'] ?? '') : '';
-            $deviceBrand = \is_array($device) ? ($device['deviceBrand'] ?? '') : '';
-            $deviceModel = \is_array($device) ? ($device['deviceModel'] ?? '') : '';
+            $deviceName = $device['deviceName'] ?? '';
+            $deviceBrand = $device['deviceBrand'] ?? '';
+            $deviceModel = $device['deviceModel'] ?? '';
 
             $output[$i] = new Document([
                 'event' => $log['event'],

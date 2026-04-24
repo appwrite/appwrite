@@ -21,8 +21,6 @@ class ScheduleFunctions extends ScheduleBase
     public const UPDATE_TIMER = 10; // seconds
     public const ENQUEUE_TIMER = 60; // seconds
 
-    private ?float $lastEnqueueUpdate = null;
-
     public static function getName(): string
     {
         return 'schedule-functions';
@@ -43,7 +41,10 @@ class ScheduleFunctions extends ScheduleBase
         $timerStart = \microtime(true);
         $time = DateTime::now();
 
-        $enqueueDiff = $this->lastEnqueueUpdate === null ? 0 : $timerStart - $this->lastEnqueueUpdate;
+        // TODO: Track the last enqueue timestamp to subtract ENQUEUE_TIMER drift from
+        // the time frame. Previously this used $this->lastEnqueueUpdate as a property
+        // but enabling the assignment broke scheduling, so the diff stays 0.
+        $enqueueDiff = 0;
         $timeFrame = DateTime::addSeconds(new \DateTime(), static::ENQUEUE_TIMER - $enqueueDiff);
 
         Console::log("Enqueue tick: started at: $time (with diff $enqueueDiff)");
@@ -127,9 +128,6 @@ class ScheduleFunctions extends ScheduleBase
         }
 
         $timerEnd = \microtime(true);
-
-        // TODO: This was a bug before because it wasn't passed by reference, enabling it breaks scheduling
-        //$this->lastEnqueueUpdate = $timerStart;
 
         Console::log("Enqueue tick: {$total} executions were enqueued in " . ($timerEnd - $timerStart) . " seconds");
     }

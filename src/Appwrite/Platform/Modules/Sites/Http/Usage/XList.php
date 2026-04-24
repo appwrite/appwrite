@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Usage;
 
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -107,6 +108,7 @@ class XList extends Base
         $format = match ($days['period']) {
             '1h' => 'Y-m-d\TH:00:00.000P',
             '1d' => 'Y-m-d\T00:00:00.000P',
+            default => throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unsupported period: ' . $days['period']),
         };
 
         foreach ($metrics as $metric) {

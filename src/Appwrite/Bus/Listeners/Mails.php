@@ -71,7 +71,9 @@ class Mails extends Listener
             throw new \Exception('Invalid template path');
         }
 
-        $customTemplate = $project->getAttribute('templates', [])["email.sessionAlert-$event->locale"] ?? [];
+        $customTemplate =
+            $project->getAttribute('templates', [])["email.sessionAlert-" . $locale->default] ??
+            $project->getAttribute('templates', [])['email.sessionAlert-' . $locale->fallback] ?? [];
         $isBranded = $smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE;
 
         $subject = $customTemplate['subject'] ?? $locale->getText('emails.sessionAlert.subject');
@@ -131,7 +133,8 @@ class Mails extends Listener
                 ->setSmtpUsername($smtp['username'] ?? '')
                 ->setSmtpPassword($smtp['password'] ?? '')
                 ->setSmtpSecure($smtp['secure'] ?? '')
-                ->setSmtpReplyTo($customTemplate['replyTo'] ?? $smtp['replyTo'] ?? '')
+                ->setSmtpReplyToEmail($customTemplate['replyToEmail'] ?? $customTemplate['replyTo'] ?? $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? '') // Includes backwards compatibility
+                ->setSmtpReplyToName($customTemplate['replyToName'] ?? $smtp['replyToName'] ?? '')
                 ->setSmtpSenderEmail($customTemplate['senderEmail'] ?? $smtp['senderEmail'] ?? System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM))
                 ->setSmtpSenderName($customTemplate['senderName'] ?? $smtp['senderName'] ?? System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
         }

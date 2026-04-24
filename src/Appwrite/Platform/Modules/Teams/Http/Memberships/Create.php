@@ -324,7 +324,9 @@ class Create extends Action
                 $body = $locale->getText('emails.invitation.body');
                 $preview = $locale->getText('emails.invitation.preview');
                 $subject = $locale->getText('emails.invitation.subject');
-                $customTemplate = $project->getAttribute('templates', [])['email.invitation-' . $locale->default] ?? [];
+                $customTemplate =
+                    $project->getAttribute('templates', [])['email.invitation-' . $locale->default] ??
+                    $project->getAttribute('templates', [])['email.invitation-' . $locale->fallback] ?? [];
 
                 $message = Template::fromFile(APP_CE_CONFIG_DIR . '/locale/templates/email-inner-base.tpl');
                 $message
@@ -341,7 +343,8 @@ class Create extends Action
 
                 $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
                 $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
-                $replyTo = '';
+                $replyToEmail = '';
+                $replyToName = '';
 
                 if ($smtpEnabled) {
                     if (! empty($smtp['senderEmail'])) {
@@ -350,8 +353,13 @@ class Create extends Action
                     if (! empty($smtp['senderName'])) {
                         $senderName = $smtp['senderName'];
                     }
-                    if (! empty($smtp['replyTo'])) {
-                        $replyTo = $smtp['replyTo'];
+                    // Includes backwards compatibility: fall back to legacy `replyTo` key
+                    $smtpReplyToEmail = $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? '';
+                    if (! empty($smtpReplyToEmail)) {
+                        $replyToEmail = $smtpReplyToEmail;
+                    }
+                    if (! empty($smtp['replyToName'])) {
+                        $replyToName = $smtp['replyToName'];
                     }
 
                     $queueForMails
@@ -368,8 +376,13 @@ class Create extends Action
                         if (! empty($customTemplate['senderName'])) {
                             $senderName = $customTemplate['senderName'];
                         }
-                        if (! empty($customTemplate['replyTo'])) {
-                            $replyTo = $customTemplate['replyTo'];
+                        // Includes backwards compatibility: fall back to legacy `replyTo` key
+                        $customReplyToEmail = $customTemplate['replyToEmail'] ?? $customTemplate['replyTo'] ?? '';
+                        if (! empty($customReplyToEmail)) {
+                            $replyToEmail = $customReplyToEmail;
+                        }
+                        if (! empty($customTemplate['replyToName'])) {
+                            $replyToName = $customTemplate['replyToName'];
                         }
 
                         $body = $customTemplate['message'] ?? '';
@@ -377,7 +390,8 @@ class Create extends Action
                     }
 
                     $queueForMails
-                        ->setSmtpReplyTo($replyTo)
+                        ->setSmtpReplyToEmail($replyToEmail)
+                        ->setSmtpReplyToName($replyToName)
                         ->setSmtpSenderEmail($senderEmail)
                         ->setSmtpSenderName($senderName);
                 }
@@ -406,11 +420,6 @@ class Create extends Action
                 }
 
                 $message = Template::fromFile(APP_CE_CONFIG_DIR . '/locale/templates/sms-base.tpl');
-
-                $customTemplate = $project->getAttribute('templates', [])['sms.invitation-' . $locale->default] ?? [];
-                if (! empty($customTemplate)) {
-                    $message = $customTemplate['message'];
-                }
 
                 $message = $message->setParam('{{token}}', $url);
                 $message = $message->render();

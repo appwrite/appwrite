@@ -3,12 +3,19 @@
 namespace Appwrite\Platform\Modules\Project\Services;
 
 use Appwrite\Platform\Modules\Project\Http\Init;
+use Appwrite\Platform\Modules\Project\Http\Project\AuthMethods\Update as UpdateAuthMethod;
+use Appwrite\Platform\Modules\Project\Http\Project\Delete as DeleteProject;
 use Appwrite\Platform\Modules\Project\Http\Project\Keys\Create as CreateKey;
 use Appwrite\Platform\Modules\Project\Http\Project\Keys\Delete as DeleteKey;
 use Appwrite\Platform\Modules\Project\Http\Project\Keys\Get as GetKey;
 use Appwrite\Platform\Modules\Project\Http\Project\Keys\Update as UpdateKey;
 use Appwrite\Platform\Modules\Project\Http\Project\Keys\XList as ListKeys;
 use Appwrite\Platform\Modules\Project\Http\Project\Labels\Update as UpdateProjectLabels;
+use Appwrite\Platform\Modules\Project\Http\Project\MockPhone\Create as CreateMockPhone;
+use Appwrite\Platform\Modules\Project\Http\Project\MockPhone\Delete as DeleteMockPhone;
+use Appwrite\Platform\Modules\Project\Http\Project\MockPhone\Get as GetMockPhone;
+use Appwrite\Platform\Modules\Project\Http\Project\MockPhone\Update as UpdateMockPhone;
+use Appwrite\Platform\Modules\Project\Http\Project\MockPhone\XList as ListMockPhones;
 use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Android\Create as CreateAndroidPlatform;
 use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Android\Update as UpdateAndroidPlatform;
 use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Apple\Create as CreateApplePlatform;
@@ -22,8 +29,24 @@ use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Web\Update as Updat
 use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Windows\Create as CreateWindowsPlatform;
 use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Windows\Update as UpdateWindowsPlatform;
 use Appwrite\Platform\Modules\Project\Http\Project\Platforms\XList as ListPlatforms;
-use Appwrite\Platform\Modules\Project\Http\Project\Protocols\Status\Update as UpdateProjectProtocolStatus;
-use Appwrite\Platform\Modules\Project\Http\Project\Services\Status\Update as UpdateProjectServiceStatus;
+use Appwrite\Platform\Modules\Project\Http\Project\Policies\Get as GetPolicy;
+use Appwrite\Platform\Modules\Project\Http\Project\Policies\MembershipPrivacy\Update as UpdateMembershipPrivacyPolicy;
+use Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordDictionary\Update as UpdatePasswordDictionaryPolicy;
+use Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordHistory\Update as UpdatePasswordHistoryPolicy;
+use Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordPersonalData\Update as UpdatePasswordPersonalDataPolicy;
+use Appwrite\Platform\Modules\Project\Http\Project\Policies\SessionAlert\Update as UpdateSessionAlertPolicy;
+use Appwrite\Platform\Modules\Project\Http\Project\Policies\SessionDuration\Update as UpdateSessionDurationPolicy;
+use Appwrite\Platform\Modules\Project\Http\Project\Policies\SessionInvalidation\Update as UpdateSessionInvalidationPolicy;
+use Appwrite\Platform\Modules\Project\Http\Project\Policies\SessionLimit\Update as UpdateSessionLimitPolicy;
+use Appwrite\Platform\Modules\Project\Http\Project\Policies\UserLimit\Update as UpdateUserLimitPolicy;
+use Appwrite\Platform\Modules\Project\Http\Project\Policies\XList as ListPolicies;
+use Appwrite\Platform\Modules\Project\Http\Project\Protocols\Update as UpdateProjectProtocol;
+use Appwrite\Platform\Modules\Project\Http\Project\Services\Update as UpdateProjectService;
+use Appwrite\Platform\Modules\Project\Http\Project\SMTP\Tests\Create as CreateSMTPTest;
+use Appwrite\Platform\Modules\Project\Http\Project\SMTP\Update as UpdateSMTP;
+use Appwrite\Platform\Modules\Project\Http\Project\Templates\Email\Get as GetTemplate;
+use Appwrite\Platform\Modules\Project\Http\Project\Templates\Email\Update as UpdateTemplate;
+use Appwrite\Platform\Modules\Project\Http\Project\Templates\Email\XList as ListTemplates;
 use Appwrite\Platform\Modules\Project\Http\Project\Variables\Create as CreateVariable;
 use Appwrite\Platform\Modules\Project\Http\Project\Variables\Delete as DeleteVariable;
 use Appwrite\Platform\Modules\Project\Http\Project\Variables\Get as GetVariable;
@@ -41,9 +64,19 @@ class Http extends Service
         $this->addAction(Init::getName(), new Init());
 
         // Project
+        $this->addAction(DeleteProject::getName(), new DeleteProject());
         $this->addAction(UpdateProjectLabels::getName(), new UpdateProjectLabels());
-        $this->addAction(UpdateProjectProtocolStatus::getName(), new UpdateProjectProtocolStatus());
-        $this->addAction(UpdateProjectServiceStatus::getName(), new UpdateProjectServiceStatus());
+        $this->addAction(UpdateProjectProtocol::getName(), new UpdateProjectProtocol());
+        $this->addAction(UpdateProjectService::getName(), new UpdateProjectService());
+
+        // SMTP
+        $this->addAction(UpdateSMTP::getName(), new UpdateSMTP());
+        $this->addAction(CreateSMTPTest::getName(), new CreateSMTPTest());
+
+        // Templates
+        $this->addAction(ListTemplates::getName(), new ListTemplates());
+        $this->addAction(GetTemplate::getName(), new GetTemplate());
+        $this->addAction(UpdateTemplate::getName(), new UpdateTemplate());
 
         // Variables
         $this->addAction(CreateVariable::getName(), new CreateVariable());
@@ -73,5 +106,28 @@ class Http extends Service
         $this->addAction(CreateLinuxPlatform::getName(), new CreateLinuxPlatform());
         $this->addAction(GetPlatform::getName(), new GetPlatform());
         $this->addAction(ListPlatforms::getName(), new ListPlatforms());
+
+        // Mock Phones
+        $this->addAction(CreateMockPhone::getName(), new CreateMockPhone());
+        $this->addAction(ListMockPhones::getName(), new ListMockPhones());
+        $this->addAction(GetMockPhone::getName(), new GetMockPhone());
+        $this->addAction(UpdateMockPhone::getName(), new UpdateMockPhone());
+        $this->addAction(DeleteMockPhone::getName(), new DeleteMockPhone());
+
+        // Policies
+        $this->addAction(ListPolicies::getName(), new ListPolicies());
+        $this->addAction(GetPolicy::getName(), new GetPolicy());
+        $this->addAction(UpdateMembershipPrivacyPolicy::getName(), new UpdateMembershipPrivacyPolicy());
+        $this->addAction(UpdatePasswordDictionaryPolicy::getName(), new UpdatePasswordDictionaryPolicy());
+        $this->addAction(UpdatePasswordHistoryPolicy::getName(), new UpdatePasswordHistoryPolicy());
+        $this->addAction(UpdatePasswordPersonalDataPolicy::getName(), new UpdatePasswordPersonalDataPolicy());
+        $this->addAction(UpdateSessionAlertPolicy::getName(), new UpdateSessionAlertPolicy());
+        $this->addAction(UpdateSessionDurationPolicy::getName(), new UpdateSessionDurationPolicy());
+        $this->addAction(UpdateSessionInvalidationPolicy::getName(), new UpdateSessionInvalidationPolicy());
+        $this->addAction(UpdateSessionLimitPolicy::getName(), new UpdateSessionLimitPolicy());
+        $this->addAction(UpdateUserLimitPolicy::getName(), new UpdateUserLimitPolicy());
+
+        // Auth Methods
+        $this->addAction(UpdateAuthMethod::getName(), new UpdateAuthMethod());
     }
 }

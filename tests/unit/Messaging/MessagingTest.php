@@ -147,6 +147,193 @@ class MessagingTest extends TestCase
         $this->assertEmpty($realtime->subscriptions);
     }
 
+    public function testSubscribeUnionsChannelsAndRoles(): void
+    {
+        $realtime = new Realtime();
+
+        $realtime->subscribe(
+            '1',
+            1,
+            'sub-a',
+            [Role::user(ID::custom('123'))->toString()],
+            ['documents'],
+        );
+
+        $realtime->subscribe(
+            '1',
+            1,
+            'sub-b',
+            [Role::users()->toString()],
+            ['files'],
+        );
+
+        $connection = $realtime->connections[1];
+
+        $this->assertContains('documents', $connection['channels']);
+        $this->assertContains('files', $connection['channels']);
+        $this->assertContains(Role::user(ID::custom('123'))->toString(), $connection['roles']);
+        $this->assertContains(Role::users()->toString(), $connection['roles']);
+        $this->assertCount(2, $connection['channels']);
+        $this->assertCount(2, $connection['roles']);
+    }
+
+    public function testUnsubscribeSubscriptionRemovesOnlyOneSubscription(): void
+    {
+        $realtime = new Realtime();
+
+        $realtime->subscribe(
+            '1',
+            1,
+            'sub-a',
+            [Role::user(ID::custom('123'))->toString()],
+            ['documents'],
+        );
+
+        $realtime->subscribe(
+            '1',
+            1,
+            'sub-b',
+            [Role::users()->toString()],
+            ['files'],
+        );
+
+        $removed = $realtime->unsubscribeSubscription(1, 'sub-a');
+
+        $this->assertTrue($removed);
+        $this->assertArrayHasKey(1, $realtime->connections);
+
+        // sub-a is fully cleaned from the tree
+        $this->assertArrayNotHasKey(
+            Role::user(ID::custom('123'))->toString(),
+            $realtime->subscriptions['1']
+        );
+
+        // sub-b still delivers
+        $event = [
+            'project' => '1',
+            'roles' => [Role::users()->toString()],
+            'data' => [
+                'channels' => ['files'],
+            ],
+        ];
+        $receivers = array_keys($realtime->getSubscribers($event));
+        $this->assertEquals([1], $receivers);
+
+        // Channels recomputed: sub-a's channel is gone
+        $this->assertSame(['files'], $realtime->connections[1]['channels']);
+
+        // Roles are connection-level auth context — union of both subscribe calls preserved
+        $this->assertContains(Role::user(ID::custom('123'))->toString(), $realtime->connections[1]['roles']);
+        $this->assertContains(Role::users()->toString(), $realtime->connections[1]['roles']);
+    }
+
+    public function testUnsubscribeSubscriptionIsIdempotent(): void
+    {
+        $realtime = new Realtime();
+
+        $realtime->subscribe(
+            '1',
+            1,
+            'sub-a',
+            [Role::users()->toString()],
+            ['documents'],
+        );
+
+        $this->assertFalse($realtime->unsubscribeSubscription(1, 'does-not-exist'));
+        $this->assertFalse($realtime->unsubscribeSubscription(99, 'sub-a'));
+
+        // Original sub is untouched
+        $event = [
+            'project' => '1',
+            'roles' => [Role::users()->toString()],
+            'data' => [
+                'channels' => ['documents'],
+            ],
+        ];
+        $this->assertEquals([1], array_keys($realtime->getSubscribers($event)));
+    }
+
+    public function testUnsubscribeSubscriptionKeepsConnectionWhenLastSubRemoved(): void
+    {
+        $realtime = new Realtime();
+
+        $realtime->subscribe(
+            '1',
+            1,
+            'sub-a',
+            [Role::users()->toString()],
+            ['documents'],
+        );
+
+        $this->assertTrue($realtime->unsubscribeSubscription(1, 'sub-a'));
+
+        $this->assertArrayHasKey(1, $realtime->connections);
+        $this->assertSame([], $realtime->connections[1]['channels']);
+        // Roles preserved so a later resubscribe on the same connection still has auth context
+        $this->assertSame([Role::users()->toString()], $realtime->connections[1]['roles']);
+        $this->assertArrayNotHasKey('1', $realtime->subscriptions);
+    }
+
+    public function testResubscribeAfterUnsubscribingLastSubDelivers(): void
+    {
+        $realtime = new Realtime();
+
+        $realtime->subscribe(
+            '1',
+            1,
+            'sub-a',
+            [Role::users()->toString()],
+            ['documents'],
+        );
+
+        $this->assertTrue($realtime->unsubscribeSubscription(1, 'sub-a'));
+
+        // Simulate the message-based subscribe path reading stored roles
+        $storedRoles = $realtime->connections[1]['roles'];
+        $this->assertNotEmpty($storedRoles, 'connection roles must survive per-subscription removal');
+
+        $realtime->subscribe('1', 1, 'sub-b', $storedRoles, ['files']);
+
+        $event = [
+            'project' => '1',
+            'roles' => [Role::users()->toString()],
+            'data' => [
+                'channels' => ['files'],
+            ],
+        ];
+        $this->assertEquals([1], array_keys($realtime->getSubscribers($event)));
+    }
+
+    public function testSubscribeAfterOnOpenEmptySentinelPreservesUnion(): void
+    {
+        $realtime = new Realtime();
+
+        // Mirrors the onOpen empty-channels path: subscribe with '' id, empty channels
+        $realtime->subscribe(
+            '1',
+            1,
+            '',
+            [Role::users()->toString()],
+            [],
+            [],
+            'user-123',
+        );
+
+        // Now a real subscription comes in via the subscribe message type
+        $realtime->subscribe(
+            '1',
+            1,
+            'sub-a',
+            [Role::user(ID::custom('user-123'))->toString()],
+            ['documents'],
+        );
+
+        $this->assertSame('user-123', $realtime->connections[1]['userId']);
+        $this->assertContains('documents', $realtime->connections[1]['channels']);
+        $this->assertContains(Role::users()->toString(), $realtime->connections[1]['roles']);
+        $this->assertContains(Role::user(ID::custom('user-123'))->toString(), $realtime->connections[1]['roles']);
+    }
+
     public function testConvertChannelsGuest(): void
     {
         $user = new Document([

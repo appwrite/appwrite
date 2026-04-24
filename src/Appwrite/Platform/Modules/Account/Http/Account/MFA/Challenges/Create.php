@@ -170,11 +170,6 @@ class Create extends Action
 
                 $message = Template::fromFile($templatesPath . '/sms-base.tpl');
 
-                $customTemplate = $project->getAttribute('templates', [])['sms.mfaChallenge-' . $locale->default] ?? [];
-                if (!empty($customTemplate)) {
-                    $message = $customTemplate['message'] ?? $message;
-                }
-
                 $messageContent = Template::fromString($locale->getText("sms.verification.body"));
                 $messageContent
                     ->setParam('{{project}}', $projectName)
@@ -223,7 +218,9 @@ class Create extends Action
                 $preview = $locale->getText("emails.mfaChallenge.preview");
                 $heading = $locale->getText("emails.mfaChallenge.heading");
 
-                $customTemplate = $project->getAttribute('templates', [])['email.mfaChallenge-' . $locale->default] ?? [];
+                $customTemplate =
+                    $project->getAttribute('templates', [])['email.mfaChallenge-' . $locale->default] ??
+                    $project->getAttribute('templates', [])['email.mfaChallenge-' . $locale->fallback] ?? [];
                 $smtpBaseTemplate = $project->getAttribute('smtpBaseTemplate', 'email-base');
 
                 $validator = new FileName();
@@ -253,7 +250,8 @@ class Create extends Action
 
                 $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
                 $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
-                $replyTo = "";
+                $replyToEmail = '';
+                $replyToName = '';
 
                 if ($smtpEnabled) {
                     if (!empty($smtp['senderEmail'])) {
@@ -262,8 +260,13 @@ class Create extends Action
                     if (!empty($smtp['senderName'])) {
                         $senderName = $smtp['senderName'];
                     }
-                    if (!empty($smtp['replyTo'])) {
-                        $replyTo = $smtp['replyTo'];
+                    // Includes backwards compatibility: fall back to legacy `replyTo` key
+                    $smtpReplyToEmail = $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? '';
+                    if (!empty($smtpReplyToEmail)) {
+                        $replyToEmail = $smtpReplyToEmail;
+                    }
+                    if (!empty($smtp['replyToName'])) {
+                        $replyToName = $smtp['replyToName'];
                     }
 
                     $queueForMails
@@ -280,8 +283,13 @@ class Create extends Action
                         if (!empty($customTemplate['senderName'])) {
                             $senderName = $customTemplate['senderName'];
                         }
-                        if (!empty($customTemplate['replyTo'])) {
-                            $replyTo = $customTemplate['replyTo'];
+                        // Includes backwards compatibility: fall back to legacy `replyTo` key
+                        $customReplyToEmail = $customTemplate['replyToEmail'] ?? $customTemplate['replyTo'] ?? '';
+                        if (!empty($customReplyToEmail)) {
+                            $replyToEmail = $customReplyToEmail;
+                        }
+                        if (!empty($customTemplate['replyToName'])) {
+                            $replyToName = $customTemplate['replyToName'];
                         }
 
                         $body = $customTemplate['message'] ?? '';
@@ -289,7 +297,8 @@ class Create extends Action
                     }
 
                     $queueForMails
-                        ->setSmtpReplyTo($replyTo)
+                        ->setSmtpReplyToEmail($replyToEmail)
+                        ->setSmtpReplyToName($replyToName)
                         ->setSmtpSenderEmail($senderEmail)
                         ->setSmtpSenderName($senderName);
                 }

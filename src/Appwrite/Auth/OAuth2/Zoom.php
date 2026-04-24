@@ -12,11 +12,6 @@ class Zoom extends OAuth2
     private string $endpoint = 'https://zoom.us';
 
     /**
-     * @var string
-     */
-    private string $version = '2022-03-26';
-
-    /**
      * @var array
      */
     protected array $user = [];

@@ -164,9 +164,7 @@ class Action extends PlatformAction
             $validator = new AnyOf($cnameValidators);
             $validators[] = $validator;
 
-            if (\is_null($mainValidator)) {
-                $mainValidator = $validator;
-            }
+            $mainValidator = $validator;
         }
 
         // Ensure at least one of CNAME/A/AAAA record points to our servers properly

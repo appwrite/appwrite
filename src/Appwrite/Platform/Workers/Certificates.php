@@ -94,7 +94,7 @@ class Certificates extends Action
         array $plan,
         ValidatorAuthorization $authorization,
     ): void {
-        $payload = $message->getPayload() ?? [];
+        $payload = $message->getPayload();
 
         if (empty($payload)) {
             throw new Exception('Missing payload');
