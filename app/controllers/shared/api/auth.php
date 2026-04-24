@@ -9,6 +9,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Http\Http;
+use Utopia\Http\Route;
 use Utopia\System\System;
 
 Http::init()
@@ -32,13 +33,13 @@ Http::init()
 
 Http::init()
     ->groups(['auth'])
-    ->inject('utopia')
     ->inject('request')
     ->inject('project')
     ->inject('geodb')
     ->inject('user')
     ->inject('authorization')
-    ->action(function (Http $utopia, Request $request, Document $project, Reader $geodb, User $user, Authorization $authorization) {
+    ->inject('route')
+    ->action(function (Request $request, Document $project, Reader $geodb, User $user, Authorization $authorization, ?Route $route) {
         $denylist = System::getEnv('_APP_CONSOLE_COUNTRIES_DENYLIST', '');
         if (!empty($denylist && $project->getId() === 'console')) {
             $countries = explode(',', $denylist);
@@ -49,8 +50,6 @@ Http::init()
             }
         }
 
-        $route = $utopia->match($request);
-
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
         $isAppUser = $user->isApp($authorization->getRoles());
 
@@ -59,7 +58,7 @@ Http::init()
         }
 
         $auths = $project->getAttribute('auths', []);
-        switch ($route->getLabel('auth.type', '')) {
+        switch ($route?->getLabel('auth.type', '')) {
             case 'email-password':
                 if (($auths[Config::getParam('auth')['email-password']['key']] ?? true) === false) {
                     throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Email / Password authentication is disabled for this project');

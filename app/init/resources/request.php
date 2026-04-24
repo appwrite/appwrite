@@ -47,6 +47,7 @@ use Utopia\DI\Container;
 use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
 use Utopia\Http\Http;
+use Utopia\Http\Router;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
 use Utopia\Pools\Group;
@@ -620,10 +621,12 @@ return function (Container $container): void {
         // These endpoints moved from /v1/projects/:projectId/<resource> to /v1/<resource>
         // When accessed via the old alias path, extract projectId from the URI
         $deprecatedProjectPathPrefix = '/v1/projects/';
-        $route = $utopia->match($request);
-        if (!empty($route)) {
+        $urlPath = \parse_url($request->getURI(), PHP_URL_PATH);
+        $urlPath = \is_string($urlPath) ? ($urlPath === '' ? '/' : $urlPath) : '/';
+        $match = Router::matchRoute($request->getMethod(), $urlPath);
+        if ($match !== null) {
             $isDeprecatedAlias = \str_starts_with($request->getURI(), $deprecatedProjectPathPrefix) &&
-                !\str_starts_with($route->getPath(), $deprecatedProjectPathPrefix);
+                !\str_starts_with($match->route->getPath(), $deprecatedProjectPathPrefix);
 
             if ($isDeprecatedAlias) {
                 $projectId = \explode('/', $request->getURI(), 5)[3] ?? '';
@@ -1109,8 +1112,10 @@ return function (Container $container): void {
         if ($project->getId() !== 'console') {
             $teamInternalId = $project->getAttribute('teamInternalId', '');
         } else {
-            $route = $utopia->match($request);
-            $path = ! empty($route) ? $route->getPath() : $request->getURI();
+            $urlPath = \parse_url($request->getURI(), PHP_URL_PATH);
+            $urlPath = \is_string($urlPath) ? ($urlPath === '' ? '/' : $urlPath) : '/';
+            $match = Router::matchRoute($request->getMethod(), $urlPath);
+            $path = $match !== null ? $match->route->getPath() : $request->getURI();
             $orgHeader = $request->getHeader('x-appwrite-organization', '');
             if (str_starts_with($path, '/v1/projects/:projectId')) {
                 $uri = $request->getURI();

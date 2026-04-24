@@ -10,6 +10,7 @@ use Utopia\DI\Container;
 use Utopia\Http\Exception;
 use Utopia\Http\Http;
 use Utopia\Http\Route;
+use Utopia\Http\Router;
 use Utopia\System\System;
 
 class Resolvers
@@ -359,7 +360,11 @@ class Resolvers
 
         $lock->acquire();
 
-        $original = $utopia->getRoute();
+        try {
+            $originalMatch = $utopia->getResource('routeMatch');
+        } catch (\Throwable) {
+            $originalMatch = null;
+        }
         try {
             $request = clone $request;
 
@@ -380,7 +385,13 @@ class Resolvers
             $resolverResponse->setContentType(Response::CONTENT_TYPE_NULL);
             $resolverResponse->setSent(false);
 
-            $route = $utopia->match($request, fresh: true);
+            $urlPath = \parse_url($request->getURI(), PHP_URL_PATH);
+            $urlPath = \is_string($urlPath) ? ($urlPath === '' ? '/' : $urlPath) : '/';
+            $match = Router::matchRoute($request->getMethod(), $urlPath);
+            if ($match === null) {
+                throw new Exception('Route not found: ' . $request->getMethod() . ' ' . $urlPath, 404);
+            }
+            $route = $match->route;
             $request->setRoute($route);
 
             $utopia->execute($route, $request, $resolverResponse);
@@ -402,9 +413,9 @@ class Resolvers
             $reject($e);
             return;
         } finally {
-            if ($original !== null) {
-                $utopia->setRoute($original);
-            }
+            $container = self::getResolverContainer($utopia);
+            $container->set('route', static fn () => $originalMatch?->route);
+            $container->set('routeMatch', static fn () => $originalMatch);
 
             $lock->release();
             unset(self::$locks[\spl_object_hash($utopia)]);
