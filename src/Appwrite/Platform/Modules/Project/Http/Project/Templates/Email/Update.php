@@ -57,7 +57,7 @@ class Update extends Action
                 ]
             ))
             ->param('templateId', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? [], true), 'Custom email template type. Can be one of: '.\implode(', ', Config::getParam('locale-templates')['email'] ?? []))
-            ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Custom email template locale. If left empty, the fallback locale (en) will be used.', optional: true, injections: ['localeCodes'])
+            ->param('locale', null, fn ($localeCodes) => new Nullable(new WhiteList($localeCodes)), 'Custom email template locale. If left empty, the fallback locale (en) will be used.', optional: true, injections: ['localeCodes'])
             ->param('subject', null, new Nullable(new Text(255)), 'Subject of the email template. Can be up to 255 characters.', optional: true)
             ->param('message', null, new Nullable(new Text(10485760)), 'Plain or HTML body of the email template message. Can be up to 10MB of content.', optional: true)
             ->param('senderName', null, new Nullable(new Text(255, 0)), 'Name of the email sender.', optional: true)
@@ -74,7 +74,7 @@ class Update extends Action
 
     public function action(
         string $templateId,
-        string $locale,
+        ?string $locale,
         ?string $subject,
         ?string $message,
         ?string $senderName,
