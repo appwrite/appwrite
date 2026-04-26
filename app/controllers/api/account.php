@@ -569,9 +569,14 @@ App::delete('/v1/account')
             // get all memberships
             $memberships = $user->getAttribute('memberships', []);
             foreach ($memberships as $membership) {
-                // prevent deletion if at least one active membership
+                // prevent deletion if at least one active membership whose team still exists
                 if ($membership->getAttribute('confirm', false)) {
-                    throw new Exception(Exception::USER_DELETION_PROHIBITED);
+                    $teamId = $membership->getAttribute('teamId', '');
+                    // If the team has already been deleted (asynchronously via the delete queue),
+                    // do not block account deletion for this stale membership record.
+                    if (!empty($teamId) && !$dbForProject->getDocument('teams', $teamId)->isEmpty()) {
+                        throw new Exception(Exception::USER_DELETION_PROHIBITED);
+                    }
                 }
             }
         }
