@@ -2565,6 +2565,10 @@ App::get('/v1/messaging/topics/:topicId/logs')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
+        // Filter audit logs to only those created after the current topic was created.
+        // This prevents logs from a previously deleted topic with the same ID from appearing.
+        $queries[] = Query::greaterThanEqual('time', $topic->getCreatedAt());
+
         $audit = new Audit($dbForProject);
         $resource = 'topic/' . $topicId;
         $logs = $audit->getLogsByResource($resource, $queries);
