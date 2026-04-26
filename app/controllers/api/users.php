@@ -1223,7 +1223,7 @@ App::put('/v1/users/:userId/labels')
 App::patch('/v1/users/:userId/verification/phone')
     ->desc('Update phone verification')
     ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].update.verification')
+    ->label('event', 'users.[userId].verification.[userId].update')
     ->label('scope', 'users.write')
     ->label('audits.event', 'verification.update')
     ->label('audits.resource', 'user/{response.$id}')
@@ -1256,7 +1256,8 @@ App::patch('/v1/users/:userId/verification/phone')
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('phoneVerification', $phoneVerification));
 
         $queueForEvents
-            ->setParam('userId', $user->getId());
+            ->setParam('userId', $user->getId())
+            ->setPayload($response->output($user, Response::MODEL_USER));
 
         $response->dynamic($user, Response::MODEL_USER);
     });
@@ -1607,7 +1608,7 @@ App::patch('/v1/users/:userId/phone')
 App::patch('/v1/users/:userId/verification')
     ->desc('Update email verification')
     ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].update.verification')
+    ->label('event', 'users.[userId].verification.[userId].update')
     ->label('scope', 'users.write')
     ->label('audits.event', 'verification.update')
     ->label('audits.resource', 'user/{request.userId}')
@@ -1640,7 +1641,9 @@ App::patch('/v1/users/:userId/verification')
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('emailVerification', $emailVerification));
 
-        $queueForEvents->setParam('userId', $user->getId());
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setPayload($response->output($user, Response::MODEL_USER));
 
         $response->dynamic($user, Response::MODEL_USER);
     });
