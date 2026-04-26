@@ -18,6 +18,7 @@ class Request extends UtopiaRequest
      */
     private array $filters = [];
     private ?Route $route = null;
+    private ?array $filteredParams = null;
 
     public function __construct(SwooleRequest $request)
     {
@@ -32,6 +33,10 @@ class Request extends UtopiaRequest
      */
     public function getParams(): array
     {
+        if ($this->filteredParams !== null) {
+            return $this->filteredParams;
+        }
+
         $parameters = parent::getParams();
 
         if (!$this->hasFilters() || !$this->hasRoute()) {
@@ -49,6 +54,7 @@ class Request extends UtopiaRequest
             foreach ($this->getFilters() as $filter) {
                 $parameters = $filter->parse($parameters, $id);
             }
+            $this->filteredParams = $parameters;
             return $parameters;
         }
 
@@ -79,6 +85,7 @@ class Request extends UtopiaRequest
             $parameters = $filter->parse($parameters, $id);
         }
 
+        $this->filteredParams = $parameters;
         return $parameters;
     }
 
@@ -92,6 +99,7 @@ class Request extends UtopiaRequest
     public function addFilter(Filter $filter): void
     {
         $this->filters[] = $filter;
+        $this->filteredParams = null;
     }
 
     /**
@@ -112,6 +120,7 @@ class Request extends UtopiaRequest
     public function resetFilters(): void
     {
         $this->filters = [];
+        $this->filteredParams = null;
     }
 
     /**
@@ -134,6 +143,7 @@ class Request extends UtopiaRequest
     public function setRoute(?Route $route): void
     {
         $this->route = $route;
+        $this->filteredParams = null;
     }
 
     /**
