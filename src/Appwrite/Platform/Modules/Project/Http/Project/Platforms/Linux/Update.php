@@ -53,8 +53,8 @@ class Update extends Action
                 ]
             ))
             ->param('platformId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Platform ID.', false, ['dbForPlatform'])
-            ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
-            ->param('packageName', '', new Text(256), 'Linux package name. Max length: 256 chars.')
+            ->param('name', null, new Text(128, 1), 'Platform name. Min length: 1 char. Max length: 128 chars.')
+            ->param('packageName', '', new Text(256, 1), 'Linux package name. Min length: 1 char. Max length: 256 chars.')
             ->inject('response')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')

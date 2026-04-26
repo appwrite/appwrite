@@ -55,8 +55,8 @@ class Create extends Action
                 ],
             ))
             ->param('platformId', '', fn (Database $dbForPlatform) => new CustomId(false, $dbForPlatform->getAdapter()->getMaxUIDLength()), 'Platform ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForPlatform'])
-            ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
-            ->param('packageName', '', new Text(256), 'Linux package name. Max length: 256 chars.')
+            ->param('name', null, new Text(128, 1), 'Platform name. Min length: 1 char. Max length: 128 chars.')
+            ->param('packageName', '', new Text(256, 1), 'Linux package name. Min length: 1 char. Max length: 256 chars.')
             ->inject('response')
             ->inject('queueForEvents')
             ->inject('project')
