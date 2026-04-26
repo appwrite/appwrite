@@ -848,7 +848,7 @@ App::patch('/v1/projects/:projectId/auth/duration')
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('duration', 31536000, new Range(0, 31536000), 'Project session length in seconds. Max length: 31536000 seconds.')
+    ->param('duration', TOKEN_EXPIRATION_LOGIN_LONG, new Range(0, TOKEN_EXPIRATION_LOGIN_LONG), 'Project session length in seconds. Max length: ' . TOKEN_EXPIRATION_LOGIN_LONG . ' seconds (365 days).')
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, int $duration, Response $response, Database $dbForPlatform) {
