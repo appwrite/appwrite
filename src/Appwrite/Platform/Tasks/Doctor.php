@@ -283,13 +283,33 @@ class Doctor extends Action
         try {
             if (App::isProduction()) {
                 Console::log('');
-                $version = \json_decode(@\file_get_contents(System::getEnv('_APP_HOME', 'http://localhost') . '/version'), true);
 
-                if ($version && isset($version['version'])) {
-                    if (\version_compare($version['version'], System::getEnv('_APP_VERSION', 'UNKNOWN')) === 0) {
+                $context = \stream_context_create([
+                    'http' => [
+                        'method' => 'GET',
+                        'header' => "User-Agent: appwrite-doctor\r\n",
+                        'timeout' => 5,
+                    ],
+                ]);
+                $release = \json_decode(
+                    @\file_get_contents(
+                        'https://api.github.com/repos/appwrite/appwrite/releases/latest',
+                        false,
+                        $context
+                    ),
+                    true
+                );
+
+                $latestVersion = $release['tag_name'] ?? null;
+
+                if ($latestVersion !== null) {
+                    // Strip a leading 'v' if present (e.g. "v1.6.0" → "1.6.0")
+                    $latestVersion = \ltrim($latestVersion, 'v');
+
+                    if (\version_compare($latestVersion, System::getEnv('_APP_VERSION', 'UNKNOWN')) === 0) {
                         Console::info('You are running the latest version of ' . APP_NAME . '! 🥳');
                     } else {
-                        Console::info('A new version (' . $version['version'] . ') is available! 🥳' . "\n");
+                        Console::info('A new version (' . $latestVersion . ') is available! 🥳' . "\n");
                     }
                 } else {
                     Console::error('Failed to check for a newer version' . "\n");
