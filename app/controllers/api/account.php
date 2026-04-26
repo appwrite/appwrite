@@ -3354,29 +3354,33 @@ App::patch('/v1/account/phone')
         contentType: ContentType::JSON
     ))
     ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
-    ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
+    ->param('password', null, new Nullable(new Password()), 'User password. Must be at least 8 chars. Required only when the account has a password set.', true)
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('project')
     ->inject('hooks')
-                ->inject('proofForPassword')
-->inject('authorization')
-    ->action(function (string $phone, string $password, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks, ProofsPassword $proofForPassword, Authorization $authorization) {
-        // passwordUpdate will be empty if the user has never set a password
+    ->inject('proofForPassword')
+    ->inject('authorization')
+    ->action(function (string $phone, ?string $password, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks, ProofsPassword $proofForPassword, Authorization $authorization) {
+        // passwordUpdate will be empty if the user has never set a password (e.g. OAuth-only users)
         $passwordUpdate = $user->getAttribute('passwordUpdate');
 
-        $userProofForPassword = ProofsPassword::createHash($user->getAttribute('hash'), $user->getAttribute('hashOptions'));
-
-        if (
-            !empty($passwordUpdate) &&
-            !$userProofForPassword->verify($password, $user->getAttribute('password'))
-        ) { // Double check user password
-            throw new Exception(Exception::USER_INVALID_CREDENTIALS);
+        if (!empty($passwordUpdate)) {
+            // User has a password — require it to be provided and correct
+            if ($password === null) {
+                throw new Exception(Exception::USER_INVALID_CREDENTIALS);
+            }
+            $userProofForPassword = ProofsPassword::createHash($user->getAttribute('hash'), $user->getAttribute('hashOptions'));
+            if (!$userProofForPassword->verify($password, $user->getAttribute('password'))) {
+                throw new Exception(Exception::USER_INVALID_CREDENTIALS);
+            }
         }
 
-        $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, false]);
+        if ($password !== null) {
+            $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, false]);
+        }
 
         $target = $authorization->skip(fn () => $dbForProject->findOne('targets', [
             Query::equal('identifier', [$phone]),
@@ -3393,7 +3397,8 @@ App::patch('/v1/account/phone')
             ->setAttribute('phoneVerification', false) // After this user needs to confirm phone number again
         ;
 
-        if (empty($passwordUpdate)) {
+        if (empty($passwordUpdate) && $password !== null) {
+            // OAuth-only users may optionally set a password during phone update
             $user
                 ->setAttribute('password', $proofForPassword->hash($password))
                 ->setAttribute('hash', $proofForPassword->getHash()->getName())
