@@ -427,9 +427,7 @@ class Databases extends Action
             $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'available'));
         } catch (\Throwable $e) {
             Console::error($e->getMessage());
-            if ($e instanceof DatabaseException) {
-                $index->setAttribute('error', $e->getMessage());
-            }
+            $index->setAttribute('error', $e->getMessage());
             $dbForProject->updateDocument(
                 'indexes',
                 $index->getId(),
