@@ -448,6 +448,14 @@ App::setResource('project', function ($dbForPlatform, $request, $console, $autho
 
     $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
 
+    if (!$project->isEmpty()) {
+        $accessedAt = $project->getAttribute('accessedAt', 0);
+        if (DatabaseDateTime::formatTz(DatabaseDateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
+            $project->setAttribute('accessedAt', DatabaseDateTime::now());
+            $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $project));
+        }
+    }
+
     return $project;
 }, ['dbForPlatform', 'request', 'console', 'authorization']);
 
