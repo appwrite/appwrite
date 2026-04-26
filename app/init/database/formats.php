@@ -1,12 +1,12 @@
 <?php
 
 use Appwrite\Network\Validator\Email;
+use Appwrite\Network\Validator\URL;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Structure;
 use Utopia\Validator\IP;
 use Utopia\Validator\Range;
-use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_EMAIL, function () {
