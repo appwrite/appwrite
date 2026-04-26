@@ -68,6 +68,7 @@ use Utopia\Validator;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -3236,7 +3237,7 @@ App::patch('/v1/account/email')
         contentType: ContentType::JSON
     ))
     ->param('email', '', new EmailValidator(), 'User email.')
-    ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
+    ->param('password', null, new Nullable(new Password()), 'User password. Must be at least 8 chars. Required only when the account has a password set.', true)
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('user')
@@ -3245,21 +3246,25 @@ App::patch('/v1/account/email')
     ->inject('project')
     ->inject('hooks')
     ->inject('proofForPassword')
- ->inject('authorization')
-    ->action(function (string $email, string $password, ?\DateTime $requestTimestamp, Response $response, User $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks, ProofsPassword $proofForPassword, Authorization $authorization) {
-        // passwordUpdate will be empty if the user has never set a password
+    ->inject('authorization')
+    ->action(function (string $email, ?string $password, ?\DateTime $requestTimestamp, Response $response, User $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks, ProofsPassword $proofForPassword, Authorization $authorization) {
+        // passwordUpdate will be empty if the user has never set a password (e.g. OAuth-only users)
         $passwordUpdate = $user->getAttribute('passwordUpdate');
 
-        $userProofForPassword = ProofsPassword::createHash($user->getAttribute('hash'), $user->getAttribute('hashOptions'));
-
-        if (
-            !empty($passwordUpdate) &&
-            !$userProofForPassword->verify($password, $user->getAttribute('password'))
-        ) { // Double check user password
-            throw new Exception(Exception::USER_INVALID_CREDENTIALS);
+        if (!empty($passwordUpdate)) {
+            // User has a password — require it to be provided and correct
+            if ($password === null) {
+                throw new Exception(Exception::USER_INVALID_CREDENTIALS);
+            }
+            $userProofForPassword = ProofsPassword::createHash($user->getAttribute('hash'), $user->getAttribute('hashOptions'));
+            if (!$userProofForPassword->verify($password, $user->getAttribute('password'))) {
+                throw new Exception(Exception::USER_INVALID_CREDENTIALS);
+            }
         }
 
-        $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, false]);
+        if ($password !== null) {
+            $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, false]);
+        }
 
         $oldEmail = $user->getAttribute('email');
 
@@ -3290,7 +3295,8 @@ App::patch('/v1/account/email')
             ->setAttribute('emailIsFree', $emailCanonical?->isFree())
         ;
 
-        if (empty($passwordUpdate)) {
+        if (empty($passwordUpdate) && $password !== null) {
+            // OAuth-only users may optionally set a password during email update
             $user
                 ->setAttribute('password', $proofForPassword->hash($password))
                 ->setAttribute('hash', $proofForPassword->getHash()->getName())
