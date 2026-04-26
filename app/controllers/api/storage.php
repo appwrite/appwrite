@@ -460,9 +460,11 @@ App::post('/v1/storage/buckets/:bucketId/files')
         $permissions = Permission::aggregate($permissions, $allowedPermissions);
 
         // Add permissions for current the user if none were provided.
+        // Privileged users and API keys uploading without permissions get empty permissions (no auto-grant).
+        $roles = $authorization->getRoles();
         if (\is_null($permissions)) {
             $permissions = [];
-            if (!empty($user->getId())) {
+            if (!empty($user->getId()) && !$isAPIKey && !$isPrivilegedUser) {
                 foreach ($allowedPermissions as $permission) {
                     $permissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
                 }
@@ -470,7 +472,6 @@ App::post('/v1/storage/buckets/:bucketId/files')
         }
 
         // Users can only manage their own roles, API keys and Admin users can manage any
-        $roles = $authorization->getRoles();
         if (!User::isApp($roles) && !User::isPrivileged($roles)) {
             foreach (Database::PERMISSIONS as $type) {
                 foreach ($permissions as $permission) {
