@@ -205,10 +205,11 @@ class Update extends Action
                     if (
                         \is_array($relation)
                         && \array_values($relation) !== $relation
-                        && !isset($relation['$id'])
                     ) {
-                        $relation['$id'] = ID::unique();
-                        $relation = new Document($relation);
+                        if (!isset($relation['$id'])) {
+                            $relation['$id'] = ID::unique();
+                        }
+                        $relation = new Document($this->removeReadonlyAttributes($relation, $isAPIKey || $isPrivilegedUser));
                     }
                     if ($relation instanceof Document) {
                         $relation = $this->removeReadonlyAttributes($relation, $isAPIKey || $isPrivilegedUser);
