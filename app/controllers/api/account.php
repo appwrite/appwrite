@@ -9,6 +9,8 @@ use Appwrite\Auth\Validator\PasswordDictionary;
 use Appwrite\Auth\Validator\PasswordHistory;
 use Appwrite\Auth\Validator\PersonalData;
 use Appwrite\Auth\Validator\Phone;
+use Appwrite\Deletes\Identities as DeleteIdentities;
+use Appwrite\Deletes\Targets as DeleteTargets;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
@@ -577,6 +579,14 @@ App::delete('/v1/account')
         }
 
         $dbForProject->deleteDocument('users', $user->getId());
+
+        // Eagerly remove identities and targets so that the released email address
+        // is immediately available for a new registration.  Without this, OAuth
+        // identity documents linger until the async Deletes worker processes them,
+        // causing a spurious GENERAL_BAD_REQUEST when another user tries to sign up
+        // with the same email address.
+        DeleteIdentities::delete($dbForProject, Query::equal('userInternalId', [$user->getSequence()]));
+        DeleteTargets::delete($dbForProject, Query::equal('userInternalId', [$user->getSequence()]));
 
         $queueForDeletes
             ->setType(DELETE_TYPE_DOCUMENT)
