@@ -592,9 +592,20 @@ App::get('/v1/avatars/initials')
         $code = 0;
 
         foreach ($words as $key => $w) {
-            if (ctype_alnum($w[0] ?? '')) {
-                $initials .= $w[0];
-                $code += ord($w[0]);
+            // Find the first alphanumeric character in the word.
+            // Names starting with non-alphanumeric characters (e.g. "@user") should
+            // still produce an initial from the first letter, not a blank image.
+            $char = '';
+            for ($i = 0; $i < \strlen($w); $i++) {
+                if (\ctype_alnum($w[$i])) {
+                    $char = $w[$i];
+                    break;
+                }
+            }
+
+            if (!empty($char)) {
+                $initials .= $char;
+                $code += \ord($char);
 
                 if ($key == 1) {
                     break;
