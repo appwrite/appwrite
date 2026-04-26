@@ -120,7 +120,13 @@ class Create extends Action
                 throw new Exception($this->getDuplicateException(), params: [$key]);
             }
 
+            // Only check for twoWayKey conflicts when both the new relationship and the
+            // existing relationship are two-way. A one-way relationship stores a twoWayKey
+            // internally but never creates the reverse attribute in the related collection,
+            // so its twoWayKey cannot conflict with other relationships.
             if (
+                $twoWay &&
+                ($attribute->getAttribute('options')['twoWay'] ?? false) &&
                 \strtolower($attribute->getAttribute('options')['twoWayKey']) === \strtolower($twoWayKey) &&
                 $attribute->getAttribute('options')['relatedCollection'] === $relatedCollection->getId()
             ) {
