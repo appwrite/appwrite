@@ -13,6 +13,8 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
+use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -61,6 +63,7 @@ class Delete extends Base
             ->inject('queueForDeletes')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
+            ->inject('project')
             ->inject('authorization')
             ->callback($this->action(...));
     }
@@ -72,6 +75,7 @@ class Delete extends Base
         DeleteEvent $queueForDeletes,
         Event $queueForEvents,
         Database $dbForPlatform,
+        Document $project,
         Authorization $authorization
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -90,6 +94,19 @@ class Delete extends Base
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('active', false);
         $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
+
+        // Immediately remove deployment rules (custom domains) linked to this function so that
+        // the domains become available for reassignment without waiting for the delete worker.
+        // Certificate files and certificate documents are cleaned up by the async worker.
+        $authorization->skip(function () use ($dbForPlatform, $function, $project) {
+            $dbForPlatform->deleteDocuments('rules', [
+                Query::equal('type', ['deployment']),
+                Query::equal('deploymentResourceType', ['function']),
+                Query::equal('deploymentResourceInternalId', [$function->getSequence()]),
+                Query::equal('projectInternalId', [$project->getSequence()]),
+                Query::orderAsc(),
+            ]);
+        });
 
         $queueForDeletes
             ->setType(DELETE_TYPE_DOCUMENT)
