@@ -421,7 +421,7 @@ class Create extends Action
 
                 $message = Template::fromFile(APP_CE_CONFIG_DIR . '/locale/templates/sms-base.tpl');
 
-                $message = $message->setParam('{{token}}', $url);
+                $message = $message->setParam('{{token}}', $url, escapeHtml: false);
                 $message = $message->render();
 
                 $messageDoc = new Document([
