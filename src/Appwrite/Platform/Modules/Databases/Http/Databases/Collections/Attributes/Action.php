@@ -306,6 +306,12 @@ abstract class Action extends UtopiaAction
         $default = $attribute->getAttribute('default');
         $options = $attribute->getAttribute('options', []);
 
+        // Periods are reserved as path separators in the database layer and must not appear in attribute keys.
+        if (\str_contains($key, '.')) {
+            $context = $this->isCollectionsAPI() ? 'Attribute' : 'Column';
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, $context . ' key cannot contain a period (.)');
+        }
+
         if (in_array($type, Database::SPATIAL_TYPES) && !$dbForProject->getAdapter()->getSupportForSpatialAttributes()) {
             throw new Exception($this->getSpatialTypeNotSupportedException(), params: [$type]);
         }
