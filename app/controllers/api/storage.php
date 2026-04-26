@@ -592,6 +592,14 @@ App::post('/v1/storage/buckets/:bucketId/files')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed uploading file');
         }
 
+        // When a single Content-Range request covers the entire file, both $chunk
+        // and $chunks are set to -1 as a sentinel.  After a successful upload the
+        // device returns the real chunk count, so normalise $chunks so that the
+        // completion check below is correct and no negative value reaches the DB.
+        if ($chunks === -1) {
+            $chunks = $chunksUploaded;
+        }
+
         if ($chunksUploaded === $chunks) {
             if (System::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled' && $bucket->getAttribute('antivirus', true) && $fileSize <= APP_LIMIT_ANTIVIRUS && $deviceForFiles->getType() === Storage::DEVICE_LOCAL) {
                 $antivirus = new Network(
