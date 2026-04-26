@@ -98,8 +98,8 @@ class Create extends Action
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
-        $collection = $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId);
-        $collection = $dbForProject->getCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
+        $collectionDocument = $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId);
+        $collection = $dbForProject->getCollection('database_' . $database->getSequence() . '_collection_' . $collectionDocument->getSequence());
         if ($collection->isEmpty()) {
             throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         }
@@ -110,6 +110,10 @@ class Create extends Action
             throw new Exception($this->getParentNotFoundException(), params: [$relatedCollectionId]);
         }
 
+        // Transient statuses that mean the attribute is being cleaned up and a
+        // re-creation with the same key should be allowed to proceed.
+        $transientStatuses = ['deleting', 'failed', 'stuck'];
+
         $attributes = $collection->getAttribute('attributes', []);
         foreach ($attributes as $attribute) {
             if ($attribute->getAttribute('type') !== Database::VAR_RELATIONSHIP) {
@@ -117,6 +121,19 @@ class Create extends Action
             }
 
             if (\strtolower($attribute->getId()) === \strtolower($key)) {
+                // Before raising a duplicate error, verify the existing attribute is
+                // not in a transient state (being deleted / failed / stuck).  When a
+                // relationship is deleted its worker-side cleanup is asynchronous, so
+                // the attribute may still appear in the collection schema for a short
+                // period.  Allowing re-creation in that window prevents a misleading
+                // "already exists" error. See: appwrite/appwrite#9212
+                $existingMeta = $dbForProject->getDocument(
+                    'attributes',
+                    $database->getSequence() . '_' . $collectionDocument->getSequence() . '_' . $attribute->getId()
+                );
+                if (!$existingMeta->isEmpty() && \in_array($existingMeta->getAttribute('status'), $transientStatuses)) {
+                    continue;
+                }
                 throw new Exception($this->getDuplicateException(), params: [$key]);
             }
 
@@ -127,6 +144,15 @@ class Create extends Action
                 // If user explicitly provided twoWayKey, report that.
                 // Otherwise report the key that they're trying to create.
                 $conflictingKey = $twoWayKeyWasProvided ? $twoWayKey : $key;
+
+                // Same transient-state guard for the twoWayKey side.
+                $existingMeta = $dbForProject->getDocument(
+                    'attributes',
+                    $database->getSequence() . '_' . $relatedCollectionDocument->getSequence() . '_' . $twoWayKey
+                );
+                if (!$existingMeta->isEmpty() && \in_array($existingMeta->getAttribute('status'), $transientStatuses)) {
+                    continue;
+                }
                 throw new Exception($this->getDuplicateException(), params: [$conflictingKey]);
             }
 
