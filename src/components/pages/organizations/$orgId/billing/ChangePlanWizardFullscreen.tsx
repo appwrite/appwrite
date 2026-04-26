@@ -378,20 +378,26 @@ export function ChangePlanWizardFullscreen() {
         taxId: taxId || null,
       })
 
-      // Payment authentication required (e.g. 3DS): handle inline via handleNextAction.
-      // The backend may return either a bare clientSecret or an object whose
-      // `status` indicates `requires_action` / `requires_authentication`.
+      // 3DS / authentication required: backend signals it by including a
+      // clientSecret on the otherwise-success response. If the response says
+      // requires_action without a clientSecret we have nothing to drive
+      // client-side, so surface that as an explicit error instead of
+      // silently succeeding.
       const resultObj = result as {
         clientSecret?: string
         status?: string | number
       }
-      const needsAction =
-        !!resultObj?.clientSecret ||
-        (typeof resultObj?.status === 'string' &&
-          (resultObj.status === 'requires_action' ||
-            resultObj.status === 'requires_authentication'))
+      const statusRequiresAction =
+        typeof resultObj?.status === 'string' &&
+        (resultObj.status === 'requires_action' ||
+          resultObj.status === 'requires_authentication')
+      if (statusRequiresAction && !resultObj?.clientSecret) {
+        throw new Error(
+          'Payment authentication is required but the server did not return a client secret.',
+        )
+      }
 
-      if (needsAction && resultObj?.clientSecret) {
+      if (resultObj?.clientSecret) {
         // Grab the Stripe provider id so confirmPayment can attach the card
         // if the PaymentIntent still needs a payment method.
         const selectedMethod = paymentMethods.find(

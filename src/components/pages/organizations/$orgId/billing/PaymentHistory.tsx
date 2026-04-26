@@ -191,6 +191,12 @@ export function PaymentHistory() {
         paymentMethodId,
       })
       toast.success('Payment retry initiated')
+      await queryClient.invalidateQueries({
+        queryKey: ['invoices', 'organization', orgId],
+      })
+      await queryClient.invalidateQueries({
+        queryKey: ['organization', orgId],
+      })
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : 'Failed to retry payment',
@@ -339,7 +345,6 @@ export function PaymentHistory() {
                 orgId={orgId}
                 onAuthorize={() => handleAuthorizeInvoice(invoice)}
                 onRetry={() => handleRetryInvoice(invoice)}
-                isRetrying={retryPaymentMutation.isPending}
                 onViewInvoice={async (invoiceId: string) => {
                   if (!orgId) return
                   try {
@@ -493,7 +498,6 @@ interface InvoiceRowProps {
   onDownloadInvoice: (invoiceId: string) => Promise<void>
   onAuthorize: () => Promise<void>
   onRetry: () => Promise<void>
-  isRetrying: boolean
 }
 
 function InvoiceRow({
@@ -503,11 +507,11 @@ function InvoiceRow({
   onDownloadInvoice,
   onAuthorize,
   onRetry,
-  isRetrying,
 }: InvoiceRowProps) {
   const [isViewing, setIsViewing] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
   const [isAuthorizing, setIsAuthorizing] = useState(false)
+  const [isRetrying, setIsRetrying] = useState(false)
 
   const handleAuthorize = async () => {
     setIsAuthorizing(true)
@@ -515,6 +519,15 @@ function InvoiceRow({
       await onAuthorize()
     } finally {
       setIsAuthorizing(false)
+    }
+  }
+
+  const handleRetry = async () => {
+    setIsRetrying(true)
+    try {
+      await onRetry()
+    } finally {
+      setIsRetrying(false)
     }
   }
 
@@ -593,7 +606,7 @@ function InvoiceRow({
               variant="outline"
               className="h-8 gap-1.5 px-2.5 text-[12px]"
               title="Retry payment"
-              onClick={onRetry}
+              onClick={handleRetry}
               disabled={!orgId || isRetrying}
             >
               <RotateCw className="h-3.5 w-3.5" />

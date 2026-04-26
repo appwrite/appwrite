@@ -53,8 +53,15 @@ export function ReadonlyOrgBanner({ orgId }: ReadonlyOrgBannerProps) {
   const hasFailedInvoice = !!failedInvoice?.$id
   const isReadonly = READONLY_STATUSES.has(orgStatus) || hasFailedInvoice
 
-  // Only fetch invoices if the org is actually read-only to avoid noise.
-  const { invoices } = useOrganizationInvoices(isReadonly ? orgId : undefined)
+  // Only fetch invoices if the org is actually read-only to avoid noise. Pull
+  // a wider page than the default so the failed-invoice count is accurate
+  // when an org has many invoices and the failed ones aren't on the first
+  // page (the listing default is 10).
+  const { invoices } = useOrganizationInvoices(
+    isReadonly ? orgId : undefined,
+    0,
+    100,
+  )
 
   const failedCount = useMemo(() => {
     if (!isReadonly) return 0

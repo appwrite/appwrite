@@ -11,7 +11,12 @@ import {
 } from '@/components/ui/select'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
-import type { Stripe, StripeElements, PaymentElement } from '@stripe/stripe-js'
+import type {
+  PaymentMethod as StripePaymentMethod,
+  Stripe,
+  StripeElements,
+  PaymentElement,
+} from '@stripe/stripe-js'
 import { cn } from '@/lib/utils'
 import {
   getStripeInstance,
@@ -378,6 +383,11 @@ export function PaymentMethodForm({
         if (aborted()) return
 
         let finalIntent = existingIntent ?? null
+        // Card object captured from the pre-action SetupIntent. handleNextAction
+        // returns a bare payment_method id, so this is the only path that
+        // exposes the card's country — without it the US state-picker check
+        // would silently fail for any 3DS card.
+        let initialPmCard: StripePaymentMethod.Card | null = null
 
         if (finalIntent?.status !== 'succeeded') {
           await elementsRef.current.submit()
@@ -402,6 +412,18 @@ export function PaymentMethodForm({
           if (aborted()) return
 
           if (stripeError) throw new Error(stripeError.message)
+
+          // confirmSetup honours `expand: ['payment_method']`, so the initial
+          // intent has the full card object. handleNextAction strips that
+          // expansion and returns a bare id, which would hide the card's
+          // country from us — capture the expanded card now and use it as a
+          // fallback after the 3DS step.
+          if (
+            setupIntent?.payment_method &&
+            typeof setupIntent.payment_method === 'object'
+          ) {
+            initialPmCard = setupIntent.payment_method.card ?? null
+          }
 
           // If Stripe couldn't complete the SCA inline it hands control back
           // with status=requires_action — run handleNextAction explicitly.
@@ -432,15 +454,16 @@ export function PaymentMethodForm({
         }
 
         // After handleNextAction / retrieveSetupIntent the payment_method is a
-        // bare id string. Only the confirmSetup + expand path has the card.
+        // bare id string. Only the confirmSetup + expand path has the card,
+        // which we already captured into `initialPmCard` above.
         resolvedProviderMethodId =
           typeof stripePaymentMethod === 'string'
             ? stripePaymentMethod
             : stripePaymentMethod.id
         const pmCard =
-          typeof stripePaymentMethod === 'object'
+          typeof stripePaymentMethod === 'object' && stripePaymentMethod.card
             ? stripePaymentMethod.card
-            : null
+            : initialPmCard
 
         // Cache the card preview for the state picker view whenever we have
         // expanded card info, so every path (US + recovery) shows the user
