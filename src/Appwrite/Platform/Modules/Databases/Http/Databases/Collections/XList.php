@@ -85,7 +85,11 @@ class XList extends Action
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        if (!empty($search)) {
+        // The console may pass the literal string "null" when no search term is provided
+        // (e.g. JavaScript `null` serialized as a query-string value). Treat that as
+        // an empty search so that listCollections returns all collections instead of
+        // searching for a collection named literally "null".
+        if (!empty($search) && $search !== 'null') {
             $queries[] = Query::search('search', $search);
         }
 
