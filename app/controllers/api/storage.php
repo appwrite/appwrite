@@ -606,6 +606,21 @@ App::post('/v1/storage/buckets/:bucketId/files')
             }
 
             $mimeType = $deviceForFiles->getFileMimeType($path); // Get mime-type before compression and encryption
+
+            // Some file formats share underlying container formats (e.g. ZIP), causing
+            // content-based detection to return a generic type. Override with the correct
+            // MIME type for known file extensions to ensure proper handling on download.
+            $extensionMimeMap = [
+                'apk'  => 'application/vnd.android.package-archive',
+                'jar'  => 'application/java-archive',
+                'epub' => 'application/epub+zip',
+                'xpi'  => 'application/x-xpinstall',
+            ];
+            $fileExtension = \strtolower(\pathinfo($fileName, PATHINFO_EXTENSION));
+            if (isset($extensionMimeMap[$fileExtension])) {
+                $mimeType = $extensionMimeMap[$fileExtension];
+            }
+
             $fileHash = $deviceForFiles->getFileHash($path); // Get file hash before compression and encryption
             $data = '';
             // Compression
