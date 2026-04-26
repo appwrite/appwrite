@@ -384,6 +384,11 @@ class Exception extends \Exception
     public const string MESSAGE_TARGET_NOT_PUSH = 'message_target_not_push';
     public const string MESSAGE_MISSING_SCHEDULE = 'message_missing_schedule';
 
+    /** Mocks */
+    public const string MOCK_NUMBER_ALREADY_EXISTS = 'mock_number_already_exists';
+    public const string MOCK_NUMBER_NOT_FOUND = 'mock_number_not_found';
+    public const string MOCK_NUMBER_LIMIT_EXCEEDED = 'mock_number_limit_exceeded';
+
     /** Targets */
     public const string TARGET_PROVIDER_INVALID_TYPE = 'target_provider_invalid_type';
 
