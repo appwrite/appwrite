@@ -62,6 +62,12 @@ class Mails extends Listener
         }
 
         $locale->setDefault($event->locale);
+        // Ensure the fallback locale is always set so that keys missing in the
+        // requested locale (e.g. emails.sessionAlert.*) are resolved from the
+        // system default locale instead of rendering raw template placeholders.
+        if ($locale->fallback === null) {
+            $locale->setFallback(System::getEnv('_APP_LOCALE', 'en'));
+        }
 
         $session = new Document($event->session);
         $smtp = $project->getAttribute('smtp', []);
