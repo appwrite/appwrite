@@ -2,4 +2,4 @@ Allow the user to login to their account using the OAuth2 provider of their choi
 
 If authentication succeeds, `userId` and `secret` of a token will be appended to the success URL as query parameters. These can be used to create a new session using the [Create session](https://appwrite.io/docs/references/cloud/client-web/account#createSession) endpoint.
 
-A user is limited to 100 active sessions at a time by default. [Learn more about session limits](https://appwrite.io/docs/authentication-security#limits).
+A user is limited to maximum of 100 active sessions at a time. [Learn more about session limits](https://appwrite.io/docs/authentication-security#limits).
