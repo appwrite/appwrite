@@ -2,17 +2,33 @@ import * as React from 'react'
 
 import { cn } from '@/lib/utils'
 
-function Table({ className, ...props }: React.ComponentProps<'table'>) {
+type TableProps = React.ComponentProps<'table'> & {
+  /**
+   * When false, renders only the `<table>` (no inner `overflow-x-auto` wrapper).
+   * Use when the parent is already the scroll container and you need `thead` /
+   * `th` `position: sticky` to stick vertically — an intermediate overflow-x
+   * wrapper breaks sticky against an outer `overflow-y-auto`.
+   */
+  withScrollContainer?: boolean
+}
+
+function Table({
+  className,
+  withScrollContainer = true,
+  ...props
+}: TableProps) {
+  const tableClassName = cn('w-full caption-bottom text-sm', className)
+  if (!withScrollContainer) {
+    return (
+      <table data-slot="table" className={tableClassName} {...props} />
+    )
+  }
   return (
     <div
       data-slot="table-container"
       className="relative min-w-0 w-full overflow-x-auto"
     >
-      <table
-        data-slot="table"
-        className={cn('w-full caption-bottom text-sm', className)}
-        {...props}
-      />
+      <table data-slot="table" className={tableClassName} {...props} />
     </div>
   )
 }

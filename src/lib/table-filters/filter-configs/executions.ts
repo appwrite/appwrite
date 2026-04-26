@@ -12,6 +12,7 @@ const EXECUTION_STATUS_ELEMENTS = [
 ]
 
 export const executionsFilterColumns: FilterColumn[] = [
+  { id: '$id', title: '$id', type: 'string' },
   {
     id: 'status',
     title: 'Status',

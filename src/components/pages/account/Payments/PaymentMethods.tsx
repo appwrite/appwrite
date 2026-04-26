@@ -317,22 +317,19 @@ export function AccountPaymentMethods({
                         <TableCell className="px-4 py-3">
                           {hasError ? (
                             <Badge
-                              variant="destructive"
-                              className="h-5 px-2 text-[11px] font-medium"
+                              variant="failed"
+                              className="text-[10px] shrink-0"
                             >
                               {method.expired ? 'Expired' : 'Failed'}
                             </Badge>
                           ) : isExpiringSoon ? (
-                            <Badge
-                              variant="secondary"
-                              className="h-5 px-2 text-[11px] font-medium bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20"
-                            >
+                            <Badge variant="warning" className="text-[10px] shrink-0">
                               Expiring soon
                             </Badge>
                           ) : (
-                            <span className="text-[12px] text-muted-foreground">
+                            <Badge variant="active" className="text-[10px] shrink-0">
                               Active
-                            </span>
+                            </Badge>
                           )}
                         </TableCell>
                       )}
@@ -369,9 +366,9 @@ export function AccountPaymentMethods({
                             </PopoverContent>
                           </Popover>
                         ) : (
-                          <span className="text-[12px] text-muted-foreground">
+                          <Badge variant="inactive" className="text-[10px] shrink-0">
                             Not linked
-                          </span>
+                          </Badge>
                         )}
                       </TableCell>
                       <TableCell className="px-4 py-3 text-right">

@@ -12,7 +12,7 @@ import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
 
 /** Strip ANSI SGR sequences for clipboard text. */
-function stripAnsiForClipboard(text: string): string {
+export function stripAnsiForClipboard(text: string): string {
   return text.replace(/\x1b\[[0-9;]*m/g, '')
 }
 
@@ -247,10 +247,10 @@ export interface BuildLogsViewProps {
   buildLogs: string
   /** Optional search term to filter and highlight lines */
   searchTerm?: string
-  /** Currently selected line number (highlighted row) */
-  selectedLine?: number | null
+  /** Log line numbers (1-based) to highlight as selected. */
+  selectedLines?: ReadonlySet<number> | null
   /** When set, rows are selectable on click and a per-row copy control is shown. */
-  onLineClick?: (lineNumber: number) => void
+  onLineClick?: (lineNumber: number, event: React.MouseEvent<HTMLDivElement>) => void
   /** Ref map for line elements (e.g. for scroll-into-view) */
   lineRefs?: React.MutableRefObject<Map<number, HTMLDivElement>>
   /** Message when buildLogs is empty */
@@ -280,7 +280,7 @@ export interface BuildLogsViewProps {
 export function BuildLogsView({
   buildLogs,
   searchTerm = '',
-  selectedLine = null,
+  selectedLines = null,
   onLineClick,
   lineRefs,
   emptyMessage = 'No build logs available.',
@@ -371,7 +371,8 @@ export function BuildLogsView({
 
     const rows = linesToDisplay.map(({ line, originalLineNumber }, displayIndex) => {
       const parsedLine = parseAnsiLogs(line, term || undefined)
-      const isSelected = selectedLine === originalLineNumber
+      const isSelected =
+        selectedLines != null && selectedLines.has(originalLineNumber)
       const isClickable = !!onLineClick
       const showHover = isClickable || highlightLineOnHover
 
@@ -389,7 +390,7 @@ export function BuildLogsView({
             isClickable
               ? (e) => {
                   e.preventDefault()
-                  onLineClick(originalLineNumber)
+                  onLineClick(originalLineNumber, e)
                 }
               : undefined
           }
@@ -414,7 +415,7 @@ export function BuildLogsView({
           style={gridStyle}
           title={
             isClickable
-              ? `Select line ${originalLineNumber}`
+              ? `Toggle line ${originalLineNumber} (Shift-click adds a range)`
               : highlightLineOnHover
                 ? `Line ${originalLineNumber}`
                 : undefined
@@ -493,7 +494,7 @@ export function BuildLogsView({
   }, [
     buildLogs,
     searchTerm,
-    selectedLine,
+    selectedLines,
     copiedLineNumber,
     copyHiddenUntilLeaveLine,
     onLineClick,
@@ -521,7 +522,9 @@ export function BuildLogsView({
   }
 
   return (
-    <div className={`min-h-full min-w-0 ${className}`}>
+    <div
+      className={cn('min-h-full min-w-0', className, onLineClick && 'select-none')}
+    >
       <div
         className={`${fontSizeClass} font-mono text-foreground flex min-w-0 max-w-full flex-col overflow-x-auto break-all`}
       >

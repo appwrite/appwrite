@@ -18,8 +18,17 @@ import { ACTIVITY_DEFAULT_PAGE_SIZE, DEFAULT_STALE_TIME } from './constants'
 
 export interface FetchActivitiesParams {
   projectId: string
-  page?: number
   limit?: number
+  /**
+   * Next page: pass the last row `$id` from the previous page (`Query.cursorAfter`).
+   * Mutually exclusive with `cursorBefore`.
+   */
+  cursorAfter?: string | null
+  /**
+   * Previous page: pass the first row `$id` from the current page (`Query.cursorBefore`).
+   * Mutually exclusive with `cursorAfter`.
+   */
+  cursorBefore?: string | null
   /** Optional filter by `event` value (e.g. "users.create"). Matches via Query.equal. */
   event?: string
   /** Optional filter by resource type (e.g. "users", "files"). */
@@ -32,33 +41,39 @@ export interface FetchActivitiesParams {
 
 export interface ActivitiesResult {
   events: Models.ActivityEvent[]
-  total: number
+  /** True when the API may have more rows after this page (`total` was not requested). */
+  hasMore: boolean
 }
 
 /**
  * Fetches a page of activity events for a project.
  *
+ * Uses [cursor pagination](https://appwrite.io/docs/products/databases/pagination)
+ * (`Query.cursorAfter` / `Query.cursorBefore`) with `orderDesc('time')`, not offset.
  * Reused in both the route loader (via `activitiesQueryOptions`) and the
  * `useProjectActivities` hook so cache keys match exactly.
  */
 export async function fetchProjectActivities({
   projectId,
-  page = 0,
   limit = ACTIVITY_DEFAULT_PAGE_SIZE,
+  cursorAfter,
+  cursorBefore,
   event,
   resourceType,
   userId,
   since,
 }: FetchActivitiesParams): Promise<ActivitiesResult> {
   if (!projectId) {
-    return { events: [], total: 0 }
+    return { events: [], hasMore: false }
   }
 
-  const queries: string[] = [
-    Query.orderDesc('time'),
-    Query.limit(limit),
-    Query.offset(page * limit),
-  ]
+  const queries: string[] = [Query.orderDesc('time'), Query.limit(limit)]
+
+  if (cursorBefore) {
+    queries.push(Query.cursorBefore(cursorBefore))
+  } else if (cursorAfter) {
+    queries.push(Query.cursorAfter(cursorAfter))
+  }
 
   if (event) queries.push(Query.equal('event', event))
   if (resourceType) queries.push(Query.equal('resourceType', resourceType))
@@ -68,13 +83,19 @@ export async function fetchProjectActivities({
   // The SDK type definition for `listEvents` declares `queries: string`, but
   // the runtime accepts the same `string[]` shape used by every other list
   // endpoint and serializes it as `queries[]=...`. Cast to satisfy the type.
-  const response = await sdk
-    .forProject(projectId)
-    .activities.listEvents({ queries: queries as unknown as string })
+  const projectSdk = sdk.forProject(projectId)
+  const endpoint = projectSdk.client.config.endpoint as string
+  const uri = new URL(`${endpoint}/activities/events`)
+  const response = (await projectSdk.client.call('get', uri, {}, {
+    queries: queries as unknown as string,
+    total: false,
+  })) as Models.ActivityEventList
+
+  const events = response.events ?? []
 
   return {
-    events: response.events ?? [],
-    total: response.total ?? 0,
+    events,
+    hasMore: events.length === limit,
   }
 }
 
@@ -84,8 +105,9 @@ export async function fetchProjectActivities({
 
 export function activitiesQueryOptions(params: {
   projectId: string | null | undefined
-  page?: number
   limit?: number
+  cursorAfter?: string | null
+  cursorBefore?: string | null
   event?: string
   resourceType?: string
   userId?: string
@@ -93,8 +115,9 @@ export function activitiesQueryOptions(params: {
 }) {
   const {
     projectId,
-    page = 0,
     limit = ACTIVITY_DEFAULT_PAGE_SIZE,
+    cursorAfter = null,
+    cursorBefore = null,
     event,
     resourceType,
     userId,
@@ -106,8 +129,9 @@ export function activitiesQueryOptions(params: {
       'activities',
       'project',
       projectId,
-      page,
       limit,
+      cursorAfter ?? null,
+      cursorBefore ?? null,
       event ?? null,
       resourceType ?? null,
       userId ?? null,
@@ -116,8 +140,9 @@ export function activitiesQueryOptions(params: {
     queryFn: () =>
       fetchProjectActivities({
         projectId: projectId!,
-        page,
         limit,
+        cursorAfter,
+        cursorBefore,
         event,
         resourceType,
         userId,
@@ -143,8 +168,9 @@ export function activitiesQueryOptions(params: {
  */
 export function useProjectActivities(params: {
   projectId: string | null | undefined
-  page?: number
   limit?: number
+  cursorAfter?: string | null
+  cursorBefore?: string | null
   event?: string
   resourceType?: string
   userId?: string
@@ -156,7 +182,7 @@ export function useProjectActivities(params: {
 
   return {
     events: data?.events ?? [],
-    total: data?.total ?? 0,
+    hasMore: data?.hasMore ?? false,
     isLoading,
     isFetching,
     error,

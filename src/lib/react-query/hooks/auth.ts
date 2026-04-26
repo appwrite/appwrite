@@ -10,10 +10,14 @@ import {
   useQuery,
   useQueryClient,
   queryOptions,
+  type QueryClient,
 } from '@tanstack/react-query'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
+  buildDatabasesSidebarWidthPrefs,
   buildSavedFiltersPrefs,
+  DATABASES_SIDEBAR_WIDTH_DEFAULT_PERCENT,
+  parseDatabasesSidebarWidthPercent,
   parseSavedFilters,
   MAX_SAVED_FILTER_NAME_LENGTH,
   clearRecentImpersonationSessionList,
@@ -26,6 +30,24 @@ import {
 import type { SavedFilter } from '@/lib/user-prefs-keys'
 import { DEFAULT_STALE_TIME } from './constants'
 import { useConsoleTeam, useUpdateConsoleTeamPrefs } from './teams'
+
+type ConsoleAccountCache = { prefs?: Record<string, unknown> }
+
+/**
+ * Account is cached under `['account', 'console', consoleImpersonationRevision]`.
+ * `getQueryData(['account', 'console'])` never matches — use prefix query (see useSidebarCollapsed).
+ */
+function getConsoleAccountFromCache(
+  queryClient: QueryClient,
+): ConsoleAccountCache | undefined {
+  const rows = queryClient.getQueriesData<ConsoleAccountCache>({
+    queryKey: ['account', 'console'],
+  })
+  for (const [, data] of rows) {
+    if (data) return data
+  }
+  return undefined
+}
 
 // ============================================================================
 // AUTH SECURITY FEATURES
@@ -586,8 +608,8 @@ export function useToggleFeatureNotification() {
 
   return useMutation({
     mutationFn: async (featureId: string) => {
-      // Get current account data from cache
-      const account = queryClient.getQueryData<unknown>(['account', 'console'])
+      // Get current account data from cache (key includes consoleImpersonationRevision)
+      const account = getConsoleAccountFromCache(queryClient)
 
       if (!account) {
         throw new Error('Account data not available')
@@ -692,6 +714,74 @@ export function useSidebarCollapsed(
 }
 
 // ============================================================================
+// DATABASES SIDEBAR WIDTH PREFERENCE
+// ============================================================================
+
+/**
+ * Hook to manage the persisted width (percent) of the tables sidebar inside
+ * the database detail view. Persisted in `account.prefs` under
+ * `console.databases.sidebarWidth` so the value follows the user across
+ * devices and browsers and is shared across all databases/tables.
+ *
+ * Reads synchronously from the cached account, writes asynchronously through
+ * `account.updatePrefs` with optimistic cache updates (matches the pattern of
+ * `useSidebarCollapsed`).
+ *
+ * Must be used within RequireAuth (or where the account query is loaded).
+ */
+export function useDatabasesSidebarWidth(
+  account: { prefs?: Record<string, unknown> } | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  const widthPercent =
+    parseDatabasesSidebarWidthPercent(account?.prefs) ??
+    DATABASES_SIDEBAR_WIDTH_DEFAULT_PERCENT
+
+  const updateMutation = useMutation({
+    mutationFn: async (value: number) => {
+      if (!account) {
+        throw new Error('Account data not available')
+      }
+      return await updateAccountPrefs({
+        ...account.prefs,
+        ...buildDatabasesSidebarWidthPrefs(value),
+      })
+    },
+    // The auth query key includes consoleImpersonationRevision, so an exact
+    // ['account', 'console'] lookup misses it. Use prefix matching to update
+    // every cached variant optimistically.
+    onMutate: async (value) => {
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: {
+                  ...current.prefs,
+                  ...buildDatabasesSidebarWidthPrefs(value),
+                },
+              }
+            : current,
+      )
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    },
+  })
+
+  const setWidthPercent = useCallback(
+    (value: number) => {
+      updateMutation.mutate(value)
+    },
+    [updateMutation],
+  )
+
+  return { widthPercent, setWidthPercent }
+}
+
+// ============================================================================
 // SAVED FILTERS (USER AND TEAM PREFERENCES)
 // ============================================================================
 
@@ -731,9 +821,7 @@ export function useSavedFilters(
       query: string
       sort?: string
     }) => {
-      const currentAccount = queryClient.getQueryData<{
-        prefs?: Record<string, unknown>
-      }>(['account', 'console'])
+      const currentAccount = getConsoleAccountFromCache(queryClient)
       if (!currentAccount || !scope) {
         throw new Error('Account or filter scope not available')
       }
@@ -800,9 +888,7 @@ export function useSavedFilters(
 
   const deleteUserMutation = useMutation({
     mutationFn: async (id: string) => {
-      const currentAccount = queryClient.getQueryData<{
-        prefs?: Record<string, unknown>
-      }>(['account', 'console'])
+      const currentAccount = getConsoleAccountFromCache(queryClient)
       if (!currentAccount || !scope) {
         throw new Error('Account or filter scope not available')
       }
@@ -845,9 +931,7 @@ export function useSavedFilters(
 
   const reorderUserMutation = useMutation({
     mutationFn: async (orderedFilters: SavedFilter[]) => {
-      const currentAccount = queryClient.getQueryData<{
-        prefs?: Record<string, unknown>
-      }>(['account', 'console'])
+      const currentAccount = getConsoleAccountFromCache(queryClient)
       if (!currentAccount || !scope) {
         throw new Error('Account or filter scope not available')
       }
@@ -921,9 +1005,7 @@ export function useSavedFilters(
 
   const updateUserFilterMutation = useMutation({
     mutationFn: async ({ id, name }: { id: string; name: string }) => {
-      const currentAccount = queryClient.getQueryData<{
-        prefs?: Record<string, unknown>
-      }>(['account', 'console'])
+      const currentAccount = getConsoleAccountFromCache(queryClient)
       if (!currentAccount || !scope) {
         throw new Error('Account or filter scope not available')
       }

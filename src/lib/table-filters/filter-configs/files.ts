@@ -5,6 +5,7 @@
 import type { FilterColumn } from '../types'
 
 export const filesFilterColumns: FilterColumn[] = [
+  { id: '$id', title: '$id', type: 'string' },
   { id: 'name', title: 'Name', type: 'string' },
   { id: 'signature', title: 'Signature', type: 'string' },
   { id: 'mimeType', title: 'MIME type', type: 'string' },

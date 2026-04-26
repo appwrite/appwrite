@@ -799,3 +799,270 @@ html:is(.crazy, .stealth, .premium, .high-contrast, .barbie, .nineties) .upgrade
 .dark .find-in-file-highlight {
   background-color: rgba(255, 193, 7, 0.35);
 }
+
+/* Project selector plan pill - “strained” split when billing needs attention */
+@keyframes plan-badge-split-left {
+  0%,
+  38%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(-2.5px);
+  }
+  62% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes plan-badge-split-right {
+  0%,
+  38%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(2.5px);
+  }
+  62% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes plan-badge-split-crack {
+  0%,
+  38%,
+  100% {
+    opacity: 0.75;
+    transform: translateX(-50%) scaleY(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(-50%) scaleY(1.12);
+  }
+  62% {
+    opacity: 0.75;
+    transform: translateX(-50%) scaleY(1);
+  }
+}
+
+.plan-badge-split-left {
+  animation: plan-badge-split-left 2.4s ease-in-out infinite;
+}
+
+.plan-badge-split-right {
+  animation: plan-badge-split-right 2.4s ease-in-out infinite;
+}
+
+.plan-badge-split-crack {
+  animation: plan-badge-split-crack 2.4s ease-in-out infinite;
+}
+
+/* Glass-like shards - one burst after delay; timing vars set on .plan-badge-stress-wrap */
+@keyframes plan-badge-stress-rumble-once {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  4% {
+    transform: translate3d(-0.55px, 0.4px, 0) rotate(-0.55deg);
+  }
+  8% {
+    transform: translate3d(0.45px, -0.5px, 0) rotate(0.45deg);
+  }
+  12% {
+    transform: translate3d(-0.35px, -0.35px, 0) rotate(-0.35deg);
+  }
+  16% {
+    transform: translate3d(0.35px, 0.3px, 0) rotate(0.28deg);
+  }
+  20% {
+    transform: translate3d(-0.2px, 0.15px, 0) rotate(-0.15deg);
+  }
+  26%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+}
+
+@keyframes plan-badge-shard-orbit {
+  0% {
+    opacity: 0;
+    transform: translate3d(-50%, -50%, 0) rotate(var(--r0, 0deg)) scale(0.12);
+  }
+  11% {
+    opacity: 0.92;
+    transform: translate3d(-50%, -50%, 0) rotate(var(--r0, 0deg)) scale(1);
+  }
+  52% {
+    opacity: 0.42;
+    transform: translate3d(
+        calc(-50% + var(--sx) * 0.52),
+        calc(-50% + var(--sy) * 0.52),
+        0
+      )
+      rotate(var(--r1, 0deg)) scale(0.62);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(
+        calc(-50% + var(--sx)),
+        calc(-50% + var(--sy)),
+        0
+      )
+      rotate(var(--r2, 0deg)) scale(0.08);
+  }
+}
+
+@keyframes plan-badge-stress-crack-once {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scaleY(0.35);
+  }
+  14% {
+    opacity: 1;
+    transform: translateX(-50%) scaleY(1.18);
+  }
+  32% {
+    opacity: 0.88;
+    transform: translateX(-50%) scaleY(1.06);
+  }
+  55% {
+    opacity: 0.35;
+    transform: translateX(-50%) scaleY(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) scaleY(0.9);
+  }
+}
+
+@keyframes plan-badge-label-vanish {
+  0% {
+    opacity: 1;
+  }
+  20% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Outer: hinge near top-right; falls after burst so clicks pass through when done */
+@keyframes plan-badge-outer-fall {
+  0% {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: rotate(0deg) translate3d(0, 0, 0);
+  }
+  5% {
+    transform: rotate(-10deg) translate3d(0, 0, 0);
+  }
+  11% {
+    transform: rotate(6deg) translate3d(0, 0, 0);
+  }
+  17% {
+    transform: rotate(-8deg) translate3d(0, 0, 0);
+  }
+  23% {
+    transform: rotate(5deg) translate3d(0, 0, 0);
+  }
+  29% {
+    transform: rotate(-6deg) translate3d(0, 0, 0);
+  }
+  35% {
+    transform: rotate(4deg) translate3d(0, 1px, 0);
+  }
+  /* Slip off the “nail”, still tilted */
+  42% {
+    transform: rotate(-11deg) translate3d(0, 4px, 0);
+    opacity: 1;
+  }
+  /* Straighten while dropping — shorter travel, opacity eases out smoothly */
+  50% {
+    transform: rotate(-7deg) translate3d(0, 12px, 0);
+    opacity: 1;
+  }
+  58% {
+    transform: rotate(-3deg) translate3d(0, 22px, 0);
+    opacity: 0.88;
+  }
+  66% {
+    transform: rotate(-1deg) translate3d(0, 30px, 0);
+    opacity: 0.68;
+  }
+  74% {
+    transform: rotate(0deg) translate3d(0, 36px, 0);
+    opacity: 0.48;
+  }
+  82% {
+    transform: rotate(0deg) translate3d(0, 42px, 0);
+    opacity: 0.28;
+  }
+  90% {
+    transform: rotate(0deg) translate3d(0, 46px, 0);
+    opacity: 0.12;
+  }
+  97% {
+    transform: rotate(0deg) translate3d(0, 48px, 0);
+    opacity: 0.03;
+  }
+  99%,
+  100% {
+    transform: rotate(0deg) translate3d(0, 50px, 0);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+
+.plan-badge-stress-outer {
+  --plan-badge-burst-delay: 3s;
+  --plan-badge-burst-duration: 1.35s;
+  --plan-badge-fall-duration: 1.65s;
+  transform-origin: 88% 0;
+  animation: plan-badge-outer-fall var(--plan-badge-fall-duration)
+    cubic-bezier(0.25, 0.46, 0.45, 0.94)
+    calc(var(--plan-badge-burst-delay) + var(--plan-badge-burst-duration))
+    forwards;
+}
+
+/* Inner pill: rumble only during burst; inherits timing vars for shards / crack / label */
+.plan-badge-stress-inner {
+  animation: plan-badge-stress-rumble-once var(--plan-badge-burst-duration)
+    ease-in-out var(--plan-badge-burst-delay) both;
+}
+
+/* Intact until burst: invisible crack (no line) until animation applies 0%+ */
+.plan-badge-stress-crack {
+  opacity: 0;
+  transform: translateX(-50%) scaleY(0.35);
+  animation: plan-badge-stress-crack-once var(--plan-badge-burst-duration)
+    ease-out var(--plan-badge-burst-delay) both;
+}
+
+.plan-badge-stress-label {
+  animation: plan-badge-label-vanish var(--plan-badge-burst-duration) ease-out
+    var(--plan-badge-burst-delay) both;
+}
+
+/* Intact until burst: shards fully hidden during delay */
+.plan-badge-shard {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 12px;
+  height: 14px;
+  opacity: 0;
+  transform: translate3d(-50%, -50%, 0);
+  transform-origin: center center;
+  background: color-mix(in oklch, currentColor 44%, transparent);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklch, currentColor 22%, transparent),
+    0 0 6px color-mix(in oklch, currentColor 15%, transparent);
+  animation: plan-badge-shard-orbit var(--plan-badge-burst-duration, 1.35s)
+    cubic-bezier(0.22, 0.82, 0.28, 1)
+    calc(var(--plan-badge-burst-delay, 3s) + var(--shard-delay, 0s)) both;
+  will-change: transform, opacity;
+}

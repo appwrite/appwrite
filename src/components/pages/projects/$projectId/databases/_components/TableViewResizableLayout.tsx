@@ -1,10 +1,19 @@
 import type { ReactNode } from 'react'
-import { useLayoutEffect, useMemo, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
 } from '@/components/ui/resizable'
+import { useAuth } from '@/components/global/auth/RequireAuth'
+import { useDatabasesSidebarWidth } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
 
 /** Above rows grid stickies (`z-20`–`z-40` in View.tsx), below overlays (`z-50+`). */
@@ -27,6 +36,9 @@ const SIDEBAR_MAX_WIDTH_PX = 480
 /** Also cap sidebar max at this % (matches previous `maxSize={40}` on smaller groups). */
 const SIDEBAR_MAX_PERCENT_CAP = 40
 
+/** Debounce window for persisting the sidebar width to user prefs. */
+const PERSIST_DEBOUNCE_MS = 250
+
 function pxToMinPercent(
   px: number,
   containerWidth: number,
@@ -39,8 +51,6 @@ function pxToMinPercent(
 type TableViewResizableLayoutProps = {
   sidebar: ReactNode
   children: ReactNode
-  /** Persists panel sizes in localStorage (react-resizable-panels) */
-  autoSaveId?: string
   className?: string
 }
 
@@ -50,15 +60,29 @@ type TableViewResizableLayoutProps = {
  *
  * Minimum widths are defined in px; the library only accepts %, so we measure
  * the group and convert (see react-resizable-panels constraint notes).
+ *
+ * The sidebar width is persisted in user (account) preferences as a single
+ * shared setting (`console.databases.sidebarWidth`) so it follows the user
+ * across devices and is the same across all databases and tables.
  */
 export function TableViewResizableLayout({
   sidebar,
   children,
-  autoSaveId = 'database-table-view-sidebar',
   className,
 }: TableViewResizableLayoutProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [containerWidth, setContainerWidth] = useState(0)
+  const { account } = useAuth()
+  const { widthPercent, setWidthPercent } = useDatabasesSidebarWidth(
+    account as { prefs?: Record<string, unknown> } | undefined,
+  )
+
+  // Capture the initial persisted width once so the panel group is created
+  // with stable `defaultSize` props (changing them later would otherwise
+  // cause the library to reset the layout while the user is dragging).
+  const initialWidthPercentRef = useRef(widthPercent)
+  const initialSidebarPercent = initialWidthPercentRef.current
+  const initialMainPercent = 100 - initialSidebarPercent
 
   useLayoutEffect(() => {
     const el = containerRef.current
@@ -91,6 +115,35 @@ export function TableViewResizableLayout({
     }
   }, [containerWidth])
 
+  // Persist the sidebar width to user prefs after the user stops resizing.
+  const persistTimerRef = useRef<number | null>(null)
+  const lastPersistedRef = useRef(widthPercent)
+  const handleLayout = useCallback(
+    (sizes: number[]) => {
+      const next = sizes[0]
+      if (typeof next !== 'number' || !Number.isFinite(next)) return
+      // Avoid spamming the API if the size hasn't meaningfully changed.
+      if (Math.abs(next - lastPersistedRef.current) < 0.1) return
+      if (persistTimerRef.current !== null) {
+        window.clearTimeout(persistTimerRef.current)
+      }
+      persistTimerRef.current = window.setTimeout(() => {
+        persistTimerRef.current = null
+        lastPersistedRef.current = next
+        setWidthPercent(next)
+      }, PERSIST_DEBOUNCE_MS)
+    },
+    [setWidthPercent],
+  )
+
+  useEffect(() => {
+    return () => {
+      if (persistTimerRef.current !== null) {
+        window.clearTimeout(persistTimerRef.current)
+      }
+    }
+  }, [])
+
   return (
     <div
       ref={containerRef}
@@ -101,11 +154,11 @@ export function TableViewResizableLayout({
     >
       <ResizablePanelGroup
         direction="horizontal"
-        autoSaveId={autoSaveId}
         className="h-full min-h-0 min-w-0 flex-1"
+        onLayout={handleLayout}
       >
         <ResizablePanel
-          defaultSize={20}
+          defaultSize={initialSidebarPercent}
           minSize={sidebarMinPercent}
           maxSize={sidebarMaxPercent}
           className="min-w-0"
@@ -116,7 +169,7 @@ export function TableViewResizableLayout({
         </ResizablePanel>
         <ResizableHandle className={HANDLE_CLASS} />
         <ResizablePanel
-          defaultSize={80}
+          defaultSize={initialMainPercent}
           minSize={mainMinPercent}
           className="min-w-0"
         >

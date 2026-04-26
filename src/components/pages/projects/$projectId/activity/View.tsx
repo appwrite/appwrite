@@ -1,4 +1,6 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
+import { getRouteApi } from '@tanstack/react-router'
+import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import {
   Activity,
@@ -18,14 +20,11 @@ import {
   Clock,
   X,
   AlertCircle,
-  Info,
 } from '@/lib/icons'
 import type { Models } from '@appwrite.io/console'
 import { ServiceHeader } from '../shared/ServiceHeader'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Pagination } from '@/components/global/shared/Pagination'
-import { CopyableId } from '@/components/global/shared/CopyableId'
-import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Button } from '@/components/ui/button'
 import {
@@ -38,7 +37,10 @@ import {
 } from '@/components/ui/table'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { ACTIVITY_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
-import { useProjectActivities } from '@/lib/react-query/hooks/activities'
+import {
+  useProjectActivities,
+  useProjectActivity,
+} from '@/lib/react-query/hooks/activities'
 
 import {
   Select,
@@ -47,12 +49,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
 import type { PlanType } from '@/server/functions/activities'
+import { ActivityLogDrawer } from '@/components/pages/projects/$projectId/activity/ActivityLogDrawer'
+import {
+  hasHumanEmail,
+  userTypeBadge,
+} from '@/components/pages/projects/$projectId/activity/activity-utils'
+import { UserTypeAvatar } from '@/components/pages/projects/$projectId/activity/UserTypeAvatar'
+
+const activityRouteApi = getRouteApi('/_public/projects/$projectId/activity')
 
 // Action types and their visual representation
 type ActionType =
@@ -111,15 +116,15 @@ type ResourceType =
   | 'project'
 
 const resourceIcons: Record<ResourceType, React.ReactNode> = {
-  document: <FileText className="h-3.5 w-3.5" />,
-  collection: <Folder className="h-3.5 w-3.5" />,
-  database: <Database className="h-3.5 w-3.5" />,
-  file: <FileText className="h-3.5 w-3.5" />,
-  bucket: <Folder className="h-3.5 w-3.5" />,
-  function: <Zap className="h-3.5 w-3.5" />,
-  user: <Users className="h-3.5 w-3.5" />,
-  team: <Users className="h-3.5 w-3.5" />,
-  project: <Server className="h-3.5 w-3.5" />,
+  document: <FileText className="h-4 w-4" />,
+  collection: <Folder className="h-4 w-4" />,
+  database: <Database className="h-4 w-4" />,
+  file: <FileText className="h-4 w-4" />,
+  bucket: <Folder className="h-4 w-4" />,
+  function: <Zap className="h-4 w-4" />,
+  user: <Users className="h-4 w-4" />,
+  team: <Users className="h-4 w-4" />,
+  project: <Server className="h-4 w-4" />,
 }
 
 /**
@@ -130,6 +135,7 @@ const resourceIcons: Record<ResourceType, React.ReactNode> = {
 interface DisplayActivity {
   $id: string
   userId: string
+  userType: string
   userName: string
   userEmail: string
   action: ActionType
@@ -212,6 +218,7 @@ function toDisplayActivity(event: Models.ActivityEvent): DisplayActivity {
   return {
     $id: event.$id,
     userId: event.userId,
+    userType: event.userType || '',
     userName: event.userName || event.userEmail || 'Unknown',
     userEmail: event.userEmail || '',
     action: eventToActionType(event.event),
@@ -262,14 +269,30 @@ interface ViewProps {
 }
 
 export function View({ projectId, plan = 'pro' }: ViewProps) {
+  const navigate = activityRouteApi.useNavigate()
+  const { event: eventIdFromUrl } = activityRouteApi.useSearch()
+
   const [searchValue, setSearchValue] = useState('')
   const [actionFilter, setActionFilter] = useState<string>('')
   const [resourceTypeFilter, setResourceTypeFilter] = useState<string>('')
   const [showFilters, setShowFilters] = useState(false)
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [selectedEvent, setSelectedEvent] =
+    useState<Models.ActivityEvent | null>(null)
 
-  // Pagination state (1-indexed in UI, 0-indexed for the API)
+  // Pagination: 1-based page for the UI; API uses Appwrite cursor pagination
+  // (cursorAfter = last $id of previous page, cursorBefore = first $id of current page).
   const [currentPage, setCurrentPage] = useState(1)
+  const [listCursor, setListCursor] = useState<{
+    cursorAfter: string | null
+    cursorBefore: string | null
+  }>({ cursorAfter: null, cursorBefore: null })
   const [pageSize, setPageSize] = useState(ACTIVITY_DEFAULT_PAGE_SIZE)
+
+  const resetListPosition = useCallback(() => {
+    setCurrentPage(1)
+    setListCursor({ cursorAfter: null, cursorBefore: null })
+  }, [])
 
   // Plan-based retention window. We pass this to the API as a `since`
   // filter so the server only returns events within the plan's window.
@@ -281,17 +304,90 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
 
   const {
     events,
-    total,
+    hasMore,
     isLoading,
     isFetching,
     refetch,
   } = useProjectActivities({
     projectId,
-    page: currentPage - 1,
     limit: pageSize,
+    cursorAfter: listCursor.cursorAfter,
+    cursorBefore: listCursor.cursorBefore,
     resourceType: resourceTypeFilter || undefined,
     since,
   })
+
+  const eventOnCurrentList = useMemo(
+    () =>
+      eventIdFromUrl
+        ? events.some((e) => e.$id === eventIdFromUrl)
+        : false,
+    [eventIdFromUrl, events],
+  )
+
+  const { event: fetchedEventById, error: singleEventError } =
+    useProjectActivity(
+      projectId,
+      eventIdFromUrl && !eventOnCurrentList ? eventIdFromUrl : undefined,
+    )
+
+  // Deep link / share: `?event=<activity $id>` opens the drawer when the event
+  // exists on the current page or loads via `getEvent`.
+  useEffect(() => {
+    if (!eventIdFromUrl) return
+
+    const fromList = events.find((e) => e.$id === eventIdFromUrl)
+    if (fromList) {
+      setSelectedEvent(fromList)
+      setDrawerOpen(true)
+      return
+    }
+
+    if (fetchedEventById?.$id === eventIdFromUrl) {
+      setSelectedEvent(fetchedEventById)
+      setDrawerOpen(true)
+    }
+  }, [eventIdFromUrl, events, fetchedEventById])
+
+  useEffect(() => {
+    if (!eventIdFromUrl || !singleEventError) return
+    toast.error('Activity log not found or unavailable.')
+    navigate({
+      search: (prev) => ({ ...prev, event: undefined }),
+      replace: true,
+    })
+  }, [eventIdFromUrl, singleEventError, navigate])
+
+  // Browser back/forward: closing `event` in the URL closes the drawer.
+  useEffect(() => {
+    if (eventIdFromUrl) return
+    if (!drawerOpen) return
+    setDrawerOpen(false)
+    setSelectedEvent(null)
+  }, [eventIdFromUrl, drawerOpen])
+
+  const handlePageChange = useCallback(
+    (nextPage: number) => {
+      if (nextPage <= 1) {
+        resetListPosition()
+        return
+      }
+      if (nextPage === currentPage + 1) {
+        const lastId = events.at(-1)?.$id
+        if (!lastId) return
+        setCurrentPage(nextPage)
+        setListCursor({ cursorAfter: lastId, cursorBefore: null })
+        return
+      }
+      if (nextPage === currentPage - 1) {
+        const firstId = events[0]?.$id
+        if (!firstId) return
+        setCurrentPage(nextPage)
+        setListCursor({ cursorAfter: null, cursorBefore: firstId })
+      }
+    },
+    [currentPage, events, resetListPosition],
+  )
 
   // Convert API events to the display shape the table expects.
   const displayedActivities = useMemo(
@@ -320,6 +416,37 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
     })
   }, [displayedActivities, actionFilter, searchValue])
 
+  const filteredIds = useMemo(
+    () => new Set(filteredActivities.map((a) => a.$id)),
+    [filteredActivities],
+  )
+
+  const filteredRawEvents = useMemo(
+    () => events.filter((e) => filteredIds.has(e.$id)),
+    [events, filteredIds],
+  )
+
+  const openActivityDrawer = useCallback(
+    (event: Models.ActivityEvent) => {
+      setSelectedEvent(event)
+      setDrawerOpen(true)
+      navigate({
+        search: (prev) => ({ ...prev, event: event.$id }),
+        replace: true,
+      })
+    },
+    [navigate],
+  )
+
+  const closeActivityDrawer = useCallback(() => {
+    setDrawerOpen(false)
+    setSelectedEvent(null)
+    navigate({
+      search: (prev) => ({ ...prev, event: undefined }),
+      replace: true,
+    })
+  }, [navigate])
+
   const handleSearchChange = (value: string) => {
     setSearchValue(value)
   }
@@ -327,14 +454,14 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
   const clearFilters = () => {
     setActionFilter('')
     setResourceTypeFilter('')
-    setCurrentPage(1)
+    resetListPosition()
   }
 
   const hasActiveFilters = Boolean(actionFilter || resourceTypeFilter)
 
   return (
-    <div className="flex flex-col">
-      <div className="sticky top-0 z-20 bg-background">
+    <div className="flex flex-col h-full min-h-0">
+      <div className="sticky top-0 z-20 bg-background shrink-0">
         <ServiceHeader
           title="Activity"
           searchPlaceholder="Search activities..."
@@ -427,7 +554,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
                 value={actionFilter}
                 onValueChange={(value) => {
                   setActionFilter(value)
-                  setCurrentPage(1)
+                  resetListPosition()
                 }}
               >
                 <SelectTrigger className="h-8 w-[140px] text-[12px]">
@@ -451,7 +578,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
                 value={resourceTypeFilter}
                 onValueChange={(value) => {
                   setResourceTypeFilter(value)
-                  setCurrentPage(1)
+                  resetListPosition()
                 }}
               >
                 <SelectTrigger className="h-8 w-[140px] text-[12px]">
@@ -487,8 +614,10 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
         )}
       </div>
 
-      {/* Activity Table */}
-      <div className="flex-1">
+      {/* Activity table + pagination: flex column so only the table body scrolls
+          (sticky thead needs its nearest scroll ancestor to be the table area,
+          not a parent that also wraps the pagination bar). */}
+      <div className="flex flex-1 min-h-0 flex-col">
         {/* Plan upgrade notice for free tier */}
         {plan === 'free' && (
           <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-900/50 dark:bg-amber-950/20">
@@ -514,161 +643,170 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
 
         {filteredActivities.length > 0 ? (
           <>
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent border-b border-border">
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[200px] pl-6 sm:pl-8">
-                    Event
-                  </TableHead>
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[200px]">
-                    Resource
-                  </TableHead>
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
-                    User
-                  </TableHead>
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[280px]">
-                    Description
-                  </TableHead>
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[140px]">
-                    Time
-                  </TableHead>
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[50px] pr-6 sm:pr-8"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredActivities.map((activity) => (
-                  <TableRow
-                    key={activity.$id}
-                    className="cursor-pointer"
-                    onClick={() => {}}
-                  >
-                    <TableCell className="pl-6 sm:pl-8 py-3">
-                      <div className="flex items-center gap-2.5">
-                        <div
-                          className={cn(
-                            'flex h-7 w-7 shrink-0 items-center justify-center rounded-md',
-                            actionColors[activity.action],
-                          )}
-                        >
-                          {actionIcons[activity.action]}
-                        </div>
-                        <span className="text-[13px] font-medium text-foreground">
-                          {actionLabels[activity.action]}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-muted text-muted-foreground">
-                          {resourceIcons[activity.resourceType]}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="truncate text-[13px] font-medium text-foreground">
-                            {activity.resourceName}
-                          </p>
-                          <p className="text-[11px] capitalize text-muted-foreground">
-                            {activity.resourceType}
-                          </p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      <div className="flex items-center gap-2.5">
-                        <InitialsAvatar name={activity.userName} size="sm" />
-                        <div className="min-w-0">
-                          <p className="truncate text-[13px] font-medium text-foreground">
-                            {activity.userName}
-                          </p>
-                          <p className="truncate text-[11px] text-muted-foreground">
-                            {activity.userEmail}
-                          </p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      <p className="truncate text-[12px] text-muted-foreground">
-                        {activity.description || '-'}
-                      </p>
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      <DateTooltip
-                        date={activity.timestamp}
-                        className="text-[12px] text-muted-foreground"
-                      />
-                    </TableCell>
-                    <TableCell className="pr-6 sm:pr-8 py-3">
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 w-7 p-0"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Info className="h-4 w-4 text-muted-foreground" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent align="end" className="w-72">
-                          <div className="space-y-3">
-                            <div>
-                              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                                Activity ID
-                              </p>
-                              <CopyableId
-                                id={activity.$id}
-                                size="xs"
-                                className="mt-1"
-                              />
-                            </div>
-                            <div>
-                              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                                Resource ID
-                              </p>
-                              <CopyableId
-                                id={activity.resourceId}
-                                size="xs"
-                                className="mt-1"
-                              />
-                            </div>
-                            <div>
-                              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                                User ID
-                              </p>
-                              <CopyableId
-                                id={activity.userId}
-                                size="xs"
-                                className="mt-1"
-                              />
-                            </div>
-                            {activity.ipAddress && (
-                              <div>
-                                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                                  IP Address
-                                </p>
-                                <p className="mt-1 text-[12px] text-foreground">
-                                  {activity.ipAddress}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-                    </TableCell>
+            <div className="min-h-0 flex-1 overflow-auto">
+              <Table withScrollContainer={false}>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent border-b border-border">
+                    <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[200px] pl-6 sm:pl-8 shadow-[inset_0_-1px_0_var(--border)]">
+                      Event
+                    </TableHead>
+                    <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[min(22rem,32vw)] min-w-[12rem] shadow-[inset_0_-1px_0_var(--border)]">
+                      Resource
+                    </TableHead>
+                    <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px] shadow-[inset_0_-1px_0_var(--border)]">
+                      User
+                    </TableHead>
+                    <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px] shadow-[inset_0_-1px_0_var(--border)]">
+                      Type
+                    </TableHead>
+                    <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[280px] shadow-[inset_0_-1px_0_var(--border)]">
+                      Description
+                    </TableHead>
+                    <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 pr-6 sm:pr-8 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[140px] shadow-[inset_0_-1px_0_var(--border)]">
+                      Time
+                    </TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <div className="sticky bottom-0 z-20 h-[54px] shrink-0 border-t border-border bg-background px-4 sm:px-6">
+                </TableHeader>
+                <TableBody>
+                  {filteredRawEvents.map((rawEvent) => {
+                    const activity = toDisplayActivity(rawEvent)
+                    return (
+                    <TableRow
+                      key={activity.$id}
+                      role="button"
+                      tabIndex={0}
+                      data-state={
+                        drawerOpen && selectedEvent?.$id === activity.$id
+                          ? 'selected'
+                          : undefined
+                      }
+                      aria-label={`Open activity details: ${activity.rawEvent}`}
+                      className={cn(
+                        'cursor-pointer',
+                        drawerOpen &&
+                          selectedEvent?.$id === activity.$id &&
+                          'bg-muted/60 hover:bg-muted/60',
+                      )}
+                      onClick={() => openActivityDrawer(rawEvent)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          openActivityDrawer(rawEvent)
+                        }
+                      }}
+                    >
+                      <TableCell className="pl-6 sm:pl-8 py-3">
+                        <div className="flex items-center gap-2.5">
+                          <div
+                            className={cn(
+                              'flex h-7 w-7 shrink-0 items-center justify-center rounded-md',
+                              actionColors[activity.action],
+                            )}
+                          >
+                            {actionIcons[activity.action]}
+                          </div>
+                          <span className="text-[13px] font-medium text-foreground">
+                            {actionLabels[activity.action]}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="whitespace-normal px-4 py-3 align-top">
+                        <div className="flex min-w-0 items-center gap-2.5">
+                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                            {resourceIcons[activity.resourceType]}
+                          </div>
+                          <div className="min-w-0 flex flex-col gap-1">
+                            <p className="break-words text-[13px] font-medium leading-snug text-foreground">
+                              {activity.resourceId?.trim() ||
+                                activity.resourceName ||
+                                '—'}
+                            </p>
+                            <p className="text-[11px] capitalize text-muted-foreground">
+                              {activity.resourceType}
+                            </p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-4 py-3">
+                        <div className="flex items-center gap-2.5">
+                          <UserTypeAvatar
+                            userType={activity.userType}
+                            userName={activity.userName}
+                            className="shadow-none"
+                          />
+                          <div className="min-w-0">
+                            <p className="truncate text-[13px] font-medium text-foreground">
+                              {activity.userName}
+                            </p>
+                            <p
+                              className={cn(
+                                'truncate text-[11px] text-muted-foreground',
+                                hasHumanEmail(activity.userType)
+                                  ? ''
+                                  : 'font-mono',
+                              )}
+                            >
+                              {hasHumanEmail(activity.userType)
+                                ? activity.userEmail ||
+                                  activity.userId ||
+                                  '—'
+                                : activity.userId || '—'}
+                            </p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-4 py-3">
+                        {(() => {
+                          const badge = userTypeBadge(activity.userType)
+                          return (
+                            <span
+                              className={cn(
+                                'inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider',
+                                badge.tone,
+                              )}
+                            >
+                              {badge.label}
+                            </span>
+                          )
+                        })()}
+                      </TableCell>
+                      <TableCell className="px-4 py-3">
+                        <p className="truncate text-[12px] text-muted-foreground">
+                          {activity.description || '-'}
+                        </p>
+                      </TableCell>
+                      <TableCell className="px-4 py-3 pr-6 sm:pr-8">
+                        <DateTooltip
+                          date={activity.timestamp}
+                          className="text-[12px] text-muted-foreground"
+                        />
+                      </TableCell>
+                    </TableRow>
+                  )})}
+                </TableBody>
+              </Table>
+            </div>
+            <div className="h-[54px] shrink-0 border-t border-border bg-background px-4 sm:px-6">
               <Pagination
                 currentPage={currentPage}
-                totalItems={total}
+                totalItems={0}
+                totalKnown={false}
+                hasNextPage={hasMore}
                 pageSize={pageSize}
                 pageSizeOptions={[10, 25, 50, 100]}
-                onPageChange={setCurrentPage}
+                onPageChange={handlePageChange}
                 onPageSizeChange={(size) => {
                   setPageSize(size)
-                  setCurrentPage(1)
+                  resetListPosition()
                 }}
+                displayItemRange={
+                  events.length === 0
+                    ? { start: 0, end: 0 }
+                    : {
+                        start: (currentPage - 1) * pageSize + 1,
+                        end: (currentPage - 1) * pageSize + events.length,
+                      }
+                }
                 itemLabel="activities"
                 className="h-full min-h-0 border-0 mt-0 py-0"
               />
@@ -693,10 +831,34 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
             }
             isEmpty={!hasActiveFilters && !searchValue}
             hasFilters={hasActiveFilters || !!searchValue}
-            variant="card"
+            variant="centered"
           />
         )}
       </div>
+
+      <ActivityLogDrawer
+        open={drawerOpen}
+        onOpenChange={(open) => {
+          if (open) {
+            setDrawerOpen(true)
+            return
+          }
+          closeActivityDrawer()
+        }}
+        event={selectedEvent}
+        display={
+          selectedEvent
+            ? {
+                action: eventToActionType(selectedEvent.event),
+                resourceType: eventToResourceType(
+                  selectedEvent.resourceType,
+                  selectedEvent.event,
+                ),
+                resourceName: resourceLabelFromEvent(selectedEvent),
+              }
+            : null
+        }
+      />
     </div>
   )
 }

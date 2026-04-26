@@ -31,9 +31,11 @@ import { toast } from 'sonner'
 import { Bell } from 'lucide-react'
 import type { RealtimeResponseEvent, Models } from '@appwrite.io/console'
 import { useFavicon, type FaviconVariant } from '@/hooks/use-favicon'
+import { usesThemeAwareFaviconHost } from '@/lib/utils/theme-favicon-host'
 import { registerConsoleRealtimeListener } from '@/lib/realtime/console-hub'
 import { registerRegionalConsoleRealtimeListener } from '@/lib/realtime/regional-console-hub'
 import { PROJECT_CHANNELS } from '@/lib/realtime/constants'
+import { isDeploymentTimeout } from '@/lib/utils/deployment-status'
 
 /** localStorage key for remembering that the user explicitly opted out of the prompt. */
 const OPT_OUT_STORAGE_KEY = 'appwrite.buildNotifications.optedOut'
@@ -43,6 +45,8 @@ interface ActiveBuild {
   resourceId: string
   resourceType: DeploymentResource
   status: string
+  /** Used with `isDeploymentTimeout` so stale `building` rows do not keep the orange favicon */
+  createdAt?: string | null
 }
 
 /** How long the success/failure favicon stays before we restore the original. */
@@ -122,15 +126,23 @@ function isTerminalStatus(status: string): boolean {
   return (
     status === 'ready' ||
     status === 'failed' ||
+    status === 'timeout' ||
     status === 'canceled' ||
     status === 'cancelled'
   )
 }
 
-function isFailureStatus(status: string): boolean {
-  return (
-    status === 'failed' || status === 'canceled' || status === 'cancelled'
-  )
+/** Match base favicon: theme variants in dev/local, flat logo colors in prod. */
+function buildInProgressFavicon(): FaviconVariant {
+  return usesThemeAwareFaviconHost() ? 'theme-orange' : 'orange'
+}
+
+function buildSuccessFavicon(): FaviconVariant {
+  return usesThemeAwareFaviconHost() ? 'theme-green' : 'green'
+}
+
+function buildFailureFavicon(): FaviconVariant {
+  return usesThemeAwareFaviconHost() ? 'theme-red' : 'red'
 }
 
 let permissionPromptShown = false
@@ -423,9 +435,31 @@ export function BuildNotificationsProvider({
       resourceId: string
       resourceType: DeploymentResource
       status: string
+      createdAt?: string | null
     }): void {
       const builds = activeBuildsRef.current
       const tracked = trackedRef.current
+
+      const createdAtForTimeout =
+        update.createdAt ?? builds.get(update.deploymentId)?.createdAt
+
+      // API can still say building while the UI treats the deployment as timed out
+      if (
+        isInProgressStatus(update.status) &&
+        isDeploymentTimeout(update.status, createdAtForTimeout)
+      ) {
+        const had = builds.has(update.deploymentId)
+        builds.delete(update.deploymentId)
+        tracked.delete(update.deploymentId)
+        if (had) {
+          if (builds.size === 0) {
+            applyDesiredFavicon(null)
+          } else {
+            applyDesiredFavicon(buildInProgressFavicon())
+          }
+        }
+        return
+      }
 
       if (isInProgressStatus(update.status)) {
         const isNew = !builds.has(update.deploymentId)
@@ -441,10 +475,13 @@ export function BuildNotificationsProvider({
         }
         // Re-arm dedupe if the same deployment ID restarts (rare, but harmless).
         notifiedTerminalRef.current.delete(update.deploymentId)
-        builds.set(update.deploymentId, { ...update })
+        builds.set(update.deploymentId, {
+          ...update,
+          createdAt: createdAtForTimeout ?? update.createdAt,
+        })
         tracked.add(update.deploymentId)
         clearResetTimer()
-        applyDesiredFavicon('theme-orange')
+        applyDesiredFavicon(buildInProgressFavicon())
         // First time we see this build start, nudge the user to enable browser
         // notifications so they hear about completion. Already gated by the
         // relevance check above, so we know we're on the right page.
@@ -480,9 +517,10 @@ export function BuildNotificationsProvider({
       builds.delete(update.deploymentId)
       tracked.delete(update.deploymentId)
 
-      const failed = isFailureStatus(update.status)
+      const failed = update.status === 'failed'
       const canceled =
         update.status === 'canceled' || update.status === 'cancelled'
+      const timedOut = update.status === 'timeout'
       const name = lookupResourceName(update.resourceType, update.resourceId)
       const label = update.resourceType === 'site' ? 'Site' : 'Function'
       const verb =
@@ -490,9 +528,19 @@ export function BuildNotificationsProvider({
           ? 'completed successfully'
           : update.status === 'failed'
             ? 'failed'
-            : 'was canceled'
+            : timedOut
+              ? 'timed out'
+              : 'was canceled'
+      const notifyResultWord =
+        update.status === 'ready'
+          ? 'ready'
+          : update.status === 'failed'
+            ? 'failed'
+            : timedOut
+              ? 'timed out'
+              : 'canceled'
       notify(
-        `${label} build ${update.status === 'ready' ? 'ready' : update.status === 'failed' ? 'failed' : 'canceled'}`,
+        `${label} build ${notifyResultWord}`,
         `${name} build ${verb}.`,
         `appwrite-build-${update.deploymentId}`,
       )
@@ -502,12 +550,14 @@ export function BuildNotificationsProvider({
           // Canceling is a user action, not an error - just go back to normal.
           applyDesiredFavicon(null)
         } else {
-          applyDesiredFavicon(failed ? 'theme-red' : 'theme-green')
+          applyDesiredFavicon(
+            failed || timedOut ? buildFailureFavicon() : buildSuccessFavicon(),
+          )
           scheduleFaviconReset()
         }
       } else {
         // Other builds still running - keep the in-progress favicon.
-        applyDesiredFavicon('theme-orange')
+        applyDesiredFavicon(buildInProgressFavicon())
       }
     }
 
@@ -544,11 +594,14 @@ export function BuildNotificationsProvider({
       const resourceType: DeploymentResource =
         resourceTypeRaw === 'function' ? 'function' : 'site'
 
+      const createdAt = payload.$createdAt as string | undefined
+
       handleStatusChange({
         deploymentId,
         resourceId,
         resourceType,
         status,
+        createdAt,
       })
     }
 
@@ -589,7 +642,9 @@ export function BuildNotificationsProvider({
           if (!status || !isInProgressStatus(status)) continue
           const depId = (dep as { $id?: string }).$id
           const resId = (dep as { resourceId?: string }).resourceId
+          const createdAt = (dep as { $createdAt?: string }).$createdAt
           if (!depId || !resId) continue
+          if (isDeploymentTimeout(status, createdAt)) continue
           if (activeBuildsRef.current.has(depId)) continue
           // Same relevance gate as live events - only seed builds the user is
           // currently looking at, otherwise reloading mid-build on (e.g.) the
@@ -607,6 +662,7 @@ export function BuildNotificationsProvider({
             resourceId: resId,
             resourceType,
             status,
+            createdAt,
           })
           // Mark as tracked so the eventual terminal event is allowed to
           // change the favicon and fire a notification.
@@ -616,7 +672,7 @@ export function BuildNotificationsProvider({
 
       if (activeBuildsRef.current.size > 0) {
         clearResetTimer()
-        applyDesiredFavicon('theme-orange')
+        applyDesiredFavicon(buildInProgressFavicon())
       }
     }
 
@@ -689,6 +745,7 @@ export function BuildNotificationsProvider({
     // Are any currently-tracked builds relevant to the page we just landed on?
     let hasRelevantActive = false
     activeBuildsRef.current.forEach((b) => {
+      if (isDeploymentTimeout(b.status, b.createdAt)) return
       if (
         isUpdateRelevant(ctx, {
           resourceType: b.resourceType,
@@ -704,7 +761,7 @@ export function BuildNotificationsProvider({
         const current = getCurrentFaviconRef.current()
         originalFaviconRef.current = current ?? 'default'
       }
-      setFaviconRef.current('theme-orange')
+      setFaviconRef.current(buildInProgressFavicon())
     } else if (originalFaviconRef.current) {
       // Either we walked away from Sites/Functions entirely, or there's
       // nothing on this specific page that's still building - put the favicon

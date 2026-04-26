@@ -24,26 +24,94 @@ import {
 
 const MERGED_DATABASE_LIST_LIMIT = 500
 
+/**
+ * Module-level dedup for `getDatabaseModel`.
+ *
+ * Many fetch functions (`fetchProjectTables`, `fetchProjectTableRows`,
+ * `fetchProjectTableColumns`, `fetchProjectTableIndexes`, `fetchProjectTable`,
+ * `fetchProjectDatabase`, …) all need the database "type" before calling the
+ * right SDK (tables / documents / vectors). When a single route loader uses
+ * `Promise.all` to prefetch rows + columns + indexes + table + database, that
+ * was firing a fresh `tablesDB.get({ databaseId })` per query – often 6–8
+ * duplicate calls back-to-back (visible in the network tab).
+ *
+ * This dedup:
+ *   1. Returns the same in-flight promise for concurrent callers (same key).
+ *   2. Caches the resolved value briefly (matching `DEFAULT_STALE_TIME`) so
+ *      near-sequential callers also hit the cache without re-fetching.
+ *
+ * Failures are not cached. Mutations that change a database should call
+ * `invalidateDatabaseModel(projectId, databaseId)` so the next call refetches.
+ */
+const databaseModelInflight = new Map<
+  string,
+  Promise<Models.Database | null>
+>()
+const databaseModelCache = new Map<
+  string,
+  { value: Models.Database | null; expiresAt: number }
+>()
+
+function databaseModelCacheKey(projectId: string, databaseId: string): string {
+  return `${projectId}:${databaseId}`
+}
+
+/** Clear the dedup cache for one database (call after delete/update). */
+export function invalidateDatabaseModel(
+  projectId: string,
+  databaseId: string,
+): void {
+  const key = databaseModelCacheKey(projectId, databaseId)
+  databaseModelCache.delete(key)
+  databaseModelInflight.delete(key)
+}
+
 /** Resolve a database from whichever product API owns it (Tables, Documents, or Vectors). */
 export async function getDatabaseModel(
   projectId: string,
   databaseId: string,
 ): Promise<Models.Database | null> {
   if (!projectId || !databaseId) return null
-  const projectSdk = sdk.forProject(projectId)
-  for (const tryGet of [
-    () => projectSdk.tablesDB.get({ databaseId }),
-    () => projectSdk.documentsDB.get({ databaseId }),
-    () => projectSdk.vectorsDB.get({ databaseId }),
-  ]) {
-    try {
-      const d = await tryGet()
-      if (d?.$id) return d
-    } catch {
-      /* try next backend */
-    }
+
+  const key = databaseModelCacheKey(projectId, databaseId)
+  const now = Date.now()
+
+  const cached = databaseModelCache.get(key)
+  if (cached && cached.expiresAt > now) {
+    return cached.value
   }
-  return null
+
+  const inFlight = databaseModelInflight.get(key)
+  if (inFlight) return inFlight
+
+  const projectSdk = sdk.forProject(projectId)
+  const promise = (async () => {
+    for (const tryGet of [
+      () => projectSdk.tablesDB.get({ databaseId }),
+      () => projectSdk.documentsDB.get({ databaseId }),
+      () => projectSdk.vectorsDB.get({ databaseId }),
+    ]) {
+      try {
+        const d = await tryGet()
+        if (d?.$id) return d
+      } catch {
+        /* try next backend */
+      }
+    }
+    return null
+  })()
+
+  databaseModelInflight.set(key, promise)
+  try {
+    const value = await promise
+    databaseModelCache.set(key, {
+      value,
+      expiresAt: Date.now() + DEFAULT_STALE_TIME,
+    })
+    return value
+  } finally {
+    databaseModelInflight.delete(key)
+  }
 }
 
 function flattenDocumentForTableRow(

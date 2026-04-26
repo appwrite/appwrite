@@ -1,4 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
+import { z } from 'zod'
 import { View } from '@/components/pages/projects/$projectId/activity/View'
 import { pageTitle } from '@/lib/utils/page-title'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
@@ -7,12 +8,18 @@ import {
   activitiesQueryOptions,
 } from '@/lib/react-query/hooks'
 
+const activitySearchSchema = z.object({
+  /** Activity event `$id` — opens the detail drawer when valid. */
+  event: z.string().optional().catch(undefined),
+})
+
 // Mirror the Pro plan retention window (`PLAN_TIME_LIMITS.pro` in View.tsx)
 // so the route loader prefetches the same query the View renders.
 const PRO_PLAN_HOURS = 7 * 24
 
 export const Route = createFileRoute('/_public/projects/$projectId/activity')({
   head: () => ({ meta: [{ title: pageTitle('Activity') }] }),
+  validateSearch: activitySearchSchema,
   beforeLoad: ({ params }) => {
     if (!getActiveProfileFeatures().activity) {
       throw redirect({
@@ -36,7 +43,6 @@ export const Route = createFileRoute('/_public/projects/$projectId/activity')({
       .ensureQueryData(
         activitiesQueryOptions({
           projectId,
-          page: 0,
           limit: ACTIVITY_DEFAULT_PAGE_SIZE,
           since,
         }),

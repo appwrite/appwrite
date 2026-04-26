@@ -272,6 +272,74 @@ export async function fetchOrganizationInvoices(
 }
 
 /**
+ * Whether the organization has at least one invoice with status "failed".
+ * Uses a single filtered list request (limit 1) for efficiency.
+ */
+export async function fetchOrganizationHasFailedInvoice(
+  organizationId: string,
+): Promise<{ hasFailedInvoice: boolean }> {
+  if (!organizationId) {
+    return { hasFailedInvoice: false }
+  }
+
+  try {
+    const response = await sdk.forConsole.organizations.listInvoices({
+      organizationId,
+      queries: [
+        Query.equal('status', 'failed'),
+        Query.orderDesc('$createdAt'),
+        Query.limit(1),
+        Query.offset(0),
+      ],
+    })
+    const total = response.total ?? 0
+    const count = response.invoices?.length ?? 0
+    return { hasFailedInvoice: total > 0 || count > 0 }
+  } catch {
+    return { hasFailedInvoice: false }
+  }
+}
+
+/**
+ * Query options for failed-invoice presence (org-wide banner).
+ */
+export function organizationFailedInvoicePresenceQueryOptions(
+  organizationId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: [
+      'invoices',
+      'organization',
+      organizationId,
+      'presence',
+      'failed',
+    ],
+    queryFn: () => fetchOrganizationHasFailedInvoice(organizationId!),
+    enabled: !!organizationId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: organizationId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
+ * Failed-invoice presence for an organization (use team / org id from project or route).
+ * Shares cache with {@link organizationFailedInvoicePresenceQueryOptions}; does not fetch the org document.
+ */
+export function useOrganizationFailedInvoicePresence(
+  organizationId: string | null | undefined,
+) {
+  const billingEnabled = getActiveProfileFeatures().billing
+  return useQuery({
+    ...organizationFailedInvoicePresenceQueryOptions(organizationId),
+    enabled: !!organizationId && billingEnabled,
+  })
+}
+
+/**
  * Query function to fetch billing aggregation for an organization
  *
  * @param organizationId - The organization ID to fetch aggregation for

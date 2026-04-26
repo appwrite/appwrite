@@ -113,8 +113,18 @@ export function SimplePagination({
 export interface PaginationProps {
   /** Current page (1-indexed) */
   currentPage: number
-  /** Total number of items */
+  /**
+   * Total number of items when the API returns an accurate count.
+   * When `totalKnown` is false, this is only used for legacy branches; prefer `displayItemRange`.
+   */
   totalItems: number
+  /**
+   * When false, the list API omitted total count (e.g. `total=false`). Use `hasNextPage` for the
+   * next button and hide total-based navigation (last page, "of N" in the summary).
+   */
+  totalKnown?: boolean
+  /** Whether another page exists after the current one (required for next when `totalKnown` is false). */
+  hasNextPage?: boolean
   /** Items per page */
   pageSize: number
   /** Available page size options */
@@ -142,6 +152,8 @@ export interface PaginationProps {
 export function Pagination({
   currentPage,
   totalItems,
+  totalKnown = true,
+  hasNextPage = false,
   pageSize,
   pageSizeOptions = [10, 25, 50, 100],
   onPageChange,
@@ -157,11 +169,13 @@ export function Pagination({
   const derivedEnd = Math.min(currentPage * pageSize, totalItems)
   const startItem = displayItemRange?.start ?? derivedStart
   const endItem = displayItemRange
-    ? Math.min(displayItemRange.end, totalItems)
+    ? totalKnown
+      ? Math.min(displayItemRange.end, totalItems)
+      : displayItemRange.end
     : derivedEnd
 
   const canGoPrevious = currentPage > 1
-  const canGoNext = currentPage < totalPages
+  const canGoNext = totalKnown ? currentPage < totalPages : hasNextPage
 
   const prevPageRef = useRef(currentPage)
   const isUserInitiatedRef = useRef(false)
@@ -205,7 +219,7 @@ export function Pagination({
   }
 
   const handleLastPage = () => {
-    if (canGoNext) {
+    if (totalKnown && canGoNext) {
       isUserInitiatedRef.current = true
       onPageChange(totalPages)
       scrollToTop()
@@ -230,9 +244,13 @@ export function Pagination({
       <div className="flex items-center gap-3 min-w-0">
         {showTotal && (
           <span className="hidden @[600px]:inline whitespace-nowrap">
-            {totalItems === 0
-              ? `No ${itemLabel}`
-              : `${startItem}-${endItem} of ${totalItems.toLocaleString()}`}
+            {totalKnown
+              ? totalItems === 0
+                ? `No ${itemLabel}`
+                : `${startItem}-${endItem} of ${totalItems.toLocaleString()}`
+              : startItem === 0 && endItem === 0
+                ? `No ${itemLabel}`
+                : `${startItem}-${endItem}`}
           </span>
         )}
 
@@ -293,9 +311,11 @@ export function Pagination({
             <span className="font-medium text-foreground tabular-nums text-[12px]">
               {currentPage}
             </span>
-            <span className="text-muted-foreground whitespace-nowrap text-[12px]">
-              of {totalPages.toLocaleString()}
-            </span>
+            {totalKnown ? (
+              <span className="text-muted-foreground whitespace-nowrap text-[12px]">
+                of {totalPages.toLocaleString()}
+              </span>
+            ) : null}
           </div>
           <Button
             variant="ghost"
@@ -312,7 +332,7 @@ export function Pagination({
             size="icon"
             className="hidden h-8 w-8 rounded-none border-0 @[500px]:inline-flex hover:bg-muted/80"
             onClick={handleLastPage}
-            disabled={!canGoNext}
+            disabled={!totalKnown || !canGoNext}
             aria-label="Go to last page"
           >
             <ChevronsRight className="h-4 w-4" />

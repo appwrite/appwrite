@@ -5,6 +5,7 @@
 import type { FilterColumn } from '../types'
 
 export const bucketsFilterColumns: FilterColumn[] = [
+  { id: '$id', title: '$id', type: 'string' },
   { id: 'name', title: 'Name', type: 'string' },
   {
     id: 'enabled',

@@ -55,6 +55,7 @@ import {
   useUpdateConsoleTeamPrefs,
   pinnedProjectsQueryOptions,
   useOrganizationPlan,
+  useOrganizationFailedInvoicePresence,
   useOrganizationScopes,
   useResendMembershipInvite,
   useUpdateMembershipRole,
@@ -156,6 +157,8 @@ import { ComplianceTab } from '../settings/ComplianceTab'
 import { View as DomainsView } from '../domains/View'
 import { EnterpriseSuccessManager } from '@/components/pages/projects/$projectId/shared/EnterpriseSuccessManager'
 import { Pagination } from '@/components/global/shared/Pagination'
+import { OrganizationFailedInvoiceHeaderBanner } from '@/components/global/shared/OrganizationFailedInvoiceHeaderBanner'
+import { FailedInvoiceWarningIcon } from '@/components/global/shared/FailedInvoiceWarningIcon'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { InviteMembersDialog } from './InviteMembers'
 import { CreateOrganizationDialog } from './CreateOrganization'
@@ -300,6 +303,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const { features, isCloud } = useConsoleProfile()
   const supportsMultiRegion = features.multiRegion
   const { access, isLoading: orgScopesLoading } = useOrganizationScopes(orgId)
+
+  const { data: failedInvoicePresence } =
+    useOrganizationFailedInvoicePresence(orgId)
+  const showFailedInvoiceOrgAlert =
+    features.billing && failedInvoicePresence?.hasFailedInvoice === true
   const { showSuccessTeamCard: debugShowSuccessTeamCard } = useDebugOverrides()
   const { isDebugModeOpen } = useDebugMode()
 
@@ -1131,7 +1139,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   // Pagination info (from search results)
   const activeProjectsTotal = activeProjectsData?.total || 0
 
-  // Total count of all projects (without search) — for plan-limit checks.
+  // Total count of all projects (without search) - for plan-limit checks.
   // The active-projects listing excludes pinned ids, so when no search is
   // active the unconditional total is just `listing total + pinned count`.
   // We cache the last value seen while the search box was empty so the
@@ -1375,6 +1383,12 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           onCommandCenterOpen: () => setCommandCenterOpen(true),
           onCreateOrganization: () => setCreateOrgDialogOpen(true),
         }}
+        headerBanner={
+          <OrganizationFailedInvoiceHeaderBanner
+            organizationId={orgId}
+            show={showFailedInvoiceOrgAlert}
+          />
+        }
         showFooter
         containerClassName="org-layout-container"
       >
@@ -2019,8 +2033,13 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                             className="block"
                                           >
                                             <div>
-                                              <h3 className="text-[14px] font-medium text-foreground group-hover:text-foreground">
-                                                {project.name}
+                                              <h3 className="flex min-w-0 items-center gap-1.5 text-[14px] font-medium text-foreground group-hover:text-foreground">
+                                                <span className="min-w-0 truncate">
+                                                  {project.name}
+                                                </span>
+                                                <FailedInvoiceWarningIcon
+                                                  show={showFailedInvoiceOrgAlert}
+                                                />
                                               </h3>
                                               {supportsMultiRegion &&
                                                 project.region && (
@@ -2173,8 +2192,15 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                 className="block"
                                               >
                                                 <div>
-                                                  <h3 className="text-[14px] font-medium text-foreground group-hover:text-foreground">
-                                                    {project.name}
+                                                  <h3 className="flex min-w-0 items-center gap-1.5 text-[14px] font-medium text-foreground group-hover:text-foreground">
+                                                    <span className="min-w-0 truncate">
+                                                      {project.name}
+                                                    </span>
+                                                    <FailedInvoiceWarningIcon
+                                                      show={
+                                                        showFailedInvoiceOrgAlert
+                                                      }
+                                                    />
                                                   </h3>
                                                   {supportsMultiRegion &&
                                                     project.region && (

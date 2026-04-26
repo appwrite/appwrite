@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState } from 'react'
 import {
   ArrowDown,
   ArrowUp,
+  ChevronDown,
   GripVertical,
   Loader2,
   Plus,
@@ -28,7 +29,11 @@ import type {
   FilterColumnType,
   FilterMap,
 } from '@/lib/table-filters'
-import { mapToQueryParam } from '@/lib/table-filters'
+import {
+  compactFilterKeysEqual,
+  findCompactFilterKeyInMap,
+  mapToQueryParam,
+} from '@/lib/table-filters'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { canSaveTeamFilters } from '@/lib/console-access-checks'
@@ -39,6 +44,11 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Tooltip,
@@ -59,6 +69,14 @@ function reorderList<T>(list: T[], fromIndex: number, toIndex: number): T[] {
   copy.splice(toIndex, 0, removed)
   return copy
 }
+
+/** Horizontal rules between popover sections — minimal */
+const SECTION_DIVIDE =
+  'border-muted-foreground/6 dark:border-muted-foreground/9'
+
+/** Vertical split inside compact button groups (Asc | Desc, For me | For team) */
+const SEGMENT_DIVIDE =
+  'border-l border-muted-foreground/7 dark:border-muted-foreground/10'
 
 const K1024 = 1024
 
@@ -203,6 +221,7 @@ export function FiltersPopoverContent({
     useState<FilterColumnType>('string')
   const [editingReplaceKey, setEditingReplaceKey] =
     useState<CompactFilterKey | null>(null)
+  const [listSortOpen, setListSortOpen] = useState(false)
 
   const resetFormToDefaults = useCallback(() => {
     const first = columns[0]
@@ -385,10 +404,20 @@ export function FiltersPopoverContent({
 
   useEffect(() => {
     if (!editingReplaceKey) return
-    if (!filterMap.has(editingReplaceKey)) {
+    if (!findCompactFilterKeyInMap(filterMap, editingReplaceKey)) {
       resetFormToDefaults()
     }
   }, [filterMap, editingReplaceKey, resetFormToDefaults])
+
+  useEffect(() => {
+    const sortActive =
+      sortBy != null && sortOrder != null && onSortChange != null
+    if (!sortActive || defaultSortParam == null) return
+    const currentSortParam = encodeSort(sortBy, sortOrder)
+    if ((currentSortParam ?? defaultSortParam) !== defaultSortParam) {
+      setListSortOpen(true)
+    }
+  }, [sortBy, sortOrder, onSortChange, defaultSortParam])
 
   const filterEntries = Array.from(filterMap.entries())
 
@@ -460,7 +489,12 @@ export function FiltersPopoverContent({
       o: filterOperatorKey,
       ...(val !== undefined && val !== '' ? { v: val } : {}),
     }
-    onApplyFilter(compactKey, queryString, editingReplaceKey ?? undefined)
+    const replaceKey =
+      editingReplaceKey != null
+        ? findCompactFilterKeyInMap(filterMap, editingReplaceKey) ??
+          editingReplaceKey
+        : undefined
+    onApplyFilter(compactKey, queryString, replaceKey)
     setEditingReplaceKey(null)
     setFilterValue('')
     setFilterValueEnd('')
@@ -771,82 +805,128 @@ export function FiltersPopoverContent({
   const canSaveCurrent =
     filterMap.size > 0 || (sortEnabled && hasNonDefaultSort)
 
+  const sortFieldSummaryLabel =
+    sortEnabled && sortOptionsFromColumns.length > 0
+      ? (sortOptionsFromColumns.find((o) => o.id === sortBy)?.label ??
+        sortBy ??
+        '')
+      : ''
+
   const filtersTabContent = (
     <>
-      {/* Order by – when list supports sort; options from table columns; saved with filter presets */}
       {sortEnabled && sortOptionsFromColumns.length > 0 && (
-        <>
-          <div className="px-4 pt-3 pb-2">
-            <div className="flex items-center justify-between gap-2 mb-2">
-              <p className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider">
-                Order by
-              </p>
-              {onReset && (hasNonDefaultSort || filterMap.size > 0) && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    onReset()
-                    onClose?.()
-                  }}
-                  className="cursor-pointer text-[12px] text-muted-foreground hover:text-foreground transition-colors shrink-0"
-                >
-                  Reset
-                </button>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              <SearchableSelect
-                value={sortBy}
-                onValueChange={(field) => {
-                  const nextOrder =
-                    field === sortBy && sortOrder === 'desc' ? 'asc' : 'desc'
-                  onSortChange!(field, nextOrder)
-                }}
-                items={sortOptionsFromColumns.map((o) => ({
-                  value: o.id,
-                  label: o.label,
-                }))}
-                placeholder="Column"
-                searchPlaceholder="Search columns…"
-                emptyMessage="No columns"
-                triggerClassName="h-9 min-w-0 flex-1 text-[13px]"
-              />
-              <div className="flex shrink-0 rounded-md border border-border overflow-hidden">
-                <button
-                  type="button"
-                  onClick={() => onSortChange!(sortBy, 'asc')}
+        <Collapsible open={listSortOpen} onOpenChange={setListSortOpen}>
+          <div className={cn('border-t border-b', SECTION_DIVIDE)}>
+            <CollapsibleTrigger asChild>
+              <button
+                type="button"
+                className="flex w-full cursor-pointer items-center gap-2 px-4 py-2 text-left transition-colors hover:bg-muted/50"
+              >
+                <ChevronDown
                   className={cn(
-                    'flex h-9 cursor-pointer items-center gap-1 px-2 text-[12px] transition-colors',
-                    sortOrder === 'asc'
-                      ? 'bg-muted text-foreground'
-                      : 'text-muted-foreground hover:bg-muted/60',
+                    'size-3.5 shrink-0 text-muted-foreground transition-transform duration-200',
+                    listSortOpen && 'rotate-180',
                   )}
-                  aria-pressed={sortOrder === 'asc'}
-                  title="Ascending"
-                >
-                  <ArrowUp className="h-3.5 w-3.5" />
-                  Asc
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onSortChange!(sortBy, 'desc')}
-                  className={cn(
-                    'flex h-9 cursor-pointer items-center gap-1 px-2 text-[12px] transition-colors border-l border-border',
-                    sortOrder === 'desc'
-                      ? 'bg-muted text-foreground'
-                      : 'text-muted-foreground hover:bg-muted/60',
+                  aria-hidden
+                />
+                <span className="min-w-0 flex-1 text-[12px] leading-snug">
+                  <span className="font-medium text-foreground/85">
+                    List order
+                  </span>
+                  <span className="text-muted-foreground">
+                    {' '}
+                    · {sortFieldSummaryLabel} ·{' '}
+                    {sortOrder === 'asc' ? 'Ascending' : 'Descending'}
+                  </span>
+                </span>
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div
+                className={cn(
+                  'space-y-2 border-t bg-muted/20 px-4 py-2.5',
+                  SECTION_DIVIDE,
+                )}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider">
+                    List order
+                  </span>
+                  {onReset && (hasNonDefaultSort || filterMap.size > 0) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onReset()
+                        onClose?.()
+                      }}
+                      className="cursor-pointer shrink-0 text-[12px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Reset
+                    </button>
                   )}
-                  aria-pressed={sortOrder === 'desc'}
-                  title="Descending"
-                >
-                  <ArrowDown className="h-3.5 w-3.5" />
-                  Desc
-                </button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <SearchableSelect
+                    value={sortBy}
+                    onValueChange={(field) => {
+                      const nextOrder =
+                        field === sortBy && sortOrder === 'desc'
+                          ? 'asc'
+                          : 'desc'
+                      onSortChange!(field, nextOrder)
+                    }}
+                    items={sortOptionsFromColumns.map((o) => ({
+                      value: o.id,
+                      label: o.label,
+                    }))}
+                    placeholder="Sort field"
+                    searchPlaceholder="Search columns…"
+                    emptyMessage="No columns"
+                    triggerClassName="h-9 min-w-0 flex-1 text-[13px]"
+                  />
+                  <div
+                    className={cn(
+                      'flex shrink-0 overflow-hidden rounded-md border',
+                      SECTION_DIVIDE,
+                    )}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => onSortChange!(sortBy!, 'asc')}
+                      className={cn(
+                        'flex h-9 cursor-pointer items-center gap-1 px-2 text-[12px] transition-colors',
+                        sortOrder === 'asc'
+                          ? 'bg-muted text-foreground'
+                          : 'text-muted-foreground hover:bg-muted/60',
+                      )}
+                      aria-pressed={sortOrder === 'asc'}
+                      title="Ascending"
+                    >
+                      <ArrowUp className="h-3.5 w-3.5" />
+                      Asc
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onSortChange!(sortBy!, 'desc')}
+                      className={cn(
+                        'flex h-9 cursor-pointer items-center gap-1 px-2 text-[12px] transition-colors',
+                        SEGMENT_DIVIDE,
+                        sortOrder === 'desc'
+                          ? 'bg-muted text-foreground'
+                          : 'text-muted-foreground hover:bg-muted/60',
+                      )}
+                      aria-pressed={sortOrder === 'desc'}
+                      title="Descending"
+                    >
+                      <ArrowDown className="h-3.5 w-3.5" />
+                      Desc
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
+            </CollapsibleContent>
           </div>
-          <div className="border-t border-border" />
-        </>
+        </Collapsible>
       )}
 
       <form
@@ -854,7 +934,10 @@ export function FiltersPopoverContent({
           e.preventDefault()
           applyFilter()
         }}
-        className="px-4 py-3"
+        className={cn(
+          'px-4 pb-3',
+          sortEnabled && sortOptionsFromColumns.length > 0 ? 'pt-2' : 'pt-3',
+        )}
       >
         <div className="space-y-2">
           <div className="grid grid-cols-2 gap-2">
@@ -999,7 +1082,7 @@ export function FiltersPopoverContent({
       {/* Active filters – below form so new filters appear here */}
       {filterMap.size > 0 && (
         <>
-          <div className="border-t border-border" />
+          <div className={cn('border-t', SECTION_DIVIDE)} />
           <div className="px-4 py-2">
             <div className="flex items-center justify-between gap-2 mb-1.5">
               <span className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider">
@@ -1021,15 +1104,15 @@ export function FiltersPopoverContent({
                 const column = parts[1] ?? ''
                 const operator = (parts[2] ?? '').trim()
                 const value = parts[3] ?? null
-                const isEditingThis = editingReplaceKey === key
+                const isEditingThis =
+                  editingReplaceKey != null &&
+                  compactFilterKeysEqual(editingReplaceKey, key)
                 return (
                   <div
                     key={`${key.c}-${key.o}-${JSON.stringify(key.v ?? '')}`}
                     className={cn(
                       'flex items-center gap-2 rounded-lg border bg-muted/30 px-2.5 py-1.5 group',
-                      isEditingThis
-                        ? 'border-primary'
-                        : 'border-border',
+                      isEditingThis ? 'border-primary' : 'border-border',
                     )}
                   >
                     <button
@@ -1067,7 +1150,7 @@ export function FiltersPopoverContent({
 
       {/* Save current on Filters tab (when saved filters feature is on and there are filters and/or non-default sort) */}
       {hasSavedFiltersFeature && canSaveCurrent && (
-        <div className="border-t border-border px-4 py-2">
+        <div className={cn('border-t px-4 py-2', SECTION_DIVIDE)}>
           {matchingSavedFilter ? (
             <p className="text-[12px] text-muted-foreground">
               Same as saved filter &quot;{matchingSavedFilter.name}&quot;
@@ -1079,7 +1162,12 @@ export function FiltersPopoverContent({
               </p>
               <div className="flex flex-nowrap items-center gap-2">
                 {hasTeamLevel && (
-                  <div className="flex shrink-0 rounded-md border border-border overflow-hidden">
+                  <div
+                    className={cn(
+                      'flex shrink-0 overflow-hidden rounded-md border',
+                      SECTION_DIVIDE,
+                    )}
+                  >
                     <button
                       type="button"
                       onClick={() => setSaveLevel('user')}
@@ -1102,7 +1190,8 @@ export function FiltersPopoverContent({
                           }
                           disabled={!canSaveTeamFiltersResult}
                           className={cn(
-                            'flex h-9 cursor-pointer items-center gap-1 px-2 text-[12px] transition-colors border-l border-border',
+                            'flex h-9 cursor-pointer items-center gap-1 px-2 text-[12px] transition-colors disabled:cursor-not-allowed',
+                            SEGMENT_DIVIDE,
                             saveLevel === 'team'
                               ? 'bg-muted text-foreground'
                               : 'text-muted-foreground hover:bg-muted/60 disabled:opacity-50',
@@ -1313,13 +1402,11 @@ export function FiltersPopoverContent({
           e.preventDefault()
           if (canEdit) handleSavedFilterDrop(e, level, index)
         }}
-        className={`flex items-center gap-2 rounded-lg border px-2 py-1.5 group transition-colors ${
-          isEditing
-            ? 'cursor-default border-border bg-muted/20'
-            : canEdit
-              ? 'cursor-grab active:cursor-grabbing'
-              : ''
-        } ${isDragOver && canEdit && !isEditing ? 'border-primary bg-primary/10' : 'border-border bg-muted/20'}`}
+        className={cn(
+          'group flex items-center gap-2 rounded-lg border border-border px-2 py-1.5 bg-muted/20 transition-colors',
+          isEditing ? 'cursor-default' : canEdit && 'cursor-grab active:cursor-grabbing',
+          isDragOver && canEdit && !isEditing && 'border-primary bg-primary/10',
+        )}
         aria-label={
           isEditing
             ? undefined
@@ -1468,14 +1555,19 @@ export function FiltersPopoverContent({
         </p>
       )}
       {filterMap.size > 0 && (
-        <div className="border-t border-border px-4 py-2">
+        <div className={cn('border-t px-4 py-2', SECTION_DIVIDE)}>
           <div className="space-y-1.5">
             <p className="text-[12px] text-muted-foreground">
               Save current filters with a name:
             </p>
             <div className="flex flex-nowrap items-center gap-2">
               {hasTeamLevel && (
-                <div className="flex shrink-0 rounded-md border border-border overflow-hidden">
+                <div
+                  className={cn(
+                    'flex shrink-0 overflow-hidden rounded-md border',
+                    SECTION_DIVIDE,
+                  )}
+                >
                   <button
                     type="button"
                     onClick={() => setSaveLevel('user')}
@@ -1498,7 +1590,8 @@ export function FiltersPopoverContent({
                         }
                         disabled={!canSaveTeamFiltersResult}
                         className={cn(
-                          'flex h-9 cursor-pointer items-center gap-1 px-2 text-[12px] transition-colors border-l border-border',
+                          'flex h-9 cursor-pointer items-center gap-1 px-2 text-[12px] transition-colors disabled:cursor-not-allowed',
+                          SEGMENT_DIVIDE,
                           saveLevel === 'team'
                             ? 'bg-muted text-foreground'
                             : 'text-muted-foreground hover:bg-muted/60 disabled:opacity-50',

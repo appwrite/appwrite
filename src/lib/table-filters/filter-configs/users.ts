@@ -6,6 +6,7 @@
 import type { FilterColumn } from '../types'
 
 export const usersFilterColumns: FilterColumn[] = [
+  { id: '$id', title: '$id', type: 'string' },
   { id: 'name', title: 'Name', type: 'string' },
   { id: 'email', title: 'Email', type: 'string' },
   { id: 'phone', title: 'Phone', type: 'string' },

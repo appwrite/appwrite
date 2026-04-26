@@ -23,6 +23,8 @@ export {
   encodeSort,
   queryParamToMap,
   mapToQueryParam,
+  compactFilterKeysEqual,
+  findCompactFilterKeyInMap,
   buildListSearchParams,
   MIN_SEARCH_LENGTH,
   PARAM_SEARCH,
