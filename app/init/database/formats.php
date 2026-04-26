@@ -31,13 +31,17 @@ Structure::addFormat(APP_DATABASE_ATTRIBUTE_URL, function () {
 }, Database::VAR_STRING);
 
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_INT_RANGE, function ($attribute) {
-    $min = $attribute['formatOptions']['min'] ?? -INF;
-    $max = $attribute['formatOptions']['max'] ?? INF;
+    // formatOptions min/max may be strings after JSON decode or may be on the attribute directly.
+    // Cast with intval() and fall back to the direct attribute keys for compatibility.
+    $min = \intval($attribute['formatOptions']['min'] ?? $attribute['min'] ?? \PHP_INT_MIN);
+    $max = \intval($attribute['formatOptions']['max'] ?? $attribute['max'] ?? \PHP_INT_MAX);
     return new Range($min, $max, Range::TYPE_INTEGER);
 }, Database::VAR_INTEGER);
 
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_FLOAT_RANGE, function ($attribute) {
-    $min = $attribute['formatOptions']['min'] ?? -INF;
-    $max = $attribute['formatOptions']['max'] ?? INF;
+    // formatOptions min/max may be strings after JSON decode or may be on the attribute directly.
+    // Cast with floatval() and fall back to the direct attribute keys for compatibility.
+    $min = \floatval($attribute['formatOptions']['min'] ?? $attribute['min'] ?? -INF);
+    $max = \floatval($attribute['formatOptions']['max'] ?? $attribute['max'] ?? INF);
     return new Range($min, $max, Range::TYPE_FLOAT);
 }, Database::VAR_FLOAT);

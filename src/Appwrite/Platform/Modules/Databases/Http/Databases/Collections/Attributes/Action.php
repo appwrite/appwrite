@@ -322,6 +322,18 @@ abstract class Action extends UtopiaAction
         $default = $attribute->getAttribute('default');
         $options = $attribute->getAttribute('options', []);
 
+        // Attribute names that match attribute type URL segments conflict with the REST routing,
+        // making those attributes unreachable via type-specific update endpoints.
+        // For example, an enum named "relationship" would make the URL
+        // PATCH .../attributes/enum/relationship ambiguous with PATCH .../attributes/:key/relationship.
+        $reservedAttributeTypeNames = [
+            'boolean', 'integer', 'float', 'string', 'email', 'url', 'ip',
+            'datetime', 'relationship', 'enum', 'point', 'line', 'polygon',
+        ];
+        if (\in_array(\strtolower($key), $reservedAttributeTypeNames)) {
+            throw new Exception($this->getInvalidValueException(), 'Attribute key "' . $key . '" is reserved and cannot be used as an attribute name.');
+        }
+
         if (in_array($type, Database::SPATIAL_TYPES) && !$dbForProject->getAdapter()->getSupportForSpatialAttributes()) {
             throw new Exception($this->getSpatialTypeNotSupportedException(), params: [$type]);
         }
@@ -490,6 +502,15 @@ abstract class Action extends UtopiaAction
 
     protected function updateAttribute(string $databaseId, string $collectionId, string $key, Database $dbForProject, Event $queueForEvents, Authorization $authorization, string $type, ?int $size = null, ?string $filter = null, string|bool|int|float|array|null $default = null, ?bool $required = null, int|float|null $min = null, int|float|null $max = null, ?array $elements = null, array $options = [], ?string $newKey = null): Document
     {
+        // Reject reserved attribute type names for the new key to prevent routing conflicts.
+        $reservedAttributeTypeNames = [
+            'boolean', 'integer', 'float', 'string', 'email', 'url', 'ip',
+            'datetime', 'relationship', 'enum', 'point', 'line', 'polygon',
+        ];
+        if ($newKey !== null && \in_array(\strtolower($newKey), $reservedAttributeTypeNames)) {
+            throw new Exception($this->getInvalidValueException(), 'Attribute key "' . $newKey . '" is reserved and cannot be used as an attribute name.');
+        }
+
         $db = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($db->isEmpty()) {
@@ -512,11 +533,11 @@ abstract class Action extends UtopiaAction
             throw new Exception($this->getNotAvailableException());
         }
 
-        if ($attribute->getAttribute(('type') !== $type)) {
+        if ($attribute->getAttribute('type') !== $type) {
             throw new Exception($this->getTypeInvalidException());
         }
 
-        if ($attribute->getAttribute('type') === Database::VAR_STRING && $attribute->getAttribute(('filter') !== $filter)) {
+        if ($attribute->getAttribute('type') === Database::VAR_STRING && $attribute->getAttribute('filter') !== $filter) {
             throw new Exception($this->getTypeInvalidException());
         }
 
