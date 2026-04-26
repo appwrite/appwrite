@@ -95,8 +95,8 @@ class Update extends Action
 
         $formatOptions = $attribute->getAttribute('formatOptions', []);
         if (!empty($formatOptions)) {
-            $attribute->setAttribute('min', \intval($formatOptions['min']));
-            $attribute->setAttribute('max', \intval($formatOptions['max']));
+            $attribute->setAttribute('min', $formatOptions['min'] === \PHP_INT_MIN ? null : \intval($formatOptions['min']));
+            $attribute->setAttribute('max', $formatOptions['max'] === \PHP_INT_MAX ? null : \intval($formatOptions['max']));
         }
 
         $response

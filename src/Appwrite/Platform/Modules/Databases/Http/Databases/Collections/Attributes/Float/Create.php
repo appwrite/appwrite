@@ -106,8 +106,8 @@ class Create extends Action
 
         $formatOptions = $attribute->getAttribute('formatOptions', []);
         if (!empty($formatOptions)) {
-            $attribute->setAttribute('min', \floatval($formatOptions['min']));
-            $attribute->setAttribute('max', \floatval($formatOptions['max']));
+            $attribute->setAttribute('min', $formatOptions['min'] === -\PHP_FLOAT_MAX ? null : \floatval($formatOptions['min']));
+            $attribute->setAttribute('max', $formatOptions['max'] === \PHP_FLOAT_MAX ? null : \floatval($formatOptions['max']));
         }
 
         $response
