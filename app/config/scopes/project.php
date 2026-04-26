@@ -204,6 +204,18 @@ return [ // List of publicly visible scopes
         "description" =>
             "Access to create, update, and delete project\'s platforms",
     ],
+    "mocks.read" => [
+        "description" =>
+            "Access to read project\'s mocks",
+    ],
+    "mocks.write" => [
+        "description" =>
+            "Access to create, update, and delete project\'s mocks",
+    ],
+    "policies.read" => [
+        "description" =>
+            "Access to read project\'s policies",
+    ],
     "policies.write" => [
         "description" =>
             "Access to update project\'s policies",
