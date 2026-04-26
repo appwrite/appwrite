@@ -22,7 +22,7 @@ class Comment
         'Every Git commit and branch gets its own deployment URL automatically',
         'Custom domains work with both CNAME for subdomains and NS records for apex domains',
         'HTTPS and SSL certificates are handled automatically for all your Sites',
-        'Functions can run for up to 15 minutes before timing out',
+        'Function builds can take up to 45 minutes before timing out',
         'Schedule functions to run as often as every minute with cron expressions',
         'Environment variables can be scoped per function or shared across your project',
         'Function scopes give you fine-grained control over API permissions',
@@ -148,6 +148,7 @@ class Comment
                         'building' => $this->generatImage($pathLight, $pathDark, 'Building', 85) . ' _Building_',
                         'ready' => $this->generatImage($pathLight, $pathDark, 'Ready', 85) . ' _Ready_',
                         'failed' => $this->generatImage($pathLight, $pathDark, 'Failed', 85) . ' _Failed_',
+                        default => '',
                     };
 
                     if ($site['action']['type'] === 'logs') {
@@ -195,6 +196,7 @@ class Comment
                         'building' => $this->generatImage($pathLight, $pathDark, 'Building', 85) . ' _Building_',
                         'ready' => $this->generatImage($pathLight, $pathDark, 'Ready', 85) . ' _Ready_',
                         'failed' => $this->generatImage($pathLight, $pathDark, 'Failed', 85) . ' _Failed_',
+                        default => '',
                     };
 
                     if ($function['action']['type'] === 'logs') {
@@ -245,13 +247,13 @@ class Comment
 
     public function parseComment(string $comment): self
     {
-        $state = \explode("\n", $comment)[0] ?? '';
+        $state = \explode("\n", $comment)[0];
         $state = substr($state, strlen($this->statePrefix));
 
         $json = \base64_decode($state);
 
         $builds = \json_decode($json, true);
-        $this->builds = $builds;
+        $this->builds = \is_array($builds) ? $builds : [];
 
         return $this;
     }

@@ -55,6 +55,12 @@ $admins = [
     'tables.write',
     'platforms.read',
     'platforms.write',
+    'mocks.read',
+    'mocks.write',
+    'policies.read',
+    'policies.write',
+    'templates.read',
+    'templates.write',
     'projects.write',
     'keys.read',
     'keys.write',
@@ -62,6 +68,8 @@ $admins = [
     'devKeys.write',
     'webhooks.read',
     'webhooks.write',
+    'project.read',
+    'project.write',
     'locale.read',
     'avatars.read',
     'health.read',
@@ -91,6 +99,8 @@ $admins = [
     'subscribers.read',
     'tokens.read',
     'tokens.write',
+    'schedules.read',
+    'schedules.write',
 ];
 
 return [

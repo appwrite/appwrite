@@ -1,1 +1,0 @@
-appwrite avatars get-initials

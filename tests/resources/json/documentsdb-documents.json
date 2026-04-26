@@ -1,0 +1,162 @@
+[
+    {
+        "$id": "doc01",
+        "name": "Alice",
+        "email": "alice@test.com",
+        "age": 35,
+        "active": false,
+        "tags": [
+            "analyst",
+            "engineer"
+        ],
+        "address": {
+            "city": "New York",
+            "zip": "27436",
+            "country": "DE"
+        }
+    },
+    {
+        "$id": "doc02",
+        "name": "Bob",
+        "email": "bob@test.com",
+        "age": 58,
+        "active": false,
+        "tags": [
+            "engineer",
+            "manager"
+        ],
+        "address": {
+            "city": "London",
+            "zip": "49320",
+            "country": "JP"
+        }
+    },
+    {
+        "$id": "doc03",
+        "name": "Charlie",
+        "email": "charlie@test.com",
+        "age": 23,
+        "active": true,
+        "tags": [
+            "analyst",
+            "manager"
+        ],
+        "address": {
+            "city": "Tokyo",
+            "zip": "74758",
+            "country": "JP"
+        }
+    },
+    {
+        "$id": "doc04",
+        "name": "Diana",
+        "email": "diana@test.com",
+        "age": 60,
+        "active": true,
+        "tags": [
+            "analyst",
+            "manager"
+        ],
+        "address": {
+            "city": "Paris",
+            "zip": "50703",
+            "country": "JP"
+        }
+    },
+    {
+        "$id": "doc05",
+        "name": "Eve",
+        "email": "eve@test.com",
+        "age": 59,
+        "active": false,
+        "tags": [
+            "engineer",
+            "designer"
+        ],
+        "address": {
+            "city": "Berlin",
+            "zip": "98929",
+            "country": "UK"
+        }
+    },
+    {
+        "$id": "doc06",
+        "name": "Frank",
+        "email": "frank@test.com",
+        "age": 23,
+        "active": true,
+        "tags": [
+            "engineer",
+            "manager"
+        ],
+        "address": {
+            "city": "Sydney",
+            "zip": "82907",
+            "country": "US"
+        }
+    },
+    {
+        "$id": "doc07",
+        "name": "Grace",
+        "email": "grace@test.com",
+        "age": 36,
+        "active": true,
+        "tags": [
+            "analyst",
+            "developer"
+        ],
+        "address": {
+            "city": "Toronto",
+            "zip": "68710",
+            "country": "US"
+        }
+    },
+    {
+        "$id": "doc08",
+        "name": "Hank",
+        "email": "hank@test.com",
+        "age": 28,
+        "active": false,
+        "tags": [
+            "engineer",
+            "manager"
+        ],
+        "address": {
+            "city": "Mumbai",
+            "zip": "61026",
+            "country": "FR"
+        }
+    },
+    {
+        "$id": "doc09",
+        "name": "Iris",
+        "email": "iris@test.com",
+        "age": 40,
+        "active": true,
+        "tags": [
+            "developer",
+            "designer"
+        ],
+        "address": {
+            "city": "Seoul",
+            "zip": "48039",
+            "country": "FR"
+        }
+    },
+    {
+        "$id": "doc10",
+        "name": "Jack",
+        "email": "jack@test.com",
+        "age": 45,
+        "active": false,
+        "tags": [
+            "manager",
+            "developer"
+        ],
+        "address": {
+            "city": "Dubai",
+            "zip": "22733",
+            "country": "JP"
+        }
+    }
+]

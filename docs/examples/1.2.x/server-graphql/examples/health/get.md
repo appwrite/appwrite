@@ -1,6 +1,0 @@
-query {
-    healthGet {
-        ping
-        status
-    }
-}

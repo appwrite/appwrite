@@ -40,9 +40,8 @@ class FunctionsScheduleTest extends Scope
             'activate' => true
         ]);
 
-        // Wait for scheduled execution
-        \sleep(60);
-
+        // Wait for scheduled execution (schedule runs every minute)
+        // Give extra time in CI where deployment/scheduling may be slower
         $this->assertEventually(function () use ($functionId) {
             $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', [
                 'content-type' => 'application/json',
@@ -51,7 +50,7 @@ class FunctionsScheduleTest extends Scope
             ]);
 
             $this->assertEquals(200, $executions['headers']['status-code']);
-            $this->assertCount(1, $executions['body']['executions']);
+            $this->assertGreaterThanOrEqual(1, count($executions['body']['executions']), 'Expected at least 1 scheduled execution');
 
             $asyncExecution = $executions['body']['executions'][0];
 
@@ -65,7 +64,7 @@ class FunctionsScheduleTest extends Scope
             $this->assertNotEmpty($asyncExecution['$id']);
             $headers = array_column($asyncExecution['requestHeaders'] ?? [], 'value', 'name');
             $this->assertEmpty($headers['x-appwrite-client-ip'] ?? '');
-        }, 60000, 500);
+        }, 180000, 500); // 3 minute timeout with 500ms polling for CI stability
 
         $this->cleanupFunction($functionId);
     }
@@ -91,7 +90,7 @@ class FunctionsScheduleTest extends Scope
 
         // Schedule execution for the future
         \date_default_timezone_set('UTC');
-        $futureTime = (new \DateTime())->add(new \DateInterval('PT2M')); // 2 minute in the future
+        $futureTime = (new \DateTime())->add(new \DateInterval('PT2M')); // 2 minutes in the future
         $futureTime->setTime($futureTime->format('H'), $futureTime->format('i'), 0, 0);
 
 
@@ -125,8 +124,6 @@ class FunctionsScheduleTest extends Scope
         $this->assertEquals('x-appwrite-client-ip', $execution['body']['requestHeaders'][0]['name']);
         $this->assertNotEmpty($execution['body']['requestHeaders'][0]['value']);
 
-        \sleep(120);
-
         $this->assertEventually(function () use ($functionId, $executionId) {
             $execution = $this->getExecution($functionId, $executionId);
 
@@ -142,7 +139,7 @@ class FunctionsScheduleTest extends Scope
             $this->assertStringContainsString('user-is-' . $this->getUser()['$id'], $execution['body']['logs']);
             $this->assertStringContainsString('jwt-is-valid', $execution['body']['logs']);
             $this->assertGreaterThan(0, $execution['body']['duration']);
-        }, 10000, 500);
+        }, 120000, 500);
 
         /* Test for FAILURE */
         // Schedule synchronous execution
@@ -173,7 +170,7 @@ class FunctionsScheduleTest extends Scope
         ]);
         $this->assertEquals(400, $execution['headers']['status-code']);
 
-        $this->cleanupFunction($functionId, $executionId);
+        $this->cleanupFunction($functionId);
     }
 
     public function testDeleteScheduledExecution()

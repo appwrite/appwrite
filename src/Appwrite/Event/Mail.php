@@ -4,6 +4,7 @@ namespace Appwrite\Event;
 
 use Utopia\Config\Config;
 use Utopia\Queue\Publisher;
+use Utopia\System\System;
 
 class Mail extends Event
 {
@@ -24,8 +25,8 @@ class Mail extends Event
         parent::__construct($publisher);
 
         $this
-            ->setQueue(Event::MAILS_QUEUE_NAME)
-            ->setClass(Event::MAILS_CLASS_NAME);
+            ->setQueue(System::getEnv('_APP_MAILS_QUEUE_NAME', Event::MAILS_QUEUE_NAME))
+            ->setClass(System::getEnv('_APP_MAILS_CLASS_NAME', Event::MAILS_CLASS_NAME));
     }
 
     /**
@@ -100,7 +101,7 @@ class Mail extends Event
     /**
      * Sets preview for the mail event.
      *
-     * @return string
+     * @return self
      */
     public function setPreview(string $preview): self
     {
@@ -114,7 +115,7 @@ class Mail extends Event
      *
      * @return string
      */
-    public function getPreview(string $preview): string
+    public function getPreview(): string
     {
         return $this->preview;
     }
@@ -180,7 +181,7 @@ class Mail extends Event
     /**
      * Set SMTP port
      *
-     * @param int port
+     * @param int $port
      * @return self
      */
     public function setSmtpPort(int $port): self
@@ -216,7 +217,7 @@ class Mail extends Event
     /**
      * Set SMTP secure
      *
-     * @param string $password
+     * @param string $secure
      * @return self
      */
     public function setSmtpSecure(string $secure): self
@@ -250,14 +251,26 @@ class Mail extends Event
     }
 
     /**
-     * Set SMTP reply to
+     * Set SMTP reply-to email
      *
-     * @param string $replyTo
+     * @param string $email
      * @return self
      */
-    public function setSmtpReplyTo(string $replyTo): self
+    public function setSmtpReplyToEmail(string $email): self
     {
-        $this->smtp['replyTo'] = $replyTo;
+        $this->smtp['replyToEmail'] = $email;
+        return $this;
+    }
+
+    /**
+     * Set SMTP reply-to name
+     *
+     * @param string $name
+     * @return self
+     */
+    public function setSmtpReplyToName(string $name): self
+    {
+        $this->smtp['replyToName'] = $name;
         return $this;
     }
 
@@ -332,13 +345,23 @@ class Mail extends Event
     }
 
     /**
-     * Get SMTP reply to
+     * Get SMTP reply-to email
      *
      * @return string
      */
-    public function getSmtpReplyTo(): string
+    public function getSmtpReplyToEmail(): string
     {
-        return $this->smtp['replyTo'] ?? '';
+        return $this->smtp['replyToEmail'] ?? '';
+    }
+
+    /**
+     * Get SMTP reply-to name
+     *
+     * @return string
+     */
+    public function getSmtpReplyToName(): string
+    {
+        return $this->smtp['replyToName'] ?? '';
     }
 
     /**
@@ -360,6 +383,18 @@ class Mail extends Event
     public function setVariables(array $variables): self
     {
         $this->variables = $variables;
+        return $this;
+    }
+
+    /**
+     * Append variables to the email event.
+     *
+     * @param array $variables
+     * @return self
+     */
+    public function appendVariables(array $variables): self
+    {
+        $this->variables = \array_merge($this->variables, $variables);
         return $this;
     }
 

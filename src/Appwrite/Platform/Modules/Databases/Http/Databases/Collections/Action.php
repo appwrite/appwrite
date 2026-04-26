@@ -3,27 +3,29 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections;
 
 use Appwrite\Extend\Exception;
-use Utopia\Platform\Action as UtopiaAction;
-use Utopia\Platform\Scope\HTTP;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction;
+use Utopia\Database\Database;
+use Utopia\Database\Document;
 
-abstract class Action extends UtopiaAction
+abstract class Action extends DatabasesAction
 {
     /**
      * The current API context (either 'table' or 'collection').
      */
-    private ?string $context = COLLECTIONS;
+    private string $context = COLLECTIONS;
 
     /**
      * Get the response model used in the SDK and HTTP responses.
      */
     abstract protected function getResponseModel(): string;
 
-    public function setHttpPath(string $path): UtopiaAction
+    public function setHttpPath(string $path): self
     {
         if (\str_contains($path, '/tablesdb')) {
             $this->context = TABLES;
         }
-        return parent::setHttpPath($path);
+        parent::setHttpPath($path);
+        return $this;
     }
 
     /**
@@ -164,5 +166,16 @@ abstract class Action extends UtopiaAction
         return $this->isCollectionsAPI()
             ? Exception::ATTRIBUTE_TYPE_INVALID
             : Exception::COLUMN_TYPE_INVALID;
+    }
+
+    /**
+     * Add row bytes information to a collection/table document.
+     */
+    protected function addRowBytesInfo(Document $document, Database $dbForProject): Document
+    {
+        $adapter = $dbForProject->getAdapter();
+        $document->setAttribute('bytesMax', $adapter->getDocumentSizeLimit());
+        $document->setAttribute('bytesUsed', $adapter->getAttributeWidth($document));
+        return $document;
     }
 }

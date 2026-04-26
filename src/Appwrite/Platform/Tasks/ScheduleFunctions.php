@@ -4,9 +4,11 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Func;
 use Cron\CronExpression;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
+use Utopia\Span\Span;
+use Utopia\System\System;
 
 /**
  * ScheduleFunctions
@@ -18,8 +20,6 @@ class ScheduleFunctions extends ScheduleBase
 {
     public const UPDATE_TIMER = 10; // seconds
     public const ENQUEUE_TIMER = 60; // seconds
-
-    private ?float $lastEnqueueUpdate = null;
 
     public static function getName(): string
     {
@@ -41,7 +41,10 @@ class ScheduleFunctions extends ScheduleBase
         $timerStart = \microtime(true);
         $time = DateTime::now();
 
-        $enqueueDiff = $this->lastEnqueueUpdate === null ? 0 : $timerStart - $this->lastEnqueueUpdate;
+        // TODO: Track the last enqueue timestamp to subtract ENQUEUE_TIMER drift from
+        // the time frame. Previously this used $this->lastEnqueueUpdate as a property
+        // but enabling the assignment broke scheduling, so the diff stays 0.
+        $enqueueDiff = 0;
         $timeFrame = DateTime::addSeconds(new \DateTime(), static::ENQUEUE_TIMER - $enqueueDiff);
 
         Console::log("Enqueue tick: started at: $time (with diff $enqueueDiff)");
@@ -88,7 +91,7 @@ class ScheduleFunctions extends ScheduleBase
                     $scheduleKey = $delayConfig['key'];
                     // Ensure schedule was not deleted
                     if (!\array_key_exists($scheduleKey, $this->schedules)) {
-                        return;
+                        continue;
                     }
 
                     $schedule = $this->schedules[$scheduleKey];
@@ -102,8 +105,22 @@ class ScheduleFunctions extends ScheduleBase
                         ->setFunction($schedule['resource'])
                         ->setMethod('POST')
                         ->setPath('/')
-                        ->setProject($schedule['project'])
-                        ->trigger();
+                        ->setProject($schedule['project']);
+
+                    $projectDoc = $schedule['project'];
+                    $functionDoc = $schedule['resource'];
+                    $traceProjectId = System::getEnv('_APP_TRACE_PROJECT_ID', '');
+                    $traceFunctionId = System::getEnv('_APP_TRACE_FUNCTION_ID', '');
+                    if ($traceProjectId !== '' && $traceFunctionId !== '' && $projectDoc->getId() === $traceProjectId && $functionDoc->getId() === $traceFunctionId) {
+                        Span::init('execution.trace.v1_functions_enqueue');
+                        Span::add('datetime', gmdate('c'));
+                        Span::add('projectId', $projectDoc->getId());
+                        Span::add('functionId', $functionDoc->getId());
+                        Span::add('scheduleId', $schedule['$id'] ?? '');
+                        Span::current()?->finish();
+                    }
+
+                    $queueForFunctions->trigger();
 
                     $this->recordEnqueueDelay($delayConfig['nextDate']);
                 }
@@ -111,9 +128,6 @@ class ScheduleFunctions extends ScheduleBase
         }
 
         $timerEnd = \microtime(true);
-
-        // TODO: This was a bug before because it wasn't passed by reference, enabling it breaks scheduling
-        //$this->lastEnqueueUpdate = $timerStart;
 
         Console::log("Enqueue tick: {$total} executions were enqueued in " . ($timerEnd - $timerStart) . " seconds");
     }

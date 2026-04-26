@@ -5,8 +5,8 @@ namespace Appwrite\Utopia\Database\Validator;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Key;
+use Utopia\Emails\Validator\Email;
 use Utopia\Validator;
-use Utopia\Validator\Email;
 use Utopia\Validator\IP;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
@@ -45,10 +45,12 @@ class Attributes extends Validator
     /**
      * @param int $maxAttributes Maximum number of attributes allowed
      * @param bool $supportForSpatialAttributes Whether DB supports spatial attributes
+     * @param bool $supportForAttributes Whether DB supports attributes or not
      */
     public function __construct(
         int $maxAttributes = APP_LIMIT_ARRAY_PARAMS_SIZE,
         protected bool $supportForSpatialAttributes = true,
+        protected bool $supportForAttributes = true
     ) {
         $this->maxAttributes = $maxAttributes;
     }
@@ -75,6 +77,11 @@ class Attributes extends Validator
     {
         if (!\is_array($value)) {
             $this->message = 'Attributes must be an array';
+            return false;
+        }
+
+        if (\count($value) && !$this->supportForAttributes) {
+            $this->message = 'Attributes are not supported by the current database';
             return false;
         }
 
@@ -181,13 +188,13 @@ class Attributes extends Validator
             }
 
             // Validate required and default conflict
-            if (isset($attribute['required']) && $attribute['required'] === true && isset($attribute['default']) && $attribute['default'] !== null) {
+            if (isset($attribute['required']) && $attribute['required'] === true && isset($attribute['default'])) {
                 $this->message = "Attribute '" . $attribute['key'] . "' cannot have a default value when required is true";
                 return false;
             }
 
             // Validate array and default conflict
-            if (isset($attribute['array']) && $attribute['array'] === true && isset($attribute['default']) && $attribute['default'] !== null) {
+            if (isset($attribute['array']) && $attribute['array'] === true && isset($attribute['default'])) {
                 $this->message = "Attribute '" . $attribute['key'] . "' cannot have a default value when array is true";
                 return false;
             }
@@ -324,7 +331,7 @@ class Attributes extends Validator
                 }
 
                 // Validate default exists in elements
-                if (isset($attribute['default']) && $attribute['default'] !== null) {
+                if (isset($attribute['default'])) {
                     if (!in_array($attribute['default'], $attribute['elements'], true)) {
                         $this->message = "Default value for enum attribute '" . $attribute['key'] . "' must be one of the provided elements";
                         return false;

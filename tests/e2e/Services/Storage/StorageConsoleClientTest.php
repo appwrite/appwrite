@@ -160,4 +160,40 @@ class StorageConsoleClientTest extends Scope
         ], $this->getHeaders()));
         $this->assertEquals(204, $response['headers']['status-code']);
     }
+
+    public function testFilePermissionNotAutoSetInConsole(): void
+    {
+        // Create a bucket
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'bucketId' => ID::unique(),
+            'name' => 'Test Bucket Permissions',
+            'fileSecurity' => true,
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        // Create a file without providing permissions (console client should not auto-set permissions)
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'test.png'),
+        ]);
+        $this->assertEquals(201, $file['headers']['status-code']);
+
+        // Verify file permissions are empty (not auto-set for privileged console user)
+        $this->assertIsArray($file['body']['$permissions']);
+        $this->assertEmpty($file['body']['$permissions']);
+
+        // Clean up: delete the bucket
+        $response = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(204, $response['headers']['status-code']);
+    }
 }

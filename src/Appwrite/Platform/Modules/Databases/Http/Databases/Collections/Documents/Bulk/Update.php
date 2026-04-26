@@ -3,14 +3,15 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Bulk;
 
 use Appwrite\Event\Event;
-use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
+use Appwrite\Functions\EventProcessor;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -22,7 +23,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Nullable;
@@ -72,23 +73,25 @@ class Update extends Action
                     replaceWith: 'tablesDB.updateRows',
                 ),
             ))
-            ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('collectionId', '', new UID(), 'Collection ID.')
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
             ->param('data', [], new JSON(), 'Document data as JSON object. Include only attribute and value pairs to be updated.', true, example: '{"username":"walter.obrien","email":"walter.obrien@example.com","fullName":"Walter O\'Brien","age":33,"isAdmin":false}')
             ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
-            ->param('transactionId', null, new Nullable(new UID()), 'Transaction ID for staging the operation.', true)
+            ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForStatsUsage')
+            ->inject('getDatabasesDB')
+            ->inject('usage')
             ->inject('queueForEvents')
             ->inject('queueForRealtime')
             ->inject('queueForFunctions')
             ->inject('queueForWebhooks')
             ->inject('plan')
+            ->inject('eventProcessor')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string|array $data, array $queries, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, Event $queueForEvents, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, array $plan): void
+    public function action(string $databaseId, string $collectionId, string|array $data, array $queries, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Context $usage, Event $queueForEvents, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, array $plan, EventProcessor $eventProcessor): void
     {
         $data = \is_string($data)
             ? \json_decode($data, true)
@@ -187,11 +190,12 @@ class Update extends Action
             return;
         }
 
+        $dbForDatabases = $getDatabasesDB($database);
         $documents = [];
 
         try {
-            $modified = $dbForProject->withPreserveDates(function () use ($plan, &$documents, $dbForProject, $database, $collection, $data, $queries) {
-                return $dbForProject->updateDocuments(
+            $modified = $dbForDatabases->withPreserveDates(function () use ($plan, &$documents, $dbForDatabases, $database, $collection, $data, $queries) {
+                return $dbForDatabases->updateDocuments(
                     'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
                     new Document($data),
                     $queries,
@@ -214,12 +218,12 @@ class Update extends Action
 
         foreach ($documents as $document) {
             $document->setAttribute('$databaseId', $database->getId());
-            $document->setAttribute('$'.$this->getCollectionsEventsContext().'Id', $collection->getId());
+            $document->setAttribute('$' . $this->getCollectionsEventsContext() . 'Id', $collection->getId());
         }
 
-        $queueForStatsUsage
-            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, \max(1, $modified))
-            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), \max(1, $modified));
+        $usage
+            ->addMetric($this->getDatabasesOperationWriteMetric(), \max(1, $modified))
+            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), $this->getDatabasesIdOperationWriteMetric()), \max(1, $modified));
 
         $response->dynamic(new Document([
             'total' => $modified,
@@ -234,7 +238,9 @@ class Update extends Action
             $queueForEvents,
             $queueForRealtime,
             $queueForFunctions,
-            $queueForWebhooks
+            $queueForWebhooks,
+            $dbForProject,
+            $eventProcessor
         );
     }
 }

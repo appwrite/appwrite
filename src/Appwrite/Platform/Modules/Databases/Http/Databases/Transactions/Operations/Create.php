@@ -20,7 +20,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\UID;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
 
 class Create extends Action
@@ -58,24 +58,25 @@ class Create extends Action
                 ],
                 contentType: ContentType::JSON
             ))
-            ->param('transactionId', '', new UID(), 'Transaction ID.')
+            ->param('transactionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Transaction ID.', false, ['dbForProject'])
             ->param('operations', [], new ArrayList(new Operation(type: 'legacy')), 'Array of staged operations.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('transactionState')
             ->inject('plan')
             ->inject('authorization')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
-    public function action(string $transactionId, array $operations, UtopiaResponse $response, Database $dbForProject, TransactionState $transactionState, array $plan, Authorization $authorization): void
+    public function action(string $transactionId, array $operations, UtopiaResponse $response, Database $dbForProject, TransactionState $transactionState, array $plan, Authorization $authorization, User $user): void
     {
         if (empty($operations)) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Operations array cannot be empty');
         }
 
-        $isAPIKey = User::isApp($authorization->getRoles());
-        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
+        $isAPIKey = $user->isApp($authorization->getRoles());
+        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         // API keys and admins can read any transaction, regular users need permissions
         $transaction = ($isAPIKey || $isPrivilegedUser)
@@ -148,7 +149,7 @@ class Create extends Action
                 $collectionKey = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
                 $isDependant = isset($dependants[$collectionKey][$documentId]);
 
-                $document = $transactionState->getDocument($collectionKey, $documentId, $transactionId);
+                $document = $transactionState->getDocument($database, $collectionKey, $documentId, $transactionId);
                 if ($document->isEmpty() && !$isDependant && $operation['action'] !== 'upsert') {
                     throw new Exception(Exception::DOCUMENT_NOT_FOUND, params: [$documentId]);
                 }
@@ -238,7 +239,7 @@ class Create extends Action
             }
         }
 
-        $transaction = $authorization->skip(fn () => $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged, $existing, $operations) {
+        $transaction = $authorization->skip(fn () => $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged, $operations) {
             $dbForProject->createDocuments('transactionLogs', $staged);
             return $dbForProject->increaseDocumentAttribute(
                 'transactions',

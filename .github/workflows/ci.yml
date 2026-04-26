@@ -1,0 +1,833 @@
+name: CI
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  COMPOSE_FILE: docker-compose.yml
+  IMAGE: appwrite-dev
+  K6_VERSION: '0.53.0'
+
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      response_format:
+        description: 'Response format version to test (e.g., 1.5.0, 1.4.0)'
+        required: false
+        type: string
+        default: ''
+
+jobs:
+  dependencies:
+    name: Checks / Dependencies
+    if: github.event_name == 'pull_request'
+    permissions:
+      actions: read
+      security-events: write
+      contents: read
+    uses: "google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@v2.3.3"
+
+  security:
+    name: Checks / Image
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          submodules: 'recursive'
+
+      - name: Build the Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: true
+          tags: pr_image:${{ github.sha }}
+          target: production
+
+      - name: Run Trivy vulnerability scanner on image
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          image-ref: 'pr_image:${{ github.sha }}'
+          format: 'sarif'
+          output: 'trivy-image-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Run Trivy vulnerability scanner on source code
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-fs-results.sarif'
+          severity: 'CRITICAL,HIGH'
+          skip-setup-trivy: true
+
+      - name: Upload image scan results
+        uses: github/codeql-action/upload-sarif@v4
+        if: always() && hashFiles('trivy-image-results.sarif') != ''
+        with:
+          sarif_file: 'trivy-image-results.sarif'
+          category: 'trivy-image'
+
+      - name: Upload source code scan results
+        uses: github/codeql-action/upload-sarif@v4
+        if: always() && hashFiles('trivy-fs-results.sarif') != ''
+        with:
+          sarif_file: 'trivy-fs-results.sarif'
+          category: 'trivy-source'
+
+  composer:
+    name: Checks / Composer
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2
+          coverage: none
+
+      - name: Validate
+        run: composer validate
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --ignore-platform-reqs
+
+      - name: Audit
+        env:
+          COMPOSER_NO_AUDIT: 0
+        run: composer audit
+
+  format:
+    name: Checks / Format
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+
+      - run: git checkout HEAD^2
+        if: github.event_name == 'pull_request'
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --ignore-platform-reqs
+
+      - name: Run Linter
+        run: composer lint
+
+  analyze:
+    name: Checks / Analyze
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --ignore-platform-reqs
+
+      - name: Cache PHPStan result cache
+        uses: actions/cache@v4
+        with:
+          path: .phpstan-cache
+          key: phpstan-${{ github.sha }}
+          restore-keys: |
+            phpstan-
+
+      - name: Run PHPStan
+        run: composer analyze -- --no-progress
+
+  specs:
+    name: Checks / Specs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: swoole
+          tools: composer:v2
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --ignore-platform-reqs
+
+      - name: Generate specs
+        run: _APP_STORAGE_LIMIT=5368709120 php app/cli.php specs --version=latest --git=no
+
+  locale:
+    name: Checks / Locale
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Run Locale check
+        run: node .github/workflows/static-analysis/locale/index.js
+
+  matrix:
+    name: Tests / Matrix
+    runs-on: ubuntu-latest
+    outputs:
+      databases: ${{ steps.generate.outputs.databases }}
+      modes: ${{ steps.generate.outputs.modes }}
+    steps:
+      - name: Generate matrix
+        id: generate
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const allDatabases = ['MariaDB', 'PostgreSQL', 'MongoDB'];
+            const allModes = ['dedicated', 'shared'];
+
+            const defaultDatabases = ['MongoDB'];
+            const defaultModes = ['dedicated'];
+
+            const pr = context.payload.pull_request;
+            if (!pr) {
+              core.setOutput('databases', JSON.stringify(allDatabases));
+              core.setOutput('modes', JSON.stringify(allModes));
+              return;
+            }
+
+            const getContent = (ref) => github.rest.repos.getContent({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              path: 'composer.lock',
+              ref,
+            });
+
+            const getDbVersion = (lock) => lock.packages?.find(p => p.name === 'utopia-php/database')?.version;
+
+            const [{ data: base }, { data: head }] = await Promise.all([
+              getContent(pr.base.sha),
+              getContent(pr.head.sha),
+            ]);
+
+            const decode = (content) => JSON.parse(Buffer.from(content, 'base64').toString());
+            const databaseChanged = getDbVersion(decode(base.content)) !== getDbVersion(decode(head.content));
+
+            core.setOutput('databases', JSON.stringify(databaseChanged ? allDatabases : defaultDatabases));
+            core.setOutput('modes', JSON.stringify(databaseChanged ? allModes : defaultModes));
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build Appwrite
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: ${{ env.IMAGE }}
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          outputs: type=docker,dest=/tmp/${{ env.IMAGE }}.tar
+          target: development
+          build-args: |
+            DEBUG=false
+            TESTING=true
+            VERSION=dev
+
+      - name: Upload Docker Image
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ env.IMAGE }}
+          path: /tmp/${{ env.IMAGE }}.tar
+          retention-days: 1
+
+  unit:
+    name: Tests / Unit
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: checkout
+        uses: actions/checkout@v6
+
+      - name: Download Docker Image
+        uses: actions/download-artifact@v7
+        with:
+          name: ${{ env.IMAGE }}
+          path: /tmp
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Load and Start Appwrite
+        timeout-minutes: 5
+        run: |
+          docker load --input /tmp/${{ env.IMAGE }}.tar
+          docker compose pull --quiet --ignore-buildable
+          docker compose up -d --quiet-pull --wait
+
+      - name: Environment Variables
+        run: docker compose exec -T appwrite vars
+
+      - name: Run Unit Tests
+        uses: itznotabug/php-retry@v3
+        with:
+          max_attempts: 2
+          retry_wait_seconds: 60
+          timeout_minutes: 15
+          job_id: ${{ job.check_run_id }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          test_dir: tests/unit
+          command: >-
+            docker compose exec
+            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
+            appwrite test /usr/src/code/tests/unit
+
+  e2e_general:
+    name: Tests / E2E / General
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: checkout
+        uses: actions/checkout@v6
+
+      - name: Download Docker Image
+        uses: actions/download-artifact@v7
+        with:
+          name: ${{ env.IMAGE }}
+          path: /tmp
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Load and Start Appwrite
+        timeout-minutes: 5
+        run: |
+          docker load --input /tmp/${{ env.IMAGE }}.tar
+          docker compose pull --quiet --ignore-buildable
+          docker compose up -d --quiet-pull --wait
+
+      - name: Wait for Open Runtimes
+        timeout-minutes: 3
+        run: |
+          while ! docker compose logs openruntimes-executor | grep -q "Executor is ready."; do
+            echo "Waiting for Executor to come online"
+            sleep 1
+          done
+
+      - name: Run General Tests
+        uses: itznotabug/php-retry@v3
+        with:
+          max_attempts: 2
+          retry_wait_seconds: 60
+          timeout_minutes: 15
+          job_id: ${{ job.check_run_id }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          test_dir: tests/e2e/General
+          command: >-
+            docker compose exec -T
+            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
+            appwrite test /usr/src/code/tests/e2e/General
+
+      - name: Failure Logs
+        if: failure()
+        run: |
+          echo "=== Appwrite Logs ==="
+          docker compose logs
+
+  e2e_service:
+    name: Tests / E2E / ${{ matrix.database }} (${{ matrix.mode }}) / ${{ matrix.service }}
+    runs-on: ${{ matrix.runner || 'ubuntu-latest' }}
+    needs: [build, matrix]
+    permissions:
+      contents: read
+      pull-requests: write
+    strategy:
+      fail-fast: false
+      matrix:
+        database: ${{ fromJSON(needs.matrix.outputs.databases) }}
+        mode: ${{ fromJSON(needs.matrix.outputs.modes) }}
+        service: [
+          Account,
+          Avatars,
+          Console,
+          Databases,
+          TablesDB,
+          Functions,
+          FunctionsSchedule,
+          GraphQL,
+          Health,
+          Locale,
+          Projects,
+          Realtime,
+          Sites,
+          Proxy,
+          Storage,
+          Tokens,
+          Teams,
+          Users,
+          ProjectWebhooks,
+          Webhooks,
+          VCS,
+          Messaging,
+          Migrations,
+          Project
+        ]
+        include:
+          - service: Databases
+            runner: blacksmith-4vcpu-ubuntu-2404
+            paratest_processes: 3
+            timeout_minutes: 30
+          - service: Sites
+            runner: blacksmith-4vcpu-ubuntu-2404
+          - service: Functions
+            runner: blacksmith-4vcpu-ubuntu-2404
+          - service: Avatars
+            runner: blacksmith-4vcpu-ubuntu-2404
+          - service: Realtime
+            runner: blacksmith-4vcpu-ubuntu-2404
+          - service: TablesDB
+            runner: blacksmith-4vcpu-ubuntu-2404
+            paratest_processes: 3
+            timeout_minutes: 30
+          - service: Migrations
+            paratest_processes: 1
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Download Docker Image
+        uses: actions/download-artifact@v7
+        with:
+          name: ${{ env.IMAGE }}
+          path: /tmp
+
+      - name: Set database environment
+        run: |
+          if [ "${{ matrix.database }}" = "MariaDB" ]; then
+            echo "COMPOSE_PROFILES=mariadb" >> $GITHUB_ENV
+            echo "_APP_DB_ADAPTER=mariadb" >> $GITHUB_ENV
+            echo "_APP_DB_HOST=mariadb" >> $GITHUB_ENV
+            echo "_APP_DB_PORT=3306" >> $GITHUB_ENV
+          elif [ "${{ matrix.database }}" = "MongoDB" ]; then
+            echo "COMPOSE_PROFILES=mongodb" >> $GITHUB_ENV
+            echo "_APP_DB_ADAPTER=mongodb" >> $GITHUB_ENV
+            echo "_APP_DB_HOST=mongodb" >> $GITHUB_ENV
+            echo "_APP_DB_PORT=27017" >> $GITHUB_ENV
+          elif [ "${{ matrix.database }}" = "PostgreSQL" ]; then
+            echo "COMPOSE_PROFILES=postgresql" >> $GITHUB_ENV
+            echo "_APP_DB_ADAPTER=postgresql" >> $GITHUB_ENV
+            echo "_APP_DB_HOST=postgresql" >> $GITHUB_ENV
+            echo "_APP_DB_PORT=5432" >> $GITHUB_ENV
+          fi
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Load and Start Appwrite
+        timeout-minutes: 5
+        env:
+          _APP_BROWSER_HOST: http://invalid-browser/v1
+          _APP_DATABASE_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'database_db_main' || '' }}
+          _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'documentsdb_db_main' || '' }}
+          _APP_DATABASE_VECTORSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'vectorsdb_db_main' || '' }}
+        run: |
+          docker load --input /tmp/${{ env.IMAGE }}.tar
+          docker compose pull --quiet --ignore-buildable
+          docker compose up -d --quiet-pull --wait
+
+      - name: Wait for Open Runtimes
+        timeout-minutes: 3
+        run: |
+          while ! docker compose logs openruntimes-executor | grep -q "Executor is ready."; do
+            echo "Waiting for Executor to come online"
+            sleep 1
+          done
+
+      - name: Run tests
+        uses: itznotabug/php-retry@v3
+        with:
+          max_attempts: 2
+          retry_wait_seconds: 60
+          timeout_minutes: ${{ matrix.timeout_minutes || 20 }}
+          job_id: ${{ job.check_run_id }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          test_dir: tests/e2e/Services/${{ matrix.service }}
+          command: |
+            SERVICE_PATH="/usr/src/code/tests/e2e/Services/${{ matrix.service }}"
+
+            # Services that rely on sequential test method execution (shared static state)
+            FUNCTIONAL_FLAG="--functional"
+            case "${{ matrix.service }}" in
+              Databases|TablesDB|Functions|Realtime|GraphQL|ProjectWebhooks) FUNCTIONAL_FLAG="" ;;
+            esac
+
+            PARATEST_PROCESSES="${{ matrix.paratest_processes }}"
+            if [ -z "$PARATEST_PROCESSES" ]; then
+              PARATEST_PROCESSES="$(nproc)"
+            fi
+
+            docker compose exec -T \
+              -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
+              appwrite vendor/bin/paratest --processes "$PARATEST_PROCESSES" $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --log-junit tests/e2e/Services/${{ matrix.service }}/junit.xml
+
+      - name: Failure Logs
+        if: failure()
+        run: |
+          echo "=== Appwrite Logs ==="
+          docker compose logs
+
+  e2e_abuse:
+    name: Tests / E2E / Abuse (${{ matrix.mode }})
+    runs-on: ubuntu-latest
+    needs: [build, matrix]
+    permissions:
+      contents: read
+      pull-requests: write
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: ${{ fromJSON(needs.matrix.outputs.modes) }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - name: Download Docker Image
+        uses: actions/download-artifact@v7
+        with:
+          name: ${{ env.IMAGE }}
+          path: /tmp
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Load and Start Appwrite
+        timeout-minutes: 5
+        env:
+          _APP_OPTIONS_ABUSE: enabled
+          _APP_DATABASE_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'database_db_main' || '' }}
+          _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'documentsdb_db_main' || '' }}
+          _APP_DATABASE_VECTORSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'vectorsdb_db_main' || '' }}
+        run: |
+          docker load --input /tmp/${{ env.IMAGE }}.tar
+          docker compose pull --quiet --ignore-buildable
+          docker compose up -d --quiet-pull --wait
+
+      - name: Run tests
+        uses: itznotabug/php-retry@v3
+        with:
+          max_attempts: 2
+          retry_wait_seconds: 60
+          timeout_minutes: 15
+          job_id: ${{ job.check_run_id }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          test_dir: tests/e2e
+          command: >-
+            docker compose exec -T
+            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
+            appwrite test /usr/src/code/tests/e2e --group=abuseEnabled
+
+      - name: Failure Logs
+        if: failure()
+        run: |
+          echo "=== Appwrite Logs ==="
+          docker compose logs
+
+  e2e_screenshots:
+    name: Tests / E2E / Screenshots (${{ matrix.mode }})
+    runs-on: ubuntu-latest
+    needs: [build, matrix]
+    permissions:
+      contents: read
+      pull-requests: write
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: ${{ fromJSON(needs.matrix.outputs.modes) }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Download Docker Image
+        uses: actions/download-artifact@v7
+        with:
+          name: ${{ env.IMAGE }}
+          path: /tmp
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Load and Start Appwrite
+        timeout-minutes: 5
+        env:
+          _APP_DATABASE_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'database_db_main' || '' }}
+          _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'documentsdb_db_main' || '' }}
+          _APP_DATABASE_VECTORSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'vectorsdb_db_main' || '' }}
+        run: |
+          docker load --input /tmp/${{ env.IMAGE }}.tar
+          docker compose pull --quiet --ignore-buildable
+          docker compose up -d --quiet-pull --wait
+
+      - name: Wait for Open Runtimes
+        timeout-minutes: 3
+        run: |
+          while ! docker compose logs openruntimes-executor | grep -q "Executor is ready."; do
+            echo "Waiting for Executor to come online"
+            sleep 1
+          done
+
+      - name: Run tests
+        uses: itznotabug/php-retry@v3
+        with:
+          max_attempts: 2
+          retry_wait_seconds: 60
+          timeout_minutes: 15
+          job_id: ${{ job.check_run_id }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          test_dir: tests/e2e/Services/Sites
+          command: >-
+            docker compose exec -T
+            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
+            appwrite test /usr/src/code/tests/e2e/Services/Sites --group=screenshots
+
+      - name: Failure Logs
+        if: failure()
+        run: |
+          echo "=== Appwrite Logs ==="
+          docker compose logs
+
+  benchmark:
+    name: Benchmark
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      actions: read
+      contents: read
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - name: Download Docker Image
+        uses: actions/download-artifact@v7
+        with:
+          name: ${{ env.IMAGE }}
+          path: /tmp
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Load Appwrite image
+        run: |
+          docker load --input /tmp/${{ env.IMAGE }}.tar
+          docker tag ${{ env.IMAGE }} ${{ env.IMAGE }}:after
+
+      - name: Setup k6
+        uses: grafana/setup-k6-action@ffe7d7290dfa715e48c2ccc924d068444c94bde2
+        with:
+          k6-version: ${{ env.K6_VERSION }}
+
+      - name: Prepare benchmark before
+        id: benchmark_before_prepare
+        continue-on-error: true
+        run: |
+          git fetch --depth=1 origin ${{ github.event.pull_request.base.sha }}
+          git worktree add --detach /tmp/appwrite-benchmark-before ${{ github.event.pull_request.base.sha }}
+          docker build \
+            --cache-from ${{ env.IMAGE }}:after \
+            --target development \
+            --build-arg DEBUG=false \
+            --build-arg TESTING=true \
+            --build-arg VERSION=dev \
+            --tag ${{ env.IMAGE }}:before \
+            /tmp/appwrite-benchmark-before
+
+      - name: Start before Appwrite
+        id: benchmark_before_start
+        if: steps.benchmark_before_prepare.outcome == 'success'
+        continue-on-error: true
+        working-directory: /tmp/appwrite-benchmark-before
+        env:
+          _APP_DOMAIN: localhost
+          _APP_CONSOLE_DOMAIN: localhost
+          _APP_DOMAIN_FUNCTIONS: functions.localhost
+          _APP_OPTIONS_ABUSE: disabled
+        run: |
+          docker tag ${{ env.IMAGE }}:before ${{ env.IMAGE }}
+          docker compose up -d --wait --no-build
+
+      - name: Prepare benchmark files
+        run: rm -f benchmark-before-summary.json benchmark-after-summary.json benchmark-before-samples.json benchmark-after-samples.json
+
+      - name: Benchmark before
+        if: steps.benchmark_before_start.outcome == 'success'
+        continue-on-error: true
+        uses: grafana/run-k6-action@a15e2072ede004e8d46141e33d7f7dad8ad08d9d
+        env:
+          APPWRITE_ENDPOINT: 'http://localhost/v1'
+          APPWRITE_BENCHMARK_ITERATIONS: '5'
+          APPWRITE_BENCHMARK_VUS: '1'
+          APPWRITE_WORKER_TIMEOUT_MS: '120000'
+          APPWRITE_BENCHMARK_SUMMARY_PATH: 'benchmark-before-summary.json'
+        with:
+          path: tests/benchmarks/http.js
+          flags: --quiet --out json=benchmark-before-samples.json
+          cloud-comment-on-pr: false
+          debug: true
+
+      - name: Stop before Appwrite
+        if: always()
+        run: |
+          if [ -d /tmp/appwrite-benchmark-before ]; then
+            cd /tmp/appwrite-benchmark-before
+            docker compose down -v || true
+          fi
+
+      - name: Wait for benchmark ports
+        if: always()
+        run: |
+          for port in 80 443 8080 9503; do
+            for attempt in $(seq 1 30); do
+              if ! ss -ltn | awk '{print $4}' | grep -Eq "[:.]${port}$"; then
+                break
+              fi
+              sleep 1
+            done
+
+            if ss -ltn | awk '{print $4}' | grep -Eq "[:.]${port}$"; then
+              echo "Port ${port} is still in use after stopping the before stack"
+              ss -ltn
+              exit 1
+            fi
+          done
+
+      - name: Start after Appwrite
+        env:
+          _APP_DOMAIN: localhost
+          _APP_CONSOLE_DOMAIN: localhost
+          _APP_DOMAIN_FUNCTIONS: functions.localhost
+          _APP_OPTIONS_ABUSE: disabled
+        run: |
+          docker tag ${{ env.IMAGE }}:after ${{ env.IMAGE }}
+          docker compose up -d --wait --no-build
+
+      - name: Benchmark after
+        id: benchmark_after
+        continue-on-error: true
+        uses: grafana/run-k6-action@a15e2072ede004e8d46141e33d7f7dad8ad08d9d
+        env:
+          APPWRITE_ENDPOINT: 'http://localhost/v1'
+          APPWRITE_BENCHMARK_ITERATIONS: '5'
+          APPWRITE_BENCHMARK_VUS: '1'
+          APPWRITE_WORKER_TIMEOUT_MS: '120000'
+          APPWRITE_BENCHMARK_PREVIOUS_SUMMARY_PATH: '../../benchmark-before-summary.json'
+          APPWRITE_BENCHMARK_SUMMARY_PATH: 'benchmark-after-summary.json'
+        with:
+          path: tests/benchmarks/http.js
+          flags: --quiet --out json=benchmark-after-samples.json
+          cloud-comment-on-pr: false
+          debug: true
+
+      - name: Stop after Appwrite
+        if: always()
+        run: docker compose down -v || true
+
+      - name: Comment on PR
+        if: always()
+        uses: actions/github-script@v8
+        env:
+          BENCHMARK_BASE_REF: ${{ github.event.pull_request.base.ref }}
+          BENCHMARK_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        with:
+          script: |
+            const comment = require('./.github/workflows/benchmark-comment.js');
+            await comment({ github, context, core });
+
+      - name: Save results
+        uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: benchmark-results
+          path: |
+            benchmark-comment.txt
+            benchmark-before-summary.json
+            benchmark-after-summary.json
+            benchmark-before-samples.json
+            benchmark-after-samples.json
+          retention-days: 7
+
+      - name: Fail benchmark
+        if: always() && steps.benchmark_after.outcome != 'success'
+        run: exit 1

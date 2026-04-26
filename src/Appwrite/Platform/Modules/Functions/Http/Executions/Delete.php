@@ -12,6 +12,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
+use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
@@ -55,8 +56,8 @@ class Delete extends Base
                 ],
                 contentType: ContentType::NONE
             ))
-            ->param('functionId', '', new UID(), 'Function ID.')
-            ->param('executionId', '', new UID(), 'Execution ID.')
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
+            ->param('executionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Execution ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('dbForPlatform')
@@ -90,6 +91,15 @@ class Delete extends Base
         }
         $status = $execution->getAttribute('status');
 
+        // Treat timed-out executions as failed so they can be deleted.
+        if ($status === 'waiting' || $status === 'processing') {
+            $timeout = $function->getAttribute('timeout', 900);
+            $elapsed = \time() - \strtotime($execution->getCreatedAt());
+            if ($elapsed >= $timeout) {
+                $status = 'failed';
+            }
+        }
+
         if (!in_array($status, ['completed', 'failed', 'scheduled'])) {
             throw new Exception(Exception::EXECUTION_IN_PROGRESS);
         }
@@ -110,7 +120,10 @@ class Delete extends Base
                     ->setAttribute('resourceUpdatedAt', DateTime::now())
                     ->setAttribute('active', false);
 
-                $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
+                $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), new Document([
+                    'resourceUpdatedAt' => $schedule->getAttribute('resourceUpdatedAt'),
+                    'active' => $schedule->getAttribute('active'),
+                ])));
             }
         }
 

@@ -1,10 +1,14 @@
-# Re-use public resolver to answer unknown queries
+# Forward unknown queries to Docker's embedded DNS for service name resolution,
+# with Cloudflare as fallback for external names.
+# Bind to our static IP to avoid conflict with Docker's DNS proxy on 127.0.0.11.
 . {
-    forward . 1.1.1.1
+    bind 172.16.238.100
+    forward . 127.0.0.11 1.1.1.1
 }
 
 # Zones configuration
 webapp.com {
+    bind 172.16.238.100
     template IN A {
         match "^webapp\.com\.$"
         answer "{{ .Name }} 60 IN A 203.0.0.1"
@@ -19,7 +23,7 @@ webapp.com {
 
     template IN CNAME {
         match "^stage-function\.webapp\.com\.$"
-        answer "{{ .Name }} 60 IN CNAME functions.localhost."
+        answer "{{ .Name }} 60 IN CNAME cname.localhost."
         fallthrough
     }
 
@@ -65,6 +69,7 @@ webapp.com {
 
 # Zones configuration
 wrong-a-webapp.com {
+    bind 172.16.238.100
     template IN A {
         match "^wrong-a-webapp\.com\.$"
         answer "{{ .Name }} 60 IN A 203.0.0.5"

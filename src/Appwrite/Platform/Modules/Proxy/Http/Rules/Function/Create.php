@@ -2,10 +2,10 @@
 
 namespace Appwrite\Platform\Modules\Proxy\Http\Rules\Function;
 
-use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Proxy\Http\Rules\Action;
+use Appwrite\Platform\Modules\Proxy\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -62,11 +62,11 @@ class Create extends Action
             ->label('abuse-key', 'userId:{userId}, url:{url}')
             ->label('abuse-time', 60)
             ->param('domain', null, new ValidatorDomain(), 'Domain name.')
-            ->param('functionId', '', new UID(), 'ID of function to be executed.')
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'ID of function to be executed.', false, ['dbForProject'])
             ->param('branch', '', new Text(255, 0), 'Name of VCS branch to deploy changes automatically', true)
             ->inject('response')
             ->inject('project')
-            ->inject('queueForCertificates')
+            ->inject('publisherForCertificates')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
             ->inject('dbForProject')
@@ -75,12 +75,9 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $domain, string $functionId, string $branch, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForPlatform, Database $dbForProject, array $platform, Log $log)
+    public function action(string $domain, string $functionId, string $branch, Response $response, Document $project, Certificate $publisherForCertificates, Event $queueForEvents, Database $dbForPlatform, Database $dbForProject, array $platform, Log $log)
     {
         $this->validateDomainRestrictions($domain, $platform);
-
-        $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
-        $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
 
         $function = $dbForProject->getDocument('functions', $functionId);
         if ($function->isEmpty()) {
@@ -90,14 +87,11 @@ class Create extends Action
         $deployment = $dbForProject->getDocument('deployments', $function->getAttribute('deploymentId', ''));
 
         // TODO: (@Meldiron) Remove after 1.7.x migration
-        $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain) : ID::unique();
+        $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5(\strtolower($domain)) : ID::unique();
         $status = RULE_STATUS_CREATED;
         $owner = '';
 
-        if (
-            ($functionsDomain != '' && \str_ends_with($domain, $functionsDomain)) ||
-            ($sitesDomain != '' && \str_ends_with($domain, $sitesDomain))
-        ) {
+        if ($this->isAppwriteOwned($domain)) {
             $status = RULE_STATUS_VERIFIED;
             $owner = 'Appwrite';
         }
@@ -138,12 +132,14 @@ class Create extends Action
         }
 
         if ($rule->getAttribute('status', '') === RULE_STATUS_CERTIFICATE_GENERATING) {
-            $queueForCertificates
-                ->setDomain(new Document([
+            $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(
+                project: $project,
+                domain: new Document([
                     'domain' => $rule->getAttribute('domain'),
                     'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
-                ]))
-                ->trigger();
+                ]),
+                action: \Appwrite\Event\Certificate::ACTION_GENERATION,
+            ));
         }
 
         $queueForEvents->setParam('ruleId', $rule->getId());

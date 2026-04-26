@@ -14,7 +14,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\FloatValidator;
 use Utopia\Validator\Nullable;
@@ -61,14 +61,14 @@ class Update extends Action
                     replaceWith: 'tablesDB.updateFloatColumn',
                 ),
             ))
-            ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('collectionId', '', new UID(), 'Collection ID.')
-            ->param('key', '', new Key(), 'Attribute Key.')
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
+            ->param('key', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Attribute Key.', false, ['dbForProject'])
             ->param('required', null, new Boolean(), 'Is attribute required?')
             ->param('min', null, new Nullable(new FloatValidator()), 'Minimum value.', true)
             ->param('max', null, new Nullable(new FloatValidator()), 'Maximum value.', true)
             ->param('default', null, new Nullable(new FloatValidator()), 'Default value. Cannot be set when required.')
-            ->param('newKey', null, new Nullable(new Key()), 'New Attribute Key.', true)
+            ->param('newKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'New Attribute Key.', true, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')

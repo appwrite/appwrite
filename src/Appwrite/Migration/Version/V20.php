@@ -6,7 +6,7 @@ use Appwrite\Migration\Migration;
 use Exception;
 use PDOException;
 use Throwable;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -452,7 +452,7 @@ class V20 extends Migration
                 Query::equal('period', ['1d']),
             ]);
 
-            $value = $query ?? 0;
+            $value = $query;
             $this->createInfMetric($to, $value);
         }
 
