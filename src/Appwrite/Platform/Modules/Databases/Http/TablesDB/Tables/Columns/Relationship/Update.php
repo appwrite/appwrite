@@ -31,7 +31,7 @@ class Update extends RelationshipUpdate
     {
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_PATCH)
-            ->setHttpPath('/v1/tablesdb/:databaseId/tables/:tableId/columns/:key/relationship')
+            ->setHttpPath('/v1/tablesdb/:databaseId/tables/:tableId/columns/relationship/:key')
             ->desc('Update relationship column')
             ->groups(['api', 'database', 'schema'])
             ->label('scope', ['tables.write', 'collections.write'])
