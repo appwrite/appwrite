@@ -216,7 +216,12 @@ class StatsResources extends Action
         $totalFiles = 0;
         $totalStorage = 0;
         $this->foreachDocument($dbForProject, 'buckets', [], function ($bucket) use ($dbForProject, $dbForLogs, $region, &$totalFiles, &$totalStorage) {
-            $files = $dbForProject->count('bucket_' . $bucket->getSequence());
+            // Only count fully-uploaded files to exclude in-progress chunked uploads.
+            // Incomplete uploads have mimeType set to '' and sizeActual set to 0;
+            // completed uploads (including empty files) always have a non-empty mimeType.
+            $files = $dbForProject->count('bucket_' . $bucket->getSequence(), [
+                Query::notEqual('mimeType', ''),
+            ]);
 
             $metric = str_replace('{bucketInternalId}', $bucket->getSequence(), METRIC_BUCKET_ID_FILES);
             $this->createStatsDocuments($region, $metric, $files);
