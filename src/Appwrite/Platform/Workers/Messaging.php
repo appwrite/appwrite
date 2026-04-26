@@ -380,12 +380,8 @@ class Messaging extends Action
             'deliveredAt' => $message->getAttribute('deliveredAt'),
         ]));
 
-        // Delete any attachments that were downloaded to local storage
+        // Delete any attachments that were copied to local temporary storage
         if ($providerType === MESSAGE_TYPE_EMAIL) {
-            if ($deviceForFiles->getType() === Storage::DEVICE_LOCAL) {
-                return;
-            }
-
             $data = $message->getAttribute('data');
             $attachments = $data['attachments'] ?? [];
 
@@ -404,6 +400,16 @@ class Messaging extends Action
                 }
 
                 $path = $file->getAttribute('path', '');
+
+                $cipher = $file->getAttribute('openSSLCipher');
+                $algorithm = $file->getAttribute('algorithm', \Utopia\Compression\Compression::NONE);
+                $wasProcessed = !empty($cipher) || $algorithm !== \Utopia\Compression\Compression::NONE;
+
+                // Skip cleanup when the storage device is local and no processing was done —
+                // in that case no temporary copy was created.
+                if ($deviceForFiles->getType() === Storage::DEVICE_LOCAL && !$wasProcessed) {
+                    continue;
+                }
 
                 if ($this->getLocalDevice($project)->exists($path)) {
                     $this->getLocalDevice($project)->delete($path);
@@ -609,8 +615,49 @@ class Messaging extends Action
                     $contentType = $file->getAttribute('mimeType');
                 }
 
-                if ($deviceForFiles->getType() !== Storage::DEVICE_LOCAL) {
+                $cipher = $file->getAttribute('openSSLCipher');
+                $algorithm = $file->getAttribute('algorithm', \Utopia\Compression\Compression::NONE);
+                $needsProcessing = !empty($cipher) || $algorithm !== \Utopia\Compression\Compression::NONE;
+
+                // Always copy the file to the local temp device when processing is needed
+                // (decryption or decompression) so we have a writable local copy.
+                // For remote storage without processing, transfer as before.
+                if ($deviceForFiles->getType() !== Storage::DEVICE_LOCAL || $needsProcessing) {
                     $deviceForFiles->transfer($path, $path, $this->getLocalDevice($project));
+                }
+
+                // Decrypt and decompress if the bucket has encryption or compression enabled.
+                // Files stored in encrypted buckets have their bytes encrypted on disk; sending
+                // the raw bytes as an email attachment would produce a corrupt file. We process
+                // the content here the same way the storage download endpoint does and write
+                // the result back to the same local temporary path so the email adapter reads
+                // the correct plaintext bytes.
+                if ($needsProcessing) {
+                    $source = $this->getLocalDevice($project)->read($path);
+
+                    if (!empty($cipher)) {
+                        $source = \Appwrite\OpenSSL\OpenSSL::decrypt(
+                            $source,
+                            $cipher,
+                            System::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
+                            0,
+                            \hex2bin($file->getAttribute('openSSLIV')),
+                            \hex2bin($file->getAttribute('openSSLTag'))
+                        );
+                    }
+
+                    switch ($algorithm) {
+                        case \Utopia\Compression\Compression::ZSTD:
+                            $compressor = new \Utopia\Compression\Algorithms\Zstd();
+                            $source = $compressor->decompress($source);
+                            break;
+                        case \Utopia\Compression\Compression::GZIP:
+                            $compressor = new \Utopia\Compression\Algorithms\GZIP();
+                            $source = $compressor->decompress($source);
+                            break;
+                    }
+
+                    $this->getLocalDevice($project)->write($path, $source, $contentType);
                 }
 
                 $attachment = new Attachment(
