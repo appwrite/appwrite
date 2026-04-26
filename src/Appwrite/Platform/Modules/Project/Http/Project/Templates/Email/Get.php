@@ -13,6 +13,7 @@ use Utopia\Locale\Locale;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\WhiteList;
 
 class Get extends Action
@@ -48,7 +49,7 @@ class Get extends Action
                 ]
             ))
             ->param('templateId', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? [], true), 'Custom email template type. Can be one of: '.\implode(', ', Config::getParam('locale-templates')['email'] ?? []))
-            ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Custom email template locale. If left empty, the fallback locale (en) will be used.', optional: true, injections: ['localeCodes'])
+            ->param('locale', null, fn ($localeCodes) => new Nullable(new WhiteList($localeCodes)), 'Custom email template locale. If left empty, the fallback locale (en) will be used.', optional: true, injections: ['localeCodes'])
             ->inject('response')
             ->inject('project')
             ->callback($this->action(...));
@@ -56,7 +57,7 @@ class Get extends Action
 
     public function action(
         string $templateId,
-        string $locale,
+        ?string $locale,
         Response $response,
         Document $project,
     ) {
