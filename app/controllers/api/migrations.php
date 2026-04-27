@@ -1240,7 +1240,7 @@ Http::delete('/v1/migrations/:migrationId')
     ->desc('Delete migration')
     ->label('scope', 'migrations.write')
     ->label('event', 'migrations.[migrationId].delete')
-    ->label('audits.event', 'migrationId.delete')
+    ->label('audits.event', 'migration.delete')
     ->label('audits.resource', 'migrations/{request.migrationId}')
     ->label('sdk', new Method(
         namespace: 'migrations',
