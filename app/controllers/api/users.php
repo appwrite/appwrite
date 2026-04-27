@@ -2500,7 +2500,7 @@ App::delete('/v1/users/:userId/targets/:targetId')
     ->desc('Delete user target')
     ->groups(['api', 'users'])
     ->label('audits.event', 'target.delete')
-    ->label('audits.resource', 'target/{request.$targetId}')
+    ->label('audits.resource', 'target/{request.targetId}')
     ->label('event', 'users.[userId].targets.[targetId].delete')
     ->label('scope', 'targets.write')
     ->label('sdk', new Method(
@@ -2560,7 +2560,7 @@ App::delete('/v1/users/identities/:identityId')
     ->label('event', 'users.[userId].identities.[identityId].delete')
     ->label('scope', 'users.write')
     ->label('audits.event', 'identity.delete')
-    ->label('audits.resource', 'identity/{request.$identityId}')
+    ->label('audits.resource', 'identity/{request.identityId}')
     ->label('sdk', new Method(
         namespace: 'users',
         group: 'identities',
