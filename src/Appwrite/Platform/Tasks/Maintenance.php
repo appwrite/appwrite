@@ -118,8 +118,27 @@ class Maintenance extends Action
     {
         $time = DatabaseDateTime::now();
 
+        // Reset the attempt counter for certificates that have been stuck (≥5 failed
+        // attempts) for more than 7 days.  Without this, a transient DNS or network
+        // problem that triggers 5 consecutive failures permanently blocks auto-renewal,
+        // forcing the operator to intervene manually (issue #9694).
+        $staleCutoff = DatabaseDateTime::addSeconds(new \DateTime(), -60 * 60 * 24 * 7);
+        $staleCertificates = $dbForPlatform->find('certificates', [
+            Query::greaterThanEqual('attempts', 5),
+            Query::isNotNull('renewDate'),
+            Query::lessThanEqual('renewDate', $staleCutoff),
+            Query::limit(200),
+        ]);
+        foreach ($staleCertificates as $staleCert) {
+            $dbForPlatform->updateDocument(
+                'certificates',
+                $staleCert->getId(),
+                $staleCert->setAttribute('attempts', 0)
+            );
+        }
+
         $certificates = $dbForPlatform->find('certificates', [
-            Query::lessThan('attempts', 5), // Maximum 5 attempts
+            Query::lessThan('attempts', 5), // Maximum 5 attempts per renewal window
             Query::isNotNull('renewDate'),
             Query::lessThanEqual('renewDate', $time), // includes 60 days cooldown (we have 30 days to renew)
             Query::limit(200), // Limit 200 comes from LetsEncrypt (300 orders per 3 hours, keeping some for new domains)
