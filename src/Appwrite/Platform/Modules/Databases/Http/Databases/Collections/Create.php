@@ -49,7 +49,7 @@ class Create extends Action
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/databases/:databaseId/collections')
-            ->desc('Create collections')
+            ->desc('Create collection')
             ->groups(['api', 'database'])
             ->label('event', 'databases.[databaseId].collections.[collectionId].create')
             ->label('scope', 'collections.write')
