@@ -838,6 +838,11 @@ Http::patch('/v1/account/sessions/:sessionId')
             $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
             $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
 
+            if (!empty($appSecret) && isset($appSecret['version'])) {
+                $key = System::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
+                $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
+            }
+
             $oauth2 = new $className($appId, $appSecret, '', [], []);
             $oauth2->refreshTokens($refreshToken);
 
