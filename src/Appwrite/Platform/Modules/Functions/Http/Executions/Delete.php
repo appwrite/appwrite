@@ -37,7 +37,7 @@ class Delete extends Base
             ->label('scope', 'execution.write')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('event', 'functions.[functionId].executions.[executionId].delete')
-            ->label('audits.event', 'executions.delete')
+            ->label('audits.event', 'execution.delete')
             ->label('audits.resource', 'function/{request.functionId}')
             ->label('sdk', new Method(
                 namespace: 'functions',
