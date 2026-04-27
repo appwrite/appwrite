@@ -128,10 +128,22 @@ class Create extends Action
                 \strtolower($attribute->getAttribute('options')['twoWayKey']) === \strtolower($twoWayKey) &&
                 $attribute->getAttribute('options')['relatedCollection'] === $relatedCollection->getId()
             ) {
-                // If user explicitly provided twoWayKey, report that.
-                // Otherwise report the key that they're trying to create.
-                $conflictingKey = $twoWayKeyWasProvided ? $twoWayKey : $key;
-                throw new Exception($this->getDuplicateException(), params: [$conflictingKey]);
+                $parentType = $this->isCollectionsAPI() ? 'collection' : 'table';
+                if ($twoWayKeyWasProvided) {
+                    // The user explicitly chose this twoWayKey — report it directly.
+                    throw new Exception(
+                        $this->getDuplicateException(),
+                        'Attribute with key \'' . $twoWayKey . '\' already exists in the related ' . $parentType . ' \'' . $relatedCollectionId . '\'.',
+                        params: [$twoWayKey]
+                    );
+                } else {
+                    // The twoWayKey defaulted to collectionId — explain the real conflict clearly.
+                    throw new Exception(
+                        $this->getDuplicateException(),
+                        'A reverse relationship attribute with the auto-generated key \'' . $twoWayKey . '\' already exists in ' . $parentType . ' \'' . $relatedCollectionId . '\'. Provide a unique \'twoWayKey\' to resolve the conflict.',
+                        params: [$twoWayKey]
+                    );
+                }
             }
 
             if (
