@@ -371,7 +371,7 @@ class Mail extends Event
      * @param string $type
      * @return self
      */
-    public function setAttachment(string $content, string $filename, string $encoding = 'base64', string $type = 'plain/text')
+    public function setAttachment(string $content, string $filename, string $encoding = 'base64', string $type = 'text/plain')
     {
         $this->attachment = [
             'content' => base64_encode($content),

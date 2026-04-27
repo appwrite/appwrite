@@ -175,7 +175,7 @@ class Mails extends Action
                 base64_decode($attachment['content']),
                 $attachment['filename'] ?? 'unknown.file',
                 $attachment['encoding'] ?? PHPMailer::ENCODING_BASE64,
-                $attachment['type'] ?? 'plain/text'
+                $attachment['type'] ?? 'text/plain'
             );
         }
 
