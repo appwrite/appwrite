@@ -74,7 +74,6 @@ class Google extends OAuth2
                     'client_id' => $this->appID,
                     'client_secret' => $this->appSecret,
                     'redirect_uri' => $this->callback,
-                    'scope' => null,
                     'grant_type' => 'authorization_code'
                 ])
             ), true);
