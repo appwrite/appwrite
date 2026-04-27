@@ -67,14 +67,16 @@ class Google extends OAuth2
     protected function getTokens(string $code): array
     {
         if (empty($this->tokens)) {
+            $headers = ['Content-Type: application/x-www-form-urlencoded'];
             $this->tokens = \json_decode($this->request(
                 'POST',
-                'https://oauth2.googleapis.com/token?' . \http_build_query([
+                'https://oauth2.googleapis.com/token',
+                $headers,
+                \http_build_query([
                     'code' => $code,
                     'client_id' => $this->appID,
                     'client_secret' => $this->appSecret,
                     'redirect_uri' => $this->callback,
-                    'scope' => null,
                     'grant_type' => 'authorization_code'
                 ])
             ), true);
@@ -90,9 +92,12 @@ class Google extends OAuth2
      */
     public function refreshTokens(string $refreshToken): array
     {
+        $headers = ['Content-Type: application/x-www-form-urlencoded'];
         $this->tokens = \json_decode($this->request(
             'POST',
-            'https://oauth2.googleapis.com/token?' . \http_build_query([
+            'https://oauth2.googleapis.com/token',
+            $headers,
+            \http_build_query([
                 'refresh_token' => $refreshToken,
                 'client_id' => $this->appID,
                 'client_secret' => $this->appSecret,
