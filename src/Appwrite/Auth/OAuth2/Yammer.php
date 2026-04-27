@@ -37,7 +37,7 @@ class Yammer extends OAuth2
      */
     public function getLoginURL(): string
     {
-        return $this->endpoint . 'oauth2/authorize?' .
+        return $this->endpoint . 'authorize?' .
             \http_build_query([
                 'client_id' => $this->appID,
                 'response_type' => 'code',
