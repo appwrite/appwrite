@@ -193,6 +193,7 @@ class Etsy extends OAuth2
         $this->user = \json_decode($this->request(
             'GET',
             'https://api.etsy.com/v3/application/users/' . $this->getUserID($accessToken),
+            $headers,
         ), true);
 
         return $this->user;
