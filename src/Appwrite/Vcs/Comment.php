@@ -213,11 +213,9 @@ class Comment
                 $text .= "</details>\n\n";
             }
 
-            $text .= "</details>\n\n";
-
             $isLast = $i === \count($projects) - 1;
 
-            if (\count($projects) > 1 && $isLast) {
+            if (\count($projects) > 1 && !$isLast) {
                 $text .= "---\n\n";
             }
 
