@@ -939,6 +939,8 @@ App::patch('/v1/migrations/:migrationId')
             ->setAttribute('status', 'pending')
             ->setAttribute('dateUpdated', \time());
 
+        $dbForProject->updateDocument('migrations', $migration->getId(), $migration);
+
         // Trigger Migration
         $queueForMigrations
             ->setMigration($migration)
