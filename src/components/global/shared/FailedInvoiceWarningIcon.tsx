@@ -7,11 +7,16 @@ import {
 } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 
-const TOOLTIP =
+const TOOLTIP_DEFAULT =
   'Payment failed - update billing to avoid interrupting your projects and services.'
+
+const TOOLTIP_READONLY =
+  'Payment failed - this organization is read-only until the outstanding invoice is paid. Project and service changes are limited; open Billing to update payment and restore access.'
 
 type FailedInvoiceWarningIconProps = {
   show: boolean
+  /** Organization is in billing read-only; use escalated tooltip copy */
+  orgBillingReadonly?: boolean
   /** e.g. absolute placement in compact triggers */
   className?: string
   iconClassName?: string
@@ -21,17 +26,20 @@ type FailedInvoiceWarningIconProps = {
 
 export function FailedInvoiceWarningIcon({
   show,
+  orgBillingReadonly,
   className,
   iconClassName,
   suppressTooltip,
 }: FailedInvoiceWarningIconProps) {
   if (!show) return null
 
+  const tooltip = orgBillingReadonly ? TOOLTIP_READONLY : TOOLTIP_DEFAULT
+
   if (suppressTooltip) {
     return (
       <span
         className={cn('inline-flex shrink-0', className)}
-        title={TOOLTIP}
+        title={tooltip}
       >
         <AlertTriangle
           className={cn(
@@ -59,7 +67,7 @@ export function FailedInvoiceWarningIcon({
           </span>
         </TooltipTrigger>
         <TooltipContent side="top" className="max-w-xs">
-          <p className="text-[13px]">{TOOLTIP}</p>
+          <p className="text-[13px]">{tooltip}</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

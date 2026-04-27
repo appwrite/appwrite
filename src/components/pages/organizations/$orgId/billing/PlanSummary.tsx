@@ -640,8 +640,8 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                   Additional members
                   {additionalMembersCount > 0 && (
                     <Badge
-                      variant="secondary"
-                      className="h-4 px-1.5 text-[10px] font-medium"
+                      variant="info"
+                      className="h-4 px-1.5 text-[10px] font-medium shrink-0"
                     >
                       {additionalMembersCount}
                     </Badge>
@@ -659,8 +659,8 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                 <span className="text-foreground flex items-center gap-2">
                   Additional projects
                   <Badge
-                    variant="secondary"
-                    className="h-4 px-1.5 text-[10px] font-medium"
+                    variant="info"
+                    className="h-4 px-1.5 text-[10px] font-medium shrink-0"
                   >
                     {additionalProjectsCount}
                   </Badge>

@@ -61,6 +61,7 @@ import { CopyableId } from '@/components/global/shared/CopyableId'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { DeploymentInfo } from '@/components/global/shared/DeploymentInfo'
+import { DeploymentListRowContextMenu } from '@/components/global/shared/DeploymentListRowContextMenu'
 import {
   Table,
   TableBody,
@@ -1458,27 +1459,39 @@ export function View() {
                       const isActive =
                         deploymentData.$id === activeDeploymentResolved?.$id
                       return (
-                        <TableRow
+                        <DeploymentListRowContextMenu
                           key={deploymentData.$id}
-                          className={cn(
-                            selectedDeployments.has(deploymentData.$id)
-                              ? 'bg-muted'
-                              : isActive
-                                ? 'bg-muted/40 dark:bg-muted/35 hover:bg-muted/55 dark:hover:bg-muted/50'
-                                : 'hover:bg-muted/50',
-                            'cursor-pointer',
-                          )}
-                          onClick={() => {
-                            navigate({
-                              to: '/projects/$projectId/sites/$siteId/deployments/$deploymentId',
-                              params: {
-                                projectId: projectId!,
-                                siteId: siteId!,
-                                deploymentId: deploymentData.$id,
-                              },
-                            })
+                          variant="site"
+                          projectId={projectId!}
+                          resourceId={siteId!}
+                          deployment={deploymentData}
+                          isActive={isActive}
+                          onRequestCancelBuild={(id) => {
+                            setCancelTargetDeploymentId(id)
+                            setCancelBuildDialogOpen(true)
                           }}
                         >
+                          <tr
+                            className={cn(
+                              'border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted',
+                              selectedDeployments.has(deploymentData.$id)
+                                ? 'bg-muted'
+                                : isActive
+                                  ? 'bg-muted/40 dark:bg-muted/35 hover:bg-muted/55 dark:hover:bg-muted/50'
+                                  : 'hover:bg-muted/50',
+                              'cursor-pointer',
+                            )}
+                            onClick={() => {
+                              navigate({
+                                to: '/projects/$projectId/sites/$siteId/deployments/$deploymentId',
+                                params: {
+                                  projectId: projectId!,
+                                  siteId: siteId!,
+                                  deploymentId: deploymentData.$id,
+                                },
+                              })
+                            }}
+                          >
                           <TableCell
                             className="px-4 py-3"
                             onClick={(e) => e.stopPropagation()}
@@ -1871,7 +1884,8 @@ export function View() {
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </TableCell>
-                        </TableRow>
+                          </tr>
+                        </DeploymentListRowContextMenu>
                       )
                     })}
                   </TableBody>

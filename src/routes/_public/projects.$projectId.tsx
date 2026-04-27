@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet, useLocation } from '@tanstack/react-router'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { CloudStatusBanner } from '@/components/global/layout/CloudStatusBanner'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { PausedProjectCurtain } from '@/components/global/layout/PausedProjectCurtain'
@@ -19,6 +20,7 @@ import {
   organizationsQueryOptions,
   useProject,
   useOrganizationFailedInvoicePresence,
+  isOrganizationBillingReadonlyStatus,
 } from '@/lib/react-query/hooks'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { consoleVariablesQueryOptions } from '@/lib/react-query/hooks/console-variables'
@@ -189,6 +191,24 @@ function ProjectLayout() {
     useOrganizationFailedInvoicePresence(teamIdForBilling)
   const showFailedInvoiceBanner =
     features.billing && failedInvoicePresence?.hasFailedInvoice === true
+
+  const { data: organizationsListData } = useQuery(organizationsQueryOptions())
+  const orgBillingReadonlyForFailedInvoice = useMemo(() => {
+    if (
+      !showFailedInvoiceBanner ||
+      !teamIdForBilling ||
+      !organizationsListData?.teams
+    )
+      return false
+    const row = organizationsListData.teams.find(
+      (t: { $id: string }) => t.$id === teamIdForBilling,
+    ) as { status?: string } | undefined
+    return isOrganizationBillingReadonlyStatus(row?.status)
+  }, [
+    showFailedInvoiceBanner,
+    organizationsListData,
+    teamIdForBilling,
+  ])
 
   // Use loader data for first paint so paused curtain shows immediately (no layout shift)
   const projectForPaused =
@@ -363,6 +383,7 @@ function ProjectLayout() {
                 <OrganizationFailedInvoiceHeaderBanner
                   organizationId={teamIdForBilling}
                   show={showFailedInvoiceBanner}
+                  orgBillingReadonly={orgBillingReadonlyForFailedInvoice}
                 />
               }
               showFooter={!hideFooter}

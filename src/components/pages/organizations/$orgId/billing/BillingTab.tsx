@@ -3,6 +3,7 @@ import { useParams, useNavigate } from '@tanstack/react-router'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { AlertTriangle, CreditCard } from 'lucide-react'
+import { asOrganizationPaymentRefs } from './utils'
 import { PlanSummary } from './PlanSummary'
 import { PaymentHistory } from './PaymentHistory'
 import { PaymentMethods } from './PaymentMethods'
@@ -17,8 +18,9 @@ import {
   useOrganizationById,
   useOrganizationPaymentMethod,
   useRetryInvoicePayment,
+  resolvePaymentMethodIdForInvoiceRetry,
+  isOrganizationBillingReadonlyStatus,
 } from '@/lib/react-query/hooks'
-import { sdk } from '@/lib/appwrite/sdk'
 import { toast } from 'sonner'
 
 /**
@@ -48,47 +50,46 @@ export function BillingTab() {
 
   // Fetch organization data for alerts
   const { organization, isLoading: orgLoading } = useOrganizationById(orgId)
+  const orgRefs = organization
+    ? asOrganizationPaymentRefs(organization)
+    : null
 
   // Fetch payment methods for alert checking (org-scoped so all members see org cards)
   const primaryPaymentMethod = useOrganizationPaymentMethod(
     orgId,
-    organization?.paymentMethodId,
+    orgRefs?.paymentMethodId ?? undefined,
   )
-  useOrganizationPaymentMethod(orgId, organization?.backupPaymentMethodId)
+  useOrganizationPaymentMethod(
+    orgId,
+    orgRefs?.backupPaymentMethodId ?? undefined,
+  )
 
   const retryPaymentMutation = useRetryInvoicePayment()
 
   // Check for failed invoice
-  const failedInvoice = organization?.failedInvoice
+  const failedInvoice = orgRefs?.failedInvoice
   const hasFailedInvoice = failedInvoice && failedInvoice.lastError
 
   // Check for expired payment method
   const primaryFailed = primaryPaymentMethod.paymentMethod?.failed === true
   const hasExpiredPaymentMethod =
-    primaryFailed && !organization?.backupPaymentMethodId
+    primaryFailed && !orgRefs?.backupPaymentMethodId
 
   // Check for plan downgrade
-  const hasPlanDowngrade = !!organization?.billingPlanDowngrade
+  const hasPlanDowngrade = !!orgRefs?.billingPlanDowngrade
+
+  const orgBillingReadonly = isOrganizationBillingReadonlyStatus(
+    (organization as { status?: string } | null | undefined)?.status,
+  )
 
   const handleRetryPayment = async () => {
-    if (!orgId || !failedInvoice) return
+    if (!orgId || !failedInvoice || !organization) return
 
     try {
-      // Determine which payment method to use
-      let paymentMethodId = organization.paymentMethodId
-      if (!paymentMethodId || primaryFailed) {
-        paymentMethodId = organization.backupPaymentMethodId
-      }
-      if (!paymentMethodId) {
-        // Get first available payment method from account
-        const paymentMethods = await sdk.forConsole.account.listPaymentMethods()
-        if (
-          paymentMethods.paymentMethods &&
-          paymentMethods.paymentMethods.length > 0
-        ) {
-          paymentMethodId = paymentMethods.paymentMethods[0].$id
-        }
-      }
+      const paymentMethodId = await resolvePaymentMethodIdForInvoiceRetry({
+        organization: asOrganizationPaymentRefs(organization),
+        primaryPaymentMethodFailed: primaryFailed,
+      })
 
       if (!paymentMethodId) {
         toast.error(
@@ -149,9 +150,18 @@ export function BillingTab() {
             <Alert variant="default" className="border-red-500/30 bg-red-500/5">
               <AlertTriangle className="h-4 w-4 text-red-500" />
               <AlertTitle className="text-[13px] font-medium text-red-600 dark:text-red-400">
-                Payment Failed
+                {orgBillingReadonly
+                  ? 'Payment failed - organization in read-only mode'
+                  : 'Payment Failed'}
               </AlertTitle>
               <AlertDescription className="mt-2 text-[12px] text-red-600/80 dark:text-red-400/80">
+                {orgBillingReadonly && (
+                  <p className="mb-2 font-medium text-red-600 dark:text-red-400">
+                    Changes to projects and services are limited until the
+                    outstanding invoice is paid. Complete payment to restore
+                    full access.
+                  </p>
+                )}
                 {failedInvoice.lastError ||
                   'Your last payment attempt failed. Please update your payment method and try again.'}
                 <div className="mt-3">

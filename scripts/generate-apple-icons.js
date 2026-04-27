@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 
 /**
- * Script to generate Apple Touch Icons from SVG logo
- * This generates PNG files required for iOS devices
+ * Script to generate Apple Touch Icon and favicon.ico from the SVG logo.
+ * - apple-touch-icon.png: required for iOS home screen
+ * - favicon.ico: used when the browser has no HTML (e.g. plain 500) and requests /favicon.ico
  */
 
-import { readFile } from 'fs/promises'
+import { readFile, writeFile } from 'fs/promises'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 
@@ -13,9 +14,23 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 const rootDir = join(__dirname, '..')
 
-async function generateAppleIcons() {
+const TRANSPARENT = { r: 255, g: 255, b: 255, alpha: 0 }
+
+async function pngFromLogoSvg(sharp, svgBuffer, size) {
+  return sharp(svgBuffer)
+    .resize(size, size, {
+      fit: 'contain',
+      background: TRANSPARENT,
+    })
+    .png({
+      compressionLevel: 9,
+      adaptiveFiltering: true,
+    })
+    .toBuffer()
+}
+
+async function generateIcons() {
   try {
-    // Try to use sharp if available
     let sharp
     try {
       sharp = (await import('sharp')).default
@@ -32,30 +47,47 @@ async function generateAppleIcons() {
       process.exit(1)
     }
 
-    // Read the SVG file
+    let pngToIco
+    try {
+      pngToIco = (await import('png-to-ico')).default
+    } catch (_e) {
+      console.error('\n❌ Error: png-to-ico is not installed.')
+      console.error('  bun add -d png-to-ico')
+      process.exit(1)
+    }
+
     const svgPath = join(rootDir, 'public', 'logo.svg')
     const svgBuffer = await readFile(svgPath)
 
-    // Generate 180x180 PNG (standard iOS size)
-    const outputPath = join(rootDir, 'public', 'apple-touch-icon.png')
-
+    const applePath = join(rootDir, 'public', 'apple-touch-icon.png')
     await sharp(svgBuffer)
       .resize(180, 180, {
         fit: 'contain',
-        background: { r: 255, g: 255, b: 255, alpha: 0 }, // Transparent background
+        background: TRANSPARENT,
       })
       .png({
         compressionLevel: 9,
         adaptiveFiltering: true,
       })
-      .toFile(outputPath)
+      .toFile(applePath)
 
     console.log('✅ Successfully generated apple-touch-icon.png (180x180)')
-    console.log(`   Output: ${outputPath}`)
+    console.log(`   Output: ${applePath}`)
+
+    const faviconSizes = [16, 24, 32, 48]
+    const pngBuffers = await Promise.all(
+      faviconSizes.map((s) => pngFromLogoSvg(sharp, svgBuffer, s)),
+    )
+    const icoBuffer = await pngToIco(pngBuffers)
+    const faviconPath = join(rootDir, 'public', 'favicon.ico')
+    await writeFile(faviconPath, icoBuffer)
+
+    console.log('✅ Successfully generated favicon.ico')
+    console.log(`   Output: ${faviconPath}`)
   } catch (error) {
-    console.error('❌ Error generating Apple icons:', error.message)
+    console.error('❌ Error generating icons:', error.message)
     process.exit(1)
   }
 }
 
-generateAppleIcons()
+generateIcons()

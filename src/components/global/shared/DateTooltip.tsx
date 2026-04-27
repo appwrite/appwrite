@@ -214,6 +214,7 @@ export function DateTooltip({
         align="center"
         sideOffset={8}
         className="w-auto max-w-[280px] p-0"
+        onOpenAutoFocus={(event) => event.preventDefault()}
         onClick={(event) => event.stopPropagation()}
         onPointerDown={(event) => event.stopPropagation()}
         onMouseEnter={openPopover}

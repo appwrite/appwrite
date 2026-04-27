@@ -498,7 +498,7 @@ export function ConsoleSidebar({
       {/* Mobile Sidebar - GPU-accelerated transform; inert when closed so it's skipped in tab order */}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-[130] flex w-[280px] flex-col border-r border-border bg-background',
+          'fixed left-0 top-0 z-[130] flex h-[100dvh] max-h-[100dvh] w-[280px] flex-col overflow-hidden border-r border-border bg-background',
           'transition-transform duration-200 ease-out [backface-visibility:hidden]',
           mobileOpen ? 'translate-x-0' : '-translate-x-full',
         )}

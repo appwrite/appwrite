@@ -102,6 +102,28 @@ export function getInvoiceStatusColor(status: InvoiceStatus): string {
   }
 }
 
+/** Status-style `Badge` variant for invoice rows (matches `badge.tsx` tinted status variants). */
+export type InvoiceStatusBadgeVariant = 'success' | 'warning' | 'error' | 'info'
+
+/**
+ * Map invoice status to a status-style Badge variant (prefer over raw Tailwind on spans).
+ */
+export function getInvoiceStatusBadgeVariant(
+  status: InvoiceStatus,
+): InvoiceStatusBadgeVariant {
+  switch (status) {
+    case 'paid':
+      return 'success'
+    case 'pending':
+      return 'warning'
+    case 'overdue':
+    case 'failed':
+      return 'error'
+    default:
+      return 'info'
+  }
+}
+
 /**
  * Plan types for organizations (alias of canonical billing plan ids)
  */

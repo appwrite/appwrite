@@ -113,8 +113,8 @@ export function PlanSelection({
                     </span>
                     {isCurrent && (
                       <Badge
-                        variant="secondary"
-                        className="text-[11px] font-medium px-2 py-0.5 h-5 shrink-0"
+                        variant="info"
+                        className="text-[10px] font-medium px-2 py-0.5 h-5 shrink-0"
                       >
                         Current plan
                       </Badge>

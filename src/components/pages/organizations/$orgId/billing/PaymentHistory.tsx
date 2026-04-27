@@ -2,9 +2,20 @@ import { useState, useMemo, useEffect } from 'react'
 import { Download, Eye, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { type Invoice } from '@/lib/utils/mock-data'
-import { formatCurrency, formatDate, getStatusColor } from './utils'
-import { cn } from '@/lib/utils'
-import { useOrganizationInvoices } from '@/lib/react-query/hooks'
+import {
+  formatCurrency,
+  formatDate,
+  asOrganizationPaymentRefs,
+} from './utils'
+import { getInvoiceStatusBadgeVariant } from '@/lib/utils/status-badge'
+import { Badge } from '@/components/ui/badge'
+import {
+  useOrganizationInvoices,
+  useOrganizationById,
+  useOrganizationPaymentMethod,
+  useRetryInvoicePayment,
+  resolvePaymentMethodIdForInvoiceRetry,
+} from '@/lib/react-query/hooks'
 import { useParams } from '@tanstack/react-router'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -41,7 +52,7 @@ function mapApiInvoiceToComponent(apiInvoice: Models.Invoice): Invoice {
   const apiStatus = apiInvoice.status?.toLowerCase() || ''
   if (apiStatus === 'succeeded' || apiStatus === 'paid') {
     status = 'paid'
-  } else if (apiStatus === 'failed') {
+  } else if (apiStatus === 'failed' || apiStatus === 'requires_authentication') {
     status = 'failed'
   } else if (apiStatus === 'overdue') {
     status = 'overdue'
@@ -107,6 +118,43 @@ export function PaymentHistory() {
   const orgId = params.orgId as string | undefined
   const [requestedPage, setRequestedPage] = useState(0)
   const [displayedPage, setDisplayedPage] = useState(0)
+
+  const { organization } = useOrganizationById(orgId)
+  const orgPaymentRefs = organization
+    ? asOrganizationPaymentRefs(organization)
+    : null
+  const primaryPaymentMethod = useOrganizationPaymentMethod(
+    orgId,
+    orgPaymentRefs?.paymentMethodId ?? undefined,
+  )
+  const primaryFailed = primaryPaymentMethod.paymentMethod?.failed === true
+  const retryPaymentMutation = useRetryInvoicePayment()
+
+  const handleRetryInvoicePayment = async (invoiceId: string) => {
+    if (!orgId || !organization) return
+    try {
+      const paymentMethodId = await resolvePaymentMethodIdForInvoiceRetry({
+        organization: asOrganizationPaymentRefs(organization),
+        primaryPaymentMethodFailed: primaryFailed,
+      })
+      if (!paymentMethodId) {
+        toast.error(
+          'No payment method available. Please add a payment method first.',
+        )
+        return
+      }
+      await retryPaymentMutation.mutateAsync({
+        organizationId: orgId,
+        invoiceId,
+        paymentMethodId,
+      })
+      toast.success('Payment retry initiated')
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to retry payment',
+      )
+    }
+  }
 
   // Fetch invoices for requested page (user intent)
   const {
@@ -247,6 +295,15 @@ export function PaymentHistory() {
                 key={invoice.$id}
                 invoice={invoice}
                 orgId={orgId}
+                isRetrying={
+                  retryPaymentMutation.isPending &&
+                  retryPaymentMutation.variables?.invoiceId === invoice.$id
+                }
+                onRetryPayment={
+                  invoice.status === 'failed' || invoice.status === 'overdue'
+                    ? () => handleRetryInvoicePayment(invoice.$id)
+                    : undefined
+                }
                 onViewInvoice={async (invoiceId: string) => {
                   if (!orgId) return
                   try {
@@ -396,6 +453,8 @@ export function PaymentHistory() {
 interface InvoiceRowProps {
   invoice: Invoice
   orgId?: string
+  onRetryPayment?: () => void
+  isRetrying?: boolean
   onViewInvoice: (invoiceId: string) => Promise<void>
   onDownloadInvoice: (invoiceId: string) => Promise<void>
 }
@@ -403,6 +462,8 @@ interface InvoiceRowProps {
 function InvoiceRow({
   invoice,
   orgId,
+  onRetryPayment,
+  isRetrying,
   onViewInvoice,
   onDownloadInvoice,
 }: InvoiceRowProps) {
@@ -442,14 +503,12 @@ function InvoiceRow({
         </span>
       </td>
       <td className="px-6 py-3">
-        <span
-          className={cn(
-            'inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium capitalize',
-            getStatusColor(invoice.status),
-          )}
+        <Badge
+          variant={getInvoiceStatusBadgeVariant(invoice.status)}
+          className="text-[10px] capitalize shrink-0"
         >
           {invoice.status}
-        </span>
+        </Badge>
       </td>
       <td className="px-6 py-3 text-right">
         <span className="text-[13px] font-medium text-foreground">
@@ -457,14 +516,25 @@ function InvoiceRow({
         </span>
       </td>
       <td className="px-6 py-3 text-right">
-        <div className="flex items-center justify-end gap-1">
+        <div className="flex flex-wrap items-center justify-end gap-1.5">
+          {onRetryPayment && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 text-[12px]"
+              onClick={onRetryPayment}
+              disabled={!orgId || isRetrying || isViewing || isDownloading}
+            >
+              Retry payment
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="sm"
             className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
             title="View invoice"
             onClick={handleView}
-            disabled={!orgId || isViewing || isDownloading}
+            disabled={!orgId || isViewing || isDownloading || isRetrying}
           >
             <Eye className="h-4 w-4" />
           </Button>
@@ -474,7 +544,7 @@ function InvoiceRow({
             className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
             title="Download invoice"
             onClick={handleDownload}
-            disabled={!orgId || isViewing || isDownloading}
+            disabled={!orgId || isViewing || isDownloading || isRetrying}
           >
             <Download className="h-4 w-4" />
           </Button>
