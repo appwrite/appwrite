@@ -187,7 +187,7 @@ class Github extends OAuth2
             $verifiedEmail = null;
             $primaryEmail = null;
 
-            foreach ($emails as $email) {
+            foreach ($emails ?? [] as $email) {
                 if (isset($email['verified']) && $email['verified'] === true) {
                     $verifiedEmail = $email;
 
