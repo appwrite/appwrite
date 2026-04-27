@@ -231,7 +231,7 @@ export function BuyDomainWizard({
   useEffect(() => {
     if (
       routeSearch.payment !== 'purchase' ||
-      !routeSearch.domainId ||
+      !routeSearch.invoiceId ||
       !orgId ||
       paymentReturnHandled.current
     ) {
@@ -241,7 +241,7 @@ export function BuyDomainWizard({
     ;(async () => {
       try {
         const result = await finalizeDomainPurchase({
-          domainId: routeSearch.domainId!,
+          invoiceId: routeSearch.invoiceId!,
           organizationId: orgId,
         })
         if (result.status === DomainPurchaseStatus.Succeeded) {
@@ -251,7 +251,7 @@ export function BuyDomainWizard({
           toast.success('Payment confirmed')
           navigate({
             to: '/organizations/$orgId/domains/$domainId',
-            params: { orgId, domainId: routeSearch.domainId! },
+            params: { orgId, domainId: result.domainId },
             replace: true,
           })
         } else {
@@ -275,7 +275,7 @@ export function BuyDomainWizard({
         })
       }
     })()
-  }, [routeSearch.payment, routeSearch.domainId, orgId, navigate, queryClient])
+  }, [routeSearch.payment, routeSearch.invoiceId, orgId, navigate, queryClient])
 
   // Only fetch prices for TLDs that have been visible (initial batch + when scrolled into view)
   const [requestedTlds, setRequestedTlds] = useState<string[]>(() =>

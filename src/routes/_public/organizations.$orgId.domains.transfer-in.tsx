@@ -5,7 +5,7 @@ import { pageTitle } from '@/lib/utils/page-title'
 
 export const transferInSearchSchema = z.object({
   payment: z.enum(['transfer_in']).optional(),
-  domainId: z.string().optional(),
+  invoiceId: z.string().optional(),
 })
 
 export type TransferInSearch = z.infer<typeof transferInSearchSchema>

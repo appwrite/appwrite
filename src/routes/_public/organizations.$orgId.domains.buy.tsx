@@ -5,7 +5,7 @@ import { pageTitle } from '@/lib/utils/page-title'
 
 export const buyDomainSearchSchema = z.object({
   payment: z.enum(['purchase']).optional(),
-  domainId: z.string().optional(),
+  invoiceId: z.string().optional(),
 })
 
 export type BuyDomainWizardSearch = z.infer<typeof buyDomainSearchSchema>
