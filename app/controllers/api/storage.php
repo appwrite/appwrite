@@ -1740,7 +1740,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
                 $file = $authorization->skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $fileId, $file));
             }
         } catch (NotFoundException) {
-            throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+            throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
         $queueForEvents
@@ -1839,7 +1839,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
                     $deleted = $authorization->skip(fn () => $dbForProject->deleteDocument('bucket_' . $bucket->getSequence(), $fileId));
                 }
             } catch (NotFoundException) {
-                throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+                throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
             }
 
             if (!$deleted) {
