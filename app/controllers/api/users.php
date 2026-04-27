@@ -1355,6 +1355,7 @@ App::patch('/v1/users/:userId/password')
             $user = $dbForProject->updateDocument('users', $user->getId(), $user);
             $queueForEvents->setParam('userId', $user->getId());
             $response->dynamic($user, Response::MODEL_USER);
+            return;
         }
 
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
