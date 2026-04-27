@@ -34,7 +34,7 @@ class Delete extends Action
             ->groups(['api', 'proxy'])
             ->label('scope', 'rules.write')
             ->label('event', 'rules.[ruleId].delete')
-            ->label('audits.event', 'rules.delete')
+            ->label('audits.event', 'rule.delete')
             ->label('audits.resource', 'rule/{request.ruleId}')
             ->label('sdk', new Method(
                 namespace: 'proxy',
