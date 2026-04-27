@@ -53,7 +53,7 @@ class Box extends OAuth2
             \http_build_query([
                 'response_type' => 'code',
                 'client_id' => $this->appID,
-                'scope' => \implode(',', $this->getScopes()),
+                'scope' => \implode(' ', $this->getScopes()),
                 'redirect_uri' => $this->callback,
                 'state' => \json_encode($this->state),
             ]);
@@ -79,7 +79,7 @@ class Box extends OAuth2
                     "client_secret" => $this->appSecret,
                     "code" => $code,
                     "grant_type" => "authorization_code",
-                    "scope" => \implode(',', $this->getScopes()),
+                    "scope" => \implode(' ', $this->getScopes()),
                     "redirect_uri" => $this->callback
                 ])
             ), true);
