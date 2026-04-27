@@ -74,11 +74,11 @@ class Get extends Base
 
         $execution = $dbForProject->getDocument('executions', $executionId);
 
-        if ($execution->getAttribute('resourceType') !== 'functions' || $execution->getAttribute('resourceInternalId') !== $function->getSequence()) {
+        if ($execution->isEmpty()) {
             throw new Exception(Exception::EXECUTION_NOT_FOUND);
         }
 
-        if ($execution->isEmpty()) {
+        if ($execution->getAttribute('resourceType') !== 'functions' || $execution->getAttribute('resourceInternalId') !== $function->getSequence()) {
             throw new Exception(Exception::EXECUTION_NOT_FOUND);
         }
 
