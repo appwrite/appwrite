@@ -5,14 +5,14 @@ namespace Appwrite\Auth\OAuth2;
 use Appwrite\Auth\OAuth2;
 
 // Reference Material
-// https://discordapp.com/developers/docs/topics/oauth2
+// https://discord.com/developers/docs/topics/oauth2
 
 class Discord extends OAuth2
 {
     /**
      * @var string
      */
-    private string $endpoint = 'https://discordapp.com/api';
+    private string $endpoint = 'https://discord.com/api';
 
     /**
      * @var array
