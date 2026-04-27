@@ -4,7 +4,6 @@ import {
   getActiveProfile,
   subscribeToProfileChange,
   type ConsoleProfileId,
-  type ConsoleProfile,
   type ConsoleProfileFeatures,
 } from '@/lib/console-profiles'
 

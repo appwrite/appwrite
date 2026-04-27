@@ -55,7 +55,7 @@ import {
 } from '@/components/ui/tooltip'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
-import type { Models, ServiceId } from '@appwrite.io/console'
+import { ProtocolId, type Models, type ServiceId } from '@appwrite.io/console'
 import { GitConfigurationCard } from './GitConfigurationCard'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
@@ -110,8 +110,6 @@ enum Dependencies {
   PROJECT_INSTALLATIONS = 'project-installations',
 }
 
-type ProtocolId = 'rest' | 'graphql' | 'websocket'
-
 type ProjectProtocol = {
   id: ProtocolId
   label: string
@@ -129,21 +127,21 @@ type ProjectService = {
 
 const PROJECT_PROTOCOLS: ProjectProtocol[] = [
   {
-    id: 'rest',
+    id: ProtocolId.Rest,
     label: 'REST',
     description: 'Standard HTTP API requests from client SDKs.',
     projectField: 'protocolStatusForRest',
     icon: Globe,
   },
   {
-    id: 'graphql',
+    id: ProtocolId.Graphql,
     label: 'GraphQL',
     description: 'GraphQL API access for queries and mutations.',
     projectField: 'protocolStatusForGraphql',
     icon: Code,
   },
   {
-    id: 'websocket',
+    id: ProtocolId.Websocket,
     label: 'WebSocket',
     description: 'Realtime subscriptions over WebSocket connections.',
     projectField: 'protocolStatusForWebsocket',
@@ -291,9 +289,9 @@ export function ProjectSettingsOverview({
     new Set(),
   )
   const [protocols, setProtocols] = useState<Record<ProtocolId, boolean>>({
-    rest: true,
-    graphql: true,
-    websocket: true,
+    [ProtocolId.Rest]: true,
+    [ProtocolId.Graphql]: true,
+    [ProtocolId.Websocket]: true,
   })
   const [protocolDialogOpen, setProtocolDialogOpen] = useState(false)
   const [protocolBulkStatus, setProtocolBulkStatus] = useState<boolean | null>(
@@ -346,15 +344,15 @@ export function ProjectSettingsOverview({
       )
 
       setProtocols({
-        rest:
+        [ProtocolId.Rest]:
           typeof projectRecord.protocolStatusForRest === 'boolean'
             ? projectRecord.protocolStatusForRest
             : true,
-        graphql:
+        [ProtocolId.Graphql]:
           typeof projectRecord.protocolStatusForGraphql === 'boolean'
             ? projectRecord.protocolStatusForGraphql
             : true,
-        websocket:
+        [ProtocolId.Websocket]:
           typeof projectRecord.protocolStatusForWebsocket === 'boolean'
             ? projectRecord.protocolStatusForWebsocket
             : true,
@@ -602,9 +600,9 @@ export function ProjectSettingsOverview({
     },
     onSuccess: async (status) => {
       setProtocols({
-        rest: status,
-        graphql: status,
-        websocket: status,
+        [ProtocolId.Rest]: status,
+        [ProtocolId.Graphql]: status,
+        [ProtocolId.Websocket]: status,
       })
       patchCachedProject({
         protocolStatusForRest: status,

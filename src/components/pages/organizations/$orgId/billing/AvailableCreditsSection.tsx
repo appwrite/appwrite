@@ -97,7 +97,7 @@ export function AvailableCreditsSection({
   const isLoading = orgLoading || planLoading || displayedCreditsLoading
 
   // Check if credits are supported
-  const areCreditsSupported = plan?.credits !== false
+  const areCreditsSupported = plan?.supportsCredits === true
 
   // Calculate total available credit
   const totalAvailableCredit = useMemo(() => {
@@ -105,8 +105,8 @@ export function AvailableCreditsSection({
 
     const now = new Date()
     return credits.reduce((sum, credit) => {
-      if (credit.expiresAt && new Date(credit.expiresAt) > now) {
-        return sum + (credit.remaining || 0)
+      if (credit.expiration && new Date(credit.expiration) > now) {
+        return sum + (credit.credits || 0)
       }
       return sum
     }, 0)
@@ -119,13 +119,15 @@ export function AvailableCreditsSection({
     const now = new Date()
     return credits
       .map((credit) => {
-        const expiresAt = credit.expiresAt ? new Date(credit.expiresAt) : null
-        const isExpired = expiresAt ? expiresAt < now : false
+        const expiresAtDate = credit.expiration
+          ? new Date(credit.expiration)
+          : null
+        const isExpired = expiresAtDate ? expiresAtDate < now : false
 
         return {
           ...credit,
           isExpired,
-          expiresAtDate: expiresAt,
+          expiresAtDate,
         }
       })
       .sort((a, b) => {
@@ -296,7 +298,7 @@ export function AvailableCreditsSection({
               </TableHeader>
               <TableBody>
                 {processedCredits.map((credit) => {
-                  const isFullyUsed = (credit.remaining || 0) === 0
+                  const isFullyUsed = (credit.credits || 0) === 0
                   const isExpired = credit.isExpired
 
                   return (
@@ -313,10 +315,7 @@ export function AvailableCreditsSection({
                         </code>
                       </TableCell>
                       <TableCell className="px-4 py-3 text-right text-[13px] text-muted-foreground">
-                        {formatCurrency(
-                          credit.total || 0,
-                          credit.currency || 'USD',
-                        )}
+                        {formatCurrency(credit.total || 0, 'USD')}
                       </TableCell>
                       <TableCell className="px-4 py-3 text-right">
                         <span
@@ -327,14 +326,11 @@ export function AvailableCreditsSection({
                               : 'text-foreground',
                           )}
                         >
-                          {formatCurrency(
-                            credit.remaining || 0,
-                            credit.currency || 'USD',
-                          )}
+                          {formatCurrency(credit.credits || 0, 'USD')}
                         </span>
                       </TableCell>
                       <TableCell className="px-4 py-3 text-right">
-                        {credit.expiresAt ? (
+                        {credit.expiration ? (
                           <div className="flex items-center justify-end gap-2">
                             <span
                               className={cn(
@@ -344,7 +340,7 @@ export function AvailableCreditsSection({
                                   : 'text-foreground',
                               )}
                             >
-                              {formatDate(credit.expiresAt)}
+                              {formatDate(credit.expiration)}
                             </span>
                             {isExpired && (
                               <Badge

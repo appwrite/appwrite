@@ -1,9 +1,9 @@
-import { BillingPlan } from '@appwrite.io/console'
+import type { BillingPlanTier } from '@/lib/constants/billing-plan'
 import { getBillingPlanDisplayLabel } from '@/lib/utils/plan-filter'
 
 interface PlanComparisonBoxProps {
-  currentPlan: BillingPlan | string
-  selectedPlan: BillingPlan | null
+  currentPlan: BillingPlanTier | string
+  selectedPlan: BillingPlanTier | null
   plans: Record<string, unknown>
 }
 

@@ -1,4 +1,4 @@
-import { BillingPlan } from '@appwrite.io/console'
+import type { BillingPlanTier } from '@/lib/constants/billing-plan'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -18,9 +18,9 @@ import { cn } from '@/lib/utils'
 
 interface PlanSelectionProps {
   plans: Record<string, unknown>
-  currentPlan: BillingPlan | string
-  selectedPlan: BillingPlan | null
-  onPlanSelect: (plan: BillingPlan) => void
+  currentPlan: BillingPlanTier | string
+  selectedPlan: BillingPlanTier | null
+  onPlanSelect: (plan: BillingPlanTier) => void
   selfService: boolean
   hasFreeOrgs: boolean
   variant?: 'card' | 'inline'
@@ -72,7 +72,7 @@ export function PlanSelection({
 
       <RadioGroup
         value={selectedPlan || undefined}
-        onValueChange={(value) => onPlanSelect(value as BillingPlan)}
+        onValueChange={(value) => onPlanSelect(value as BillingPlanTier)}
         className="space-y-2"
       >
         {availablePlans.map(([planTier, planData]) => {

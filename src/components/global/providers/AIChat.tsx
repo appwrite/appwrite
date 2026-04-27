@@ -73,6 +73,17 @@ import { getApiEndpoint, sdk } from '@/lib/appwrite/sdk'
 import { useAvifSupport } from '@/lib/avif-support'
 import { registerConsoleRealtimeListener } from '@/lib/realtime'
 
+/** API may return projectId on conversations; SDK types omit optional fields at times. */
+function assistantConversationProjectId(
+  conversation: AssistantConversation | undefined | null,
+): string | undefined {
+  if (!conversation) return undefined
+  const extended = conversation as AssistantConversation & {
+    projectId?: string | null
+  }
+  return extended.projectId ?? undefined
+}
+
 interface AIChatContextValue {
   isOpen: boolean
   activeConversationId: string | null
@@ -1280,7 +1291,8 @@ export function AIChatPanel() {
       ),
     [activeConversationId, conversations],
   )
-  const contextProjectId = params.projectId ?? activeConversation?.projectId
+  const contextProjectId =
+    params.projectId ?? assistantConversationProjectId(activeConversation)
   const { project, isLoading: projectLoading } = useProject(contextProjectId)
   const { account } = useAuth()
   const queryClient = useQueryClient()
@@ -1375,7 +1387,7 @@ export function AIChatPanel() {
       '{{APPWRITE_REGION}}': dedupeValues([region]),
       '{{APPWRITE_PROJECT_ID}}': dedupeValues([
         params.projectId,
-        activeConversation?.projectId,
+        assistantConversationProjectId(activeConversation),
         project?.$id,
       ]),
       '{{APPWRITE_PROJECT_NAME}}': dedupeValues([project?.name]),
@@ -1394,7 +1406,7 @@ export function AIChatPanel() {
       ]),
     } as Partial<Record<PlaceholderToken, string[]>>
   }, [
-    activeConversation?.projectId,
+    activeConversation,
     account,
     params.orgId,
     params.projectId,
@@ -1615,8 +1627,8 @@ export function AIChatPanel() {
   const resolveConversationProjectId = async (): Promise<string | null> => {
     const directContextProjectId =
       params.projectId ??
-      activeConversation?.projectId ??
-      conversations[0]?.projectId
+      assistantConversationProjectId(activeConversation) ??
+      assistantConversationProjectId(conversations[0])
     if (directContextProjectId) return directContextProjectId
 
     try {
@@ -1688,7 +1700,7 @@ export function AIChatPanel() {
       setPendingAttachments((previous) => [...previous, pendingAttachment])
 
       const contextForUploadProjectId =
-        params.projectId ?? activeConversation?.projectId
+        params.projectId ?? assistantConversationProjectId(activeConversation)
       const uploadPromise = uploadAssistantAttachmentsMutation
         .mutateAsync({
           files: [file],
@@ -1727,7 +1739,7 @@ export function AIChatPanel() {
       uploadTasksRef.current.set(localId, uploadPromise)
     },
     [
-      activeConversation?.projectId,
+      activeConversation,
       params.projectId,
       uploadAssistantAttachmentsMutation,
     ],
@@ -1862,7 +1874,8 @@ export function AIChatPanel() {
         contentText: trimmed,
         context: {
           contextTeamId: params.orgId ?? params.teamId ?? project?.teamId,
-          contextProjectId: params.projectId ?? activeConversation?.projectId,
+          contextProjectId:
+            params.projectId ?? assistantConversationProjectId(activeConversation),
           contextOrganizationId:
             params.orgId ?? params.teamId ?? project?.teamId,
           contextPagePath: location.pathname,

@@ -35,6 +35,7 @@ import { DEFAULT_BILLING_PROJECTS_LIMIT } from '@/lib/react-query/hooks/constant
 import { resolveOrganizationPlanDisplayLabel } from '@/lib/utils/plan-filter'
 import { Link } from '@tanstack/react-router'
 import { Pagination } from '@/components/global/shared/Pagination'
+import type { Models } from '@appwrite.io/console'
 
 /**
  * PlanSummary Component
@@ -130,8 +131,8 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
     if (!credits || credits.length === 0) return 0
     const now = new Date()
     return credits.reduce((sum, credit) => {
-      if (credit.expiresAt && new Date(credit.expiresAt) > now) {
-        return sum + (credit.remaining || 0)
+      if (credit.expiration && new Date(credit.expiration) > now) {
+        return sum + (credit.credits || 0)
       }
       return sum
     }, 0)
@@ -147,22 +148,11 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
     })
   }, [plan, organization])
 
-  // Get next plan if downgrade is scheduled
-  const nextPlan = useMemo(() => {
-    if (!organization?.billingPlanDowngrade) return null
-    // TODO: Fetch next plan details if needed
-    // For now, we'll use current plan price
-    return null
-  }, [organization])
-
-  // Get base plan price (use next plan if downgrade scheduled)
+  // Get base plan price
   const basePlanPrice = useMemo(() => {
-    if (nextPlan) {
-      return nextPlan.price || 0
-    }
     if (!plan) return 0
     return plan.price || 0
-  }, [plan, nextPlan])
+  }, [plan])
 
   // Get base amount (from aggregation if available, otherwise plan price)
   const baseAmount = useMemo(() => {
@@ -214,7 +204,10 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
   // Get billing cycle label
   const billingCycleLabel = useMemo(() => {
     if (!plan) return 'Monthly'
-    return plan.billingCycle || 'Monthly'
+    return (
+      (plan as Models.BillingPlan & { billingCycle?: string }).billingCycle ||
+      'Monthly'
+    )
   }, [plan])
 
   // Get additional members cost from aggregation
@@ -230,9 +223,10 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
 
   // Get projects resource from aggregation API (resourceId: "projects")
   const projectsResource = useMemo(() => {
-    const resources = (aggregation as unknown)?.resources
-    if (!Array.isArray(resources)) return null
-    return resources.find((r: unknown) => r.resourceId === 'projects') ?? null
+    if (!aggregation?.resources) return null
+    return (
+      aggregation.resources.find((r) => r.resourceId === 'projects') ?? null
+    )
   }, [aggregation])
 
   // Additional projects count and cost from aggregation API when available
@@ -247,11 +241,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
     if (!plan || !aggregation) return 0
     const includedProjects =
       plan.projects || plan.addons?.projects?.planIncluded || 0
-    const projects =
-      aggregation.breakdown ||
-      aggregation.projects ||
-      aggregation.projectBreakdown ||
-      []
+    const projects = aggregation.breakdown || []
     const totalProjects = Array.isArray(projects) ? projects.length : 0
     return Math.max(0, totalProjects - includedProjects)
   }, [plan, aggregation, projectsResource])
@@ -267,16 +257,11 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
     if (!plan || !aggregation) return 0
     const includedProjects =
       plan.projects || plan.addons?.projects?.planIncluded || 0
-    const projects =
-      aggregation.breakdown ||
-      aggregation.projects ||
-      aggregation.projectBreakdown ||
-      []
+    const projects = aggregation.breakdown || []
     const totalProjects = Array.isArray(projects) ? projects.length : 0
     if (totalProjects <= includedProjects) return 0
     const additionalCount = totalProjects - includedProjects
-    const additionalProjectPrice =
-      plan.addons?.projects?.price || plan.additionalProjectPrice || 0
+    const additionalProjectPrice = plan.addons?.projects?.price || 0
     return additionalCount * additionalProjectPrice
   }, [plan, aggregation, projectsResource])
 
@@ -297,15 +282,10 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
   const projectBreakdowns = useMemo(() => {
     if (!aggregation) return []
 
-    // Try different property names for projects
-    const projects =
-      aggregation.breakdown ||
-      aggregation.projects ||
-      aggregation.projectBreakdown ||
-      []
+    const projects = aggregation.breakdown || []
     if (!Array.isArray(projects) || projects.length === 0) return []
 
-    return projects.map((project: unknown) => {
+    return projects.map((project) => {
       const resources: ResourceItem[] = []
       let projectTotal = 0
 
@@ -409,9 +389,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
 
       // Helper to get resource from aggregation by resourceId
       const getResourceByResourceId = (resourceId: string) => {
-        return projectResources.find(
-          (r: unknown) => r.resourceId === resourceId,
-        )
+        return projectResources.find((r) => r.resourceId === resourceId)
       }
 
       // Get plan limits from the plan object
@@ -461,9 +439,9 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
 
       // Keep the API resource order first, then append known resources that are not present.
       const apiOrderedResourceIds = projectResources
-        .map((resource: unknown) => resource?.resourceId)
+        .map((resource) => resource.resourceId)
         .filter(
-          (resourceId: unknown): resourceId is string =>
+          (resourceId): resourceId is string =>
             typeof resourceId === 'string' && resourceId.length > 0,
         )
       const orderedResourceIds = Array.from(
@@ -504,8 +482,8 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
       })
 
       return {
-        projectId: project.projectId || project.$id || project.id,
-        projectName: project.projectName || project.name || 'Unknown Project',
+        projectId: project.$id,
+        projectName: project.name || 'Unknown Project',
         resources,
         total: projectTotal,
       }

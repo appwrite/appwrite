@@ -181,7 +181,7 @@ export function formatPaymentMethodSummary(
 export type OrganizationPaymentRefs = {
   paymentMethodId?: string | null
   backupPaymentMethodId?: string | null
-  failedInvoice?: { $id: string; lastError?: string } | null
+  failedInvoice?: { $id: string; lastError?: string; type?: string } | null
   billingPlanDowngrade?: unknown
 }
 
@@ -189,4 +189,15 @@ export function asOrganizationPaymentRefs(
   organization: unknown,
 ): OrganizationPaymentRefs {
   return organization as OrganizationPaymentRefs
+}
+
+/** Subscription failed invoices only — other types (domains, addons, etc.) must not trigger payment alerts. */
+export function isSubscriptionFailedInvoiceWithError(
+  failedInvoice: OrganizationPaymentRefs['failedInvoice'],
+): failedInvoice is NonNullable<OrganizationPaymentRefs['failedInvoice']> {
+  return (
+    !!failedInvoice &&
+    failedInvoice.type === 'subscription' &&
+    !!failedInvoice.lastError
+  )
 }

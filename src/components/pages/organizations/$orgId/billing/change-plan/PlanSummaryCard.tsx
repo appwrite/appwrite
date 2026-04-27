@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { BillingPlan } from '@appwrite.io/console'
+import type { BillingPlanTier } from '@/lib/constants/billing-plan'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Info } from '@/lib/icons'
@@ -13,7 +13,7 @@ import {
 import { getBillingPlanDisplayLabel } from '@/lib/utils/plan-filter'
 
 interface PlanSummaryCardProps {
-  selectedPlan: BillingPlan | null
+  selectedPlan: BillingPlanTier | null
   billingPlans: Record<string, unknown>
   estimation: unknown | null
   isLoading: boolean

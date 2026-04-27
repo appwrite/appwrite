@@ -3,7 +3,10 @@ import { useParams, useNavigate } from '@tanstack/react-router'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { AlertTriangle, CreditCard } from 'lucide-react'
-import { asOrganizationPaymentRefs } from './utils'
+import {
+  asOrganizationPaymentRefs,
+  isSubscriptionFailedInvoiceWithError,
+} from './utils'
 import { PlanSummary } from './PlanSummary'
 import { PaymentHistory } from './PaymentHistory'
 import { PaymentMethods } from './PaymentMethods'
@@ -66,9 +69,9 @@ export function BillingTab() {
 
   const retryPaymentMutation = useRetryInvoicePayment()
 
-  // Check for failed invoice
+  // Check for failed subscription invoice only (domains/addons use other types)
   const failedInvoice = orgRefs?.failedInvoice
-  const hasFailedInvoice = failedInvoice && failedInvoice.lastError
+  const hasFailedInvoice = isSubscriptionFailedInvoiceWithError(failedInvoice)
 
   // Check for expired payment method
   const primaryFailed = primaryPaymentMethod.paymentMethod?.failed === true

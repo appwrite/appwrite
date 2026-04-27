@@ -29,7 +29,7 @@ function buildConsoleUserPrefixQueries(trimmed: string): string[] {
  */
 export async function fetchConsoleUsersSearch(search: string) {
   const trimmed = search?.trim() ?? ''
-  const sortOrder = USERS_DEFAULT_SORT_ORDER
+  const sortOrder = USERS_DEFAULT_SORT_ORDER as 'asc' | 'desc'
   const orderQuery =
     sortOrder === 'asc'
       ? Query.orderAsc(USERS_DEFAULT_SORT_BY)

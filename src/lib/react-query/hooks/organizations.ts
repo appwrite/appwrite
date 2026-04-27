@@ -38,7 +38,7 @@ import {
 } from './constants'
 
 type OrganizationListResponse = Models.TeamList
-type OrganizationRecord = Models.Team
+type OrganizationRecord = Models.Organization
 type OrganizationPlan = Models.BillingPlan
 
 /**
@@ -102,6 +102,8 @@ function createSelfHostedOrganizationPlan(): OrganizationPlan {
         type: 'self-hosted',
         currency: 'USD',
         price: 0,
+        value: 0,
+        invoiceDesc: '',
       },
       projects: {
         supported: true,
@@ -110,6 +112,8 @@ function createSelfHostedOrganizationPlan(): OrganizationPlan {
         type: 'self-hosted',
         currency: 'USD',
         price: 0,
+        value: 0,
+        invoiceDesc: '',
       },
     },
     budgetCapEnabled: false,
@@ -124,8 +128,12 @@ function createSelfHostedOrganizationPlan(): OrganizationPlan {
     supportsMockNumbers: true,
     supportsOrganizationRoles: false,
     supportsCredits: false,
+    supportsDisposableEmailValidation: false,
+    supportsCanonicalEmailValidation: false,
+    supportsFreeEmailValidation: false,
     backupsEnabled: false,
     usagePerProject: false,
+    supportedAddons: { baa: false },
     backupPolicies: 0,
     deploymentSize: Number.MAX_SAFE_INTEGER,
     buildSize: Number.MAX_SAFE_INTEGER,
@@ -282,7 +290,7 @@ export async function fetchOrganizationInvoices(
 }
 
 /**
- * Whether the organization has at least one invoice with status "failed".
+ * Whether the organization has at least one failed **subscription** invoice.
  * Uses a single filtered list request (limit 1) for efficiency.
  */
 export async function fetchOrganizationHasFailedInvoice(
@@ -297,6 +305,7 @@ export async function fetchOrganizationHasFailedInvoice(
       organizationId,
       queries: [
         Query.equal('status', 'failed'),
+        Query.equal('type', 'subscription'),
         Query.orderDesc('$createdAt'),
         Query.limit(1),
         Query.offset(0),
@@ -311,7 +320,7 @@ export async function fetchOrganizationHasFailedInvoice(
 }
 
 /**
- * Query options for failed-invoice presence (org-wide banner).
+ * Query options for failed subscription-invoice presence (org-wide banner).
  */
 export function organizationFailedInvoicePresenceQueryOptions(
   organizationId: string | null | undefined,
@@ -323,6 +332,7 @@ export function organizationFailedInvoicePresenceQueryOptions(
       organizationId,
       'presence',
       'failed',
+      'subscription',
     ],
     queryFn: () => fetchOrganizationHasFailedInvoice(organizationId!),
     enabled: !!organizationId,
