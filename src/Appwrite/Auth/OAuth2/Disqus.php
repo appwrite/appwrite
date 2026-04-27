@@ -91,7 +91,7 @@ class Disqus extends OAuth2
     {
         $this->tokens = \json_decode($this->request(
             'POST',
-            $this->endpoint . 'oauth/2.0/access_token/?',
+            $this->endpoint . 'oauth/2.0/access_token/',
             ['Content-Type: application/x-www-form-urlencoded'],
             \http_build_query([
                 'grant_type' => 'refresh_token',
