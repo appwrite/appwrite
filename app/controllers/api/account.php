@@ -4343,7 +4343,7 @@ App::post('/v1/account/targets/push')
     ->groups(['api', 'account'])
     ->label('scope', 'targets.write')
     ->label('audits.event', 'target.create')
-    ->label('audits.resource', 'target/response.$id')
+    ->label('audits.resource', 'target/{response.$id}')
     ->label('event', 'users.[userId].targets.[targetId].create')
     ->label('sdk', new Method(
         namespace: 'account',
@@ -4427,7 +4427,7 @@ App::put('/v1/account/targets/:targetId/push')
     ->groups(['api', 'account'])
     ->label('scope', 'targets.write')
     ->label('audits.event', 'target.update')
-    ->label('audits.resource', 'target/response.$id')
+    ->label('audits.resource', 'target/{response.$id}')
     ->label('event', 'users.[userId].targets.[targetId].update')
     ->label('sdk', new Method(
         namespace: 'account',
@@ -4493,7 +4493,7 @@ App::delete('/v1/account/targets/:targetId/push')
     ->groups(['api', 'account'])
     ->label('scope', 'targets.write')
     ->label('audits.event', 'target.delete')
-    ->label('audits.resource', 'target/response.$id')
+    ->label('audits.resource', 'target/{response.$id}')
     ->label('event', 'users.[userId].targets.[targetId].delete')
     ->label('sdk', new Method(
         namespace: 'account',
