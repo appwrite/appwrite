@@ -120,7 +120,7 @@ class WordPress extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if ($user['verified']) {
+        if ($user['email_verified'] ?? false) {
             return $user['email'] ?? '';
         }
 
