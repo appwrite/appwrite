@@ -146,7 +146,7 @@ class Create extends Base
          */
         $assocParams = ['headers'];
         foreach ($assocParams as $assocParam) {
-            if (!empty('headers') && !is_array($$assocParam)) {
+            if (!empty($$assocParam) && !is_array($$assocParam)) {
                 $$assocParam = \json_decode($$assocParam, true);
             }
         }
