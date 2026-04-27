@@ -60,6 +60,7 @@ class Update extends Action
             ->inject('project')
             ->inject('authorization')
             ->inject('queueForEvents')
+            ->inject('distributedLockOrFail')
             ->callback($this->action(...));
     }
 
@@ -70,14 +71,26 @@ class Update extends Action
         Database $dbForPlatform,
         Document $project,
         Authorization $authorization,
-        Event $queueForEvents
+        Event $queueForEvents,
+        callable $distributedLockOrFail,
     ): void {
-        $services = $project->getAttribute('services', []);
-        $services[$serviceId] = $enabled;
+        // The services map is a JSON object on the project document. Two
+        // concurrent service toggles read the same baseline, each set their
+        // own key, and the second updateDocument() overwrites the first —
+        // silent lost-update on a sparse write. Lock the project doc for
+        // the read-modify-write window; re-read inside the lock so the
+        // baseline reflects any update that landed between request init
+        // and lock acquisition.
+        $project = $distributedLockOrFail("platform:project:{$project->getId()}", function () use ($project, $serviceId, $enabled, $dbForPlatform, $authorization) {
+            $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $project->getId()));
 
-        $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-            'services' => $services,
-        ])));
+            $services = $project->getAttribute('services', []);
+            $services[$serviceId] = $enabled;
+
+            return $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                'services' => $services,
+            ])));
+        });
 
         $queueForEvents->setParam('serviceId', $serviceId);
 

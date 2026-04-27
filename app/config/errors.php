@@ -54,6 +54,11 @@ return [
         'description' => 'Rate limit for the current endpoint has been exceeded. Please try again after some time.',
         'code' => 429,
     ],
+    Exception::GENERAL_RESOURCE_LOCKED => [
+        'name' => Exception::GENERAL_RESOURCE_LOCKED,
+        'description' => 'The requested resource is currently being modified by another request. Please retry after a brief delay.',
+        'code' => 409,
+    ],
     Exception::GENERAL_SMTP_DISABLED => [
         'name' => Exception::GENERAL_SMTP_DISABLED,
         'description' => 'SMTP is disabled on your Appwrite instance. You can <a href="/docs/email-delivery">learn more about setting up SMTP</a> in our docs.',

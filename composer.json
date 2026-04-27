@@ -94,8 +94,15 @@
         "spomky-labs/otphp": "11.*",
         "webonyx/graphql-php": "15.31.*",
         "league/csv": "9.14.*",
-        "enshrined/svg-sanitize": "0.22.*"
+        "enshrined/svg-sanitize": "0.22.*",
+        "premtsd-code/lock": "dev-main#7ec10dae33b950bc0f473c51e5b165b20754760c"
     },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/premtsd-code/lock"
+        }
+    ],
     "require-dev": {
         "ext-fileinfo": "*",
         "appwrite/sdk-generator": "*",

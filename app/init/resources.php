@@ -8,6 +8,7 @@ use Appwrite\Event\Publisher\Migration as MigrationPublisher;
 use Appwrite\Event\Publisher\Screenshot as ScreenshotPublisher;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
+use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Utopia\Database\Documents\User;
 use Executor\Executor;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
@@ -22,6 +23,9 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\DSN\DSN;
+use Utopia\Lock\Adapter\Redis as LockRedisAdapter;
+use Utopia\Lock\Exception\LockAcquireException;
+use Utopia\Lock\Lock;
 use Utopia\Pools\Group;
 use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Publisher;
@@ -212,6 +216,134 @@ $container->set('timelimit', function (\Redis $redis) {
         return new TimeLimitRedis($key, $limit, $time, $redis);
     };
 }, ['redis']);
+
+// Extract the collection segment ("keys" / "projects" / "users") from keys
+// of the form "lock:platform:{target}:{id}" so metrics can slice by target.
+// Used by both distributedLock and distributedLockOrFail factories below.
+$lockTargetOf = function (string $key): string {
+    $parts = explode(':', $key, 4);
+    return $parts[2] ?? 'unknown';
+};
+
+/**
+ * Distributed-lock factory: skip-on-contention variant.
+ *
+ * For idempotent writes where losing the race is correct (e.g., per-request
+ * `accessedAt` updates from N pods all writing the same value). On contention,
+ * the callback is silently skipped — another pod is doing the same work.
+ *
+ * Behavior:
+ *  - Non-blocking acquire (one attempt). On conflict, skip and return.
+ *  - Fail-open: if Redis is unreachable, run the callback unlocked + warn.
+ *  - Kill switch: `_APP_LOCKING_ENABLED=disabled` runs the callback unlocked.
+ *
+ * Returns void — the caller can't distinguish "acquired and ran" from "skipped".
+ *
+ * Metric: `lock.attempts{outcome,target}` where outcome ∈ {acquired, skipped,
+ * backend_error, release_error}.
+ */
+$container->set('distributedLock', function (\Redis $redis, Telemetry $telemetry) use ($lockTargetOf) {
+    $enabled = System::getEnv('_APP_LOCKING_ENABLED', 'enabled') !== 'disabled';
+    $attempts = $telemetry->createCounter('lock.attempts', null, 'Distributed lock acquire outcomes');
+
+    if (! $enabled) {
+        return function (string $key, \Closure $fn, float $ttl = 5.0): void {
+            $fn();
+        };
+    }
+
+    return function (string $key, \Closure $fn, float $ttl = 5.0) use ($redis, $attempts, $lockTargetOf): void {
+        $target = $lockTargetOf($key);
+        $lock = new Lock(new LockRedisAdapter($redis), $key, $ttl);
+
+        try {
+            $acquired = $lock->acquire();
+        } catch (LockAcquireException $e) {
+            $attempts->add(1, ['outcome' => 'backend_error', 'target' => $target]);
+            Console::warning("Lock backend unavailable for {$key}, proceeding unlocked: {$e->getMessage()}");
+            $fn();
+            return;
+        }
+
+        if (! $acquired) {
+            $attempts->add(1, ['outcome' => 'skipped', 'target' => $target]);
+            return;
+        }
+
+        $attempts->add(1, ['outcome' => 'acquired', 'target' => $target]);
+        try {
+            $fn();
+        } finally {
+            try {
+                $lock->release();
+            } catch (\Throwable $e) {
+                $attempts->add(1, ['outcome' => 'release_error', 'target' => $target]);
+                Console::warning("Lock release failed for {$key}: {$e->getMessage()}");
+            }
+        }
+    };
+}, ['redis', 'telemetry']);
+
+/**
+ * Distributed-lock factory: 409-on-contention variant.
+ *
+ * For explicit user-write endpoints where read-modify-write on shared mutable
+ * state must NOT silently drop a request. On contention, throws
+ * `Exception::GENERAL_RESOURCE_LOCKED` (HTTP 409) so the client retries.
+ *
+ * Behavior:
+ *  - Blocking acquire with short timeout (default 3s).
+ *  - On timeout, throws `GENERAL_RESOURCE_LOCKED`.
+ *  - Fail-open: backend unreachable runs the callback unlocked + warning.
+ *  - Kill switch: `_APP_LOCKING_ENABLED=disabled` runs the callback unlocked.
+ *  - Returns the callback's return value so callers can use the result.
+ *
+ * Metric: `lock.attempts{outcome,target}` where outcome ∈ {acquired, contended,
+ * backend_error, release_error}.
+ */
+$container->set('distributedLockOrFail', function (\Redis $redis, Telemetry $telemetry) use ($lockTargetOf) {
+    $enabled = System::getEnv('_APP_LOCKING_ENABLED', 'enabled') !== 'disabled';
+    $attempts = $telemetry->createCounter('lock.attempts', null, 'Distributed lock acquire outcomes');
+
+    if (! $enabled) {
+        return function (string $key, \Closure $fn, float $ttl = 10.0, float $waitTimeout = 3.0): mixed {
+            return $fn();
+        };
+    }
+
+    return function (string $key, \Closure $fn, float $ttl = 10.0, float $waitTimeout = 3.0) use ($redis, $attempts, $lockTargetOf): mixed {
+        $target = $lockTargetOf($key);
+        $lock = new Lock(new LockRedisAdapter($redis), $key, $ttl);
+
+        try {
+            $acquired = $lock->acquire(blocking: true, waitTimeout: $waitTimeout, retryDelay: 0.1);
+        } catch (LockAcquireException $e) {
+            $attempts->add(1, ['outcome' => 'backend_error', 'target' => $target]);
+            Console::warning("Lock backend unavailable for {$key}, proceeding unlocked: {$e->getMessage()}");
+            return $fn();
+        }
+
+        if (! $acquired) {
+            $attempts->add(1, ['outcome' => 'contended', 'target' => $target]);
+            throw new AppwriteException(
+                AppwriteException::GENERAL_RESOURCE_LOCKED,
+                "Resource '{$key}' is currently being modified by another request. Please retry."
+            );
+        }
+
+        $attempts->add(1, ['outcome' => 'acquired', 'target' => $target]);
+        try {
+            return $fn();
+        } finally {
+            try {
+                $lock->release();
+            } catch (\Throwable $e) {
+                $attempts->add(1, ['outcome' => 'release_error', 'target' => $target]);
+                Console::warning("Lock release failed for {$key}: {$e->getMessage()}");
+            }
+        }
+    };
+}, ['redis', 'telemetry']);
 
 $container->set('deviceForLocal', function (Telemetry $telemetry) {
     return new Device\Telemetry($telemetry, new Local());

@@ -100,7 +100,8 @@ Http::init()
     ->inject('team')
     ->inject('apiKey')
     ->inject('authorization')
-    ->action(function (Http $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization) {
+    ->inject('distributedLock')
+    ->action(function (Http $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization, callable $distributedLock) {
         $route = $utopia->getRoute();
         if ($route === null) {
             throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
@@ -249,15 +250,20 @@ Http::init()
                 }
 
                 if (! $updates->isEmpty()) {
-                    $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->updateDocument('keys', $dbKey->getId(), $updates));
+                    // Serialize concurrent per-request writes to this key across API nodes.
+                    // Skip on contention is safe: the winner applies the same idempotent update;
+                    // if this node observed a new SDK the other didn't, the next request catches up.
+                    $distributedLock('lock:platform:keys:' . $dbKey->getId(), function () use ($dbForPlatform, $dbKey, $updates, $apiKey, $project, $user, $team) {
+                        $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->updateDocument('keys', $dbKey->getId(), $updates));
 
-                    if (! empty($apiKey->getProjectId())) {
-                        $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
-                    } elseif (! empty($apiKey->getUserId())) {
-                        $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('users', $user->getId()));
-                    } elseif (! empty($apiKey->getTeamId())) {
-                        $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('teams', $team->getId()));
-                    }
+                        if (! empty($apiKey->getProjectId())) {
+                            $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
+                        } elseif (! empty($apiKey->getUserId())) {
+                            $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('users', $user->getId()));
+                        } elseif (! empty($apiKey->getTeamId())) {
+                            $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('teams', $team->getId()));
+                        }
+                    });
                 }
 
                 $userClone = clone $user;
@@ -388,9 +394,11 @@ Http::init()
         if ($project->getId() !== 'console') {
             $accessedAt = $project->getAttribute('accessedAt', 0);
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
-                $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-                    'accessedAt' => DateTime::now()
-                ])));
+                $distributedLock('lock:platform:projects:' . $project->getId(), function () use ($authorization, $dbForPlatform, $project) {
+                    $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                        'accessedAt' => DateTime::now()
+                    ])));
+                });
             }
         }
 
@@ -407,9 +415,11 @@ Http::init()
                         'accessedAt' => $user->getAttribute('accessedAt')
                     ]));
                 } else {
-                    $authorization->skip(fn () => $dbForPlatform->updateDocument('users', $user->getId(), new Document([
-                        'accessedAt' => $user->getAttribute('accessedAt')
-                    ])));
+                    $distributedLock('lock:platform:users:' . $user->getId(), function () use ($authorization, $dbForPlatform, $user) {
+                        $authorization->skip(fn () => $dbForPlatform->updateDocument('users', $user->getId(), new Document([
+                            'accessedAt' => $user->getAttribute('accessedAt')
+                        ])));
+                    });
                 }
             }
         }
