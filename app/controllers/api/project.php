@@ -513,6 +513,7 @@ App::put('/v1/project/variables/:variableId')
     ->desc('Update variable')
     ->groups(['api'])
     ->label('scope', 'projects.write')
+    ->label('audits.event', 'variable.update')
     ->label('sdk', new Method(
         namespace: 'project',
         group: null,
@@ -571,6 +572,7 @@ App::delete('/v1/project/variables/:variableId')
     ->desc('Delete variable')
     ->groups(['api'])
     ->label('scope', 'projects.write')
+    ->label('audits.event', 'variable.delete')
     ->label('sdk', new Method(
         namespace: 'project',
         group: null,
