@@ -3549,7 +3549,7 @@ App::post('/v1/messaging/messages/push')
 
             $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
             if ($file->isEmpty()) {
-                throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+                throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
             }
 
             if (!\in_array($file->getAttribute('mimeType'), ['image/png', 'image/jpeg'])) {
@@ -4546,7 +4546,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
 
             $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
             if ($file->isEmpty()) {
-                throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+                throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
             }
 
             if (!\in_array($file->getAttribute('mimeType'), ['image/png', 'image/jpeg'])) {
