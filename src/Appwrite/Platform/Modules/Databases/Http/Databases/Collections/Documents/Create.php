@@ -332,7 +332,19 @@ class Create extends Action
 
                     if ($relation instanceof Document) {
                         $relation = $this->removeReadonlyAttributes($relation, $isAPIKey || $isPrivilegedUser);
+// Security fix: prevent identity spoofing
+unset(
+    $document['$createdBy'],
+    $document['$owner'],
+    $document['ownerId'],
+    $document['userId']
+);
 
+// Resolve authenticated user safely
+$userId = isset($user) && $user ? $user->getId() : null;
+
+// Enforce server-side ownership
+$document['$createdBy'] = $userId;
                         $current = $authorization->skip(
                             fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(), $relation->getId())
                         );
@@ -360,7 +372,7 @@ class Create extends Action
             }
         };
 
-        $documents = \array_map(function ($document) use ($collection, $permissions, $checkPermissions, $isBulk, $documentId, $setPermissions, $isAPIKey, $isPrivilegedUser) {
+        $documents = \array_map(function ($document) use ($collection, $permissions, $checkPermissions, $isBulk, $documentId, $setPermissions, $isAPIKey, $isPrivilegedUser, $user) {
             $document['$collection'] = $collection->getId();
 
             // Determine the source ID depending on whether it's a bulk operation.
@@ -379,6 +391,19 @@ class Create extends Action
             // Assign a unique ID if needed, otherwise use the provided ID.
             $document['$id'] = $sourceId === 'unique()' ? ID::unique() : $sourceId;
             $document = $this->removeReadonlyAttributes($document, $isAPIKey || $isPrivilegedUser);
+
+            // Remove all client-provided identity fields to prevent impersonation
+            unset(
+                $document['$createdBy'],
+                $document['$owner'],
+                $document['ownerId'],
+                $document['userId']
+            );
+
+            // Enforce server-controlled ownership
+            $userId = $user ? $user->getId() : null;
+            $document['$createdBy'] = $userId;
+
             $document = new Document($document);
             $setPermissions($document, $permissions);
             $checkPermissions($collection, $document, Database::PERMISSION_CREATE);
