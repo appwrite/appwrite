@@ -76,7 +76,7 @@ class Stripe extends OAuth2
                 ])
             ), true);
 
-            $this->stripeAccountId = $this->tokens['stripe_user_id'];
+            $this->stripeAccountId = $this->tokens['stripe_user_id'] ?? '';
         }
 
         return $this->tokens;
@@ -103,7 +103,7 @@ class Stripe extends OAuth2
             $this->tokens['refresh_token'] = $refreshToken;
         }
 
-        $this->stripeAccountId = $this->tokens['stripe_user_id'];
+        $this->stripeAccountId = $this->tokens['stripe_user_id'] ?? '';
         return $this->tokens;
     }
 
