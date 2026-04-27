@@ -595,6 +595,7 @@ App::get('/v1/vcs/github/callback')
 
         $state = \json_decode($state, true);
         $projectId = $state['projectId'] ?? '';
+        $redirectFailure = $state['failure'] ?? '';
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
