@@ -83,12 +83,12 @@ class Autodesk extends OAuth2
         $response = $this->request(
             'POST',
             'https://developer.api.autodesk.com/authentication/v1/refreshtoken',
-            [],
+            ['Content-Type: application/x-www-form-urlencoded'],
             \http_build_query([
                 'client_id' => $this->appID,
                 'client_secret' => $this->appSecret,
                 'grant_type' => 'refresh_token',
-                'code' => $refreshToken,
+                'refresh_token' => $refreshToken,
                 'redirect_uri' => $this->callback,
             ])
         );
