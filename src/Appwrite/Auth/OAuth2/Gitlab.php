@@ -163,7 +163,11 @@ class Gitlab extends OAuth2
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $user = $this->request('GET', $this->getEndpoint() . '/api/v4/user?access_token=' . \urlencode($accessToken));
+            $user = $this->request(
+                'GET',
+                $this->getEndpoint() . '/api/v4/user',
+                ['Authorization: Bearer ' . \urlencode($accessToken)]
+            );
             $this->user = \json_decode($user, true);
         }
 
