@@ -33,7 +33,7 @@ class Delete extends Base
             ->label('scope', 'log.write')
             ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('event', 'sites.[siteId].logs.[logId].delete')
-            ->label('audits.event', 'logs.delete')
+            ->label('audits.event', 'log.delete')
             ->label('audits.resource', 'site/{request.siteId}')
             ->label('sdk', new Method(
                 namespace: 'sites',
