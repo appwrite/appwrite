@@ -22,7 +22,6 @@ class AppDomainTest extends TestCase
     public function testDescription(): void
     {
         $this->assertNotEmpty($this->validator->getDescription());
-        $this->assertIsString($this->validator->getDescription());
     }
 
     public function testIsArray(): void

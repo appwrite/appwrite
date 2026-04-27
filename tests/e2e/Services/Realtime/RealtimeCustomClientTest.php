@@ -3828,7 +3828,7 @@ class RealtimeCustomClientTest extends Scope
             $this->fail('Should not receive any event after rollback');
         } catch (TimeoutException $e) {
             // Expected - no event should be triggered
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $client->close();
@@ -5655,7 +5655,7 @@ class RealtimeCustomClientTest extends Scope
             $client->receive();
             $this->fail('Should not receive duplicate event');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         // Test Document Decrement
@@ -5686,7 +5686,7 @@ class RealtimeCustomClientTest extends Scope
             $client->receive();
             $this->fail('Should not receive duplicate event');
         } catch (TimeoutException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $client->close();

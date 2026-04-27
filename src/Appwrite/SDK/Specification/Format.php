@@ -40,6 +40,9 @@ abstract class Format
         'license.url' => '',
     ];
 
+    /**
+     * @var list<array{namespace: string, methods: list<string>, parameter: string, excludeKeys?: list<string>, exclude?: bool}>
+     */
     private const array OAUTH_PROVIDER_BLACKLIST = [
         [
             'namespace' => 'account',
@@ -67,6 +70,9 @@ abstract class Format
         ],
     ];
 
+    /**
+     * @var list<array{namespace: string, methods: list<string>, parameter: string, excludeKeys?: list<string>, exclude?: bool}>
+     */
     private const array PROVIDER_USAGE_BLACKLIST = [
         [
             'namespace' => 'users',
@@ -78,6 +84,9 @@ abstract class Format
         ],
     ];
 
+    /**
+     * @var list<array{namespace: string, methods: list<string>, parameter: string, required?: bool, nullable?: bool}>
+     */
     private const array REQUEST_PARAMETER_OVERRIDES = [
         [
             'namespace' => 'project',
@@ -109,24 +118,7 @@ abstract class Format
     {
         $blacklist = [];
 
-        foreach (self::OAUTH_PROVIDER_BLACKLIST as $config) {
-            foreach ($config['methods'] as $method) {
-                $entry = [
-                    'namespace' => $config['namespace'],
-                    'method' => $method,
-                    'parameter' => $config['parameter'],
-                ];
-                if (isset($config['excludeKeys'])) {
-                    $entry['excludeKeys'] = $config['excludeKeys'];
-                }
-                if (isset($config['exclude'])) {
-                    $entry['exclude'] = $config['exclude'];
-                }
-                $blacklist[] = $entry;
-            }
-        }
-
-        foreach (self::PROVIDER_USAGE_BLACKLIST as $config) {
+        foreach ([...self::OAUTH_PROVIDER_BLACKLIST, ...self::PROVIDER_USAGE_BLACKLIST] as $config) {
             foreach ($config['methods'] as $method) {
                 $entry = [
                     'namespace' => $config['namespace'],
@@ -751,6 +743,15 @@ abstract class Format
                 break;
             case 'project':
                 switch ($method) {
+                    case 'getEmailTemplate':
+                    case 'updateEmailTemplate':
+                        switch ($param) {
+                            case 'templateId':
+                                return 'EmailTemplateType';
+                            case 'locale':
+                                return 'EmailTemplateLocale';
+                        }
+                        break;
                     case 'getUsage':
                         switch ($param) {
                             case 'period':
@@ -763,7 +764,6 @@ abstract class Format
                 switch ($method) {
                     case 'getEmailTemplate':
                     case 'updateEmailTemplate':
-                    case 'deleteEmailTemplate':
                         switch ($param) {
                             case 'type':
                                 return 'EmailTemplateType';
@@ -959,7 +959,7 @@ abstract class Format
             'nullable' => $nullable,
         ];
 
-        foreach (self::REQUEST_PARAMETER_OVERRIDES as $override) {
+        foreach ($this->getRequestParameterOverrides() as $override) {
             if (
                 $override['namespace'] !== $service
                 || !\in_array($method, $override['methods'], true)
@@ -968,14 +968,26 @@ abstract class Format
                 continue;
             }
 
-            $config['required'] = $override['required'] ?? $config['required'];
-            $config['nullable'] = $override['nullable'] ?? $config['nullable'];
+            if (isset($override['required'])) {
+                $config['required'] = $override['required'];
+            }
+            if (isset($override['nullable'])) {
+                $config['nullable'] = $override['nullable'];
+            }
             break;
         }
 
         $config['emitDefault'] = !$config['required'] && !\is_null($default);
 
         return $config;
+    }
+
+    /**
+     * @return list<array{namespace: string, methods: list<string>, parameter: string, required?: bool, nullable?: bool}>
+     */
+    private function getRequestParameterOverrides(): array
+    {
+        return self::REQUEST_PARAMETER_OVERRIDES;
     }
 
     public function getResponseEnumName(string $model, string $param): ?string

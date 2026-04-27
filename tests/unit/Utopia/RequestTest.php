@@ -23,7 +23,6 @@ class RequestTest extends TestCase
     public function testFilters(): void
     {
         $this->assertFalse($this->request->hasFilters());
-        $this->assertIsArray($this->request->getFilters());
         $this->assertEmpty($this->request->getFilters());
 
         $this->request->addFilter(new First());

@@ -18,7 +18,6 @@ class AuthTest extends Scope
     use Base;
 
     private array $account1;
-    private array $account2;
 
     private string $token1;
     private string $token2;

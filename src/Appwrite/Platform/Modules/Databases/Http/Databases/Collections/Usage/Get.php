@@ -119,6 +119,7 @@ class Get extends Action
         $format = match ($days['period']) {
             '1h' => 'Y-m-d\TH:00:00.000P',
             '1d' => 'Y-m-d\T00:00:00.000P',
+            default => throw new \LogicException('Unexpected period: ' . $days['period']),
         };
 
         foreach ($metrics as $metric) {

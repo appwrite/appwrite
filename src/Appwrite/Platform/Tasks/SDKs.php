@@ -182,7 +182,7 @@ class SDKs extends Action
 
                 Console::log('');
 
-                if ($createRelease && ! $examplesOnly) {
+                if ($createRelease) {
                     Console::info("━━━ {$language['name']} SDK ({$platform['name']}, {$language['version']}) ━━━");
                     $changelog = $language['changelog'] ?? '';
                     $changelog = ($changelog) ? \file_get_contents($changelog) : '# Change Log';
@@ -1150,7 +1150,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
             if (! empty($prListOutput[0])) {
                 $parts = \explode(' ', trim($prListOutput[0]), 2);
-                $prNumber = $parts[0] ?? '';
+                $prNumber = $parts[0];
                 $prUrl = $parts[1] ?? '';
             }
         }

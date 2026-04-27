@@ -375,7 +375,7 @@ return function (Container $container): void {
 
             return $dbForPlatform->findOne('rules', [
                 Query::equal('domain', [$domain]),
-            ]) ?? new Document();
+            ]);
         });
 
         $permitsCurrentProject = $rule->getAttribute('projectInternalId', '') === $project->getSequence();
@@ -478,14 +478,10 @@ return function (Container $container): void {
         }
 
         // Get fallback session from old clients (no SameSite support) or clients who block 3rd-party cookies
-        if ($response) { // if in http context - add debug header
-            $response->addHeader('X-Debug-Fallback', 'false');
-        }
+        $response->addHeader('X-Debug-Fallback', 'false');
 
         if (empty($store->getProperty('id', '')) && empty($store->getProperty('secret', ''))) {
-            if ($response) {
-                $response->addHeader('X-Debug-Fallback', 'true');
-            }
+            $response->addHeader('X-Debug-Fallback', 'true');
             $fallback = $request->getHeader('x-fallback-cookies', '');
             $fallback = \json_decode($fallback, true);
             $store->decode(((is_array($fallback) && isset($fallback[$store->getKey()])) ? $fallback[$store->getKey()] : ''));
@@ -1084,7 +1080,7 @@ return function (Container $container): void {
         $sdkValidator = new WhiteList($servers, true);
         $sdk = \strtolower($request->getHeader('x-sdk-name', 'UNKNOWN'));
 
-        if ($sdk !== 'UNKNOWN' && $sdkValidator->isValid($sdk)) {
+        if ($sdk !== 'unknown' && $sdkValidator->isValid($sdk)) {
             $sdks = $key->getAttribute('sdks', []);
 
             if (! in_array($sdk, $sdks)) {

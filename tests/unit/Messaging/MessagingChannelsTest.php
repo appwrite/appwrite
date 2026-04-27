@@ -203,7 +203,6 @@ class MessagingChannelsTest extends TestCase
                  * Making sure the right clients receive the event.
                  */
                 $this->assertStringEndsWith($index, $receiverId);
-                $this->assertIsArray($queryKeys);
             }
         }
     }
@@ -240,7 +239,6 @@ class MessagingChannelsTest extends TestCase
                      * Making sure the right clients receive the event.
                      */
                     $this->assertStringEndsWith($index, $receiverId);
-                    $this->assertIsArray($queryKeys);
                 }
             }
         }

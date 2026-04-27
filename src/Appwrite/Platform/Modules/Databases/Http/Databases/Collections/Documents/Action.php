@@ -14,10 +14,10 @@ use Utopia\Database\Validator\Authorization;
 abstract class Action extends DatabasesAction
 {
     /**
-     * @var string|null The current context (either 'row' or 'document')
+     * @var string The current context (either 'row' or 'document')
      */
-    private ?string $context = DOCUMENTS;
-    private ?string $databaseType = DATABASE_TYPE_LEGACY;
+    private string $context = DOCUMENTS;
+    private string $databaseType = DATABASE_TYPE_LEGACY;
 
     /**
      * Get the response model used in the SDK and HTTP responses.

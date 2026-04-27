@@ -16,7 +16,7 @@ class OpenSSL
      * @param string $aad
      * @param int    $tag_length
      *
-     * @return string
+     * @return string|false
      */
     public static function encrypt($data, $method, $key, $options = 0, $iv = '', ?string &$tag = null, $aad = '', $tag_length = 16)
     {

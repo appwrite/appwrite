@@ -26,9 +26,9 @@ use Utopia\Validator\Range;
 abstract class Action extends UtopiaAction
 {
     /**
-     * @var string|null The current context (either 'column' or 'attribute')
+     * @var string The current context (either 'column' or 'attribute')
      */
-    private ?string $context = ATTRIBUTES;
+    private string $context = ATTRIBUTES;
 
     /**
      * Get the correct response model.

@@ -84,7 +84,8 @@ class Create extends Action
 
         $collection = match ($resourceType) {
             'site' => 'sites',
-            'function' => 'functions'
+            'function' => 'functions',
+            default => throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid resource type: ' . $resourceType),
         };
         $resource = $dbForProject->getDocument($collection, $resourceId);
         if ($resource->isEmpty()) {

@@ -104,7 +104,7 @@ class Get extends Action
             $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
             $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
             $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
-            $owner = $github->getOwnerName($providerInstallationId) ?? '';
+            $owner = $github->getOwnerName($providerInstallationId);
 
             $projectInternalId = $project->getSequence();
 
@@ -121,11 +121,11 @@ class Get extends Action
             if (!empty($code)) {
                 $oauth2 = new OAuth2Github(System::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''), System::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''), "");
 
-                $accessToken = $oauth2->getAccessToken($code) ?? '';
-                $refreshToken = $oauth2->getRefreshToken($code) ?? '';
+                $accessToken = $oauth2->getAccessToken($code);
+                $refreshToken = $oauth2->getRefreshToken($code);
                 $accessTokenExpiry = DateTime::addSeconds(new \DateTime(), \intval($oauth2->getAccessTokenExpiry($code)));
 
-                $personalSlug = $oauth2->getUserSlug($accessToken) ?? '';
+                $personalSlug = $oauth2->getUserSlug($accessToken);
                 $personal = $personalSlug === $owner;
             }
 
