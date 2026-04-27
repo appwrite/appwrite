@@ -33,7 +33,7 @@ class Salesforce extends OAuth2
      */
     public function getName(): string
     {
-        return 'Salesforce';
+        return 'salesforce';
     }
 
     /**
