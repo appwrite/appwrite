@@ -55,6 +55,18 @@ class Etsy extends OAuth2
     }
 
     /**
+     * Compute the RFC 7636 S256 code challenge from the PKCE verifier.
+     *
+     * challenge = BASE64URL(SHA-256(ASCII(verifier)))
+     *
+     * @return string
+     */
+    private function getCodeChallenge(): string
+    {
+        return \rtrim(\strtr(\base64_encode(\hash('sha256', $this->getPKCE(), true)), '+/', '-_'), '=');
+    }
+
+    /**
      * @return string
      */
     public function getLoginURL(): string
@@ -65,7 +77,7 @@ class Etsy extends OAuth2
             'response_type' => 'code',
             'state' => \json_encode($this->state),
             'scope' => $this->scopes,
-            'code_challenge' => $this->getPKCE(),
+            'code_challenge' => $this->getCodeChallenge(),
             'code_challenge_method' => 'S256',
         ]);
     }
