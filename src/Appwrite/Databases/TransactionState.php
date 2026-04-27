@@ -251,11 +251,14 @@ class TransactionState
 
         $filters = $this->extractFilters($queries);
 
-        foreach ($state[$collectionId] as $docId => $doc) {
-            if ($this->documentMatchesFilters($doc, $filters)) {
+        foreach ($state[$collectionId] as $docId => $docState) {
+            if (!$docState['exists']) {
+                continue;
+            }
+            if ($this->documentMatchesFilters($docState['document'], $filters)) {
                 foreach ($updateData->getArrayCopy() as $key => $value) {
                     if ($key !== '$id') {
-                        $doc->setAttribute($key, $value);
+                        $docState['document']->setAttribute($key, $value);
                     }
                 }
             }
@@ -283,8 +286,11 @@ class TransactionState
 
         $filters = $this->extractFilters($queries);
 
-        foreach ($state[$collectionId] as $docId => $doc) {
-            if ($this->documentMatchesFilters($doc, $filters)) {
+        foreach ($state[$collectionId] as $docId => $docState) {
+            if (!$docState['exists']) {
+                continue;
+            }
+            if ($this->documentMatchesFilters($docState['document'], $filters)) {
                 unset($state[$collectionId][$docId]);
             }
         }
