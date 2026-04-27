@@ -116,9 +116,7 @@ class Disqus extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        $userId = $user['id'];
-
-        return $userId;
+        return $user['id'] ?? '';
     }
 
     /**
@@ -130,9 +128,7 @@ class Disqus extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        $userEmail = $user['email'];
-
-        return $userEmail;
+        return $user['email'] ?? '';
     }
 
     /**
