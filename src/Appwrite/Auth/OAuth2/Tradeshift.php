@@ -185,7 +185,7 @@ class Tradeshift extends OAuth2
             'Content-Type: application/json',
             'Accept: application/json',
             'Host: ' . urlencode($this->apiDomain[$this->environment]),
-            'Authorization: Bearer ' . $accessToken,
+            'Authorization: Bearer ' . \urlencode($accessToken),
         ];
 
         if (empty($this->user)) {
