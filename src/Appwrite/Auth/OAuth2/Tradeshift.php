@@ -154,9 +154,9 @@ class Tradeshift extends OAuth2
      */
     public function isEmailVerified(string $accessToken): bool
     {
-        $email = $this->getUser($accessToken);
+        $user = $this->getUser($accessToken);
 
-        return !empty($email);
+        return !empty($user['Username']);
     }
 
     /**
