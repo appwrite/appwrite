@@ -36,7 +36,7 @@ class Decrement extends DecrementDocumentAttribute
             ->label('event', 'databases.[databaseId].tables.[tableId].rows.[rowId].update')
             ->label('scope', ['rows.write', 'documents.write'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
-            ->label('audits.event', 'rows.update')
+            ->label('audits.event', 'row.update')
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
             ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
