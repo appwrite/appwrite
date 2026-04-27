@@ -168,7 +168,7 @@ class Apple extends OAuth2
         try {
             $secret = \json_decode($this->appSecret, true);
         } catch (\Throwable $th) {
-            throw new Exception('Invalid secret');
+            throw new \Exception('Invalid secret');
         }
 
         $keyfile = (isset($secret['p8'])) ? $secret['p8'] : ''; // Your p8 Key file
