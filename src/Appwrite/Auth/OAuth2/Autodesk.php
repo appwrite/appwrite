@@ -80,22 +80,21 @@ class Autodesk extends OAuth2
      */
     public function refreshTokens(string $refreshToken): array
     {
+        $headers = ['Content-Type: application/x-www-form-urlencoded'];
         $response = $this->request(
             'POST',
             'https://developer.api.autodesk.com/authentication/v1/refreshtoken',
-            [],
+            $headers,
             \http_build_query([
                 'client_id' => $this->appID,
                 'client_secret' => $this->appSecret,
                 'grant_type' => 'refresh_token',
-                'code' => $refreshToken,
+                'refresh_token' => $refreshToken,
                 'redirect_uri' => $this->callback,
             ])
         );
 
-        $output = [];
-        \parse_str($response, $output);
-        $this->tokens = $output;
+        $this->tokens = \json_decode($response, true);
 
         if (empty($this->tokens['refresh_token'])) {
             $this->tokens['refresh_token'] = $refreshToken;
