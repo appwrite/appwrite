@@ -387,7 +387,9 @@ App::put('/v1/teams/:teamId/prefs')
             'prefs' => $prefs->getArrayCopy()
         ]));
 
-        $queueForEvents->setParam('teamId', $team->getId());
+        $queueForEvents
+            ->setParam('teamId', $team->getId())
+            ->setPayload($response->output($team, Response::MODEL_TEAM));
 
         $response->dynamic($prefs, Response::MODEL_PREFERENCES);
     });
