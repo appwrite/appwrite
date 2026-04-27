@@ -1148,7 +1148,7 @@ Http::get('/v1/users/identities')
             $identityId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('identities', $identityId);
             if ($cursorDocument->isEmpty()) {
-                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "User '{$identityId}' for the 'cursor' value not found.");
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Identity '{$identityId}' for the 'cursor' value not found.");
             }
             $cursor->setValue($cursorDocument);
         }
