@@ -442,7 +442,11 @@ abstract class Action extends UtopiaAction
                 $dbForProject->checkAttribute($relatedCollection, $twoWayAttribute);
                 $dbForProject->createDocument('attributes', $twoWayAttribute);
             } catch (DuplicateException) {
-                throw new Exception($this->getDuplicateException(), params: [$twoWayKey]);
+                throw new Exception(
+                    $this->getDuplicateException(),
+                    'Attribute with key \'' . $twoWayKey . '\' already exists in the related ' . ($this->isCollectionsAPI() ? 'collection' : 'table') . ' \'' . $relatedCollection->getId() . '\'.',
+                    params: [$twoWayKey]
+                );
             } catch (LimitException) {
                 throw new Exception($this->getLimitException(), params: [$relatedCollection->getId()]);
             } catch (StructureException) {
