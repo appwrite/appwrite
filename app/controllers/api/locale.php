@@ -231,6 +231,7 @@ App::get('/v1/locale/continents')
     ->inject('locale')
     ->action(function (Response $response, Locale $locale) {
         $list = array_keys(Config::getParam('locale-continents'));
+        $output = [];
 
         foreach ($list as $value) {
             $output[] = new Document([
