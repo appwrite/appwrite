@@ -167,7 +167,7 @@ class Webhooks extends Action
 
             if ($attempts >= \intval(System::getEnv('_APP_WEBHOOK_MAX_FAILED_ATTEMPTS', '10'))) {
                 $webhook->setAttribute('enabled', false);
-                $this->sendEmailAlert($attempts, $statusCode, $webhook, $project, $dbForPlatform, $queueForMails, $plan);
+                $this->sendEmailAlert($attempts, $statusCode, $curlError, $webhook, $project, $dbForPlatform, $queueForMails, $plan);
             }
 
             $dbForPlatform->updateDocument('webhooks', $webhook->getId(), $webhook);
@@ -198,6 +198,7 @@ class Webhooks extends Action
     /**
      * @param int $attempts
      * @param mixed $statusCode
+     * @param string $curlError
      * @param Document $webhook
      * @param Document $project
      * @param Database $dbForPlatform
@@ -205,7 +206,7 @@ class Webhooks extends Action
      * @param array $plan
      * @return void
      */
-    public function sendEmailAlert(int $attempts, mixed $statusCode, Document $webhook, Document $project, Database $dbForPlatform, Mail $queueForMails, array $plan): void
+    public function sendEmailAlert(int $attempts, mixed $statusCode, string $curlError, Document $webhook, Document $project, Database $dbForPlatform, Mail $queueForMails, array $plan): void
     {
         $memberships = $dbForPlatform->find('memberships', [
             Query::equal('teamInternalId', [$project->getAttribute('teamInternalId')]),
