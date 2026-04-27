@@ -165,7 +165,7 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, arr
     $emailVariables = [
         'direction' => $locale->getText('settings.direction'),
         'date' => (new \DateTime())->format('F j'),
-        'year' => (new \DateTime())->format('YYYY'),
+        'year' => (new \DateTime())->format('Y'),
         'time' => (new \DateTime())->format('H:i:s'),
         'user' => $user->getAttribute('name'),
         'project' => $projectName,
