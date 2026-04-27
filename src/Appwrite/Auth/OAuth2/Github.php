@@ -178,9 +178,9 @@ class Github extends OAuth2
     protected function getUser(string $accessToken)
     {
         if (empty($this->user)) {
-            $this->user = \json_decode($this->request('GET', 'https://api.github.com/user', ['Authorization: token ' . \urlencode($accessToken)]), true);
+            $this->user = \json_decode($this->request('GET', 'https://api.github.com/user', ['Authorization: Bearer ' . \urlencode($accessToken)]), true);
 
-            $emails = $this->request('GET', 'https://api.github.com/user/emails', ['Authorization: token ' . \urlencode($accessToken)]);
+            $emails = $this->request('GET', 'https://api.github.com/user/emails', ['Authorization: Bearer ' . \urlencode($accessToken)]);
 
             $emails = \json_decode($emails, true);
 
@@ -211,7 +211,7 @@ class Github extends OAuth2
 
     public function createRepository(string $accessToken, string $repositoryName, bool $private): array
     {
-        $repository = $this->request('POST', 'https://api.github.com/user/repos', ['Authorization: token ' . \urlencode($accessToken)], \json_encode([
+        $repository = $this->request('POST', 'https://api.github.com/user/repos', ['Authorization: Bearer ' . \urlencode($accessToken)], \json_encode([
             'name' => $repositoryName,
             'private' => $private
         ]));
