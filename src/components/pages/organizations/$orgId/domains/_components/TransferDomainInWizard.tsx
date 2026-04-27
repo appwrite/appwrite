@@ -68,7 +68,7 @@ export function TransferDomainInWizard({
   useEffect(() => {
     if (
       search.payment !== 'transfer_in' ||
-      !search.domainId ||
+      !search.invoiceId ||
       !orgId ||
       paymentReturnHandled.current
     ) {
@@ -78,7 +78,7 @@ export function TransferDomainInWizard({
     ;(async () => {
       try {
         const result = await finalizeDomainTransferIn({
-          domainId: search.domainId!,
+          invoiceId: search.invoiceId!,
           organizationId: orgId,
         })
         if (result.status === DomainPurchaseStatus.Succeeded) {
@@ -88,7 +88,7 @@ export function TransferDomainInWizard({
           toast.success('Transfer payment confirmed')
           navigate({
             to: '/organizations/$orgId/domains/$domainId',
-            params: { orgId, domainId: search.domainId! },
+            params: { orgId, domainId: result.domainId },
             replace: true,
           })
         } else {
@@ -112,7 +112,7 @@ export function TransferDomainInWizard({
         })
       }
     })()
-  }, [search.payment, search.domainId, orgId, navigate, queryClient])
+  }, [search.payment, search.invoiceId, orgId, navigate, queryClient])
 
   const completedPaymentMethods = useMemo(
     () => paymentMethods.filter((pm) => pm.last4),
@@ -151,7 +151,7 @@ export function TransferDomainInWizard({
       }
 
       const finalized = await finalizeDomainTransferIn({
-        domainId: purchase.domainId,
+        invoiceId: purchase.$id,
         organizationId: orgId,
       })
       if (finalized.status !== DomainPurchaseStatus.Succeeded) {

@@ -284,7 +284,7 @@ export function BuyDomainCheckout({
       }
 
       const finalized = await finalizeDomainPurchase({
-        domainId: purchase.domainId,
+        invoiceId: purchase.$id,
         organizationId: orgId,
       })
       if (finalized.status !== DomainPurchaseStatus.Succeeded) {
