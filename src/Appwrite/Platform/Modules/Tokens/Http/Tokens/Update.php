@@ -33,7 +33,7 @@ class Update extends Action
         ->groups(['api', 'tokens'])
         ->label('scope', 'tokens.write')
         ->label('event', 'tokens.[tokenId].update')
-        ->label('audits.event', 'tokens.update')
+        ->label('audits.event', 'token.update')
         ->label('audits.resource', 'tokens/{response.$id}')
         ->label('usage.metric', 'tokens.{scope}.requests.update')
         ->label('usage.params', ['tokenId:{request.tokenId}'])

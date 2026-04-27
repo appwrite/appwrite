@@ -31,7 +31,7 @@ class Delete extends Action
         ->groups(['api', 'tokens'])
         ->label('scope', 'tokens.write')
         ->label('event', 'tokens.[tokenId].delete')
-        ->label('audits.event', 'tokens.delete')
+        ->label('audits.event', 'token.delete')
         ->label('audits.resource', 'token/{request.tokenId}')
         ->label('usage.metric', 'tokens.{scope}.requests.delete')
         ->label('usage.params', ['tokenId:{request.tokenId}'])
