@@ -135,15 +135,7 @@ class Bitly extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['emails'])) {
-            foreach ($user['emails'] as $email) {
-                if ($email['is_verified'] === true) {
-                    return $email['email'];
-                }
-            }
-        }
-
-        return '';
+        return $user['email'] ?? '';
     }
 
     /**
