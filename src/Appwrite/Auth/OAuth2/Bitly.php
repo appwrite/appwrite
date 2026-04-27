@@ -157,7 +157,9 @@ class Bitly extends OAuth2
      */
     public function isEmailVerified(string $accessToken): bool
     {
-        return true;
+        $email = $this->getUserEmail($accessToken);
+
+        return !empty($email);
     }
 
     /**
