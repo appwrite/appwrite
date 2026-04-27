@@ -550,7 +550,7 @@ App::post('/v1/users/:userId/targets')
     ->desc('Create user target')
     ->groups(['api', 'users'])
     ->label('audits.event', 'target.create')
-    ->label('audits.resource', 'target/response.$id')
+    ->label('audits.resource', 'target/{response.$id}')
     ->label('event', 'users.[userId].targets.[targetId].create')
     ->label('scope', 'targets.write')
     ->label('sdk', new Method(
