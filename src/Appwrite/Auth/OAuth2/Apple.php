@@ -146,11 +146,14 @@ class Apple extends OAuth2
      */
     public function isEmailVerified(string $accessToken): bool
     {
-        if ($this->claims['email_verified'] ?? false) {
-            return true;
+        $emailVerified = $this->claims['email_verified'] ?? false;
+
+        // Apple may return email_verified as the string "true" or "false" rather than a boolean
+        if (\is_string($emailVerified)) {
+            return $emailVerified === 'true';
         }
 
-        return false;
+        return (bool) $emailVerified;
     }
 
     /**
