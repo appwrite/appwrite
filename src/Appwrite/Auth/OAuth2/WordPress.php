@@ -43,7 +43,7 @@ class WordPress extends OAuth2
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
             'response_type' => 'code',
-            'scope' => $this->getScopes(),
+            'scope' => \implode(' ', $this->getScopes()),
             'state' => \json_encode($this->state)
         ]);
     }
