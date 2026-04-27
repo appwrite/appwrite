@@ -171,7 +171,8 @@ class Google extends OAuth2
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $user = $this->request('GET', 'https://www.googleapis.com/oauth2/v3/userinfo?access_token=' . \urlencode($accessToken));
+            $headers = ['Authorization: Bearer ' . \urlencode($accessToken)];
+            $user = $this->request('GET', 'https://www.googleapis.com/oauth2/v3/userinfo', $headers);
             $this->user = \json_decode($user, true);
         }
 
