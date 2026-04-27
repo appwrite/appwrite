@@ -1598,7 +1598,7 @@ App::post('/v1/vcs/github/events')
                             $providerPullRequestIds = $repository->getAttribute('providerPullRequestIds', []);
 
                             if (\in_array($providerPullRequestId, $providerPullRequestIds)) {
-                                $providerPullRequestIds = \array_diff($providerPullRequestIds, [$providerPullRequestId]);
+                                $providerPullRequestIds = \array_values(\array_diff($providerPullRequestIds, [$providerPullRequestId]));
                                 $repository = $repository->setAttribute('providerPullRequestIds', $providerPullRequestIds);
                                 $repository = $authorization->skip(fn () => $dbForPlatform->updateDocument('repositories', $repository->getId(), $repository));
                             }
