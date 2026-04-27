@@ -149,7 +149,7 @@ class Paypal extends OAuth2
             });
 
             if (!empty($email)) {
-                return $email[0]['value'];
+                return reset($email)['value'];
             }
         }
 
