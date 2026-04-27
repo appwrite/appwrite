@@ -80,7 +80,7 @@ class Zoho extends OAuth2
                 ])
             ), true);
             $this->user = (isset($this->tokens['id_token'])) ? \explode('.', $this->tokens['id_token']) : [0 => '', 1 => ''];
-            $this->user = (isset($this->user[1])) ? \json_decode(\base64_decode($this->user[1]), true) : [];
+            $this->user = (isset($this->user[1])) ? \json_decode(\base64_decode(\str_pad(\strtr($this->user[1], '-_', '+/'), \strlen($this->user[1]) + (4 - \strlen($this->user[1]) % 4) % 4, '=')), true) : [];
         }
 
         return $this->tokens;
@@ -112,7 +112,7 @@ class Zoho extends OAuth2
         }
 
         $this->user = (isset($this->tokens['id_token'])) ? \explode('.', $this->tokens['id_token']) : [0 => '', 1 => ''];
-        $this->user = (isset($this->user[1])) ? \json_decode(\base64_decode($this->user[1]), true) : [];
+        $this->user = (isset($this->user[1])) ? \json_decode(\base64_decode(\str_pad(\strtr($this->user[1], '-_', '+/'), \strlen($this->user[1]) + (4 - \strlen($this->user[1]) % 4) % 4, '=')), true) : [];
 
         return $this->tokens;
     }
