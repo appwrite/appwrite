@@ -56,6 +56,20 @@ class Detector
                 'name' => 'Appwrite CLI',
                 'version' => $version
             ];
+        } elseif ($this->isMobileAppUserAgent()) {
+            // Mobile SDKs (e.g. Flutter/Dart) send a UA like:
+            //   com.example.app/1.0.0 iPhone17,1 iOS/18.1
+            // Matomo's device-detector has no entry for bundle-ID prefixed UAs and
+            // falls back to classifying the trailing "iOS/x" token as Mobile Safari,
+            // which is misleading.  Detect the bundle-ID pattern and classify these
+            // requests as a generic mobile app instead.
+            $parts = explode('/', explode(' ', $this->userAgent)[0], 2);
+            $client = [
+                'type' => 'mobile app',
+                'short_name' => 'mobile-app',
+                'name' => $parts[0],
+                'version' => $parts[1] ?? '',
+            ];
         } else {
             $client = $this->getDetector()->getClient();
         }
@@ -86,6 +100,33 @@ class Detector
             'deviceBrand' => empty($deviceBrand) ? null : $deviceBrand,
             'deviceModel' => empty($deviceModel) ? null : $deviceModel,
         ];
+    }
+
+    /**
+     * Returns true when the User-Agent looks like a mobile app rather than a
+     * browser.  Mobile SDKs (Flutter, React-Native, …) typically start with a
+     * reverse-domain bundle identifier followed by a version, e.g.:
+     *   com.example.myapp/1.0.0 iPhone17,1 iOS/18.1
+     *
+     * The heuristic: the first token before a space contains at least one dot
+     * and a slash (bundleId/version), and no common browser-name keyword.
+     *
+     * @return bool
+     */
+    protected function isMobileAppUserAgent(): bool
+    {
+        $browserKeywords = ['Mozilla', 'Opera', 'Chrome', 'Safari', 'Firefox',
+                            'Edge', 'MSIE', 'Trident', 'OkHttp', 'Dalvik'];
+
+        foreach ($browserKeywords as $keyword) {
+            if (stripos($this->userAgent, $keyword) !== false) {
+                return false;
+            }
+        }
+
+        // Must start with bundleId/version (contains both a '.' and a '/')
+        $firstToken = explode(' ', $this->userAgent)[0];
+        return str_contains($firstToken, '.') && str_contains($firstToken, '/');
     }
 
     /**
