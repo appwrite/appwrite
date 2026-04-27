@@ -760,7 +760,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                 try {
                     $file = $authorization->skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $fileId, $file));
                 } catch (NotFoundException) {
-                    throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+                    throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
                 }
             }
         }
