@@ -37,7 +37,7 @@ return [
             [
                 'name' => '_APP_LOCKING_ENABLED',
                 'description' => 'Enable distributed locking for platform writes. Locks coordinate concurrent updates across API pods so that read-modify-write operations on shared documents do not lose updates. By default, set to \'enabled\'. Set to \'disabled\' as an emergency kill switch — locks become no-ops (fail-open) and concurrent writes will race.',
-                'introduction' => '1.10.0',
+                'introduction' => '1.9.3',
                 'default' => 'enabled',
                 'required' => false,
                 'question' => '',

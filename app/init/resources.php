@@ -325,10 +325,12 @@ $container->set('distributedLockOrFail', function (\Redis $redis, Telemetry $tel
 
         if (! $acquired) {
             $attempts->add(1, ['outcome' => 'contended', 'target' => $target]);
-            throw new AppwriteException(
-                AppwriteException::GENERAL_RESOURCE_LOCKED,
-                "Resource '{$key}' is currently being modified by another request. Please retry."
-            );
+            // Don't pass a custom message — the catalog message in
+            // app/config/errors.php is reused so we don't leak the internal
+            // lock key (which embeds collection name and document id) into a
+            // user-facing 409 response. The telemetry attribute already
+            // carries the target collection for operator-side observability.
+            throw new AppwriteException(AppwriteException::GENERAL_RESOURCE_LOCKED);
         }
 
         $attempts->add(1, ['outcome' => 'acquired', 'target' => $target]);

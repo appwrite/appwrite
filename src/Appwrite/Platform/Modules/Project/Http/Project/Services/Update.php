@@ -81,7 +81,7 @@ class Update extends Action
         // the read-modify-write window; re-read inside the lock so the
         // baseline reflects any update that landed between request init
         // and lock acquisition.
-        $project = $distributedLockOrFail("platform:project:{$project->getId()}", function () use ($project, $serviceId, $enabled, $dbForPlatform, $authorization) {
+        $project = $distributedLockOrFail("lock:platform:projects:{$project->getId()}", function () use ($project, $serviceId, $enabled, $dbForPlatform, $authorization) {
             $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $project->getId()));
 
             $services = $project->getAttribute('services', []);
