@@ -160,10 +160,11 @@ class Bitbucket extends OAuth2
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $user = $this->request('GET', 'https://api.bitbucket.org/2.0/user?access_token=' . \urlencode($accessToken));
+            $headers = ['Authorization: Bearer ' . \urlencode($accessToken)];
+            $user = $this->request('GET', 'https://api.bitbucket.org/2.0/user', $headers);
             $this->user = \json_decode($user, true);
 
-            $emails = $this->request('GET', 'https://api.bitbucket.org/2.0/user/emails?access_token=' . \urlencode($accessToken));
+            $emails = $this->request('GET', 'https://api.bitbucket.org/2.0/user/emails', $headers);
             $emails = \json_decode($emails, true);
             if (isset($emails['values'])) {
                 foreach ($emails['values'] as $email) {
