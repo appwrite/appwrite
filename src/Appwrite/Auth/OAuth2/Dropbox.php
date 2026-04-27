@@ -163,8 +163,11 @@ class Dropbox extends OAuth2
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $headers = ['Authorization: Bearer ' . \urlencode($accessToken)];
-            $user = $this->request('POST', 'https://api.dropboxapi.com/2/users/get_current_account', $headers);
+            $headers = [
+                'Authorization: Bearer ' . \urlencode($accessToken),
+                'Content-Type: application/json',
+            ];
+            $user = $this->request('POST', 'https://api.dropboxapi.com/2/users/get_current_account', $headers, 'null');
             $this->user = \json_decode($user, true);
         }
 
