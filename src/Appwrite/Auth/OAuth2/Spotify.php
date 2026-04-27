@@ -5,7 +5,7 @@ namespace Appwrite\Auth\OAuth2;
 use Appwrite\Auth\OAuth2;
 
 // Reference Material
-// https://dev.twitch.tv/docs/authentication
+// https://developer.spotify.com/documentation/web-api/tutorials/code-flow
 
 class Spotify extends OAuth2
 {
