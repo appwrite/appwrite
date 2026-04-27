@@ -4778,7 +4778,7 @@ Http::delete('/v1/account/identities/:identityId')
     ->label('scope', 'account')
     ->label('event', 'users.[userId].identities.[identityId].delete')
     ->label('audits.event', 'identity.delete')
-    ->label('audits.resource', 'identity/{request.$identityId}')
+    ->label('audits.resource', 'identity/{request.identityId}')
     ->label('audits.userId', '{user.$id}')
     ->label('sdk', new Method(
         namespace: 'account',
