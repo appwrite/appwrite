@@ -38,7 +38,7 @@ class Create extends Action
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.write')
             ->label('event', 'sites.[siteId].deployments.[deploymentId].update')
-            ->label('audits.event', 'deployment.update')
+            ->label('audits.event', 'deployment.create')
             ->label('audits.resource', 'site/{request.siteId}')
             ->label('sdk', new Method(
                 namespace: 'sites',
