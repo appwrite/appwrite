@@ -61,12 +61,15 @@ class Notion extends OAuth2
     protected function getTokens(string $code): array
     {
         if (empty($this->tokens)) {
-            $headers = ['Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret)];
+            $headers = [
+                'Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret),
+                'Content-Type: application/json',
+            ];
             $this->tokens = \json_decode($this->request(
                 'POST',
                 $this->endpoint . '/oauth/token',
                 $headers,
-                \http_build_query([
+                \json_encode([
                     'grant_type' => 'authorization_code',
                     'redirect_uri' => $this->callback,
                     'code' => $code
@@ -84,12 +87,15 @@ class Notion extends OAuth2
      */
     public function refreshTokens(string $refreshToken): array
     {
-        $headers = ['Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret)];
+        $headers = [
+            'Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret),
+            'Content-Type: application/json',
+        ];
         $this->tokens = \json_decode($this->request(
             'POST',
             $this->endpoint . '/oauth/token',
             $headers,
-            \http_build_query([
+            \json_encode([
                 'grant_type' => 'refresh_token',
                 'refresh_token' => $refreshToken,
             ])
