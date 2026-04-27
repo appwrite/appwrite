@@ -156,7 +156,11 @@ class Facebook extends OAuth2
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $user = $this->request('GET', 'https://graph.facebook.com/' . $this->version . '/me?fields=email,name&access_token=' . \urlencode($accessToken));
+            $user = $this->request(
+                'GET',
+                'https://graph.facebook.com/' . $this->version . '/me?fields=email,name',
+                ['Authorization: Bearer ' . \urlencode($accessToken)]
+            );
 
             $this->user = \json_decode($user, true);
         }
