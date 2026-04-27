@@ -101,7 +101,7 @@ class Yandex extends OAuth2
             $headers,
             \http_build_query([
                 'refresh_token' => $refreshToken,
-                'grant_type' => 'authorization_code'
+                'grant_type' => 'refresh_token'
             ])
         ), true);
 
