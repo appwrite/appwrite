@@ -338,6 +338,12 @@ abstract class Action extends UtopiaAction
             throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         }
 
+        // Reject keys that conflict with internal system attributes (without the $ prefix)
+        $reservedKeys = ['collection'];
+        if (\in_array(\strtolower($key), $reservedKeys)) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, "Attribute key '{$key}' is reserved and cannot be used.");
+        }
+
         if (!empty($format)) {
             if (!Structure::hasFormat($format, $type)) {
                 throw new Exception($this->getFormatUnsupportedException(), "Format $format not available for $type columns.");
