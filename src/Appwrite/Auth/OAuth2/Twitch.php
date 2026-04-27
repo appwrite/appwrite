@@ -70,7 +70,9 @@ class Twitch extends OAuth2
         if (empty($this->tokens)) {
             $this->tokens = \json_decode($this->request(
                 'POST',
-                $this->endpoint . 'token?' . \http_build_query([
+                $this->endpoint . 'token',
+                ['Content-Type: application/x-www-form-urlencoded'],
+                \http_build_query([
                     "client_id" => $this->appID,
                     "client_secret" => $this->appSecret,
                     "code" => $code,
@@ -92,7 +94,9 @@ class Twitch extends OAuth2
     {
         $this->tokens = \json_decode($this->request(
             'POST',
-            $this->endpoint . 'token?' . \http_build_query([
+            $this->endpoint . 'token',
+            ['Content-Type: application/x-www-form-urlencoded'],
+            \http_build_query([
                 "client_id" => $this->appID,
                 "client_secret" => $this->appSecret,
                 "refresh_token" => $refreshToken,
