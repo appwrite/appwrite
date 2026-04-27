@@ -1959,7 +1959,7 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
     ->desc('Delete platform')
     ->groups(['api', 'projects'])
     ->label('audits.event', 'platforms.delete')
-    ->label('audits.resource', 'project/{request.projectId}/platform/${request.platformId}')
+    ->label('audits.resource', 'project/{request.projectId}/platform/{request.platformId}')
     ->label('scope', 'platforms.write')
     ->label('sdk', new Method(
         namespace: 'projects',
