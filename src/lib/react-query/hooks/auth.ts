@@ -12,6 +12,7 @@ import {
   queryOptions,
   type QueryClient,
 } from '@tanstack/react-query'
+import { MethodId } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
   buildDatabasesSidebarWidthPrefs,
@@ -389,10 +390,9 @@ export function useUpdateAuthMethod(projectId: string | null | undefined) {
         throw new Error('Project ID is required')
       }
 
-      return await sdk.forConsole.projects.updateAuthStatus({
-        projectId,
-        method: method as unknown,
-        status,
+      return await sdk.forProject(projectId).project.updateAuthMethod({
+        methodId: method as MethodId,
+        enabled: status,
       })
     },
     onSuccess: () => {

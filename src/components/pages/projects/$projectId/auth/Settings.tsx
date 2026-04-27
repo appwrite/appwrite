@@ -35,7 +35,7 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
-import { AuthMethod, OAuthProvider } from '@appwrite.io/console'
+import { MethodId, OAuthProvider } from '@appwrite.io/console'
 
 interface AuthSettingsProps {
   projectId: string
@@ -44,37 +44,37 @@ interface AuthSettingsProps {
 // Auth method configuration
 const AUTH_METHODS = [
   {
-    key: AuthMethod.Emailpassword,
+    key: MethodId.Emailpassword,
     label: 'Email/Password',
     icon: Mail,
   },
   {
-    key: AuthMethod.Phone,
+    key: MethodId.Phone,
     label: 'Phone',
     icon: Smartphone,
   },
   {
-    key: AuthMethod.Magicurl,
+    key: MethodId.Magicurl,
     label: 'Magic URL',
     icon: Key,
   },
   {
-    key: AuthMethod.Emailotp,
+    key: MethodId.Emailotp,
     label: 'Email OTP',
     icon: Mail,
   },
   {
-    key: AuthMethod.Anonymous,
+    key: MethodId.Anonymous,
     label: 'Anonymous',
     icon: UserPlus,
   },
   {
-    key: AuthMethod.Invites,
+    key: MethodId.Invites,
     label: 'Team Invites',
     icon: UserPlus,
   },
   {
-    key: AuthMethod.Jwt,
+    key: MethodId.Jwt,
     label: 'JWT',
     icon: Lock,
   },
@@ -1343,24 +1343,24 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
   const baseAuthMethods = useMemo(() => {
     if (!rawProjectData) {
       return {
-        [AuthMethod.Emailpassword]: false,
-        [AuthMethod.Phone]: false,
-        [AuthMethod.Magicurl]: false,
-        [AuthMethod.Emailotp]: false,
-        [AuthMethod.Anonymous]: false,
-        [AuthMethod.Invites]: false,
-        [AuthMethod.Jwt]: false,
+        [MethodId.Emailpassword]: false,
+        [MethodId.Phone]: false,
+        [MethodId.Magicurl]: false,
+        [MethodId.Emailotp]: false,
+        [MethodId.Anonymous]: false,
+        [MethodId.Invites]: false,
+        [MethodId.Jwt]: false,
       }
     }
     const projectData = rawProjectData as unknown
     return {
-      [AuthMethod.Emailpassword]: projectData.authEmailPassword ?? false,
-      [AuthMethod.Phone]: projectData.authPhone ?? false,
-      [AuthMethod.Magicurl]: projectData.authUsersAuthMagicURL ?? false,
-      [AuthMethod.Emailotp]: projectData.authEmailOtp ?? false,
-      [AuthMethod.Anonymous]: projectData.authAnonymous ?? false,
-      [AuthMethod.Invites]: projectData.authInvites ?? false,
-      [AuthMethod.Jwt]: projectData.authJWT ?? false,
+      [MethodId.Emailpassword]: projectData.authEmailPassword ?? false,
+      [MethodId.Phone]: projectData.authPhone ?? false,
+      [MethodId.Magicurl]: projectData.authUsersAuthMagicURL ?? false,
+      [MethodId.Emailotp]: projectData.authEmailOtp ?? false,
+      [MethodId.Anonymous]: projectData.authAnonymous ?? false,
+      [MethodId.Invites]: projectData.authInvites ?? false,
+      [MethodId.Jwt]: projectData.authJWT ?? false,
     }
   }, [rawProjectData])
 
