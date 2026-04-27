@@ -93,7 +93,14 @@ class Delete extends Action
         }
 
         if (!empty($deployment->getAttribute('sourcePath', ''))) {
-            if (!($deviceForFunctions->delete($deployment->getAttribute('sourcePath', '')))) {
+            $sourcePath = $deployment->getAttribute('sourcePath', '');
+            // Only delete the source file if no other deployment is sharing the same path.
+            // Re-deployments from VCS may reuse the same tarball, so deleting it prematurely
+            // would break any sibling deployment that still references the file.
+            $siblingCount = $dbForProject->count('deployments', [
+                Query::equal('sourcePath', [$sourcePath]),
+            ]);
+            if ($siblingCount === 0 && !$deviceForFunctions->delete($sourcePath)) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from storage');
             }
         }
