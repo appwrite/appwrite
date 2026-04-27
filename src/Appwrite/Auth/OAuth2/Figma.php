@@ -164,7 +164,7 @@ class Figma extends OAuth2
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $headers = ['Authorization: Bearer ' . $accessToken];
+            $headers = ['Authorization: Bearer ' . \urlencode($accessToken)];
             $user = $this->request(
                 'GET',
                 'https://api.figma.com/v1/me',
