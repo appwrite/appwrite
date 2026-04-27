@@ -573,15 +573,14 @@ App::post('/v1/teams/:teamId/memberships')
                 throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
             }
 
+            $userId = ID::unique();
+
             try {
-                $userId = ID::unique();
                 $hash = $proofForPassword->hash($proofForPassword->generate());
                 $emailCanonical = new Email($email);
             } catch (Throwable) {
                 $emailCanonical = null;
             }
-
-            $userId = ID::unique();
 
             $userDocument = new Document([
                 '$id' => $userId,
