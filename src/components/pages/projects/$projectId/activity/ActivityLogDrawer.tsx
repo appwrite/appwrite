@@ -23,6 +23,7 @@ import {
   Activity,
   Database,
   FileText,
+  Folder,
   Globe,
   Link2,
   LogIn,
@@ -106,14 +107,42 @@ const actionColors: Record<ActionType, string> = {
 
 const resourceIcons: Record<ResourceType, React.ReactNode> = {
   document: <FileText className="h-4 w-4" />,
-  collection: <Database className="h-4 w-4" />,
+  collection: <Folder className="h-4 w-4" />,
   database: <Database className="h-4 w-4" />,
   file: <FileText className="h-4 w-4" />,
-  bucket: <Database className="h-4 w-4" />,
+  bucket: <Folder className="h-4 w-4" />,
   function: <Zap className="h-4 w-4" />,
   user: <User className="h-4 w-4" />,
   team: <User className="h-4 w-4" />,
   project: <Server className="h-4 w-4" />,
+}
+
+/** Same layout as the activity table Resource column: icon left, id/name, then type. */
+function ActivityResourcePrimary({
+  resourceType,
+  resourceId,
+  resourceLabel,
+}: {
+  resourceType: ResourceType
+  resourceId: string | null | undefined
+  resourceLabel: string
+}) {
+  const primary = resourceId?.trim() || resourceLabel.trim() || '—'
+  return (
+    <div className="flex min-w-0 items-center gap-2.5">
+      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+        {resourceIcons[resourceType]}
+      </div>
+      <div className="min-w-0 flex flex-col gap-1">
+        <p className="break-words text-[13px] font-medium leading-snug text-foreground">
+          {primary}
+        </p>
+        <p className="text-[11px] capitalize text-muted-foreground">
+          {resourceType}
+        </p>
+      </div>
+    </div>
+  )
 }
 
 function DetailSection({
@@ -341,13 +370,13 @@ export function ActivityLogDrawer({
                         {event.event}
                       </span>
                     </div>
-                    <p className="mt-1.5 text-[13px] text-muted-foreground">
-                      <span className="font-medium text-foreground">
-                        {display.resourceName}
-                      </span>
-                      <span className="mx-1.5 text-border">·</span>
-                      <span className="capitalize">{resourceType}</span>
-                    </p>
+                    <div className="mt-1.5">
+                      <ActivityResourcePrimary
+                        resourceType={resourceType}
+                        resourceId={event.resourceId}
+                        resourceLabel={display.resourceName}
+                      />
+                    </div>
                     <div className="mt-3 flex flex-wrap items-center gap-2">
                       <span
                         className={cn(
@@ -421,38 +450,22 @@ export function ActivityLogDrawer({
               <DetailSection title="Resource">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <DetailField label="Resource" className="sm:col-span-2">
-                    <div className="flex min-w-0 items-start gap-2.5">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-                        {resourceIcons[resourceType]}
-                      </div>
-                      <div className="min-w-0 flex-1 flex flex-col gap-2">
-                        <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-                          <span className="shrink-0 text-[11px] font-medium capitalize text-muted-foreground">
-                            {resourceType}
-                          </span>
-                          {event.resourceId?.trim() ? (
-                            <CopyableId
-                              id={event.resourceId}
-                              size="xs"
-                              maxWidth={280}
-                            />
-                          ) : (
-                            <span className="font-mono text-[12px] text-muted-foreground">
-                              —
-                            </span>
-                          )}
-                        </div>
-                        {event.resourceType?.trim() ? (
-                          <p className="font-mono text-[11px] text-muted-foreground">
-                            {event.resourceType}
-                          </p>
-                        ) : null}
-                        <p className="break-words text-[13px] font-medium leading-relaxed text-foreground">
-                          {display.resourceName}
-                        </p>
-                      </div>
-                    </div>
+                    <ActivityResourcePrimary
+                      resourceType={resourceType}
+                      resourceId={event.resourceId}
+                      resourceLabel={display.resourceName}
+                    />
                   </DetailField>
+                  {event.resourceType?.trim() ? (
+                    <DetailField
+                      label="Resource type (API)"
+                      className="sm:col-span-2"
+                    >
+                      <p className="font-mono text-[12px] text-muted-foreground">
+                        {event.resourceType}
+                      </p>
+                    </DetailField>
+                  ) : null}
                   <DetailField label="Resource path" className="sm:col-span-2">
                     <p className="break-all rounded-md border border-border bg-muted/30 px-2.5 py-2 font-mono text-[11px] leading-relaxed text-muted-foreground">
                       {formatValue(event.resource)}

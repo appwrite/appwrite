@@ -203,7 +203,7 @@ function UpdateEmailSection() {
             Update email
           </h3>
           {account?.emailVerification && (
-            <Badge variant="secondary" className="h-5 gap-1 px-1.5 text-[11px]">
+            <Badge variant="success" className="text-[10px] shrink-0 gap-1">
               <CheckCircle2 className="h-3 w-3" />
               verified
             </Badge>
@@ -493,19 +493,20 @@ function IdentitiesSection() {
               {identities.map((identity) => (
                 <TableRow key={identity.$id}>
                   <TableCell>
-                    <div className="flex items-center gap-2">
+                    <Badge
+                      variant="info"
+                      className="text-[10px] shrink-0 gap-1.5 font-medium"
+                    >
                       <img
                         src={`/icons/${getProviderIcon(identity.provider)}`}
                         alt={identity.provider}
-                        className={`h-4 w-4 ${PUBLIC_ICON_MUTED_CLASSES}`}
+                        className={`h-3.5 w-3.5 ${PUBLIC_ICON_MUTED_CLASSES}`}
                         onError={(e) => {
                           e.currentTarget.src = '/icons/empty.svg'
                         }}
                       />
-                      <span className="text-[13px] font-medium">
-                        {getProviderName(identity.provider)}
-                      </span>
-                    </div>
+                      {getProviderName(identity.provider)}
+                    </Badge>
                   </TableCell>
                   <TableCell>
                     <span className="text-[13px] text-muted-foreground">
@@ -764,10 +765,7 @@ function TOTPMethod({ factors }: { factors: Models.MfaFactors }) {
               Authenticator app
             </h4>
             {factors.totp && (
-              <Badge
-                variant="secondary"
-                className="h-5 gap-1 px-1.5 text-[11px]"
-              >
+              <Badge variant="success" className="text-[10px] shrink-0 gap-1">
                 <CheckCircle2 className="h-3 w-3" />
                 connected
               </Badge>
@@ -931,13 +929,13 @@ function EmailMFAMethod({
         <div className="flex items-center gap-2 mb-1">
           <h4 className="text-[14px] font-semibold text-foreground">Email</h4>
           {account?.emailVerification && factors.email && (
-            <Badge variant="secondary" className="h-5 gap-1 px-1.5 text-[11px]">
+            <Badge variant="success" className="text-[10px] shrink-0 gap-1">
               <CheckCircle2 className="h-3 w-3" />
               verified
             </Badge>
           )}
           {!account?.emailVerification && (
-            <Badge variant="warning" className="h-5 gap-1 px-1.5 text-[11px]">
+            <Badge variant="warning" className="text-[10px] shrink-0 gap-1">
               <XCircle className="h-3 w-3" />
               unverified
             </Badge>
@@ -978,7 +976,7 @@ function SMSMFAMethod({
         <div className="flex items-center gap-2 mb-1">
           <h4 className="text-[14px] font-semibold text-foreground">SMS</h4>
           {account?.phoneVerification && factors.phone && (
-            <Badge variant="secondary" className="h-5 gap-1 px-1.5 text-[11px]">
+            <Badge variant="success" className="text-[10px] shrink-0 gap-1">
               <CheckCircle2 className="h-3 w-3" />
               verified
             </Badge>

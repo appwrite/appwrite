@@ -15,13 +15,20 @@ const avatarFrame =
 export function UserTypeAvatar({
   userType,
   userName,
+  className,
 }: {
   userType: string
   userName: string
+  /** Merged with the frame; e.g. `shadow-none` for the activity table user column. */
+  className?: string
 }) {
   if (isRegularUserType(userType)) {
     return (
-      <InitialsAvatar name={userName} size="sm" className={avatarFrame} />
+      <InitialsAvatar
+        name={userName}
+        size="sm"
+        className={cn(avatarFrame, className)}
+      />
     )
   }
 
@@ -46,7 +53,7 @@ export function UserTypeAvatar({
 
   return (
     <div
-      className={cn(avatarFrame, tone)}
+      className={cn(avatarFrame, tone, className)}
       aria-label={label}
       title={label}
     >

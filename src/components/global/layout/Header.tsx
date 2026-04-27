@@ -180,16 +180,16 @@ export function ConsoleHeader({
   const logoColumnWidth = 60
 
   return (
-    <div className="@container w-full">
+    <div className="@container w-full overflow-visible">
       <header
         className={cn(
-          'flex h-14 min-h-14 flex-wrap items-center justify-between gap-1 @[640px]:gap-2 border-b border-border bg-background',
+          'flex h-14 min-h-14 flex-wrap items-center justify-between gap-1 overflow-visible @[640px]:gap-2 border-b border-border bg-background',
           'pl-3 pr-3 @[640px]:pl-4 @[640px]:pr-4 @[1024px]:pl-0 @[1000px]:pr-6',
           className,
         )}
       >
         {/* Left: Menu + Logo (+ nav border when project) + Project Selector */}
-        <div className="flex min-w-0 flex-1 items-center gap-1.5 @[640px]:gap-2">
+        <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-visible @[640px]:gap-2">
           {/* Mobile menu button - only show when in project context and sidebar is hidden */}
           {!isOrgOverview && (
             <button
@@ -273,7 +273,7 @@ export function ConsoleHeader({
           {!isOrgOverview && (
             <>
               {/* Project Selector */}
-              <div className="hidden min-w-0 @[700px]:block">
+              <div className="hidden min-w-0 overflow-visible @[700px]:block">
                 <ProjectSelector
                   projectId={projectId}
                   className="max-w-full min-w-0"

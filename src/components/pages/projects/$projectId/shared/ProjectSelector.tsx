@@ -23,7 +23,10 @@ import {
   fetchActiveProjects,
   pinnedProjectsQueryOptions,
   consoleTeamQueryOptions,
+  useOrganizationFailedInvoicePresence,
 } from '@/lib/react-query/hooks'
+import { FailedInvoiceWarningIcon } from '@/components/global/shared/FailedInvoiceWarningIcon'
+import { ProjectSelectorPlanBadge } from '@/components/pages/projects/$projectId/shared/ProjectSelectorPlanBadge'
 import { parsePinnedProjectIds } from '@/lib/team-prefs-keys'
 import {
   useQuery,
@@ -67,6 +70,15 @@ export function ProjectSelector({
   // Fetch current project separately by ID
   const { project: currentProject, isLoading: currentProjectLoading } =
     useProject(projectId)
+
+  const { data: routeFailedInvoicePresence } =
+    useOrganizationFailedInvoicePresence(
+      projectId ? currentProject?.teamId : undefined,
+    )
+  const billingFailureTeamId =
+    routeFailedInvoicePresence?.hasFailedInvoice && currentProject?.teamId
+      ? currentProject.teamId
+      : null
 
   // Infinite scroll state for projects
   const [projectSearch, setProjectSearch] = useState('')
@@ -390,6 +402,7 @@ export function ProjectSelector({
               organizations={organizations}
               isCloud={isCloud}
               currentProjectId={projectId}
+              billingFailureTeamId={billingFailureTeamId}
               onCreateProject={() => setCreateProjectDialogOpen(true)}
               onCreateOrganization={handleCreateOrganization}
             />
@@ -413,18 +426,20 @@ export function ProjectSelector({
         <button
           onClick={() => setOpen(true)}
           className={cn(
-            'flex w-full items-center gap-2 rounded-md border border-border bg-background px-2.5 py-2 text-left transition-colors hover:bg-accent cursor-pointer',
+            'flex w-full items-center gap-2 overflow-visible rounded-md border border-border bg-background px-2.5 py-2 text-left transition-colors hover:bg-accent cursor-pointer',
             className,
           )}
         >
           <InitialsAvatar name={resolvedProject.name} size="sm" />
           <div className="min-w-0 flex-1">
-            <p
-              className="truncate text-[13px] font-medium text-foreground"
-              title={resolvedProject.name}
-            >
-              {truncateMiddle(resolvedProject.name, 30)}
-            </p>
+            <div className="flex items-center gap-1.5">
+              <p
+                className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground"
+                title={resolvedProject.name}
+              >
+                {truncateMiddle(resolvedProject.name, 30)}
+              </p>
+            </div>
             <p
               className="truncate text-[11px] text-muted-foreground"
               title={currentProjectTeam?.name || resolvedTeam.name}
@@ -436,14 +451,10 @@ export function ProjectSelector({
             </p>
           </div>
           {isCloud && currentProjectOrg && (
-            <span
-              className={cn(
-                'shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium capitalize',
-                getPlanBadgeColor(currentProjectOrg.plan),
-              )}
-            >
-              {getPlanDisplayName(currentProjectOrg.plan)}
-            </span>
+            <ProjectSelectorPlanBadge
+              plan={currentProjectOrg.plan}
+              billingStress={!!billingFailureTeamId}
+            />
           )}
           <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
         </button>
@@ -487,6 +498,7 @@ export function ProjectSelector({
               organizations={organizations}
               isCloud={isCloud}
               currentProjectId={projectId}
+              billingFailureTeamId={billingFailureTeamId}
               onCreateProject={() => setCreateProjectDialogOpen(true)}
               onCreateOrganization={handleCreateOrganization}
             />
@@ -509,14 +521,14 @@ export function ProjectSelector({
         <PopoverTrigger asChild>
           <button
             className={cn(
-              'flex h-9 max-w-full min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent cursor-pointer',
+              'flex h-9 max-w-full min-w-0 items-center gap-2 overflow-visible rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent cursor-pointer',
               className,
             )}
           >
             <InitialsAvatar name={resolvedProject.name} size="sm" />
-            <div className="min-w-0 flex flex-1 items-center gap-2 overflow-hidden">
+            <div className="min-w-0 flex flex-1 items-center gap-2 overflow-visible">
               <p
-                className="truncate text-[13px] font-medium text-foreground"
+                className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground"
                 title={`${currentProjectTeam?.name || resolvedTeam.name} / ${resolvedProject.name}`}
               >
                 {truncateMiddle(
@@ -526,14 +538,10 @@ export function ProjectSelector({
                 / {truncateMiddle(resolvedProject.name, 22)}
               </p>
               {isCloud && currentProjectOrg && (
-                <span
-                  className={cn(
-                    'shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium capitalize',
-                    getPlanBadgeColor(currentProjectOrg.plan),
-                  )}
-                >
-                  {getPlanDisplayName(currentProjectOrg.plan)}
-                </span>
+                <ProjectSelectorPlanBadge
+                  plan={currentProjectOrg.plan}
+                  billingStress={!!billingFailureTeamId}
+                />
               )}
             </div>
             <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
@@ -563,6 +571,7 @@ export function ProjectSelector({
             organizations={organizations}
             isCloud={isCloud}
             currentProjectId={projectId}
+            billingFailureTeamId={billingFailureTeamId}
             onCreateProject={() => setCreateProjectDialogOpen(true)}
             onCreateOrganization={handleCreateOrganization}
           />
@@ -598,6 +607,8 @@ interface ProjectSelectorContentProps {
   organizations: Organization[]
   isCloud: boolean
   currentProjectId?: string
+  /** Team id for the open project when that org has a failed invoice; list rows match on project.teamId */
+  billingFailureTeamId: string | null
   onCreateProject: () => void
   onCreateOrganization: () => void
 }
@@ -620,6 +631,7 @@ function ProjectSelectorContent({
   organizations,
   isCloud,
   currentProjectId,
+  billingFailureTeamId,
   onCreateProject,
   onCreateOrganization,
 }: ProjectSelectorContentProps) {
@@ -796,24 +808,32 @@ function ProjectSelectorContent({
                       )}
                     >
                       <InitialsAvatar name={project.name} size="sm" />
-                      <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground">
-                        {project.name}
-                        {isCurrentProject && (
-                          <Badge
-                            variant="outline"
-                            className="ml-1.5 shrink-0 text-[10px] font-normal text-muted-foreground"
-                          >
-                            Current
-                          </Badge>
-                        )}
-                        {project.paused && (
-                          <Badge
-                            variant="outline"
-                            className="ml-1.5 shrink-0 text-[10px] font-normal text-muted-foreground"
-                          >
-                            Paused
-                          </Badge>
-                        )}
+                      <span className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
+                        <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground">
+                          {project.name}
+                          {isCurrentProject && (
+                            <Badge
+                              variant="outline"
+                              className="ml-1.5 shrink-0 text-[10px] font-normal text-muted-foreground"
+                            >
+                              Current
+                            </Badge>
+                          )}
+                          {project.paused && (
+                            <Badge
+                              variant="outline"
+                              className="ml-1.5 shrink-0 text-[10px] font-normal text-muted-foreground"
+                            >
+                              Paused
+                            </Badge>
+                          )}
+                        </span>
+                        <FailedInvoiceWarningIcon
+                          show={
+                            !!billingFailureTeamId &&
+                            project.teamId === billingFailureTeamId
+                          }
+                        />
                       </span>
                       {isPinned && (
                         <Pin className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
@@ -870,6 +890,7 @@ function MobileProjectSelectorContent({
   organizations,
   isCloud,
   currentProjectId,
+  billingFailureTeamId,
   onCreateProject,
   onCreateOrganization,
 }: ProjectSelectorContentProps) {
@@ -1095,24 +1116,32 @@ function MobileProjectSelectorContent({
                         )}
                       >
                         <InitialsAvatar name={project.name} size="sm" />
-                        <span className="min-w-0 flex-1 truncate text-[14px] font-medium text-foreground">
-                          {project.name}
-                          {isCurrentProject && (
-                            <Badge
-                              variant="outline"
-                              className="ml-1.5 shrink-0 text-[10px] font-normal text-muted-foreground"
-                            >
-                              Current
-                            </Badge>
-                          )}
-                          {project.paused && (
-                            <Badge
-                              variant="outline"
-                              className="ml-1.5 shrink-0 text-[10px] font-normal text-muted-foreground"
-                            >
-                              Paused
-                            </Badge>
-                          )}
+                        <span className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
+                          <span className="min-w-0 flex-1 truncate text-[14px] font-medium text-foreground">
+                            {project.name}
+                            {isCurrentProject && (
+                              <Badge
+                                variant="outline"
+                                className="ml-1.5 shrink-0 text-[10px] font-normal text-muted-foreground"
+                              >
+                                Current
+                              </Badge>
+                            )}
+                            {project.paused && (
+                              <Badge
+                                variant="outline"
+                                className="ml-1.5 shrink-0 text-[10px] font-normal text-muted-foreground"
+                              >
+                                Paused
+                              </Badge>
+                            )}
+                          </span>
+                          <FailedInvoiceWarningIcon
+                            show={
+                              !!billingFailureTeamId &&
+                              project.teamId === billingFailureTeamId
+                            }
+                          />
                         </span>
                         {isPinned && (
                           <Pin className="h-4 w-4 shrink-0 text-muted-foreground" />
