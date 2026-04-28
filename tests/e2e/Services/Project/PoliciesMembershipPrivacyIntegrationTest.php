@@ -125,12 +125,19 @@ class PoliciesMembershipPrivacyIntegrationTest extends Scope
         $this->assertSame(2, $response['body']['total']);
         $this->assertCount(2, $response['body']['memberships']);
 
+        $membership1Id = $membership1['body']['$id'];
         foreach ($response['body']['memberships'] as $membership) {
             $this->assertSame('', $membership['userName']);
             $this->assertSame('', $membership['userEmail']);
             $this->assertSame('', $membership['userPhone']);
-            $this->assertSame('', $membership['userId']);
             $this->assertFalse($membership['mfa']);
+            // userId is always visible for the requesting user's own membership so
+            // they can validate team access; other members' userIds respect the setting.
+            if ($membership['$id'] === $membership1Id) {
+                $this->assertSame($user1Id, $membership['userId']);
+            } else {
+                $this->assertSame('', $membership['userId']);
+            }
         }
 
         // Step 5: Update privacy to true
