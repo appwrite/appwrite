@@ -41,6 +41,16 @@ type OrganizationListResponse = Models.TeamList
 type OrganizationRecord = Models.Team
 type OrganizationPlan = Models.BillingPlan
 
+/**
+ * True when the organization's billing/team status is read-only (writes restricted).
+ * Comparison is case-insensitive to tolerate API casing.
+ */
+export function isOrganizationBillingReadonlyStatus(
+  status: string | null | undefined,
+): boolean {
+  return (status ?? '').toLowerCase() === 'readonly'
+}
+
 function isBillingEnabled(): boolean {
   return getActiveProfileFeatures().billing
 }
@@ -1059,6 +1069,32 @@ export async function retryInvoicePayment(params: {
 }
 
 /**
+ * Resolves which payment method to use when retrying an invoice (primary, backup if primary failed, or first on the account).
+ */
+export async function resolvePaymentMethodIdForInvoiceRetry(params: {
+  organization: {
+    paymentMethodId?: string | null
+    backupPaymentMethodId?: string | null
+  }
+  primaryPaymentMethodFailed: boolean
+}): Promise<string | null> {
+  let paymentMethodId = params.organization.paymentMethodId
+  if (!paymentMethodId || params.primaryPaymentMethodFailed) {
+    paymentMethodId = params.organization.backupPaymentMethodId
+  }
+  if (!paymentMethodId) {
+    const paymentMethods = await sdk.forConsole.account.listPaymentMethods()
+    if (
+      paymentMethods.paymentMethods &&
+      paymentMethods.paymentMethods.length > 0
+    ) {
+      paymentMethodId = paymentMethods.paymentMethods[0].$id
+    }
+  }
+  return paymentMethodId ?? null
+}
+
+/**
  * Mutation function to create a payment method
  *
  * Creates an empty payment method record and returns it with a clientSecret for Stripe
@@ -1390,16 +1426,24 @@ export function useOrganizations() {
     if (!organizationsData?.teams) return []
 
     return organizationsData.teams.map((org: unknown) => {
+      const o = org as {
+        $id: string
+        name: string
+        total?: number
+        billingPlan?: string
+        status?: string
+      }
       // Map billingPlan to plan name using the filter
-      const plan = getPlanNameFromTier(org.billingPlan) as CanonicalPlanId
+      const plan = getPlanNameFromTier(o.billingPlan) as CanonicalPlanId
 
       return {
-        $id: org.$id,
-        name: org.name,
-        slug: org.name.toLowerCase().replace(/\s+/g, '-'),
+        $id: o.$id,
+        name: o.name,
+        slug: o.name.toLowerCase().replace(/\s+/g, '-'),
         avatar: undefined, // Organizations from SDK don't have avatar
         plan,
-        members: org.total || 0,
+        members: o.total || 0,
+        status: o.status,
       }
     }) as Organization[]
   }, [organizationsData])

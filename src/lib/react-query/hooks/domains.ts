@@ -219,11 +219,11 @@ export async function createDomainPurchase(params: {
 }
 
 export async function finalizeDomainPurchase(params: {
-  domainId: string
+  invoiceId: string
   organizationId: string
 }) {
   return await sdk.forConsole.domains.updatePurchase({
-    domainId: params.domainId,
+    invoiceId: params.invoiceId,
     organizationId: params.organizationId,
   })
 }
@@ -243,11 +243,11 @@ export async function createDomainTransferIn(params: {
 }
 
 export async function finalizeDomainTransferIn(params: {
-  domainId: string
+  invoiceId: string
   organizationId: string
 }) {
   return await sdk.forConsole.domains.updateTransferIn({
-    domainId: params.domainId,
+    invoiceId: params.invoiceId,
     organizationId: params.organizationId,
   })
 }

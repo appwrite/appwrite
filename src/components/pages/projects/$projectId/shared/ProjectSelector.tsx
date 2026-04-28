@@ -24,6 +24,7 @@ import {
   pinnedProjectsQueryOptions,
   consoleTeamQueryOptions,
   useOrganizationFailedInvoicePresence,
+  isOrganizationBillingReadonlyStatus,
 } from '@/lib/react-query/hooks'
 import { FailedInvoiceWarningIcon } from '@/components/global/shared/FailedInvoiceWarningIcon'
 import { ProjectSelectorPlanBadge } from '@/components/pages/projects/$projectId/shared/ProjectSelectorPlanBadge'
@@ -79,6 +80,12 @@ export function ProjectSelector({
     routeFailedInvoicePresence?.hasFailedInvoice && currentProject?.teamId
       ? currentProject.teamId
       : null
+
+  const billingOrgReadonly = useMemo(() => {
+    if (!billingFailureTeamId) return false
+    const org = organizations.find((o) => o.$id === billingFailureTeamId)
+    return isOrganizationBillingReadonlyStatus(org?.status)
+  }, [billingFailureTeamId, organizations])
 
   // Infinite scroll state for projects
   const [projectSearch, setProjectSearch] = useState('')
@@ -403,6 +410,7 @@ export function ProjectSelector({
               isCloud={isCloud}
               currentProjectId={projectId}
               billingFailureTeamId={billingFailureTeamId}
+              billingOrgReadonly={billingOrgReadonly}
               onCreateProject={() => setCreateProjectDialogOpen(true)}
               onCreateOrganization={handleCreateOrganization}
             />
@@ -499,6 +507,7 @@ export function ProjectSelector({
               isCloud={isCloud}
               currentProjectId={projectId}
               billingFailureTeamId={billingFailureTeamId}
+              billingOrgReadonly={billingOrgReadonly}
               onCreateProject={() => setCreateProjectDialogOpen(true)}
               onCreateOrganization={handleCreateOrganization}
             />
@@ -572,6 +581,7 @@ export function ProjectSelector({
             isCloud={isCloud}
             currentProjectId={projectId}
             billingFailureTeamId={billingFailureTeamId}
+            billingOrgReadonly={billingOrgReadonly}
             onCreateProject={() => setCreateProjectDialogOpen(true)}
             onCreateOrganization={handleCreateOrganization}
           />
@@ -609,6 +619,8 @@ interface ProjectSelectorContentProps {
   currentProjectId?: string
   /** Team id for the open project when that org has a failed invoice; list rows match on project.teamId */
   billingFailureTeamId: string | null
+  /** That org's billing status is read-only (stronger invoice warning copy) */
+  billingOrgReadonly: boolean
   onCreateProject: () => void
   onCreateOrganization: () => void
 }
@@ -632,6 +644,7 @@ function ProjectSelectorContent({
   isCloud,
   currentProjectId,
   billingFailureTeamId,
+  billingOrgReadonly,
   onCreateProject,
   onCreateOrganization,
 }: ProjectSelectorContentProps) {
@@ -833,6 +846,7 @@ function ProjectSelectorContent({
                             !!billingFailureTeamId &&
                             project.teamId === billingFailureTeamId
                           }
+                          orgBillingReadonly={billingOrgReadonly}
                         />
                       </span>
                       {isPinned && (
@@ -891,6 +905,7 @@ function MobileProjectSelectorContent({
   isCloud,
   currentProjectId,
   billingFailureTeamId,
+  billingOrgReadonly,
   onCreateProject,
   onCreateOrganization,
 }: ProjectSelectorContentProps) {
@@ -1141,6 +1156,7 @@ function MobileProjectSelectorContent({
                               !!billingFailureTeamId &&
                               project.teamId === billingFailureTeamId
                             }
+                            orgBillingReadonly={billingOrgReadonly}
                           />
                         </span>
                         {isPinned && (

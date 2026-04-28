@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as PublicIndexRouteImport } from './routes/_public/index'
 import { Route as PublicResetRouteImport } from './routes/_public/reset'
 import { Route as PublicCompsRouteImport } from './routes/_public/comps'
+import { Route as PublicBlocksRouteImport } from './routes/_public/blocks'
 import { Route as PublicAccountRouteImport } from './routes/_public/account'
 import { Route as ProtectedExampleProtectedRouteRouteImport } from './routes/_protected/example-protected-route'
 import { Route as AuthVerifyEmailRouteImport } from './routes/_auth/verify-email'
@@ -231,6 +232,11 @@ const PublicResetRoute = PublicResetRouteImport.update({
 const PublicCompsRoute = PublicCompsRouteImport.update({
   id: '/comps',
   path: '/comps',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicBlocksRoute = PublicBlocksRouteImport.update({
+  id: '/blocks',
+  path: '/blocks',
   getParentRoute: () => PublicRoute,
 } as any)
 const PublicAccountRoute = PublicAccountRouteImport.update({
@@ -1484,6 +1490,7 @@ export interface FileRoutesByFullPath {
   '/verify-email': typeof AuthVerifyEmailRoute
   '/example-protected-route': typeof ProtectedExampleProtectedRouteRoute
   '/account': typeof PublicAccountRouteWithChildren
+  '/blocks': typeof PublicBlocksRoute
   '/comps': typeof PublicCompsRoute
   '/reset': typeof PublicResetRoute
   '/': typeof PublicIndexRoute
@@ -1679,6 +1686,7 @@ export interface FileRoutesByTo {
   '/verify-email': typeof AuthVerifyEmailRoute
   '/example-protected-route': typeof ProtectedExampleProtectedRouteRoute
   '/account': typeof PublicAccountRouteWithChildren
+  '/blocks': typeof PublicBlocksRoute
   '/comps': typeof PublicCompsRoute
   '/reset': typeof PublicResetRoute
   '/': typeof PublicIndexRoute
@@ -1850,6 +1858,7 @@ export interface FileRoutesById {
   '/_auth/verify-email': typeof AuthVerifyEmailRoute
   '/_protected/example-protected-route': typeof ProtectedExampleProtectedRouteRoute
   '/_public/account': typeof PublicAccountRouteWithChildren
+  '/_public/blocks': typeof PublicBlocksRoute
   '/_public/comps': typeof PublicCompsRoute
   '/_public/reset': typeof PublicResetRoute
   '/_public/': typeof PublicIndexRoute
@@ -2047,6 +2056,7 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/example-protected-route'
     | '/account'
+    | '/blocks'
     | '/comps'
     | '/reset'
     | '/'
@@ -2242,6 +2252,7 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/example-protected-route'
     | '/account'
+    | '/blocks'
     | '/comps'
     | '/reset'
     | '/'
@@ -2412,6 +2423,7 @@ export interface FileRouteTypes {
     | '/_auth/verify-email'
     | '/_protected/example-protected-route'
     | '/_public/account'
+    | '/_public/blocks'
     | '/_public/comps'
     | '/_public/reset'
     | '/_public/'
@@ -2646,6 +2658,13 @@ declare module '@tanstack/react-router' {
       path: '/comps'
       fullPath: '/comps'
       preLoaderRoute: typeof PublicCompsRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/blocks': {
+      id: '/_public/blocks'
+      path: '/blocks'
+      fullPath: '/blocks'
+      preLoaderRoute: typeof PublicBlocksRouteImport
       parentRoute: typeof PublicRoute
     }
     '/_public/account': {
@@ -4988,6 +5007,7 @@ const PublicProjectsProjectIdRouteWithChildren =
 
 interface PublicRouteChildren {
   PublicAccountRoute: typeof PublicAccountRouteWithChildren
+  PublicBlocksRoute: typeof PublicBlocksRoute
   PublicCompsRoute: typeof PublicCompsRoute
   PublicResetRoute: typeof PublicResetRoute
   PublicIndexRoute: typeof PublicIndexRoute
@@ -4998,6 +5018,7 @@ interface PublicRouteChildren {
 
 const PublicRouteChildren: PublicRouteChildren = {
   PublicAccountRoute: PublicAccountRouteWithChildren,
+  PublicBlocksRoute: PublicBlocksRoute,
   PublicCompsRoute: PublicCompsRoute,
   PublicResetRoute: PublicResetRoute,
   PublicIndexRoute: PublicIndexRoute,

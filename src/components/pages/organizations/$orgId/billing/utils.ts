@@ -40,20 +40,6 @@ export function formatDate(
   return new Date(date).toLocaleDateString('en-US', options)
 }
 
-import {
-  getInvoiceStatusColor as getInvoiceStatusColorUtil,
-  type InvoiceStatus,
-} from '@/lib/utils/status-badge'
-
-/**
- * Get status badge color classes based on invoice status
- * @param status - Invoice status
- * @returns Tailwind CSS classes for the badge
- */
-export function getStatusColor(status: InvoiceStatus): string {
-  return getInvoiceStatusColorUtil(status)
-}
-
 /**
  * Calculate total from an array of charges
  * @param charges - Array of charge objects with amount property
@@ -189,4 +175,18 @@ export function formatPaymentMethodSummary(
     out += ` · Expires ${formatCardExpiry(method.expiryMonth, method.expiryYear)}`
   }
   return out
+}
+
+/** Billing-related fields on org API payloads (SDK Team type may omit these). */
+export type OrganizationPaymentRefs = {
+  paymentMethodId?: string | null
+  backupPaymentMethodId?: string | null
+  failedInvoice?: { $id: string; lastError?: string } | null
+  billingPlanDowngrade?: unknown
+}
+
+export function asOrganizationPaymentRefs(
+  organization: unknown,
+): OrganizationPaymentRefs {
+  return organization as OrganizationPaymentRefs
 }

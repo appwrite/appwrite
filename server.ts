@@ -496,6 +496,27 @@ async function initializeStaticRoutes(
   return { routes, loaded, skipped }
 }
 
+/** Minimal HTML for fatal errors so the tab keeps Appwrite branding (browsers request /favicon.ico when there is no document head). */
+function internalServerErrorResponse(): Response {
+  const body = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Appwrite Console</title>
+<link rel="icon" href="/logo.svg" type="image/svg+xml"/>
+<link rel="shortcut icon" href="/favicon.ico"/>
+</head>
+<body style="font-family:system-ui,sans-serif;margin:2rem">
+<p>Internal Server Error</p>
+</body>
+</html>`
+  return new Response(body, {
+    status: 500,
+    headers: { 'Content-Type': 'text/html; charset=utf-8' },
+  })
+}
+
 /**
  * Initialize the server
  */
@@ -533,7 +554,7 @@ async function initializeServer() {
           return handler.fetch(req)
         } catch (error) {
           log.error(`Server handler error: ${String(error)}`)
-          return new Response('Internal Server Error', { status: 500 })
+          return internalServerErrorResponse()
         }
       },
     },
@@ -543,7 +564,7 @@ async function initializeServer() {
       log.error(
         `Uncaught server error: ${error instanceof Error ? error.message : String(error)}`,
       )
-      return new Response('Internal Server Error', { status: 500 })
+      return internalServerErrorResponse()
     },
   })
 

@@ -9,6 +9,8 @@ export interface Organization {
   avatar?: string
   plan: CanonicalPlanId
   members: number
+  /** Cloud billing: e.g. `readonly` when the org is restricted after failed payment */
+  status?: string
 }
 
 export interface Team {

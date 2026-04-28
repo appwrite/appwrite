@@ -223,8 +223,8 @@ export function AvailableCreditsSection({
           </h3>
           {hasCredits && (
             <Badge
-              variant="secondary"
-              className="h-6 px-2.5 text-[11px] font-medium"
+              variant="info"
+              className="h-6 px-2.5 text-[10px] font-medium shrink-0"
             >
               Balance: {formatCurrency(totalAvailableCredit)}
             </Badge>
@@ -348,8 +348,8 @@ export function AvailableCreditsSection({
                             </span>
                             {isExpired && (
                               <Badge
-                                variant="secondary"
-                                className="h-5 px-1.5 text-[10px]"
+                                variant="error"
+                                className="h-5 px-1.5 text-[10px] shrink-0"
                               >
                                 Expired
                               </Badge>

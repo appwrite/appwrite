@@ -56,6 +56,7 @@ import {
   pinnedProjectsQueryOptions,
   useOrganizationPlan,
   useOrganizationFailedInvoicePresence,
+  isOrganizationBillingReadonlyStatus,
   useOrganizationScopes,
   useResendMembershipInvite,
   useUpdateMembershipRole,
@@ -594,6 +595,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         billingPlan?: string
         tier?: string
         prefs?: Record<string, unknown>
+        status?: string
       }) => {
         const planName = getPlanNameFromTier(
           org.billingPlan ?? (org.prefs as { tier?: string })?.tier ?? 'free',
@@ -607,6 +609,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           avatar: undefined, // Organizations from SDK don't have avatar
           plan,
           members: org.total || 0,
+          status: org.status,
         }
       },
     )
@@ -617,6 +620,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     if (!orgId || !organizations.length) return null
     return organizations.find((org: Organization) => org.$id === orgId) || null
   }, [orgId, organizations])
+
+  const orgBillingReadonlyForFailedInvoice =
+    showFailedInvoiceOrgAlert &&
+    isOrganizationBillingReadonlyStatus(selectedOrg?.status)
 
   const [orgName, setOrgName] = useState('')
 
@@ -1387,6 +1394,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           <OrganizationFailedInvoiceHeaderBanner
             organizationId={orgId}
             show={showFailedInvoiceOrgAlert}
+            orgBillingReadonly={orgBillingReadonlyForFailedInvoice}
           />
         }
         showFooter
@@ -2039,6 +2047,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                 </span>
                                                 <FailedInvoiceWarningIcon
                                                   show={showFailedInvoiceOrgAlert}
+                                                  orgBillingReadonly={
+                                                    orgBillingReadonlyForFailedInvoice
+                                                  }
                                                 />
                                               </h3>
                                               {supportsMultiRegion &&
@@ -2199,6 +2210,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                     <FailedInvoiceWarningIcon
                                                       show={
                                                         showFailedInvoiceOrgAlert
+                                                      }
+                                                      orgBillingReadonly={
+                                                        orgBillingReadonlyForFailedInvoice
                                                       }
                                                     />
                                                   </h3>

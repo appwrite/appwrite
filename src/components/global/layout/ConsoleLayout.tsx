@@ -129,7 +129,7 @@ export function ConsoleLayout({
       {/* Mobile sidebar overlay */}
       {sidebar?.mobileOpen && (
         <div
-          className="fixed inset-0 z-[120] bg-black/60"
+          className="fixed inset-0 z-[120] h-[100dvh] max-h-[100dvh] w-full bg-black/60"
           onClick={sidebar.onMobileClose}
         />
       )}
