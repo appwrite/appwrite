@@ -126,7 +126,13 @@ class Upsert extends PresenceAction
         $presenceState = new PresenceState();
         $presenceDocument = new Document($presenceData);
         $presenceState->setPermissions($presenceDocument, $permissions, $user, $authorization);
-        $presence = $presenceState->upsertForUser($dbForProject, $presenceDocument, $presenceId, $resolvedUserId);
+        $presence = $presenceState->upsertForUser(
+            $dbForProject,
+            $presenceDocument,
+            $presenceId,
+            $resolvedUserId,
+            fn () => $usage->addMetric(METRIC_USERS_PRESENCE, 1)
+        );
         $queueForEvents->setParam('presenceId', $presence->getId());
 
         $response->dynamic($presence, Response::MODEL_PRESENCE);

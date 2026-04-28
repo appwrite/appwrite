@@ -51,18 +51,38 @@ class PresenceState
         return $document;
     }
 
-    public function upsertForUser(Database $dbForProject, Document $presenceDocument, string $presenceId, string $userId): Document
-    {
+    public function upsertForUser(
+        Database $dbForProject,
+        Document $presenceDocument,
+        string $presenceId,
+        string $userId,
+        ?callable $onPresenceCreated = null
+    ): Document {
         if ($presenceId !== 'unique()') {
             $presenceDocument->setAttribute('$id', $presenceId);
         }
 
+        $presenceCreated = false;
 
         try {
             if ($this->getSupportForUniqueIndexBasedUpsert()) {
-                return $this->transactionalUpsertForUser($dbForProject, $presenceDocument, $presenceId, $userId);
+                $presence = $this->transactionalUpsertForUser(
+                    $dbForProject,
+                    $presenceDocument,
+                    $presenceId,
+                    $userId,
+                    $presenceCreated
+                );
+            } else {
+                $presenceCreated = $dbForProject->findOne('presenceLogs', [Query::equal('userId', [$userId])])->isEmpty();
+                $presence = $dbForProject->upsertDocument('presenceLogs', $presenceDocument);
             }
-            return $dbForProject->upsertDocument('presenceLogs', $presenceDocument);
+
+            if ($presenceCreated && $onPresenceCreated !== null) {
+                call_user_func($onPresenceCreated);
+            }
+
+            return $presence;
         } catch (DuplicateException $e) {
             throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS, params: [$presenceId], previous: $e);
         } catch (NotFoundException $e) {
@@ -78,12 +98,14 @@ class PresenceState
         Database $dbForProject,
         Document $presenceDocument,
         string $presenceId,
-        string $userId
+        string $userId,
+        ?bool &$presenceCreated = null
     ): Document {
-        return $dbForProject->withTransaction(function () use ($dbForProject, $presenceDocument, $presenceId, $userId) {
+        return $dbForProject->withTransaction(function () use ($dbForProject, $presenceDocument, $presenceId, $userId, &$presenceCreated) {
             $existingPresence = $dbForProject->findOne('presenceLogs', [Query::equal('userId', [$userId])]);
 
             if ($existingPresence->isEmpty()) {
+                $presenceCreated = true;
                 return $dbForProject->createDocument('presenceLogs', $presenceDocument);
             }
 

@@ -18,6 +18,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\System\System;
+use WebSocket\Client as WebSocketClient;
 
 class UsageTest extends Scope
 {
@@ -227,6 +228,110 @@ class UsageTest extends Scope
     }
 
     #[Depends('testUsersStats')]
+    public function testPreparePresenceStats(array $data): array
+    {
+        $presenceKey = $this->getNewKey([
+            'presence.read',
+            'presence.write',
+        ]);
+        $projectId = $this->getProject()['$id'];
+
+        $apiUser = $this->getUser(true);
+        $apiPresence = $this->client->call(
+            Client::METHOD_PUT,
+            '/presences/' . ID::unique(),
+            [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $presenceKey,
+            ],
+            [
+                'userId' => $apiUser['$id'],
+                'status' => 'online',
+                'metadata' => [
+                    'source' => 'api',
+                    'testRunId' => ID::unique(),
+                ],
+                'permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
+                ],
+            ]
+        );
+        $this->assertEquals(200, $apiPresence['headers']['status-code']);
+
+        return $data;
+    }
+
+    #[Depends('testPreparePresenceStats')]
+    #[Retry(count: 1)]
+    public function testPresenceStats(array $data): array
+    {
+        $projectId = $this->getProject()['$id'];
+        $realtimeUser = $this->getUser(true);
+        $realtime = new WebSocketClient(
+            'ws://appwrite.test/v1/realtime?' . \http_build_query([
+                'project' => $projectId,
+            ]),
+            [
+                'headers' => [
+                    'origin' => 'http://localhost',
+                    'cookie' => 'a_session_' . $projectId . '=' . $realtimeUser['session'],
+                ],
+                'timeout' => 2,
+            ]
+        );
+
+        try {
+            $connected = \json_decode($realtime->receive(), true);
+            $this->assertSame('connected', $connected['type'] ?? null);
+
+            $presenceId = ID::unique();
+            $realtime->send(\json_encode([
+                'type' => 'presence',
+                'data' => [
+                    'presenceId' => $presenceId,
+                    'status' => 'online',
+                    'metadata' => [
+                        'source' => 'realtime',
+                        'testRunId' => ID::unique(),
+                    ],
+                    'permissions' => [
+                        Permission::read(Role::any()),
+                        Permission::update(Role::any()),
+                        Permission::delete(Role::any()),
+                    ],
+                ],
+            ]));
+
+            $response = \json_decode($realtime->receive(), true);
+            $this->assertSame('response', $response['type'] ?? null);
+            $this->assertSame('presence', $response['data']['to'] ?? null);
+            $this->assertSame($presenceId, $response['data']['presence']['$id'] ?? null);
+
+            $this->assertEventually(function () {
+                $response = $this->client->call(
+                    Client::METHOD_GET,
+                    '/presences/usage?range=90d',
+                    $this->getConsoleHeaders()
+                );
+
+                $this->assertEquals(200, $response['headers']['status-code']);
+                $this->assertEquals('90d', $response['body']['range']);
+                $this->assertEquals(90, count($response['body']['usersOnline']));
+                $this->assertEquals(2, $response['body']['usersOnlineTotal']);
+                $this->assertEquals(2, $response['body']['usersOnline'][array_key_last($response['body']['usersOnline'])]['value']);
+                $this->validateDates($response['body']['usersOnline']);
+            });
+        } finally {
+            $realtime->close();
+        }
+
+        return $data;
+    }
+
+    #[Depends('testPresenceStats')]
     public function testPrepareStorageStats(array $data): array
     {
         $requestsTotal = $data['requestsTotal'];

@@ -77,6 +77,7 @@ class Delete extends Base
         }
 
         $usage->addMetric(METRIC_PRESENCE_DELETED, 1);
+        $usage->addMetric(METRIC_USERS_PRESENCE, -1);
 
         $queueForEvents
             ->setParam('presenceId', $presence->getId())

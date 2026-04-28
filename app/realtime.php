@@ -2,12 +2,15 @@
 
 use Appwrite\Databases\PresenceState;
 use Appwrite\Event\Event as QueueEvent;
+use Appwrite\Event\Message\Usage as UsageMessage;
+use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime as QueueRealtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
+use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -42,6 +45,7 @@ use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Pools\Group;
 use Utopia\Queue\Broker\Pool as BrokerPool;
+use Utopia\Queue\Queue;
 use Utopia\Registry\Registry;
 use Utopia\Span\Span;
 use Utopia\System\System;
@@ -54,6 +58,29 @@ require_once __DIR__ . '/init/span.php';
 
 /** @var Registry $register */
 $register = $GLOBALS['register'] ?? throw new \RuntimeException('Registry not initialized');
+
+/** @var Group $pools */
+$pools = $register->get('pools');
+$statsUsageConnection = System::getEnv('_APP_CONNECTIONS_QUEUE_STATS_USAGE', '');
+$publisherPoolName = 'publisher';
+
+if (!empty($statsUsageConnection)) {
+    try {
+        $pools->get('publisher_' . $statsUsageConnection);
+        $publisherPoolName = 'publisher_' . $statsUsageConnection;
+    } catch (Throwable) {
+        // Fallback to default publisher pool when custom one is unavailable.
+    }
+}
+
+$broker = new BrokerPool(publisher: $pools->get($publisherPoolName));
+$publisherForUsage = new UsagePublisher(
+    $broker,
+    new Queue(System::getEnv(
+        '_APP_STATS_USAGE_QUEUE_NAME',
+        \Appwrite\Event\Event::STATS_USAGE_QUEUE_NAME
+    ))
+);
 
 $registerConnectionResources ??= require __DIR__ . '/init/realtime/connection.php';
 
@@ -245,8 +272,39 @@ if (!function_exists('getTelemetry')) {
 }
 
 if (!function_exists('triggerStats')) {
-    function triggerStats(array $event, string $projectId): void
+    function triggerStats(array $event, string $projectId): void{}
+}
+
+if (!function_exists('triggerPresenceUsage')) {
+    function triggerPresenceUsage(int $value, string $projectId): void
     {
+        if (empty($projectId)) {
+            return;
+        }
+
+        try {
+            global $publisherForUsage;
+
+            $consoleDB = getConsoleDB();
+            /** @var Document $project */
+            $project = $consoleDB->getAuthorization()->skip(
+                fn () => $consoleDB->getDocument('projects', $projectId)
+            );
+
+            if ($project->isEmpty()) {
+                return;
+            }
+
+            $usage = new Context();
+            $usage->addMetric(METRIC_USERS_PRESENCE, $value);
+
+            $publisherForUsage->enqueue(new UsageMessage(
+                project: $project,
+                metrics: $usage->getMetrics(),
+            ));
+        } catch (Throwable $th) {
+            logError($th, 'realtimeStats', tags: ['projectId' => $projectId]);
+        }
     }
 }
 
@@ -1429,7 +1487,17 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                 $presenceState->setPermissions($presenceDocument, $message['data']['permissions'] ?? null, $user, $authorization);
 
                 $presenceId = $message['data']['presenceId'] ?? 'unique()';
-                $presence = $presenceState->upsertForUser($database, $presenceDocument, $presenceId, $userId);
+                $presence = $presenceState->upsertForUser(
+                    $database,
+                    $presenceDocument,
+                    $presenceId,
+                    $userId,
+                    function () use ($project): void {
+                        if ($project !== null && !$project->isEmpty()) {
+                            triggerPresenceUsage(1, $project->getId());
+                        }
+                    }
+                );
 
                 $presence->removeAttribute('hostname');
 
@@ -1556,6 +1624,12 @@ $server->onClose(function (int $connection) use ($server, $realtime, $stats, $re
                             $dbForProject->deleteDocuments('presenceLogs', [Query::equal('$id', $presenceIds)]);
                         } catch (Throwable $th) {
                             // swallow errors to avoid breaking disconnect cleanup
+                        }
+
+                        $deletedPresences = \count($presences);
+
+                        if ($deletedPresences > 0) {
+                            triggerPresenceUsage(-$deletedPresences, $project->getId());
                         }
 
                         foreach ($presences as $presence) {
