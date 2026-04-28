@@ -11,6 +11,8 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Logger\Log;
+use Utopia\Logger\Logger;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
 
@@ -56,6 +58,9 @@ class Update extends Action
             ->inject('project')
             ->inject('authorization')
             ->inject('queueForEvents')
+            ->inject('distributedLockOrFail')
+            ->inject('log')
+            ->inject('logger')
             ->callback($this->action(...));
     }
 
@@ -66,15 +71,20 @@ class Update extends Action
         Document $project,
         Authorization $authorization,
         Event $queueForEvents,
+        callable $distributedLockOrFail,
+        Log $log,
+        ?Logger $logger,
     ): void {
-        $auths = $project->getAttribute('auths', []);
-        $auths['invalidateSessions'] = $enabled;
+        $project = $distributedLockOrFail("lock:platform:projects:{$project->getId()}", function () use ($project, $enabled, $dbForPlatform, $authorization) {
+            $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $project->getId()));
 
-        $updates = new Document([
-            'auths' => $auths,
-        ]);
+            $auths = $project->getAttribute('auths', []);
+            $auths['invalidateSessions'] = $enabled;
 
-        $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
+            return $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                'auths' => $auths,
+            ])));
+        }, log: $log, logger: $logger);
 
         $queueForEvents
             ->setParam('projectId', $project->getId())

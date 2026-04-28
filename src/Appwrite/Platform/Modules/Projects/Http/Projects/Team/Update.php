@@ -13,6 +13,8 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
+use Utopia\Logger\Log;
+use Utopia\Logger\Logger;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator;
 
@@ -55,29 +57,39 @@ class Update extends Action
             ->param('teamId', '', new UID(), 'Team ID of the team to transfer project to.')
             ->inject('response')
             ->inject('dbForPlatform')
+            ->inject('distributedLockOrFail')
+            ->inject('log')
+            ->inject('logger')
             ->callback($this->action(...));
     }
 
-    public function action(string $projectId, string $teamId, Response $response, Database $dbForPlatform)
+    public function action(string $projectId, string $teamId, Response $response, Database $dbForPlatform, callable $distributedLockOrFail, Log $log, ?Logger $logger)
     {
-        $project = $dbForPlatform->getDocument('projects', $projectId);
-        $team = $dbForPlatform->getDocument('teams', $teamId);
+        // Lock around the project doc RMW. Cascade fan-out to installations,
+        // repositories and vcsComments runs after the lock is released —
+        // those write to separate collections, not the project doc.
+        [$project, $permissions] = $distributedLockOrFail("lock:platform:projects:{$projectId}", function () use ($projectId, $teamId, $dbForPlatform) {
+            $project = $dbForPlatform->getDocument('projects', $projectId);
+            $team = $dbForPlatform->getDocument('teams', $teamId);
 
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
+            if ($project->isEmpty()) {
+                throw new Exception(Exception::PROJECT_NOT_FOUND);
+            }
 
-        if ($team->isEmpty()) {
-            throw new Exception(Exception::TEAM_NOT_FOUND);
-        }
+            if ($team->isEmpty()) {
+                throw new Exception(Exception::TEAM_NOT_FOUND);
+            }
 
-        $permissions = $this->getPermissions($teamId, $projectId);
+            $permissions = $this->getPermissions($teamId, $projectId);
 
-        $project = $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-            'teamId' => $teamId,
-            'teamInternalId' => $team->getSequence(),
-            '$permissions' => $permissions,
-        ]));
+            $project = $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                'teamId' => $teamId,
+                'teamInternalId' => $team->getSequence(),
+                '$permissions' => $permissions,
+            ]));
+
+            return [$project, $permissions];
+        }, log: $log, logger: $logger);
 
         $installations = $dbForPlatform->find('installations', [
             Query::equal('projectInternalId', [$project->getSequence()]),

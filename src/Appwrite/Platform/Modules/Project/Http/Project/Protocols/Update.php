@@ -12,6 +12,8 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Logger\Log;
+use Utopia\Logger\Logger;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\WhiteList;
@@ -60,6 +62,9 @@ class Update extends Action
             ->inject('project')
             ->inject('authorization')
             ->inject('queueForEvents')
+            ->inject('distributedLockOrFail')
+            ->inject('log')
+            ->inject('logger')
             ->callback($this->action(...));
     }
 
@@ -71,13 +76,20 @@ class Update extends Action
         Document $project,
         Authorization $authorization,
         Event $queueForEvents,
+        callable $distributedLockOrFail,
+        Log $log,
+        ?Logger $logger,
     ): void {
-        $protocols = $project->getAttribute('apis', []);
-        $protocols[$protocolId] = $enabled;
+        $project = $distributedLockOrFail("lock:platform:projects:{$project->getId()}", function () use ($project, $protocolId, $enabled, $dbForPlatform, $authorization) {
+            $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $project->getId()));
 
-        $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-            'apis' => $protocols,
-        ])));
+            $protocols = $project->getAttribute('apis', []);
+            $protocols[$protocolId] = $enabled;
+
+            return $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                'apis' => $protocols,
+            ])));
+        }, log: $log, logger: $logger);
 
         $queueForEvents->setParam('protocolId', $protocolId);
 

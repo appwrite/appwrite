@@ -13,6 +13,8 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Logger\Log;
+use Utopia\Logger\Logger;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Text;
@@ -59,6 +61,9 @@ class Update extends Action
             ->inject('project')
             ->inject('dbForPlatform')
             ->inject('authorization')
+            ->inject('distributedLockOrFail')
+            ->inject('log')
+            ->inject('logger')
             ->callback($this->action(...));
     }
 
@@ -70,38 +75,43 @@ class Update extends Action
         Document $project,
         Database $dbForPlatform,
         Authorization $authorization,
+        callable $distributedLockOrFail,
+        Log $log,
+        ?Logger $logger,
     ) {
-        $auths = $project->getAttribute('auths', []);
+        $mockNumber = $distributedLockOrFail("lock:platform:projects:{$project->getId()}", function () use ($project, $number, $otp, $dbForPlatform, $authorization) {
+            $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $project->getId()));
 
-        $mockNumbers = $auths['mockNumbers'] ?? [];
+            $auths = $project->getAttribute('auths', []);
+            $mockNumbers = $auths['mockNumbers'] ?? [];
 
-        $mockNumberIndex = null;
-        foreach ($mockNumbers as $index => $mock) {
-            if ($mock['phone'] === $number) {
-                $mockNumberIndex = $index;
-                break;
+            $mockNumberIndex = null;
+            foreach ($mockNumbers as $index => $mock) {
+                if ($mock['phone'] === $number) {
+                    $mockNumberIndex = $index;
+                    break;
+                }
             }
-        }
 
-        if (\is_null($mockNumberIndex)) {
-            throw new Exception(Exception::MOCK_NUMBER_NOT_FOUND);
-        }
+            if (\is_null($mockNumberIndex)) {
+                throw new Exception(Exception::MOCK_NUMBER_NOT_FOUND);
+            }
 
-        $mockNumbers[$mockNumberIndex]['otp'] = $otp;
-        $mockNumbers[$mockNumberIndex]['$updatedAt'] = DateTime::now();
+            $mockNumbers[$mockNumberIndex]['otp'] = $otp;
+            $mockNumbers[$mockNumberIndex]['$updatedAt'] = DateTime::now();
+            $auths['mockNumbers'] = $mockNumbers;
 
-        $auths['mockNumbers'] = $mockNumbers;
+            $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                'auths' => $auths,
+            ])));
 
-        $updates = new Document([
-            'auths' => $auths,
-        ]);
-
-        $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
+            return $mockNumbers[$mockNumberIndex];
+        }, log: $log, logger: $logger);
 
         $queueForEvents->setParam('number', $number);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_OK)
-            ->dynamic(new Document($mockNumbers[$mockNumberIndex]), Response::MODEL_MOCK_NUMBER);
+            ->dynamic(new Document($mockNumber), Response::MODEL_MOCK_NUMBER);
     }
 }

@@ -14,6 +14,8 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Emails\Validator\Email;
+use Utopia\Logger\Log;
+use Utopia\Logger\Logger;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
@@ -72,6 +74,9 @@ class Update extends Action
             ->inject('dbForPlatform')
             ->inject('project')
             ->inject('authorization')
+            ->inject('distributedLockOrFail')
+            ->inject('log')
+            ->inject('logger')
             ->callback($this->action(...));
     }
 
@@ -90,83 +95,103 @@ class Update extends Action
         Response $response,
         Database $dbForPlatform,
         Document $project,
-        Authorization $authorization
+        Authorization $authorization,
+        callable $distributedLockOrFail,
+        Log $log,
+        ?Logger $logger,
     ): void {
-        // Fetch current configuration
-        $smtp = $project->getAttribute('smtp', []);
+        $inputs = [
+            'host' => $host,
+            'port' => $port,
+            'username' => $username,
+            'password' => $password,
+            'senderEmail' => $senderEmail,
+            'senderName' => $senderName,
+            'replyToEmail' => $replyToEmail,
+            'replyToName' => $replyToName,
+            'secure' => $secure,
+            'enabled' => $enabled,
+        ];
 
-        // Apply changes
-        $keys = ['host', 'port', 'username', 'password', 'senderEmail', 'senderName', 'replyToEmail', 'replyToName', 'secure', 'enabled'];
-        foreach ($keys as $key) {
-            if (!\is_null(${$key})) {
-                $smtp[$key] = ${$key};
-            }
-        }
+        // The SMTP test (PHPMailer SmtpConnect with Timeout=5) runs inside the
+        // lock so two concurrent SMTP updates don't validate against the same
+        // baseline and overwrite each other's secrets. The 10s default lock
+        // TTL covers the worst-case 5s connection probe with margin.
+        $project = $distributedLockOrFail("lock:platform:projects:{$project->getId()}", function () use ($project, $inputs, $enabled, $dbForPlatform, $authorization) {
+            $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $project->getId()));
 
-        // Backwards compatibility
-        $smtp['replyToEmail'] = $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? '';
+            // Fetch current configuration
+            $smtp = $project->getAttribute('smtp', []);
 
-        if (($smtp['enabled'] ?? false) === true) {
-            // Ensure required fields are set
-            $requiredKeys = ['host', 'port', 'senderEmail'];
-            foreach ($requiredKeys as $key) {
-                if (empty($smtp[$key])) {
-                    throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Param "' . $key . '" is not optional.');
+            // Apply changes
+            foreach ($inputs as $key => $value) {
+                if (!\is_null($value)) {
+                    $smtp[$key] = $value;
                 }
             }
-        }
 
-        // Validate SMTP credentials
-        // Validate when the caller is explicitly enabling or hasn't expressed a preference
-        // (so a credentials-only PATCH can auto-enable). Skip only when the caller is
-        // explicitly keeping/turning SMTP off.
-        if (\is_null($enabled) || $enabled === true) {
-            $mail = new PHPMailer(true);
-            $mail->isSMTP();
+            // Backwards compatibility
+            $smtp['replyToEmail'] = $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? '';
 
-            $mail->Host = $smtp['host'] ?? '';
-            $mail->Port = $smtp['port'] ?? '';
-            $mail->SMTPSecure = $smtp['secure'] ?? '';
-            $mail->setFrom($smtp['senderEmail'], $smtp['senderName'] ?? '');
-
-            if (!empty($smtp['username'] ?? '')) {
-                $mail->SMTPAuth = true;
-                $mail->Username = $smtp['username'];
-                $mail->Password = $smtp['password'] ?? '';
-            }
-
-            if (!empty($smtp['replyToEmail'] ?? '')) {
-                $mail->addReplyTo($smtp['replyToEmail'], $smtp['replyToName'] ?? '');
-            }
-
-            $mail->SMTPAutoTLS = false;
-            $mail->Timeout = 5;
-
-            try {
-                $valid = $mail->SmtpConnect();
-
-                if (!$valid) {
-                    throw new \Exception('Connection is not valid.');
-                }
-
-                // Auto-enable if configuration is valid
-                // Dont do this if specifically request to mark disabled
-                if (\is_null($enabled)) {
-                    $smtp['enabled'] = true;
-                }
-            } catch (Throwable $error) {
-                if (($smtp['enabled'] ?? null) === true) {
-                    throw new Exception(Exception::PROJECT_SMTP_CONFIG_INVALID, $error->getMessage());
+            if (($smtp['enabled'] ?? false) === true) {
+                // Ensure required fields are set
+                $requiredKeys = ['host', 'port', 'senderEmail'];
+                foreach ($requiredKeys as $key) {
+                    if (empty($smtp[$key])) {
+                        throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Param "' . $key . '" is not optional.');
+                    }
                 }
             }
-        }
 
-        // Save configuration
-        $updates = new Document([
-            'smtp' => $smtp,
-        ]);
+            // Validate SMTP credentials
+            // Validate when the caller is explicitly enabling or hasn't expressed a preference
+            // (so a credentials-only PATCH can auto-enable). Skip only when the caller is
+            // explicitly keeping/turning SMTP off.
+            if (\is_null($enabled) || $enabled === true) {
+                $mail = new PHPMailer(true);
+                $mail->isSMTP();
 
-        $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
+                $mail->Host = $smtp['host'] ?? '';
+                $mail->Port = $smtp['port'] ?? '';
+                $mail->SMTPSecure = $smtp['secure'] ?? '';
+                $mail->setFrom($smtp['senderEmail'], $smtp['senderName'] ?? '');
+
+                if (!empty($smtp['username'] ?? '')) {
+                    $mail->SMTPAuth = true;
+                    $mail->Username = $smtp['username'];
+                    $mail->Password = $smtp['password'] ?? '';
+                }
+
+                if (!empty($smtp['replyToEmail'] ?? '')) {
+                    $mail->addReplyTo($smtp['replyToEmail'], $smtp['replyToName'] ?? '');
+                }
+
+                $mail->SMTPAutoTLS = false;
+                $mail->Timeout = 5;
+
+                try {
+                    $valid = $mail->SmtpConnect();
+
+                    if (!$valid) {
+                        throw new \Exception('Connection is not valid.');
+                    }
+
+                    // Auto-enable if configuration is valid
+                    // Dont do this if specifically request to mark disabled
+                    if (\is_null($enabled)) {
+                        $smtp['enabled'] = true;
+                    }
+                } catch (Throwable $error) {
+                    if (($smtp['enabled'] ?? null) === true) {
+                        throw new Exception(Exception::PROJECT_SMTP_CONFIG_INVALID, $error->getMessage());
+                    }
+                }
+            }
+
+            return $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                'smtp' => $smtp,
+            ])));
+        }, log: $log, logger: $logger);
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     }

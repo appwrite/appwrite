@@ -13,6 +13,8 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Logger\Log;
+use Utopia\Logger\Logger;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Text;
@@ -59,6 +61,9 @@ class Create extends Action
             ->inject('project')
             ->inject('dbForPlatform')
             ->inject('authorization')
+            ->inject('distributedLockOrFail')
+            ->inject('log')
+            ->inject('logger')
             ->callback($this->action(...));
     }
 
@@ -70,21 +75,10 @@ class Create extends Action
         Document $project,
         Database $dbForPlatform,
         Authorization $authorization,
+        callable $distributedLockOrFail,
+        Log $log,
+        ?Logger $logger,
     ) {
-        $auths = $project->getAttribute('auths', []);
-
-        $mockNumbers = $auths['mockNumbers'] ?? [];
-
-        if (\count($mockNumbers) >= APP_LIMIT_COUNT) {
-            throw new Exception(Exception::MOCK_NUMBER_LIMIT_EXCEEDED);
-        }
-
-        foreach ($mockNumbers as $mockNumber) {
-            if ($mockNumber['phone'] === $number) {
-                throw new Exception(Exception::MOCK_NUMBER_ALREADY_EXISTS);
-            }
-        }
-
         // Set to now date
         $mockNumber = [
             'phone' => $number,
@@ -93,14 +87,29 @@ class Create extends Action
             '$updatedAt' => DateTime::now(),
         ];
 
-        $mockNumbers[] = $mockNumber;
-        $auths['mockNumbers'] = $mockNumbers;
+        $distributedLockOrFail("lock:platform:projects:{$project->getId()}", function () use ($project, $number, $mockNumber, $dbForPlatform, $authorization) {
+            $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $project->getId()));
 
-        $updates = new Document([
-            'auths' => $auths,
-        ]);
+            $auths = $project->getAttribute('auths', []);
+            $mockNumbers = $auths['mockNumbers'] ?? [];
 
-        $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
+            if (\count($mockNumbers) >= APP_LIMIT_COUNT) {
+                throw new Exception(Exception::MOCK_NUMBER_LIMIT_EXCEEDED);
+            }
+
+            foreach ($mockNumbers as $existing) {
+                if ($existing['phone'] === $number) {
+                    throw new Exception(Exception::MOCK_NUMBER_ALREADY_EXISTS);
+                }
+            }
+
+            $mockNumbers[] = $mockNumber;
+            $auths['mockNumbers'] = $mockNumbers;
+
+            $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                'auths' => $auths,
+            ])));
+        }, log: $log, logger: $logger);
 
         $queueForEvents->setParam('number', $number);
 
