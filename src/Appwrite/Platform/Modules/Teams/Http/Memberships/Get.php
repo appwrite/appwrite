@@ -82,13 +82,16 @@ class Get extends Action
         $roles = $authorization->getRoles();
         $isPrivilegedUser = $user->isPrivileged($roles);
         $isAppUser = $user->isApp($roles);
-        $isAuthenticatedUser = !$user->isEmpty();
 
         $membershipsPrivacy = array_map(function ($privacy) use ($isPrivilegedUser, $isAppUser) {
             return $privacy || $isPrivilegedUser || $isAppUser;
         }, $membershipsPrivacy);
 
-        $membershipsPrivacy['userId'] = $membershipsPrivacy['userId'] || $isAuthenticatedUser;
+        // userId is always visible to an authenticated user for their own membership so
+        // they can validate team access. Other members' userIds still respect the setting.
+        if (!$user->isEmpty() && $membership->getAttribute('userId') === $user->getId()) {
+            $membershipsPrivacy['userId'] = true;
+        }
 
         $memberUser = !empty(array_filter($membershipsPrivacy))
             ? $dbForProject->getDocument('users', $membership->getAttribute('userId'))

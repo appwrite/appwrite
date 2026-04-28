@@ -135,20 +135,24 @@ class XList extends Action
         $roles = $authorization->getRoles();
         $isPrivilegedUser = $user->isPrivileged($roles);
         $isAppUser = $user->isApp($roles);
-        $isAuthenticatedUser = !$user->isEmpty();
 
         $membershipsPrivacy = array_map(function ($privacy) use ($isPrivilegedUser, $isAppUser) {
             return $privacy || $isPrivilegedUser || $isAppUser;
         }, $membershipsPrivacy);
 
-        $membershipsPrivacy['userId'] = $membershipsPrivacy['userId'] || $isAuthenticatedUser;
+        $memberships = array_map(function ($membership) use ($dbForProject, $team, $membershipsPrivacy, $user) {
+            // userId is always visible to an authenticated user for their own membership so
+            // they can validate team access. Other members' userIds still respect the setting.
+            $membershipPrivacy = $membershipsPrivacy;
+            if (!$user->isEmpty() && $membership->getAttribute('userId') === $user->getId()) {
+                $membershipPrivacy['userId'] = true;
+            }
 
-        $memberships = array_map(function ($membership) use ($dbForProject, $team, $membershipsPrivacy) {
-            $memberUser = !empty(array_filter($membershipsPrivacy))
+            $memberUser = !empty(array_filter($membershipPrivacy))
                 ? $dbForProject->getDocument('users', $membership->getAttribute('userId'))
                 : new Document();
 
-            if ($membershipsPrivacy['mfa']) {
+            if ($membershipPrivacy['mfa']) {
                 $mfa = $memberUser->getAttribute('mfa', false);
 
                 if ($mfa) {
@@ -165,21 +169,21 @@ class XList extends Action
                 $membership->setAttribute('mfa', $mfa);
             }
 
-            if ($membershipsPrivacy['userName']) {
+            if ($membershipPrivacy['userName']) {
                 $membership->setAttribute('userName', $memberUser->getAttribute('name'));
             }
 
-            if ($membershipsPrivacy['userEmail']) {
+            if ($membershipPrivacy['userEmail']) {
                 $membership->setAttribute('userEmail', $memberUser->getAttribute('email'));
             }
 
-            if ($membershipsPrivacy['userId']) {
+            if ($membershipPrivacy['userId']) {
                 $membership->setAttribute('userId', $memberUser->getId());
             } else {
                 $membership->removeAttribute('userId');
             }
 
-            if ($membershipsPrivacy['userPhone']) {
+            if ($membershipPrivacy['userPhone']) {
                 $membership->setAttribute('userPhone', $memberUser->getAttribute('phone'));
             }
 
