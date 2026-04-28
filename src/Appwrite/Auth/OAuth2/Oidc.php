@@ -274,7 +274,7 @@ class Oidc extends OAuth2
         if (empty($this->wellKnownConfiguration)) {
             $response = $this->request('GET', $this->getWellKnownEndpoint());
             if (empty($response)) {
-                throw new Exception('Invalid well-known configuration');
+                throw new \Exception('Invalid well-known configuration');
             }
             $this->wellKnownConfiguration = \json_decode($response, true);
         }
