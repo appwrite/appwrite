@@ -3,7 +3,7 @@
 require_once __DIR__ . '/init.php';
 require_once __DIR__ . '/init/span.php';
 
-$registerRequestResources = require __DIR__ . '/init/resources/request.php';
+$registerContext = require __DIR__ . '/init/resources/request.php';
 
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -502,7 +502,7 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
     });
 });
 
-$swooleAdapter->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files, $swooleAdapter, $registerRequestResources) {
+$swooleAdapter->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files, $swooleAdapter, $registerContext) {
     Span::init('http.request');
 
     $request = new Request($utopiaRequest->getSwooleRequest());
@@ -522,15 +522,15 @@ $swooleAdapter->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files
         return;
     }
 
-    $requestContainer = $swooleAdapter->getContext();
-    $requestContainer->set('container', fn () => $requestContainer);
-    $requestContainer->set('request', fn () => $request);
-    $requestContainer->set('response', fn () => $response);
+    $context = $swooleAdapter->getContext();
+    $context->set('container', fn () => $context);
+    $context->set('request', fn () => $request);
+    $context->set('response', fn () => $response);
 
     $app = new Http($swooleAdapter, 'UTC');
-    $requestContainer->set('utopia', fn () => $app);
+    $context->set('utopia', fn () => $app);
 
-    $registerRequestResources($requestContainer);
+    $registerContext($context);
 
     $app->setCompression(System::getEnv('_APP_COMPRESSION_ENABLED', 'enabled') === 'enabled');
     $app->setCompressionMinSize(intval(System::getEnv('_APP_COMPRESSION_MIN_SIZE_BYTES', '1024'))); // 1KB

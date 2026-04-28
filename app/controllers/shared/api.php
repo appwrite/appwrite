@@ -864,7 +864,10 @@ Http::shutdown()
             }
         }
 
-        $requestParams = $request->getParams();
+        $requestParams = array_merge(
+            $route?->getPathValues($request) ?? [],
+            $request->getParams(),
+        );
 
         /**
          * Abuse labels
