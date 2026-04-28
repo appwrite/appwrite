@@ -57,8 +57,10 @@ class Slack extends OAuth2
     {
         if (empty($this->tokens)) {
             $this->tokens = \json_decode($this->request(
-                'GET',
-                'https://slack.com/api/oauth.v2.access?' . \http_build_query([
+                'POST',
+                'https://slack.com/api/oauth.v2.access',
+                ['Content-Type: application/x-www-form-urlencoded'],
+                \http_build_query([
                     'client_id' => $this->appID,
                     'client_secret' => $this->appSecret,
                     'code' => $code,
@@ -78,8 +80,10 @@ class Slack extends OAuth2
     public function refreshTokens(string $refreshToken): array
     {
         $this->tokens = \json_decode($this->request(
-            'GET',
-            'https://slack.com/api/oauth.v2.access?' . \http_build_query([
+            'POST',
+            'https://slack.com/api/oauth.v2.access',
+            ['Content-Type: application/x-www-form-urlencoded'],
+            \http_build_query([
                 'client_id' => $this->appID,
                 'client_secret' => $this->appSecret,
                 'refresh_token' => $refreshToken,
