@@ -218,7 +218,6 @@ export function SupportWizardFullscreen() {
       if (typeof window !== 'undefined' && (window as unknown).track) {
         ;(window as unknown).track(eventName, {})
       }
-      toast.success('Support ticket submitted')
       setSubmitted(true)
     } catch (err) {
       const eventName = getSupportAnalyticsEvent()
