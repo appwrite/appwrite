@@ -95,12 +95,12 @@
         "webonyx/graphql-php": "15.31.*",
         "league/csv": "9.14.*",
         "enshrined/svg-sanitize": "0.22.*",
-        "premtsd-code/lock": "dev-main#7ec10dae33b950bc0f473c51e5b165b20754760c"
+        "utopia-php/lock": "0.2.*"
     },
     "repositories": [
         {
             "type": "vcs",
-            "url": "https://github.com/premtsd-code/lock"
+            "url": "https://github.com/utopia-php/lock"
         }
     ],
     "require-dev": {

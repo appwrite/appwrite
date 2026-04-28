@@ -23,9 +23,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\DSN\DSN;
-use Utopia\Lock\Adapter\Redis as LockRedisAdapter;
-use Utopia\Lock\Exception\LockAcquireException;
-use Utopia\Lock\Lock;
+use Utopia\Lock\Distributed as DistributedLock;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\Pools\Group;
@@ -318,11 +316,11 @@ $container->set('distributedLock', function (\Redis $redis, Telemetry $telemetry
 
     return function (string $key, \Closure $fn, float $ttl = 5.0, ?Log $log = null, ?Logger $logger = null) use ($redis, $attempts, $lockTargetOf, $lockErrorReporter): void {
         $target = $lockTargetOf($key);
-        $lock = new Lock(new LockRedisAdapter($redis), $key, $ttl);
+        $lock = new DistributedLock($redis, $key, (int) $ttl);
 
         try {
-            $acquired = $lock->acquire();
-        } catch (LockAcquireException $e) {
+            $acquired = $lock->tryAcquire();
+        } catch (\RedisException $e) {
             $attempts->add(1, ['outcome' => 'backend_error', 'target' => $target]);
             $lockErrorReporter($log, $logger, 'backend_error', $key, $target, $e);
             $fn();
@@ -377,11 +375,11 @@ $container->set('distributedLockOrFail', function (\Redis $redis, Telemetry $tel
 
     return function (string $key, \Closure $fn, float $ttl = 10.0, float $waitTimeout = 3.0, ?Log $log = null, ?Logger $logger = null) use ($redis, $attempts, $lockTargetOf, $lockErrorReporter): mixed {
         $target = $lockTargetOf($key);
-        $lock = new Lock(new LockRedisAdapter($redis), $key, $ttl);
+        $lock = new DistributedLock($redis, $key, (int) $ttl);
 
         try {
-            $acquired = $lock->acquire(blocking: true, waitTimeout: $waitTimeout, retryDelay: 0.1);
-        } catch (LockAcquireException $e) {
+            $acquired = $lock->acquire($waitTimeout);
+        } catch (\RedisException $e) {
             $attempts->add(1, ['outcome' => 'backend_error', 'target' => $target]);
             $lockErrorReporter($log, $logger, 'backend_error', $key, $target, $e);
             return $fn();

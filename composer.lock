@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5108bf79532c9d666fb96daa9ec4b3d5",
+    "content-hash": "bbf2208dac35ff90f57b7e49b8546d45",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2103,75 +2103,6 @@
                 }
             ],
             "time": "2026-04-10T01:33:53+00:00"
-        },
-        {
-            "name": "premtsd-code/lock",
-            "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/premtsd-code/lock.git",
-                "reference": "7ec10dae33b950bc0f473c51e5b165b20754760c"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/premtsd-code/lock/zipball/7ec10dae33b950bc0f473c51e5b165b20754760c",
-                "reference": "7ec10dae33b950bc0f473c51e5b165b20754760c",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.1"
-            },
-            "require-dev": {
-                "laravel/pint": "1.2.*",
-                "phpstan/phpstan": "^1.12",
-                "phpunit/phpunit": "^9.5"
-            },
-            "suggest": {
-                "ext-redis": "Required for Utopia\\Lock\\Adapter\\Redis"
-            },
-            "default-branch": true,
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Lock\\": "src/Lock"
-                }
-            },
-            "autoload-dev": {
-                "psr-4": {
-                    "Utopia\\Tests\\": "tests/Lock"
-                }
-            },
-            "scripts": {
-                "check": [
-                    "./vendor/bin/phpstan analyse --level 8 src tests"
-                ],
-                "lint": [
-                    "./vendor/bin/pint --test"
-                ],
-                "format": [
-                    "./vendor/bin/pint"
-                ],
-                "test": [
-                    "./vendor/bin/phpunit --configuration phpunit.xml tests"
-                ]
-            },
-            "license": [
-                "MIT"
-            ],
-            "description": "A distributed lock library for PHP, part of the Utopia framework",
-            "keywords": [
-                "distributed",
-                "lock",
-                "mutex",
-                "php",
-                "redis",
-                "utopia"
-            ],
-            "support": {
-                "source": "https://github.com/premtsd-code/lock/tree/main",
-                "issues": "https://github.com/premtsd-code/lock/issues"
-            },
-            "time": "2026-04-26T15:50:08+00:00"
         },
         {
             "name": "psr/clock",
@@ -4489,6 +4420,78 @@
                 "source": "https://github.com/utopia-php/locale/tree/0.8.0"
             },
             "time": "2025-08-12T12:58:26+00:00"
+        },
+        {
+            "name": "utopia-php/lock",
+            "version": "0.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/lock.git",
+                "reference": "49317c9493d8f747e4299aa24c22862aa5f6e106"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/lock/zipball/49317c9493d8f747e4299aa24c22862aa5f6e106",
+                "reference": "49317c9493d8f747e4299aa24c22862aa5f6e106",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.3"
+            },
+            "require-dev": {
+                "laravel/pint": "1.*",
+                "phpstan/phpstan": "2.*",
+                "phpunit/phpunit": "11.*",
+                "swoole/ide-helper": "*"
+            },
+            "suggest": {
+                "ext-pcntl": "Required to run the File lock tests",
+                "ext-redis": "Required for the Distributed lock",
+                "ext-swoole": "Required for the Mutex and Semaphore locks (>=6.0)"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Lock\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\Lock\\Tests\\": "tests/"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "vendor/bin/phpunit"
+                ],
+                "lint": [
+                    "vendor/bin/pint --test"
+                ],
+                "format": [
+                    "vendor/bin/pint"
+                ],
+                "format:check": [
+                    "vendor/bin/pint --test"
+                ],
+                "analyze": [
+                    "vendor/bin/phpstan analyse --memory-limit=512M"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Appwrite Team",
+                    "email": "team@appwrite.io"
+                }
+            ],
+            "description": "Mutex, semaphore, file and distributed locks for PHP — one interface, four backends.",
+            "support": {
+                "source": "https://github.com/utopia-php/lock/tree/0.2.0",
+                "issues": "https://github.com/utopia-php/lock/issues"
+            },
+            "time": "2026-04-24T10:47:56+00:00"
         },
         {
             "name": "utopia-php/logger",
@@ -8512,9 +8515,7 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "premtsd-code/lock": 20
-    },
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
