@@ -633,7 +633,6 @@ Http::init()
         $useCache = $route->getLabel('cache', false);
         $storageCacheOperationsCounter = $telemetry->createCounter('storage.cache.operations.load');
         if ($useCache) {
-            $route = $utopia->match($request);
             $isImageTransformation = $route->getPath() === '/v1/storage/buckets/:bucketId/files/:fileId/preview';
             $isDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && ! $user->isPrivileged($authorization->getRoles());
 

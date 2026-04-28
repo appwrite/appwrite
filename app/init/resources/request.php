@@ -47,6 +47,7 @@ use Utopia\DI\Container;
 use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
 use Utopia\Http\Http;
+use Utopia\Http\RouteMatch;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
 use Utopia\Pools\Group;
@@ -602,7 +603,7 @@ return function (Container $container): void {
         return $user;
     }, ['mode', 'project', 'console', 'request', 'response', 'dbForProject', 'dbForPlatform', 'store', 'proofForToken', 'authorization']);
 
-    $container->set('project', function ($dbForPlatform, $request, $console, $authorization, Http $utopia) {
+    $container->set('project', function ($dbForPlatform, $request, $console, $authorization, ?RouteMatch $match) {
         /** @var Appwrite\Utopia\Request $request */
         /** @var Utopia\Database\Database $dbForPlatform */
         /** @var Utopia\Database\Document $console */
@@ -616,7 +617,7 @@ return function (Container $container): void {
         // These endpoints moved from /v1/projects/:projectId/<resource> to /v1/<resource>
         // When accessed via the old alias path, extract projectId from the URI
         $deprecatedProjectPathPrefix = '/v1/projects/';
-        $route = $utopia->match($request);
+        $route = $match?->route;
         if (!empty($route)) {
             $isDeprecatedAlias = \str_starts_with($request->getURI(), $deprecatedProjectPathPrefix) &&
                 !\str_starts_with($route->getPath(), $deprecatedProjectPathPrefix);
@@ -633,7 +634,7 @@ return function (Container $container): void {
         $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
 
         return $project;
-    }, ['dbForPlatform', 'request', 'console', 'authorization', 'utopia']);
+    }, ['dbForPlatform', 'request', 'console', 'authorization', 'match']);
 
     $container->set('session', function (User $user, Store $store, Token $proofForToken) {
         if ($user->isEmpty()) {
@@ -1100,12 +1101,12 @@ return function (Container $container): void {
         return $key;
     }, ['request', 'project', 'servers', 'dbForPlatform', 'authorization']);
 
-    $container->set('team', function (Document $project, Database $dbForPlatform, Http $utopia, Request $request, Authorization $authorization) {
+    $container->set('team', function (Document $project, Database $dbForPlatform, ?RouteMatch $match, Request $request, Authorization $authorization) {
         $teamInternalId = '';
         if ($project->getId() !== 'console') {
             $teamInternalId = $project->getAttribute('teamInternalId', '');
         } else {
-            $route = $utopia->match($request);
+            $route = $match?->route;
             $path = ! empty($route) ? $route->getPath() : $request->getURI();
             $orgHeader = $request->getHeader('x-appwrite-organization', '');
             if (str_starts_with($path, '/v1/projects/:projectId')) {
@@ -1141,7 +1142,7 @@ return function (Container $container): void {
         });
 
         return $team;
-    }, ['project', 'dbForPlatform', 'utopia', 'request', 'authorization']);
+    }, ['project', 'dbForPlatform', 'match', 'request', 'authorization']);
 
     $container->set('previewHostname', function (Request $request, ?Key $apiKey) {
         $allowed = false;

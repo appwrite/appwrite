@@ -9,6 +9,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Http\Http;
+use Utopia\Http\RouteMatch;
 use Utopia\System\System;
 
 Http::init()
@@ -32,13 +33,13 @@ Http::init()
 
 Http::init()
     ->groups(['auth'])
-    ->inject('utopia')
     ->inject('request')
     ->inject('project')
     ->inject('geodb')
     ->inject('user')
     ->inject('authorization')
-    ->action(function (Http $utopia, Request $request, Document $project, Reader $geodb, User $user, Authorization $authorization) {
+    ->inject('match')
+    ->action(function (Request $request, Document $project, Reader $geodb, User $user, Authorization $authorization, ?RouteMatch $match) {
         $denylist = System::getEnv('_APP_CONSOLE_COUNTRIES_DENYLIST', '');
         if (!empty($denylist && $project->getId() === 'console')) {
             $countries = explode(',', $denylist);
@@ -49,7 +50,7 @@ Http::init()
             }
         }
 
-        $route = $utopia->match($request);
+        $route = $match?->route;
 
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
         $isAppUser = $user->isApp($authorization->getRoles());
