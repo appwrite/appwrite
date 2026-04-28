@@ -125,7 +125,7 @@ class Realtime extends MessagingAdapter
             'projectId' => $projectId,
             'roles' => \array_values(\array_unique(\array_merge($existingRoles, $roles))),
             'userId' => $userId ?? ($existing['userId'] ?? ''),
-            'channels' => \array_values(\array_unique(\array_merge($existingChannels, $channels))),,
+            'channels' => \array_values(\array_unique(\array_merge($existingChannels, $channels))),
             'presences' => $this->connections[$identifier]['presences'] ?? []
         ];
 
