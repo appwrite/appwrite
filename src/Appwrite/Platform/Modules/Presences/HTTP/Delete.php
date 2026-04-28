@@ -9,6 +9,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Exception\Conflict as ConflictException;
@@ -33,7 +34,7 @@ class Delete extends Base
             ->setHttpPath('/v1/presences/:presenceId')
             ->desc('Delete presence')
             ->groups(['api', 'presences'])
-            ->label('scope', 'users.write')
+            ->label('scope', 'presence.write')
             ->label('event', 'presences.[presenceId].delete')
             ->label('audits.event', 'presence.delete')
             ->label('audits.resource', 'presence/{request.presenceId}')
@@ -55,10 +56,11 @@ class Delete extends Base
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
+            ->inject('usage')
             ->callback($this->action(...));
     }
 
-    public function action(string $presenceId, Response $response, Database $dbForProject, Event $queueForEvents): void
+    public function action(string $presenceId, Response $response, Database $dbForProject, Event $queueForEvents, Context $usage): void
     {
         $presence = $dbForProject->getDocument('presenceLogs', $presenceId);
 
@@ -73,6 +75,8 @@ class Delete extends Base
         } catch (RestrictedException) {
             throw new Exception(Exception::DOCUMENT_UPDATE_CONFLICT);
         }
+
+        $usage->addMetric(METRIC_PRESENCE_DELETED, 1);
 
         $queueForEvents
             ->setParam('presenceId', $presence->getId())

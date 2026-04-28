@@ -9,6 +9,7 @@ use Appwrite\Platform\Modules\Presences\HTTP\Action as PresenceAction;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
@@ -40,7 +41,7 @@ class Upsert extends PresenceAction
             ->setHttpPath('/v1/presences/:presenceId')
             ->desc('Upsert presence')
             ->groups(['api', 'presences'])
-            ->label('scope', 'users.write')
+            ->label('scope', 'presence.write')
             ->label('event', 'presences.[presenceId].upsert')
             ->label('audits.event', 'presence.upsert')
             ->label('audits.resource', 'presence/{response.$id}')
@@ -69,6 +70,7 @@ class Upsert extends PresenceAction
             ->inject('user')
             ->inject('authorization')
             ->inject('queueForEvents')
+            ->inject('usage')
             ->callback($this->action(...));
     }
 
@@ -83,7 +85,8 @@ class Upsert extends PresenceAction
         Database $dbForProject,
         User $user,
         Authorization $authorization,
-        Event $queueForEvents
+        Event $queueForEvents,
+        Context $usage
     ): void {
         $isAPIKey = $user->isApp($authorization->getRoles());
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());

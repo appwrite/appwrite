@@ -38,7 +38,7 @@ class Update extends PresenceAction
             ->setHttpPath('/v1/presences/:presenceId')
             ->desc('Update presence')
             ->groups(['api', 'presences'])
-            ->label('scope', 'users.write')
+            ->label('scope', 'presence.write')
             ->label('event', 'presences.[presenceId].update')
             ->label('audits.event', 'presence.update')
             ->label('audits.resource', 'presence/{response.$id}')
