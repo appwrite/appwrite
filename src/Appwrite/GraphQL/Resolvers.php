@@ -403,8 +403,7 @@ class Resolvers
             return;
         } finally {
             if ($original !== null) {
-                $container = self::getResolverContainer($utopia);
-                $container->set('match', static fn () => $original);
+                $utopia->setContext('match', static fn () => $original);
             }
 
             $lock->release();
