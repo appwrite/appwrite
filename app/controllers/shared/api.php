@@ -101,7 +101,7 @@ Http::init()
     ->inject('apiKey')
     ->inject('authorization')
     ->action(function (Http $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization) {
-        $route = $utopia->getRoute();
+        $route = $utopia->getResource('route');
         if ($route === null) {
             throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
         }
@@ -507,12 +507,12 @@ Http::init()
         $response->setUser($user);
         $request->setUser($user);
 
-        $route = $utopia->getRoute();
+        $route = $utopia->getResource('route');
         if ($route === null) {
             throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
         }
 
-        $path = $route->getMatchedPath();
+        $path = $utopia->getResource('matchedPath');
         $databaseType = match (true) {
             str_contains($path, '/documentsdb') => DATABASE_TYPE_DOCUMENTSDB,
             str_contains($path, '/vectorsdb') => DATABASE_TYPE_VECTORSDB,
@@ -861,8 +861,8 @@ Http::shutdown()
             }
         }
 
-        $route = $utopia->getRoute();
-        $requestParams = $route->getParamsValues();
+        $route = $utopia->getResource('route');
+        $requestParams = $request->getParams();
 
         /**
          * Abuse labels

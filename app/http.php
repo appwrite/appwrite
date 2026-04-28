@@ -522,7 +522,7 @@ $swooleAdapter->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files
         return;
     }
 
-    $requestContainer = $swooleAdapter->getContainer();
+    $requestContainer = $swooleAdapter->getContext();
     $requestContainer->set('container', fn () => $requestContainer);
     $requestContainer->set('request', fn () => $request);
     $requestContainer->set('response', fn () => $response);
@@ -545,7 +545,7 @@ $swooleAdapter->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files
 
         $app->run($request, $response);
 
-        $route = $app->getRoute();
+        $route = $app->getResource('route');
         Span::add('http.path', $route?->getPath() ?? 'unknown');
     } catch (\Throwable $th) {
         Span::error($th);
@@ -561,7 +561,11 @@ $swooleAdapter->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files
                 // All good, user is optional information for logger
             }
 
-            $route = $app->getRoute();
+            try {
+                $route = $app->getResource('route');
+            } catch (\Throwable $_th) {
+                $route = null;
+            }
 
             $log = $app->getResource("log");
 

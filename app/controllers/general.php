@@ -856,14 +856,14 @@ Http::init()
         // Only run Router when external domain
         if (!\in_array($hostname, $platformHostnames) || !empty($previewHostname)) {
             if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $log, $queueForEvents, $bus, $executor, $geodb, $isResourceBlocked, $platform, $previewHostname, $authorization, $apiKey, $queueForDeletes, $executionsRetentionCount)) {
-                $utopia->getRoute()?->label('router', true);
+                $utopia->getResource('route')?->label('router', true);
             }
         }
 
         /*
         * Request format
         */
-        $route = $utopia->getRoute();
+        $route = $utopia->getResource('route');
         $request->setRoute($route);
 
         if ($route === null) {
@@ -1148,7 +1148,7 @@ Http::options()
         // Only run Router when external domain
         if (!in_array($request->getHostname(), $platformHostnames) || !empty($previewHostname)) {
             if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $log, $queueForEvents, $bus, $executor, $geodb, $isResourceBlocked, $platform, $previewHostname, $authorization, $apiKey, $queueForDeletes, $executionsRetentionCount)) {
-                $utopia->getRoute()?->label('router', true);
+                $utopia->getResource('route')?->label('router', true);
             }
         }
 
@@ -1183,7 +1183,11 @@ Http::error()
     ->inject('authorization')
     ->action(function (Throwable $error, Http $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, Bus $bus, Document $devKey, Authorization $authorization) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
-        $route = $utopia->getRoute();
+        try {
+            $route = $utopia->getResource('route');
+        } catch (\Throwable $_th) {
+            $route = null;
+        }
         $class = \get_class($error);
         $code = $error->getCode();
         $message = $error->getMessage();
@@ -1549,7 +1553,7 @@ Http::get('/robots.txt')
             $response->text($template->render(false));
         } else {
             if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $log, $queueForEvents, $bus, $executor, $geodb, $isResourceBlocked, $platform, $previewHostname, $authorization, $apiKey, $queueForDeletes, $executionsRetentionCount)) {
-                $utopia->getRoute()?->label('router', true);
+                $utopia->getResource('route')?->label('router', true);
             }
         }
     });
@@ -1583,7 +1587,7 @@ Http::get('/humans.txt')
             $response->text($template->render(false));
         } else {
             if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $log, $queueForEvents, $bus, $executor, $geodb, $isResourceBlocked, $platform, $previewHostname, $authorization, $apiKey, $queueForDeletes, $executionsRetentionCount)) {
-                $utopia->getRoute()?->label('router', true);
+                $utopia->getResource('route')?->label('router', true);
             }
         }
     });

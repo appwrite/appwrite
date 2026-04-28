@@ -359,7 +359,11 @@ class Resolvers
 
         $lock->acquire();
 
-        $original = $utopia->getRoute();
+        try {
+            $original = $utopia->getResource('route');
+        } catch (\Throwable $_th) {
+            $original = null;
+        }
         try {
             $request = clone $request;
 
@@ -403,7 +407,8 @@ class Resolvers
             return;
         } finally {
             if ($original !== null) {
-                $utopia->setRoute($original);
+                $container = self::getResolverContainer($utopia);
+                $container->set('route', static fn () => $original);
             }
 
             $lock->release();
