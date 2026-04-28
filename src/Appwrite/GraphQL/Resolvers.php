@@ -359,11 +359,7 @@ class Resolvers
 
         $lock->acquire();
 
-        try {
-            $original = $utopia->getResource('match');
-        } catch (\Throwable $_th) {
-            $original = null;
-        }
+        $original = $utopia->getResource('match');
         try {
             $request = clone $request;
 

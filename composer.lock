@@ -4275,12 +4275,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "41179392e58553f03467ba1d53710e4ecb542e03"
+                "reference": "2e2c19aef535b1f9241bb5c9e1bf9811a11ec3d2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/41179392e58553f03467ba1d53710e4ecb542e03",
-                "reference": "41179392e58553f03467ba1d53710e4ecb542e03",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/2e2c19aef535b1f9241bb5c9e1bf9811a11ec3d2",
+                "reference": "2e2c19aef535b1f9241bb5c9e1bf9811a11ec3d2",
                 "shasum": ""
             },
             "require": {
@@ -4323,7 +4323,7 @@
                 "issues": "https://github.com/utopia-php/http/issues",
                 "source": "https://github.com/utopia-php/http/tree/fix/concurrency-shared-state"
             },
-            "time": "2026-04-28T14:08:05+00:00"
+            "time": "2026-04-28T15:13:55+00:00"
         },
         {
             "name": "utopia-php/image",

@@ -561,12 +561,7 @@ $swooleAdapter->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files
                 // All good, user is optional information for logger
             }
 
-            try {
-                $match = $app->getResource('match');
-                $route = $match?->route;
-            } catch (\Throwable $_th) {
-                $route = null;
-            }
+            $route = $app->getResource('match')?->route;
 
             $log = $app->getResource("log");
 
