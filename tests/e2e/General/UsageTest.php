@@ -319,10 +319,10 @@ class UsageTest extends Scope
 
                 $this->assertEquals(200, $response['headers']['status-code']);
                 $this->assertEquals('90d', $response['body']['range']);
-                $this->assertEquals(90, count($response['body']['usersOnline']));
+                $this->assertEquals(90, count($response['body']['presences']));
                 $this->assertEquals(2, $response['body']['usersOnlineTotal']);
-                $this->assertEquals(2, $response['body']['usersOnline'][array_key_last($response['body']['usersOnline'])]['value']);
-                $this->validateDates($response['body']['usersOnline']);
+                $this->assertEquals(2, $response['body']['presences'][array_key_last($response['body']['presences'])]['value']);
+                $this->validateDates($response['body']['presences']);
             });
         } finally {
             $realtime->close();

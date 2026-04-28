@@ -34,6 +34,6 @@ class PresenceConsoleClientTest extends Scope
         $this->assertEquals('24h', $response['body']['range']);
         $this->assertCount(3, $response['body']);
         $this->assertIsNumeric($response['body']['usersOnlineTotal']);
-        $this->assertIsArray($response['body']['usersOnline']);
+        $this->assertIsArray($response['body']['presences']);
     }
 }

@@ -22,7 +22,7 @@ class UsagePresence extends Model
                 'default' => 0,
                 'example' => 0,
             ])
-            ->addRule('usersOnline', [
+            ->addRule('presences', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated number of online users per period.',
                 'default' => [],

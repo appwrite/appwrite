@@ -113,7 +113,7 @@ class Get extends Base
         $response->dynamic(new Document([
             'range' => $range,
             'usersOnlineTotal' => $stats['total'],
-            'usersOnline' => $usage,
+            'presences' => $usage,
         ]), Response::MODEL_USAGE_PRESENCE);
     }
 }
