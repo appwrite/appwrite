@@ -360,7 +360,7 @@ class Resolvers
         $lock->acquire();
 
         try {
-            $original = $utopia->getResource('route');
+            $original = $utopia->getResource('match');
         } catch (\Throwable $_th) {
             $original = null;
         }
@@ -408,7 +408,7 @@ class Resolvers
         } finally {
             if ($original !== null) {
                 $container = self::getResolverContainer($utopia);
-                $container->set('route', static fn () => $original);
+                $container->set('match', static fn () => $original);
             }
 
             $lock->release();

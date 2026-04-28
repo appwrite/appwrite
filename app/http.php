@@ -545,8 +545,8 @@ $swooleAdapter->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files
 
         $app->run($request, $response);
 
-        $route = $app->getResource('route');
-        Span::add('http.path', $route?->getPath() ?? 'unknown');
+        $match = $app->getResource('match');
+        Span::add('http.path', $match?->route->getPath() ?? 'unknown');
     } catch (\Throwable $th) {
         Span::error($th);
 
@@ -562,7 +562,8 @@ $swooleAdapter->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files
             }
 
             try {
-                $route = $app->getResource('route');
+                $match = $app->getResource('match');
+                $route = $match?->route;
             } catch (\Throwable $_th) {
                 $route = null;
             }

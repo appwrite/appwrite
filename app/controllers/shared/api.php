@@ -40,6 +40,7 @@ use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Roles;
 use Utopia\Http\Http;
 use Utopia\Http\Route;
+use Utopia\Http\RouteMatch;
 use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -101,8 +102,9 @@ Http::init()
     ->inject('team')
     ->inject('apiKey')
     ->inject('authorization')
-    ->inject('route')
-    ->action(function (Http $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization, ?Route $route) {
+    ->inject('match')
+    ->action(function (Http $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization, ?RouteMatch $match) {
+        $route = $match?->route;
         if ($route === null) {
             throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
         }
@@ -503,16 +505,17 @@ Http::init()
     ->inject('telemetry')
     ->inject('platform')
     ->inject('authorization')
-    ->inject('route')
-    ->inject('matchedPath')
-    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, Messaging $queueForMessaging, AuditContext $auditContext, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Context $usage, Func $queueForFunctions, Mail $queueForMails, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry, array $platform, Authorization $authorization, ?Route $route, string $path) {
+    ->inject('match')
+    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, Messaging $queueForMessaging, AuditContext $auditContext, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Context $usage, Func $queueForFunctions, Mail $queueForMails, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry, array $platform, Authorization $authorization, ?RouteMatch $match) {
 
         $response->setUser($user);
         $request->setUser($user);
 
+        $route = $match?->route;
         if ($route === null) {
             throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
         }
+        $path = $match->path;
 
 
         $databaseType = match (true) {
@@ -813,8 +816,9 @@ Http::shutdown()
     ->inject('bus')
     ->inject('apiKey')
     ->inject('mode')
-    ->inject('route')
-    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Audit $publisherForAudits, Context $usage, UsagePublisher $publisherForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor, Bus $bus, ?Key $apiKey, string $mode, ?Route $route) use ($parseLabel) {
+    ->inject('match')
+    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Audit $publisherForAudits, Context $usage, UsagePublisher $publisherForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor, Bus $bus, ?Key $apiKey, string $mode, ?RouteMatch $match) use ($parseLabel) {
+        $route = $match?->route;
 
         $responsePayload = $response->getPayload();
 
@@ -864,10 +868,7 @@ Http::shutdown()
             }
         }
 
-        $requestParams = array_merge(
-            $route?->getPathValues($request) ?? [],
-            $request->getParams(),
-        );
+        $requestParams = $match->arguments ?? [];
 
         /**
          * Abuse labels

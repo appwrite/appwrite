@@ -13,7 +13,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Http;
-use Utopia\Http\Route;
+use Utopia\Http\RouteMatch;
 use Utopia\Locale\Locale;
 use Utopia\System\System;
 use Utopia\Validator\Text;
@@ -287,8 +287,9 @@ Http::shutdown()
     ->inject('utopia')
     ->inject('response')
     ->inject('request')
-    ->inject('route')
-    ->action(function (Http $utopia, Response $response, Request $request, ?Route $route) {
+    ->inject('match')
+    ->action(function (Http $utopia, Response $response, Request $request, ?RouteMatch $match) {
+        $route = $match?->route;
 
         $result = [];
         $path   = APP_STORAGE_CACHE . '/tests.json';
