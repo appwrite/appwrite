@@ -11,6 +11,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -66,6 +67,7 @@ class Upsert extends PresenceAction
             ->param('expiry', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Presence expiry datetime.', true)
             ->param('metadata', [], new JSON(), 'Presence metadata object.', true)
             ->inject('response')
+            ->inject('request')
             ->inject('dbForProject')
             ->inject('user')
             ->inject('authorization')
@@ -82,6 +84,7 @@ class Upsert extends PresenceAction
         ?string $expiry,
         array $metadata,
         Response $response,
+        Request $request,
         Database $dbForProject,
         User $user,
         Authorization $authorization,
@@ -111,12 +114,13 @@ class Upsert extends PresenceAction
             $userInternalId = $fetchedUser->getSequence();
             $resolvedUserId = $fetchedUser->getId();
         }
+        $isGraphQL = $request->getHeader('x-appwrite-source') === 'graphql';
 
         $presenceData = [
             'userInternalId' => $userInternalId,
             'userId' => $resolvedUserId,
             'status' => $status,
-            'source' => 'rest',
+            'source' => $isGraphQL ? 'graphql' : 'rest',
             'expiry' => $expiry ?? DateTime::addSeconds(new \DateTime(), 15 * 60),
             // TODO: finding a way to find hostname
             // 'hostname' => $hostname,

@@ -272,7 +272,9 @@ if (!function_exists('getTelemetry')) {
 }
 
 if (!function_exists('triggerStats')) {
-    function triggerStats(array $event, string $projectId): void{}
+    function triggerStats(array $event, string $projectId): void
+    {
+    }
 }
 
 if (!function_exists('triggerPresenceUsage')) {

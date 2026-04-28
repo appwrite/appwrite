@@ -362,6 +362,7 @@ class Resolvers
         $original = $utopia->getRoute();
         try {
             $request = clone $request;
+            $request->addHeader('x-appwrite-source', 'graphql');
 
             // Drop json content type so post args are used directly.
             if (\str_starts_with($request->getHeader('content-type'), 'application/json')) {
