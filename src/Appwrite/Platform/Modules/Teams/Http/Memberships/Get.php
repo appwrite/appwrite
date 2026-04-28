@@ -82,10 +82,13 @@ class Get extends Action
         $roles = $authorization->getRoles();
         $isPrivilegedUser = $user->isPrivileged($roles);
         $isAppUser = $user->isApp($roles);
+        $isAuthenticatedUser = !$user->isEmpty();
 
         $membershipsPrivacy = array_map(function ($privacy) use ($isPrivilegedUser, $isAppUser) {
             return $privacy || $isPrivilegedUser || $isAppUser;
         }, $membershipsPrivacy);
+
+        $membershipsPrivacy['userId'] = $membershipsPrivacy['userId'] || $isAuthenticatedUser;
 
         $memberUser = !empty(array_filter($membershipsPrivacy))
             ? $dbForProject->getDocument('users', $membership->getAttribute('userId'))

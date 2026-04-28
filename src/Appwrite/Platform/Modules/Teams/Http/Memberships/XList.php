@@ -135,10 +135,13 @@ class XList extends Action
         $roles = $authorization->getRoles();
         $isPrivilegedUser = $user->isPrivileged($roles);
         $isAppUser = $user->isApp($roles);
+        $isAuthenticatedUser = !$user->isEmpty();
 
         $membershipsPrivacy = array_map(function ($privacy) use ($isPrivilegedUser, $isAppUser) {
             return $privacy || $isPrivilegedUser || $isAppUser;
         }, $membershipsPrivacy);
+
+        $membershipsPrivacy['userId'] = $membershipsPrivacy['userId'] || $isAuthenticatedUser;
 
         $memberships = array_map(function ($membership) use ($dbForProject, $team, $membershipsPrivacy) {
             $memberUser = !empty(array_filter($membershipsPrivacy))

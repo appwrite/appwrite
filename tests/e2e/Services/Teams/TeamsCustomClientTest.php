@@ -115,6 +115,71 @@ class TeamsCustomClientTest extends Scope
         $this->assertArrayHasKey('mfa', $response['body']['memberships'][0]);
     }
 
+    public function testJWTListMembershipsUserIdVisibility(): void
+    {
+        $projectId = $this->getProject()['$id'];
+
+        // Disable userId visibility in project privacy settings
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/auth/memberships-privacy', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]), [
+            'userId' => false,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Create a team and invite a new member
+        $teamData = $this->createTeamHelper();
+        $teamUid = $teamData['teamUid'];
+        $memberData = $this->createAndAcceptMembershipHelper($teamUid, $teamData['teamName']);
+        $memberSession = $memberData['session'];
+        $memberUserId = $memberData['userUid'];
+
+        // Obtain a JWT for the member using their session
+        $response = $this->client->call(Client::METHOD_POST, '/account/jwt', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $memberSession,
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $jwt = $response['body']['jwt'];
+
+        // listMemberships via JWT — userId must be present for membership resolution
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-jwt' => $jwt,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $memberships = $response['body']['memberships'];
+        $memberMembership = array_values(array_filter($memberships, fn ($m) => $m['userId'] === $memberUserId));
+        $this->assertNotEmpty($memberMembership, 'userId must be present in JWT listMemberships response even when membershipsUserId privacy is false');
+
+        // getMembership via JWT — userId must also be present
+        $membershipId = $memberData['membershipUid'];
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships/' . $membershipId, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-jwt' => $jwt,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['userId'], 'userId must be present in JWT getMembership response even when membershipsUserId privacy is false');
+
+        // Restore privacy setting
+        $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/auth/memberships-privacy', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]), [
+            'userId' => true,
+        ]);
+    }
+
     public function testTeamsInviteHTMLInjection(): void
     {
         $teamData = $this->createTeamHelper();
