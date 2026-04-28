@@ -153,7 +153,6 @@ import {
   type CanonicalPlanId,
 } from '@/lib/utils/plan-filter'
 import { BillingTab } from '../billing/BillingTab'
-import { ReadonlyOrgBanner } from '../billing/ReadonlyOrgBanner'
 import { ComplianceTab } from '../settings/ComplianceTab'
 import { View as DomainsView } from '../domains/View'
 import { EnterpriseSuccessManager } from '@/components/pages/projects/$projectId/shared/EnterpriseSuccessManager'
@@ -1830,9 +1829,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
             }
             return null
           })()}
-
-        {/* Read-only organization banner (unpaid invoices, suspended, etc.) */}
-        <ReadonlyOrgBanner orgId={orgId} />
 
         {/* Main Content */}
         <div className="flex-1">
