@@ -191,7 +191,7 @@ $http->on(Constant::EVENT_AFTER_RELOAD, function ($server) {
 });
 
 $container->set('bus', function ($register) use ($swooleAdapter) {
-    return $register->get('bus')->setResolver(fn (string $name) => $swooleAdapter->getContainer()->get($name));
+    return $register->get('bus')->setResolver(fn (string $name) => $swooleAdapter->getContext()->get($name));
 }, ['register']);
 
 include __DIR__ . '/controllers/general.php';

@@ -13,6 +13,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Http;
+use Utopia\Http\Route;
 use Utopia\Locale\Locale;
 use Utopia\System\System;
 use Utopia\Validator\Text;
@@ -286,10 +287,10 @@ Http::shutdown()
     ->inject('utopia')
     ->inject('response')
     ->inject('request')
-    ->action(function (Http $utopia, Response $response, Request $request) {
+    ->inject('route')
+    ->action(function (Http $utopia, Response $response, Request $request, ?Route $route) {
 
         $result = [];
-        $route  = $utopia->getResource('route');
         $path   = APP_STORAGE_CACHE . '/tests.json';
         $tests  = (\file_exists($path)) ? \json_decode(\file_get_contents($path), true) : [];
 

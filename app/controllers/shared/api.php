@@ -39,6 +39,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Roles;
 use Utopia\Http\Http;
+use Utopia\Http\Route;
 use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -100,8 +101,8 @@ Http::init()
     ->inject('team')
     ->inject('apiKey')
     ->inject('authorization')
-    ->action(function (Http $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization) {
-        $route = $utopia->getResource('route');
+    ->inject('route')
+    ->action(function (Http $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization, ?Route $route) {
         if ($route === null) {
             throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
         }
@@ -502,17 +503,18 @@ Http::init()
     ->inject('telemetry')
     ->inject('platform')
     ->inject('authorization')
-    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, Messaging $queueForMessaging, AuditContext $auditContext, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Context $usage, Func $queueForFunctions, Mail $queueForMails, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry, array $platform, Authorization $authorization) {
+    ->inject('route')
+    ->inject('matchedPath')
+    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, Messaging $queueForMessaging, AuditContext $auditContext, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Context $usage, Func $queueForFunctions, Mail $queueForMails, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry, array $platform, Authorization $authorization, ?Route $route, string $path) {
 
         $response->setUser($user);
         $request->setUser($user);
 
-        $route = $utopia->getResource('route');
         if ($route === null) {
             throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
         }
 
-        $path = $utopia->getResource('matchedPath');
+
         $databaseType = match (true) {
             str_contains($path, '/documentsdb') => DATABASE_TYPE_DOCUMENTSDB,
             str_contains($path, '/vectorsdb') => DATABASE_TYPE_VECTORSDB,
@@ -811,7 +813,8 @@ Http::shutdown()
     ->inject('bus')
     ->inject('apiKey')
     ->inject('mode')
-    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Audit $publisherForAudits, Context $usage, UsagePublisher $publisherForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor, Bus $bus, ?Key $apiKey, string $mode) use ($parseLabel) {
+    ->inject('route')
+    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Audit $publisherForAudits, Context $usage, UsagePublisher $publisherForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor, Bus $bus, ?Key $apiKey, string $mode, ?Route $route) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
@@ -861,7 +864,6 @@ Http::shutdown()
             }
         }
 
-        $route = $utopia->getResource('route');
         $requestParams = $request->getParams();
 
         /**

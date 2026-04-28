@@ -54,6 +54,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
 use Utopia\Http\Http;
+use Utopia\Http\Route;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Adapter\Sentry;
 use Utopia\Logger\Log;
@@ -847,7 +848,8 @@ Http::init()
     ->inject('authorization')
     ->inject('queueForDeletes')
     ->inject('executionsRetentionCount')
-    ->action(function (Http $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Document $project, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, Reader $geodb, Event $queueForEvents, Bus $bus, Executor $executor, array $platform, callable $isResourceBlocked, string $previewHostname, Document $devKey, ?Key $apiKey, Cors $cors, Authorization $authorization, DeleteEvent $queueForDeletes, int $executionsRetentionCount) {
+    ->inject('route')
+    ->action(function (Http $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Document $project, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, Reader $geodb, Event $queueForEvents, Bus $bus, Executor $executor, array $platform, callable $isResourceBlocked, string $previewHostname, Document $devKey, ?Key $apiKey, Cors $cors, Authorization $authorization, DeleteEvent $queueForDeletes, int $executionsRetentionCount, ?Route $route) {
         /*
         * Appwrite Router
         */
@@ -855,15 +857,12 @@ Http::init()
         $platformHostnames = $platform['hostnames'] ?? [];
         // Only run Router when external domain
         if (!\in_array($hostname, $platformHostnames) || !empty($previewHostname)) {
-            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $log, $queueForEvents, $bus, $executor, $geodb, $isResourceBlocked, $platform, $previewHostname, $authorization, $apiKey, $queueForDeletes, $executionsRetentionCount)) {
-                $utopia->getResource('route')?->label('router', true);
-            }
+            router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $log, $queueForEvents, $bus, $executor, $geodb, $isResourceBlocked, $platform, $previewHostname, $authorization, $apiKey, $queueForDeletes, $executionsRetentionCount);
         }
 
         /*
         * Request format
         */
-        $route = $utopia->getResource('route');
         $request->setRoute($route);
 
         if ($route === null) {
@@ -1147,9 +1146,7 @@ Http::options()
         $platformHostnames = $platform['hostnames'] ?? [];
         // Only run Router when external domain
         if (!in_array($request->getHostname(), $platformHostnames) || !empty($previewHostname)) {
-            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $log, $queueForEvents, $bus, $executor, $geodb, $isResourceBlocked, $platform, $previewHostname, $authorization, $apiKey, $queueForDeletes, $executionsRetentionCount)) {
-                $utopia->getResource('route')?->label('router', true);
-            }
+            router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $log, $queueForEvents, $bus, $executor, $geodb, $isResourceBlocked, $platform, $previewHostname, $authorization, $apiKey, $queueForDeletes, $executionsRetentionCount);
         }
 
         foreach ($cors->headers($request->getOrigin()) as $name => $value) {
@@ -1181,13 +1178,9 @@ Http::error()
     ->inject('bus')
     ->inject('devKey')
     ->inject('authorization')
-    ->action(function (Throwable $error, Http $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, Bus $bus, Document $devKey, Authorization $authorization) {
+    ->inject('route')
+    ->action(function (Throwable $error, Http $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, Bus $bus, Document $devKey, Authorization $authorization, ?Route $route) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
-        try {
-            $route = $utopia->getResource('route');
-        } catch (\Throwable $_th) {
-            $route = null;
-        }
         $class = \get_class($error);
         $code = $error->getCode();
         $message = $error->getMessage();
@@ -1552,9 +1545,7 @@ Http::get('/robots.txt')
             $template = new View(__DIR__ . '/../views/general/robots.phtml');
             $response->text($template->render(false));
         } else {
-            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $log, $queueForEvents, $bus, $executor, $geodb, $isResourceBlocked, $platform, $previewHostname, $authorization, $apiKey, $queueForDeletes, $executionsRetentionCount)) {
-                $utopia->getResource('route')?->label('router', true);
-            }
+            router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $log, $queueForEvents, $bus, $executor, $geodb, $isResourceBlocked, $platform, $previewHostname, $authorization, $apiKey, $queueForDeletes, $executionsRetentionCount);
         }
     });
 
@@ -1586,9 +1577,7 @@ Http::get('/humans.txt')
             $template = new View(__DIR__ . '/../views/general/humans.phtml');
             $response->text($template->render(false));
         } else {
-            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $log, $queueForEvents, $bus, $executor, $geodb, $isResourceBlocked, $platform, $previewHostname, $authorization, $apiKey, $queueForDeletes, $executionsRetentionCount)) {
-                $utopia->getResource('route')?->label('router', true);
-            }
+            router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $log, $queueForEvents, $bus, $executor, $geodb, $isResourceBlocked, $platform, $previewHostname, $authorization, $apiKey, $queueForDeletes, $executionsRetentionCount);
         }
     });
 
