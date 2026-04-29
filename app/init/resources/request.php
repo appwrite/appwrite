@@ -75,9 +75,9 @@ return function (Container $container): void {
         return $register->get('logger');
     }, ['register']);
 
-    $container->set('lock', function (\Redis $redis, Telemetry $telemetry, Database $dbForPlatform, Authorization $authorization, Log $log, ?Logger $logger): Lock {
-        return new Lock($redis, $telemetry, $dbForPlatform, $authorization, $log, $logger);
-    }, ['redis', 'telemetry', 'dbForPlatform', 'authorization', 'log', 'logger']);
+    $container->set('lock', function (\Redis $redis, Telemetry $telemetry, Database $dbForPlatform, Authorization $authorization, Log $log, ?Logger $logger, Document $project): Lock {
+        return new Lock($redis, $telemetry, $dbForPlatform, $authorization, $log, $logger, $project);
+    }, ['redis', 'telemetry', 'dbForPlatform', 'authorization', 'log', 'logger', 'project']);
 
     $container->set('authorization', function () {
         return new Authorization();
