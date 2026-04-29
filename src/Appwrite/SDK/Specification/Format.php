@@ -3,13 +3,13 @@
 namespace Appwrite\SDK\Specification;
 
 use Appwrite\Utopia\Response\Model;
-use Utopia\App;
 use Utopia\Config\Config;
-use Utopia\Route;
+use Utopia\DI\Container;
+use Utopia\Http\Route;
 
 abstract class Format
 {
-    protected App $app;
+    protected Container $container;
 
     /**
      * @var array<Route>
@@ -24,6 +24,7 @@ abstract class Format
     protected array $services;
     protected array $keys;
     protected int $authCount;
+    protected string $platform;
     protected array $params = [
         'name' => '',
         'description' => '',
@@ -39,25 +40,102 @@ abstract class Format
         'license.url' => '',
     ];
 
-    /*
-     * Blacklist to omit the enum types for the given route's parameter
+    /**
+     * @var list<array{namespace: string, methods: list<string>, parameter: string, excludeKeys?: list<string>, exclude?: bool}>
      */
-    protected array $enumBlacklist = [
+    private const array OAUTH_PROVIDER_BLACKLIST = [
         [
-            'namespace' => 'users',
-            'method' => 'getUsage',
-            'parameter' => 'provider'
-        ]
+            'namespace' => 'account',
+            'methods' => [
+                'createOAuth2Session',
+                'createOAuth2Token',
+                'updateMagicURLSession'
+            ],
+            'parameter' => 'provider',
+            'excludeKeys' => [
+                'mock',
+                'mock-unverified'
+            ],
+        ],
+        [
+            'namespace' => 'projects',
+            'methods' => [
+                'updateOAuth2'
+            ],
+            'parameter' => 'provider',
+            'excludeKeys' => [
+                'mock',
+                'mock-unverified'
+            ],
+        ],
     ];
 
-    public function __construct(App $app, array $services, array $routes, array $models, array $keys, int $authCount)
+    /**
+     * @var list<array{namespace: string, methods: list<string>, parameter: string, excludeKeys?: list<string>, exclude?: bool}>
+     */
+    private const array PROVIDER_USAGE_BLACKLIST = [
+        [
+            'namespace' => 'users',
+            'methods' => [
+                'getUsage'
+            ],
+            'parameter' => 'provider',
+            'exclude' => true, /* fully excluded */
+        ],
+    ];
+
+    /**
+     * @var list<array{namespace: string, methods: list<string>, parameter: string, required?: bool, nullable?: bool}>
+     */
+    private const array REQUEST_PARAMETER_OVERRIDES = [
+        [
+            'namespace' => 'project',
+            'methods' => [
+                'createWebPlatform',
+                'updateWebPlatform',
+            ],
+            'parameter' => 'hostname',
+            'required' => true,
+        ],
+    ];
+
+    protected array $enumBlacklist = [];
+
+    public function __construct(Container $container, array $services, array $routes, array $models, array $keys, int $authCount, string $platform)
     {
-        $this->app = $app;
+        $this->container = $container;
         $this->services = $services;
         $this->routes = $routes;
         $this->models = $models;
         $this->keys = $keys;
         $this->authCount = $authCount;
+        $this->platform = $platform;
+
+        $this->enumBlacklist = $this->buildEnumBlacklist();
+    }
+
+    protected function buildEnumBlacklist(): array
+    {
+        $blacklist = [];
+
+        foreach ([...self::OAUTH_PROVIDER_BLACKLIST, ...self::PROVIDER_USAGE_BLACKLIST] as $config) {
+            foreach ($config['methods'] as $method) {
+                $entry = [
+                    'namespace' => $config['namespace'],
+                    'method' => $method,
+                    'parameter' => $config['parameter'],
+                ];
+                if (isset($config['excludeKeys'])) {
+                    $entry['excludeKeys'] = $config['excludeKeys'];
+                }
+                if (isset($config['exclude'])) {
+                    $entry['exclude'] = $config['exclude'];
+                }
+                $blacklist[] = $entry;
+            }
+        }
+
+        return $blacklist;
     }
 
     /**
@@ -110,8 +188,252 @@ abstract class Format
         return $this->params[$key] ?? $default;
     }
 
-    protected function getEnumName(string $service, string $method, string $param): ?string
+    /**
+     * Set Services.
+     *
+     * Set services value
+     *
+     * @param array $services
+     *
+     * @return self
+     */
+    public function setServices(array $services): self
     {
+        $this->services = $services;
+        return $this;
+    }
+
+    /**
+     * Set Services.
+     *
+     * Get services value
+     *
+     */
+    public function getServices(): array
+    {
+        return $this->services;
+    }
+
+    /**
+     * @param list<string> $injections
+     * @return array<string, mixed>
+     */
+    protected function getResources(array $injections): array
+    {
+        $resources = [];
+
+        foreach ($injections as $name) {
+            $resources[$name] = $this->container->get($name);
+        }
+
+        return $resources;
+    }
+
+    protected function getValidator(array $param): mixed
+    {
+        return \is_callable($param['validator'])
+            ? ($param['validator'])(...$this->getResources($param['injections'] ?? []))
+            : $param['validator'];
+    }
+
+    protected function getDescriptionContents(?string $description): string
+    {
+        if ($description === null || $description === '') {
+            return '';
+        }
+
+        if (!\str_ends_with($description, '.md')) {
+            return $description;
+        }
+
+        $contents = @\file_get_contents($description);
+
+        if ($contents === false) {
+            throw new \RuntimeException('Documentation file not found or unreadable: ' . $description);
+        }
+
+        return $contents;
+    }
+
+    /**
+     * @param array<Model> $models
+     * @return array<string, mixed>|null
+     */
+    protected function getDiscriminator(array $models, string $refPrefix): ?array
+    {
+        if (\count($models) < 2) {
+            return null;
+        }
+
+        $candidateKeys = \array_keys($models[0]->conditions);
+
+        foreach (\array_slice($models, 1) as $model) {
+            $candidateKeys = \array_values(\array_intersect($candidateKeys, \array_keys($model->conditions)));
+        }
+
+        if (empty($candidateKeys)) {
+            return null;
+        }
+
+        foreach ($candidateKeys as $key) {
+            $mapping = [];
+            $isValid = true;
+
+            foreach ($models as $model) {
+                $rules = $model->getRules();
+                $condition = $model->conditions[$key] ?? null;
+
+                if (!isset($rules[$key]) || ($rules[$key]['required'] ?? false) !== true) {
+                    $isValid = false;
+                    break;
+                }
+
+                if (!\is_array($condition)) {
+                    if (!\is_scalar($condition)) {
+                        $isValid = false;
+                        break;
+                    }
+
+                    $values = [$condition];
+                } else {
+                    if ($condition === []) {
+                        $isValid = false;
+                        break;
+                    }
+
+                    $values = $condition;
+                    $hasInvalidValue = false;
+
+                    foreach ($values as $value) {
+                        if (!\is_scalar($value)) {
+                            $hasInvalidValue = true;
+                            break;
+                        }
+                    }
+
+                    if ($hasInvalidValue) {
+                        $isValid = false;
+                        break;
+                    }
+                }
+
+                if (isset($rules[$key]['enum']) && \is_array($rules[$key]['enum'])) {
+                    $values = \array_values(\array_filter(
+                        $values,
+                        fn (mixed $value) => \in_array($value, $rules[$key]['enum'], true)
+                    ));
+                }
+
+                if ($values === []) {
+                    $isValid = false;
+                    break;
+                }
+
+                $ref = $refPrefix . $model->getType();
+
+                foreach ($values as $value) {
+                    $mappingKey = \is_bool($value) ? ($value ? 'true' : 'false') : (string) $value;
+
+                    if (isset($mapping[$mappingKey]) && $mapping[$mappingKey] !== $ref) {
+                        $isValid = false;
+                        break;
+                    }
+
+                    $mapping[$mappingKey] = $ref;
+                }
+
+                if (!$isValid) {
+                    break;
+                }
+            }
+
+            if (!$isValid || $mapping === []) {
+                continue;
+            }
+
+            return [
+                'propertyName' => $key,
+                'mapping' => $mapping,
+            ];
+        }
+
+        // Single-key failed — try compound discriminator
+        return $this->getCompoundDiscriminator($models, $refPrefix);
+    }
+
+    /**
+     * @param array<Model> $models
+     * @return array<string, mixed>|null
+     */
+    private function getCompoundDiscriminator(array $models, string $refPrefix): ?array
+    {
+        $allKeys = [];
+        foreach ($models as $model) {
+            foreach (\array_keys($model->conditions) as $key) {
+                if (!\in_array($key, $allKeys, true)) {
+                    $allKeys[] = $key;
+                }
+            }
+        }
+
+        if (\count($allKeys) < 2) {
+            return null;
+        }
+
+        $primaryKey = $allKeys[0];
+        $primaryMapping = [];
+        $compoundMapping = [];
+
+        foreach ($models as $model) {
+            $rules = $model->getRules();
+            $conditions = [];
+
+            foreach ($model->conditions as $key => $condition) {
+                if (!isset($rules[$key]) || ($rules[$key]['required'] ?? false) !== true) {
+                    return null;
+                }
+
+                if (!\is_scalar($condition)) {
+                    return null;
+                }
+
+                $conditions[$key] = \is_bool($condition) ? ($condition ? 'true' : 'false') : (string) $condition;
+            }
+
+            if (empty($conditions)) {
+                return null;
+            }
+
+            $ref = $refPrefix . $model->getType();
+            $compoundMapping[$ref] = $conditions;
+
+            // Best-effort single-key mapping — last model with this value wins (fallback)
+            if (isset($conditions[$primaryKey])) {
+                $primaryMapping[$conditions[$primaryKey]] = $ref;
+            }
+        }
+
+        // Verify compound uniqueness
+        $seen = [];
+        foreach ($compoundMapping as $conditions) {
+            $sig = \json_encode($conditions, JSON_THROW_ON_ERROR);
+            if (isset($seen[$sig])) {
+                return null;
+            }
+            $seen[$sig] = true;
+        }
+
+        return \array_filter([
+            'propertyName' => $primaryKey,
+            'mapping' => !empty($primaryMapping) ? $primaryMapping : null,
+            'x-propertyNames' => $allKeys,
+            'x-mapping' => $compoundMapping,
+        ]);
+    }
+
+    protected function getRequestEnumName(string $service, string $method, string $param): ?string
+    {
+        /* `$service` is `$namespace` */
         switch ($service) {
             case 'proxy':
                 switch ($method) {
@@ -168,16 +490,24 @@ abstract class Format
                         return 'CreditCard';
                     case 'getFlag':
                         return  'Flag';
+                    case 'getScreenshot':
+                        switch ($param) {
+                            case 'permissions':
+                                return 'BrowserPermission';
+                            case 'output':
+                                return 'ImageFormat';
+                        }
+                        break;
                 }
                 break;
             case 'databases':
                 switch ($method) {
                     case 'getUsage':
+                    case 'listUsage':
                     case 'getCollectionUsage':
-                    case 'getDatabaseUsage':
                         switch ($param) {
                             case 'range':
-                                return 'DatabaseUsageRange';
+                                return 'UsageRange';
                         }
                         break;
                     case 'createRelationshipAttribute':
@@ -197,7 +527,78 @@ abstract class Format
                     case 'createIndex':
                         switch ($param) {
                             case 'type':
-                                return 'IndexType';
+                                return 'DatabasesIndexType';
+                            case 'orders':
+                                return 'OrderBy';
+                        }
+                }
+                break;
+            case 'tablesDB':
+                switch ($method) {
+                    case 'getUsage':
+                    case 'listUsage':
+                    case 'getTableUsage':
+                        switch ($param) {
+                            case 'range':
+                                return 'UsageRange';
+                        }
+                        break;
+                    case 'createRelationshipColumn':
+                        switch ($param) {
+                            case 'type':
+                                return 'RelationshipType';
+                            case 'onDelete':
+                                return 'RelationMutate';
+                        }
+                        break;
+                    case 'updateRelationshipColumn':
+                        switch ($param) {
+                            case 'onDelete':
+                                return 'RelationMutate';
+                        }
+                        break;
+                    case 'createIndex':
+                        switch ($param) {
+                            case 'type':
+                                return 'TablesDBIndexType';
+                            case 'orders':
+                                return 'OrderBy';
+                        }
+                }
+                break;
+            case 'documentsDB':
+                switch ($method) {
+                    case 'getUsage':
+                    case 'listUsage':
+                    case 'getCollectionUsage':
+                        switch ($param) {
+                            case 'range':
+                                return 'UsageRange';
+                        }
+                        break;
+                    case 'createIndex':
+                        switch ($param) {
+                            case 'type':
+                                return 'DocumentsDBIndexType';
+                            case 'orders':
+                                return 'OrderBy';
+                        }
+                }
+                break;
+            case 'vectorsDB':
+                switch ($method) {
+                    case 'getUsage':
+                    case 'listUsage':
+                    case 'getCollectionUsage':
+                        switch ($param) {
+                            case 'range':
+                                return 'UsageRange';
+                        }
+                        break;
+                    case 'createIndex':
+                        switch ($param) {
+                            case 'type':
+                                return 'VectorsDBIndexType';
                             case 'orders':
                                 return 'OrderBy';
                         }
@@ -209,7 +610,7 @@ abstract class Format
                     case 'listUsage':
                         switch ($param) {
                             case 'range':
-                                return 'FunctionUsageRange';
+                                return 'UsageRange';
                         }
                         break;
                     case 'createExecution':
@@ -227,7 +628,13 @@ abstract class Format
                     case 'createVcsDeployment':
                         switch ($param) {
                             case 'type':
-                                return 'VCSDeploymentType';
+                                return 'VCSReferenceType';
+                        }
+                        break;
+                    case 'createTemplateDeployment':
+                        switch ($param) {
+                            case 'type':
+                                return 'TemplateReferenceType';
                         }
                         break;
                 }
@@ -244,13 +651,19 @@ abstract class Format
                     case 'listUsage':
                         switch ($param) {
                             case 'range':
-                                return 'SiteUsageRange';
+                                return 'UsageRange';
                         }
                         break;
                     case 'createVcsDeployment':
                         switch ($param) {
                             case 'type':
-                                return 'VCSDeploymentType';
+                                return 'VCSReferenceType';
+                        }
+                        break;
+                    case 'createTemplateDeployment':
+                        switch ($param) {
+                            case 'type':
+                                return 'TemplateReferenceType';
                         }
                         break;
                 }
@@ -296,8 +709,49 @@ abstract class Format
                         break;
                 }
                 break;
+            case 'migrations':
+                switch ($method) {
+                    case 'createAppwriteMigration':
+                    case 'getAppwriteReport':
+                        switch ($param) {
+                            case 'resources':
+                                return 'AppwriteMigrationResource';
+                        }
+                        break;
+                    case 'createFirebaseMigration':
+                    case 'getFirebaseReport':
+                        switch ($param) {
+                            case 'resources':
+                                return 'FirebaseMigrationResource';
+                        }
+                        break;
+                    case 'createSupabaseMigration':
+                    case 'getSupabaseReport':
+                        switch ($param) {
+                            case 'resources':
+                                return 'SupabaseMigrationResource';
+                        }
+                        break;
+                    case 'createNHostMigration':
+                    case 'getNHostReport':
+                        switch ($param) {
+                            case 'resources':
+                                return 'NHostMigrationResource';
+                        }
+                        break;
+                }
+                break;
             case 'project':
                 switch ($method) {
+                    case 'getEmailTemplate':
+                    case 'updateEmailTemplate':
+                        switch ($param) {
+                            case 'templateId':
+                                return 'EmailTemplateType';
+                            case 'locale':
+                                return 'EmailTemplateLocale';
+                        }
+                        break;
                     case 'getUsage':
                         switch ($param) {
                             case 'period':
@@ -310,22 +764,11 @@ abstract class Format
                 switch ($method) {
                     case 'getEmailTemplate':
                     case 'updateEmailTemplate':
-                    case 'deleteEmailTemplate':
                         switch ($param) {
                             case 'type':
                                 return 'EmailTemplateType';
                             case 'locale':
                                 return 'EmailTemplateLocale';
-                        }
-                        break;
-                    case 'getSmsTemplate':
-                    case 'updateSmsTemplate':
-                    case 'deleteSmsTemplate':
-                        switch ($param) {
-                            case 'type':
-                                return 'SmsTemplateType';
-                            case 'locale':
-                                return 'SmsTemplateLocale';
                         }
                         break;
                     case 'createPlatform':
@@ -367,7 +810,7 @@ abstract class Format
                     case 'getBucketUsage':
                         switch ($param) {
                             case 'range':
-                                return 'StorageUsageRange';
+                                return 'UsageRange';
                         }
                         break;
                     case 'getFilePreview':
@@ -385,7 +828,7 @@ abstract class Format
                     case 'getUsage':
                         switch ($param) {
                             case 'range':
-                                return 'UserUsageRange';
+                                return 'UsageRange';
                         }
                         break;
                     case 'createMfaAuthenticator':
@@ -413,7 +856,8 @@ abstract class Format
         }
         return null;
     }
-    public function getEnumKeys(string $service, string $method, string $param): array
+
+    public function getRequestEnumKeys(string $service, string $method, string $param): array
     {
         $values = [];
         switch ($service) {
@@ -440,10 +884,21 @@ abstract class Format
                 }
                 break;
             case 'databases':
+            case 'documentsDB':
+            case 'vectorsDB':
                 switch ($method) {
                     case 'getUsage':
+                    case 'listUsage':
                     case 'getCollectionUsage':
-                    case 'getDatabaseUsage':
+                        // Range Enum Keys
+                        return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
+                }
+                break;
+            case 'tablesDB':
+                switch ($method) {
+                    case 'getUsage':
+                    case 'listUsage':
+                    case 'getTableUsage':
                         // Range Enum Keys
                         return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
                 }
@@ -460,15 +915,8 @@ abstract class Format
                         break;
                 }
                 break;
-            case 'functions':
-                switch ($method) {
-                    case 'getUsage':
-                    case 'listUsage':
-                        // Range Enum Keys
-                        return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
-                }
-                break;
             case 'sites':
+            case 'functions':
                 switch ($method) {
                     case 'getUsage':
                     case 'listUsage':
@@ -504,9 +952,68 @@ abstract class Format
         return $values;
     }
 
+    protected function getRequestParameterConfig(string $service, string $method, string $param, bool $optional, bool $nullable, mixed $default): array
+    {
+        $config = [
+            'required' => !$optional,
+            'nullable' => $nullable,
+        ];
+
+        foreach ($this->getRequestParameterOverrides() as $override) {
+            if (
+                $override['namespace'] !== $service
+                || !\in_array($method, $override['methods'], true)
+                || $override['parameter'] !== $param
+            ) {
+                continue;
+            }
+
+            if (isset($override['required'])) {
+                $config['required'] = $override['required'];
+            }
+            if (isset($override['nullable'])) {
+                $config['nullable'] = $override['nullable'];
+            }
+            break;
+        }
+
+        $config['emitDefault'] = !$config['required'] && !\is_null($default);
+
+        return $config;
+    }
+
+    /**
+     * @return list<array{namespace: string, methods: list<string>, parameter: string, required?: bool, nullable?: bool}>
+     */
+    private function getRequestParameterOverrides(): array
+    {
+        return self::REQUEST_PARAMETER_OVERRIDES;
+    }
+
+    public function getResponseEnumName(string $model, string $param): ?string
+    {
+        if ($param === 'type' && \str_starts_with($model, 'platform') && $model !== 'platformList') {
+            return 'PlatformType';
+        }
+
+        if ($param !== 'status') {
+            return null;
+        }
+
+        return match (true) {
+            $model === 'healthStatus' => 'HealthCheckStatus',
+            str_starts_with($model, 'attribute') => 'AttributeStatus',
+            str_starts_with($model, 'column') => 'ColumnStatus',
+            default => null,
+        };
+    }
+
     protected function getNestedModels(Model $model, array &$usedModels): void
     {
         foreach ($model->getRules() as $rule) {
+            if (($rule['hidden'] ?? false) === true) {
+                continue;
+            }
             if (!in_array($model->getType(), $usedModels)) {
                 continue;
             }
@@ -522,5 +1029,32 @@ abstract class Format
                 }
             }
         }
+    }
+
+    protected function parseDescription(string $description, array $excludedValues): string
+    {
+        if (empty($excludedValues)) {
+            return $description;
+        }
+
+        foreach ($excludedValues as $excludedValue) {
+            // remove from comma-separated list
+            $description = preg_replace(
+                '/,\s*' . preg_quote($excludedValue, '/') . '(?=\s*[,.]|$)/',
+                '',
+                $description
+            );
+            $description = preg_replace(
+                '/(?<=:\s|,\s)' . preg_quote($excludedValue, '/') . '\s*,\s*/',
+                '',
+                $description
+            );
+        }
+
+        // clean up double commas and extra spaces
+        $description = preg_replace('/,\s*,/', ',', $description);
+        $description = preg_replace('/\s+/', ' ', $description);
+
+        return trim($description);
     }
 }

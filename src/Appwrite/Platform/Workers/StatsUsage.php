@@ -4,7 +4,7 @@ namespace Appwrite\Platform\Workers;
 
 use Exception;
 use Throwable;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -18,24 +18,24 @@ class StatsUsage extends Action
     /**
      * In memory per project metrics calculation
      */
-    private array $stats = [];
-    private int $lastTriggeredTime = 0;
-    private int $keys = 0;
-    private const INFINITY_PERIOD = '_inf_';
-    private const BATCH_SIZE_DEVELOPMENT = 1;
-    private const BATCH_SIZE_PRODUCTION = 10_000;
+    protected array $stats = [];
+    protected int $lastTriggeredTime = 0;
+    protected int $keys = 0;
+    protected const INFINITY_PERIOD = '_inf_';
+    protected const BATCH_SIZE_DEVELOPMENT = 1;
+    protected const BATCH_SIZE_PRODUCTION = 10_000;
 
     /**
     * Stats for batch write separated per project
     * @var array
     */
-    private array $projects = [];
+    protected array $projects = [];
 
     /**
      * Array of stat documents to batch write to logsDB
      * @var array
      */
-    private array $statDocuments = [];
+    protected array $statDocuments = [];
 
     protected Registry $register;
 
@@ -47,6 +47,8 @@ class StatsUsage extends Action
      */
     protected array $skipBaseMetrics = [
         METRIC_DATABASES => true,
+        METRIC_DATABASES_DOCUMENTSDB => true,
+        METRIC_DATABASES_VECTORSDB => true,
         METRIC_BUCKETS => true,
         METRIC_USERS => true,
         METRIC_FUNCTIONS => true,
@@ -66,7 +68,13 @@ class StatsUsage extends Action
         METRIC_BUILDS => true,
         METRIC_COLLECTIONS => true,
         METRIC_DOCUMENTS => true,
+        METRIC_COLLECTIONS_DOCUMENTSDB => true,
+        METRIC_DOCUMENTS_DOCUMENTSDB => true,
+        METRIC_COLLECTIONS_VECTORSDB => true,
+        METRIC_DOCUMENTS_VECTORSDB => true,
         METRIC_DATABASES_STORAGE => true,
+        METRIC_DATABASES_STORAGE_DOCUMENTSDB => true,
+        METRIC_DATABASES_STORAGE_VECTORSDB => true,
     ];
 
     /**
@@ -85,6 +93,12 @@ class StatsUsage extends Action
         '.databases.storage'
     ];
 
+    public const DATABASE_PREFIXES = [
+        DATABASE_TYPE_LEGACY,
+        DATABASE_TYPE_TABLESDB,
+        DATABASE_TYPE_DOCUMENTSDB,
+    ];
+
     /**
      * @var callable(): Database
      */
@@ -101,7 +115,7 @@ class StatsUsage extends Action
         return 'stats-usage';
     }
 
-    private function getBatchSize(): int
+    protected function getBatchSize(): int
     {
         return System::getEnv('_APP_ENV', 'development') === 'development'
             ? self::BATCH_SIZE_DEVELOPMENT
@@ -126,7 +140,7 @@ class StatsUsage extends Action
 
     /**
      * @param Message $message
-     * @param callable(): Database $getProjectDB
+     * @param callable(Document): Database $getProjectDB
      * @param callable(): Database $getLogsDB
      * @param Registry $register
      * @return void
@@ -137,7 +151,7 @@ class StatsUsage extends Action
     {
         $this->getLogsDB = $getLogsDB;
         $this->register = $register;
-        $payload = $message->getPayload() ?? [];
+        $payload = $message->getPayload();
         if (empty($payload)) {
             throw new Exception('Missing payload');
         }
@@ -146,6 +160,11 @@ class StatsUsage extends Action
         $aggregationInterval = (int) System::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', '20');
         $project = new Document($payload['project'] ?? []);
         $projectId = $project->getSequence();
+
+        // Get database type from context
+        $databaseContext = $payload['context']['database'] ?? null;
+        $databaseType = $databaseContext ? (new Document($databaseContext))->getAttribute('type', '') : '';
+
         foreach ($payload['reduce'] ?? [] as $document) {
             if (empty($document)) {
                 continue;
@@ -155,12 +174,13 @@ class StatsUsage extends Action
                 project: $project,
                 document: new Document($document),
                 metrics:  $payload['metrics'],
-                getProjectDB: $getProjectDB
+                getProjectDB: $getProjectDB,
+                databaseType: $databaseType
             );
         }
 
         $this->stats[$projectId]['project'] = $project;
-        $this->stats[$projectId]['receivedAt'] = DateTime::now();
+        $this->stats[$projectId]['receivedAt'] = DateTime::format(new \DateTime('@' . $message->getTimestamp()));
         foreach ($payload['metrics'] ?? [] as $metric) {
             $this->keys++;
             if (!isset($this->stats[$projectId]['keys'][$metric['key']])) {
@@ -192,10 +212,11 @@ class StatsUsage extends Action
     * @param Document $project
     * @param Document $document
     * @param array $metrics
-    * @param  callable(): Database $getProjectDB
+    * @param  callable(Document): Database $getProjectDB
+    * @param string $databaseType Database type from context
     * @return void
     */
-    private function reduce(Document $project, Document $document, array &$metrics, callable $getProjectDB): void
+    protected function reduce(Document $project, Document $document, array &$metrics, callable $getProjectDB, string $databaseType = ''): void
     {
         $dbForProject = $getProjectDB($project);
 
@@ -211,38 +232,48 @@ class StatsUsage extends Action
                     }
                     break;
                 case $document->getCollection() === 'databases': // databases
-                    $collections = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{databaseInternalId}', $document->getSequence(), METRIC_DATABASE_ID_COLLECTIONS)));
-                    $documents = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{databaseInternalId}', $document->getSequence(), METRIC_DATABASE_ID_DOCUMENTS)));
+                    $databaseCollectionsMetric = implode('.', array_filter([$databaseType,METRIC_COLLECTIONS]));
+                    $databaseDocumentsMetric = implode('.', array_filter([$databaseType,METRIC_DOCUMENTS]));
+
+                    $databaseIdCollectionsMetric = implode('.', array_filter([$databaseType,METRIC_DATABASE_ID_COLLECTIONS]));
+                    $databaseIdDocumentsMetric = implode('.', array_filter([$databaseType,METRIC_DATABASE_ID_DOCUMENTS]));
+
+                    $collections = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{databaseInternalId}', $document->getSequence(), $databaseIdCollectionsMetric)));
+                    $documents = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{databaseInternalId}', $document->getSequence(), $databaseIdDocumentsMetric)));
                     if (!empty($collections['value'])) {
                         $metrics[] = [
-                            'key' => METRIC_COLLECTIONS,
+                            'key' => $databaseCollectionsMetric,
                             'value' => ($collections['value'] * -1),
                         ];
                     }
 
                     if (!empty($documents['value'])) {
                         $metrics[] = [
-                            'key' => METRIC_DOCUMENTS,
+                            'key' => $databaseDocumentsMetric,
                             'value' => ($documents['value'] * -1),
                         ];
                     }
                     break;
                 case str_starts_with($document->getCollection(), 'database_') && !str_contains($document->getCollection(), 'collection'): //collections
+                    $databaseDocumentsMetric = implode('.', array_filter([$databaseType,METRIC_DOCUMENTS]));
+                    $databaseIdCollectionIdDocumentsMetric = implode('.', array_filter([$databaseType,METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS]));
+                    $databaseIdDocumentsMetric = implode('.', array_filter([$databaseType,METRIC_DATABASE_ID_DOCUMENTS]));
+
                     $parts = explode('_', $document->getCollection());
                     $databaseInternalId = $parts[1] ?? 0;
                     $documents = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace(
                         ['{databaseInternalId}', '{collectionInternalId}'],
                         [$databaseInternalId, $document->getSequence()],
-                        METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS
+                        $databaseIdCollectionIdDocumentsMetric
                     )));
 
                     if (!empty($documents['value'])) {
                         $metrics[] = [
-                            'key' => METRIC_DOCUMENTS,
+                            'key' => $databaseDocumentsMetric,
                             'value' => ($documents['value'] * -1),
                         ];
                         $metrics[] = [
-                            'key' => str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_DOCUMENTS),
+                            'key' => str_replace('{databaseInternalId}', $databaseInternalId, $databaseIdDocumentsMetric),
                             'value' => ($documents['value'] * -1),
                         ];
                     }
@@ -363,7 +394,7 @@ class StatsUsage extends Action
 
     /**
      * Commit stats to DB
-     * @param callable(): Database $getProjectDB
+     * @param callable(Document): Database $getProjectDB
      * @return void
      */
     public function commitToDb(callable $getProjectDB): void
@@ -424,12 +455,40 @@ class StatsUsage extends Action
             try {
                 $dbForProject = $getProjectDB($projectStats['project']);
                 Console::log('Processing batch with ' . count($projectStats['stats']) . ' stats');
-                $dbForProject->createOrUpdateDocumentsWithIncrease('stats', 'value', $projectStats['stats']);
-                Console::success('Batch successfully written to DB');
 
-                unset($this->projects[$sequence]);
+                /**
+                 * Sort by unique index key reduce locks/deadlocks
+                 */
+                usort($projectStats['stats'], function ($a, $b) {
+                    // Metric DESC
+                    $cmp = strcmp($b['metric'], $a['metric']);
+                    if ($cmp !== 0) {
+                        return $cmp;
+                    }
+
+                    // Period ASC
+                    $cmp = strcmp($a['period'], $b['period']);
+                    if ($cmp !== 0) {
+                        return $cmp;
+                    }
+
+                    // Time ASC, NULLs first
+                    if ($a['time'] === null) {
+                        return ($b['time'] === null) ? 0 : -1;
+                    }
+                    if ($b['time'] === null) {
+                        return 1;
+                    }
+
+                    return strcmp($a['time'], $b['time']);
+                });
+
+                $dbForProject->upsertDocumentsWithIncrease('stats', 'value', $projectStats['stats']);
+                Console::success('Batch successfully written to DB');
             } catch (Throwable $e) {
                 Console::error('Error processing stats: ' . $e->getMessage());
+            } finally {
+                unset($this->projects[$sequence]);
             }
         }
 
@@ -445,13 +504,17 @@ class StatsUsage extends Action
         if (array_key_exists($stat->getAttribute('metric'), $this->skipBaseMetrics)) {
             return;
         }
+
         foreach ($this->skipParentIdMetrics as $skipMetric) {
-            if (str_ends_with($stat->getAttribute('metric'), $skipMetric)) {
+            $metricParts = explode('.', $stat->getAttribute('metric'));
+            $metric = implode('.', in_array($metricParts[0], self::DATABASE_PREFIXES) ? array_slice($metricParts, 1) : $metricParts);
+            if (str_ends_with($metric, $skipMetric)) {
                 return;
             }
         }
         $documentClone = clone $stat;
-        $documentClone->setAttribute('$tenant', (int) $project->getSequence());
+        $dbForLogs = ($this->getLogsDB)();
+        $documentClone->setAttribute('$tenant', $project->getSequence());
         $this->statDocuments[] = $documentClone;
     }
 
@@ -468,7 +531,43 @@ class StatsUsage extends Action
 
         try {
             Console::log('Processing batch with ' . count($this->statDocuments) . ' stats');
-            $dbForLogs->createOrUpdateDocumentsWithIncrease(
+
+            /**
+             * Sort by UNIQUE KEY "_key_metric_period_time" ("_tenant","metric" DESC,"period","time")
+             * Here we sort by _tenant as well because of setTenantPerDocument
+             */
+
+            usort($this->statDocuments, function ($a, $b) {
+                // Tenant ASC
+                $cmp = $a['$tenant'] <=> $b['$tenant'];
+                if ($cmp !== 0) {
+                    return $cmp;
+                }
+
+                // Metric DESC
+                $cmp = strcmp($b['metric'], $a['metric']);
+                if ($cmp !== 0) {
+                    return $cmp;
+                }
+
+                // Period ASC
+                $cmp = strcmp($a['period'], $b['period']);
+                if ($cmp !== 0) {
+                    return $cmp;
+                }
+
+                // Time ASC, NULLs first
+                if ($a['time'] === null) {
+                    return ($b['time'] === null) ? 0 : -1;
+                }
+                if ($b['time'] === null) {
+                    return 1;
+                }
+
+                return strcmp($a['time'], $b['time']);
+            });
+
+            $dbForLogs->upsertDocumentsWithIncrease(
                 'stats',
                 'value',
                 $this->statDocuments
@@ -476,6 +575,9 @@ class StatsUsage extends Action
             Console::success('Usage logs pushed to Logs DB');
         } catch (Throwable $th) {
             Console::error($th->getMessage());
+        } finally {
+            // Clear statDocuments to prevent memory accumulation across batches
+            $this->statDocuments = [];
         }
     }
 }

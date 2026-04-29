@@ -11,7 +11,6 @@ class URLTest extends TestCase
     {
         $url = URL::parse('https://appwrite.io:8080/path?query=string&param=value');
 
-        $this->assertIsArray($url);
         $this->assertEquals('https', $url['scheme']);
         $this->assertEquals('appwrite.io', $url['host']);
         $this->assertEquals('8080', $url['port']);
@@ -20,9 +19,16 @@ class URLTest extends TestCase
 
         $url = URL::parse('https://appwrite.io');
 
-        $this->assertIsArray($url);
         $this->assertEquals('https', $url['scheme']);
         $this->assertEquals('appwrite.io', $url['host']);
+        $this->assertEquals(null, $url['port']);
+        $this->assertEquals('', $url['path']);
+        $this->assertEquals('', $url['query']);
+
+        $url = URL::parse('appwrite-callback-project://');
+
+        $this->assertEquals('appwrite-callback-project', $url['scheme']);
+        $this->assertEquals('', $url['host']);
         $this->assertEquals(null, $url['port']);
         $this->assertEquals('', $url['path']);
         $this->assertEquals('', $url['query']);
@@ -38,7 +44,6 @@ class URLTest extends TestCase
             'query' => 'query=string&param=value',
         ]);
 
-        $this->assertIsString($url);
         $this->assertEquals('https://appwrite.io:8080/path?query=string&param=value', $url);
 
         $url = URL::unparse([
@@ -49,7 +54,6 @@ class URLTest extends TestCase
             'query' => 'query=string&param=value',
         ]);
 
-        $this->assertIsString($url);
         $this->assertEquals('https://appwrite.io/path?query=string&param=value', $url);
 
         $url = URL::unparse([
@@ -60,7 +64,6 @@ class URLTest extends TestCase
             'query' => '',
         ]);
 
-        $this->assertIsString($url);
         $this->assertEquals('https://appwrite.io/', $url);
 
         $url = URL::unparse([
@@ -71,7 +74,6 @@ class URLTest extends TestCase
             'fragment' => 'bottom',
         ]);
 
-        $this->assertIsString($url);
         $this->assertEquals('https://appwrite.io/#bottom', $url);
 
         $url = URL::unparse([
@@ -84,15 +86,25 @@ class URLTest extends TestCase
             'fragment' => 'bottom',
         ]);
 
-        $this->assertIsString($url);
         $this->assertEquals('https://eldad:fux@appwrite.io/#bottom', $url);
+
+        $url = URL::unparse([
+            'scheme' => 'https',
+            'user' => '',
+            'pass' => '',
+            'host' => 'appwrite.io',
+            'port' => null,
+            'path' => '',
+            'fragment' => '',
+        ]);
+
+        $this->assertEquals('https://appwrite.io/#', $url);
     }
 
     public function testParseQuery(): void
     {
         $result = URL::parseQuery('param1=value1&param2=value2');
 
-        $this->assertIsArray($result);
         $this->assertEquals(['param1' => 'value1', 'param2' => 'value2'], $result);
     }
 
@@ -100,7 +112,6 @@ class URLTest extends TestCase
     {
         $result = URL::unparseQuery(['param1' => 'value1', 'param2' => 'value2']);
 
-        $this->assertIsString($result);
         $this->assertEquals('param1=value1&param2=value2', $result);
     }
 }

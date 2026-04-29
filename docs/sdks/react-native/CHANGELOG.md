@@ -1,5 +1,56 @@
 # Change log
 
+## 0.24.0
+
+* Added Query.contains, Query.containsAny, and Query.containsAll for enhanced filtering capabilities.
+
+## 0.23.1
+
+* Add `upsert` method to Realtime `Channels` helper class
+* Fix `bignumber.js` bundler conflict by removing direct dependency in favor of transitive dependency from `json-bigint`
+
+## 0.21.0
+
+* Add `queries` parameter to `client.subscribe()` for filtering Realtime events
+* Fix `Roles` enum removed from Teams service; `roles` parameter now accepts `string[]`
+* Fix parameter detection in overloaded methods to check for optional params (Account, Avatars, Graphql)
+
+## 0.20.0
+
+* Add array-based enum parameters (e.g., `permissions: BrowserPermission[]`).
+* Breaking change: `Output` enum has been removed; use `ImageFormat` instead.
+* Add `Channel` helpers for Realtime.
+
+## 0.19.0
+
+* Add `getScreenshot` method to `Avatars` service
+* Add `Theme`, `Timezone` and `Output` enums
+
+## 0.18.0
+
+* Add `total` parameter to list queries allowing skipping counting rows in a table for improved performance
+* Add `Operator` class for atomic modification of rows via update, bulk update, upsert, and bulk upsert operations
+
+## 0.17.1
+
+* Add transaction support for Databases and TablesDB
+
+## 0.16.0
+
+* Deprecate `createVerification` method in `Account` service
+* Add `createEmailVerification` method in `Account` service
+
+## 0.11.0
+
+* Add `incrementDocumentAttribute` and `decrementDocumentAttribute` support to `Databases` service
+* Add `sequence` support to `Document` model
+* Fix autocompletion not working for `Document` model even when generic is passed
+
+## 0.10.1
+
+* Fix URL based methods like `getFileViewURL`, `getFilePreviewURL` etc. by adding the missing `projectId` to searchParams
+* Add `gif` to ImageFormat enum
+
 ## 0.10.0
 
 * Add generate file URL methods like`getFilePreviewURL`, `getFileViewURL` etc.

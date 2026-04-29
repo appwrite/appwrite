@@ -1,21 +1,48 @@
 <?php
 
 use Utopia\Config\Config;
+use Utopia\System\System;
 
 $templateRuntimes = Config::getParam('template-runtimes');
+$allowList = \array_map('trim', \explode(',', System::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
 
-function getRuntimes($runtime, $commands, $entrypoint, $providerRootDirectory, $versionsDenyList = [])
+function getRuntimes($runtimes, $commands, $entrypoint, $providerRootDirectory, $allowList)
 {
-    return array_map(function ($version) use ($runtime, $commands, $entrypoint, $providerRootDirectory) {
+    return array_map(function ($runtime) use ($commands, $entrypoint, $providerRootDirectory) {
         return [
-            'name' => $runtime['name'] . '-' . $version,
+            'name' => $runtime,
             'commands' => $commands,
             'entrypoint' => $entrypoint,
             'providerRootDirectory' => $providerRootDirectory
         ];
-    }, array_filter($runtime['versions'], function ($version) use ($versionsDenyList) {
-        return !in_array($version, $versionsDenyList);
+    }, array_filter($runtimes, function ($runtime) use ($allowList) {
+        return in_array($runtime, $allowList);
     }));
+}
+
+
+class FunctionUseCases
+{
+    public const STARTER = 'starter';
+    public const DATABASES = 'databases';
+    public const AI = 'ai';
+    public const MESSAGING = 'messaging';
+    public const UTILITIES = 'utilities';
+    public const DEV_TOOLS = 'dev-tools';
+    public const AUTH = 'auth';
+
+    public static function getAll(): array
+    {
+        return [
+            self::STARTER,
+            self::DATABASES,
+            self::AI,
+            self::MESSAGING,
+            self::UTILITIES,
+            self::DEV_TOOLS,
+            self::AUTH,
+        ];
+    }
 }
 
 return [
@@ -30,26 +57,28 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'useCases' => ['starter'],
+        'useCases' => [FunctionUseCases::STARTER],
         'runtimes' => [
-            ...getRuntimes($templateRuntimes['NODE'], 'npm install', 'src/main.js', 'node/starter'),
+            ...getRuntimes($templateRuntimes['NODE'], 'npm install', 'src/main.js', 'node/starter', $allowList),
             ...getRuntimes(
                 $templateRuntimes['PYTHON'],
                 'pip install -r requirements.txt',
                 'src/main.py',
-                'python/starter'
+                'python/starter',
+                $allowList
             ),
-            ...getRuntimes($templateRuntimes['DART'], 'dart pub get', 'lib/main.dart', 'dart/starter'),
-            ...getRuntimes($templateRuntimes['GO'], '', 'main.go', 'go/starter'),
+            ...getRuntimes($templateRuntimes['DART'], 'dart pub get', 'lib/main.dart', 'dart/starter', $allowList),
+            ...getRuntimes($templateRuntimes['GO'], '', 'main.go', 'go/starter', $allowList),
             ...getRuntimes(
                 $templateRuntimes['PHP'],
                 'composer install',
                 'src/index.php',
-                'php/starter'
+                'php/starter',
+                $allowList
             ),
-            ...getRuntimes($templateRuntimes['DENO'], 'deno cache src/main.ts', 'src/main.ts', 'deno/starter'),
-            ...getRuntimes($templateRuntimes['BUN'], 'bun install', 'src/main.ts', 'bun/starter'),
-            ...getRuntimes($templateRuntimes['RUBY'], 'bundle install', 'lib/main.rb', 'ruby/starter'),
+            ...getRuntimes($templateRuntimes['DENO'], 'deno cache src/main.ts', 'src/main.ts', 'deno/starter', $allowList),
+            ...getRuntimes($templateRuntimes['BUN'], 'bun install', 'src/main.ts', 'bun/starter', $allowList),
+            ...getRuntimes($templateRuntimes['RUBY'], 'bundle install', 'lib/main.rb', 'ruby/starter', $allowList),
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/starter">file</a>.',
         'vcsProvider' => 'github',
@@ -69,13 +98,14 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'useCases' => ['databases'],
+        'useCases' => [FunctionUseCases::DATABASES],
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
-                'node/query-upstash-vector'
+                'node/query-upstash-vector',
+                $allowList
             )
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/query-upstash-vector">file</a>.',
@@ -114,13 +144,14 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'useCases' => ['databases'],
+        'useCases' => [FunctionUseCases::DATABASES],
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
-                'node/query-redis-labs'
+                'node/query-redis-labs',
+                $allowList
             )
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/query-redis-labs">file</a>.',
@@ -158,13 +189,14 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'useCases' => ['databases'],
+        'useCases' => [FunctionUseCases::DATABASES],
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
-                'node/query-neo4j-auradb'
+                'node/query-neo4j-auradb',
+                $allowList
             )
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/query-neo4j-auradb">file</a>.',
@@ -211,13 +243,14 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'useCases' => ['databases'],
+        'useCases' => [FunctionUseCases::DATABASES],
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
-                'node/query-mongo-atlas'
+                'node/query-mongo-atlas',
+                $allowList
             )
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/query-mongo-atlas">file</a>.',
@@ -249,13 +282,14 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'useCases' => ['databases'],
+        'useCases' => [FunctionUseCases::DATABASES],
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
-                'node/query-neon-postgres'
+                'node/query-neon-postgres',
+                $allowList
             )
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/query-neon-postgres">file</a>.',
@@ -317,31 +351,35 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'useCases' => ['ai'],
+        'useCases' => [FunctionUseCases::AI],
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
-                'node/prompt-chatgpt'
+                'node/prompt-chatgpt',
+                $allowList
             ),
             ...getRuntimes(
                 $templateRuntimes['PYTHON'],
                 'pip install -r requirements.txt',
                 'src/main.py',
-                'python/prompt_chatgpt'
+                'python/prompt_chatgpt',
+                $allowList
             ),
             ...getRuntimes(
                 $templateRuntimes['PHP'],
                 'composer install',
                 'src/index.php',
-                'php/prompt-chatgpt'
+                'php/prompt-chatgpt',
+                $allowList
             ),
             ...getRuntimes(
                 $templateRuntimes['DART'],
                 'dart pub get',
                 'lib/main.dart',
-                'dart/prompt_chatgpt'
+                'dart/prompt_chatgpt',
+                $allowList
             )
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/prompt-chatgpt">file</a>.',
@@ -379,25 +417,28 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'useCases' => ['messaging'],
+        'useCases' => [FunctionUseCases::MESSAGING],
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
                 'npm install && npm run setup',
                 'src/main.js',
-                'node/discord-command-bot'
+                'node/discord-command-bot',
+                $allowList
             ),
             ...getRuntimes(
                 $templateRuntimes['PYTHON'],
                 'pip install -r requirements.txt && python src/setup.py',
                 'src/main.py',
-                'python/discord_command_bot'
+                'python/discord_command_bot',
+                $allowList
             ),
             ...getRuntimes(
                 $templateRuntimes['GO'],
                 '',
                 'main.go',
-                'go/discord-command-bot'
+                'go/discord-command-bot',
+                $allowList
             )
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/discord-command-bot">file</a>.',
@@ -443,13 +484,14 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'useCases' => ['ai'],
+        'useCases' => [FunctionUseCases::AI],
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
-                'node/analyze-with-perspectiveapi'
+                'node/analyze-with-perspectiveapi',
+                $allowList
             )
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/analyze-with-perspectiveapi">file</a>.',
@@ -480,25 +522,28 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'useCases' => ['ai'],
+        'useCases' => [FunctionUseCases::AI],
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
-                'node/censor-with-redact'
+                'node/censor-with-redact',
+                $allowList
             ),
             ...getRuntimes(
                 $templateRuntimes['PYTHON'],
                 'pip install -r requirements.txt',
                 'src/main.py',
-                'python/censor_with_redact'
+                'python/censor_with_redact',
+                $allowList
             ),
             ...getRuntimes(
                 $templateRuntimes['DART'],
                 'dart pub get',
                 'lib/main.dart',
-                'dart/censor_with_redact'
+                'dart/censor_with_redact',
+                $allowList
             )
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/censor-with-redact">file</a>.',
@@ -528,9 +573,9 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'useCases' => ['utilities'],
+        'useCases' => [FunctionUseCases::UTILITIES],
         'runtimes' => [
-            ...getRuntimes($templateRuntimes['NODE'], 'npm install', 'src/main.js', 'node/generate-pdf')
+            ...getRuntimes($templateRuntimes['NODE'], 'npm install', 'src/main.js', 'node/generate-pdf', $allowList)
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/generate-pdf">file</a>.',
         'vcsProvider' => 'github',
@@ -551,13 +596,14 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'useCases' => ['dev-tools'],
+        'useCases' => [FunctionUseCases::DEV_TOOLS],
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
-                'node/github-issue-bot'
+                'node/github-issue-bot',
+                $allowList
             )
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/github-issue-bot">file</a>.',
@@ -595,13 +641,14 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'useCases' => ['utilities'],
+        'useCases' => [FunctionUseCases::UTILITIES],
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
-                'node/url-shortener'
+                'node/url-shortener',
+                $allowList
             )
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/url-shortener">file</a>.',
@@ -635,7 +682,7 @@ return [
                 'type' => 'url'
             ]
         ],
-        'scopes' => ['databases.read', 'databases.write', 'collections.write', 'attributes.write', 'documents.read', 'documents.write']
+        'scopes' => ['databases.read', 'databases.write', 'collections.write', 'tables.write', 'attributes.write', 'columns.write', 'documents.read', 'rows.read', 'documents.write', 'rows.write']
     ],
     [
         'icon' => 'icon-algolia',
@@ -647,25 +694,28 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'useCases' => ['databases'],
+        'useCases' => [FunctionUseCases::DATABASES],
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
-                'node/sync-with-algolia'
+                'node/sync-with-algolia',
+                $allowList
             ),
             ...getRuntimes(
                 $templateRuntimes['PYTHON'],
                 'pip install -r requirements.txt',
                 'src/main.py',
-                'python/sync_with_algolia'
+                'python/sync_with_algolia',
+                $allowList
             ),
             ...getRuntimes(
                 $templateRuntimes['PHP'],
                 'composer install',
                 'src/index.php',
-                'php/sync-with-algolia'
+                'php/sync-with-algolia',
+                $allowList
             )
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/sync-with-algolia">file</a>.',
@@ -717,7 +767,7 @@ return [
                 'type' => 'password'
             ],
         ],
-        'scopes' => ['databases.read', 'collections.read', 'documents.read']
+        'scopes' => ['databases.read', 'collections.read', 'tables.read', 'documents.read', 'rows.read']
     ],
     [
         'icon' => 'icon-meilisearch',
@@ -729,37 +779,42 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'useCases' => ['databases'],
+        'useCases' => [FunctionUseCases::DATABASES],
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
-                'node/sync-with-meilisearch'
+                'node/sync-with-meilisearch',
+                $allowList
             ),
             ...getRuntimes(
                 $templateRuntimes['PYTHON'],
                 'pip install -r requirements.txt',
                 'src/main.py',
-                'python/sync-with-meilisearch'
+                'python/sync-with-meilisearch',
+                $allowList
             ),
             ...getRuntimes(
                 $templateRuntimes['PHP'],
                 'composer install',
                 'src/index.php',
-                'php/sync-with-meilisearch'
+                'php/sync-with-meilisearch',
+                $allowList
             ),
             ...getRuntimes(
                 $templateRuntimes['BUN'],
                 'bun install',
                 'src/main.ts',
-                'bun/sync-with-meilisearch'
+                'bun/sync-with-meilisearch',
+                $allowList
             ),
             ...getRuntimes(
                 $templateRuntimes['RUBY'],
                 'bundle install',
                 'lib/main.rb',
-                'ruby/sync-with-meilisearch'
+                'ruby/sync-with-meilisearch',
+                $allowList
             )
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/sync-with-meilisearch">file</a>.',
@@ -811,7 +866,7 @@ return [
                 'type' => 'text'
             ],
         ],
-        'scopes' => ['databases.read', 'collections.read', 'documents.read']
+        'scopes' => ['databases.read', 'collections.read', 'tables.read', 'documents.read', 'rows.read']
     ],
     [
         'icon' => 'icon-vonage',
@@ -823,43 +878,49 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'useCases' => ['messaging'],
+        'useCases' => [FunctionUseCases::MESSAGING],
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
-                'node/whatsapp-with-vonage'
+                'node/whatsapp-with-vonage',
+                $allowList
             ),
             ...getRuntimes(
                 $templateRuntimes['PYTHON'],
                 'pip install -r requirements.txt',
                 'src/main.py',
-                'python/whatsapp_with_vonage'
+                'python/whatsapp_with_vonage',
+                $allowList
             ),
             ...getRuntimes(
                 $templateRuntimes['DART'],
                 'dart pub get',
                 'lib/main.dart',
-                'dart/whatsapp-with-vonage'
+                'dart/whatsapp-with-vonage',
+                $allowList
             ),
             ...getRuntimes(
                 $templateRuntimes['PHP'],
                 'composer install',
                 'src/index.php',
-                'php/whatsapp-with-vonage'
+                'php/whatsapp-with-vonage',
+                $allowList
             ),
             ...getRuntimes(
                 $templateRuntimes['BUN'],
                 'bun install',
                 'src/main.ts',
-                'bun/whatsapp-with-vonage'
+                'bun/whatsapp-with-vonage',
+                $allowList
             ),
             ...getRuntimes(
                 $templateRuntimes['RUBY'],
                 'bundle install',
                 'lib/main.rb',
-                'ruby/whatsapp-with-vonage'
+                'ruby/whatsapp-with-vonage',
+                $allowList
             ),
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/whatsapp-with-vonage">file</a>.',
@@ -910,13 +971,14 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'useCases' => ['messaging'],
+        'useCases' => [FunctionUseCases::MESSAGING],
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
-                'node/push-notification-with-fcm'
+                'node/push-notification-with-fcm',
+                $allowList
             )
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/push-notification-with-fcm">file</a>.',
@@ -967,25 +1029,28 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'useCases' => ['utilities'],
+        'useCases' => [FunctionUseCases::UTILITIES],
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
-                'node/email-contact-form'
+                'node/email-contact-form',
+                $allowList
             ),
             ...getRuntimes(
                 $templateRuntimes['PYTHON'],
                 'pip install -r requirements.txt',
                 'src/main.py',
-                'python/email_contact_form'
+                'python/email_contact_form',
+                $allowList
             ),
             ...getRuntimes(
                 $templateRuntimes['PHP'],
                 'composer install',
                 'src/index.php',
-                'php/email-contact-form'
+                'php/email-contact-form',
+                $allowList
             )
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/email-contact-form">file</a>.',
@@ -1051,13 +1116,14 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'useCases' => ['utilities'],
+        'useCases' => [FunctionUseCases::UTILITIES],
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
-                'node/subscriptions-with-stripe'
+                'node/subscriptions-with-stripe',
+                $allowList
             )
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/subscriptions-with-stripe">file</a>.',
@@ -1093,13 +1159,14 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'useCases' => ['utilities'],
+        'useCases' => [FunctionUseCases::UTILITIES],
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
-                'node/payments-with-stripe'
+                'node/payments-with-stripe',
+                $allowList
             )
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/payments-with-stripe">file</a>.',
@@ -1139,7 +1206,7 @@ return [
                 'type' => 'text'
             ]
         ],
-        'scopes' => ['databases.read', 'databases.write', 'collections.write', 'attributes.write', 'documents.read', 'documents.write']
+        'scopes' => ['databases.read', 'databases.write', 'collections.write', 'tables.write', 'attributes.write', 'columns.write', 'documents.read', 'rows.read', 'documents.write', 'rows.write']
     ],
     [
         'icon' => 'icon-chat',
@@ -1151,13 +1218,14 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 30,
-        'useCases' => ['ai'],
+        'useCases' => [FunctionUseCases::AI],
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
-                'node/text-generation-with-huggingface'
+                'node/text-generation-with-huggingface',
+                $allowList
             )
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/text-generation-with-huggingface">file</a>.',
@@ -1186,13 +1254,14 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 30,
-        'useCases' => ['ai'],
+        'useCases' => [FunctionUseCases::AI],
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
-                'node/language-translation-with-huggingface'
+                'node/language-translation-with-huggingface',
+                $allowList
             )
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/language-translation-with-huggingface">file</a>.',
@@ -1221,13 +1290,14 @@ return [
         'events' => ['buckets.*.files.*.create'],
         'cron' => '',
         'timeout' => 15,
-        'useCases' => ['ai'],
+        'useCases' => [FunctionUseCases::AI],
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
                 'npm install && npm run setup',
                 'src/main.js',
-                'node/image-classification-with-huggingface'
+                'node/image-classification-with-huggingface',
+                $allowList
             )
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/image-classification-with-huggingface">file</a>.',
@@ -1268,7 +1338,7 @@ return [
                 'type' => 'password'
             ]
         ],
-        'scopes' => ['databases.read', 'databases.write', 'collections.read', 'collections.write', 'attributes.write', 'documents.read', 'documents.write', 'buckets.read', 'buckets.write', 'files.read']
+        'scopes' => ['databases.read', 'databases.write', 'collections.read', 'tables.read', 'collections.write', 'tables.write', 'attributes.write', 'columns.write', 'documents.read', 'rows.read', 'documents.write', 'rows.write', 'buckets.read', 'buckets.write', 'files.read']
     ],
     [
         'icon' => 'icon-eye',
@@ -1280,13 +1350,14 @@ return [
         'events' => ['buckets.*.files.*.create'],
         'cron' => '',
         'timeout' => 15,
-        'useCases' => ['ai'],
+        'useCases' => [FunctionUseCases::AI],
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
                 'npm install && npm run setup',
                 'src/main.js',
-                'node/object-detection-with-huggingface'
+                'node/object-detection-with-huggingface',
+                $allowList
             )
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/object-detection-with-huggingface">file</a>.',
@@ -1327,7 +1398,7 @@ return [
                 'type' => 'password'
             ]
         ],
-        'scopes' => ['databases.read', 'databases.write', 'collections.read', 'collections.write', 'attributes.write', 'documents.read', 'documents.write', 'buckets.read', 'buckets.write', 'files.read']
+        'scopes' => ['databases.read', 'databases.write', 'collections.read', 'tables.read', 'collections.write', 'tables.write', 'attributes.write', 'columns.write', 'documents.read', 'rows.read', 'documents.write', 'rows.write', 'buckets.read', 'buckets.write', 'files.read']
     ],
     [
         'icon' => 'icon-text',
@@ -1339,13 +1410,14 @@ return [
         'events' => ['buckets.*.files.*.create'],
         'cron' => '',
         'timeout' => 15,
-        'useCases' => ['ai'],
+        'useCases' => [FunctionUseCases::AI],
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
                 'npm install && npm run setup',
                 'src/main.js',
-                'node/speech-recognition-with-huggingface'
+                'node/speech-recognition-with-huggingface',
+                $allowList
             )
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/speech-recognition-with-huggingface">file</a>.',
@@ -1386,7 +1458,7 @@ return [
                 'type' => 'password'
             ]
         ],
-        'scopes' => ['databases.read', 'databases.write', 'collections.read', 'collections.write', 'attributes.write', 'documents.read', 'documents.write', 'buckets.read', 'buckets.write', 'files.read']
+        'scopes' => ['databases.read', 'databases.write', 'collections.read', 'tables.read', 'collections.write', 'tables.write', 'attributes.write', 'columns.write', 'documents.read', 'rows.read', 'documents.write', 'rows.write', 'buckets.read', 'buckets.write', 'files.read']
     ],
     [
         'icon' => 'icon-chat',
@@ -1395,16 +1467,20 @@ return [
         'score' => 5,
         'tagline' => 'Convert text to speech using the Hugging Face inference API.',
         'permissions' => ['any'],
-        'events' => ['databases.*.collections.*.documents.*.create'],
+        'events' => [
+            'databases.*.tables.*.rows.*.create',
+            'databases.*.collections.*.documents.*.create',
+        ],
         'cron' => '',
         'timeout' => 15,
-        'useCases' => ['ai'],
+        'useCases' => [FunctionUseCases::AI],
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
                 'npm install && npm run setup',
                 'src/main.js',
-                'node/text-to-speech-with-huggingface'
+                'node/text-to-speech-with-huggingface',
+                $allowList
             )
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/text-to-speech-with-huggingface">file</a>.',
@@ -1457,13 +1533,14 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 300,
-        'useCases' => ['ai'],
+        'useCases' => [FunctionUseCases::AI],
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
-                'node/generate-with-replicate'
+                'node/generate-with-replicate',
+                $allowList
             )
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/generate-with-replicate">file</a>.',
@@ -1493,13 +1570,14 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 300,
-        'useCases' => ['ai'],
+        'useCases' => [FunctionUseCases::AI],
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
-                'node/generate-with-together-ai'
+                'node/generate-with-together-ai',
+                $allowList
             )
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/generate-with-together-ai">file</a>.',
@@ -1536,13 +1614,14 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'useCases' => ['ai'],
+        'useCases' => [FunctionUseCases::AI],
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
-                'node/chat-with-perplexity-ai'
+                'node/chat-with-perplexity-ai',
+                $allowList
             )
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/chat-with-perplexity-ai">file</a>.',
@@ -1578,13 +1657,14 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 300,
-        'useCases' => ['ai'],
+        'useCases' => [FunctionUseCases::AI],
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
-                'node/generate-with-replicate'
+                'node/generate-with-replicate',
+                $allowList
             )
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/generate-with-replicate">file</a>.',
@@ -1614,13 +1694,14 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 30,
-        'useCases' => ['ai'],
+        'useCases' => [FunctionUseCases::AI],
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
-                'node/sync-with-pinecone'
+                'node/sync-with-pinecone',
+                $allowList
             )
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/sync-with-pinecone">file</a>.',
@@ -1666,7 +1747,7 @@ return [
                 'type' => 'text'
             ]
         ],
-        'scopes' => ['databases.read', 'collections.read', 'documents.read']
+        'scopes' => ['databases.read', 'collections.read', 'tables.read', 'documents.read', 'rows.read']
     ],
     [
         'icon' => 'icon-chip',
@@ -1678,13 +1759,14 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 30,
-        'useCases' => ['ai'],
+        'useCases' => [FunctionUseCases::AI],
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
-                'node/rag-with-langchain'
+                'node/rag-with-langchain',
+                $allowList
             )
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/rag-with-langchain">file</a>.',
@@ -1730,7 +1812,7 @@ return [
                 'type' => 'text'
             ]
         ],
-        'scopes' => ['databases.read', 'collections.read', 'documents.read']
+        'scopes' => ['databases.read', 'collections.read', 'tables.read', 'documents.read', 'rows.read']
     ],
     [
         'icon' => 'icon-chat',
@@ -1742,13 +1824,14 @@ return [
         'cron' => '',
         'events' => [],
         'timeout' => 15,
-        'useCases' => ['ai'],
+        'useCases' => [FunctionUseCases::AI],
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
-                'node/speak-with-elevenlabs'
+                'node/speak-with-elevenlabs',
+                $allowList
             )
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/speak-with-elevenlabs">file</a>.',
@@ -1798,13 +1881,14 @@ return [
         'cron' => '',
         'events' => [],
         'timeout' => 15,
-        'useCases' => ['ai'],
+        'useCases' => [FunctionUseCases::AI],
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
-                'node/speak-with-lmnt'
+                'node/speak-with-lmnt',
+                $allowList
             )
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/speak-with-lmnt">file</a>.',
@@ -1840,13 +1924,14 @@ return [
         'cron' => '',
         'events' => [],
         'timeout' => 15,
-        'useCases' => ['ai'],
+        'useCases' => [FunctionUseCases::AI],
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
-                'node/chat-with-anyscale'
+                'node/chat-with-anyscale',
+                $allowList
             )
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/chat-with-anyscale">file</a>.',
@@ -1882,13 +1967,14 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'useCases' => ['ai'],
+        'useCases' => [FunctionUseCases::AI],
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
                 'npm install && npm run setup',
                 'src/main.js',
-                'node/music-generation-with-huggingface'
+                'node/music-generation-with-huggingface',
+                $allowList
             )
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/music-generation-with-huggingface">file</a>.',
@@ -1925,13 +2011,14 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 300,
-        'useCases' => ['ai'],
+        'useCases' => [FunctionUseCases::AI],
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
-                'node/generate-with-fal-ai'
+                'node/generate-with-fal-ai',
+                $allowList
             )
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/generate-with-fal-ai">file</a>.',
@@ -1961,13 +2048,14 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'useCases' => ['utilities'],
+        'useCases' => [FunctionUseCases::UTILITIES],
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
-                'node/subscriptions-with-lemon-squeezy'
+                'node/subscriptions-with-lemon-squeezy',
+                $allowList
             )
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/subscriptions-with-lemon-squeezy">file</a>.',
@@ -2017,13 +2105,14 @@ return [
         'events' => [],
         'cron' => '',
         'timeout' => 15,
-        'useCases' => ['utilities'],
+        'useCases' => [FunctionUseCases::UTILITIES],
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
                 'npm install',
                 'src/main.js',
-                'node/payments-with-lemon-squeezy'
+                'node/payments-with-lemon-squeezy',
+                $allowList
             )
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/payments-with-lemon-squeezy">file</a>.',
@@ -2075,6 +2164,61 @@ return [
                 'placeholder' => 'abcd...',
                 'required' => true,
                 'type' => 'text'
+            ]
+        ],
+        'scopes' => ['databases.read', 'databases.write', 'collections.write', 'attributes.write', 'documents.read', 'documents.write']
+    ],
+    [
+        'icon' => 'icon-apple',
+        'id' => 'sign-in-with-apple',
+        'name' => 'Sign in with Apple',
+        'score' => 6,
+        'tagline' => 'Use native Apple sign-in APIs on Apple devices with Appwrite Auth',
+        'permissions' => ['any'],
+        'events' => [],
+        'cron' => '',
+        'timeout' => 15,
+        'useCases' => [FunctionUseCases::AUTH],
+        'runtimes' => [
+            ...getRuntimes($templateRuntimes['DART'], 'dart pub get', 'lib/main.dart', 'dart/sign_in_with_apple', $allowList)
+        ],
+        'instructions' => 'For documentation and instructions, check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/dart/sign_in_with_apple">file</a>.',
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.2.*',
+        'variables' => [
+            [
+                'name' => 'BUNDLE_ID',
+                'description' => 'Bundle ID of the app. <a class="u-bold" target="_blank" href="https://developer.apple.com/documentation/xcode/preparing-your-app-for-distribution/#Set-the-bundle-ID">Learn more</a>.',
+                'value' => '',
+                'placeholder' => 'com.companyname.appname',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'TEAM_ID',
+                'description' => 'Team ID of the Apple Developer account.',
+                'value' => '',
+                'placeholder' => '6K3...5PH',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'KEY_ID',
+                'description' => 'Key ID required to communicate with Apple Developer services. <a class="u-bold" target="_blank" href="https://developer.apple.com/help/account/keys/get-a-key-identifier/">Learn more</a>.',
+                'value' => '',
+                'placeholder' => '9G8...6YF',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'KEY_CONTENTS_ENCODED',
+                'description' => 'Contents of Key required to communicated with Apple Developer services, encoded in Base64. <a class="u-bold" target="_blank" href="https://developer.apple.com/help/account/keys/revoke-edit-and-download-keys">Learn more</a>.',
+                'value' => '',
+                'placeholder' => '7x8aA...Ab7c',
+                'required' => true,
+                'type' => 'password'
             ]
         ],
         'scopes' => ['users.read', 'users.write']

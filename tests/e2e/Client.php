@@ -109,6 +109,20 @@ class Client
     }
 
     /**
+     * Set Response Format
+     *
+     * @param string $value
+     *
+     * @return self $this
+     */
+    public function setResponseFormat(string $value): self
+    {
+        $this->addHeader('X-Appwrite-Response-Format', $value);
+
+        return $this;
+    }
+
+    /**
      * @param bool $status true
      * @return self $this
      */
@@ -171,6 +185,14 @@ class Client
         $responseHeaders    = [];
         $cookies = [];
 
+        if (isset($params['queries'])) {
+            foreach ($params['queries'] as $value) {
+                if (!is_string($value)) {
+                    throw new Exception('Queries must be converted to strings');
+                }
+            }
+        }
+
         $query = match ($headers['content-type']) {
             'application/json' => json_encode($params),
             'multipart/form-data' => $this->flatten($params),
@@ -196,8 +218,9 @@ class Client
         curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36');
         curl_setopt($ch, CURLOPT_HTTPHEADER, $formattedHeaders);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 0);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 15);
-        curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, $header) use (&$responseHeaders, &$cookies) {
+        curl_setopt($ch, CURLOPT_TIMEOUT, 120);
+        curl_setopt($ch, CURLOPT_COOKIEFILE, ''); // enable in-memory RFC 6265 cookie engine
+        curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, $header) use (&$responseHeaders) {
             $len = strlen($header);
             $header = explode(':', $header, 2);
 
@@ -205,18 +228,20 @@ class Client
                 return $len;
             }
 
-            if (strtolower(trim($header[0])) == 'set-cookie') {
-                $parsed = $this->parseCookie((string)trim($header[1]));
-                $name = array_key_first($parsed);
-                $cookies[$name] = $parsed[$name];
-            }
-
             $responseHeaders[strtolower(trim($header[0]))] = trim($header[1]);
 
             return $len;
         });
 
-        if ($method != self::METHOD_GET) {
+
+        if ($method === self::METHOD_HEAD) {
+            curl_setopt($ch, CURLOPT_NOBODY, true); // This is crucial for HEAD requests
+            curl_setopt($ch, CURLOPT_HEADER, false);
+        } else {
+            curl_setopt($ch, CURLOPT_NOBODY, false);
+        }
+
+        if ($method != self::METHOD_GET && $method != self::METHOD_HEAD) {
             curl_setopt($ch, CURLOPT_POSTFIELDS, $query);
         }
 
@@ -229,12 +254,17 @@ class Client
         $responseType   = $responseHeaders['content-type'] ?? '';
         $responseStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-        if ($decode) {
+        foreach (curl_getinfo($ch, CURLINFO_COOKIELIST) as $line) {
+            $parts = explode("\t", $line);
+            $cookies[$parts[5]] = $parts[6] ?? '';
+        }
+
+        if ($decode && $method !== self::METHOD_HEAD) {
             $strpos = strpos($responseType, ';');
             $strpos = \is_bool($strpos) ? \strlen($responseType) : $strpos;
             switch (substr($responseType, 0, $strpos)) {
                 case 'multipart/form-data':
-                    $boundary = \explode('boundary=', $responseHeaders['content-type'] ?? '')[1] ?? '';
+                    $boundary = \explode('boundary=', $responseHeaders['content-type'])[1] ?? '';
                     $multipartResponse = new BodyMultipart($boundary);
                     $multipartResponse->load(\is_bool($responseBody) ? '' : $responseBody);
 
@@ -255,6 +285,9 @@ class Client
                     $json = null;
                     break;
             }
+        } elseif ($method === self::METHOD_HEAD) {
+            // For HEAD requests, always set body to empty string regardless of decode flag
+            $responseBody = '';
         }
 
         if ((curl_errno($ch)/* || 200 != $responseStatus*/)) {
@@ -274,21 +307,6 @@ class Client
             'cookies' => $cookies,
             'body' => $responseBody
         ];
-    }
-
-    /**
-     * Parse Cookie String
-     *
-     * @param string $cookie
-     * @return array
-     */
-    public function parseCookie(string $cookie): array
-    {
-        $cookies = [];
-
-        parse_str(strtr($cookie, ['&' => '%26', '+' => '%2B', ';' => '&']), $cookies);
-
-        return $cookies;
     }
 
     /**

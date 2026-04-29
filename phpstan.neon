@@ -1,7 +1,13 @@
 parameters:
-  level: 8
+  level: 4
+  tmpDir: .phpstan-cache
   paths:
-    - src/Appwrite/Transformation
+    - src
+    - app
+    - bin
+    - tests
+  bootstrapFiles:
+    - app/init/constants.php
   scanDirectories:
     - vendor/swoole/ide-helper
   excludePaths:

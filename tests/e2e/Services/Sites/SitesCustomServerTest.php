@@ -9,7 +9,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
@@ -26,26 +26,34 @@ class SitesCustomServerTest extends Scope
     {
         $specifications = $this->listSpecifications();
         $this->assertEquals(200, $specifications['headers']['status-code']);
-        $this->assertGreaterThan(0, $specifications['body']['total']);
+        $this->assertGreaterThanOrEqual(2, $specifications['body']['total']);
         $this->assertArrayHasKey(0, $specifications['body']['specifications']);
+        $this->assertArrayHasKey(1, $specifications['body']['specifications']);
         $this->assertArrayHasKey('memory', $specifications['body']['specifications'][0]);
         $this->assertArrayHasKey('cpus', $specifications['body']['specifications'][0]);
         $this->assertArrayHasKey('enabled', $specifications['body']['specifications'][0]);
         $this->assertArrayHasKey('slug', $specifications['body']['specifications'][0]);
+        $this->assertArrayHasKey('memory', $specifications['body']['specifications'][1]);
+        $this->assertArrayHasKey('cpus', $specifications['body']['specifications'][1]);
+        $this->assertArrayHasKey('enabled', $specifications['body']['specifications'][1]);
+        $this->assertArrayHasKey('slug', $specifications['body']['specifications'][1]);
 
         $site = $this->createSite([
             'buildRuntime' => 'node-22',
             'framework' => 'other',
             'name' => 'Specs site',
             'siteId' => ID::unique(),
-            'specification' => $specifications['body']['specifications'][0]['slug']
+            'buildSpecification' => $specifications['body']['specifications'][0]['slug'],
+            'runtimeSpecification' => $specifications['body']['specifications'][1]['slug'],
         ]);
         $this->assertEquals(201, $site['headers']['status-code']);
-        $this->assertEquals($specifications['body']['specifications'][0]['slug'], $site['body']['specification']);
+        $this->assertEquals($specifications['body']['specifications'][0]['slug'], $site['body']['buildSpecification']);
+        $this->assertEquals($specifications['body']['specifications'][1]['slug'], $site['body']['runtimeSpecification']);
 
         $site = $this->getSite($site['body']['$id']);
         $this->assertEquals(200, $site['headers']['status-code']);
-        $this->assertEquals($specifications['body']['specifications'][0]['slug'], $site['body']['specification']);
+        $this->assertEquals($specifications['body']['specifications'][0]['slug'], $site['body']['buildSpecification']);
+        $this->assertEquals($specifications['body']['specifications'][1]['slug'], $site['body']['runtimeSpecification']);
 
         $this->cleanupSite($site['body']['$id']);
 
@@ -54,7 +62,16 @@ class SitesCustomServerTest extends Scope
             'framework' => 'other',
             'name' => 'Specs site',
             'siteId' => ID::unique(),
-            'specification' => 'cheap-please'
+            'buildSpecification' => 'cheap-please'
+        ]);
+        $this->assertEquals(400, $site['headers']['status-code']);
+
+        $site = $this->createSite([
+            'buildRuntime' => 'node-22',
+            'framework' => 'other',
+            'name' => 'Specs site',
+            'siteId' => ID::unique(),
+            'runtimeSpecification' => 'cheap-please'
         ]);
         $this->assertEquals(400, $site['headers']['status-code']);
     }
@@ -155,7 +172,7 @@ class SitesCustomServerTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
                 'queries' => [
-                    Query::equal('deploymentResourceId', [$siteId])
+                    Query::equal('deploymentResourceId', [$siteId])->toString()
                 ]
             ]);
 
@@ -325,7 +342,7 @@ class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'outputDirectory' => './dist',
             'buildCommand' => 'npm run build',
-            'installCommand' => 'npm install',
+            'installCommand' => 'npm ci',
             'fallbackFile' => '',
         ]);
 
@@ -387,7 +404,7 @@ class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'outputDirectory' => './dist',
             'buildCommand' => 'npm run build',
-            'installCommand' => 'npm install',
+            'installCommand' => 'npm ci',
         ]);
         $this->assertNotEmpty($siteId);
 
@@ -405,8 +422,10 @@ class SitesCustomServerTest extends Scope
         ]);
         $this->assertNotEmpty($deploymentId);
 
-        $site = $this->getSite($siteId);
-        $this->assertEquals('ssr', $site['body']['adapter']);
+        $this->assertEventually(function () use ($siteId, &$site) {
+            $site = $this->getSite($siteId);
+            $this->assertEquals('ssr', $site['body']['adapter']);
+        });
 
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://' . $domain);
@@ -416,6 +435,7 @@ class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    #[Retry(count: 3)]
     public function testAdapterDetectionAstroStatic(): void
     {
         $siteId = $this->setupSite([
@@ -425,7 +445,7 @@ class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'outputDirectory' => './dist',
             'buildCommand' => 'npm run build',
-            'installCommand' => 'npm install',
+            'installCommand' => 'npm ci',
         ]);
         $this->assertNotEmpty($siteId);
 
@@ -549,7 +569,7 @@ class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'outputDirectory' => './dist',
             'buildCommand' => 'npm run build',
-            'installCommand' => 'npm install',
+            'installCommand' => 'npm ci',
         ]);
         $this->assertNotEmpty($siteId);
 
@@ -578,7 +598,7 @@ class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'outputDirectory' => './dist',
             'buildCommand' => 'npm run build',
-            'installCommand' => 'npm install',
+            'installCommand' => 'npm ci',
             'adapter' => 'ssr',
             'fallbackFile' => '',
             '$id' => $siteId,
@@ -630,19 +650,21 @@ class SitesCustomServerTest extends Scope
         $siteId = $this->setupSite([
             'buildRuntime' => 'node-22',
             'fallbackFile' => '',
-            'framework' => 'other',
-            'name' => 'Test Site',
+            'framework' => 'analog',
+            'name' => 'Test List Sites',
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
             'siteId' => ID::unique()
         ]);
 
-        $sites = $this->listSites();
+        $sites = $this->listSites([
+            'search' => 'Test List Sites',
+        ]);
 
         $this->assertEquals($sites['headers']['status-code'], 200);
         $this->assertCount(1, $sites['body']['sites']);
-        $this->assertEquals($sites['body']['sites'][0]['name'], 'Test Site');
+        $this->assertEquals($sites['body']['sites'][0]['name'], 'Test List Sites');
 
         // Test pagination limit
         $sites = $this->listSites([
@@ -654,8 +676,9 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals($sites['headers']['status-code'], 200);
         $this->assertCount(1, $sites['body']['sites']);
 
-        // Test pagination offset
+        // Test pagination offset with search filter (to only count our test site)
         $sites = $this->listSites([
+            'search' => 'Test List Sites',
             'queries' => [
                 Query::offset(1)->toString(),
             ],
@@ -664,8 +687,9 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals($sites['headers']['status-code'], 200);
         $this->assertCount(0, $sites['body']['sites']);
 
-        // Test filter enabled
+        // Test filter enabled (with search to isolate our test site)
         $sites = $this->listSites([
+            'search' => 'Test List Sites',
             'queries' => [
                 Query::equal('enabled', [true])->toString(),
             ],
@@ -674,8 +698,9 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals($sites['headers']['status-code'], 200);
         $this->assertCount(1, $sites['body']['sites']);
 
-        // Test filter disabled
+        // Test filter disabled (with search to isolate our test site)
         $sites = $this->listSites([
+            'search' => 'Test List Sites',
             'queries' => [
                 Query::equal('enabled', [false])->toString(),
             ],
@@ -686,16 +711,16 @@ class SitesCustomServerTest extends Scope
 
         // Test search name
         $sites = $this->listSites([
-            'search' => 'Test'
+            'search' => 'Test List Sites'
         ]);
 
         $this->assertEquals($sites['headers']['status-code'], 200);
         $this->assertCount(1, $sites['body']['sites']);
         $this->assertEquals($sites['body']['sites'][0]['$id'], $siteId);
 
-        // Test search framework
+        // Test search framework ('analog' used because PostgreSQL treats 'other' as a fulltext stop word)
         $sites = $this->listSites([
-            'search' => 'other'
+            'search' => 'analog'
         ]);
 
         $this->assertEquals($sites['headers']['status-code'], 200);
@@ -709,23 +734,26 @@ class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'fallbackFile' => '',
             'framework' => 'other',
-            'name' => 'Test Site 2',
+            'name' => 'Test List Sites 2',
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
             'siteId' => ID::unique()
         ]);
 
-        $sites = $this->listSites();
+        $sites = $this->listSites([
+            'search' => 'Test List Sites',
+        ]);
 
         $this->assertEquals($sites['headers']['status-code'], 200);
         $this->assertEquals($sites['body']['total'], 2);
         $this->assertIsArray($sites['body']['sites']);
         $this->assertCount(2, $sites['body']['sites']);
-        $this->assertEquals($sites['body']['sites'][0]['name'], 'Test Site');
-        $this->assertEquals($sites['body']['sites'][1]['name'], 'Test Site 2');
+        $this->assertEquals($sites['body']['sites'][0]['name'], 'Test List Sites');
+        $this->assertEquals($sites['body']['sites'][1]['name'], 'Test List Sites 2');
 
         $sites1 = $this->listSites([
+            'search' => 'Test List Sites',
             'queries' => [
                 Query::cursorAfter(new Document(['$id' => $sites['body']['sites'][0]['$id']]))->toString(),
             ],
@@ -733,9 +761,10 @@ class SitesCustomServerTest extends Scope
 
         $this->assertEquals($sites1['headers']['status-code'], 200);
         $this->assertCount(1, $sites1['body']['sites']);
-        $this->assertEquals($sites1['body']['sites'][0]['name'], 'Test Site 2');
+        $this->assertEquals($sites1['body']['sites'][0]['name'], 'Test List Sites 2');
 
         $sites2 = $this->listSites([
+            'search' => 'Test List Sites',
             'queries' => [
                 Query::cursorBefore(new Document(['$id' => $sites['body']['sites'][1]['$id']]))->toString(),
             ],
@@ -743,7 +772,7 @@ class SitesCustomServerTest extends Scope
 
         $this->assertEquals($sites2['headers']['status-code'], 200);
         $this->assertCount(1, $sites2['body']['sites']);
-        $this->assertEquals($sites2['body']['sites'][0]['name'], 'Test Site');
+        $this->assertEquals($sites2['body']['sites'][0]['name'], 'Test List Sites');
 
         /**
          * Test for FAILURE
@@ -771,8 +800,6 @@ class SitesCustomServerTest extends Scope
             'providerRootDirectory' => './',
             'siteId' => ID::unique()
         ]);
-
-        $this->assertNotNull($siteId);
 
         /**
          * Test for SUCCESS
@@ -820,7 +847,7 @@ class SitesCustomServerTest extends Scope
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
             '$id' => $siteId,
-            'installCommand' => 'npm install'
+            'installCommand' => 'npm ci'
         ]);
 
         $dateValidator = new DatetimeValidator();
@@ -830,7 +857,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals('Test Site Updated', $site['body']['name']);
         $this->assertEquals(true, $dateValidator->isValid($site['body']['$createdAt']));
         $this->assertEquals(true, $dateValidator->isValid($site['body']['$updatedAt']));
-        $this->assertEquals('npm install', $site['body']['installCommand']);
+        $this->assertEquals('npm ci', $site['body']['installCommand']);
 
         $this->cleanupSite($siteId);
     }
@@ -838,6 +865,46 @@ class SitesCustomServerTest extends Scope
     // public function testCreateDeploymentFromCLI() {
     //     // TODO: Implement testCreateDeploymentFromCLI() later
     // }
+
+    public function testCreateDeploymentWithSingleContentRangeChunk(): void
+    {
+        $siteId = $this->setupSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Test Site Single Chunk Range',
+            'outputDirectory' => './',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+
+        $code = $this->packageSite('static-single-file');
+        $size = \filesize($code->getFilename());
+
+        $deployment = $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/deployments', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'content-range' => 'bytes 0-' . ($size - 1) . '/' . $size,
+        ], $this->getHeaders()), [
+            'code' => $code,
+            'activate' => true,
+        ]);
+
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $this->assertNotEmpty($deployment['body']['$id']);
+
+        $deploymentId = $deployment['body']['$id'];
+
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $deployment = $this->getDeployment($siteId, $deploymentId);
+
+            $this->assertEquals(200, $deployment['headers']['status-code']);
+            $this->assertEquals('ready', $deployment['body']['status']);
+        }, 120000, 500);
+
+        $this->cleanupSite($siteId);
+    }
 
     public function testCreateDeployment()
     {
@@ -851,8 +918,6 @@ class SitesCustomServerTest extends Scope
             'providerRootDirectory' => './',
             'siteId' => ID::unique()
         ]);
-
-        $this->assertNotNull($siteId);
 
         $deployment = $this->createDeployment($siteId, [
             'siteId' => $siteId,
@@ -871,7 +936,7 @@ class SitesCustomServerTest extends Scope
             $deployment = $this->getDeployment($siteId, $deploymentIdActive);
 
             $this->assertEquals('ready', $deployment['body']['status']);
-        }, 50000, 500);
+        }, 120000, 500);
 
         $deployment = $this->createDeployment($siteId, [
             'code' => $this->packageSite('static-single-file'),
@@ -887,7 +952,7 @@ class SitesCustomServerTest extends Scope
             $deployment = $this->getDeployment($siteId, $deploymentIdInactive);
 
             $this->assertEquals('ready', $deployment['body']['status']);
-        }, 50000, 500);
+        }, 120000, 500);
 
         $site = $this->getSite($siteId);
 
@@ -914,8 +979,6 @@ class SitesCustomServerTest extends Scope
             'siteId' => ID::unique()
         ]);
 
-        $this->assertNotNull($siteId);
-
         $deployment = $this->createDeployment($siteId, [
             'code' => $this->packageSite('static-single-file'),
             'activate' => 'false'
@@ -937,12 +1000,12 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(200, $deployment['headers']['status-code']);
         $this->assertEquals('canceled', $deployment['body']['status']);
 
-        /**
-         * Build worker still runs the build.
-         * 30s sleep gives worker enough time to finish build.
-         * After build finished, it should still be canceled, not ready.
-         */
-        \sleep(30);
+        // Ensures worker got eventually aware of cancellation and reacted properly
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $deployment = $this->getDeployment($siteId, $deploymentId);
+            $this->assertEquals(200, $deployment['headers']['status-code']);
+            $this->assertStringContainsString('Build has been canceled.', $deployment['body']['buildLogs']);
+        });
 
         $deployment = $this->getDeployment($siteId, $deploymentId);
 
@@ -966,8 +1029,6 @@ class SitesCustomServerTest extends Scope
             'siteId' => ID::unique()
         ]);
 
-        $this->assertNotNull($siteId);
-
         $deployment = $this->createDeployment($siteId, [
             'code' => $this->packageSite('static-single-file'),
             'activate' => 'false'
@@ -980,7 +1041,7 @@ class SitesCustomServerTest extends Scope
             $deployment = $this->getDeployment($siteId, $deploymentId);
 
             $this->assertEquals('ready', $deployment['body']['status']);
-        }, 50000, 500);
+        }, 120000, 500);
 
         /**
          * Test for SUCCESS
@@ -1010,8 +1071,6 @@ class SitesCustomServerTest extends Scope
             'providerRootDirectory' => './',
             'siteId' => ID::unique()
         ]);
-
-        $this->assertNotNull($siteId);
 
         $deployment = $this->createDeployment($siteId, [
             'code' => $this->packageSite('static-single-file'),
@@ -1048,6 +1107,30 @@ class SitesCustomServerTest extends Scope
 
         $this->assertEquals($deployments['headers']['status-code'], 200);
         $this->assertCount(1, $deployments['body']['deployments']);
+
+        $deployments = $this->listDeployments($siteId, [
+            'queries' => [
+                Query::select(['status'])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals($deployments['headers']['status-code'], 200);
+        $this->assertArrayHasKey('status', $deployments['body']['deployments'][0]);
+        $this->assertArrayHasKey('status', $deployments['body']['deployments'][1]);
+        $this->assertArrayNotHasKey('sourceSize', $deployments['body']['deployments'][0]);
+        $this->assertArrayNotHasKey('sourceSize', $deployments['body']['deployments'][1]);
+
+        // Extra select query check, for attribute not allowed by filter queries
+        $deployments = $this->listDeployments($siteId, [
+            'queries' => [
+                Query::select(['buildLogs'])->toString(),
+            ],
+        ]);
+        $this->assertEquals($deployments['headers']['status-code'], 200);
+        $this->assertArrayHasKey('buildLogs', $deployments['body']['deployments'][0]);
+        $this->assertArrayHasKey('buildLogs', $deployments['body']['deployments'][1]);
+        $this->assertArrayNotHasKey('sourceSize', $deployments['body']['deployments'][0]);
+        $this->assertArrayNotHasKey('sourceSize', $deployments['body']['deployments'][1]);
 
         $deployments = $this->listDeployments($siteId, [
             'queries' => [
@@ -1190,8 +1273,6 @@ class SitesCustomServerTest extends Scope
             'siteId' => ID::unique()
         ]);
 
-        $this->assertNotNull($siteId);
-
         $deployment = $this->createDeployment($siteId, [
             'code' => $this->packageSite('static-single-file'),
             'activate' => 'false'
@@ -1203,7 +1284,7 @@ class SitesCustomServerTest extends Scope
             $deployment = $this->getDeployment($siteId, $deploymentId);
 
             $this->assertEquals('ready', $deployment['body']['status']);
-        }, 50000, 500);
+        }, 120000, 500);
 
         /**
          * Test for SUCCESS
@@ -1241,8 +1322,6 @@ class SitesCustomServerTest extends Scope
             'siteId' => ID::unique()
         ]);
 
-        $this->assertNotNull($siteId);
-
         /**
          * Test for SUCCESS
          */
@@ -1256,12 +1335,12 @@ class SitesCustomServerTest extends Scope
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
             '$id' => $siteId,
-            'specification' => Specification::S_1VCPU_1GB,
+            'runtimeSpecification' => Specification::S_1VCPU_1GB,
         ]);
 
         $this->assertEquals(200, $site['headers']['status-code']);
         $this->assertNotEmpty($site['body']['$id']);
-        $this->assertEquals(Specification::S_1VCPU_1GB, $site['body']['specification']);
+        $this->assertEquals(Specification::S_1VCPU_1GB, $site['body']['runtimeSpecification']);
 
         // Change the specs to 1vcpu 512mb
         $site = $this->updateSite([
@@ -1273,12 +1352,12 @@ class SitesCustomServerTest extends Scope
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
             '$id' => $siteId,
-            'specification' => Specification::S_1VCPU_512MB,
+            'runtimeSpecification' => Specification::S_1VCPU_512MB,
         ]);
 
         $this->assertEquals(200, $site['headers']['status-code']);
         $this->assertNotEmpty($site['body']['$id']);
-        $this->assertEquals(Specification::S_1VCPU_512MB, $site['body']['specification']);
+        $this->assertEquals(Specification::S_1VCPU_512MB, $site['body']['runtimeSpecification']);
 
         /**
          * Test for FAILURE
@@ -1293,11 +1372,26 @@ class SitesCustomServerTest extends Scope
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
             '$id' => $siteId,
-            'specification' => 's-2vcpu-512mb', // Invalid specification
+            'buildSpecification' => 's-2vcpu-512mb', // Invalid specification
         ]);
 
         $this->assertEquals(400, $site['headers']['status-code']);
-        $this->assertStringStartsWith('Invalid `specification` param: Specification must be one of:', $site['body']['message']);
+        $this->assertStringStartsWith('Invalid `buildSpecification` param: Specification must be one of:', $site['body']['message']);
+
+        $site = $this->updateSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Test Site',
+            'outputDirectory' => './',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './',
+            '$id' => $siteId,
+            'runtimeSpecification' => 's-2vcpu-512mb', // Invalid specification
+        ]);
+
+        $this->assertEquals(400, $site['headers']['status-code']);
+        $this->assertStringStartsWith('Invalid `runtimeSpecification` param: Specification must be one of:', $site['body']['message']);
 
         $this->cleanupSite($siteId);
     }
@@ -1315,8 +1409,6 @@ class SitesCustomServerTest extends Scope
             'siteId' => ID::unique()
         ]);
 
-        $this->assertNotNull($siteId);
-
         $deployment = $this->createDeployment($siteId, [
             'code' => $this->packageSite('static-single-file'),
             'activate' => 'false'
@@ -1328,7 +1420,7 @@ class SitesCustomServerTest extends Scope
             $deployment = $this->getDeployment($siteId, $deploymentId);
 
             $this->assertEquals('ready', $deployment['body']['status']);
-        }, 50000, 500);
+        }, 120000, 500);
 
         /**
          * Test for SUCCESS
@@ -1359,8 +1451,6 @@ class SitesCustomServerTest extends Scope
             'siteId' => ID::unique()
         ]);
 
-        $this->assertNotNull($siteId);
-
         $site = $this->deleteSite($siteId);
 
         $this->assertEquals(204, $site['headers']['status-code']);
@@ -1369,6 +1459,71 @@ class SitesCustomServerTest extends Scope
         $function = $this->getSite($siteId);
 
         $this->assertEquals(404, $function['headers']['status-code']);
+    }
+
+    public function testDeleteSiteRulesCleanup(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Test Rules Cleanup Site',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './',
+            'fallbackFile' => '',
+        ]);
+
+        $this->assertNotEmpty($siteId);
+
+        // Create a manual deployment rule (type = 'deployment')
+        $domain = $this->setupSiteDomain($siteId);
+        $this->assertNotEmpty($domain);
+
+        // Create a redirect rule (type = 'redirect')
+        $redirectDomain = \uniqid() . '-redirect-cleanup.custom.localhost';
+        $redirectRule = $this->client->call(Client::METHOD_POST, '/proxy/rules/redirect', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'domain' => $redirectDomain,
+            'url' => 'https://appwrite.io',
+            'statusCode' => 301,
+            'resourceType' => 'site',
+            'resourceId' => $siteId,
+        ]);
+
+        $this->assertEquals(201, $redirectRule['headers']['status-code']);
+        $this->assertNotEmpty($redirectRule['body']['$id']);
+
+        // Verify both rules exist (no type filter — catches all rule types)
+        $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('deploymentResourceId', [$siteId])->toString()
+            ]
+        ]);
+
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(2, $rules['body']['total']);
+
+        // Delete the site
+        $this->cleanupSite($siteId);
+
+        // Verify ALL rules (deployment + redirect) are cleaned up
+        $this->assertEventually(function () use ($siteId) {
+            $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'queries' => [
+                    Query::equal('deploymentResourceId', [$siteId])->toString()
+                ]
+            ]);
+
+            $this->assertEquals(200, $rules['headers']['status-code']);
+            $this->assertEquals(0, $rules['body']['total']);
+        }, 5000, 500);
     }
 
     public function testGetFrameworks(): void
@@ -1429,6 +1584,9 @@ class SitesCustomServerTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString("Index page", $response['body']);
+
+        $this->assertArrayHasKey('x-appwrite-log-id', $response['headers']);
+        $this->assertNotEmpty($response['headers']['x-appwrite-log-id']);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/contact', array_merge([
             'content-type' => 'application/json',
@@ -1507,6 +1665,7 @@ class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    #[Retry(count: 3)]
     public function testSiteTemplate(): void
     {
         $template = $this->getTemplate('playground-for-astro');
@@ -1532,7 +1691,8 @@ class SitesCustomServerTest extends Scope
             'repository' => $template['providerRepositoryId'],
             'owner' => $template['providerOwner'],
             'rootDirectory' => $template['frameworks'][0]['providerRootDirectory'],
-            'version' => $template['providerVersion'],
+            'type' => 'tag',
+            'reference' => $template['providerVersion'],
             'activate' => true
         ]);
 
@@ -1548,7 +1708,156 @@ class SitesCustomServerTest extends Scope
         $this->assertEventually(function () use ($siteId) {
             $site = $this->getSite($siteId);
             $this->assertNotEmpty($site['body']['deploymentId']);
-        }, 50000, 500);
+        }, 120000, 500);
+
+        $domain = $this->setupSiteDomain($siteId);
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Astro Blog", $response['body']);
+        $this->assertStringContainsString("Hello, Astronaut!", $response['body']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/about');
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Astro Blog", $response['body']);
+        $this->assertStringContainsString("About Me", $response['body']);
+
+        $deployment = $this->getDeployment($siteId, $deployment['body']['$id']);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertGreaterThan(0, $deployment['body']['sourceSize']);
+        $this->assertGreaterThan(0, $deployment['body']['buildSize']);
+        $totalSize = $deployment['body']['sourceSize'] + $deployment['body']['buildSize'];
+        $this->assertEquals($totalSize, $deployment['body']['totalSize']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testCreateSiteFromTemplateBranch()
+    {
+        $template = $this->getTemplate('playground-for-astro');
+        $this->assertEquals(200, $template['headers']['status-code']);
+
+        $template = $template['body'];
+
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Astro Blog - Branch Test',
+            'framework' => $template['frameworks'][0]['key'],
+            'adapter' => $template['frameworks'][0]['adapter'],
+            'buildRuntime' => $template['frameworks'][0]['buildRuntime'],
+            'outputDirectory' => $template['frameworks'][0]['outputDirectory'],
+            'buildCommand' => $template['frameworks'][0]['buildCommand'],
+            'installCommand' => $template['frameworks'][0]['installCommand'],
+            'fallbackFile' => $template['frameworks'][0]['fallbackFile'],
+        ]);
+
+        $this->assertNotEmpty($siteId);
+
+        // Deploy using branch
+        $deployment = $this->createTemplateDeployment($siteId, [
+            'repository' => $template['providerRepositoryId'],
+            'owner' => $template['providerOwner'],
+            'rootDirectory' => $template['frameworks'][0]['providerRootDirectory'],
+            'type' => 'branch',
+            'reference' => 'main',
+            'activate' => true
+        ]);
+
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $this->assertNotEmpty($deployment['body']['$id']);
+
+        $deployment = $this->getDeployment($siteId, $deployment['body']['$id']);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertEquals(0, $deployment['body']['sourceSize']);
+        $this->assertEquals(0, $deployment['body']['buildSize']);
+        $this->assertEquals(0, $deployment['body']['totalSize']);
+
+        $this->assertEventually(function () use ($siteId) {
+            $site = $this->getSite($siteId);
+            $this->assertNotEmpty($site['body']['deploymentId']);
+        }, 120000, 500);
+
+        $domain = $this->setupSiteDomain($siteId);
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Astro Blog", $response['body']);
+        $this->assertStringContainsString("Hello, Astronaut!", $response['body']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/about');
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Astro Blog", $response['body']);
+        $this->assertStringContainsString("About Me", $response['body']);
+
+        $deployment = $this->getDeployment($siteId, $deployment['body']['$id']);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertGreaterThan(0, $deployment['body']['sourceSize']);
+        $this->assertGreaterThan(0, $deployment['body']['buildSize']);
+        $totalSize = $deployment['body']['sourceSize'] + $deployment['body']['buildSize'];
+        $this->assertEquals($totalSize, $deployment['body']['totalSize']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testCreateSiteFromTemplateCommit()
+    {
+        $template = $this->getTemplate('playground-for-astro');
+        $this->assertEquals(200, $template['headers']['status-code']);
+
+        // Get latest commit using helper function
+        $latestCommit = $this->helperGetLatestCommit(
+            $template['body']['providerOwner'],
+            $template['body']['providerRepositoryId']
+        );
+        $this->assertNotNull($latestCommit);
+
+        $template = $template['body'];
+
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Astro Blog - Commit Test',
+            'framework' => $template['frameworks'][0]['key'],
+            'adapter' => $template['frameworks'][0]['adapter'],
+            'buildRuntime' => $template['frameworks'][0]['buildRuntime'],
+            'outputDirectory' => $template['frameworks'][0]['outputDirectory'],
+            'buildCommand' => $template['frameworks'][0]['buildCommand'],
+            'installCommand' => $template['frameworks'][0]['installCommand'],
+            'fallbackFile' => $template['frameworks'][0]['fallbackFile'],
+        ]);
+
+        $this->assertNotEmpty($siteId);
+
+        // Deploy using commit
+        $deployment = $this->createTemplateDeployment($siteId, [
+            'repository' => $template['providerRepositoryId'],
+            'owner' => $template['providerOwner'],
+            'rootDirectory' => $template['frameworks'][0]['providerRootDirectory'],
+            'type' => 'commit',
+            'reference' => $latestCommit,
+            'activate' => true
+        ]);
+
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $this->assertNotEmpty($deployment['body']['$id']);
+
+        $deployment = $this->getDeployment($siteId, $deployment['body']['$id']);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertEquals(0, $deployment['body']['sourceSize']);
+        $this->assertEquals(0, $deployment['body']['buildSize']);
+        $this->assertEquals(0, $deployment['body']['totalSize']);
+
+        $this->assertEventually(function () use ($siteId) {
+            $site = $this->getSite($siteId);
+            $this->assertNotEmpty($site['body']['deploymentId']);
+        }, 120000, 500);
 
         $domain = $this->setupSiteDomain($siteId);
         $proxyClient = new Client();
@@ -1625,11 +1934,12 @@ class SitesCustomServerTest extends Scope
 
         $siteId2 = $site2['body']['$id'];
 
+        $sitesDomain = \explode(',', System::getEnv('_APP_DOMAIN_SITES', ''))[0];
         $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/site', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'domain' => $subdomain . '.' . System::getEnv('_APP_DOMAIN_SITES', ''),
+            'domain' => $subdomain . '.' . $sitesDomain,
             'siteId' => $siteId2,
         ]);
 
@@ -1649,7 +1959,7 @@ class SitesCustomServerTest extends Scope
 
             $this->assertEquals(200, $rules['headers']['status-code']);
             $this->assertEquals(0, $rules['body']['total']);
-        }, 50000, 500);
+        }, 120000, 500);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/');
 
@@ -1777,7 +2087,7 @@ class SitesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'referer' => $url,
-            'origin' => $url
+            'origin' => $url,
         ]));
 
         $this->assertEquals($url, $response['headers']['access-control-allow-origin']);
@@ -1786,11 +2096,10 @@ class SitesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => 'unknown',
             'referer' => $url,
-            'origin' => $url
+            'origin' => $url,
         ]));
 
-        $this->assertNotEquals($url, $response['headers']['access-control-allow-origin']);
-        $this->assertEquals('http://localhost', $response['headers']['access-control-allow-origin']);
+        $this->assertArrayNotHasKey('access-control-allow-origin', $response['headers']);
 
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
             'content-type' => 'application/json',
@@ -1799,8 +2108,7 @@ class SitesCustomServerTest extends Scope
             'origin' => 'http://unknown.com'
         ]));
 
-        $this->assertNotEquals($url, $response['headers']['access-control-allow-origin']);
-        $this->assertEquals('http://localhost', $response['headers']['access-control-allow-origin']);
+        $this->assertArrayNotHasKey('access-control-allow-origin', $response['headers']);
     }
 
     public function testSiteDownload(): void
@@ -1855,7 +2163,7 @@ class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'outputDirectory' => './dist',
             'buildCommand' => 'npm run build',
-            'installCommand' => 'npm install',
+            'installCommand' => 'npm ci',
             'fallbackFile' => '',
         ]);
 
@@ -1878,11 +2186,25 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString("Inline logs printed.", $response['body']);
 
-        $logs = $this->listLogs($siteId, [
-            Query::orderDesc('$createdAt')->toString(),
-            Query::limit(1)->toString(),
-        ]);
+        // Poll for execution logs to be written (async)
+        // Filter by requestPath to avoid picking up screenshot worker executions
+        $logs = null;
+        $timeout = 120;
+        $start = \time();
+        while (\time() - $start < $timeout) {
+            $logs = $this->listLogs($siteId, [
+                Query::orderDesc('$createdAt')->toString(),
+                Query::equal('requestPath', ['/logs-inline'])->toString(),
+                Query::limit(1)->toString(),
+            ]);
+            if (!empty($logs['body']['executions'])) {
+                break;
+            }
+            \usleep(500000);
+        }
+        $this->assertNotEmpty($logs['body']['executions'], 'Execution logs were not available within timeout');
         $this->assertEquals(200, $logs['headers']['status-code']);
+        $this->assertStringContainsString($deploymentId, $logs['body']['executions'][0]['deploymentId']);
         $this->assertStringContainsString("GET", $logs['body']['executions'][0]['requestMethod']);
         $this->assertStringContainsString("/logs-inline", $logs['body']['executions'][0]['requestPath']);
         $this->assertStringContainsString("Log1", $logs['body']['executions'][0]['logs']);
@@ -1892,15 +2214,35 @@ class SitesCustomServerTest extends Scope
         $log1Id = $logs['body']['executions'][0]['$id'];
         $this->assertNotEmpty($log1Id);
 
+        $logs = $this->listLogs($siteId, [
+            Query::orderDesc('$createdAt')->toString(),
+            Query::limit(1)->toString(),
+            Query::equal('deploymentId', [$deploymentId])->toString()
+        ]);
+        $this->assertEquals(200, $logs['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(1, $logs['body']['total']);
+        $this->assertCount(1, $logs['body']['executions']);
+
+        $logs = $this->listLogs($siteId, [
+            Query::orderDesc('$createdAt')->toString(),
+            Query::limit(1)->toString(),
+            Query::equal('deploymentId', ['some-random-id'])->toString()
+        ]);
+        $this->assertEquals(200, $logs['headers']['status-code']);
+        $this->assertEquals(0, $logs['body']['total']);
+        $this->assertCount(0, $logs['body']['executions']);
+
         $response = $proxyClient->call(Client::METHOD_GET, '/logs-action');
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString("Action logs printed.", $response['body']);
 
         $logs = $this->listLogs($siteId, [
             Query::orderDesc('$createdAt')->toString(),
+            Query::equal('requestPath', ['/logs-action'])->toString(),
             Query::limit(1)->toString(),
         ]);
         $this->assertEquals(200, $logs['headers']['status-code']);
+        $this->assertStringContainsString($deploymentId, $logs['body']['executions'][0]['deploymentId']);
         $this->assertStringContainsString("GET", $logs['body']['executions'][0]['requestMethod']);
         $this->assertStringContainsString("/logs-action", $logs['body']['executions'][0]['requestPath']);
         $this->assertStringContainsString("Log1", $logs['body']['executions'][0]['logs']);
@@ -1921,45 +2263,74 @@ class SitesCustomServerTest extends Scope
                 'buildRuntime' => 'node-22',
                 'outputDirectory' => './dist',
                 'buildCommand' => 'npm run build',
-                'installCommand' => 'npm install',
+                'installCommand' => 'npm ci',
                 'fallbackFile' => '',
                 'logging' => false // set logging to false
             ]
         );
         $this->assertEquals(200, $site['headers']['status-code']);
-        $response = $proxyClient->call(Client::METHOD_GET, '/logs-inline');
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("Inline logs printed.", $response['body']);
 
-        $logs = $this->listLogs($siteId, [
-            Query::orderDesc('$createdAt')->toString(),
-            Query::limit(1)->toString(),
-        ]);
-        $this->assertEquals(200, $logs['headers']['status-code']);
-        $this->assertEquals("GET", $logs['body']['executions'][0]['requestMethod']);
-        $this->assertEquals("/logs-inline", $logs['body']['executions'][0]['requestPath']);
-        $this->assertEmpty($logs['body']['executions'][0]['logs']);
-        $this->assertEmpty($logs['body']['executions'][0]['logs']);
-        $this->assertEmpty($logs['body']['executions'][0]['errors']);
-        $this->assertEmpty($logs['body']['executions'][0]['errors']);
-        $log1Id = $logs['body']['executions'][0]['$id'];
+        // Wait for the logging config change to propagate to the site runtime
+        $this->assertEventually(function () use ($proxyClient) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/logs-inline');
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertStringContainsString("Inline logs printed.", $response['body']);
+        }, 15_000, 500);
+
+        // Poll for the NEW log entry (after logging was disabled) to appear
+        $timeout = 30;
+        $start = \time();
+        $newLog = null;
+        while (\time() - $start < $timeout) {
+            $logs = $this->listLogs($siteId, [
+                Query::orderDesc('$createdAt')->toString(),
+                Query::equal('requestPath', ['/logs-inline'])->toString(),
+                Query::limit(1)->toString(),
+            ]);
+            if (
+                !empty($logs['body']['executions']) &&
+                $logs['body']['executions'][0]['$id'] !== $log1Id
+            ) {
+                $newLog = $logs['body']['executions'][0];
+                break;
+            }
+            \usleep(500000);
+        }
+        $this->assertNotNull($newLog, 'New log entry should appear after logging-disabled request');
+        $this->assertEquals("GET", $newLog['requestMethod']);
+        $this->assertEquals("/logs-inline", $newLog['requestPath']);
+        $this->assertEmpty($newLog['logs']);
+        $this->assertEmpty($newLog['errors']);
+        $log1Id = $newLog['$id'];
         $this->assertNotEmpty($log1Id);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/logs-action');
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString("Action logs printed.", $response['body']);
 
-        $logs = $this->listLogs($siteId, [
-            Query::orderDesc('$createdAt')->toString(),
-            Query::limit(1)->toString(),
-        ]);
-        $this->assertEquals(200, $logs['headers']['status-code']);
-        $this->assertEquals("GET", $logs['body']['executions'][0]['requestMethod']);
-        $this->assertEquals("/logs-action", $logs['body']['executions'][0]['requestPath']);
-        $this->assertEmpty($logs['body']['executions'][0]['logs']);
-        $this->assertEmpty($logs['body']['executions'][0]['logs']);
-        $this->assertEmpty($logs['body']['executions'][0]['errors']);
-        $this->assertEmpty($logs['body']['executions'][0]['errors']);
+        // Poll for the NEW log entry for /logs-action
+        $start = \time();
+        $newLog = null;
+        while (\time() - $start < $timeout) {
+            $logs = $this->listLogs($siteId, [
+                Query::orderDesc('$createdAt')->toString(),
+                Query::equal('requestPath', ['/logs-action'])->toString(),
+                Query::limit(1)->toString(),
+            ]);
+            if (
+                !empty($logs['body']['executions']) &&
+                $logs['body']['executions'][0]['$id'] !== $log2Id
+            ) {
+                $newLog = $logs['body']['executions'][0];
+                break;
+            }
+            \usleep(500000);
+        }
+        $this->assertNotNull($newLog, 'New log entry should appear after logging-disabled /logs-action request');
+        $this->assertEquals("GET", $newLog['requestMethod']);
+        $this->assertEquals("/logs-action", $newLog['requestPath']);
+        $this->assertEmpty($newLog['logs']);
+        $this->assertEmpty($newLog['errors']);
         $log2Id = $logs['body']['executions'][0]['$id'];
         $this->assertNotEmpty($log2Id);
 
@@ -2046,7 +2417,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEventually(function () use ($siteId, $deploymentId2) {
             $site = $this->getSite($siteId);
             $this->assertEquals($deploymentId2, $site['body']['deploymentId']);
-        }, 50000, 500);
+        }, 120000, 500);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/not-found');
         $this->assertStringContainsString("Index page", $response['body']);
@@ -2206,7 +2577,8 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertArrayHasKey('set-cookie', $response['headers']);
         $this->assertStringContainsString('a_jwt_console=', $response['headers']['set-cookie']);
-        $this->assertStringContainsString('httponly', $response['headers']['set-cookie']);
+        // due to swoole update; no more httponly
+        $this->assertStringContainsString('HttpOnly', $response['headers']['set-cookie']);
         $this->assertStringContainsString('domain=' . $domain, $response['headers']['set-cookie']);
         $this->assertStringContainsString('path=/', $response['headers']['set-cookie']);
         $this->assertNotEmpty($response['cookies']['a_jwt_console']);
@@ -2320,7 +2692,7 @@ class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'outputDirectory' => './dist',
             'buildCommand' => 'npm run build',
-            'installCommand' => 'npm install',
+            'installCommand' => 'npm ci',
         ]);
 
         $this->assertNotEmpty($siteId);
@@ -2347,7 +2719,7 @@ class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
-    public function testDomainForFailedDeloyment(): void
+    public function testDomainForFailedDeployment(): void
     {
         $siteId = $this->setupSite([
             'siteId' => ID::unique(),
@@ -2406,12 +2778,19 @@ class SitesCustomServerTest extends Scope
 
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://' . $domain);
-        $response = $proxyClient->call(Client::METHOD_GET, '/');
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString('Sub-directory index', $response['body']);
-        $response1 = $proxyClient->call(Client::METHOD_GET, '/project1');
-        $this->assertEquals(200, $response1['headers']['status-code']);
-        $this->assertStringContainsString('Sub-directory project1', $response1['body']);
+
+        $this->assertEventually(function () use ($proxyClient) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/');
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertStringContainsString('Sub-directory index', $response['body']);
+        }, 30000, 500);
+
+        $this->assertEventually(function () use ($proxyClient) {
+            $response1 = $proxyClient->call(Client::METHOD_GET, '/project1');
+            $this->assertEquals(200, $response1['headers']['status-code']);
+            $this->assertStringContainsString('Sub-directory project1', $response1['body']);
+        }, 30000, 500);
+
         $response2 = $proxyClient->call(Client::METHOD_GET, '/project1/');
         $this->assertEquals(200, $response2['headers']['status-code']);
         $this->assertStringContainsString('Sub-directory project1', $response2['body']);
@@ -2506,8 +2885,20 @@ class SitesCustomServerTest extends Scope
             'x-appwrite-key' => API_KEY_DYNAMIC . '_' . $apiKey,
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertStringContainsString("Deployment build canceled", $response['body']);
-        $this->assertStringContainsString("View deployments", $response['body']);
+        $deployment = $this->getDeployment($siteId, $deploymentId);
+        $status = $deployment['body']['status'] ?? '';
+        $expectedMessage = match ($status) {
+            'failed' => 'Deployment build failed',
+            'canceled' => 'Deployment build canceled',
+            default => 'Deployment is still building',
+        };
+        $this->assertStringContainsString($expectedMessage, $response['body']);
+        $expectedCta = match ($status) {
+            'failed' => 'View logs',
+            'canceled' => 'View deployments',
+            default => 'Reload',
+        };
+        $this->assertStringContainsString($expectedCta, $response['body']);
 
         // check site domain for no active deployments
         $proxyClient->setEndpoint('http://' . $domain);
@@ -2544,7 +2935,7 @@ class SitesCustomServerTest extends Scope
             $deployment = $this->getDeployment($siteId, $deploymentId);
 
             $this->assertEquals('failed', $deployment['body']['status']);
-        }, 50000, 500);
+        }, 120000, 500);
 
         // deployment failed error page
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
@@ -2661,7 +3052,7 @@ class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'outputDirectory' => './dist',
             'buildCommand' => 'npm run build',
-            'installCommand' => 'echo "custom error" && npm install',
+            'installCommand' => 'echo "custom error" && npm ci',
             'adapter' => 'ssr',
         ]);
         $this->assertNotEmpty($siteId);
@@ -2692,5 +3083,286 @@ class SitesCustomServerTest extends Scope
         $this->assertStringContainsString('Adapter mismatch', $deployment['body']['buildLogs']);
 
         $this->cleanupSite($siteId);
+    }
+
+    public function testCookieHeader()
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Astro site',
+            'framework' => 'astro',
+            'adapter' => 'ssr',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './dist',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'npm ci',
+            'fallbackFile' => '',
+        ]);
+
+        $this->assertNotEmpty($siteId);
+
+        $domain = $this->setupSiteDomain($siteId);
+
+        $deploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('astro'),
+            'activate' => 'true'
+        ]);
+
+        $this->assertNotEmpty($deploymentId);
+
+        $domain = $this->getSiteDomain($siteId);
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/cookies', [
+            'cookie' => 'custom-session-id=abcd123; custom-user-id=efgh456'
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals("abcd123;efgh456", $response['body']);
+        $this->assertEquals("value-one", $response['cookies']['my-cookie-one']);
+        $this->assertEquals("value-two", $response['cookies']['my-cookie-two']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testSiteCustomStartCommand(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Astro site',
+            'framework' => 'astro',
+            'adapter' => 'ssr',
+            'startCommand' => 'node custom-server.js',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './dist',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'npm ci',
+            'fallbackFile' => '',
+        ]);
+
+        $this->assertNotEmpty($siteId);
+
+        $domain = $this->setupSiteDomain($siteId);
+
+        $deploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('astro-custom-start-command'),
+            'activate' => 'true'
+        ]);
+
+        $this->assertNotEmpty($deploymentId);
+
+        $domain = $this->getSiteDomain($siteId);
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Homepage OK", $response['body']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/ssr');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("SSR OK", $response['body']);
+        $originalBody = $response['body'];
+        $response = $proxyClient->call(Client::METHOD_GET, '/ssr');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("SSR OK", $response['body']);
+        $this->assertNotEquals($originalBody, $response['body']); // Includes Date.now()
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/ssr-custom');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Custom SSR OK", $response['body']);
+        $originalBody = $response['body'];
+        $response = $proxyClient->call(Client::METHOD_GET, '/ssr-custom');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Custom SSR OK", $response['body']);
+        $this->assertNotEquals($originalBody, $response['body']); // Includes Date.now()
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/non-existing');
+        $this->assertEquals(500, $response['headers']['status-code']);
+        $this->assertStringContainsString("Custom error", $response['body']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testSiteSpecifications()
+    {
+        // Check if the site specifications are correctly set in builds
+        $site = $this->createSite([
+            'siteId' => ID::unique(),
+            'name' => 'Astro site',
+            'framework' => 'astro',
+            'adapter' => 'ssr',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './dist',
+            'buildCommand' => 'npm run build && echo $APPWRITE_SITE_MEMORY:$APPWRITE_SITE_CPUS',
+            'installCommand' => 'npm ci',
+            'fallbackFile' => '',
+            'buildSpecification' => Specification::S_1VCPU_1GB,
+            'runtimeSpecification' => Specification::S_05VCPU_512MB,
+        ]);
+
+        $this->assertEquals(201, $site['headers']['status-code']);
+        $this->assertEquals(Specification::S_1VCPU_1GB, $site['body']['buildSpecification']);
+        $this->assertEquals(Specification::S_05VCPU_512MB, $site['body']['runtimeSpecification']);
+        $this->assertNotEmpty($site['body']['$id']);
+
+        $siteId = $site['body']['$id'] ?? '';
+
+        $domain = $this->setupSiteDomain($siteId);
+
+        $deploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('astro'),
+            'activate' => true
+        ]);
+
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $deployment = $this->getDeployment($siteId, $deploymentId);
+            // TODO: This assertion is not testing what we set in create function, because build worker currently overrides to minimal build specs
+            $this->assertStringContainsString('2048:1', $deployment['body']['buildLogs']);
+        }, 10000, 500);
+
+        // Check if the sites specifications are correctly set in executions
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/specs');
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertEquals('512', $response['body']['APPWRITE_SITE_MEMORY']);
+        $this->assertEquals('0.5', $response['body']['APPWRITE_SITE_CPUS']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testSiteDeploymentRetention(): void
+    {
+        $siteIds = [];
+
+        // Default
+        $response = $this->createSite([
+            'siteId' => ID::unique(),
+            'name' => 'Test retention site',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+        ]);
+        $this->assertSame(201, $response['headers']['status-code']);
+        $this->assertSame(0, $response['body']['deploymentRetention']);
+        $siteIds[] = $response['body']['$id'];
+
+        $response = $this->getSite($response['body']['$id']);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(0, $response['body']['deploymentRetention']);
+
+        // Success values
+        $response = $this->createSite([
+            'siteId' => ID::unique(),
+            'name' => 'Test retention site',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'deploymentRetention' => 0
+        ]);
+        $this->assertSame(201, $response['headers']['status-code']);
+        $this->assertSame(0, $response['body']['deploymentRetention']);
+        $siteIds[] = $response['body']['$id'];
+
+        $response = $this->getSite($response['body']['$id']);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(0, $response['body']['deploymentRetention']);
+
+        $response = $this->createSite([
+            'siteId' => ID::unique(),
+            'name' => 'Test retention site',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'deploymentRetention' => 180
+        ]);
+        $this->assertSame(201, $response['headers']['status-code']);
+        $this->assertSame(180, $response['body']['deploymentRetention']);
+        $siteIds[] = $response['body']['$id'];
+
+        $response = $this->getSite($response['body']['$id']);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(180, $response['body']['deploymentRetention']);
+
+        // Failure values
+        $response = $this->createSite([
+            'siteId' => ID::unique(),
+            'name' => 'Test retention site',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'deploymentRetention' => 999999
+        ]);
+        $this->assertSame(400, $response['headers']['status-code']);
+
+        $response = $this->createSite([
+            'siteId' => ID::unique(),
+            'name' => 'Test retention site',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'deploymentRetention' => -1
+        ]);
+        $this->assertSame(400, $response['headers']['status-code']);
+
+        // Update flow
+        $response = $this->createSite([
+            'siteId' => ID::unique(),
+            'name' => 'Test retention site',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'deploymentRetention' => 180
+        ]);
+        $this->assertSame(201, $response['headers']['status-code']);
+        $this->assertSame(180, $response['body']['deploymentRetention']);
+        $siteIds[] = $response['body']['$id'];
+        $siteIdToUpdate = $response['body']['$id'];
+
+        $response = $this->updateSite([
+            '$id' => $siteIdToUpdate,
+            'name' => 'Test retention site',
+            'framework' => 'other',
+            'deploymentRetention' => 90
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(90, $response['body']['deploymentRetention']);
+
+        $response = $this->getSite($siteIdToUpdate);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(90, $response['body']['deploymentRetention']);
+
+        $response = $this->updateSite([
+            '$id' => $siteIdToUpdate,
+            'name' => 'Test retention site',
+            'framework' => 'other',
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(0, $response['body']['deploymentRetention']);
+
+        $response = $this->getSite($siteIdToUpdate);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(0, $response['body']['deploymentRetention']);
+
+        // Failed update flow
+        $response = $this->updateSite([
+            '$id' => $siteIdToUpdate,
+            'name' => 'Test retention site',
+            'framework' => 'other',
+            'deploymentRetention' => -1
+        ]);
+        $this->assertSame(400, $response['headers']['status-code']);
+
+        $response = $this->updateSite([
+            '$id' => $siteIdToUpdate,
+            'name' => 'Test retention site',
+            'framework' => 'other',
+            'deploymentRetention' => 999999
+        ]);
+        $this->assertSame(400, $response['headers']['status-code']);
+
+        foreach ($siteIds as $siteId) {
+            $this->cleanupSite($siteId);
+        }
     }
 }

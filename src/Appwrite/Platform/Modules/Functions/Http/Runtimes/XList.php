@@ -38,7 +38,7 @@ class XList extends Base
                 description: <<<EOT
                 Get a list of all runtimes that are currently active on your instance.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,

@@ -2,7 +2,7 @@
     "settings.inspire": "\"Die Kunst, weise zu sein, ist die Kunst, zu wissen, was zu übersehen ist.\"",
     "settings.locale": "de",
     "settings.direction": "ltr",
-    "emails.sender": "%s Team",
+    "emails.sender": "{{project}} Team",
     "emails.verification.subject": "Kontoverifizierung",
     "emails.verification.hello": "Hey {{user}},",
     "emails.verification.body": "Folge diesem Link, um deine E-Mail-Adresse zu bestätigen.",
@@ -12,8 +12,6 @@
     "emails.verification.signature": "{{project}}-Team",
     "emails.magicSession.subject": "Login",
     "emails.magicSession.hello": "Hey,",
-    "emails.magicSession.body": "Folge diesem Link, um dich einzuloggen.",
-    "emails.magicSession.footer": "Solltest du keinen Login für diese E-Mail-Adresse angefordert haben, kannst du diese Nachricht ignorieren.",
     "emails.magicSession.thanks": "Danke,",
     "emails.magicSession.signature": "{{project}}-Team",
     "emails.recovery.subject": "Kennwort zurücksetzen",
@@ -23,7 +21,7 @@
     "emails.recovery.thanks": "Danke,",
     "emails.recovery.buttonText": "Passwort zurücksetzen",
     "emails.recovery.signature": "{{project}}-Team",
-    "emails.invitation.subject": "Einladung zum %s-Team auf %s",
+    "emails.invitation.subject": "Einladung zum {{team}}-Team auf {{project}}",
     "emails.invitation.hello": "Hello,",
     "emails.invitation.body": "Du erhälst diese E-Mail, weil {{owner}} dich in das Team {{team}} auf {{project}} eingeladen hat.",
     "emails.invitation.footer": "Wenn du nicht interessiert bist, kannst du diese Nachricht ignorieren.",
@@ -247,5 +245,6 @@
     "emails.otpSession.clientInfo": "Diese Anmeldung wurde über {{agentClient}} auf {{agentDevice}} {{agentOs}} angefordert. Wenn Sie die Anmeldung nicht angefordert haben, können Sie diese E-Mail getrost ignorieren.",
     "emails.otpSession.securityPhrase": "Die Sicherheitsphrase für diese E-Mail lautet {{phrase}}. Sie können dieser E-Mail vertrauen, wenn diese Phrase mit der Phrase übereinstimmt, die beim Anmelden angezeigt wird.",
     "emails.otpSession.thanks": "Danke,",
-    "emails.otpSession.signature": "{{project}} Team"
+    "emails.otpSession.signature": "{{project}} Team",
+    "mock": "Eine Beispielübersetzung für Testzwecke."
 }

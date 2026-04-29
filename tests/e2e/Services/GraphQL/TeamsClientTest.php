@@ -14,10 +14,18 @@ class TeamsClientTest extends Scope
     use Base;
     use SideClient;
 
-    public function testCreateTeam(): array
+    private static array $cachedTeam = [];
+    private static array $cachedMembership = [];
+
+    protected function setupTeam(): array
     {
+        $key = $this->getProject()['$id'];
+        if (!empty(self::$cachedTeam[$key])) {
+            return self::$cachedTeam[$key];
+        }
+
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_TEAM);
+        $query = $this->getQuery(self::CREATE_TEAM);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -37,16 +45,21 @@ class TeamsClientTest extends Scope
         $team = $team['body']['data']['teamsCreate'];
         $this->assertEquals('Team Name', $team['name']);
 
+        self::$cachedTeam[$key] = $team;
         return $team;
     }
 
-    /**
-     * @depends testCreateTeam
-     */
-    public function testCreateTeamMembership($team): array
+    protected function setupMembership(): array
     {
+        $key = $this->getProject()['$id'];
+        if (!empty(self::$cachedMembership[$key])) {
+            return self::$cachedMembership[$key];
+        }
+
+        $team = $this->setupTeam();
+
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_TEAM_MEMBERSHIP);
+        $query = $this->getQuery(self::CREATE_TEAM_MEMBERSHIP);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -69,13 +82,26 @@ class TeamsClientTest extends Scope
         $this->assertEquals($team['_id'], $membership['teamId']);
         $this->assertEquals(['developer'], $membership['roles']);
 
+        self::$cachedMembership[$key] = $membership;
         return $membership;
+    }
+
+    public function testCreateTeam(): void
+    {
+        $team = $this->setupTeam();
+        $this->assertEquals('Team Name', $team['name']);
+    }
+
+    public function testCreateTeamMembership(): void
+    {
+        $membership = $this->setupMembership();
+        $this->assertEquals(['developer'], $membership['roles']);
     }
 
     public function testGetTeams()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_TEAMS);
+        $query = $this->getQuery(self::GET_TEAMS);
         $graphQLPayload = [
             'query' => $query,
         ];
@@ -89,13 +115,12 @@ class TeamsClientTest extends Scope
         $this->assertArrayNotHasKey('errors', $teams['body']);
     }
 
-    /**
-     * @depends testCreateTeam
-     */
-    public function testGetTeam($team)
+    public function testGetTeam()
     {
+        $team = $this->setupTeam();
+
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_TEAM);
+        $query = $this->getQuery(self::GET_TEAM);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -114,13 +139,12 @@ class TeamsClientTest extends Scope
         $this->assertIsArray($team);
     }
 
-    /**
-     * @depends testCreateTeam
-     */
-    public function testGetTeamMemberships($team)
+    public function testGetTeamMemberships()
     {
+        $team = $this->setupTeam();
+
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_TEAM_MEMBERSHIPS);
+        $query = $this->getQuery(self::GET_TEAM_MEMBERSHIPS);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -138,14 +162,13 @@ class TeamsClientTest extends Scope
         $this->assertIsArray($memberships['body']['data']['teamsListMemberships']);
     }
 
-    /**
-     * @depends testCreateTeam
-     * @depends testCreateTeamMembership
-     */
-    public function testGetTeamMembership($team, $membership)
+    public function testGetTeamMembership()
     {
+        $team = $this->setupTeam();
+        $membership = $this->setupMembership();
+
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_TEAM_MEMBERSHIP);
+        $query = $this->getQuery(self::GET_TEAM_MEMBERSHIP);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -163,14 +186,13 @@ class TeamsClientTest extends Scope
         $this->assertArrayNotHasKey('errors', $membership['body']);
     }
 
-    /**
-     * @depends testCreateTeam
-     * @depends testCreateTeamMembership
-     */
-    public function testDeleteTeamMembership($team, $membership)
+    public function testDeleteTeamMembership()
     {
+        $team = $this->setupTeam();
+        $membership = $this->setupMembership();
+
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$DELETE_TEAM_MEMBERSHIP);
+        $query = $this->getQuery(self::DELETE_TEAM_MEMBERSHIP);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -186,5 +208,9 @@ class TeamsClientTest extends Scope
 
         $this->assertIsNotArray($team['body']);
         $this->assertEquals(204, $team['headers']['status-code']);
+
+        // Clear cache after deletion
+        $key = $this->getProject()['$id'];
+        self::$cachedMembership[$key] = [];
     }
 }

@@ -35,11 +35,18 @@ class V19 extends Filter
             case 'functions.updateVariable':
                 $content['secret'] = false;
                 break;
+            case 'functions.getDeploymentDownload':
+                // Pre-1.7.0 clients call the legacy alias
+                // `/v1/functions/:functionId/deployments/:deploymentId/build/download`,
+                // which always downloaded the build output. The merged 1.7.0 endpoint
+                // requires an explicit `type` param, so force it to `output` here.
+                $content['type'] = 'output';
+                break;
         }
         return $content;
     }
 
-    public function convertQueryAttribute(array $content, string $old, string $new)
+    public function convertQueryAttribute(array $content, string $old, string $new): array
     {
         if (isset($content['queries']) && is_array($content['queries'])) {
             foreach ($content['queries'] as $index => $query) {

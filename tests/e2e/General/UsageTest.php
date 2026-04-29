@@ -3,8 +3,10 @@
 namespace Tests\E2E\General;
 
 use Appwrite\Platform\Modules\Compute\Specification;
+use Appwrite\Tests\Retry;
 use CURLFile;
 use DateTime;
+use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -28,6 +30,7 @@ class UsageTest extends Scope
         FunctionsBase::createVariable insteadof SitesBase;
         FunctionsBase::getVariable insteadof SitesBase;
         FunctionsBase::listVariables insteadof SitesBase;
+        FunctionsBase::helperGetLatestCommit insteadof SitesBase;
         FunctionsBase::updateVariable insteadof SitesBase;
         FunctionsBase::deleteVariable insteadof SitesBase;
         FunctionsBase::getDeployment insteadof SitesBase;
@@ -179,9 +182,7 @@ class UsageTest extends Scope
         ];
     }
 
-    /**
-     * @depends testPrepareUsersStats
-     */
+    #[Depends('testPrepareUsersStats')]
     public function testUsersStats(array $data): array
     {
         $requestsTotal = $data['requestsTotal'];
@@ -225,7 +226,7 @@ class UsageTest extends Scope
         ]);
     }
 
-    /** @depends testUsersStats */
+    #[Depends('testUsersStats')]
     public function testPrepareStorageStats(array $data): array
     {
         $requestsTotal = $data['requestsTotal'];
@@ -358,9 +359,7 @@ class UsageTest extends Scope
         ]);
     }
 
-    /**
-     * @depends testPrepareStorageStats
-     */
+    #[Depends('testPrepareStorageStats')]
     public function testStorageStats(array $data): array
     {
         $bucketId      = $data['bucketId'];
@@ -417,8 +416,8 @@ class UsageTest extends Scope
         return $data;
     }
 
-    /** @depends testStorageStats */
-    public function testPrepareDatabaseStats(array $data): array
+    #[Depends('testStorageStats')]
+    public function testPrepareDatabaseStatsCollectionsAPI(array $data): array
     {
         $requestsTotal = $data['requestsTotal'];
 
@@ -529,7 +528,15 @@ class UsageTest extends Scope
 
         $this->assertEquals('name', $response['body']['key']);
 
-        sleep(self::WAIT);
+        $this->assertEventually(function () use ($databaseId, $collectionId) {
+            $attr = $this->client->call(
+                Client::METHOD_GET,
+                '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/name',
+                $this->getConsoleHeaders()
+            );
+            $this->assertEquals(200, $attr['headers']['status-code']);
+            $this->assertEquals('available', $attr['body']['status']);
+        }, 30_000, 500);
 
         $requestsTotal += 1;
 
@@ -583,9 +590,8 @@ class UsageTest extends Scope
         ]);
     }
 
-    /** @depends testPrepareDatabaseStats */
-
-    public function testDatabaseStats(array $data): array
+    #[Depends('testPrepareDatabaseStatsCollectionsAPI')]
+    public function testDatabaseStatsCollectionsAPI(array $data): array
     {
         $databaseId = $data['databaseId'];
         $collectionId = $data['collectionId'];
@@ -593,6 +599,8 @@ class UsageTest extends Scope
         $databasesTotal = $data['databasesTotal'];
         $collectionsTotal = $data['collectionsTotal'];
         $documentsTotal = $data['documentsTotal'];
+
+        sleep(self::WAIT);
 
         $this->assertEventually(function () use ($requestsTotal, $databasesTotal, $documentsTotal) {
             $response = $this->client->call(
@@ -658,7 +666,706 @@ class UsageTest extends Scope
         return $data;
     }
 
-    /** @depends testDatabaseStats */
+    #[Depends('testDatabaseStatsCollectionsAPI')]
+    public function testPrepareDatabaseStatsTablesAPI(array $data): array
+    {
+        $rowsTotal = 0;
+        $tablesTotal = 0;
+        $databasesTotal = $data['databasesTotal'];
+        $documentsTotal = $data['documentsTotal'];
+        $collectionsTotal = $data['collectionsTotal'];
+
+        $requestsTotal = $data['requestsTotal'];
+
+        for ($i = 0; $i < self::CREATE; $i++) {
+            $name = uniqid() . ' database';
+
+            $response = $this->client->call(
+                Client::METHOD_POST,
+                '/databases',
+                array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id']
+                ], $this->getHeaders()),
+                [
+                    'databaseId' => 'unique()',
+                    'name' => $name,
+                ]
+            );
+
+            $this->assertEquals($name, $response['body']['name']);
+            $this->assertNotEmpty($response['body']['$id']);
+
+            $requestsTotal += 1;
+            $databasesTotal += 1;
+
+            $databaseId = $response['body']['$id'];
+
+            if ($i < (self::CREATE / 2)) {
+                $response = $this->client->call(
+                    Client::METHOD_DELETE,
+                    '/databases/' . $databaseId,
+                    array_merge([
+                        'x-appwrite-project' => $this->getProject()['$id']
+                    ], $this->getHeaders()),
+                );
+
+                $this->assertEmpty($response['body']);
+
+                $databasesTotal -= 1;
+                $requestsTotal += 1;
+            }
+        }
+
+        for ($i = 0; $i < self::CREATE; $i++) {
+            $name = uniqid() . ' table';
+
+            $response = $this->client->call(
+                Client::METHOD_POST,
+                '/tablesdb/' . $databaseId . '/tables',
+                array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id']
+                ], $this->getHeaders()),
+                [
+                    'tableId' => 'unique()',
+                    'name' => $name,
+                    'documentSecurity' => false,
+                    'permissions' => [
+                        Permission::read(Role::any()),
+                        Permission::create(Role::any()),
+                        Permission::update(Role::any()),
+                        Permission::delete(Role::any()),
+                    ],
+                ]
+            );
+
+            $this->assertEquals($name, $response['body']['name']);
+            $this->assertNotEmpty($response['body']['$id']);
+
+            $requestsTotal += 1;
+            $tablesTotal += 1;
+
+            $tableId = $response['body']['$id'];
+
+            if ($i < (self::CREATE / 2)) {
+                $response = $this->client->call(
+                    Client::METHOD_DELETE,
+                    '/tablesdb/' . $databaseId . '/tables/' . $tableId,
+                    array_merge([
+                        'x-appwrite-project' => $this->getProject()['$id']
+                    ], $this->getHeaders()),
+                );
+
+                $this->assertEmpty($response['body']);
+
+                $tablesTotal -= 1;
+                $requestsTotal += 1;
+            }
+        }
+
+        $response = $this->client->call(
+            Client::METHOD_POST,
+            '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns' . '/string',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id']
+            ], $this->getHeaders()),
+            [
+                'key' => 'name',
+                'size' => 255,
+                'required' => true,
+            ]
+        );
+
+        $this->assertEquals('name', $response['body']['key']);
+
+        $this->assertEventually(function () use ($databaseId, $tableId) {
+            $attr = $this->client->call(
+                Client::METHOD_GET,
+                '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/name',
+                $this->getConsoleHeaders()
+            );
+            $this->assertEquals(200, $attr['headers']['status-code']);
+            $this->assertEquals('available', $attr['body']['status']);
+        }, 30_000, 500);
+
+        $requestsTotal += 1;
+
+        for ($i = 0; $i < self::CREATE; $i++) {
+            $name = uniqid() . ' table';
+
+            $response = $this->client->call(
+                Client::METHOD_POST,
+                '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows',
+                array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id']
+                ], $this->getHeaders()),
+                [
+                    'rowId' => 'unique()',
+                    'data' => ['name' => $name]
+                ]
+            );
+
+            $this->assertEquals($name, $response['body']['name']);
+            $this->assertNotEmpty($response['body']['$id']);
+
+            $requestsTotal += 1;
+            $rowsTotal += 1;
+
+            $rowId = $response['body']['$id'];
+
+            if ($i < (self::CREATE / 2)) {
+                $response = $this->client->call(
+                    Client::METHOD_DELETE,
+                    '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/' . $rowId,
+                    array_merge([
+                        'x-appwrite-project' => $this->getProject()['$id']
+                    ], $this->getHeaders()),
+                );
+
+                $this->assertEmpty($response['body']);
+
+                $rowsTotal -= 1;
+                $requestsTotal += 1;
+            }
+        }
+
+        return array_merge($data, [
+            'databaseId' => $databaseId,
+            'tableId' => $tableId,
+            'requestsTotal' => $requestsTotal,
+            'databasesTotal' => $databasesTotal,
+            'tablesTotal' => $tablesTotal,
+            'rowsTotal' => $rowsTotal,
+
+            // For clarity
+            'absoluteRowsTotal' => $rowsTotal + $data['documentsTotal'],
+            'absoluteTablesTotal' => $tablesTotal + $data['collectionsTotal'],
+        ]);
+    }
+
+    #[Depends('testPrepareDatabaseStatsTablesAPI')]
+    #[Retry(count: 1)]
+    public function testDatabaseStatsTablesAPI(array $data): array
+    {
+        $tableId = $data['tableId'];
+        $databaseId = $data['databaseId'];
+        $requestsTotal = $data['requestsTotal'];
+
+        $absoluteRowsTotal = $data['absoluteRowsTotal'];
+        $absoluteTablesTotal = $data['absoluteTablesTotal'];
+
+        $rowsTotal = $data['rowsTotal'];
+        $tablesTotal = $data['tablesTotal'];
+        $databasesTotal = $data['databasesTotal'];
+
+        $this->assertEventually(function () use ($requestsTotal, $databasesTotal, $absoluteRowsTotal, $absoluteTablesTotal, $tablesTotal, $rowsTotal, $databaseId, $tableId) {
+            $response = $this->client->call(
+                Client::METHOD_GET,
+                '/project/usage',
+                $this->getConsoleHeaders(),
+                [
+                    'period' => '1d',
+                    'startDate' => self::getToday(),
+                    'endDate' => self::getTomorrow(),
+                ]
+            );
+
+            $this->assertGreaterThanOrEqual(31, count($response['body']));
+            $this->assertCount(1, $response['body']['requests']);
+            $this->assertCount(1, $response['body']['network']);
+            $this->assertEquals($requestsTotal, $response['body']['requests'][array_key_last($response['body']['requests'])]['value']);
+            $this->validateDates($response['body']['requests']);
+            $this->assertEquals($databasesTotal, $response['body']['databasesTotal']);
+
+            // project level includes all i.e. documents + rows total.
+            $this->assertEquals($absoluteRowsTotal, $response['body']['rowsTotal']);
+
+            $response = $this->client->call(
+                Client::METHOD_GET,
+                '/databases/usage?range=30d',
+                $this->getConsoleHeaders()
+            );
+
+            $this->assertEquals($databasesTotal, $response['body']['databases'][array_key_last($response['body']['databases'])]['value']);
+            $this->validateDates($response['body']['databases']);
+
+            // database level includes all i.e. collections + tables total.
+            $this->assertEquals($absoluteTablesTotal, $response['body']['tables'][array_key_last($response['body']['tables'])]['value']); // database level
+            $this->validateDates($response['body']['tables']);
+
+            // database level includes all i.e. documents + rows total.
+            $this->assertEquals($absoluteRowsTotal, $response['body']['rows'][array_key_last($response['body']['rows'])]['value']);
+            $this->validateDates($response['body']['rows']);
+
+            $response = $this->client->call(
+                Client::METHOD_GET,
+                '/databases/' . $databaseId . '/usage?range=30d',
+                $this->getConsoleHeaders()
+            );
+
+            $this->assertEquals($tablesTotal, $response['body']['tables'][array_key_last($response['body']['tables'])]['value']);
+            $this->validateDates($response['body']['tables']);
+
+            $this->assertEquals($rowsTotal, $response['body']['rows'][array_key_last($response['body']['rows'])]['value']);
+            $this->validateDates($response['body']['rows']);
+
+            $response = $this->client->call(
+                Client::METHOD_GET,
+                '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/usage?range=30d',
+                $this->getConsoleHeaders()
+            );
+
+            $this->assertEquals($rowsTotal, $response['body']['rows'][array_key_last($response['body']['rows'])]['value']);
+            $this->validateDates($response['body']['rows']);
+        }, 30_000, 1000);
+
+        return $data;
+    }
+
+    #[Depends('testDatabaseStatsTablesAPI')]
+    public function testPrepareDocumentsDBStats(array $data): array
+    {
+        $documentsTotal = 0;
+        $collectionsTotal = 0;
+        $documentsDbTotal = 0;
+        $databasesTotal = $data['databasesTotal'];
+        $requestsTotal = $data['requestsTotal'];
+
+        for ($i = 0; $i < self::CREATE; $i++) {
+            $name = uniqid() . ' documentsdb';
+
+            $response = $this->client->call(
+                Client::METHOD_POST,
+                '/documentsdb',
+                array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id']
+                ], $this->getHeaders()),
+                [
+                    'databaseId' => 'unique()',
+                    'name' => $name,
+                ]
+            );
+
+            $this->assertEquals($name, $response['body']['name']);
+            $this->assertNotEmpty($response['body']['$id']);
+
+            $requestsTotal += 1;
+            $documentsDbTotal += 1;
+
+            $documentsDbId = $response['body']['$id'];
+
+            if ($i < (self::CREATE / 2)) {
+                $response = $this->client->call(
+                    Client::METHOD_DELETE,
+                    '/documentsdb/' . $documentsDbId,
+                    array_merge([
+                        'x-appwrite-project' => $this->getProject()['$id']
+                    ], $this->getHeaders()),
+                );
+
+                $this->assertEmpty($response['body']);
+
+                $documentsDbTotal -= 1;
+                $requestsTotal += 1;
+            }
+        }
+
+        for ($i = 0; $i < self::CREATE; $i++) {
+            $name = uniqid() . ' collection';
+
+            $response = $this->client->call(
+                Client::METHOD_POST,
+                '/documentsdb/' . $documentsDbId . '/collections',
+                array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id']
+                ], $this->getHeaders()),
+                [
+                    'collectionId' => 'unique()',
+                    'name' => $name,
+                    'documentSecurity' => false,
+                    'permissions' => [
+                        Permission::read(Role::any()),
+                        Permission::create(Role::any()),
+                        Permission::update(Role::any()),
+                        Permission::delete(Role::any()),
+                    ],
+                ]
+            );
+
+            $this->assertEquals($name, $response['body']['name']);
+            $this->assertNotEmpty($response['body']['$id']);
+
+            $requestsTotal += 1;
+            $collectionsTotal += 1;
+
+            $collectionId = $response['body']['$id'];
+
+            if ($i < (self::CREATE / 2)) {
+                $response = $this->client->call(
+                    Client::METHOD_DELETE,
+                    '/documentsdb/' . $documentsDbId . '/collections/' . $collectionId,
+                    array_merge([
+                        'x-appwrite-project' => $this->getProject()['$id']
+                    ], $this->getHeaders()),
+                );
+
+                $this->assertEmpty($response['body']);
+
+                $collectionsTotal -= 1;
+                $requestsTotal += 1;
+            }
+        }
+
+        for ($i = 0; $i < self::CREATE; $i++) {
+            $response = $this->client->call(
+                Client::METHOD_POST,
+                '/documentsdb/' . $documentsDbId . '/collections/' . $collectionId . '/documents',
+                array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id']
+                ], $this->getHeaders()),
+                [
+                    'documentId' => 'unique()',
+                    'data' => [
+                        'name' => uniqid() . ' document',
+                        'value' => $i
+                    ]
+                ]
+            );
+
+            $this->assertNotEmpty($response['body']['$id']);
+
+            $requestsTotal += 1;
+            $documentsTotal += 1;
+
+            $documentId = $response['body']['$id'];
+
+            if ($i < (self::CREATE / 2)) {
+                $response = $this->client->call(
+                    Client::METHOD_DELETE,
+                    '/documentsdb/' . $documentsDbId . '/collections/' . $collectionId . '/documents/' . $documentId,
+                    array_merge([
+                        'x-appwrite-project' => $this->getProject()['$id']
+                    ], $this->getHeaders()),
+                );
+
+                $this->assertEmpty($response['body']);
+
+                $documentsTotal -= 1;
+                $requestsTotal += 1;
+            }
+        }
+
+        return array_merge($data, [
+            'documentsDbId' => $documentsDbId,
+            'documentsDbCollectionId' => $collectionId,
+            'requestsTotal' => $requestsTotal,
+            'databasesTotal' => $databasesTotal,
+            'documentsDbTotal' => $documentsDbTotal,
+            'documentsDbCollectionsTotal' => $collectionsTotal,
+            'documentsDbDocumentsTotal' => $documentsTotal,
+        ]);
+    }
+
+    #[Depends('testPrepareDocumentsDBStats')]
+    #[Retry(count: 1)]
+    public function testDocumentsDBStats(array $data): array
+    {
+        $documentsDbId = $data['documentsDbId'];
+        $collectionId = $data['documentsDbCollectionId'];
+        $requestsTotal = $data['requestsTotal'];
+        $databasesTotal = $data['databasesTotal'];
+        $documentsDbTotal = $data['documentsDbTotal'];
+        $collectionsTotal = $data['documentsDbCollectionsTotal'];
+        $documentsTotal = $data['documentsDbDocumentsTotal'];
+
+        sleep(self::WAIT);
+
+        $response = $this->client->call(
+            Client::METHOD_GET,
+            '/project/usage',
+            $this->getConsoleHeaders(),
+            [
+                'period' => '1d',
+                'startDate' => self::getToday(),
+                'endDate' => self::getTomorrow(),
+            ]
+        );
+
+        $this->assertGreaterThanOrEqual(31, count($response['body']));
+        $this->assertCount(1, $response['body']['requests']);
+        $this->assertCount(1, $response['body']['network']);
+        $this->assertEquals($requestsTotal, $response['body']['requests'][array_key_last($response['body']['requests'])]['value']);
+        $this->validateDates($response['body']['requests']);
+        // documentsdbTotal should reflect only documents DB instances, not relational databases.
+        $this->assertEquals($documentsDbTotal, $response['body']['documentsdbTotal']);
+        $this->assertEquals($documentsTotal, $response['body']['documentsdbDocumentsTotal']);
+
+        $response = $this->client->call(
+            Client::METHOD_GET,
+            '/databases/usage?range=30d',
+            $this->getConsoleHeaders()
+        );
+
+        $this->assertEquals($databasesTotal, $response['body']['databases'][array_key_last($response['body']['databases'])]['value']);
+        $this->validateDates($response['body']['databases']);
+
+        $this->assertEventually(function () use ($documentsDbId, $collectionsTotal, $documentsTotal) {
+            $response = $this->client->call(
+                Client::METHOD_GET,
+                '/documentsdb/' . $documentsDbId . '/usage?range=30d',
+                $this->getConsoleHeaders()
+            );
+
+            $this->assertEquals($collectionsTotal, $response['body']['collections'][array_key_last($response['body']['collections'])]['value']);
+            $this->validateDates($response['body']['collections']);
+
+            $this->assertEquals($documentsTotal, $response['body']['documents'][array_key_last($response['body']['documents'])]['value']);
+            $this->validateDates($response['body']['documents']);
+        });
+
+        $this->assertEventually(function () use ($documentsDbId, $collectionId, $documentsTotal) {
+            $response = $this->client->call(
+                Client::METHOD_GET,
+                '/documentsdb/' . $documentsDbId . '/collections/' . $collectionId . '/usage?range=30d',
+                $this->getConsoleHeaders()
+            );
+
+            $this->assertEquals($documentsTotal, $response['body']['documents'][array_key_last($response['body']['documents'])]['value']);
+            $this->validateDates($response['body']['documents']);
+        });
+
+        return $data;
+    }
+
+    #[Depends('testDocumentsDBStats')]
+    public function testPrepareVectorsDBStats(array $data): array
+    {
+        $documentsTotal = 0;
+        $collectionsTotal = 0;
+        $vectordbTotal = 0;
+        $databasesTotal = $data['databasesTotal'];
+        $requestsTotal = $data['requestsTotal'];
+
+        for ($i = 0; $i < self::CREATE; $i++) {
+            $name = uniqid() . ' vectorsdb';
+
+            $response = $this->client->call(
+                Client::METHOD_POST,
+                '/vectorsdb',
+                array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id']
+                ], $this->getHeaders()),
+                [
+                    'databaseId' => 'unique()',
+                    'name' => $name,
+                ]
+            );
+
+            $this->assertEquals($name, $response['body']['name']);
+            $this->assertNotEmpty($response['body']['$id']);
+
+            $requestsTotal += 1;
+            $vectordbTotal += 1;
+
+            $vectordbId = $response['body']['$id'];
+
+            if ($i < (self::CREATE / 2)) {
+                $response = $this->client->call(
+                    Client::METHOD_DELETE,
+                    '/vectorsdb/' . $vectordbId,
+                    array_merge([
+                        'x-appwrite-project' => $this->getProject()['$id']
+                    ], $this->getHeaders()),
+                );
+
+                $this->assertEmpty($response['body']);
+
+                $vectordbTotal -= 1;
+                $requestsTotal += 1;
+            }
+        }
+
+        for ($i = 0; $i < self::CREATE; $i++) {
+            $name = uniqid() . ' collection';
+
+            $response = $this->client->call(
+                Client::METHOD_POST,
+                '/vectorsdb/' . $vectordbId . '/collections',
+                array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id']
+                ], $this->getHeaders()),
+                [
+                    'collectionId' => 'unique()',
+                    'name' => $name,
+                    'dimension' => 1536,
+                    'documentSecurity' => false,
+                    'permissions' => [
+                        Permission::read(Role::any()),
+                        Permission::create(Role::any()),
+                        Permission::update(Role::any()),
+                        Permission::delete(Role::any()),
+                    ],
+                ]
+            );
+
+            $this->assertEquals($name, $response['body']['name']);
+            $this->assertNotEmpty($response['body']['$id']);
+
+            $requestsTotal += 1;
+            $collectionsTotal += 1;
+
+            $collectionId = $response['body']['$id'];
+
+            if ($i < (self::CREATE / 2)) {
+                $response = $this->client->call(
+                    Client::METHOD_DELETE,
+                    '/vectorsdb/' . $vectordbId . '/collections/' . $collectionId,
+                    array_merge([
+                        'x-appwrite-project' => $this->getProject()['$id']
+                    ], $this->getHeaders()),
+                );
+
+                $this->assertEmpty($response['body']);
+
+                $collectionsTotal -= 1;
+                $requestsTotal += 1;
+            }
+        }
+
+        for ($i = 0; $i < self::CREATE; $i++) {
+            $response = $this->client->call(
+                Client::METHOD_POST,
+                '/vectorsdb/' . $vectordbId . '/collections/' . $collectionId . '/documents',
+                array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id']
+                ], $this->getHeaders()),
+                [
+                    'documentId' => 'unique()',
+                    'data' => [
+                        'embeddings' => array_fill(0, 1536, 0.1),
+                        'metadata' => [
+                            'name' => uniqid() . ' document',
+                            'value' => $i
+                        ]
+                    ]
+                ]
+            );
+
+            $this->assertNotEmpty($response['body']['$id']);
+
+            $requestsTotal += 1;
+            $documentsTotal += 1;
+
+            $documentId = $response['body']['$id'];
+
+            if ($i < (self::CREATE / 2)) {
+                $response = $this->client->call(
+                    Client::METHOD_DELETE,
+                    '/vectorsdb/' . $vectordbId . '/collections/' . $collectionId . '/documents/' . $documentId,
+                    array_merge([
+                        'x-appwrite-project' => $this->getProject()['$id']
+                    ], $this->getHeaders()),
+                );
+
+                $this->assertEmpty($response['body']);
+
+                $documentsTotal -= 1;
+                $requestsTotal += 1;
+            }
+        }
+
+        return array_merge($data, [
+            'vectordbId' => $vectordbId,
+            'vectordbCollectionId' => $collectionId,
+            'requestsTotal' => $requestsTotal,
+            'databasesTotal' => $databasesTotal,
+            'vectordbTotal' => $vectordbTotal,
+            'vectordbCollectionsTotal' => $collectionsTotal,
+            'vectordbDocumentsTotal' => $documentsTotal,
+        ]);
+    }
+
+    #[Depends('testPrepareVectorsDBStats')]
+    #[Retry(count: 1)]
+    public function testVectorsDBStats(array $data): array
+    {
+        $vectordbId = $data['vectordbId'];
+        $collectionId = $data['vectordbCollectionId'];
+        $requestsTotal = $data['requestsTotal'];
+        $databasesTotal = $data['databasesTotal'];
+        $vectordbTotal = $data['vectordbTotal'];
+        $collectionsTotal = $data['vectordbCollectionsTotal'];
+        $documentsTotal = $data['vectordbDocumentsTotal'];
+
+        $this->assertEventually(function () use ($requestsTotal, $vectordbTotal, $documentsTotal) {
+            $response = $this->client->call(
+                Client::METHOD_GET,
+                '/project/usage',
+                $this->getConsoleHeaders(),
+                [
+                    'period' => '1d',
+                    'startDate' => self::getToday(),
+                    'endDate' => self::getTomorrow(),
+                ]
+            );
+
+            $this->assertGreaterThanOrEqual(31, count($response['body']));
+            $this->assertCount(1, $response['body']['requests']);
+            $this->assertCount(1, $response['body']['network']);
+            $this->assertEquals($requestsTotal, $response['body']['requests'][array_key_last($response['body']['requests'])]['value']);
+            $this->validateDates($response['body']['requests']);
+            // vectordbTotal should reflect only VectorsDB instances, not relational databases.
+            $this->assertEquals($vectordbTotal, $response['body']['vectorsdbDatabasesTotal']);
+            $this->assertEquals($documentsTotal, $response['body']['vectorsdbDocumentsTotal']);
+        });
+
+        $response = $this->client->call(
+            Client::METHOD_GET,
+            '/databases/usage?range=30d',
+            $this->getConsoleHeaders()
+        );
+
+        $this->assertEquals($databasesTotal, $response['body']['databases'][array_key_last($response['body']['databases'])]['value']);
+        $this->validateDates($response['body']['databases']);
+
+        $this->assertEventually(function () use ($vectordbId, $collectionsTotal, $documentsTotal) {
+            $response = $this->client->call(
+                Client::METHOD_GET,
+                '/vectorsdb/' . $vectordbId . '/usage?range=30d',
+                $this->getConsoleHeaders()
+            );
+
+            $this->assertEquals($collectionsTotal, $response['body']['collections'][array_key_last($response['body']['collections'])]['value']);
+            $this->validateDates($response['body']['collections']);
+
+            $this->assertEquals($documentsTotal, $response['body']['documents'][array_key_last($response['body']['documents'])]['value']);
+            $this->validateDates($response['body']['documents']);
+        });
+
+        $this->assertEventually(function () use ($vectordbId, $collectionId, $documentsTotal) {
+            $response = $this->client->call(
+                Client::METHOD_GET,
+                '/vectorsdb/' . $vectordbId . '/collections/' . $collectionId . '/usage?range=30d',
+                $this->getConsoleHeaders()
+            );
+
+            $this->assertEquals($documentsTotal, $response['body']['documents'][array_key_last($response['body']['documents'])]['value']);
+            $this->validateDates($response['body']['documents']);
+        });
+
+        return $data;
+    }
+
+    #[Depends('testVectorsDBStats')]
     public function testPrepareFunctionsStats(array $data): array
     {
         $executionTime = 0;
@@ -675,7 +1382,8 @@ class UsageTest extends Scope
             [
                 'functionId' => 'unique()',
                 'name' => 'Test',
-                'runtime' => 'php-8.0',
+                'runtime' => 'node-22',
+                'entrypoint' => 'index.js',
                 'vars' => [
                     'funcKey1' => 'funcValue1',
                     'funcKey2' => 'funcValue2',
@@ -687,7 +1395,8 @@ class UsageTest extends Scope
                 ],
                 'schedule' => '0 0 1 1 *',
                 'timeout' => 10,
-                'specification' => Specification::S_8VCPU_8GB
+                'buildSpecification' => Specification::S_8VCPU_8GB,
+                'runtimeSpecification' => Specification::S_4VCPU_4GB,
             ]
         );
 
@@ -697,8 +1406,7 @@ class UsageTest extends Scope
         $this->assertNotEmpty($response['body']['$id']);
 
         $deploymentId = $this->setupDeployment($functionId, [
-            'entrypoint' => 'index.php',
-            'code' => $this->packageFunction('php'),
+            'code' => $this->packageFunction('basic'),
             'activate' => true,
         ]);
         $this->assertNotEmpty($deploymentId);
@@ -785,11 +1493,20 @@ class UsageTest extends Scope
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals($functionId, $response['body']['functionId']);
 
-        sleep(self::WAIT);
+        $executionId = $response['body']['$id'];
+
+        $this->assertEventually(function () use ($functionId, $executionId) {
+            $response = $this->client->call(
+                Client::METHOD_GET,
+                '/functions/' . $functionId . '/executions/' . $executionId,
+                $this->getConsoleHeaders(),
+            );
+            $this->assertContains($response['body']['status'], ['completed', 'failed']);
+        }, 30_000, 500);
 
         $response = $this->client->call(
             Client::METHOD_GET,
-            '/functions/' . $functionId . '/executions/' . $response['body']['$id'],
+            '/functions/' . $functionId . '/executions/' . $executionId,
             array_merge([
                 'x-appwrite-project' => $this->getProject()['$id']
             ], $this->getHeaders()),
@@ -811,7 +1528,7 @@ class UsageTest extends Scope
         ]);
     }
 
-    /** @depends testPrepareFunctionsStats */
+    #[Depends('testPrepareFunctionsStats')]
     public function testFunctionsStats(array $data): array
     {
         $functionId = $data['functionId'];
@@ -888,8 +1605,6 @@ class UsageTest extends Scope
             'siteId' => ID::unique()
         ]);
 
-        $this->assertNotNull($siteId);
-
         $deployment = $this->createDeploymentSite($siteId, [
             'siteId' => $siteId,
             'code' => $this->packageSite('static'),
@@ -941,7 +1656,7 @@ class UsageTest extends Scope
         return $data;
     }
 
-    /** @depends testPrepareSitesStats */
+    #[Depends('testPrepareSitesStats')]
     public function testSitesStats(array $data)
     {
         $siteId = $data['siteId'];
@@ -1017,7 +1732,7 @@ class UsageTest extends Scope
         });
     }
 
-    /** @depends testFunctionsStats */
+    #[Depends('testFunctionsStats')]
     public function testCustomDomainsFunctionStats(array $data): void
     {
         $functionId = $data['functionId'];
@@ -1032,6 +1747,7 @@ class UsageTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
+        $functionsDomain = \explode(',', System::getEnv('_APP_DOMAIN_FUNCTIONS', ''))[0];
         $rule = $this->client->call(
             Client::METHOD_POST,
             '/proxy/rules/function',
@@ -1040,7 +1756,7 @@ class UsageTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()),
             [
-                'domain' => 'test-' . ID::unique() . System::getEnv('_APP_DOMAIN_FUNCTIONS'),
+                'domain' => 'test-' . ID::unique() . '.' . $functionsDomain,
                 'functionId' => $functionId,
             ],
         );
@@ -1123,6 +1839,75 @@ class UsageTest extends Scope
             $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertEquals($projectMetrics['executionsTotal'] + 1, $response['body']['executionsTotal']);
             $this->assertGreaterThan($projectMetrics['executionsMbSecondsTotal'], $response['body']['executionsMbSecondsTotal']);
+        });
+    }
+
+    public function testEmbeddingsTextUsageDoesNotBreakProjectUsage(): void
+    {
+        // Trigger embeddings endpoint a few times so stats usage worker has data to aggregate
+        for ($i = 0; $i < 3; $i++) {
+            $response = $this->client->call(
+                Client::METHOD_POST,
+                '/vectorsdb/embeddings/text',
+                array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ], $this->getHeaders()),
+                [
+                    'model' => 'embeddinggemma',
+                    'texts' => [
+                        'usage test text ' . $i,
+                    ],
+                ]
+            );
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertIsArray($response['body']['embeddings']);
+            $this->assertGreaterThan(0, $response['body']['total']);
+        }
+
+        // Ensure project usage endpoint still responds correctly after embeddings calls
+        $this->assertEventually(function () {
+            $response = $this->client->call(
+                Client::METHOD_GET,
+                '/project/usage',
+                $this->getConsoleHeaders(),
+                [
+                    'period' => '1h',
+                    'startDate' => self::getToday(),
+                    'endDate' => self::getTomorrow(),
+                ]
+            );
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertArrayHasKey('requests', $response['body']);
+            $this->assertArrayHasKey('network', $response['body']);
+            $this->assertArrayHasKey('executionsTotal', $response['body']);
+
+            // New embeddings metrics should be present after calls above
+            $this->assertArrayHasKey('embeddingsText', $response['body']);
+            $this->assertArrayHasKey('embeddingsTextErrors', $response['body']);
+            $this->assertArrayHasKey('embeddingsTextTokens', $response['body']);
+            $this->assertArrayHasKey('embeddingsTextDuration', $response['body']);
+            $this->assertArrayHasKey('embeddingsTextTotal', $response['body']);
+            $this->assertArrayHasKey('embeddingsTextErrorsTotal', $response['body']);
+            $this->assertArrayHasKey('embeddingsTextTokensTotal', $response['body']);
+            $this->assertArrayHasKey('embeddingsTextDurationTotal', $response['body']);
+
+            // Time-series arrays should be non-empty
+            $this->assertNotEmpty($response['body']['embeddingsText']);
+            $this->assertNotEmpty($response['body']['embeddingsTextTokens']);
+            $this->assertNotEmpty($response['body']['embeddingsTextDuration']);
+            $this->validateDates($response['body']['embeddingsText']);
+            $this->validateDates($response['body']['embeddingsTextTokens']);
+            $this->validateDates($response['body']['embeddingsTextDuration']);
+
+            // Total scalars should be greater than 0 (or >= 0 for errors)
+            $this->assertGreaterThan(0, $response['body']['embeddingsTextTotal']);
+            $this->assertGreaterThanOrEqual(0, $response['body']['embeddingsTextErrorsTotal']);
+            $this->assertGreaterThan(0, $response['body']['embeddingsTextTokensTotal']);
+            $this->assertGreaterThan(0, $response['body']['embeddingsTextDurationTotal']);
         });
     }
 

@@ -2,17 +2,18 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
+use Appwrite\Event\Publisher\Certificate;
 use DateInterval;
 use DateTime;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime as DatabaseDateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\System\System;
+use Utopia\Validator\WhiteList;
 
 class Maintenance extends Action
 {
@@ -25,14 +26,15 @@ class Maintenance extends Action
     {
         $this
             ->desc('Schedules maintenance tasks and publishes them to our queues')
+            ->param('type', 'loop', new WhiteList(['loop', 'trigger']), 'How to run task. "loop" is meant for container entrypoint, and "trigger" for manual execution.')
             ->inject('dbForPlatform')
             ->inject('console')
-            ->inject('queueForCertificates')
+            ->inject('publisherForCertificates')
             ->inject('queueForDeletes')
             ->callback($this->action(...));
     }
 
-    public function action(Database $dbForPlatform, Document $console, Certificate $queueForCertificates, Delete $queueForDeletes): void
+    public function action(string $type, Database $dbForPlatform, Document $console, Certificate $publisherForCertificates, Delete $queueForDeletes): void
     {
         Console::title('Maintenance V1');
         Console::success(APP_NAME . ' maintenance process v1 has started');
@@ -57,9 +59,7 @@ class Maintenance extends Action
             $delay = $next->getTimestamp() - $now->getTimestamp();
         }
 
-        Console::info('Setting loop start time to ' . $next->format("Y-m-d H:i:s.v") . '. Delaying for ' . $delay . ' seconds.');
-
-        Console::loop(function () use ($interval, $cacheRetention, $schedulesDeletionRetention, $usageStatsRetentionHourly, $dbForPlatform, $console, $queueForDeletes, $queueForCertificates) {
+        $action = function () use ($interval, $cacheRetention, $schedulesDeletionRetention, $usageStatsRetentionHourly, $dbForPlatform, $console, $queueForDeletes, $publisherForCertificates) {
             $time = DatabaseDateTime::now();
 
             Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
@@ -92,10 +92,21 @@ class Maintenance extends Action
                 ->trigger();
 
             $this->notifyDeleteConnections($queueForDeletes);
-            $this->renewCertificates($dbForPlatform, $queueForCertificates);
+            $this->renewCertificates($dbForPlatform, $publisherForCertificates);
             $this->notifyDeleteCache($cacheRetention, $queueForDeletes);
             $this->notifyDeleteSchedules($schedulesDeletionRetention, $queueForDeletes);
-        }, $interval, $delay);
+            $this->notifyDeleteCSVExports($queueForDeletes);
+        };
+
+        if ($type === 'loop') {
+            Console::info('Setting loop start time to ' . $next->format("Y-m-d H:i:s.v") . '. Delaying for ' . $delay . ' seconds.');
+
+            Console::loop(function () use ($action) {
+                $action();
+            }, $interval, $delay);
+        } elseif ($type === 'trigger') {
+            $action();
+        }
     }
 
     private function notifyDeleteConnections(Delete $queueForDeletes): void
@@ -106,7 +117,14 @@ class Maintenance extends Action
             ->trigger();
     }
 
-    private function renewCertificates(Database $dbForPlatform, Certificate $queueForCertificate): void
+    private function notifyDeleteCSVExports(Delete $queueForDeletes): void
+    {
+        $queueForDeletes
+            ->setType(DELETE_TYPE_CSV_EXPORTS)
+            ->trigger();
+    }
+
+    private function renewCertificates(Database $dbForPlatform, Certificate $publisherForCertificate): void
     {
         $time = DatabaseDateTime::now();
 
@@ -117,19 +135,40 @@ class Maintenance extends Action
             Query::limit(200), // Limit 200 comes from LetsEncrypt (300 orders per 3 hours, keeping some for new domains)
         ]);
 
-
-        if (\count($certificates) > 0) {
-            Console::info("[{$time}] Found " . \count($certificates) . " certificates for renewal, scheduling jobs.");
-
-            foreach ($certificates as $certificate) {
-                $queueForCertificate
-                    ->setDomain(new Document([
-                        'domain' => $certificate->getAttribute('domain')
-                    ]))
-                    ->trigger();
-            }
-        } else {
+        if (\count($certificates) === 0) {
             Console::info("[{$time}] No certificates for renewal.");
+            return;
+        }
+
+        Console::info("[{$time}] Found " . \count($certificates) . " certificates for renewal, scheduling jobs.");
+
+        $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
+        $appRegion = System::getEnv('_APP_REGION', 'default');
+
+        foreach ($certificates as $certificate) {
+            $domain = $certificate->getAttribute('domain');
+            $rule = $isMd5 ?
+                $dbForPlatform->getDocument('rules', md5($domain)) :
+                    $dbForPlatform->findOne('rules', [
+                        Query::equal('domain', [$domain]),
+                        Query::limit(1)
+                    ]);
+
+            if ($rule->isEmpty() || $rule->getAttribute('region') !== $appRegion) {
+                continue;
+            }
+
+            $publisherForCertificate->enqueue(new \Appwrite\Event\Message\Certificate(
+                project: new Document([
+                    '$id' => $rule->getAttribute('projectId', ''),
+                    '$sequence' => $rule->getAttribute('projectInternalId', 0),
+                ]),
+                domain: new Document([
+                    'domain' => $rule->getAttribute('domain'),
+                    'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
+                ]),
+                action: \Appwrite\Event\Certificate::ACTION_GENERATION,
+            ));
         }
     }
 

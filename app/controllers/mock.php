@@ -5,7 +5,6 @@ global $utopia, $request, $response;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use Utopia\App;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -13,29 +12,48 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\UID;
+use Utopia\Http\Http;
+use Utopia\Locale\Locale;
 use Utopia\System\System;
-use Utopia\Validator\Host;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 use Utopia\VCS\Adapter\Git\GitHub;
 
-App::get('/v1/mock/tests/general/oauth2')
+Http::get('/v1/mock/tests/general/oauth2')
     ->desc('OAuth Login')
     ->groups(['mock'])
     ->label('scope', 'public')
     ->label('docs', false)
     ->label('mock', true)
     ->param('client_id', '', new Text(100), 'OAuth2 Client ID.')
-    ->param('redirect_uri', '', new Host(['localhost']), 'OAuth2 Redirect URI.') // Important to deny an open redirect attack
+    ->param('redirect_uri', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator']) // Important to deny an open redirect attack
     ->param('scope', '', new Text(100), 'OAuth2 scope list.')
     ->param('state', '', new Text(1024), 'OAuth2 state.')
     ->inject('response')
     ->action(function (string $client_id, string $redirectURI, string $scope, string $state, Response $response) {
-
         $response->redirect($redirectURI . '?' . \http_build_query(['code' => 'abcdef', 'state' => $state]));
     });
 
-App::get('/v1/mock/tests/general/oauth2/token')
+Http::get('/v1/mock/tests/locale')
+    ->desc('Mock locale translation key')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->label('mock', true)
+    ->inject('locale')
+    ->inject('localeCodes')
+    ->inject('request')
+    ->inject('response')
+    ->action(function (Locale $locale, array $localeCodes, Request $request, Response $response) {
+        $localeParam = (string) $request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
+        if (\in_array($localeParam, $localeCodes)) {
+            $locale->setDefault($localeParam);
+        }
+
+        $response->send($locale->getText('mock'));
+    });
+
+Http::get('/v1/mock/tests/general/oauth2/token')
     ->desc('OAuth2 Token')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -44,7 +62,7 @@ App::get('/v1/mock/tests/general/oauth2/token')
     ->param('client_id', '', new Text(100), 'OAuth2 Client ID.')
     ->param('client_secret', '', new Text(100), 'OAuth2 scope list.')
     ->param('grant_type', 'authorization_code', new WhiteList(['refresh_token', 'authorization_code']), 'OAuth2 Grant Type.', true)
-    ->param('redirect_uri', '', new Host(['localhost']), 'OAuth2 Redirect URI.', true)
+    ->param('redirect_uri', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
     ->param('code', '', new Text(100), 'OAuth2 state.', true)
     ->param('refresh_token', '', new Text(100), 'OAuth2 refresh token.', true)
     ->inject('response')
@@ -81,7 +99,7 @@ App::get('/v1/mock/tests/general/oauth2/token')
         }
     });
 
-App::get('/v1/mock/tests/general/oauth2/user')
+Http::get('/v1/mock/tests/general/oauth2/user')
     ->desc('OAuth2 User')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -98,10 +116,32 @@ App::get('/v1/mock/tests/general/oauth2/user')
             'id' => 1,
             'name' => 'User Name',
             'email' => 'useroauth@localhost.test',
+            'verified' => true,
         ]);
     });
 
-App::get('/v1/mock/tests/general/oauth2/success')
+Http::get('/v1/mock/tests/general/oauth2/user-unverified')
+    ->desc('OAuth2 User Unverified')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->param('token', '', new Text(100), 'OAuth2 Access Token.')
+    ->inject('response')
+    ->action(function (string $token, Response $response) {
+
+        if ($token != '123456') {
+            throw new Exception(Exception::GENERAL_MOCK, 'Invalid token');
+        }
+
+        $response->json([
+            'id' => 2,
+            'name' => 'User Name Unverified',
+            'email' => 'useroauthunverified@localhost.test',
+            'verified' => false,
+        ]);
+    });
+
+Http::get('/v1/mock/tests/general/oauth2/success')
     ->desc('OAuth2 Success')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -114,7 +154,7 @@ App::get('/v1/mock/tests/general/oauth2/success')
         ]);
     });
 
-App::get('/v1/mock/tests/general/oauth2/failure')
+Http::get('/v1/mock/tests/general/oauth2/failure')
     ->desc('OAuth2 Failure')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -129,33 +169,7 @@ App::get('/v1/mock/tests/general/oauth2/failure')
             ]);
     });
 
-App::patch('/v1/mock/functions-v2')
-    ->desc('Update Function Version to V2 (outdated code syntax)')
-    ->groups(['mock', 'api', 'functions'])
-    ->label('scope', 'functions.write')
-    ->label('docs', false)
-    ->param('functionId', '', new UID(), 'Function ID.')
-    ->inject('response')
-    ->inject('dbForProject')
-    ->action(function (string $functionId, Response $response, Database $dbForProject) {
-        $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
-
-        if (!$isDevelopment) {
-            throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
-        }
-
-        $function = $dbForProject->getDocument('functions', $functionId);
-
-        if ($function->isEmpty()) {
-            throw new Exception(Exception::FUNCTION_NOT_FOUND);
-        }
-
-        $dbForProject->updateDocument('functions', $function->getId(), $function->setAttribute('version', 'v2'));
-
-        $response->noContent();
-    });
-
-App::post('/v1/mock/api-key-unprefixed')
+Http::post('/v1/mock/api-key-unprefixed')
     ->desc('Create API Key (without standard prefix)')
     ->groups(['mock', 'api', 'projects'])
     ->label('scope', 'public')
@@ -176,7 +190,7 @@ App::post('/v1/mock/api-key-unprefixed')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $scopes = array_keys(Config::getParam('scopes'));
+        $scopes = array_keys(Config::getParam('projectScopes'));
 
         $key = new Document([
             '$id' => ID::unique(),
@@ -185,8 +199,9 @@ App::post('/v1/mock/api-key-unprefixed')
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
-            'projectInternalId' => $project->getSequence(),
-            'projectId' => $project->getId(),
+            'resourceInternalId' => $project->getSequence(),
+            'resourceId' => $project->getId(),
+            'resourceType' => 'projects',
             'name' => 'Outdated key',
             'scopes' => $scopes,
             'expire' => null,
@@ -204,7 +219,7 @@ App::post('/v1/mock/api-key-unprefixed')
             ->dynamic($key, Response::MODEL_KEY);
     });
 
-App::get('/v1/mock/github/callback')
+Http::get('/v1/mock/github/callback')
     ->desc('Create installation document using GitHub installation id')
     ->groups(['mock', 'api', 'vcs'])
     ->label('scope', 'public')
@@ -229,47 +244,49 @@ App::get('/v1/mock/github/callback')
             throw new Exception(Exception::PROJECT_NOT_FOUND, $error);
         }
 
-        if (!empty($providerInstallationId)) {
-            $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-            $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
-            $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
-            $owner = $github->getOwnerName($providerInstallationId) ?? '';
-
-            $projectInternalId = $project->getSequence();
-
-            $teamId = $project->getAttribute('teamId', '');
-
-            $installation = new Document([
-                '$id' => ID::unique(),
-                '$permissions' => [
-                    Permission::read(Role::team(ID::custom($teamId))),
-                    Permission::update(Role::team(ID::custom($teamId), 'owner')),
-                    Permission::update(Role::team(ID::custom($teamId), 'developer')),
-                    Permission::delete(Role::team(ID::custom($teamId), 'owner')),
-                    Permission::delete(Role::team(ID::custom($teamId), 'developer')),
-                ],
-                'providerInstallationId' => $providerInstallationId,
-                'projectId' => $projectId,
-                'projectInternalId' => $projectInternalId,
-                'provider' => 'github',
-                'organization' => $owner,
-                'personal' => false
-            ]);
-
-            $installation = $dbForPlatform->createDocument('installations', $installation);
+        if (empty($providerInstallationId)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Missing provider installation ID');
         }
+
+        $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
+        $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
+        $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
+        $owner = $github->getOwnerName($providerInstallationId);
+
+        $projectInternalId = $project->getSequence();
+
+        $teamId = $project->getAttribute('teamId', '');
+
+        $installation = new Document([
+            '$id' => ID::unique(),
+            '$permissions' => [
+                Permission::read(Role::team(ID::custom($teamId))),
+                Permission::update(Role::team(ID::custom($teamId), 'owner')),
+                Permission::update(Role::team(ID::custom($teamId), 'developer')),
+                Permission::delete(Role::team(ID::custom($teamId), 'owner')),
+                Permission::delete(Role::team(ID::custom($teamId), 'developer')),
+            ],
+            'providerInstallationId' => $providerInstallationId,
+            'projectId' => $projectId,
+            'projectInternalId' => $projectInternalId,
+            'provider' => 'github',
+            'organization' => $owner,
+            'personal' => false
+        ]);
+
+        $installation = $dbForPlatform->createDocument('installations', $installation);
 
         $response->json([
             'installationId' => $installation->getId(),
         ]);
     });
 
-App::shutdown()
+Http::shutdown()
     ->groups(['mock'])
     ->inject('utopia')
     ->inject('response')
     ->inject('request')
-    ->action(function (App $utopia, Response $response, Request $request) {
+    ->action(function (Http $utopia, Response $response, Request $request) {
 
         $result = [];
         $route  = $utopia->getRoute();
