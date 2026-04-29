@@ -39,8 +39,6 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Roles;
 use Utopia\Http\Http;
-use Utopia\Logger\Log;
-use Utopia\Logger\Logger;
 use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -103,9 +101,7 @@ Http::init()
     ->inject('apiKey')
     ->inject('authorization')
     ->inject('distributedLock')
-    ->inject('log')
-    ->inject('logger')
-    ->action(function (Http $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization, callable $distributedLock, Log $log, ?Logger $logger) {
+    ->action(function (Http $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization, callable $distributedLock) {
         $route = $utopia->getRoute();
         if ($route === null) {
             throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
@@ -267,7 +263,7 @@ Http::init()
                         } elseif (! empty($apiKey->getTeamId())) {
                             $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('teams', $team->getId()));
                         }
-                    }, log: $log, logger: $logger);
+                    });
                 }
 
                 $userClone = clone $user;
@@ -402,7 +398,7 @@ Http::init()
                     $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
                         'accessedAt' => DateTime::now()
                     ])));
-                }, log: $log, logger: $logger);
+                });
             }
         }
 
@@ -423,7 +419,7 @@ Http::init()
                         $authorization->skip(fn () => $dbForPlatform->updateDocument('users', $user->getId(), new Document([
                             'accessedAt' => $user->getAttribute('accessedAt')
                         ])));
-                    }, log: $log, logger: $logger);
+                    });
                 }
             }
         }

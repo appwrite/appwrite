@@ -13,8 +13,6 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Logger\Log;
-use Utopia\Logger\Logger;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Text;
@@ -62,8 +60,6 @@ class Update extends Action
             ->inject('dbForPlatform')
             ->inject('authorization')
             ->inject('distributedLockOrFail')
-            ->inject('log')
-            ->inject('logger')
             ->callback($this->action(...));
     }
 
@@ -76,8 +72,6 @@ class Update extends Action
         Database $dbForPlatform,
         Authorization $authorization,
         callable $distributedLockOrFail,
-        Log $log,
-        ?Logger $logger,
     ) {
         $mockNumber = $distributedLockOrFail("lock:platform:projects:{$project->getId()}", function () use ($project, $number, $otp, $dbForPlatform, $authorization) {
             $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $project->getId()));
@@ -106,7 +100,7 @@ class Update extends Action
             ])));
 
             return $mockNumbers[$mockNumberIndex];
-        }, log: $log, logger: $logger);
+        });
 
         $queueForEvents->setParam('number', $number);
 

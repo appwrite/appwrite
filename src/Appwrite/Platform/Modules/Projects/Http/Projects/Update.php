@@ -10,8 +10,6 @@ use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\UID;
-use Utopia\Logger\Log;
-use Utopia\Logger\Logger;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator;
 use Utopia\Validator\Text;
@@ -68,12 +66,10 @@ class Update extends Action
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('distributedLockOrFail')
-            ->inject('log')
-            ->inject('logger')
             ->callback($this->action(...));
     }
 
-    public function action(string $projectId, string $name, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForPlatform, callable $distributedLockOrFail, Log $log, ?Logger $logger)
+    public function action(string $projectId, string $name, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForPlatform, callable $distributedLockOrFail)
     {
         // Re-fetch and write the full project doc inside the lock. This is the
         // worst RMW window in the projects API — the endpoint passes the entire
@@ -98,7 +94,7 @@ class Update extends Action
                 ->setAttribute('legalAddress', $legalAddress)
                 ->setAttribute('legalTaxId', $legalTaxId)
                 ->setAttribute('search', implode(' ', [$projectId, $name])));
-        }, log: $log, logger: $logger);
+        });
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     }

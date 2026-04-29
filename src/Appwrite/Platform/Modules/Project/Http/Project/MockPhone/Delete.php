@@ -13,8 +13,6 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Logger\Log;
-use Utopia\Logger\Logger;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 
@@ -61,8 +59,6 @@ class Delete extends Action
             ->inject('dbForPlatform')
             ->inject('authorization')
             ->inject('distributedLockOrFail')
-            ->inject('log')
-            ->inject('logger')
             ->callback($this->action(...));
     }
 
@@ -74,8 +70,6 @@ class Delete extends Action
         Database $dbForPlatform,
         Authorization $authorization,
         callable $distributedLockOrFail,
-        Log $log,
-        ?Logger $logger,
     ) {
         $distributedLockOrFail("lock:platform:projects:{$project->getId()}", function () use ($project, $number, $dbForPlatform, $authorization) {
             $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $project->getId()));
@@ -101,7 +95,7 @@ class Delete extends Action
             $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
                 'auths' => $auths,
             ])));
-        }, log: $log, logger: $logger);
+        });
 
         $queueForEvents->setParam('number', $number);
 

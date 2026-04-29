@@ -13,8 +13,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Emails\Validator\Email;
-use Utopia\Logger\Log;
-use Utopia\Logger\Logger;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
@@ -72,8 +70,6 @@ class Update extends Action
             ->inject('authorization')
             ->inject('project')
             ->inject('distributedLockOrFail')
-            ->inject('log')
-            ->inject('logger')
             ->callback($this->action(...));
     }
 
@@ -92,8 +88,6 @@ class Update extends Action
         Authorization $authorization,
         Document $project,
         callable $distributedLockOrFail,
-        Log $log,
-        ?Logger $logger,
     ) {
         $locale = $locale ?: System::getEnv('_APP_LOCALE', 'en');
 
@@ -147,7 +141,7 @@ class Update extends Action
             ])));
 
             return $template;
-        }, log: $log, logger: $logger);
+        });
 
         $queueForEvents->setParam('templateId', $templateId);
 

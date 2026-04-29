@@ -14,8 +14,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Emails\Validator\Email;
-use Utopia\Logger\Log;
-use Utopia\Logger\Logger;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
@@ -75,8 +73,6 @@ class Update extends Action
             ->inject('project')
             ->inject('authorization')
             ->inject('distributedLockOrFail')
-            ->inject('log')
-            ->inject('logger')
             ->callback($this->action(...));
     }
 
@@ -97,8 +93,6 @@ class Update extends Action
         Document $project,
         Authorization $authorization,
         callable $distributedLockOrFail,
-        Log $log,
-        ?Logger $logger,
     ): void {
         $inputs = [
             'host' => $host,
@@ -191,7 +185,7 @@ class Update extends Action
             return $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
                 'smtp' => $smtp,
             ])));
-        }, log: $log, logger: $logger);
+        });
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     }

@@ -11,8 +11,6 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Logger\Log;
-use Utopia\Logger\Logger;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
@@ -62,8 +60,6 @@ class Update extends Action
             ->inject('authorization')
             ->inject('queueForEvents')
             ->inject('distributedLockOrFail')
-            ->inject('log')
-            ->inject('logger')
             ->callback($this->action(...));
     }
 
@@ -75,8 +71,6 @@ class Update extends Action
         Authorization $authorization,
         Event $queueForEvents,
         callable $distributedLockOrFail,
-        Log $log,
-        ?Logger $logger,
     ): void {
         $project = $distributedLockOrFail("lock:platform:projects:{$project->getId()}", function () use ($project, $total, $dbForPlatform, $authorization) {
             $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $project->getId()));
@@ -87,7 +81,7 @@ class Update extends Action
             return $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
                 'auths' => $auths,
             ])));
-        }, log: $log, logger: $logger);
+        });
 
         $queueForEvents
             ->setParam('projectId', $project->getId())

@@ -13,8 +13,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
-use Utopia\Logger\Log;
-use Utopia\Logger\Logger;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator;
 
@@ -58,12 +56,10 @@ class Update extends Action
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('distributedLockOrFail')
-            ->inject('log')
-            ->inject('logger')
             ->callback($this->action(...));
     }
 
-    public function action(string $projectId, string $teamId, Response $response, Database $dbForPlatform, callable $distributedLockOrFail, Log $log, ?Logger $logger)
+    public function action(string $projectId, string $teamId, Response $response, Database $dbForPlatform, callable $distributedLockOrFail)
     {
         // Lock around the project doc RMW. Cascade fan-out to installations,
         // repositories and vcsComments runs after the lock is released —
@@ -89,7 +85,7 @@ class Update extends Action
             ]));
 
             return [$project, $permissions];
-        }, log: $log, logger: $logger);
+        });
 
         $installations = $dbForPlatform->find('installations', [
             Query::equal('projectInternalId', [$project->getSequence()]),
