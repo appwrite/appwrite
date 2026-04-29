@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Platform\Action;
 use Utopia\Queue\Publisher;
 use Utopia\Queue\Queue;
@@ -24,7 +24,7 @@ class QueueRetry extends Action
             ->param('name', '', new Text(100), 'Queue name')
             ->param('limit', 0, new Wildcard(), 'jobs limit', true)
             ->inject('publisher')
-            ->callback(fn ($name, $limit, $publisher) => $this->action($name, $limit, $publisher));
+            ->callback($this->action(...));
     }
 
     /**

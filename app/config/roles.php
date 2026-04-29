@@ -1,6 +1,6 @@
 <?php
 
-use Appwrite\Auth\Auth;
+use Appwrite\Utopia\Database\Documents\User;
 
 $member = [
     'global',
@@ -14,6 +14,8 @@ $member = [
     'teams.write',
     'documents.read',
     'documents.write',
+    'rows.read',
+    'rows.write',
     'files.read',
     'files.write',
     'projects.read',
@@ -26,6 +28,7 @@ $member = [
     'subscribers.write',
     'subscribers.read',
     'assistant.read',
+    'rules.read',
 ];
 
 $admins = [
@@ -36,6 +39,8 @@ $admins = [
     'teams.write',
     'documents.read',
     'documents.write',
+    'rows.read',
+    'rows.write',
     'files.read',
     'files.write',
     'buckets.read',
@@ -46,18 +51,36 @@ $admins = [
     'databases.write',
     'collections.read',
     'collections.write',
+    'tables.read',
+    'tables.write',
     'platforms.read',
     'platforms.write',
+    'oauth2.read',
+    'oauth2.write',
+    'mocks.read',
+    'mocks.write',
+    'policies.read',
+    'policies.write',
+    'templates.read',
+    'templates.write',
     'projects.write',
     'keys.read',
     'keys.write',
+    'devKeys.read',
+    'devKeys.write',
     'webhooks.read',
     'webhooks.write',
+    'project.read',
+    'project.write',
     'locale.read',
     'avatars.read',
     'health.read',
     'functions.read',
     'functions.write',
+    'sites.read',
+    'sites.write',
+    'log.read',
+    'log.write',
     'execution.read',
     'execution.write',
     'rules.read',
@@ -76,10 +99,14 @@ $admins = [
     'topics.read',
     'subscribers.write',
     'subscribers.read',
+    'tokens.read',
+    'tokens.write',
+    'schedules.read',
+    'schedules.write',
 ];
 
 return [
-    Auth::USER_ROLE_GUESTS => [
+    User::ROLE_GUESTS => [
         'label' => 'Guests',
         'scopes' => [
             'global',
@@ -90,6 +117,8 @@ return [
             'sessions.write',
             'documents.read',
             'documents.write',
+            'rows.read',
+            'rows.write',
             'files.read',
             'files.write',
             'locale.read',
@@ -97,23 +126,23 @@ return [
             'execution.write',
         ],
     ],
-    Auth::USER_ROLE_USERS => [
+    User::ROLE_USERS => [
         'label' => 'Users',
         'scopes' => \array_merge($member),
     ],
-    Auth::USER_ROLE_ADMIN => [
+    User::ROLE_ADMIN => [
         'label' => 'Admin',
         'scopes' => \array_merge($admins),
     ],
-    Auth::USER_ROLE_DEVELOPER => [
+    User::ROLE_DEVELOPER => [
         'label' => 'Developer',
         'scopes' => \array_merge($admins),
     ],
-    Auth::USER_ROLE_OWNER => [
+    User::ROLE_OWNER => [
         'label' => 'Owner',
         'scopes' => \array_merge($member, $admins),
     ],
-    Auth::USER_ROLE_APPS => [
+    User::ROLE_APPS => [
         'label' => 'Applications',
         'scopes' => ['global', 'health.read', 'graphql'],
     ],

@@ -2,8 +2,8 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Platform\Action;
 use Utopia\System\System;
 
@@ -18,7 +18,7 @@ class Vars extends Action
     {
         $this
             ->desc('List all the server environment variables')
-            ->callback(fn () => $this->action());
+            ->callback($this->action(...));
     }
 
     public function action(): void

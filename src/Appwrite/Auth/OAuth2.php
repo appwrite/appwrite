@@ -155,7 +155,7 @@ abstract class OAuth2
     /**
      * @param string $code
      *
-     * @return string
+     * @return int
      */
     public function getAccessTokenExpiry(string $code): int
     {
@@ -196,9 +196,9 @@ abstract class OAuth2
 
         if (!empty($payload)) {
             \curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+            $headers[] = 'Content-length: ' . \strlen($payload);
         }
 
-        $headers[] = 'Content-length: ' . \strlen($payload);
         \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
         // Send the request & save response to $response

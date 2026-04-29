@@ -17,17 +17,26 @@ class FunctionsClientTest extends Scope
     use Base;
     use Async;
 
-    public function testCreateFunction(): array
+    private static array $cachedFunction = [];
+    private static array $cachedDeployment = [];
+    private static array $cachedExecution = [];
+
+    protected function setupFunction(): array
     {
+        $key = $this->getProject()['$id'];
+        if (!empty(self::$cachedFunction[$key])) {
+            return self::$cachedFunction[$key];
+        }
+
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_FUNCTION);
+        $query = $this->getQuery(self::CREATE_FUNCTION);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
                 'functionId' => ID::unique(),
                 'name' => 'Test Function',
-                'runtime' => 'php-8.0',
-                'entrypoint' => 'index.php',
+                'runtime' => 'node-22',
+                'entrypoint' => 'index.js',
                 'execute' => [Role::any()->toString()],
             ]
         ];
@@ -70,19 +79,21 @@ class FunctionsClientTest extends Scope
         $this->assertIsArray($variables['body']['data']);
         $this->assertArrayNotHasKey('errors', $variables['body']);
 
+        self::$cachedFunction[$key] = $function;
         return $function;
     }
 
-    /**
-     * @depends testCreateFunction
-     * @param $function
-     * @return array
-     * @throws \Exception
-     */
-    public function testCreateDeployment($function): array
+    protected function setupDeployment(): array
     {
+        $key = $this->getProject()['$id'];
+        if (!empty(self::$cachedDeployment[$key])) {
+            return self::$cachedDeployment[$key];
+        }
+
+        $function = $this->setupFunction();
+
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_DEPLOYMENT);
+        $query = $this->getQuery(self::CREATE_DEPLOYMENT);
 
         $gqlPayload = [
             'operations' => \json_encode([
@@ -96,7 +107,7 @@ class FunctionsClientTest extends Scope
             'map' => \json_encode([
                 'code' => ["variables.code"]
             ]),
-            'code' => $this->packageFunction('php')
+            'code' => $this->packageFunction('basic')
         ];
 
         $deployment = $this->client->call(Client::METHOD_POST, '/graphql', [
@@ -112,7 +123,7 @@ class FunctionsClientTest extends Scope
         $deployment = $deployment['body']['data']['functionsCreateDeployment'];
         $deploymentId = $deployment['_id'];
 
-        $query = $this->getQuery(self::$GET_DEPLOYMENT);
+        $query = $this->getQuery(self::GET_DEPLOYMENT);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -133,23 +144,24 @@ class FunctionsClientTest extends Scope
 
             $deployment = $deployment['body']['data']['functionsGetDeployment'];
             $this->assertEquals('ready', $deployment['status']);
-        });
+        }, 60000);
 
+        self::$cachedDeployment[$key] = $deployment;
         return $deployment;
     }
 
-    /**
-     * @depends testCreateFunction
-     * @depends testCreateDeployment
-     * @param $function
-     * @param $deployment
-     * @return array
-     * @throws \Exception
-     */
-    public function testCreateExecution($function, $deployment): array
+    protected function setupExecution(): array
     {
+        $key = $this->getProject()['$id'];
+        if (!empty(self::$cachedExecution[$key])) {
+            return self::$cachedExecution[$key];
+        }
+
+        $function = $this->setupFunction();
+        $this->setupDeployment(); // Ensure deployment exists
+
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_EXECUTION);
+        $query = $this->getQuery(self::CREATE_EXECUTION);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -164,19 +176,47 @@ class FunctionsClientTest extends Scope
 
         $this->assertIsArray($execution['body']['data']);
         $this->assertArrayNotHasKey('errors', $execution['body']);
-        return $execution['body']['data']['functionsCreateExecution'];
+
+        self::$cachedExecution[$key] = $execution['body']['data']['functionsCreateExecution'];
+        return self::$cachedExecution[$key];
+    }
+
+    public function testCreateFunction(): void
+    {
+        $function = $this->setupFunction();
+        $this->assertNotEmpty($function);
     }
 
     /**
-     * @depends testCreateFunction
-     * @param $function
+     * @return void
+     * @throws \Exception
+     */
+    public function testCreateDeployment(): void
+    {
+        $deployment = $this->setupDeployment();
+        $this->assertNotEmpty($deployment);
+    }
+
+    /**
+     * @return void
+     * @throws \Exception
+     */
+    public function testCreateExecution(): void
+    {
+        $execution = $this->setupExecution();
+        $this->assertNotEmpty($execution);
+    }
+
+    /**
      * @return array
      * @throws \Exception
      */
-    public function testGetExecutions($function): array
+    public function testGetExecutions(): array
     {
+        $function = $this->setupFunction();
+
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_EXECUTIONS);
+        $query = $this->getQuery(self::GET_EXECUTIONS);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -198,17 +238,16 @@ class FunctionsClientTest extends Scope
     }
 
     /**
-     * @depends testCreateFunction
-     * @depends testCreateExecution
-     * @param $function
-     * @param $execution
      * @return array
      * @throws \Exception
      */
-    public function testGetExecution($function, $execution): array
+    public function testGetExecution(): array
     {
+        $function = $this->setupFunction();
+        $execution = $this->setupExecution();
+
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_EXECUTION);
+        $query = $this->getQuery(self::GET_EXECUTION);
         $gqlPayload = [
             'query' => $query,
             'variables' => [

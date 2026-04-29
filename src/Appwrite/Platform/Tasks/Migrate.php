@@ -4,15 +4,13 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Migration\Migration;
 use Redis;
-use Utopia\App;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Query;
+use Utopia\Database\Exception;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
-use Utopia\System\System;
 use Utopia\Validator\Text;
 
 class Migrate extends Action
@@ -28,118 +26,121 @@ class Migrate extends Action
     {
         $this
             ->desc('Migrate Appwrite to new version')
-            /** @TODO APP_VERSION_STABLE needs to be defined */
-            ->param('version', APP_VERSION_STABLE, new Text(8), 'Version to migrate to.', true)
+            ->param('version', APP_VERSION_STABLE, new Text(16), 'Version to migrate to.', true)
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
             ->inject('register')
-            ->callback(function ($version, $dbForPlatform, $getProjectDB, Registry $register) {
-                \Co\run(function () use ($version, $dbForPlatform, $getProjectDB, $register) {
-                    $this->action($version, $dbForPlatform, $getProjectDB, $register);
-                });
-            });
+            ->inject('authorization')
+            ->inject('console')
+            ->callback($this->action(...));
     }
 
-    private function clearProjectsCache(Document $project)
-    {
-        try {
-            $iterator = null;
-            do {
-                $pattern = "default-cache-_{$project->getInternalId()}:*";
-                $keys = $this->redis->scan($iterator, $pattern, 1000);
-                if ($keys !== false) {
-                    foreach ($keys as $key) {
-                        $this->redis->del($key);
-                    }
-                }
-            } while ($iterator > 0);
-        } catch (\Throwable $th) {
-            Console::error('Failed to clear project ("' . $project->getId() . '") cache with error: ' . $th->getMessage());
-        }
-    }
+    /**
+     * @param string $version
+     * @param Database $dbForPlatform
+     * @param callable(Document): Database $getProjectDB
+     * @param Registry $register
+     * @return void
+     * @throws Exception
+     */
+    public function action(
+        string $version,
+        Database $dbForPlatform,
+        callable $getProjectDB,
+        Registry $register,
+        Authorization $authorization,
+        Document $console
+    ): void {
 
-    public function action(string $version, Database $dbForPlatform, callable $getProjectDB, Registry $register)
-    {
-        Authorization::disable();
-        if (!array_key_exists($version, Migration::$versions)) {
-            Console::error("Version {$version} not found.");
+        if (!\array_key_exists($version, Migration::$versions)) {
+            Console::error("No migration found for version $version.");
             Console::exit(1);
-
             return;
         }
 
-        $this->redis = new Redis();
-        $this->redis->connect(
-            System::getEnv('_APP_REDIS_HOST', null),
-            System::getEnv('_APP_REDIS_PORT', 6379),
-            3,
-            null,
-            10
-        );
-
-        $app = new App('UTC');
-
-        Console::success('Starting Data Migration to version ' . $version);
-
-        $console = $app->getResource('console');
-
-        $limit = 30;
-        $sum = 30;
-        $offset = 0;
-        /**
-         * @var \Utopia\Database\Document[] $projects
-         */
-        $projects = [$console];
-        $count = 0;
-
-        try {
-            $totalProjects = $dbForPlatform->count('projects') + 1;
-        } catch (\Throwable $th) {
-            $dbForPlatform->setNamespace('_console');
-            $totalProjects = $dbForPlatform->count('projects') + 1;
-        }
+        Console::success('Starting data migration to version ' . $version);
 
         $class = 'Appwrite\\Migration\\Version\\' . Migration::$versions[$version];
+
         /** @var Migration $migration */
         $migration = new $class();
 
-        while (!empty($projects)) {
-            foreach ($projects as $project) {
-                /**
-                 * Skip user projects with id 'console'
-                 */
-                if ($project->getId() === 'console' && $project->getInternalId() !== 'console') {
-                    continue;
-                }
-
-                $this->clearProjectsCache($project);
-
-                try {
-                    // TODO: Iterate through all project DBs
-                    /** @var Database $projectDB */
-                    $projectDB = $getProjectDB($project);
-                    $projectDB->disableValidation();
-                    $migration
-                        ->setProject($project, $projectDB, $dbForPlatform)
-                        ->setPDO($register->get('db', true))
-                        ->execute();
-                } catch (\Throwable $th) {
-                    Console::error('Failed to update project ("' . $project->getId() . '") version with error: ' . $th->getMessage());
-                    throw $th;
-                }
-
-                $this->clearProjectsCache($project);
-            }
-
-            $sum = \count($projects);
-            $projects = $dbForPlatform->find('projects', [Query::limit($limit), Query::offset($offset)]);
-
-            $offset = $offset + $limit;
-            $count = $count + $sum;
-
-            Console::log('Migrated ' . $count . '/' . $totalProjects . ' projects...');
+        // Disable subquery filters that reference new schema columns not yet migrated
+        $subQueries = [
+            'subQueryAccountKeys',
+            'subQueryAttributes',
+            'subQueryAuthenticators',
+            'subQueryChallenges',
+            'subQueryDevKeys',
+            'subQueryIndexes',
+            'subQueryKeys',
+            'subQueryMemberships',
+            'subQueryOrganizationKeys',
+            'subQueryPlatforms',
+            'subQueryProjectVariables',
+            'subQuerySessions',
+            'subQueryTargets',
+            'subQueryTokens',
+            'subQueryTopicTargets',
+            'subQueryVariables',
+            'subQueryWebhooks',
+        ];
+        foreach ($subQueries as $name) {
+            Database::addFilter(
+                $name,
+                fn () => null,
+                fn () => []
+            );
         }
 
-        Console::success('Data Migration Completed');
+        $dbForPlatform->disableValidation();
+        $dbForPlatform->purgeCachedCollection('projects');
+
+        $count = 0;
+        try {
+            $total = $dbForPlatform->count('projects') + 1;
+        } catch (\Throwable) {
+            $total = 0;
+        }
+
+        $dbForPlatform->foreach('projects', function (Document $project) use ($dbForPlatform, $getProjectDB, $register, $migration, &$count, $total, $authorization) {
+            /** @var Database $dbForProject */
+            $dbForProject = $getProjectDB($project);
+            $dbForProject->disableValidation();
+
+            try {
+                $migration
+                    ->setProject($project, $dbForProject, $dbForPlatform, $authorization, $getProjectDB);
+
+                $db = $register->get('db', true);
+                if ($db instanceof \Utopia\Database\PDO) {
+                    $migration->setPDO($db);
+                }
+
+                $migration->execute();
+            } catch (\Throwable $th) {
+                Console::error('Failed to migrate project "' . $project->getId() . '" with error: ' . $th->getMessage());
+                throw $th;
+            }
+
+            Console::log('Migrated ' . ++$count . '/' . $total . ' projects...');
+        });
+
+        try {
+            $migration
+                ->setProject($console, $getProjectDB($console), $dbForPlatform, $authorization, $getProjectDB);
+
+            $db = $register->get('db', true);
+            if ($db instanceof \Utopia\Database\PDO) {
+                $migration->setPDO($db);
+            }
+
+            $migration->execute();
+        } catch (\Throwable $th) {
+            Console::error('Failed to migrate project "console" with error: ' . $th->getMessage());
+            throw $th;
+        }
+
+        Console::success('Migration completed');
     }
 }

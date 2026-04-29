@@ -34,29 +34,68 @@ class Rule extends Model
                 'default' => '',
                 'example' => 'appwrite.company.com',
             ])
-            ->addRule('resourceType', [
+            ->addRule('type', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Action definition for the rule. Possible values are "api", "function", or "redirect"',
+                'description' => 'Action definition for the rule. Possible values are "api", "deployment", or "redirect"',
                 'default' => '',
-                'example' => 'function',
+                'example' => 'deployment',
             ])
-            ->addRule('resourceId', [
+            ->addRule('trigger', [
                 'type' => self::TYPE_STRING,
-                'description' => 'ID of resource for the action type. If resourceType is "api" or "url", it is empty. If resourceType is "function", it is ID of the function.',
+                'description' => 'Defines how the rule was created. Possible values are "manual" or "deployment"',
                 'default' => '',
-                'example' => 'myAwesomeFunction',
+                'example' => 'manual',
+            ])
+            ->addRule('redirectUrl', [
+                'type' => self::TYPE_STRING,
+                'description' => 'URL to redirect to. Used if type is "redirect"',
+                'default' => '',
+                'example' => 'https://appwrite.io/docs',
+            ])
+            ->addRule('redirectStatusCode', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Status code to apply during redirect. Used if type is "redirect"',
+                'default' => 301,
+                'example' => 301,
+            ])
+            ->addRule('deploymentId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'ID of deployment. Used if type is "deployment"',
+                'default' => '',
+                'example' => 'n3u9feiwmf',
+            ])
+            ->addRule('deploymentResourceType', [
+                'type' => self::TYPE_ENUM,
+                'required' => false,
+                'description' => 'Type of deployment. Possible values are "function", "site". Used if rule\'s type is "deployment".',
+                'default' => null,
+                'example' => 'function',
+                'enum' => ['function', 'site'],
+            ])
+            ->addRule('deploymentResourceId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'ID deployment\'s resource. Used if type is "deployment"',
+                'default' => '',
+                'example' => 'n3u9feiwmf',
+            ])
+            ->addRule('deploymentVcsProviderBranch', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Name of Git branch that updates rule. Used if type is "deployment"',
+                'default' => '',
+                'example' => 'main',
             ])
             ->addRule('status', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_ENUM,
                 'description' => 'Domain verification status. Possible values are "created", "verifying", "verified" and "unverified"',
-                'default' => false,
+                'default' => 'created',
                 'example' => 'verified',
+                'enum' => ['created', 'verifying', 'verified', 'unverified'],
             ])
             ->addRule('logs', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Certificate generation logs. This will return an empty string if generation did not run, or succeeded.',
+                'description' => 'Logs from rule verification or certificate generation. Certificate generation logs are prioritized if both are available.',
                 'default' => '',
-                'example' => 'HTTP challegne failed.',
+                'example' => 'Verification of DNS records failed with DNS resolver 8.8.8.8. Domain stage.myapp.com does not have DNS record.',
             ])
             ->addRule('renewAt', [
                 'type' => self::TYPE_DATETIME,

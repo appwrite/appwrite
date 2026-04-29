@@ -26,7 +26,20 @@ class URL
             'fragment' => '',
         ];
 
-        return \array_merge($default, \parse_url($url));
+        $parsed = \parse_url($url);
+        if (is_array($parsed)) {
+            return \array_merge($default, $parsed);
+        }
+
+        // see if $url is just a scheme
+        if (preg_match('/^([a-z][a-z0-9+.-]*):/i', $url, $matches)) {
+            $scheme = $matches[1];
+            return \array_merge($default, [
+                'scheme' => $scheme
+            ]);
+        }
+
+        throw new \InvalidArgumentException('Invalid URL: ' . $url);
     }
 
     /**
@@ -55,9 +68,9 @@ class URL
 
         $parts['user'] = isset($url['user']) ? $url['user'] : '';
 
-        $parts['pass'] = isset($url['pass']) ? ':' . $url['pass'] : '';
+        $parts['pass'] = !empty($url['pass']) ? ':' . $url['pass'] : '';
 
-        $parts['pass'] = ($parts['user'] || $parts['pass']) ? $parts['pass'] . '@' : '';
+        $parts['pass'] = ($parts['user'] || !empty($parts['pass'])) ? $parts['pass'] . '@' : '';
 
         $parts['path'] = isset($url['path']) ? $url['path'] : '';
 

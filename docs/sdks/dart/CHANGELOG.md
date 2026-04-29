@@ -1,3 +1,112 @@
+# Change Log
+
+## 21.0.1
+
+* Fix doc examples with proper formatting
+
+## 21.0.0
+
+* Add array-based enum parameters (e.g., `permissions: List<BrowserPermission>`).
+* Breaking change: `Output` enum has been removed; use `ImageFormat` instead.
+* Add `getQueueAudits` support to `Health` service.
+* Add longtext/mediumtext/text/varchar attribute and column helpers to `Databases` and `TablesDB` services.
+
+## 20.1.1
+
+* Fix boolean parameter not handled correctly in Client requests
+
+## 20.1.0
+
+* Added ability to create columns and indexes synchronously while creating a table
+
+## 20.0.0
+
+* Rename `VCSDeploymentType` enum to `VCSReferenceType`
+* Change `createTemplateDeployment` method signature: replace `version` parameter with `type` (TemplateReferenceType) and `reference` parameters
+* Add `Theme`, `Timezone` and `Output` enums
+
+## 19.4.0
+
+* Add `getScreenshot` method to `Avatars` service
+* Add enums `Theme`, `Output` and `Timezone`
+* Update runtime enums to add support for `dart39` and `flutter335` runtimes
+* Fix passing of `null` values and stripping only non-nullable optional parameters from the request body
+
+## 19.3.0
+
+* Add `total` parameter to list queries allowing skipping counting rows in a table for improved performance
+* Add `Operator` class for atomic modification of rows via update, bulk update, upsert, and bulk upsert operations
+* Add `createResendProvider` and `updateResendProvider` methods to `Messaging` service
+
+## 19.2.1
+
+* Add transaction support for Databases and TablesDB
+
+## 19.1.0
+
+* Deprecate `createVerification` method in `Account` service
+* Add `createEmailVerification` method in `Account` service
+
+## 18.1.0
+
+* Add `orderRandom` query support
+
+## 18.0.0
+
+* Rename `CreditCard` enum value `unionChinaPay` to `unionPay`
+* Add time between query support
+* Add spatial attribute support
+* Add spatial index support
+* Add spatial query support
+
+## 17.0.0
+
+* Support for Appwrite 1.8
+* Added TablesDB service
+* Added new query types:
+    * `notContains`
+    * `notSearch`
+    * `notBetween`
+    * `notStartsWith`
+    * `notEndsWith`
+    * `createdBefore`
+    * `createdAfter`
+    * `updatedBefore`
+    * `updatedAfter`
+* Deprecated `updateMagicURLSession`
+* Deprecated `updatePhoneSession`
+* Deprecated Databases service
+> The TablesDB service is the new recommended way to work with databases.
+> Existing databases/collections/attributes/documents can be managed using the TablesDB service.
+> Existing Databases service will continue to work, but new features may only be added to the TablesDB service.
+  
+
+## 16.2.0
+
+* Add `incrementDocumentAttribute` and `decrementDocumentAttribute` support to `Databases` service
+* Add `encrypt` support to string attribute model
+* Add `sequence` support to `Document` model
+
+## 16.1.0
+
+* Add `gif` support to `ImageFormat` enum
+* Add support for `dart38` and `flutter332` runtimes
+* Add `upsertDocument()` method to Databases service
+* Fix `convertTo()` method in `Document` and `Preferences` models to correctly accept `Map<String, dynamic>`
+* Fix `upsertDocuments()` method to have `documents` attribute as required parameter
+
+## 16.0.0
+
+* Add `<REGION>` to doc examples due to the new multi region endpoints
+* Add doc examples and methods for bulk api transactions: `createDocuments`, `deleteDocuments` etc.
+* Add doc examples, class and methods for new `Sites` service
+* Add doc examples, class and methods for new `Tokens` service
+* Add enums for `BuildRuntime `, `Adapter`, `Framework`, `DeploymentDownloadType` and `VCSDeploymentType`
+* Add `token` param to `getFilePreview` and `getFileView` for File tokens usage
+* Add `queries` and `search` params to `listMemberships` method
+* Update enum for `runtimes` with Pythonml312, Dart219, Flutter327 and Flutter329
+* Remove `search` param from `listExecutions` method
+
 ## 14.0.0
 
 * Breaking changes:

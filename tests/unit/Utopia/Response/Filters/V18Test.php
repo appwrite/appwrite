@@ -3,15 +3,14 @@
 namespace Tests\Unit\Utopia\Response\Filters;
 
 use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Response\Filter;
 use Appwrite\Utopia\Response\Filters\V18;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class V18Test extends TestCase
 {
-    /**
-     * @var Filter
-     */
-    protected $filter = null;
+    protected Filter $filter;
 
     public function setUp(): void
     {
@@ -22,7 +21,7 @@ class V18Test extends TestCase
     {
     }
 
-    public function functionProvider(): array
+    public static function functionProvider(): array
     {
         return [
             'remove scopes' => [
@@ -38,9 +37,7 @@ class V18Test extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider functionProvider
-     */
+    #[DataProvider('functionProvider')]
     public function testFunction(array $content, array $expected): void
     {
         $model = Response::MODEL_FUNCTION;
@@ -51,7 +48,7 @@ class V18Test extends TestCase
     }
 
 
-    public function executionProvider(): array
+    public static function executionProvider(): array
     {
         return [
             'remove scheduledAt' => [
@@ -104,9 +101,7 @@ class V18Test extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider executionProvider
-     */
+    #[DataProvider('executionProvider')]
     public function testExecution(array $content, array $expected): void
     {
         $model = Response::MODEL_EXECUTION;
@@ -116,7 +111,7 @@ class V18Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public function projectProvider(): array
+    public static function projectProvider(): array
     {
         return [
             'remove authMockNumbers and authSessionAlerts' => [
@@ -136,9 +131,7 @@ class V18Test extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider projectProvider
-     */
+    #[DataProvider('projectProvider')]
     public function testProject(array $content, array $expected): void
     {
         $model = Response::MODEL_PROJECT;
@@ -148,7 +141,7 @@ class V18Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public function runtimeProvider(): array
+    public static function runtimeProvider(): array
     {
         return [
             'remove key' => [
@@ -161,9 +154,7 @@ class V18Test extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider runtimeProvider
-     */
+    #[DataProvider('runtimeProvider')]
     public function testRuntime(array $content, array $expected): void
     {
         $model = Response::MODEL_RUNTIME;

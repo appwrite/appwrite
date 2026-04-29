@@ -45,7 +45,16 @@ return [
             ],
             [
                 'name' => '_APP_OPTIONS_FUNCTIONS_FORCE_HTTPS',
-                'description' => 'Allows you to force HTTPS connection to function domains. This feature redirects any HTTP call to HTTPS and adds the \'Strict-Transport-Security\' header to all HTTP responses. By default, set to \'enabled\'. To disable, set to \'disabled\'. This feature will work only when your ports are set to default 80 and 443.',
+                'description' => 'Deprecated since 1.7.0. Allows you to force HTTPS connection to function domains. This feature redirects any HTTP call to HTTPS and adds the \'Strict-Transport-Security\' header to all HTTP responses. By default, set to \'enabled\'. To disable, set to \'disabled\'. This feature will work only when your ports are set to default 80 and 443.',
+                'introduction' => '',
+                'default' => 'disabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_OPTIONS_ROUTER_FORCE_HTTPS',
+                'description' => 'Allows you to force HTTPS connection to function and site domains. This feature redirects any HTTP call to HTTPS and adds the \'Strict-Transport-Security\' header to all HTTP responses. By default, set to \'enabled\'. To disable, set to \'disabled\'. This feature will work only when your ports are set to default 80 and 443.',
                 'introduction' => '',
                 'default' => 'disabled',
                 'required' => false,
@@ -72,11 +81,20 @@ return [
             ],
             [
                 'name' => '_APP_DOMAIN',
-                'description' => 'Your Appwrite domain address. When setting a public suffix domain, Appwrite will attempt to issue a valid SSL certificate automatically. When used with a dev domain, Appwrite will assign a self-signed SSL certificate. The default value is \'localhost\'.',
+                'description' => 'Your Appwrite domain address. When setting a public suffix domain, Appwrite will attempt to issue a valid SSL certificate automatically. When used with a dev domain, Appwrite will assign a self-signed SSL certificate. The default value is \'localhost\'. Multiple domains can be separated by commas.',
                 'introduction' => '',
                 'default' => 'localhost',
                 'required' => true,
                 'question' => 'Enter your Appwrite hostname',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CUSTOM_DOMAIN_DENY_LIST',
+                'description' => 'List of reserved or prohibited domains when configuring custom domains.',
+                'introduction' => '',
+                'default' => 'example.com,test.com,app.example.com',
+                'required' => false,
+                'question' => '',
                 'filter' => ''
             ],
             [
@@ -89,13 +107,67 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_DOMAIN_SITES',
+                'description' => 'A domain to use for site preview URLs.',
+                'introduction' => '',
+                'default' => 'sites.localhost',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_DOMAIN_TARGET',
-                'description' => 'A DNS A record hostname to serve as a CNAME target for your Appwrite custom domains. You can use the same value as used for the Appwrite \'_APP_DOMAIN\' variable. The default value is \'localhost\'.',
+                'description' => 'Deprecated since 1.7.0. A DNS A record hostname to serve as a CNAME target for your Appwrite custom domains. You can use the same value as used for the Appwrite \'_APP_DOMAIN\' variable. The default value is \'localhost\'.',
                 'introduction' => '',
                 'default' => 'localhost',
                 'required' => true,
                 'question' => 'Enter a DNS A record hostname to serve as a CNAME for your custom domains.' . PHP_EOL . 'You can use the same value as used for the Appwrite hostname.',
                 'filter' => 'domainTarget'
+            ],
+            [
+                'name' => '_APP_DOMAIN_TARGET_CNAME',
+                'description' => 'A domain that can be used as DNS CNAME record to point to instance of Appwrite server.',
+                'introduction' => '',
+                'default' => 'localhost',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DOMAIN_TARGET_AAAA',
+                'description' => 'An IPv6 that can be used as DNS AAAA record to point to instance of Appwrite server.',
+                'introduction' => '',
+                'default' => '::1',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DOMAIN_TARGET_A',
+                'description' => 'An IPV4 that can be used as DNS A record to point to instance of Appwrite server.',
+                'introduction' => '',
+                'default' => '127.0.0.1',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DOMAIN_TARGET_CAA',
+                'description' => 'A CAA record domain that can be used to validate custom domains. Value should be domain\'s hostname.',
+                'introduction' => '',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DNS',
+                'description' => 'DNS server to use for domain validation. Default: 8.8.8.8',
+                'introduction' => '',
+                'default' => '8.8.8.8',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ],
             [
                 'name' => '_APP_CONSOLE_WHITELIST_ROOT',
@@ -285,7 +357,85 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => ''
+            ],
+            [
+                'name' => '_APP_TRUSTED_HEADERS',
+                'description' => 'This option allows you to set the list of trusted headers, the value is a comma‑separated list of HTTP header names, evaluated left-to-right for the first valid IP. Header names are treated case-insensitively.',
+                'introduction' => '1.8.0',
+                'default' => 'x-forwarded-for',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ]
+        ],
+    ],
+    [
+        'category' => 'Database',
+        'description' => 'Appwrite uses a database for storing user and meta data. You can choose between MariaDB, MongoDB or PostgreSQL.',
+        'variables' => [
+            [
+                'name' => '_APP_DB_ADAPTER',
+                'description' => 'Which database to use. Must be one of: MariaDB, MongoDB, or PostgreSQL',
+                'introduction' => '1.9.0',
+                'default' => 'mongodb',
+                'required' => true,
+                'question' => 'Choose your database (mariadb|mongodb|postgresql)',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_HOST',
+                'description' => 'Database server host name address. Default value is: \'mongodb\'.',
+                'introduction' => '',
+                'default' => 'mongodb',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_PORT',
+                'description' => 'Database server TCP port. Default value is: \'27017\'.',
+                'introduction' => '',
+                'default' => '27017',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_SCHEMA',
+                'description' => 'Database server database schema. Default value is: \'appwrite\'.',
+                'introduction' => '',
+                'default' => 'appwrite',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_USER',
+                'description' => 'Database server user name. Default value is: \'user\'.',
+                'introduction' => '',
+                'default' => 'user',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_PASS',
+                'description' => 'Database server user password. Default value is: \'password\'.',
+                'introduction' => '',
+                'default' => 'password',
+                'required' => false,
+                'question' => '',
+                'filter' => 'password'
+            ],
+            [
+                'name' => '_APP_DB_ROOT_PASS',
+                'description' => 'Database server root password. Default value is: \'rootsecretpassword\'.',
+                'introduction' => '',
+                'default' => 'rootsecretpassword',
+                'required' => false,
+                'question' => '',
+                'filter' => 'password'
+            ],
         ],
     ],
     [
@@ -327,66 +477,6 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => ''
-            ],
-        ],
-    ],
-    [
-        'category' => 'MariaDB',
-        'description' => 'Appwrite is using a MariaDB server for managing persistent database data. The MariaDB env vars are used to allow Appwrite server to connect to the MariaDB container.',
-        'variables' => [
-            [
-                'name' => '_APP_DB_HOST',
-                'description' => 'MariaDB server host name address. Default value is: \'mariadb\'.',
-                'introduction' => '',
-                'default' => 'mariadb',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
-                'name' => '_APP_DB_PORT',
-                'description' => 'MariaDB server TCP port. Default value is: \'3306\'.',
-                'introduction' => '',
-                'default' => '3306',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
-                'name' => '_APP_DB_SCHEMA',
-                'description' => 'MariaDB server database schema. Default value is: \'appwrite\'.',
-                'introduction' => '',
-                'default' => 'appwrite',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
-                'name' => '_APP_DB_USER',
-                'description' => 'MariaDB server user name. Default value is: \'user\'.',
-                'introduction' => '',
-                'default' => 'user',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
-                'name' => '_APP_DB_PASS',
-                'description' => 'MariaDB server user password. Default value is: \'password\'.',
-                'introduction' => '',
-                'default' => 'password',
-                'required' => false,
-                'question' => '',
-                'filter' => 'password'
-            ],
-            [
-                'name' => '_APP_DB_ROOT_PASS',
-                'description' => 'MariaDB server root password. Default value is: \'rootsecretpassword\'.',
-                'introduction' => '',
-                'default' => 'rootsecretpassword',
-                'required' => false,
-                'question' => '',
-                'filter' => 'password'
             ],
         ],
     ],
@@ -746,8 +836,17 @@ return [
         'variables' => [
             [
                 'name' => '_APP_FUNCTIONS_SIZE_LIMIT',
-                'description' => 'The maximum size of a function in bytes. The default value is 30MB.',
+                'description' => 'Deprecated since 1.7.0. The maximum size of a function in bytes. The default value is 30MB.',
                 'introduction' => '0.13.0',
+                'default' => '30000000',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_COMPUTE_SIZE_LIMIT',
+                'description' => 'The maximum size of a function and site deployments in bytes. The default value is 30MB.',
+                'introduction' => '1.7.0',
                 'default' => '30000000',
                 'required' => false,
                 'question' => '',
@@ -764,7 +863,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_TIMEOUT',
-                'description' => 'The maximum number of seconds allowed as a timeout value when creating a new function. The default value is 900 seconds. This is the global limit, timeout for individual functions are configured in the function\'s settings or in appwrite.json.',
+                'description' => 'The maximum number of seconds allowed as a timeout value when creating a new function. The default value is 900 seconds. This is the global limit, timeout for individual functions are configured in the function\'s settings or in appwrite.config.json.',
                 'introduction' => '0.7.0',
                 'default' => '900',
                 'required' => false,
@@ -773,9 +872,18 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_BUILD_TIMEOUT',
-                'description' => 'The maximum number of seconds allowed as a timeout value when building a new function. The default value is 900 seconds.',
+                'description' => 'Deprecated since 1.7.0. The maximum number of seconds allowed as a timeout value when building a new function. The default value is 2700 seconds.',
                 'introduction' => '0.13.0',
-                'default' => '900',
+                'default' => '2700',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_COMPUTE_BUILD_TIMEOUT',
+                'description' => 'The maximum number of seconds allowed as a timeout value when building a new function or site. The default value is 2700 seconds.',
+                'introduction' => '1.7.0',
+                'default' => '2700',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -791,7 +899,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_CPUS',
-                'description' => 'The maximum number of CPU core a single cloud function is allowed to use. Please note that setting a value higher than available cores will result in a function error, which might result in an error. The default value is empty. When it\'s empty, CPU limit will be disabled.',
+                'description' => 'Deprecated since 1.7.0. The maximum number of CPU core a single cloud function is allowed to use. Please note that setting a value higher than available cores will result in a function error, which might result in an error. The default value is empty. When it\'s empty or 0, CPU limit will be disabled',
                 'introduction' => '0.7.0',
                 'default' => '0',
                 'required' => false,
@@ -799,9 +907,27 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_COMPUTE_CPUS',
+                'description' => 'The maximum number of CPU core a single cloud function or a site is allowed to use. Please note that setting a value higher than available cores might result in an error. The default value is empty. When it\'s empty, CPU limit will be disabled.',
+                'introduction' => '1.7.0',
+                'default' => '0',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_FUNCTIONS_MEMORY',
-                'description' => 'The maximum amount of memory a single cloud function is allowed to use in megabytes. The default value is  empty. When it\'s empty, memory limit will be disabled.',
+                'description' => 'Deprecated since 1.7.0. The maximum amount of memory a single cloud function is allowed to use in megabytes. The default value is  empty. When it\'s empty or 0, memory limit will be disabled.',
                 'introduction' => '0.7.0',
+                'default' => '0',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_COMPUTE_MEMORY',
+                'description' => 'The maximum amount of memory a single function or site is allowed to use in megabytes. The default value is  empty. When it\'s empty, memory limit will be disabled.',
+                'introduction' => '1.7.0',
                 'default' => '0',
                 'required' => false,
                 'question' => '',
@@ -845,6 +971,16 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_BROWSER_HOST',
+                'description' => 'The host used by Appwrite to communicate with the browser service for screenshots.',
+                'introduction' => '1.8.0',
+                'default' => 'http://appwrite-browser:3000/v1',
+                'required' => false,
+                'overwrite' => true,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_EXECUTOR_RUNTIME_NETWORK',
                 'description' => 'Deprecated with 0.14.0, use \'OPEN_RUNTIMES_NETWORK\' instead.',
                 'introduction' => '0.13.0',
@@ -864,8 +1000,17 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_INACTIVE_THRESHOLD',
-                'description' => 'The minimum time a function must be inactive before it can be shut down and cleaned up. This feature is intended to clean up unused containers. Containers may remain active for longer than the interval before being shut down, as Appwrite only cleans up unused containers every hour. If no value is provided, the default is 60 seconds.',
+                'description' => 'Deprecated since 1.7.0. The minimum time a function must be inactive before it can be shut down and cleaned up. This feature is intended to clean up unused containers. Containers may remain active for longer than the interval before being shut down, as Appwrite only cleans up unused containers every hour. If no value is provided, the default is 60 seconds.',
                 'introduction' => '0.13.0',
+                'default' => '60',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_COMPUTE_INACTIVE_THRESHOLD',
+                'description' => 'The minimum time a function or site must be inactive before it can be shut down and cleaned up. This feature is intended to clean up unused containers. Containers may remain active for longer than the interval before being shut down, as Appwrite only cleans up unused containers every hour. If no value is provided, the default is 60 seconds.',
+                'introduction' => '1.7.0',
                 'default' => '60',
                 'required' => false,
                 'question' => '',
@@ -909,8 +1054,17 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_RUNTIMES_NETWORK',
-                'description' => 'The docker network used for communication between the executor and runtimes.',
+                'description' => 'Deprecated since 1.7.0. The docker network used for communication between the executor and runtimes.',
                 'introduction' => '1.2.0',
+                'default' => 'runtimes',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_COMPUTE_RUNTIMES_NETWORK',
+                'description' => 'The docker network used for communication between the executor and runtimes for sites and functions.',
+                'introduction' => '1.7.0',
                 'default' => 'runtimes',
                 'required' => false,
                 'question' => '',
@@ -936,7 +1090,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_MAINTENANCE_INTERVAL',
-                'description' => 'Interval value containing the number of seconds that the executor should wait before checking for inactive runtimes. The default value is 3600 seconds (1 hour).',
+                'description' => 'Deprecated since 1.7.0. Interval value containing the number of seconds that the executor should wait before checking for inactive runtimes. The default value is 3600 seconds (1 hour).',
                 'introduction' => '1.4.0',
                 'default' => '3600',
                 'required' => false,
@@ -944,7 +1098,41 @@ return [
                 'question' => '',
                 'filter' => ''
             ],
+            [
+                'name' => '_APP_COMPUTE_MAINTENANCE_INTERVAL',
+                'description' => 'Interval value containing the number of seconds that the executor should wait before checking for inactive runtimes of functions and sites. The default value is 3600 seconds (1 hour).',
+                'introduction' => '1.7.0',
+                'default' => '3600',
+                'required' => false,
+                'overwrite' => true,
+                'question' => '',
+                'filter' => ''
+            ],
         ],
+    ],
+    [
+        'category' => 'Sites',
+        'description' => '',
+        'variables' => [
+            [
+                'name' => '_APP_SITES_TIMEOUT',
+                'description' => 'The maximum number of seconds allowed as a timeout value when creating a new site. The default value is 900 seconds. This is the global limit, timeout for individual functions are configured in the sites\'s settings or in appwrite.config.json.',
+                'introduction' => '1.7.0',
+                'default' => '900',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_SITES_RUNTIMES',
+                'description' => "This option allows you to enable or disable runtime environments for Sites. Disable unused runtimes to save disk space.\n\nTo enable cloud site runtimes, pass a list of enabled environments separated by a comma.\n\nCurrently, supported environments are: " . \implode(', ', \array_keys(Config::getParam('runtimes'))),
+                'introduction' => '1.7.0',
+                'default' => 'static-1,node-22,flutter-3.29',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+        ]
     ],
     [
         'category' => 'VCS (Version Control System)',
@@ -1021,9 +1209,18 @@ return [
             ],
             [
                 'name' => '_APP_MAINTENANCE_DELAY',
-                'description' => 'Delay value containing the number of seconds that the Appwrite maintenance process should wait before executing system cleanups and optimizations. The default value is 0 seconds.',
+                'description' => 'Deprecated with 1.6.2 use _APP_MAINTENANCE_START_TIME instead to run the maintenance at a specific time per day.',
                 'introduction' => '1.5.0',
                 'default' => '0',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MAINTENANCE_START_TIME',
+                'description' => 'The time of day (in 24-hour format) when the maintenance process should start. The default value is 00:00.',
+                'introduction' => '1.6.2',
+                'default' => '00:00',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -1048,9 +1245,18 @@ return [
             ],
             [
                 'name' => '_APP_MAINTENANCE_RETENTION_AUDIT',
-                'description' => 'IThe maximum duration (in seconds) upto which to retain audit logs. The default value is 1209600 seconds (14 days).',
+                'description' => 'The maximum duration (in seconds) upto which to retain audit logs. The default value is 1209600 seconds (14 days).',
                 'introduction' => '0.7.0',
                 'default' => '1209600',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE',
+                'description' => 'The maximum duration (in seconds) upto which to retain console audit logs. The default value is 15778800 seconds (6 months).',
+                'introduction' => '1.6.2',
+                'default' => '15778800',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -1088,6 +1294,15 @@ return [
         'category' => 'GraphQL',
         'description' => '',
         'variables' => [
+            [
+                'name' => '_APP_GRAPHQL_INTROSPECTION',
+                'description' => 'Enable or disable GraphQL introspection. Set to \'enabled\' to allow schema introspection, or \'disabled\' to block it. The default value is \'enabled\'.',
+                'introduction' => '',
+                'default' => 'enabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
             [
                 'name' => '_APP_GRAPHQL_MAX_BATCH_SIZE',
                 'description' => 'Maximum number of batched queries per request. The default value is 10.',

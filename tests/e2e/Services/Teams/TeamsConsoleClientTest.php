@@ -14,13 +14,89 @@ class TeamsConsoleClientTest extends Scope
     use ProjectConsole;
     use SideClient;
 
-    /**
-     * @depends testCreateTeam
-     */
-    public function testTeamMembershipPerms($data): array
+    public function testConsoleMembershipPrivacyDefaults(): void
     {
-        $teamUid = $data['teamUid'] ?? '';
-        $teamName = $data['teamName'] ?? '';
+        $teamData = $this->createTeamHelper();
+        $membershipData = $this->createAndAcceptMembershipHelper($teamData['teamUid'], $teamData['teamName']);
+
+        $teamUid = $teamData['teamUid'];
+        $projectId = $this->getProject()['$id'];
+        $owner = $this->getUser();
+        $memberHeaders = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $membershipData['session'],
+        ];
+
+        $ownerMemberships = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $ownerMemberships['headers']['status-code']);
+        $this->assertEquals(2, $ownerMemberships['body']['total']);
+
+        $ownerMembershipsByUser = [];
+        foreach ($ownerMemberships['body']['memberships'] as $membership) {
+            $ownerMembershipsByUser[$membership['userId']] = $membership;
+        }
+
+        $this->assertArrayHasKey($owner['$id'], $ownerMembershipsByUser);
+        $this->assertContains('owner', $ownerMembershipsByUser[$owner['$id']]['roles']);
+
+        $this->assertArrayHasKey($membershipData['userUid'], $ownerMembershipsByUser);
+        $this->assertNotContains('owner', $ownerMembershipsByUser[$membershipData['userUid']]['roles']);
+        $this->assertSame($membershipData['userUid'], $ownerMembershipsByUser[$membershipData['userUid']]['userId']);
+        $this->assertSame($membershipData['name'], $ownerMembershipsByUser[$membershipData['userUid']]['userName']);
+        $this->assertSame($membershipData['email'], $ownerMembershipsByUser[$membershipData['userUid']]['userEmail']);
+        $this->assertFalse($ownerMembershipsByUser[$membershipData['userUid']]['mfa']);
+
+        $memberMemberships = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', $memberHeaders);
+
+        $this->assertEquals(200, $memberMemberships['headers']['status-code']);
+        $this->assertEquals(2, $memberMemberships['body']['total']);
+
+        $memberMembershipsByUser = [];
+        foreach ($memberMemberships['body']['memberships'] as $membership) {
+            $memberMembershipsByUser[$membership['userId']] = $membership;
+        }
+
+        $this->assertArrayHasKey($owner['$id'], $memberMembershipsByUser);
+        $this->assertSame($owner['$id'], $memberMembershipsByUser[$owner['$id']]['userId']);
+        $this->assertSame($owner['name'], $memberMembershipsByUser[$owner['$id']]['userName']);
+        $this->assertSame($owner['email'], $memberMembershipsByUser[$owner['$id']]['userEmail']);
+        $this->assertFalse($memberMembershipsByUser[$owner['$id']]['mfa']);
+        $this->assertContains('owner', $memberMembershipsByUser[$owner['$id']]['roles']);
+
+        $this->assertArrayHasKey($membershipData['userUid'], $memberMembershipsByUser);
+        $this->assertNotContains('owner', $memberMembershipsByUser[$membershipData['userUid']]['roles']);
+    }
+
+    public function testTeamCreateMembershipConsole(): void
+    {
+        $teamData = $this->createTeamHelper();
+        $teamUid = $teamData['teamUid'];
+        $email = uniqid() . 'friend@localhost.test';
+        $name = 'Friend User';
+
+        $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'email' => $email,
+            'name' => $name,
+            'roles' => ['developer'],
+            'url' => 'http://example.com/join-us#title' // bad url
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    public function testTeamMembershipPerms(): void
+    {
+        $teamData = $this->createTeamHelper();
+        $teamUid = $teamData['teamUid'];
         $email = uniqid() . 'friend@localhost.test';
         $name = 'Friend User';
         $password = 'password';
@@ -41,7 +117,7 @@ class TeamsConsoleClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
+        $developer = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -51,7 +127,8 @@ class TeamsConsoleClientTest extends Scope
             'url' => 'http://localhost:5000/join-us#title'
         ]);
 
-        $this->assertEquals(201, $response['headers']['status-code']);
+        $developerUserId = $developer['body']['$id'];
+        $this->assertEquals(201, $developer['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
             'content-type' => 'application/json',
@@ -66,43 +143,37 @@ class TeamsConsoleClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        $ownerMembershipUid = $response['body']['memberships'][1]['$id'];
+        $ownerMembershipUid = $response['body']['memberships'][0]['$id'];
 
         $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . $teamUid . '/memberships/' . $ownerMembershipUid, array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
-        $this->assertEquals(204, $response['headers']['status-code']);
 
-        return $data;
-    }
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('membership_deletion_prohibited', $response['body']['type']);
+        $this->assertEquals('There must be at least one owner in the organization.', $response['body']['message']);
 
-    /** @depends testUpdateTeamMembership */
-    public function testUpdateTeamMembershipRoles($data): array
-    {
-        $teamUid = $data['teamUid'] ?? '';
-        $membershipUid = $data['membershipUid'] ?? '';
-        $session = $data['session'] ?? '';
-
-        /**
-         * Test for SUCCESS
-         */
-        $roles = ['developer'];
-        $response = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamUid . '/memberships/' . $membershipUid, array_merge([
+        // Remove the excess developer member to reduce the membership count in `TeamsBaseClient` tests.
+        // This is necessary because the only owner cannot be removed in the console project / top level team / organization.
+        $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . $teamUid . '/memberships/' . $developerUserId, array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'roles' => $roles
-        ]);
+        ], $this->getHeaders()));
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['$id']);
-        $this->assertNotEmpty($response['body']['userId']);
-        $this->assertNotEmpty($response['body']['teamId']);
-        $this->assertCount(count($roles), $response['body']['roles']);
-        $this->assertEquals($roles[0], $response['body']['roles'][0]);
+        $this->assertEquals(204, $response['headers']['status-code']);
+    }
+
+    public function testUpdateTeamMembershipRoles(): void
+    {
+        $teamData = $this->createTeamHelper();
+        $membershipData = $this->createAndAcceptMembershipHelper($teamData['teamUid'], $teamData['teamName']);
+
+        $teamUid = $membershipData['teamUid'];
+        $membershipUid = $membershipData['membershipUid'];
+        $session = $membershipData['session'];
 
         /**
          * Test for unknown team
@@ -112,7 +183,7 @@ class TeamsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'roles' => $roles
+            'roles' => ['developer']
         ]);
 
         $this->assertEquals(404, $response['headers']['status-code']);
@@ -125,7 +196,7 @@ class TeamsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'roles' => $roles
+            'roles' => ['developer']
         ]);
 
         $this->assertEquals(404, $response['headers']['status-code']);
@@ -140,12 +211,97 @@ class TeamsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ], [
-            'roles' => $roles
+            'roles' => ['developer']
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
         $this->assertEquals('User is not allowed to modify roles', $response['body']['message']);
+    }
 
-        return $data;
+    public function testDeleteTeamMembership(): void
+    {
+        $teamData = $this->createTeamHelper();
+        $teamUid = $teamData['teamUid'];
+        $teamName = $teamData['teamName'];
+
+        // Create multiple memberships for the delete test
+        $this->createPendingMembershipHelper($teamUid, $teamName);
+        $membershipData = $this->createAndAcceptMembershipHelper($teamUid, $teamName);
+
+        $membershipUid = $membershipData['membershipUid'];
+        $session = $membershipData['session'];
+
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(3, $response['body']['total']);
+
+        $ownerMembershipUid = $response['body']['memberships'][0]['$id'];
+
+        /**
+         * Test deleting a membership that does not exists
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . $teamUid . '/memberships/dne', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        /**
+         * Test deleting another user's membership
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . $teamUid . '/memberships/' . $ownerMembershipUid, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals('The current user is not authorized to perform the requested action.', $response['body']['message']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . $teamUid . '/memberships/' . $membershipUid, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(2, $response['body']['total']);
+
+        /**
+         * Test for when the owner tries to delete their membership
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . $teamUid . '/memberships/' . $ownerMembershipUid, array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('membership_deletion_prohibited', $response['body']['type']);
+        $this->assertEquals('There must be at least one owner in the organization.', $response['body']['message']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships/' . $ownerMembershipUid, array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
     }
 }

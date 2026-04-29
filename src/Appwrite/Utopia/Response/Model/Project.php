@@ -2,7 +2,6 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Config\Config;
@@ -10,11 +9,6 @@ use Utopia\Database\Document;
 
 class Project extends Model
 {
-    /**
-     * @var bool
-     */
-    protected bool $public = false;
-
     public function __construct()
     {
         $this
@@ -105,7 +99,7 @@ class Project extends Model
             ->addRule('authDuration', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Session duration in seconds.',
-                'default' => Auth::TOKEN_EXPIRATION_LOGIN_LONG,
+                'default' => TOKEN_EXPIRATION_LOGIN_LONG,
                 'example' => 60,
             ])
             ->addRule('authLimit', [
@@ -135,6 +129,24 @@ class Project extends Model
             ->addRule('authPersonalDataCheck', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Whether or not to check the user password for similarity with their personal data.',
+                'default' => false,
+                'example' => true,
+            ])
+            ->addRule('authDisposableEmails', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether or not to disallow disposable email addresses during signup and email updates.',
+                'default' => false,
+                'example' => true,
+            ])
+            ->addRule('authCanonicalEmails', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether or not to require canonical email addresses during signup and email updates.',
+                'default' => false,
+                'example' => true,
+            ])
+            ->addRule('authFreeEmails', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether or not to disallow free email addresses during signup and email updates.',
                 'default' => false,
                 'example' => true,
             ])
@@ -169,6 +181,24 @@ class Project extends Model
                 'default' => false,
                 'example' => true,
             ])
+            ->addRule('authMembershipsUserId', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether or not to show user IDs in the teams membership response.',
+                'default' => false,
+                'example' => true,
+            ])
+            ->addRule('authMembershipsUserPhone', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether or not to show user phone numbers in the teams membership response.',
+                'default' => false,
+                'example' => true,
+            ])
+            ->addRule('authInvalidateSessions', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether or not all existing sessions should be invalidated on password change',
+                'default' => false,
+                'example' => true,
+            ])
             ->addRule('oAuthProviders', [
                 'type' => Response::MODEL_AUTH_PROVIDER,
                 'description' => 'List of Auth Providers.',
@@ -177,7 +207,13 @@ class Project extends Model
                 'array' => true,
             ])
             ->addRule('platforms', [
-                'type' => Response::MODEL_PLATFORM,
+                'type' => [
+                    Response::MODEL_PLATFORM_WEB,
+                    Response::MODEL_PLATFORM_APPLE,
+                    Response::MODEL_PLATFORM_ANDROID,
+                    Response::MODEL_PLATFORM_WINDOWS,
+                    Response::MODEL_PLATFORM_LINUX,
+                ],
                 'description' => 'List of Platforms.',
                 'default' => [],
                 'example' => new \stdClass(),
@@ -193,6 +229,13 @@ class Project extends Model
             ->addRule('keys', [
                 'type' => Response::MODEL_KEY,
                 'description' => 'List of API Keys.',
+                'default' => [],
+                'example' => new \stdClass(),
+                'array' => true,
+            ])
+            ->addRule('devKeys', [
+                'type' => Response::MODEL_DEV_KEY,
+                'description' => 'List of dev keys.',
                 'default' => [],
                 'example' => new \stdClass(),
                 'array' => true,
@@ -216,7 +259,13 @@ class Project extends Model
                 'default' => '',
                 'example' => 'john@appwrite.io',
             ])
-            ->addRule('smtpReplyTo', [
+            ->addRule('smtpReplyToName', [
+                'type' => self::TYPE_STRING,
+                'description' => 'SMTP reply to name',
+                'default' => '',
+                'example' => 'Support Team',
+            ])
+            ->addRule('smtpReplyToEmail', [
                 'type' => self::TYPE_STRING,
                 'description' => 'SMTP reply to email',
                 'default' => '',
@@ -242,9 +291,9 @@ class Project extends Model
             ])
             ->addRule('smtpPassword', [
                 'type' => self::TYPE_STRING,
-                'description' => 'SMTP server password',
+                'description' => 'SMTP server password. This property is write-only and always returned empty.',
                 'default' => '',
-                'example' => 'securepassword',
+                'example' => '',
             ])
             ->addRule('smtpSecure', [
                 'type' => self::TYPE_STRING,
@@ -263,6 +312,19 @@ class Project extends Model
                 'description' => 'Last ping datetime in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+            ->addRule('labels', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Labels for the project.',
+                'default' => [],
+                'example' => ['vip'],
+                'array' => true,
+            ])
+            ->addRule('status', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Project status.',
+                'default' => 'active',
+                'example' => 'active',
             ])
         ;
 
@@ -300,6 +362,22 @@ class Project extends Model
                 ])
             ;
         }
+
+        $apis = Config::getParam('protocols', []);
+
+        foreach ($apis as $api) {
+            $name = $api['name'] ?? '';
+            $key = $api['key'] ?? '';
+
+            $this
+                ->addRule('protocolStatusFor' . ucfirst($key), [
+                    'type' => self::TYPE_BOOLEAN,
+                    'description' => $name . ' protocol status',
+                    'example' => true,
+                    'default' => true,
+                ])
+            ;
+        }
     }
 
     /**
@@ -329,19 +407,41 @@ class Project extends Model
      */
     public function filter(Document $document): Document
     {
+        $this->expandSmtpFields($document);
+        $this->expandServiceFields($document);
+        $this->expandApiFields($document);
+        $this->expandAuthFields($document);
+        $this->expandOAuthProviders($document);
+
+        return $document;
+    }
+
+    private function expandSmtpFields(Document $document): void
+    {
+        if (!$document->isSet('smtp')) {
+            return;
+        }
+
         // SMTP
         $smtp = $document->getAttribute('smtp', []);
         $document->setAttribute('smtpEnabled', $smtp['enabled'] ?? false);
         $document->setAttribute('smtpSenderEmail', $smtp['senderEmail'] ?? '');
         $document->setAttribute('smtpSenderName', $smtp['senderName'] ?? '');
-        $document->setAttribute('smtpReplyTo', $smtp['replyTo'] ?? '');
+        $document->setAttribute('smtpReplyToEmail', $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? ''); // Includes backwards compatibility
+        $document->setAttribute('smtpReplyToName', $smtp['replyToName'] ?? '');
         $document->setAttribute('smtpHost', $smtp['host'] ?? '');
         $document->setAttribute('smtpPort', $smtp['port'] ?? '');
         $document->setAttribute('smtpUsername', $smtp['username'] ?? '');
-        $document->setAttribute('smtpPassword', $smtp['password'] ?? '');
+        $document->setAttribute('smtpPassword', ''); // Write-only: never expose the stored value
         $document->setAttribute('smtpSecure', $smtp['secure'] ?? '');
+    }
 
-        // Services
+    private function expandServiceFields(Document $document): void
+    {
+        if (!$document->isSet('services')) {
+            return;
+        }
+
         $values = $document->getAttribute('services', []);
         $services = Config::getParam('services', []);
 
@@ -353,30 +453,64 @@ class Project extends Model
             $value = $values[$key] ?? true;
             $document->setAttribute('serviceStatusFor' . ucfirst($key), $value);
         }
+    }
 
-        // Auth
+    private function expandApiFields(Document $document): void
+    {
+        if (!$document->isSet('apis')) {
+            return;
+        }
+
+        $values = $document->getAttribute('apis', []);
+        $apis = Config::getParam('protocols', []);
+
+        foreach ($apis as $api) {
+            $key = $api['key'] ?? '';
+            $value = $values[$key] ?? true;
+            $document->setAttribute('protocolStatusFor' . ucfirst($key), $value);
+        }
+    }
+
+    private function expandAuthFields(Document $document): void
+    {
+        if (!$document->isSet('auths')) {
+            return;
+        }
+
         $authValues = $document->getAttribute('auths', []);
         $auth = Config::getParam('auth', []);
 
         $document->setAttribute('authLimit', $authValues['limit'] ?? 0);
-        $document->setAttribute('authDuration', $authValues['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG);
-        $document->setAttribute('authSessionsLimit', $authValues['maxSessions'] ?? APP_LIMIT_USER_SESSIONS_DEFAULT);
+        $document->setAttribute('authDuration', $authValues['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG);
+        $document->setAttribute('authSessionsLimit', $authValues['maxSessions'] ?? 0);
         $document->setAttribute('authPasswordHistory', $authValues['passwordHistory'] ?? 0);
         $document->setAttribute('authPasswordDictionary', $authValues['passwordDictionary'] ?? false);
         $document->setAttribute('authPersonalDataCheck', $authValues['personalDataCheck'] ?? false);
+        $document->setAttribute('authDisposableEmails', $authValues['disposableEmails'] ?? false);
+        $document->setAttribute('authCanonicalEmails', $authValues['canonicalEmails'] ?? false);
+        $document->setAttribute('authFreeEmails', $authValues['freeEmails'] ?? false);
         $document->setAttribute('authMockNumbers', $authValues['mockNumbers'] ?? []);
         $document->setAttribute('authSessionAlerts', $authValues['sessionAlerts'] ?? false);
-        $document->setAttribute('authMembershipsUserName', $authValues['membershipsUserName'] ?? true);
-        $document->setAttribute('authMembershipsUserEmail', $authValues['membershipsUserEmail'] ?? true);
-        $document->setAttribute('authMembershipsMfa', $authValues['membershipsMfa'] ?? true);
+        $document->setAttribute('authMembershipsUserName', $authValues['membershipsUserName'] ?? false);
+        $document->setAttribute('authMembershipsUserEmail', $authValues['membershipsUserEmail'] ?? false);
+        $document->setAttribute('authMembershipsMfa', $authValues['membershipsMfa'] ?? false);
+        $document->setAttribute('authMembershipsUserId', $authValues['membershipsUserId'] ?? false);
+        $document->setAttribute('authMembershipsUserPhone', $authValues['membershipsUserPhone'] ?? false);
+        $document->setAttribute('authInvalidateSessions', $authValues['invalidateSessions'] ?? false);
 
-        foreach ($auth as $index => $method) {
+        foreach ($auth as $method) {
             $key = $method['key'];
             $value = $authValues[$key] ?? true;
             $document->setAttribute('auth' . ucfirst($key), $value);
         }
+    }
 
-        // OAuth Providers
+    private function expandOAuthProviders(Document $document): void
+    {
+        if (!$document->isSet('oAuthProviders')) {
+            return;
+        }
+
         $providers = Config::getParam('oAuthProviders', []);
         $providerValues = $document->getAttribute('oAuthProviders', []);
         $projectProviders = [];
@@ -391,13 +525,11 @@ class Project extends Model
                 'key' => $key,
                 'name' => $provider['name'] ?? '',
                 'appId' => $providerValues[$key . 'Appid'] ?? '',
-                'secret' => $providerValues[$key . 'Secret'] ?? '',
+                'secret' => '', // Write-only: never expose the stored value
                 'enabled' => $providerValues[$key . 'Enabled'] ?? false,
             ]);
         }
 
         $document->setAttribute('oAuthProviders', $projectProviders);
-
-        return $document;
     }
 }

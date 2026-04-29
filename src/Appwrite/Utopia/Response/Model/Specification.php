@@ -32,7 +32,7 @@ class Specification extends Model
             'type' => self::TYPE_STRING,
             'description' => 'Size slug.',
             'default' => '',
-            'example' => APP_FUNCTION_SPECIFICATION_DEFAULT
+            'example' => APP_COMPUTE_SPECIFICATION_DEFAULT
         ]);
     }
 

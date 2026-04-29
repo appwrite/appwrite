@@ -3,6 +3,7 @@
 /node_modules/
 /tests/resources/storage/
 /tests/resources/functions/**/code.tar.gz
+/tests/resources/sites/**/code.tar.gz
 /app/sdks/*
 /.idea/
 !/.idea/workspace.xml
@@ -15,5 +16,15 @@ app/sdks
 dev/yasd_init.php
 .phpunit.result.cache
 Makefile
-appwrite.json
+appwrite.config.json
 /.zed/
+/app/config/specs/
+/docs/examples/
+.phpunit.cache
+.phpstan-cache
+playwright-report
+test-results
+docker-compose.web-installer.yml
+.env.web-installer
+docker-compose.web-installer.yml.**.backup
+tests/playwright/screenshots

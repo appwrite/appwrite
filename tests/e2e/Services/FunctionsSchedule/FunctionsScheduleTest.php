@@ -25,8 +25,8 @@ class FunctionsScheduleTest extends Scope
             'functionId' => ID::unique(),
             'name' => 'Test',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'events' => [
                 'users.*.create',
                 'users.*.delete',
@@ -36,14 +36,12 @@ class FunctionsScheduleTest extends Scope
         ]);
 
         $this->setupDeployment($functionId, [
-            'entrypoint' => 'index.php',
-            'code' => $this->packageFunction('php'),
+            'code' => $this->packageFunction('basic'),
             'activate' => true
         ]);
 
-        // Wait for scheduled execution
-        \sleep(60);
-
+        // Wait for scheduled execution (schedule runs every minute)
+        // Give extra time in CI where deployment/scheduling may be slower
         $this->assertEventually(function () use ($functionId) {
             $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', [
                 'content-type' => 'application/json',
@@ -52,7 +50,7 @@ class FunctionsScheduleTest extends Scope
             ]);
 
             $this->assertEquals(200, $executions['headers']['status-code']);
-            $this->assertCount(1, $executions['body']['executions']);
+            $this->assertGreaterThanOrEqual(1, count($executions['body']['executions']), 'Expected at least 1 scheduled execution');
 
             $asyncExecution = $executions['body']['executions'][0];
 
@@ -63,7 +61,10 @@ class FunctionsScheduleTest extends Scope
             $this->assertNotEmpty($asyncExecution['logs']);
             $this->assertNotEmpty($asyncExecution['errors']);
             $this->assertGreaterThan(0, $asyncExecution['duration']);
-        }, 60000, 500);
+            $this->assertNotEmpty($asyncExecution['$id']);
+            $headers = array_column($asyncExecution['requestHeaders'] ?? [], 'value', 'name');
+            $this->assertEmpty($headers['x-appwrite-client-ip'] ?? '');
+        }, 180000, 500); // 3 minute timeout with 500ms polling for CI stability
 
         $this->cleanupFunction($functionId);
     }
@@ -77,20 +78,19 @@ class FunctionsScheduleTest extends Scope
             'functionId' => ID::unique(),
             'name' => 'Test',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'timeout' => 10,
             'logging' => true,
         ]);
         $this->setupDeployment($functionId, [
-            'entrypoint' => 'index.php',
-            'code' => $this->packageFunction('php'),
+            'code' => $this->packageFunction('basic'),
             'activate' => true
         ]);
 
         // Schedule execution for the future
         \date_default_timezone_set('UTC');
-        $futureTime = (new \DateTime())->add(new \DateInterval('PT2M')); // 2 minute in the future
+        $futureTime = (new \DateTime())->add(new \DateInterval('PT2M')); // 2 minutes in the future
         $futureTime->setTime($futureTime->format('H'), $futureTime->format('i'), 0, 0);
 
 
@@ -120,9 +120,9 @@ class FunctionsScheduleTest extends Scope
         $this->assertEquals('scheduled', $execution['body']['status']);
         $this->assertEquals('PATCH', $execution['body']['requestMethod']);
         $this->assertEquals('/custom-path', $execution['body']['requestPath']);
-        $this->assertCount(0, $execution['body']['requestHeaders']);
-
-        \sleep(120);
+        $this->assertCount(1, $execution['body']['requestHeaders']);
+        $this->assertEquals('x-appwrite-client-ip', $execution['body']['requestHeaders'][0]['name']);
+        $this->assertNotEmpty($execution['body']['requestHeaders'][0]['value']);
 
         $this->assertEventually(function () use ($functionId, $executionId) {
             $execution = $this->getExecution($functionId, $executionId);
@@ -139,7 +139,7 @@ class FunctionsScheduleTest extends Scope
             $this->assertStringContainsString('user-is-' . $this->getUser()['$id'], $execution['body']['logs']);
             $this->assertStringContainsString('jwt-is-valid', $execution['body']['logs']);
             $this->assertGreaterThan(0, $execution['body']['duration']);
-        }, 10000, 500);
+        }, 120000, 500);
 
         /* Test for FAILURE */
         // Schedule synchronous execution
@@ -170,7 +170,7 @@ class FunctionsScheduleTest extends Scope
         ]);
         $this->assertEquals(400, $execution['headers']['status-code']);
 
-        $this->cleanupFunction($functionId, $executionId);
+        $this->cleanupFunction($functionId);
     }
 
     public function testDeleteScheduledExecution()
@@ -179,15 +179,14 @@ class FunctionsScheduleTest extends Scope
             'functionId' => ID::unique(),
             'name' => 'Test',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'timeout' => 10,
             'logging' => true,
         ]);
 
         $this->setupDeployment($functionId, [
-            'entrypoint' => 'index.php',
-            'code' => $this->packageFunction('php'),
+            'code' => $this->packageFunction('basic'),
             'activate' => true
         ]);
 

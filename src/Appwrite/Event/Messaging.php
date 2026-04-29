@@ -4,6 +4,7 @@ namespace Appwrite\Event;
 
 use Utopia\Database\Document;
 use Utopia\Queue\Publisher;
+use Utopia\System\System;
 
 class Messaging extends Event
 {
@@ -19,8 +20,8 @@ class Messaging extends Event
         parent::__construct($publisher);
 
         $this
-            ->setQueue(Event::MESSAGING_QUEUE_NAME)
-            ->setClass(Event::MESSAGING_CLASS_NAME);
+            ->setQueue(System::getEnv('_APP_MESSAGING_QUEUE_NAME', Event::MESSAGING_QUEUE_NAME))
+            ->setClass(System::getEnv('_APP_MESSAGING_CLASS_NAME', Event::MESSAGING_CLASS_NAME));
     }
 
     /**
@@ -85,7 +86,7 @@ class Messaging extends Event
     /**
      * Returns message document for the messaging event.
      *
-     * @return string
+     * @return Document
      */
     public function getMessage(): Document
     {
@@ -95,7 +96,7 @@ class Messaging extends Event
     /**
      * Sets message ID for the messaging event.
      *
-     * @param string $message
+     * @param string $messageId
      * @return self
      */
     public function setMessageId(string $messageId): self
@@ -159,19 +160,6 @@ class Messaging extends Event
     public function getScheduledAt(): string
     {
         return $this->scheduledAt;
-    }
-
-    /**
-     * Set project for this event.
-     *
-     * @param Document $project
-     * @return self
-     */
-    public function setProject(Document $project): self
-    {
-        $this->project = $project;
-
-        return $this;
     }
 
     /**

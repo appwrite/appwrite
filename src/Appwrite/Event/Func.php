@@ -2,13 +2,13 @@
 
 namespace Appwrite\Event;
 
+use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Queue\Publisher;
+use Utopia\System\System;
 
 class Func extends Event
 {
-    public const TYPE_ASYNC_WRITE = 'async_write';
-
     protected string $jwt = '';
     protected string $type = '';
     protected string $body = '';
@@ -24,8 +24,9 @@ class Func extends Event
         parent::__construct($publisher);
 
         $this
-            ->setQueue(Event::FUNCTIONS_QUEUE_NAME)
-            ->setClass(Event::FUNCTIONS_CLASS_NAME);
+            ->setQueue(System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME))
+            ->setClass(System::getEnv('_APP_FUNCTIONS_CLASS_NAME', Event::FUNCTIONS_CLASS_NAME))
+            ->setTTL(Event::FUNCTIONS_QUEUE_TTL);
     }
 
     /**
@@ -161,7 +162,7 @@ class Func extends Event
     /**
      * Sets custom headers for the function event.
      *
-     * @param string $headers
+     * @param array $headers
      * @return self
      */
     public function setHeaders(array $headers): self
@@ -202,6 +203,11 @@ class Func extends Event
     {
         $events = $this->getEvent() ? Event::generateEvents($this->getEvent(), $this->getParams()) : null;
 
+        $platform = $this->platform;
+        if (empty($platform)) {
+            $platform = Config::getParam('platform', []);
+        }
+
         return [
             'project' => $this->project,
             'user' => $this->user,
@@ -217,6 +223,7 @@ class Func extends Event
             'path' => $this->path,
             'headers' => $this->headers,
             'method' => $this->method,
+            'platform' => $platform,
         ];
     }
 }

@@ -22,9 +22,21 @@ class UsageDatabase extends Model
                 'default' => 0,
                 'example' => 0,
             ])
+            ->addRule('tablesTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of tables.',
+                'default' => 0,
+                'example' => 0,
+            ])
             ->addRule('documentsTotal', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Total aggregated number of documents.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('rowsTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of rows.',
                 'default' => 0,
                 'example' => 0,
             ])
@@ -53,9 +65,23 @@ class UsageDatabase extends Model
                 'example' => [],
                 'array' => true
             ])
+            ->addRule('tables', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated  number of tables per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
             ->addRule('documents', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated  number of documents per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('rows', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated  number of rows per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true

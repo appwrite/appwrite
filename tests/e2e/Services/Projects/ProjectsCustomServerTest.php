@@ -10,6 +10,7 @@ use Utopia\System\System;
 
 class ProjectsCustomServerTest extends Scope
 {
+    use ProjectsBase;
     use ProjectCustom;
     use SideServer;
 
@@ -17,6 +18,8 @@ class ProjectsCustomServerTest extends Scope
 
     public function testCreateProjectRule()
     {
+        $testId = \uniqid();
+
         $headers = array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -24,25 +27,74 @@ class ProjectsCustomServerTest extends Scope
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]);
 
-        $response = $this->client->call(Client::METHOD_POST, '/proxy/rules', $headers, [
-            'resourceType' => 'api',
-            'domain' => 'api.appwrite.test',
+        $response = $this->client->call(Client::METHOD_POST, '/proxy/rules/api', $headers, [
+            'domain' => $testId . '-api.appwrite.test',
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/proxy/rules/api', $headers, [
+            'resourceType' => 'api',
+            'domain' => $testId . '-abc.test.io',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        // duplicate rule
+        $response2 = $this->client->call(Client::METHOD_POST, '/proxy/rules/api', $headers, [
+            'domain' => $testId . '-abc.test.io',
+        ]);
+
+        $this->assertEquals(409, $response2['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_DELETE, '/proxy/rules/' . $response['body']['$id'], $headers);
 
         $this->assertEquals(204, $response['headers']['status-code']);
 
-        // prevent functions domain
-        $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+        $functionsDomain = \explode(',', System::getEnv('_APP_DOMAIN_FUNCTIONS', ''))[0];
 
-        $response = $this->client->call(Client::METHOD_POST, '/proxy/rules', $headers, [
-            'resourceType' => 'api',
+        $response = $this->client->call(Client::METHOD_POST, '/proxy/rules/api', $headers, [
             'domain' => $functionsDomain,
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
+
+
+        $sitesDomain = \explode(',', System::getEnv('_APP_DOMAIN_SITES', ''))[0];
+
+        $response = $this->client->call(Client::METHOD_POST, '/proxy/rules/api', $headers, [
+            'domain' => $sitesDomain,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // prevent functions domain
+        $response = $this->client->call(Client::METHOD_POST, '/proxy/rules/function', $headers, [
+            'domain' => $functionsDomain,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // prevent sites domain
+        $response = $this->client->call(Client::METHOD_POST, '/proxy/rules/site', $headers, [
+            'domain' => $sitesDomain,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $deniedDomains = [
+            'sites.localhost',
+            'functions.localhost',
+            'appwrite.test',
+            'localhost'
+        ];
+
+        foreach ($deniedDomains as $deniedDomain) {
+            $response = $this->client->call(Client::METHOD_POST, '/proxy/rules/api', $headers, [
+                'domain' => $deniedDomain,
+            ]);
+
+            $this->assertEquals(400, $response['headers']['status-code']);
+        }
     }
 }

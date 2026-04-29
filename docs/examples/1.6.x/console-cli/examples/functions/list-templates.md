@@ -1,5 +1,0 @@
-appwrite functions listTemplates \
-
-
-
-

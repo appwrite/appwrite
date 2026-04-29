@@ -16,7 +16,7 @@ class LocalizationTest extends Scope
     public function testGetLocale(): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = \urlencode($this->getQuery(self::$GET_LOCALE));
+        $query = \urlencode($this->getQuery(self::GET_LOCALE));
 
         $locale = $this->client->call(Client::METHOD_GET, '/graphql?query=' . $query, \array_merge([
             'content-type' => 'application/json',
@@ -34,7 +34,7 @@ class LocalizationTest extends Scope
     public function testGetCountries(): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$LIST_COUNTRIES);
+        $query = $this->getQuery(self::LIST_COUNTRIES);
         $graphQLPayload = [
             'query' => $query,
         ];
@@ -56,7 +56,7 @@ class LocalizationTest extends Scope
     public function testGetCountriesEU(): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$LIST_EU_COUNTRIES);
+        $query = $this->getQuery(self::LIST_EU_COUNTRIES);
         $graphQLPayload = [
             'query' => $query,
         ];
@@ -78,7 +78,7 @@ class LocalizationTest extends Scope
     public function testGetCountriesPhones(): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$LIST_COUNTRY_PHONE_CODES);
+        $query = $this->getQuery(self::LIST_COUNTRY_PHONE_CODES);
         $graphQLPayload = [
             'query' => $query,
         ];
@@ -100,7 +100,7 @@ class LocalizationTest extends Scope
     public function testGetContinents(): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$LIST_CONTINENTS);
+        $query = $this->getQuery(self::LIST_CONTINENTS);
         $graphQLPayload = [
             'query' => $query,
         ];
@@ -122,7 +122,7 @@ class LocalizationTest extends Scope
     public function testGetCurrencies(): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$LIST_CURRENCIES);
+        $query = $this->getQuery(self::LIST_CURRENCIES);
         $graphQLPayload = [
             'query' => $query,
         ];
@@ -144,7 +144,7 @@ class LocalizationTest extends Scope
     public function testGetLanguages(): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$LIST_LANGUAGES);
+        $query = $this->getQuery(self::LIST_LANGUAGES);
         $graphQLPayload = [
             'query' => $query,
         ];

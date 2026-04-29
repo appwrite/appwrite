@@ -17,14 +17,22 @@ class StorageServerTest extends Scope
     use SideServer;
     use Base;
 
-    public function testCreateBucket(): array
+    private static array $cachedBucket = [];
+    private static array $cachedFile = [];
+
+    protected function setupBucket(): array
     {
+        $key = $this->getProject()['$id'];
+        if (!empty(self::$cachedBucket[$key])) {
+            return self::$cachedBucket[$key];
+        }
+
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_BUCKET);
+        $query = $this->getQuery(self::CREATE_BUCKET);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'bucketId' => 'actors',
+                'bucketId' => ID::unique(),
                 'name' => 'Actors',
                 'fileSecurity' => false,
                 'permissions' => [
@@ -46,16 +54,21 @@ class StorageServerTest extends Scope
         $bucket = $bucket['body']['data']['storageCreateBucket'];
         $this->assertEquals('Actors', $bucket['name']);
 
+        self::$cachedBucket[$key] = $bucket;
         return $bucket;
     }
 
-    /**
-     * @depends testCreateBucket
-     */
-    public function testCreateFile($bucket): array
+    protected function setupFile(): array
     {
+        $key = $this->getProject()['$id'];
+        if (!empty(self::$cachedFile[$key])) {
+            return self::$cachedFile[$key];
+        }
+
+        $bucket = $this->setupBucket();
+
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_FILE);
+        $query = $this->getQuery(self::CREATE_FILE);
         $gqlPayload = [
             'operations' => \json_encode([
                 'query' => $query,
@@ -84,13 +97,27 @@ class StorageServerTest extends Scope
 
         $this->assertIsArray($file['body']['data']);
         $this->assertArrayNotHasKey('errors', $file['body']);
-        return $file['body']['data']['storageCreateFile'];
+
+        self::$cachedFile[$key] = $file['body']['data']['storageCreateFile'];
+        return self::$cachedFile[$key];
+    }
+
+    public function testCreateBucket(): void
+    {
+        $bucket = $this->setupBucket();
+        $this->assertEquals('Actors', $bucket['name']);
+    }
+
+    public function testCreateFile(): void
+    {
+        $file = $this->setupFile();
+        $this->assertNotEmpty($file);
     }
 
     public function testGetBuckets(): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_BUCKETS);
+        $query = $this->getQuery(self::GET_BUCKETS);
         $gqlPayload = [
             'query' => $query,
         ];
@@ -105,19 +132,30 @@ class StorageServerTest extends Scope
         $buckets = $buckets['body']['data']['storageListBuckets'];
         $this->assertIsArray($buckets);
 
+        if (!empty($buckets['buckets'])) {
+            foreach ($buckets['buckets'] as $bucket) {
+                $this->assertArrayHasKey('totalSize', $bucket);
+                $this->assertIsInt($bucket['totalSize']);
+
+                /* always 0 because the stats worker runs hourly! */
+                $this->assertGreaterThanOrEqual(0, $bucket['totalSize']);
+            }
+        }
+
         return $buckets;
     }
 
     /**
-     * @depends testCreateBucket
-     * @param $bucket
      * @return array
      * @throws \Exception
      */
-    public function testGetBucket($bucket): array
+    public function testGetBucket(): array
     {
+        $bucket = $this->setupBucket();
+        $this->setupFile(); // Ensure file exists
+
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_BUCKET);
+        $query = $this->getQuery(self::GET_BUCKET);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -134,20 +172,21 @@ class StorageServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $bucket['body']);
         $bucket = $bucket['body']['data']['storageGetBucket'];
         $this->assertEquals('Actors', $bucket['name']);
+        $this->assertArrayHasKey('totalSize', $bucket);
 
         return $bucket;
     }
 
     /**
-     * @depends testCreateBucket
-     * @param $bucket
      * @return array
      * @throws \Exception
      */
-    public function testGetFiles($bucket): array
+    public function testGetFiles(): array
     {
+        $bucket = $this->setupBucket();
+
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_FILES);
+        $query = $this->getQuery(self::GET_FILES);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -169,17 +208,16 @@ class StorageServerTest extends Scope
     }
 
     /**
-     * @depends testCreateBucket
-     * @depends testCreateFile
-     * @param $bucket
-     * @param $file
      * @return array
      * @throws \Exception
      */
-    public function testGetFile($bucket, $file)
+    public function testGetFile()
     {
+        $bucket = $this->setupBucket();
+        $file = $this->setupFile();
+
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_FILE);
+        $query = $this->getQuery(self::GET_FILE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -200,15 +238,15 @@ class StorageServerTest extends Scope
     }
 
     /**
-     * @depends testCreateFile
-     * @param $file
      * @return array
      * @throws \Exception
      */
-    public function testGetFilePreview($file)
+    public function testGetFilePreview()
     {
+        $file = $this->setupFile();
+
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_FILE_PREVIEW);
+        $query = $this->getQuery(self::GET_FILE_PREVIEW);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -230,15 +268,42 @@ class StorageServerTest extends Scope
     }
 
     /**
-     * @depends testCreateFile
-     * @param $file
      * @return array
      * @throws \Exception
      */
-    public function testGetFileDownload($file)
+    public function testGetFileDownload()
     {
+        $file = $this->setupFile();
+
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_FILE_DOWNLOAD);
+        $query = $this->getQuery(self::GET_FILE_DOWNLOAD);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'bucketId' => $file['bucketId'],
+                'fileId' => $file['_id'],
+            ]
+        ];
+
+        $file = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $gqlPayload);
+
+        $this->assertEquals(47218, \strlen($file['body']));
+
+        return $file;
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function testGetFileView(): void
+    {
+        $file = $this->setupFile();
+
+        $projectId = $this->getProject()['$id'];
+        $query = $this->getQuery(self::GET_FILE_VIEW);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -256,41 +321,15 @@ class StorageServerTest extends Scope
     }
 
     /**
-     * @depends testCreateFile
-     * @param $file
      * @return array
      * @throws \Exception
      */
-    public function testGetFileView($file): void
+    public function testUpdateBucket(): array
     {
+        $bucket = $this->setupBucket();
+
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_FILE_VIEW);
-        $gqlPayload = [
-            'query' => $query,
-            'variables' => [
-                'bucketId' => $file['bucketId'],
-                'fileId' => $file['_id'],
-            ]
-        ];
-
-        $file = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
-
-        $this->assertEquals(47218, \strlen($file['body']));
-    }
-
-    /**
-     * @depends testCreateBucket
-     * @param $bucket
-     * @return array
-     * @throws \Exception
-     */
-    public function testUpdateBucket($bucket): array
-    {
-        $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_BUCKET);
+        $query = $this->getQuery(self::UPDATE_BUCKET);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -314,15 +353,15 @@ class StorageServerTest extends Scope
     }
 
     /**
-     * @depends testCreateFile
-     * @param $file
      * @return array
      * @throws \Exception
      */
-    public function testUpdateFile($file): array
+    public function testUpdateFile(): array
     {
+        $file = $this->setupFile();
+
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_FILE);
+        $query = $this->getQuery(self::UPDATE_FILE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -350,14 +389,14 @@ class StorageServerTest extends Scope
     }
 
     /**
-     * @depends testCreateFile
-     * @param $file
      * @throws \Exception
      */
-    public function testDeleteFile($file): void
+    public function testDeleteFile(): void
     {
+        $file = $this->setupFile();
+
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$DELETE_FILE);
+        $query = $this->getQuery(self::DELETE_FILE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -373,18 +412,22 @@ class StorageServerTest extends Scope
 
         $this->assertIsNotArray($file['body']);
         $this->assertEquals(204, $file['headers']['status-code']);
+
+        // Clear cache after deletion
+        $key = $this->getProject()['$id'];
+        self::$cachedFile[$key] = [];
     }
 
     /**
-     * @depends testCreateBucket
-     * @param $bucket
-     * @return array
+     * @return void
      * @throws \Exception
      */
-    public function testDeleteBucket($bucket): void
+    public function testDeleteBucket(): void
     {
+        $bucket = $this->setupBucket();
+
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$DELETE_BUCKET);
+        $query = $this->getQuery(self::DELETE_BUCKET);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -399,5 +442,10 @@ class StorageServerTest extends Scope
 
         $this->assertIsNotArray($bucket['body']);
         $this->assertEquals(204, $bucket['headers']['status-code']);
+
+        // Clear cache after deletion
+        $key = $this->getProject()['$id'];
+        self::$cachedBucket[$key] = [];
+        self::$cachedFile[$key] = [];
     }
 }

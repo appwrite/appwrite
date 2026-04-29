@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/stale@v9
+      - uses: actions/stale@v10
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           stale-issue-message: "This issue has been labeled as a 'question', indicating that it requires additional information from the requestor. It has been inactive for 7 days. If no further activity occurs, this issue will be closed in 14 days."

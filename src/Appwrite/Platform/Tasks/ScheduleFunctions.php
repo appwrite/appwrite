@@ -4,17 +4,22 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Func;
 use Cron\CronExpression;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
-use Utopia\Pools\Group;
+use Utopia\Span\Span;
+use Utopia\System\System;
 
+/**
+ * ScheduleFunctions
+ *
+ * Handles cron job related executions by processing cron expressions
+ * and scheduling function executions based on recurring schedules.
+ */
 class ScheduleFunctions extends ScheduleBase
 {
     public const UPDATE_TIMER = 10; // seconds
     public const ENQUEUE_TIMER = 60; // seconds
-
-    private ?float $lastEnqueueUpdate = null;
 
     public static function getName(): string
     {
@@ -23,20 +28,23 @@ class ScheduleFunctions extends ScheduleBase
 
     public static function getSupportedResource(): string
     {
-        return 'function';
+        return SCHEDULE_RESOURCE_TYPE_FUNCTION;
     }
 
     public static function getCollectionId(): string
     {
-        return 'functions';
+        return RESOURCE_TYPE_FUNCTIONS;
     }
 
-    protected function enqueueResources(Group $pools, Database $dbForPlatform, callable $getProjectDB): void
+    protected function enqueueResources(Database $dbForPlatform, callable $getProjectDB): void
     {
         $timerStart = \microtime(true);
         $time = DateTime::now();
 
-        $enqueueDiff = $this->lastEnqueueUpdate === null ? 0 : $timerStart - $this->lastEnqueueUpdate;
+        // TODO: Track the last enqueue timestamp to subtract ENQUEUE_TIMER drift from
+        // the time frame. Previously this used $this->lastEnqueueUpdate as a property
+        // but enabling the assignment broke scheduling, so the diff stays 0.
+        $enqueueDiff = 0;
         $timeFrame = DateTime::addSeconds(new \DateTime(), static::ENQUEUE_TIMER - $enqueueDiff);
 
         Console::log("Enqueue tick: started at: $time (with diff $enqueueDiff)");
@@ -46,7 +54,13 @@ class ScheduleFunctions extends ScheduleBase
         $delayedExecutions = []; // Group executions with same delay to share one coroutine
 
         foreach ($this->schedules as $key => $schedule) {
-            $cron = new CronExpression($schedule['schedule']);
+            try {
+                $cron = new CronExpression($schedule['schedule']);
+            } catch (\InvalidArgumentException) {
+                // ignore invalid cron expressions
+                continue;
+            }
+
             $nextDate = $cron->getNextRunDate();
             $next = DateTime::format($nextDate);
 
@@ -66,45 +80,54 @@ class ScheduleFunctions extends ScheduleBase
                 $delayedExecutions[$delay] = [];
             }
 
-            $delayedExecutions[$delay][] = $key;
+            $delayedExecutions[$delay][] = ['key' => $key, 'nextDate' => $nextDate];
         }
 
-        foreach ($delayedExecutions as $delay => $scheduleKeys) {
-            \go(function () use ($delay, $scheduleKeys, $pools, $dbForPlatform) {
+        foreach ($delayedExecutions as $delay => $schedules) {
+            \go(function () use ($delay, $schedules, $dbForPlatform) {
                 \sleep($delay); // in seconds
 
-                $queue = $pools->get('publisher')->pop();
-                $connection = $queue->getResource();
-
-                foreach ($scheduleKeys as $scheduleKey) {
+                foreach ($schedules as $delayConfig) {
+                    $scheduleKey = $delayConfig['key'];
                     // Ensure schedule was not deleted
                     if (!\array_key_exists($scheduleKey, $this->schedules)) {
-                        return;
+                        continue;
                     }
 
                     $schedule = $this->schedules[$scheduleKey];
 
                     $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
-                    $queueForFunctions = new Func($connection);
+                    $queueForFunctions = new Func($this->publisherFunctions);
 
                     $queueForFunctions
                         ->setType('schedule')
                         ->setFunction($schedule['resource'])
                         ->setMethod('POST')
                         ->setPath('/')
-                        ->setProject($schedule['project'])
-                        ->trigger();
-                }
+                        ->setProject($schedule['project']);
 
-                $queue->reclaim();
+                    $projectDoc = $schedule['project'];
+                    $functionDoc = $schedule['resource'];
+                    $traceProjectId = System::getEnv('_APP_TRACE_PROJECT_ID', '');
+                    $traceFunctionId = System::getEnv('_APP_TRACE_FUNCTION_ID', '');
+                    if ($traceProjectId !== '' && $traceFunctionId !== '' && $projectDoc->getId() === $traceProjectId && $functionDoc->getId() === $traceFunctionId) {
+                        Span::init('execution.trace.v1_functions_enqueue');
+                        Span::add('datetime', gmdate('c'));
+                        Span::add('projectId', $projectDoc->getId());
+                        Span::add('functionId', $functionDoc->getId());
+                        Span::add('scheduleId', $schedule['$id'] ?? '');
+                        Span::current()?->finish();
+                    }
+
+                    $queueForFunctions->trigger();
+
+                    $this->recordEnqueueDelay($delayConfig['nextDate']);
+                }
             });
         }
 
         $timerEnd = \microtime(true);
-
-        // TODO: This was a bug before because it wasn't passed by reference, enabling it breaks scheduling
-        //$this->lastEnqueueUpdate = $timerStart;
 
         Console::log("Enqueue tick: {$total} executions were enqueued in " . ($timerEnd - $timerStart) . " seconds");
     }

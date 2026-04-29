@@ -2,23 +2,21 @@
 
 namespace Appwrite\Platform\Workers;
 
-use Appwrite\Auth\Auth;
+use Appwrite\Event\Message\Audit;
 use Exception;
 use Throwable;
-use Utopia\Audit\Audit;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Structure;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\Queue\Result\Commit;
+use Utopia\Queue\Result\NoCommit;
 use Utopia\System\System;
 
 class Audits extends Action
 {
-    protected const BATCH_SIZE_DEVELOPMENT = 1; // smaller batch size for development
-    protected const BATCH_SIZE_PRODUCTION = 5_000;
-    protected const BATCH_AGGREGATION_INTERVAL = 60; // in seconds
+    protected const int BATCH_AGGREGATION_INTERVAL = 60; // in seconds
 
     private int $lastTriggeredTime = 0;
 
@@ -27,9 +25,7 @@ class Audits extends Action
 
     protected function getBatchSize(): int
     {
-        return System::getEnv('_APP_ENV', 'development') === 'development'
-            ? self::BATCH_SIZE_DEVELOPMENT
-            : self::BATCH_SIZE_PRODUCTION;
+        return intval(System::getEnv('_APP_QUEUE_PREFETCH_COUNT', 1));
     }
 
     public static function getName(): string
@@ -45,9 +41,8 @@ class Audits extends Action
         $this
             ->desc('Audits worker')
             ->inject('message')
-            ->inject('getProjectDB')
-            ->inject('project')
-            ->callback([$this, 'action']);
+            ->inject('getAudit')
+            ->callback($this->action(...));
 
         $this->lastTriggeredTime = time();
     }
@@ -55,63 +50,91 @@ class Audits extends Action
 
     /**
      * @param Message $message
-     * @param callable $getProjectDB
-     * @param Document $project
-     * @return void
+     * @param callable(Document): \Utopia\Audit\Audit $getAudit
+     * @return Commit|NoCommit
      * @throws Throwable
      * @throws \Utopia\Database\Exception
-     * @throws Authorization
      * @throws Structure
      */
-    public function action(Message $message, callable $getProjectDB, Document $project): void
+    public function action(Message $message, callable $getAudit): Commit|NoCommit
     {
-        $payload = $message->getPayload() ?? [];
+        $payload = $message->getPayload();
 
         if (empty($payload)) {
             throw new Exception('Missing payload');
         }
 
+        $auditMessage = Audit::fromArray($payload);
+
         Console::info('Aggregating audit logs');
 
-        $event = $payload['event'] ?? '';
-        $auditPayload = $payload['payload'] ?? '';
-        $mode = $payload['mode'] ?? '';
-        $resource = $payload['resource'] ?? '';
-        $userAgent = $payload['userAgent'] ?? '';
-        $ip = $payload['ip'] ?? '';
-        $user = new Document($payload['user'] ?? []);
+        $event = $auditMessage->event;
 
-        $userName = $user->getAttribute('name', '');
-        $userEmail = $user->getAttribute('email', '');
-        $userType = $user->getAttribute('type', Auth::ACTIVITY_TYPE_USER);
+        $auditPayload = '';
+        if ($auditMessage->project->getId() === 'console') {
+            $auditPayload = $auditMessage->payload;
+        }
+        $mode = $auditMessage->mode;
+        $resource = $auditMessage->resource;
+        $userAgent = $auditMessage->userAgent;
+        $ip = $auditMessage->ip;
+        $user = $auditMessage->user;
+
+        $impersonatorUserId = $user->getAttribute('impersonatorUserId');
+        $actorUserId = $impersonatorUserId ?: $user->getId();
+        $actorUserInternalId = $impersonatorUserId
+            ? $user->getAttribute('impersonatorUserInternalId')
+            : $user->getSequence();
+        $actorUserName = $impersonatorUserId
+            ? $user->getAttribute('impersonatorUserName', '')
+            : $user->getAttribute('name', '');
+        $actorUserEmail = $impersonatorUserId
+            ? $user->getAttribute('impersonatorUserEmail', '')
+            : $user->getAttribute('email', '');
+        $userType = $user->getAttribute('type', ACTIVITY_TYPE_USER);
 
         // Create event data
         $eventData = [
-            'userId' => $user->getInternalId(),
+            'userId' => $actorUserInternalId,
             'event' => $event,
             'resource' => $resource,
             'userAgent' => $userAgent,
             'ip' => $ip,
             'location' => '',
             'data' => [
-                'userId' => $user->getId(),
-                'userName' => $userName,
-                'userEmail' => $userEmail,
+                'userId' => $actorUserId,
+                'userName' => $actorUserName,
+                'userEmail' => $actorUserEmail,
                 'userType' => $userType,
                 'mode' => $mode,
                 'data' => $auditPayload,
             ],
-            'timestamp' => date("Y-m-d H:i:s", $message->getTimestamp()),
+            'time' => date("Y-m-d H:i:s", $message->getTimestamp()),
         ];
 
-        if (isset($this->logs[$project->getInternalId()])) {
-            $this->logs[$project->getInternalId()]['logs'][] = $eventData;
+        if (!empty($impersonatorUserId)) {
+            $eventData['data']['data'] = \is_array($auditPayload)
+                ? \array_merge($auditPayload, [
+                    'impersonatedUserId' => $user->getId(),
+                    'impersonatedUserName' => $user->getAttribute('name', ''),
+                    'impersonatedUserEmail' => $user->getAttribute('email', ''),
+                ])
+                : [
+                    'payload' => $auditPayload,
+                    'impersonatedUserId' => $user->getId(),
+                    'impersonatedUserName' => $user->getAttribute('name', ''),
+                    'impersonatedUserEmail' => $user->getAttribute('email', ''),
+                ];
+        }
+
+        if (isset($this->logs[$auditMessage->project->getSequence()])) {
+            $this->logs[$auditMessage->project->getSequence()]['logs'][] = $eventData;
         } else {
-            $this->logs[$project->getInternalId()] = [
+            $this->logs[$auditMessage->project->getSequence()] = [
                 'project' => new Document([
-                    '$id' => $project->getId(),
-                    '$internalId' => $project->getInternalId(),
-                    'database' => $project->getAttribute('database'),
+                    '$id' => $auditMessage->project->getId(),
+                    '$sequence' => $auditMessage->project->getSequence(),
+                    'database' => $auditMessage->project->getAttribute('database'),
                 ]),
                 'logs' => [$eventData]
             ];
@@ -119,29 +142,33 @@ class Audits extends Action
 
         // Check if we should process the batch by checking both for the batch size and the elapsed time
         $batchSize = $this->getBatchSize();
-        $shouldProcessBatch = \count($this->logs) >= $batchSize;
-        if (!$shouldProcessBatch && \count($this->logs) > 0) {
+        $logCount = array_reduce($this->logs, fn (int $current, $logs) => $current + count($logs['logs']), 0);
+        $shouldProcessBatch = $logCount >= $batchSize;
+        if (!$shouldProcessBatch && $logCount > 0) {
             $shouldProcessBatch = (\time() - $this->lastTriggeredTime) >= self::BATCH_AGGREGATION_INTERVAL;
         }
 
-        if ($shouldProcessBatch) {
+        if (!$shouldProcessBatch) {
+            return new NoCommit();
+        }
+
+        foreach ($this->logs as $sequence => $projectLogs) {
             try {
-                foreach ($this->logs as $internalId => $projectLogs) {
-                    $dbForProject = $getProjectDB($projectLogs['project']);
+                Console::log('Processing Project "' . $sequence . '" batch with ' . count($projectLogs['logs']) . ' events');
 
-                    Console::log('Processing batch with ' . count($projectLogs['logs']) . ' events');
-                    $audit = new Audit($dbForProject);
+                $projectDocument = $projectLogs['project'];
+                $audit = $getAudit($projectDocument);
+                $audit->logBatch($projectLogs['logs']);
 
-                    $audit->logBatch($projectLogs['logs']);
-                    Console::success('Audit logs processed successfully');
-
-                    unset($this->logs[$internalId]);
-                }
+                Console::success('Audit logs processed successfully');
             } catch (Throwable $e) {
-                Console::error('Error processing audit logs: ' . $e->getMessage());
+                Console::error('Error processing audit logs for Project "' . $sequence . '": ' . $e->getMessage());
             } finally {
-                $this->lastTriggeredTime = time();
+                unset($this->logs[$sequence]);
             }
         }
+
+        $this->lastTriggeredTime = time();
+        return new Commit();
     }
 }

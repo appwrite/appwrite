@@ -16,42 +16,46 @@ class Method
      * Initialise a new SDK method
      *
      * @param string $namespace
+     * @param ?string $group
      * @param string $name
+     * @param string $desc
      * @param string $description
      * @param array<AuthType> $auth
      * @param array<SDKResponse> $responses
-     * @param ContentType $responseType
-     * @param MethodType|null $methodType
-     * @param bool $deprecated
+     * @param ContentType $contentType
+     * @param MethodType|null $type
+     * @param Deprecated|null $deprecated
      * @param array|bool $hide
      * @param bool $packaging
-     * @param string $requestType
-     * @param array $parameters
+     * @param ContentType $requestType
+     * @param array<Parameter> $parameters
      * @param array $additionalParameters
-     *
-     * @throws \Exception
+     * @param string $desc
+     * @param bool $public Whether this method should be rendered on the website/documentation
      */
     public function __construct(
         protected string $namespace,
+        protected ?string $group,
         protected string $name,
         protected string $description,
         protected array $auth,
         protected array $responses,
         protected ContentType $contentType = ContentType::JSON,
         protected ?MethodType $type = null,
-        protected bool $deprecated = false,
+        protected ?Deprecated $deprecated = null,
         protected array|bool $hide = false,
         protected bool $packaging = false,
-        protected string $requestType = 'application/json',
+        protected ContentType $requestType = ContentType::JSON,
         protected array $parameters = [],
-        protected array $additionalParameters = []
+        protected array $additionalParameters = [],
+        protected string $desc = '',
+        protected bool $public = true
     ) {
         $this->validateMethod($name, $namespace);
         $this->validateAuthTypes($auth);
         $this->validateDesc($description);
 
         foreach ($responses as $response) {
-            /** @var SDKResponse $response */
             $this->validateResponseModel($response->getModel());
             $this->validateNoContent($response);
         }
@@ -87,11 +91,13 @@ class Method
             return;
         }
 
-        $descPath = $this->getDescriptionFilePath();
+        if (\str_ends_with($desc, '.md')) {
+            $descPath = $this->getDescriptionFilePath() ?: $this->getDescription();
 
-        if (empty($descPath)) {
-            self::$errors[] = "Error with {$this->getRouteName()} method: Description file not found at {$desc}";
-            return;
+            if (empty($descPath)) {
+                self::$errors[] = "Error with {$this->getRouteName()} method: Description file not found at {$desc}";
+                return;
+            }
         }
     }
 
@@ -126,9 +132,19 @@ class Method
         return $this->namespace;
     }
 
+    public function getGroup(): ?string
+    {
+        return $this->group;
+    }
+
     public function getMethodName(): string
     {
         return $this->name;
+    }
+
+    public function getDesc(): string
+    {
+        return $this->desc;
     }
 
     public function getDescription(): string
@@ -171,12 +187,17 @@ class Method
 
     public function isDeprecated(): bool
     {
+        return $this->deprecated !== null;
+    }
+
+    public function getDeprecated(): ?Deprecated
+    {
         return $this->deprecated;
     }
 
     public function isHidden(): bool|array
     {
-        return $this->hide ?? false;
+        return $this->hide;
     }
 
     public function isPackaging(): bool
@@ -184,11 +205,14 @@ class Method
         return $this->packaging;
     }
 
-    public function getRequestType(): string
+    public function getRequestType(): ContentType
     {
         return $this->requestType;
     }
 
+    /**
+     * @return array<Parameter>
+     */
     public function getParameters(): array
     {
         return $this->parameters;
@@ -208,6 +232,12 @@ class Method
     public function setMethodName(string $name): self
     {
         $this->name = $name;
+        return $this;
+    }
+
+    public function setDesc(string $desc): self
+    {
+        $this->desc = $desc;
         return $this;
     }
 
@@ -249,13 +279,13 @@ class Method
         return $this;
     }
 
-    public function setDeprecated(bool $deprecated): self
+    public function setDeprecated(bool|Deprecated $deprecated): self
     {
         $this->deprecated = $deprecated;
         return $this;
     }
 
-    public function setHide(bool|array $hide): self
+    public function setHide(bool|Deprecated $hide): self
     {
         $this->hide = $hide;
         return $this;
@@ -267,7 +297,7 @@ class Method
         return $this;
     }
 
-    public function setRequestType(string $requestType): self
+    public function setRequestType(ContentType $requestType): self
     {
         $this->requestType = $requestType;
         return $this;
@@ -276,6 +306,17 @@ class Method
     public function setParameters(array $parameters): self
     {
         $this->parameters = $parameters;
+        return $this;
+    }
+
+    public function isPublic(): bool
+    {
+        return $this->public;
+    }
+
+    public function setPublic(bool $public): self
+    {
+        $this->public = $public;
         return $this;
     }
 

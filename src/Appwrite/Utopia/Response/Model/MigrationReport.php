@@ -29,9 +29,9 @@ class MigrationReport extends Model
                 'default' => 0,
                 'example' => 20,
             ])
-            ->addRule(Resource::TYPE_DOCUMENT, [
+            ->addRule(Resource::TYPE_ROW, [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Number of documents to be migrated.',
+                'description' => 'Number of rows to be migrated.',
                 'default' => 0,
                 'example' => 20,
             ])
@@ -52,6 +52,36 @@ class MigrationReport extends Model
                 'description' => 'Number of functions to be migrated.',
                 'default' => 0,
                 'example' => 20,
+            ])
+            ->addRule(Resource::TYPE_SITE, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of sites to be migrated.',
+                'default' => 0,
+                'example' => 5,
+            ])
+            ->addRule(Resource::TYPE_PROVIDER, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of providers to be migrated.',
+                'default' => 0,
+                'example' => 5,
+            ])
+            ->addRule(Resource::TYPE_TOPIC, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of topics to be migrated.',
+                'default' => 0,
+                'example' => 10,
+            ])
+            ->addRule(Resource::TYPE_SUBSCRIBER, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of subscribers to be migrated.',
+                'default' => 0,
+                'example' => 100,
+            ])
+            ->addRule(Resource::TYPE_MESSAGE, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of messages to be migrated.',
+                'default' => 0,
+                'example' => 50,
             ])
             ->addRule('size', [
                 'type' => self::TYPE_INTEGER,

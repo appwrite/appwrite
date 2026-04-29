@@ -4,6 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use Utopia\Database\Document;
 
 class Variable extends Model
 {
@@ -41,6 +42,12 @@ class Variable extends Model
                 'default' => '',
                 'example' => 'myPa$$word1',
             ])
+            ->addRule('secret', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Variable secret flag. Secret variables can only be updated or deleted, but never read.',
+                'default' => false,
+                'example' => false,
+            ])
             ->addRule('resourceType', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Service to which the variable belongs. Possible values are "project", "function"',
@@ -54,6 +61,21 @@ class Variable extends Model
                 'example' => 'myAwesomeFunction',
             ])
         ;
+    }
+
+    /**
+     * Filter
+     *
+     * @param Document $document
+     * @return Document
+     */
+    public function filter(Document $document): Document
+    {
+        $secret = $document->getAttribute('secret');
+        if ($secret === true) {
+            $document->setAttribute('value', null);
+        }
+        return $document;
     }
 
     /**

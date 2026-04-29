@@ -11,12 +11,113 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 trait TeamsBaseClient
 {
     /**
-     * @depends testCreateTeam
+     * Helper method to create a team membership and accept the invitation.
+     * Returns all data needed for membership-related tests.
+     *
+     * @param string $teamUid Team ID
+     * @param string $teamName Team name
+     * @return array{teamUid: string, teamName: string, secret: string, membershipUid: string, userUid: string, email: string, name: string, session: string}
      */
-    public function testGetTeamMemberships($data): array
+    protected function createAndAcceptMembershipHelper(string $teamUid, string $teamName): array
     {
-        $teamUid = $data['teamUid'] ?? '';
-        $teamName = $data['teamName'] ?? '';
+        $email = uniqid() . 'friend@localhost.test';
+        $name = 'Friend User';
+
+        // Create membership invitation
+        $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'email' => $email,
+            'name' => $name,
+            'roles' => ['developer'],
+            'url' => 'http://localhost:5000/join-us#title'
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        // Get invitation details from email
+        $lastEmail = $this->getLastEmailByAddress($email);
+        $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
+
+        $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
+        $membershipUid = $tokens['membershipId'];
+        $userUid = $tokens['userId'];
+        $secret = $tokens['secret'];
+
+        // Accept the invitation
+        $response = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamUid . '/memberships/' . $membershipUid . '/status', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'secret' => $secret,
+            'userId' => $userUid,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
+
+        return [
+            'teamUid' => $teamUid,
+            'teamName' => $teamName,
+            'secret' => $secret,
+            'membershipUid' => $membershipUid,
+            'userUid' => $userUid,
+            'email' => $email,
+            'name' => $name,
+            'session' => $session,
+        ];
+    }
+
+    /**
+     * Helper method to create a pending membership (not accepted).
+     * Returns membership data for tests that need unaccepted memberships.
+     *
+     * @param string $teamUid Team ID
+     * @param string $teamName Team name
+     * @return array{teamUid: string, teamName: string, secret: string, membershipUid: string, userUid: string, email: string, name: string}
+     */
+    protected function createPendingMembershipHelper(string $teamUid, string $teamName): array
+    {
+        $email = uniqid() . 'friend@localhost.test';
+        $name = 'Friend User';
+
+        // Create membership invitation
+        $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'email' => $email,
+            'name' => $name,
+            'roles' => ['developer'],
+            'url' => 'http://localhost:5000/join-us#title'
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        // Get invitation details from email
+        $lastEmail = $this->getLastEmailByAddress($email);
+        $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
+
+        $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
+
+        return [
+            'teamUid' => $tokens['teamId'],
+            'teamName' => $tokens['teamName'],
+            'secret' => $tokens['secret'],
+            'membershipUid' => $tokens['membershipId'],
+            'userUid' => $tokens['userId'],
+            'email' => $email,
+            'name' => $name,
+        ];
+    }
+
+    public function testGetTeamMemberships(): void
+    {
+        $teamData = $this->createTeamHelper();
+        $teamUid = $teamData['teamUid'];
+        $teamName = $teamData['teamName'];
 
         /**
          * Test for SUCCESS
@@ -133,17 +234,14 @@ trait TeamsBaseClient
         /**
          * Test for FAILURE
          */
-
-        return $data;
     }
 
-    /**
-     * @depends testCreateTeamMembership
-     */
-    public function testGetTeamMembership($data): void
+    public function testGetTeamMembership(): void
     {
-        $teamUid = $data['teamUid'] ?? '';
-        $membershipUid = $data['membershipUid'] ?? '';
+        $teamData = $this->createTeamHelper();
+        $membershipData = $this->createPendingMembershipHelper($teamData['teamUid'], $teamData['teamName']);
+        $teamUid = $membershipData['teamUid'];
+        $membershipUid = $membershipData['membershipUid'];
 
         /**
          * Test for SUCCESS
@@ -156,7 +254,7 @@ trait TeamsBaseClient
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertFalse($response['body']['mfa']);
-        $this->assertNotEmpty($response['body']['userId']);
+        $this->assertArrayHasKey('userId', $response['body']);
         $this->assertArrayHasKey('userName', $response['body']);
         $this->assertArrayHasKey('userEmail', $response['body']);
         $this->assertNotEmpty($response['body']['teamId']);
@@ -184,13 +282,11 @@ trait TeamsBaseClient
         $this->assertEquals(401, $response['headers']['status-code']);
     }
 
-    /**
-     * @depends testCreateTeam
-     */
-    public function testCreateTeamMembership($data): array
+    public function testCreateTeamMembership(): void
     {
-        $teamUid = $data['teamUid'] ?? '';
-        $teamName = $data['teamName'] ?? '';
+        $teamData = $this->createTeamHelper();
+        $teamUid = $teamData['teamUid'];
+        $teamName = $teamData['teamName'];
         $email = uniqid() . 'friend@localhost.test';
         $name = 'Friend User';
 
@@ -218,13 +314,15 @@ trait TeamsBaseClient
         $this->assertEquals(false, (new DatetimeValidator())->isValid($response['body']['joined'])); // is null in DB
         $this->assertEquals(false, $response['body']['confirm']);
 
-        $lastEmail = $this->getLastEmail();
+        $lastEmail = $this->getLastEmailByAddress($email);
 
-        $this->assertEquals($email, $lastEmail['to'][0]['address']);
+        $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
         $this->assertEquals($name, $lastEmail['to'][0]['name']);
         $this->assertEquals('Invitation to ' . $teamName . ' Team at ' . $this->getProject()['name'], $lastEmail['subject']);
-        $this->assertEquals($response['body']['teamId'], substr($lastEmail['text'], strpos($lastEmail['text'], '&teamId=', 0) + 8, 20));
-        $this->assertEquals($teamName, substr($lastEmail['text'], strpos($lastEmail['text'], '&teamName=', 0) + 10, 7));
+
+        $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
+        $this->assertEquals($teamName, $tokens['teamName']);
+        $this->assertEquals($response['body']['teamId'], $tokens['teamId']);
 
         /**
          * Test with UserId
@@ -283,13 +381,15 @@ trait TeamsBaseClient
         $this->assertEquals(false, (new DateTimeValidator())->isValid($response['body']['joined'])); // is null in DB
         $this->assertEquals(false, $response['body']['confirm']);
 
-        $lastEmail = $this->getLastEmail();
+        $lastEmail = $this->getLastEmailByAddress($secondEmail);
 
-        $this->assertEquals($secondEmail, $lastEmail['to'][0]['address']);
+        $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $secondEmail);
         $this->assertEquals($secondName, $lastEmail['to'][0]['name']);
         $this->assertEquals('Invitation to ' . $teamName . ' Team at ' . $this->getProject()['name'], $lastEmail['subject']);
-        $this->assertEquals($response['body']['teamId'], substr($lastEmail['text'], strpos($lastEmail['text'], '&teamId=', 0) + 8, 20));
-        $this->assertEquals($teamName, substr($lastEmail['text'], strpos($lastEmail['text'], '&teamName=', 0) + 10, 7));
+
+        $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
+        $this->assertEquals($teamName, $tokens['teamName']);
+        $this->assertEquals($response['body']['teamId'], $tokens['teamId']);
 
         // test for resending invitation
         $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
@@ -303,11 +403,6 @@ trait TeamsBaseClient
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
-
-        $lastEmail = $this->getLastEmail();
-        $membershipUid = substr($lastEmail['text'], strpos($lastEmail['text'], '?membershipId=', 0) + 14, 20);
-        $userUid = substr($lastEmail['text'], strpos($lastEmail['text'], '&userId=', 0) + 8, 20);
-        $secret = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
 
         /**
          * Test for FAILURE
@@ -336,36 +431,19 @@ trait TeamsBaseClient
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-
-        $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'email' => $email,
-            'name' => $name,
-            'roles' => ['developer'],
-            'url' => 'http://example.com/join-us#title' // bad url
-        ]);
-
-        $this->assertEquals(400, $response['headers']['status-code']);
-
-        return [
-            'teamUid' => $teamUid,
-            'teamName' => $teamName,
-            'secret' => $secret,
-            'membershipUid' => $membershipUid,
-            'userUid' => $userUid,
-            'email' => $email,
-            'name' => $name
-        ];
     }
 
-    /**
-     * @depends testCreateTeamMembership
-     */
-    public function testListTeamMemberships($data): void
+    public function testListTeamMemberships(): void
     {
-        $memberships = $this->client->call(Client::METHOD_GET, '/teams/' . $data['teamUid'] . '/memberships', array_merge([
+        $teamData = $this->createTeamHelper();
+        $teamUid = $teamData['teamUid'];
+        $teamName = $teamData['teamName'];
+
+        // Create additional memberships for testing list functionality
+        $this->createPendingMembershipHelper($teamUid, $teamName);
+        $this->createPendingMembershipHelper($teamUid, $teamName);
+
+        $memberships = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -375,7 +453,7 @@ trait TeamsBaseClient
         $this->assertNotEmpty($memberships['body']['memberships']);
         $this->assertCount(3, $memberships['body']['memberships']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $data['teamUid'] . '/memberships', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -391,17 +469,17 @@ trait TeamsBaseClient
         $this->assertEquals($memberships['body']['memberships'][1]['$id'], $response['body']['memberships'][0]['$id']);
     }
 
-    /**
-     * @depends testCreateTeamMembership
-     */
-    public function testUpdateTeamMembership($data): array
+    public function testUpdateTeamMembership(): void
     {
-        $teamUid = $data['teamUid'] ?? '';
-        $secret = $data['secret'] ?? '';
-        $membershipUid = $data['membershipUid'] ?? '';
-        $userUid = $data['userUid'] ?? '';
-        $email = $data['email'] ?? '';
-        $name = $data['name'] ?? '';
+        $teamData = $this->createTeamHelper();
+        $membershipData = $this->createPendingMembershipHelper($teamData['teamUid'], $teamData['teamName']);
+
+        $teamUid = $membershipData['teamUid'];
+        $secret = $membershipData['secret'];
+        $membershipUid = $membershipData['membershipUid'];
+        $userUid = $membershipData['userUid'];
+        $email = $membershipData['email'];
+        $name = $membershipData['name'];
 
         /**
          * Test for SUCCESS
@@ -423,7 +501,6 @@ trait TeamsBaseClient
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['joined']));
         $this->assertEquals(true, $response['body']['confirm']);
         $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
-        $data['session'] = $session;
 
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
             'origin' => 'http://localhost',
@@ -561,17 +638,13 @@ trait TeamsBaseClient
         ]);
 
         $this->assertEquals(409, $response['headers']['status-code']);
-
-        return $data;
     }
 
 
-    /**
-     * @depends testCreateTeam
-     */
-    public function testUpdateMembershipWithSession(array $data): void
+    public function testUpdateMembershipWithSession(): void
     {
-        $teamUid = $data['teamUid'] ?? '';
+        $teamData = $this->createTeamHelper();
+        $teamUid = $teamData['teamUid'];
 
         // create user
         $response = $this->client->call(Client::METHOD_POST, '/account', [
@@ -611,11 +684,13 @@ trait TeamsBaseClient
 
         $this->assertEquals(201, $response['headers']['status-code']);
 
-        $lastEmail = $this->getLastEmail();
+        $lastEmail = $this->getLastEmailByAddress($user['email']);
+        $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $user['email']);
+        $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
 
-        $secret = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
-        $membershipUid = substr($lastEmail['text'], strpos($lastEmail['text'], '?membershipId=', 0) + 14, 20);
-        $userUid = substr($lastEmail['text'], strpos($lastEmail['text'], '&userId=', 0) + 8, 20);
+        $secret = $tokens['secret'];
+        $membershipUid = $tokens['membershipId'];
+        $userUid = $tokens['userId'];
 
         $response = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamUid . '/memberships/' . $membershipUid . '/status', [
             'origin' => 'http://localhost',
@@ -635,14 +710,14 @@ trait TeamsBaseClient
         $this->assertEmpty($response['cookies']);
     }
 
-    /**
-     * @depends testUpdateTeamMembership
-     */
-    public function testUpdateTeamMembershipRoles($data): array
+    public function testUpdateTeamMembershipRoles(): void
     {
-        $teamUid = $data['teamUid'] ?? '';
-        $membershipUid = $data['membershipUid'] ?? '';
-        $session = $data['session'] ?? '';
+        $teamData = $this->createTeamHelper();
+        $membershipData = $this->createAndAcceptMembershipHelper($teamData['teamUid'], $teamData['teamName']);
+
+        $teamUid = $membershipData['teamUid'];
+        $membershipUid = $membershipData['membershipUid'];
+        $session = $membershipData['session'];
 
         /**
          * Test for SUCCESS
@@ -705,18 +780,21 @@ trait TeamsBaseClient
 
         $this->assertEquals(401, $response['headers']['status-code']);
         $this->assertEquals('User is not allowed to modify roles', $response['body']['message']);
-
-        return $data;
     }
 
-    /**
-    * @depends testUpdateTeamMembershipRoles
-    */
-    public function testDeleteTeamMembership($data): array
+    public function testDeleteTeamMembership(): void
     {
-        $teamUid = $data['teamUid'] ?? '';
-        $membershipUid = $data['membershipUid'] ?? '';
-        $session = $data['session'] ?? '';
+        $teamData = $this->createTeamHelper();
+        $teamUid = $teamData['teamUid'];
+        $teamName = $teamData['teamName'];
+
+        // Create multiple memberships for the delete test
+        $this->createPendingMembershipHelper($teamUid, $teamName);
+        $this->createPendingMembershipHelper($teamUid, $teamName);
+        $membershipData = $this->createAndAcceptMembershipHelper($teamUid, $teamName);
+
+        $membershipUid = $membershipData['membershipUid'];
+        $session = $membershipData['session'];
 
         $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', array_merge([
             'content-type' => 'application/json',
@@ -800,7 +878,5 @@ trait TeamsBaseClient
         ], $this->getHeaders()));
 
         $this->assertEquals(404, $response['headers']['status-code']);
-
-        return [];
     }
 }

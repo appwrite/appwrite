@@ -1,1 +1,0 @@
-Get a list of all the project's code deployments. You can use the query params to filter your results.
