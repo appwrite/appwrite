@@ -6092,6 +6092,41 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(409, $duplicate['headers']['status-code']);
+        $this->assertEquals('Document with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.', $duplicate['body']['message']);
+    }
+
+    public function testUniqueUid(): void
+    {
+        $data = $this->setupDocuments();
+
+        /**
+         * Test duplicate on unique $id
+         */
+        $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($data['databaseId'], $data['moviesId']), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            $this->getRecordIdParam() => 'i_am_unique',
+            'data' => [
+                'title' => 'Hello 1',
+                'releaseYear' => 2000
+            ]
+        ]);
+
+        $this->assertEquals(201, $document['headers']['status-code']);
+
+        $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($data['databaseId'], $data['moviesId']), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            $this->getRecordIdParam() => 'i_am_unique',
+            'data' => [
+                'title' => 'Hello 2',
+                'releaseYear' => 2000
+            ]
+        ]);
+        $this->assertEquals(409, $document['headers']['status-code']);
+        $this->assertEquals('Document with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.', $document['body']['message']);
     }
 
     public function testPersistentCreatedAt(): void
