@@ -700,7 +700,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $function['headers']['status-code']);
         $this->assertEquals($deploymentId, $function['body']['deploymentId']);
 
-        // Test starter code is used and that dynamic keys work
+        // Test starter code is used and that ephemeral keys work
         $execution = $this->createExecution($functionId, [
             'path' => '/ping',
         ]);
@@ -2129,7 +2129,7 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $deploymentId = $this->setupDeployment($functionId, [
-            'code' => $this->packageFunction('dynamic-api-key'),
+            'code' => $this->packageFunction('ephemeral-api-key'),
             'activate' => true,
         ]);
 

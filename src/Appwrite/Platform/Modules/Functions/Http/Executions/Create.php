@@ -228,7 +228,7 @@ class Create extends Base
 
         $executionId = ID::unique();
         $headers['x-appwrite-execution-id'] = $executionId;
-        $headers['x-appwrite-key'] = API_KEY_DYNAMIC . '_' . $apiKey;
+        $headers['x-appwrite-key'] = API_KEY_EPHEMERAL . '_' . $apiKey;
         $headers['x-appwrite-trigger'] = 'http';
         $headers['x-appwrite-user-id'] = $user->getId();
         $headers['x-appwrite-user-jwt'] = $jwt;

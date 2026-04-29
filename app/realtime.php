@@ -54,7 +54,10 @@ use Utopia\WebSocket\Adapter;
 use Utopia\WebSocket\Server;
 
 require_once __DIR__ . '/init.php';
-require_once __DIR__ . '/init/span.php';
+
+if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
+    require_once __DIR__ . '/init/span.php';
+}
 
 /** @var Registry $register */
 $register = $GLOBALS['register'] ?? throw new \RuntimeException('Registry not initialized');
