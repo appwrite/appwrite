@@ -58,8 +58,10 @@ class Facebook extends OAuth2
     {
         if (empty($this->tokens)) {
             $this->tokens = \json_decode($this->request(
-                'GET',
-                'https://graph.facebook.com/' . $this->version . '/oauth/access_token?' . \http_build_query([
+                'POST',
+                'https://graph.facebook.com/' . $this->version . '/oauth/access_token',
+                ['Content-Type: application/x-www-form-urlencoded'],
+                \http_build_query([
                     'client_id' => $this->appID,
                     'redirect_uri' => $this->callback,
                     'client_secret' => $this->appSecret,
@@ -79,8 +81,10 @@ class Facebook extends OAuth2
     public function refreshTokens(string $refreshToken): array
     {
         $this->tokens = \json_decode($this->request(
-            'GET',
-            'https://graph.facebook.com/' . $this->version . '/oauth/access_token?' . \http_build_query([
+            'POST',
+            'https://graph.facebook.com/' . $this->version . '/oauth/access_token',
+            ['Content-Type: application/x-www-form-urlencoded'],
+            \http_build_query([
                 'client_id' => $this->appID,
                 'redirect_uri' => $this->callback,
                 'client_secret' => $this->appSecret,
@@ -156,7 +160,7 @@ class Facebook extends OAuth2
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $user = $this->request('GET', 'https://graph.facebook.com/' . $this->version . '/me?fields=email,name&access_token=' . \urlencode($accessToken));
+            $user = $this->request('GET', 'https://graph.facebook.com/' . $this->version . '/me?fields=email,name', ['Authorization: Bearer ' . \urlencode($accessToken)]);
 
             $this->user = \json_decode($user, true);
         }
