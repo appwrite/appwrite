@@ -8,6 +8,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Presences\HTTP\Action as PresenceAction;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
+use Appwrite\SDK\Parameter;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
@@ -46,19 +47,73 @@ class Upsert extends PresenceAction
             ->label('event', 'presences.[presenceId].upsert')
             ->label('audits.event', 'presence.upsert')
             ->label('audits.resource', 'presence/{response.$id}')
-            ->label('sdk', new Method(
-                namespace: 'presences',
-                group: 'presences',
-                name: 'upsertPresence',
-                description: 'Create or update a presence log by its unique ID.',
-                auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
-                responses: [
-                    new SDKResponse(
-                        code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_PRESENCE,
-                    ),
-                ],
-            ))
+            ->label('sdk', [
+                // Client-side SDK: `userId` is not accepted (session callers should just upsert their own presence).
+                new Method(
+                    namespace: 'presences',
+                    group: 'presences',
+                    name: 'upsertPresence',
+                    description: 'Create or update a presence log by its unique ID.',
+                    auth: [AuthType::SESSION],
+                    responses: [
+                        new SDKResponse(
+                            code: Response::STATUS_CODE_OK,
+                            model: Response::MODEL_PRESENCE,
+                        ),
+                    ],
+                    parameters: [
+                        new Parameter('presenceId', optional: false),
+                        new Parameter('status', optional: false),
+                        new Parameter('permissions', optional: true),
+                        new Parameter('expiry', optional: true),
+                        new Parameter('metadata', optional: true),
+                    ],
+                ),
+                // Server-side SDK: `userId` is required when authenticating with API keys/JWT.
+                new Method(
+                    namespace: 'presences',
+                    group: 'presences',
+                    name: 'upsertPresence',
+                    description: 'Create or update a presence log by its unique ID.',
+                    auth: [AuthType::KEY, AuthType::JWT],
+                    responses: [
+                        new SDKResponse(
+                            code: Response::STATUS_CODE_OK,
+                            model: Response::MODEL_PRESENCE,
+                        ),
+                    ],
+                    parameters: [
+                        new Parameter('presenceId', optional: false),
+                        new Parameter('userId', optional: false),
+                        new Parameter('status', optional: false),
+                        new Parameter('permissions', optional: true),
+                        new Parameter('expiry', optional: true),
+                        new Parameter('metadata', optional: true),
+                    ],
+                ),
+                // Console SDK (admin): still operates with `userId`.
+                new Method(
+                    namespace: 'presences',
+                    group: 'presences',
+                    name: 'upsertPresence',
+                    description: 'Create or update a presence log by its unique ID.',
+                    auth: [AuthType::ADMIN],
+                    responses: [
+                        new SDKResponse(
+                            code: Response::STATUS_CODE_OK,
+                            model: Response::MODEL_PRESENCE,
+                        ),
+                    ],
+                    parameters: [
+                        new Parameter('presenceId', optional: false),
+                        new Parameter('userId', optional: false),
+                        new Parameter('status', optional: false),
+                        new Parameter('permissions', optional: true),
+                        new Parameter('expiry', optional: true),
+                        new Parameter('metadata', optional: true),
+                    ],
+                ),
+            ])
             ->param('presenceId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Presence unique ID.', false, ['dbForProject'])
             ->param('userId', null, new Nullable(new UID()), 'User ID.', true)
             ->param('status', '', new Text(Database::LENGTH_KEY), 'Presence status.', false)

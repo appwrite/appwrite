@@ -7,6 +7,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Presences\HTTP\Action as PresenceAction;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
+use Appwrite\SDK\Parameter;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
@@ -42,19 +43,51 @@ class Update extends PresenceAction
             ->label('event', 'presences.[presenceId].update')
             ->label('audits.event', 'presence.update')
             ->label('audits.resource', 'presence/{response.$id}')
-            ->label('sdk', new Method(
-                namespace: 'presences',
-                group: 'presences',
-                name: 'updatePresence',
-                description: 'Update a presence log by its unique ID.',
-                auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
-                responses: [
-                    new SDKResponse(
-                        code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_PRESENCE,
-                    ),
-                ],
-            ))
+            ->label('sdk', [
+                // Client-side SDK: `userId` is not accepted (session callers can only update their own presence).
+                new Method(
+                    namespace: 'presences',
+                    group: 'presences',
+                    name: 'updatePresence',
+                    description: 'Update a presence log by its unique ID.',
+                    auth: [AuthType::SESSION],
+                    responses: [
+                        new SDKResponse(
+                            code: Response::STATUS_CODE_OK,
+                            model: Response::MODEL_PRESENCE,
+                        ),
+                    ],
+                    parameters: [
+                        new Parameter('presenceId', optional: false),
+                        new Parameter('status', optional: true),
+                        new Parameter('expiry', optional: true),
+                        new Parameter('metadata', optional: true),
+                        new Parameter('permissions', optional: true),
+                    ],
+                ),
+                // Server-side SDK: `userId` is required when authenticating with API keys/JWT.
+                new Method(
+                    namespace: 'presences',
+                    group: 'presences',
+                    name: 'updatePresence',
+                    description: 'Update a presence log by its unique ID.',
+                    auth: [AuthType::KEY, AuthType::JWT, AuthType::ADMIN],
+                    responses: [
+                        new SDKResponse(
+                            code: Response::STATUS_CODE_OK,
+                            model: Response::MODEL_PRESENCE,
+                        ),
+                    ],
+                    parameters: [
+                        new Parameter('presenceId', optional: false),
+                        new Parameter('userId', optional: false),
+                        new Parameter('status', optional: true),
+                        new Parameter('expiry', optional: true),
+                        new Parameter('metadata', optional: true),
+                        new Parameter('permissions', optional: true),
+                    ],
+                ),
+            ])
             ->param('presenceId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Presence unique ID.', false, ['dbForProject'])
             ->param('userId', null, new Nullable(new UID()), 'User ID.', true)
             ->param('status', null, new Nullable(new Text(Database::LENGTH_KEY)), 'Presence status.', true)
