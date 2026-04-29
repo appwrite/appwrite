@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams, useNavigate, useSearch, Link } from '@tanstack/react-router'
+import { useQueryClient } from '@tanstack/react-query'
 import {
   BillingPlanTier,
   type BillingPlanTier as BillingPlanTierType,
@@ -58,6 +59,7 @@ export function ChangePlanWizardFullscreen() {
   const navigate = useNavigate()
   const search = useSearch({ strict: false })
   const orgId = params.orgId as string | undefined
+  const queryClient = useQueryClient()
 
   // Smart navigation for cancel/close actions
   // No fallbackPath - uses internal console history or root
@@ -376,11 +378,43 @@ export function ChangePlanWizardFullscreen() {
         taxId: taxId || null,
       })
 
-      // Payment authentication required (e.g. 3DS): handle inline via handleNextAction
-      const resultObj = result as { clientSecret?: string; status?: number }
+      // 3DS / authentication required: backend signals it by including a
+      // clientSecret on the otherwise-success response. If the response says
+      // requires_action without a clientSecret we have nothing to drive
+      // client-side, so surface that as an explicit error instead of
+      // silently succeeding.
+      const resultObj = result as {
+        clientSecret?: string
+        status?: string | number
+      }
+      const statusRequiresAction =
+        typeof resultObj?.status === 'string' &&
+        (resultObj.status === 'requires_action' ||
+          resultObj.status === 'requires_authentication')
+      if (statusRequiresAction && !resultObj?.clientSecret) {
+        throw new Error(
+          'Payment authentication is required but the server did not return a client secret.',
+        )
+      }
+
       if (resultObj?.clientSecret) {
+        // Grab the Stripe provider id so confirmPayment can attach the card
+        // if the PaymentIntent still needs a payment method.
+        const selectedMethod = paymentMethods.find(
+          (pm) => pm.$id === paymentMethodId,
+        )
         await confirmPayment({
           clientSecret: resultObj.clientSecret,
+          paymentMethod: selectedMethod?.providerMethodId || undefined,
+        })
+        // Refresh org + invoice state now that the payment intent has been
+        // authenticated; otherwise subsequent reads see the stale
+        // requires_action state.
+        await queryClient.invalidateQueries({
+          queryKey: ['organization', orgId],
+        })
+        await queryClient.invalidateQueries({
+          queryKey: ['invoices', 'organization', orgId],
         })
       }
 

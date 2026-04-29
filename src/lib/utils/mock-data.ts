@@ -116,10 +116,19 @@ export interface Invoice {
   invoiceNumber: string
   dueDate: string
   paidDate?: string
-  status: 'paid' | 'pending' | 'overdue' | 'failed'
+  status:
+    | 'paid'
+    | 'pending'
+    | 'due'
+    | 'overdue'
+    | 'failed'
+    | 'cancelled'
+    | 'requires_authentication'
   amount: number
   currency: string
   downloadUrl?: string
+  clientSecret?: string
+  lastError?: string
 }
 
 export interface PaymentMethod {

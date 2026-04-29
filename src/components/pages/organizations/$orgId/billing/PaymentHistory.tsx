@@ -1,14 +1,16 @@
 import { useState, useMemo, useEffect } from 'react'
-import { Download, Eye, ChevronLeft, ChevronRight } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { type Invoice } from '@/lib/utils/mock-data'
 import {
-  formatCurrency,
-  formatDate,
-  asOrganizationPaymentRefs,
-} from './utils'
-import { getInvoiceStatusBadgeVariant } from '@/lib/utils/status-badge'
+  Download,
+  Eye,
+  ChevronLeft,
+  ChevronRight,
+  ShieldCheck,
+} from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { type Invoice } from '@/lib/utils/mock-data'
+import { formatCurrency, formatDate, asOrganizationPaymentRefs } from './utils'
+import { getInvoiceStatusBadgeVariant } from '@/lib/utils/status-badge'
 import {
   useOrganizationInvoices,
   useOrganizationById,
@@ -17,75 +19,67 @@ import {
   resolvePaymentMethodIdForInvoiceRetry,
 } from '@/lib/react-query/hooks'
 import { useParams } from '@tanstack/react-router'
+import { useQueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { toast } from 'sonner'
-
-/**
- * PaymentHistory Component
- *
- * Displays a paginated table of past invoices with:
- * - Invoice number, due date, status, amount
- * - Download and view actions
- * - Pagination controls
- *
- * Props: None
- *
- * State:
- * - requestedPage: number - Page user requested (fetch target)
- * - displayedPage: number - Page currently rendered
- *
- * Edge cases:
- * - Empty invoices: Shows empty state message
- * - Failed/overdue status: Shows warning styling
- */
+import { confirmPayment } from '@/lib/utils/stripe'
 
 const ITEMS_PER_PAGE = 5
 
 /**
- * Map API Invoice model to component Invoice interface
+ * Map API Invoice model to component Invoice interface.
  */
 function mapApiInvoiceToComponent(apiInvoice: Models.Invoice): Invoice {
-  // Map API status to component status
-  // API status can be: 'succeeded', 'pending', 'failed', 'overdue', etc.
-  let status: 'paid' | 'pending' | 'overdue' | 'failed' = 'pending'
+  // API statuses: succeeded, pending, due, requires_authentication, failed,
+  // cancelled. 'paid' and 'requires_action' are accepted aliases from older
+  // responses / Stripe naming. 'overdue' is not returned by the API but is
+  // kept as a valid component status for UI-derived overdue rendering.
+  let status: Invoice['status']
   const apiStatus = apiInvoice.status?.toLowerCase() || ''
-  if (apiStatus === 'succeeded' || apiStatus === 'paid') {
-    status = 'paid'
-  } else if (apiStatus === 'failed' || apiStatus === 'requires_authentication') {
-    status = 'failed'
-  } else if (apiStatus === 'overdue') {
-    status = 'overdue'
-  } else {
-    status = 'pending'
+  switch (apiStatus) {
+    case 'succeeded':
+    case 'paid':
+      status = 'paid'
+      break
+    case 'requires_authentication':
+    case 'requires_action':
+      status = 'requires_authentication'
+      break
+    case 'failed':
+      status = 'failed'
+      break
+    case 'cancelled':
+      status = 'cancelled'
+      break
+    case 'due':
+      status = 'due'
+      break
+    case 'overdue':
+      status = 'overdue'
+      break
+    case 'pending':
+    default:
+      status = 'pending'
+      break
   }
 
-  // Generate invoice number from aggregationId or $id
-  // Use aggregationId if available, otherwise use $id
   const idToUse = apiInvoice.aggregationId || apiInvoice.$id
   const invoiceNumber = `INV-${idToUse.slice(-8).toUpperCase()}`
 
-  // Parse dueAt date - handle "YYYY-MM-DD HH:mm:ss.SSS" format
-  // The API returns dates like "2025-02-24 00:00:00.000"
-  // Convert to ISO format for consistent date handling
   let dueDate: string
   try {
-    // Replace space with 'T' and add 'Z' for UTC timezone
     const normalized = apiInvoice.dueAt.replace(' ', 'T') + 'Z'
     const parsed = new Date(normalized)
     if (!isNaN(parsed.getTime())) {
       dueDate = parsed.toISOString()
     } else {
-      // Fallback: try parsing as-is (might already be ISO)
       dueDate = new Date(apiInvoice.dueAt).toISOString()
     }
   } catch {
-    // Final fallback: use original value
     dueDate = apiInvoice.dueAt
   }
 
-  // Parse paidDate from $updatedAt if status is paid
-  // $updatedAt is already in ISO format from the API, so we can use it directly
   const paidDate = status === 'paid' ? apiInvoice.$updatedAt : undefined
 
   return {
@@ -96,7 +90,9 @@ function mapApiInvoiceToComponent(apiInvoice: Models.Invoice): Invoice {
     status,
     amount: apiInvoice.grossAmount || apiInvoice.amount,
     currency: apiInvoice.currency || 'USD',
-    downloadUrl: undefined, // API doesn't provide downloadUrl directly
+    downloadUrl: undefined,
+    clientSecret: apiInvoice.clientSecret || undefined,
+    lastError: apiInvoice.lastError || undefined,
   }
 }
 
@@ -113,12 +109,12 @@ function extractUrlFromResponse(response: unknown): string | undefined {
 }
 
 export function PaymentHistory() {
-  // Get orgId from route params - works for any route that has orgId
   const params = useParams({ strict: false })
   const orgId = params.orgId as string | undefined
   const [requestedPage, setRequestedPage] = useState(0)
   const [displayedPage, setDisplayedPage] = useState(0)
 
+  const queryClient = useQueryClient()
   const { organization } = useOrganizationById(orgId)
   const orgPaymentRefs = organization
     ? asOrganizationPaymentRefs(organization)
@@ -130,7 +126,30 @@ export function PaymentHistory() {
   const primaryFailed = primaryPaymentMethod.paymentMethod?.failed === true
   const retryPaymentMutation = useRetryInvoicePayment()
 
-  const handleRetryInvoicePayment = async (invoiceId: string) => {
+  const handleAuthorizeInvoice = async (invoice: Invoice) => {
+    if (!invoice.clientSecret) {
+      toast.error('This invoice is missing authentication details.')
+      return
+    }
+    try {
+      await confirmPayment({ clientSecret: invoice.clientSecret })
+      toast.success('Payment authorized')
+      if (orgId) {
+        await queryClient.invalidateQueries({
+          queryKey: ['invoices', 'organization', orgId],
+        })
+        await queryClient.invalidateQueries({
+          queryKey: ['organization', orgId],
+        })
+      }
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to authorize payment',
+      )
+    }
+  }
+
+  const handleRetryInvoicePayment = async (invoice: Invoice) => {
     if (!orgId || !organization) return
     try {
       const paymentMethodId = await resolvePaymentMethodIdForInvoiceRetry({
@@ -138,6 +157,12 @@ export function PaymentHistory() {
         primaryPaymentMethodFailed: primaryFailed,
       })
       if (!paymentMethodId) {
+        // Fall back to Stripe authorize when the invoice still has a usable
+        // clientSecret; otherwise tell the user to add a payment method.
+        if (invoice.clientSecret) {
+          await handleAuthorizeInvoice(invoice)
+          return
+        }
         toast.error(
           'No payment method available. Please add a payment method first.',
         )
@@ -145,10 +170,16 @@ export function PaymentHistory() {
       }
       await retryPaymentMutation.mutateAsync({
         organizationId: orgId,
-        invoiceId,
+        invoiceId: invoice.$id,
         paymentMethodId,
       })
       toast.success('Payment retry initiated')
+      await queryClient.invalidateQueries({
+        queryKey: ['invoices', 'organization', orgId],
+      })
+      await queryClient.invalidateQueries({
+        queryKey: ['organization', orgId],
+      })
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : 'Failed to retry payment',
@@ -156,14 +187,12 @@ export function PaymentHistory() {
     }
   }
 
-  // Fetch invoices for requested page (user intent)
   const {
     isFetching: requestedPageIsFetching,
     error: requestedPageError,
     data: requestedPageData,
   } = useOrganizationInvoices(orgId, requestedPage, ITEMS_PER_PAGE)
 
-  // Fetch invoices for displayed page (what the user currently sees)
   const {
     invoices: displayedApiInvoices,
     total: displayedTotalInvoices,
@@ -172,7 +201,6 @@ export function PaymentHistory() {
     error: displayedError,
   } = useOrganizationInvoices(orgId, displayedPage, ITEMS_PER_PAGE)
 
-  // Keep showing current page until next page data is fully loaded
   useEffect(() => {
     if (
       requestedPage !== displayedPage &&
@@ -183,7 +211,6 @@ export function PaymentHistory() {
     }
   }, [requestedPage, displayedPage, requestedPageIsFetching, requestedPageData])
 
-  // Map API invoices to component format
   const invoices = useMemo(() => {
     return displayedApiInvoices.map(mapApiInvoiceToComponent)
   }, [displayedApiInvoices])
@@ -203,9 +230,6 @@ export function PaymentHistory() {
     setRequestedPage((prev) => Math.min(totalPages - 1, prev + 1))
   }
 
-  // Loading state - only show if we don't have any data yet
-  // This prevents showing loading when we have cached data from route loader
-  // Check if data exists (from cache or fresh) - if it does, we should render it even if isPending is briefly true
   if (displayedIsPending && !displayedData) {
     return (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
@@ -223,9 +247,7 @@ export function PaymentHistory() {
     )
   }
 
-  // Error state
-  if (displayedError || requestedPageError) {
-    const error = displayedError || requestedPageError
+  if (displayedError && !displayedData) {
     return (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
@@ -234,16 +256,18 @@ export function PaymentHistory() {
           </h3>
         </div>
         <div className="border-t border-border px-6 py-12 text-center">
-          <p className="text-[13px] text-muted-foreground">
-            {error instanceof Error ? error.message : 'Failed to load invoices'}
+          <p className="text-[13px] text-red-600 dark:text-red-400">
+            Failed to load invoices.{' '}
+            {displayedError instanceof Error
+              ? displayedError.message
+              : 'Please try again.'}
           </p>
         </div>
       </div>
     )
   }
 
-  // Empty state
-  if (invoices.length === 0) {
+  if (totalInvoices === 0) {
     return (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
@@ -253,7 +277,8 @@ export function PaymentHistory() {
         </div>
         <div className="border-t border-border px-6 py-12 text-center">
           <p className="text-[13px] text-muted-foreground">
-            No invoices yet. Your payment history will appear here.
+            No invoices yet. Once you have made a payment, your invoices will
+            appear here.
           </p>
         </div>
       </div>
@@ -262,18 +287,21 @@ export function PaymentHistory() {
 
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-      {/* Header */}
-      <div className="px-6 py-4">
+      <div className="px-6 py-4 flex items-center justify-between">
         <h3 className="text-[15px] font-semibold text-foreground">
           Payment History
         </h3>
+        {requestedPageError && requestedPage !== displayedPage && (
+          <p className="text-[12px] text-red-600 dark:text-red-400">
+            Failed to load page {requestedPage + 1}
+          </p>
+        )}
       </div>
 
-      {/* Table */}
       <div className="border-t border-border overflow-x-auto">
         <table className="w-full">
-          <thead>
-            <tr className="border-b border-border bg-muted/30">
+          <thead className="bg-muted/30">
+            <tr>
               <th className="px-6 py-2.5 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                 Invoice
               </th>
@@ -299,36 +327,31 @@ export function PaymentHistory() {
                   retryPaymentMutation.isPending &&
                   retryPaymentMutation.variables?.invoiceId === invoice.$id
                 }
+                onAuthorize={() => handleAuthorizeInvoice(invoice)}
                 onRetryPayment={
                   invoice.status === 'failed' || invoice.status === 'overdue'
-                    ? () => handleRetryInvoicePayment(invoice.$id)
+                    ? () => handleRetryInvoicePayment(invoice)
                     : undefined
                 }
                 onViewInvoice={async (invoiceId: string) => {
                   if (!orgId) return
                   try {
-                    // Use SDK method to get the view URL
-                    // The SDK handles authentication automatically
                     const response =
                       await sdk.forConsole.organizations.getInvoiceView({
                         organizationId: orgId,
                         invoiceId,
                       })
 
-                    // The response might be a URL string or an object with a URL
                     let url: string
                     if (typeof response === 'string') {
                       url = response
                     } else if (response && typeof response === 'object') {
-                      // Check for common URL properties
                       url = extractUrlFromResponse(response) || ''
                       if (!url) {
-                        // If no URL in response, construct it from endpoint
                         const endpoint = sdk.forConsole.client.config.endpoint
                         url = `${endpoint}/organizations/${orgId}/invoices/${invoiceId}/view`
                       }
                     } else {
-                      // Fallback: construct URL from endpoint
                       const endpoint = sdk.forConsole.client.config.endpoint
                       url = `${endpoint}/organizations/${orgId}/invoices/${invoiceId}/view`
                     }
@@ -345,36 +368,29 @@ export function PaymentHistory() {
                 onDownloadInvoice={async (invoiceId: string) => {
                   if (!orgId) return
                   try {
-                    // Use SDK method to get the download URL
-                    // The SDK handles authentication automatically
                     const response =
                       await sdk.forConsole.organizations.getInvoiceDownload({
                         organizationId: orgId,
                         invoiceId,
                       })
 
-                    // The response might be a URL string or an object with a URL
                     let url: string
                     if (typeof response === 'string') {
                       url = response
                     } else if (response && typeof response === 'object') {
-                      // Check for common URL properties
                       url = extractUrlFromResponse(response) || ''
                       if (!url) {
-                        // If no URL in response, construct it from endpoint
                         const endpoint = sdk.forConsole.client.config.endpoint
                         url = `${endpoint}/organizations/${orgId}/invoices/${invoiceId}/download`
                       }
                     } else {
-                      // Fallback: construct URL from endpoint
                       const endpoint = sdk.forConsole.client.config.endpoint
                       url = `${endpoint}/organizations/${orgId}/invoices/${invoiceId}/download`
                     }
 
-                    // Fetch the PDF blob with credentials to include auth cookies
                     const pdfResponse = await fetch(url, {
                       method: 'GET',
-                      credentials: 'include', // Include cookies for authentication
+                      credentials: 'include',
                     })
 
                     if (!pdfResponse.ok) {
@@ -383,7 +399,6 @@ export function PaymentHistory() {
                       )
                     }
 
-                    // Get the blob and create a download link
                     const blob = await pdfResponse.blob()
                     const blobUrl = window.URL.createObjectURL(blob)
                     const link = document.createElement('a')
@@ -407,7 +422,6 @@ export function PaymentHistory() {
         </table>
       </div>
 
-      {/* Pagination */}
       <div className="border-t border-border px-6 py-3 bg-muted/30">
         <div className="flex items-center justify-between">
           <p className="text-[12px] text-muted-foreground">
@@ -453,8 +467,9 @@ export function PaymentHistory() {
 interface InvoiceRowProps {
   invoice: Invoice
   orgId?: string
-  onRetryPayment?: () => void
   isRetrying?: boolean
+  onAuthorize: () => Promise<void>
+  onRetryPayment?: () => Promise<void> | void
   onViewInvoice: (invoiceId: string) => Promise<void>
   onDownloadInvoice: (invoiceId: string) => Promise<void>
 }
@@ -462,13 +477,27 @@ interface InvoiceRowProps {
 function InvoiceRow({
   invoice,
   orgId,
-  onRetryPayment,
   isRetrying,
+  onAuthorize,
+  onRetryPayment,
   onViewInvoice,
   onDownloadInvoice,
 }: InvoiceRowProps) {
   const [isViewing, setIsViewing] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
+  const [isAuthorizing, setIsAuthorizing] = useState(false)
+
+  const handleAuthorize = async () => {
+    setIsAuthorizing(true)
+    try {
+      await onAuthorize()
+    } finally {
+      setIsAuthorizing(false)
+    }
+  }
+
+  const showAuthorize =
+    invoice.status === 'requires_authentication' && !!invoice.clientSecret
 
   const handleView = async () => {
     if (!orgId) return
@@ -490,6 +519,8 @@ function InvoiceRow({
     }
   }
 
+  const rowBusy = isViewing || isDownloading || isAuthorizing || !!isRetrying
+
   return (
     <tr className="hover:bg-accent/50 transition-colors">
       <td className="px-6 py-3">
@@ -507,7 +538,9 @@ function InvoiceRow({
           variant={getInvoiceStatusBadgeVariant(invoice.status)}
           className="text-[10px] capitalize shrink-0"
         >
-          {invoice.status}
+          {invoice.status === 'requires_authentication'
+            ? 'Action required'
+            : invoice.status}
         </Badge>
       </td>
       <td className="px-6 py-3 text-right">
@@ -517,15 +550,27 @@ function InvoiceRow({
       </td>
       <td className="px-6 py-3 text-right">
         <div className="flex flex-wrap items-center justify-end gap-1.5">
+          {showAuthorize && (
+            <Button
+              size="sm"
+              className="h-8 gap-1.5 px-2.5 text-[12px]"
+              title="Authorize payment"
+              onClick={handleAuthorize}
+              disabled={!orgId || rowBusy}
+            >
+              <ShieldCheck className="h-3.5 w-3.5" />
+              {isAuthorizing ? 'Authorizing...' : 'Authorize'}
+            </Button>
+          )}
           {onRetryPayment && (
             <Button
               variant="outline"
               size="sm"
               className="h-8 text-[12px]"
               onClick={onRetryPayment}
-              disabled={!orgId || isRetrying || isViewing || isDownloading}
+              disabled={!orgId || rowBusy}
             >
-              Retry payment
+              {isRetrying ? 'Retrying...' : 'Retry payment'}
             </Button>
           )}
           <Button
@@ -534,7 +579,7 @@ function InvoiceRow({
             className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
             title="View invoice"
             onClick={handleView}
-            disabled={!orgId || isViewing || isDownloading || isRetrying}
+            disabled={!orgId || rowBusy}
           >
             <Eye className="h-4 w-4" />
           </Button>
@@ -544,7 +589,7 @@ function InvoiceRow({
             className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
             title="Download invoice"
             onClick={handleDownload}
-            disabled={!orgId || isViewing || isDownloading || isRetrying}
+            disabled={!orgId || rowBusy}
           >
             <Download className="h-4 w-4" />
           </Button>
