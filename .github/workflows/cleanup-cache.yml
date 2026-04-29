@@ -5,6 +5,11 @@ on:
     types:
       - closed
 
+permissions:
+  actions: write
+  contents: read
+  packages: write
+
 jobs:
   cleanup:
     runs-on: ubuntu-latest
@@ -33,6 +38,31 @@ jobs:
             for cacheKey in $cacheKeysForPR
             do
               gh actions-cache delete $cacheKey -R $REPO -B $BRANCH --confirm
+            done
+          done
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cleanup GHCR image
+        continue-on-error: true
+        run: |
+          package_path="${GITHUB_REPOSITORY#*/}/appwrite-dev"
+          encoded_path="$(printf '%s' "$package_path" | jq -Rr @uri)"
+
+          gh api --paginate "/repos/${GITHUB_REPOSITORY}/pulls/${{ github.event.pull_request.number }}/commits" --jq '.[].sha' | while read -r sha; do
+            version_ids=$(gh api --paginate -H "Accept: application/vnd.github+json" \
+              "/orgs/${GITHUB_REPOSITORY_OWNER}/packages/container/${encoded_path}/versions" \
+              --jq ".[] | select(.metadata.container.tags | index(\"${sha}\")) | .id")
+
+            if [ -z "$version_ids" ]; then
+              echo "No GHCR version found for SHA ${sha}"
+              continue
+            fi
+
+            echo "$version_ids" | while read -r version_id; do
+              gh api --method DELETE -H "Accept: application/vnd.github+json" \
+                "/orgs/${GITHUB_REPOSITORY_OWNER}/packages/container/${encoded_path}/versions/${version_id}"
+              echo "Deleted ${package_path}:${sha} (version ${version_id})"
             done
           done
         env:

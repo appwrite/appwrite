@@ -402,7 +402,7 @@ class Migrations extends Action
             ]
         ]);
 
-        return API_KEY_DYNAMIC . '_' . $apiKey;
+        return API_KEY_EPHEMERAL . '_' . $apiKey;
     }
 
     /**

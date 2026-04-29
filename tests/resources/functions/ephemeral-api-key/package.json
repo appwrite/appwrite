@@ -1,5 +1,5 @@
 {
-  "name": "dynamic-api-key",
+  "name": "ephemeral-api-key",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {

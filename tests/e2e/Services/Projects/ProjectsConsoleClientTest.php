@@ -3941,6 +3941,61 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEmpty($response['body']);
     }
 
+    // JWT Keys
+
+    public function testJWTKey(): void
+    {
+        $data = $this->setupProjectData();
+        $id = $data['projectId'];
+
+        // Create JWT key
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/jwts', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.2',
+        ], $this->getHeaders()), [
+            'duration' => 5,
+            'scopes' => ['users.read'],
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['jwt']);
+        $this->assertNotEmpty($response['body']['projectId']);
+        $this->assertSame($id, $response['body']['projectId']);
+
+        $jwt = $response['body']['jwt'];
+
+        // Ensure JWT key works
+        $response = $this->client->call(Client::METHOD_GET, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-key' => $jwt,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertArrayHasKey('users', $response['body']);
+
+        // Ensure JWT key respect scopes
+        $response = $this->client->call(Client::METHOD_GET, '/functions', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-key' => $jwt,
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        // Ensure JWT key expires
+        \sleep(10);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-key' => $jwt,
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+    }
+
     // Platforms
 
     public function testCreateProjectPlatform(): void

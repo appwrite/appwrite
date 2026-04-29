@@ -44,8 +44,8 @@ const APP_PROJECT_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_RESOURCE_TOKEN_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_FILE_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 4323;
-const APP_VERSION_STABLE = '1.9.2';
+const APP_CACHE_BUSTER = 4324;
+const APP_VERSION_STABLE = '1.9.3';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -255,7 +255,7 @@ const MESSAGE_TYPE_SMS = 'sms';
 const MESSAGE_TYPE_PUSH = 'push';
 // API key types
 const API_KEY_STANDARD = 'standard';
-const API_KEY_DYNAMIC = 'dynamic';
+const API_KEY_EPHEMERAL = 'ephemeral';
 const API_KEY_ORGANIZATION = 'organization';
 const API_KEY_ACCOUNT = 'account';
 // Usage metrics
