@@ -20,6 +20,7 @@ use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\EventProcessor;
+use Appwrite\Locking\Lock;
 use Appwrite\SDK\Method;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
@@ -100,8 +101,8 @@ Http::init()
     ->inject('team')
     ->inject('apiKey')
     ->inject('authorization')
-    ->inject('distributedLock')
-    ->action(function (Http $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization, callable $distributedLock) {
+    ->inject('lock')
+    ->action(function (Http $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization, Lock $lock) {
         $route = $utopia->getRoute();
         if ($route === null) {
             throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
@@ -250,7 +251,7 @@ Http::init()
                 }
 
                 if (! $updates->isEmpty()) {
-                    $distributedLock('lock:platform:keys:' . $dbKey->getId(), function () use ($dbForPlatform, $dbKey, $updates, $apiKey, $project, $user, $team) {
+                    $lock->run('keys', $dbKey->getId(), function () use ($dbForPlatform, $dbKey, $updates, $apiKey, $project, $user, $team) {
                         $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->updateDocument('keys', $dbKey->getId(), $updates));
 
                         if (! empty($apiKey->getProjectId())) {
@@ -391,11 +392,7 @@ Http::init()
         if ($project->getId() !== 'console') {
             $accessedAt = $project->getAttribute('accessedAt', 0);
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
-                $distributedLock('lock:platform:projects:' . $project->getId(), function () use ($authorization, $dbForPlatform, $project) {
-                    $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-                        'accessedAt' => DateTime::now()
-                    ])));
-                });
+                $lock->set('projects', $project->getId());
             }
         }
 
@@ -412,11 +409,7 @@ Http::init()
                         'accessedAt' => $user->getAttribute('accessedAt')
                     ]));
                 } else {
-                    $distributedLock('lock:platform:users:' . $user->getId(), function () use ($authorization, $dbForPlatform, $user) {
-                        $authorization->skip(fn () => $dbForPlatform->updateDocument('users', $user->getId(), new Document([
-                            'accessedAt' => $user->getAttribute('accessedAt')
-                        ])));
-                    });
+                    $lock->set('users', $user->getId(), 'accessedAt', $user->getAttribute('accessedAt'));
                 }
             }
         }

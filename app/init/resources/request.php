@@ -17,6 +17,7 @@ use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\GraphQL\Schema;
+use Appwrite\Locking\Lock;
 use Appwrite\Network\Cors;
 use Appwrite\Network\Platform;
 use Appwrite\Network\Validator\Origin;
@@ -215,6 +216,15 @@ return function (Container $container): void {
             }
         };
     }, ['redis', 'telemetry', 'log', 'logger']);
+
+    $container->set('lock', function (callable $distributedLock, callable $distributedLockOrFail, Database $dbForPlatform, Authorization $authorization): Lock {
+        return new Lock(
+            \Closure::fromCallable($distributedLock),
+            \Closure::fromCallable($distributedLockOrFail),
+            $dbForPlatform,
+            $authorization,
+        );
+    }, ['distributedLock', 'distributedLockOrFail', 'dbForPlatform', 'authorization']);
 
     $container->set('authorization', function () {
         return new Authorization();
