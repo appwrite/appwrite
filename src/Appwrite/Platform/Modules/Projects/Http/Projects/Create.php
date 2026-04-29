@@ -229,8 +229,15 @@ class Create extends Action
             }
 
             $adapter = new AdapterDatabase($dbForProject);
-            $audit = new Audit($adapter);
-            $audit->setup();
+            try {
+                $dbForProject->createCollection(
+                    $adapter->getCollectionName(),
+                    $adapter->getAttributeDocuments(),
+                    $adapter->getIndexDocuments(),
+                );
+            } catch (Duplicate) {
+                // Audit collection already exists
+            }
 
             if ($create) {
                 /** @var array $collections */
