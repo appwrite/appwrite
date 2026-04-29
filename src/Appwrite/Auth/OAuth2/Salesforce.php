@@ -180,7 +180,8 @@ class Salesforce extends OAuth2
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $user = $this->request('GET', 'https://login.salesforce.com/services/oauth2/userinfo?access_token=' . \urlencode($accessToken));
+            $headers = ['Authorization: Bearer ' . \urlencode($accessToken)];
+            $user = $this->request('GET', 'https://login.salesforce.com/services/oauth2/userinfo', $headers);
             $this->user = \json_decode($user, true);
         }
         return $this->user;
