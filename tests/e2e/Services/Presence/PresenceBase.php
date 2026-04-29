@@ -4,6 +4,8 @@ namespace Tests\E2E\Services\Presence;
 
 use Tests\E2E\Client;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 
 trait PresenceBase
@@ -25,6 +27,19 @@ trait PresenceBase
         ]);
 
         return self::$presenceApiKeyCache[$projectId];
+    }
+
+    /**
+     * Server-side helper: ensure presences requests use a presence-scoped API key.
+     */
+    protected function getPresenceServerHeaders(): array
+    {
+        $headers = $this->getHeaders(false);
+
+        // Override the project API key added by `SideServer` with a presence-scoped key.
+        $headers['x-appwrite-key'] = $this->getPresenceApiKey();
+
+        return $headers;
     }
 
     protected function setupPresence(array $overrides = []): array
@@ -93,6 +108,8 @@ trait PresenceBase
     public function testUpsertAndGetPresence(): void
     {
         if ($this->getSide() === 'client') {
+            $userId = $this->getUser()['$id'];
+
             $upsert = $this->client->call(
                 Client::METHOD_PUT,
                 '/presences/' . ID::unique(),
@@ -106,7 +123,24 @@ trait PresenceBase
                 ]
             );
 
-            $this->assertEquals(401, $upsert['headers']['status-code']);
+            $this->assertEquals(200, $upsert['headers']['status-code']);
+            $this->assertNotEmpty($upsert['body']['$id']);
+            $this->assertEquals($userId, $upsert['body']['userId']);
+
+            $get = $this->client->call(
+                Client::METHOD_GET,
+                '/presences/' . $upsert['body']['$id'],
+                \array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], $this->getHeaders(false))
+            );
+
+            $this->assertEquals(200, $get['headers']['status-code']);
+            $this->assertEquals($upsert['body']['$id'], $get['body']['$id']);
+            $this->assertEquals($userId, $get['body']['userId']);
+            $this->assertArrayHasKey('expiry', $get['body']);
+
             return;
         }
 
@@ -118,7 +152,7 @@ trait PresenceBase
             \array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders(false))
+            ], $this->getPresenceServerHeaders())
         );
 
         $this->assertEquals(200, $get['headers']['status-code']);
@@ -130,16 +164,78 @@ trait PresenceBase
     public function testListPresences(): void
     {
         if ($this->getSide() === 'client') {
+            $upsert = $this->client->call(
+                Client::METHOD_PUT,
+                '/presences/' . ID::unique(),
+                \array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], $this->getHeaders(false)),
+                [
+                    'status' => 'online',
+                    'metadata' => ['device' => 'web'],
+                ]
+            );
+
+            $this->assertEquals(200, $upsert['headers']['status-code']);
+            $this->assertNotEmpty($upsert['body']['$id']);
+            $this->assertArrayHasKey('userId', $upsert['body']);
+
             $list = $this->client->call(
                 Client::METHOD_GET,
                 '/presences',
                 \array_merge([
                     'content-type' => 'application/json',
                     'x-appwrite-project' => $this->getProject()['$id'],
-                ], $this->getHeaders(false))
+                ], $this->getHeaders(false)),
+                [
+                    'queries' => [
+                        Query::equal('userId', [$upsert['body']['userId']])->toString(),
+                    ],
+                ]
             );
 
-            $this->assertEquals(401, $list['headers']['status-code']);
+            $this->assertEquals(200, $list['headers']['status-code']);
+            $this->assertArrayHasKey('total', $list['body']);
+            $this->assertArrayHasKey('presences', $list['body']);
+            $this->assertIsArray($list['body']['presences']);
+            $this->assertGreaterThanOrEqual(1, $list['body']['total']);
+
+            // Client sessions must not be able to list presences belonging to a different user.
+            $projectId = $this->getProject()['$id'];
+            $originalUser = $this->getUser();
+            $otherUserId = $this->getUser(true)['$id'];
+
+            // Important: don't let `getUser(true)` overwrite the cached user/session for the rest
+            // of this test run. We only need the other user's ID.
+            self::$user[$projectId] = $originalUser;
+
+            // Seed another presence for the other user (setup via API key, not the client session).
+            $this->setupPresence([
+                'userId' => $otherUserId,
+                'status' => 'online',
+                'metadata' => ['device' => 'other-user'],
+            ]);
+
+            $otherList = $this->client->call(
+                Client::METHOD_GET,
+                '/presences',
+                \array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], $this->getHeaders(false)),
+                [
+                    'queries' => [
+                        Query::equal('userId', [$otherUserId])->toString(),
+                    ],
+                ]
+            );
+
+            $this->assertEquals(200, $otherList['headers']['status-code']);
+            $this->assertArrayHasKey('total', $otherList['body']);
+            $this->assertArrayHasKey('presences', $otherList['body']);
+            $this->assertSame([], $otherList['body']['presences']);
+            $this->assertEquals(0, $otherList['body']['total']);
             return;
         }
 
@@ -151,7 +247,7 @@ trait PresenceBase
             \array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders(false)),
+            ], $this->getPresenceServerHeaders()),
             [
                 'queries' => [
                     Query::equal('userId', [$presence['userId']])->toString(),
@@ -166,12 +262,179 @@ trait PresenceBase
         $this->assertGreaterThanOrEqual(1, $list['body']['total']);
     }
 
+    public function testClientPresenceCustomPermissionsForOtherUser(): void
+    {
+        if ($this->getSide() !== 'client') {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $projectId = $this->getProject()['$id'];
+        $user1 = $this->getUser();
+        $headersUser1 = $this->getHeaders(false);
+
+        $user2 = $this->getUser(true);
+
+        // Avoid overwriting the cached user for the rest of the test run.
+        self::$user[$projectId] = $user1;
+
+        $headersUser2 = $this->getHeaders(false);
+        $headersUser2['cookie'] = 'a_session_' . $projectId . '=' . $user2['session'];
+
+        $permissionsForUser2 = [
+            Permission::read(Role::user($user2['$id'])),
+            Permission::update(Role::user($user2['$id'])),
+            Permission::delete(Role::user($user2['$id'])),
+            Permission::write(Role::user($user2['$id'])),
+        ];
+
+        $permissionsForUser1 = [
+            Permission::read(Role::user($user1['$id'])),
+            Permission::update(Role::user($user1['$id'])),
+            Permission::delete(Role::user($user1['$id'])),
+            Permission::write(Role::user($user1['$id'])),
+        ];
+
+        // Create a presence for user1 using a presence-scoped API key so we can set ACLs.
+        $presenceAllow = $this->client->call(
+            Client::METHOD_PUT,
+            '/presences/' . ID::unique(),
+            \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getPresenceApiKey(),
+            ]),
+            [
+                'userId' => $user1['$id'],
+                'status' => 'online',
+                'metadata' => ['case' => 'allow'],
+                // Owner always retains full permissions; user2 additionally gets access.
+                'permissions' => \array_merge($permissionsForUser1, $permissionsForUser2),
+            ]
+        );
+
+        $this->assertEquals(200, $presenceAllow['headers']['status-code']);
+        $presenceIdAllow = $presenceAllow['body']['$id'];
+
+        // user2 can read
+        $get = $this->client->call(
+            Client::METHOD_GET,
+            '/presences/' . $presenceIdAllow,
+            \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ], $headersUser2)
+        );
+        $this->assertEquals(200, $get['headers']['status-code']);
+
+        // user2 can update
+        $patch = $this->client->call(
+            Client::METHOD_PATCH,
+            '/presences/' . $presenceIdAllow,
+            \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ], $headersUser2),
+            [
+                'status' => 'busy',
+                'metadata' => ['case' => 'allow-update'],
+            ]
+        );
+        $this->assertEquals(200, $patch['headers']['status-code']);
+        $this->assertEquals('busy', $patch['body']['status']);
+
+        // user2 can delete
+        $delete = $this->client->call(
+            Client::METHOD_DELETE,
+            '/presences/' . $presenceIdAllow,
+            \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ], $headersUser2)
+        );
+        $this->assertEquals(204, $delete['headers']['status-code']);
+
+        // Create another presence for user1 without granting any special permissions to user2.
+        $presenceDeny = $this->client->call(
+            Client::METHOD_PUT,
+            '/presences/' . ID::unique(),
+            \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getPresenceApiKey(),
+            ]),
+            [
+                'userId' => $user1['$id'],
+                'status' => 'online',
+                'metadata' => ['case' => 'deny'],
+                // Only the owner has permissions; user2 should not be able to access this document.
+                'permissions' => $permissionsForUser1,
+            ]
+        );
+
+        $this->assertEquals(200, $presenceDeny['headers']['status-code']);
+        $presenceIdDeny = $presenceDeny['body']['$id'];
+
+        // user2 cannot read
+        $getDeny = $this->client->call(
+            Client::METHOD_GET,
+            '/presences/' . $presenceIdDeny,
+            \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ], $headersUser2)
+        );
+        // When read permission is missing, the document should be treated as not found.
+        $this->assertEquals(404, $getDeny['headers']['status-code']);
+
+        // user2 cannot update
+        $patchDeny = $this->client->call(
+            Client::METHOD_PATCH,
+            '/presences/' . $presenceIdDeny,
+            \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ], $headersUser2),
+            [
+                'status' => 'busy',
+            ]
+        );
+        $this->assertEquals(404, $patchDeny['headers']['status-code']);
+
+        // user2 cannot delete
+        $deleteDeny = $this->client->call(
+            Client::METHOD_DELETE,
+            '/presences/' . $presenceIdDeny,
+            \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ], $headersUser2)
+        );
+        $this->assertEquals(404, $deleteDeny['headers']['status-code']);
+    }
+
     public function testUpdatePresenceSparseFields(): void
     {
         if ($this->getSide() === 'client') {
+            $upsert = $this->client->call(
+                Client::METHOD_PUT,
+                '/presences/' . ID::unique(),
+                \array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], $this->getHeaders(false)),
+                [
+                    'status' => 'away',
+                    'metadata' => ['source' => 'setup'],
+                ]
+            );
+
+            $this->assertEquals(200, $upsert['headers']['status-code']);
+            $presenceId = $upsert['body']['$id'];
+
             $update = $this->client->call(
                 Client::METHOD_PATCH,
-                '/presences/' . ID::unique(),
+                '/presences/' . $presenceId,
                 \array_merge([
                     'content-type' => 'application/json',
                     'x-appwrite-project' => $this->getProject()['$id'],
@@ -182,7 +445,10 @@ trait PresenceBase
                 ]
             );
 
-            $this->assertEquals(401, $update['headers']['status-code']);
+            $this->assertEquals(200, $update['headers']['status-code']);
+            $this->assertEquals('busy', $update['body']['status']);
+            $this->assertEquals(['source' => 'update'], $update['body']['metadata']);
+
             return;
         }
 
@@ -206,7 +472,7 @@ trait PresenceBase
             \array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders(false)),
+            ], $this->getPresenceServerHeaders()),
             $payload
         );
 
@@ -218,16 +484,33 @@ trait PresenceBase
     public function testDeletePresence(): void
     {
         if ($this->getSide() === 'client') {
+            $upsert = $this->client->call(
+                Client::METHOD_PUT,
+                '/presences/' . ID::unique(),
+                \array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], $this->getHeaders(false)),
+                [
+                    'status' => 'temp-delete',
+                    'metadata' => ['cleanup' => true],
+                ]
+            );
+
+            $this->assertEquals(200, $upsert['headers']['status-code']);
+            $presenceId = $upsert['body']['$id'];
+
             $delete = $this->client->call(
                 Client::METHOD_DELETE,
-                '/presences/' . ID::unique(),
+                '/presences/' . $presenceId,
                 \array_merge([
                     'content-type' => 'application/json',
                     'x-appwrite-project' => $this->getProject()['$id'],
                 ], $this->getHeaders(false))
             );
 
-            $this->assertEquals(401, $delete['headers']['status-code']);
+            $this->assertEquals(204, $delete['headers']['status-code']);
+
             return;
         }
 
@@ -242,7 +525,7 @@ trait PresenceBase
             \array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders(false))
+            ], $this->getPresenceServerHeaders())
         );
 
         $this->assertEquals(204, $delete['headers']['status-code']);
@@ -263,7 +546,7 @@ trait PresenceBase
                 ]
             );
 
-            $this->assertEquals(401, $response['headers']['status-code']);
+            $this->assertEquals(404, $response['headers']['status-code']);
             return;
         }
 
@@ -281,7 +564,7 @@ trait PresenceBase
             \array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders(false)),
+            ], $this->getPresenceServerHeaders()),
             $payload
         );
 
@@ -324,7 +607,7 @@ trait PresenceBase
             \array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders(false)),
+            ], $this->getPresenceServerHeaders()),
             [
                 'status' => 'online',
             ]
@@ -345,7 +628,7 @@ trait PresenceBase
         $headers = \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-        ], $this->getHeaders(false));
+        ], $this->getPresenceServerHeaders());
 
         $firstUpsert = $this->client->call(
             Client::METHOD_PUT,

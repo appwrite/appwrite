@@ -49,7 +49,7 @@ class Upsert extends PresenceAction
             ->label('sdk', new Method(
                 namespace: 'presences',
                 group: 'presences',
-                name: 'upsert',
+                name: 'upsertPresence',
                 description: 'Create or update a presence log by its unique ID.',
                 auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
                 responses: [

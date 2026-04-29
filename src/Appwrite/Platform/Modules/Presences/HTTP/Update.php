@@ -45,7 +45,7 @@ class Update extends PresenceAction
             ->label('sdk', new Method(
                 namespace: 'presences',
                 group: 'presences',
-                name: 'update',
+                name: 'updatePresence',
                 description: 'Update a presence log by its unique ID.',
                 auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
                 responses: [

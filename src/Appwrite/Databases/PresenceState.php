@@ -66,6 +66,9 @@ class PresenceState
 
         try {
             if ($this->getSupportForUniqueIndexBasedUpsert()) {
+                $presenceCreated = $dbForProject->findOne('presenceLogs', [Query::equal('userId', [$userId])])->isEmpty();
+                $presence = $dbForProject->upsertDocument('presenceLogs', $presenceDocument);
+            } else {
                 $presence = $this->transactionalUpsertForUser(
                     $dbForProject,
                     $presenceDocument,
@@ -73,9 +76,6 @@ class PresenceState
                     $userId,
                     $presenceCreated
                 );
-            } else {
-                $presenceCreated = $dbForProject->findOne('presenceLogs', [Query::equal('userId', [$userId])])->isEmpty();
-                $presence = $dbForProject->upsertDocument('presenceLogs', $presenceDocument);
             }
 
             if ($presenceCreated && $onPresenceCreated !== null) {
@@ -129,7 +129,7 @@ class PresenceState
     private function getSupportForUniqueIndexBasedUpsert(): bool
     {
         $adapter = \strtolower(System::getEnv('_APP_DB_ADAPTER', 'mariadb'));
-        return \in_array($adapter, ['mongodb', 'postgres', 'postgresql'], true);
+        return !\in_array($adapter, ['mongodb', 'postgres', 'postgresql'], true);
     }
 
     private function assertPermissionsAgainstAuthorization(array $permissions, Authorization $authorization): void

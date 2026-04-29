@@ -18,6 +18,8 @@ class PresenceRealtimeClientTest extends Scope
     use ProjectCustom;
     use SideClient;
 
+    private static array $presenceApiKeyCache = [];
+
     private function bootstrapIsolatedProject(): array
     {
         $project = $this->getProject(true);
@@ -37,8 +39,25 @@ class PresenceRealtimeClientTest extends Scope
         return [
             'content-type' => 'application/json',
             'x-appwrite-project' => $project['$id'],
-            'x-appwrite-key' => $project['apiKey'],
+            'x-appwrite-key' => $this->getPresenceApiKey($project),
         ];
+    }
+
+    private function getPresenceApiKey(array $project): string
+    {
+        $projectId = $project['$id'];
+
+        if (!empty(self::$presenceApiKeyCache[$projectId])) {
+            return self::$presenceApiKeyCache[$projectId];
+        }
+
+        // Realtime tests validate HTTP reads of presences; those endpoints require `presence.read`.
+        self::$presenceApiKeyCache[$projectId] = $this->getNewKey([
+            'presence.read',
+            'presence.write',
+        ]);
+
+        return self::$presenceApiKeyCache[$projectId];
     }
 
     private function connectRealtimeAndSubscribe(

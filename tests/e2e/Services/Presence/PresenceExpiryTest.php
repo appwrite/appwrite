@@ -7,6 +7,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Utopia\Console;
+use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
 
 class PresenceExpiryTest extends Scope
@@ -25,8 +26,8 @@ class PresenceExpiryTest extends Scope
         }
 
         self::$presenceApiKeyCache[$projectId] = $this->getNewKey([
-            'users.read',
-            'users.write',
+            'presence.read',
+            'presence.write',
         ]);
 
         return self::$presenceApiKeyCache[$projectId];
@@ -36,7 +37,8 @@ class PresenceExpiryTest extends Scope
     {
         $projectId = $this->getProject()['$id'];
         $userId = $this->getUser()['$id'];
-        $expiredAt = \gmdate('Y-m-d\TH:i:s.v\Z', \time() - 120);
+        // Must match the format used by the maintenance worker query.
+        $expiredAt = DateTime::format((new \DateTime())->modify('-120 seconds'));
 
         $createServer = $this->client->call(
             Client::METHOD_PUT,
@@ -81,6 +83,7 @@ class PresenceExpiryTest extends Scope
         $code = Console::execute('docker exec appwrite maintenance --type=trigger', '', $stdout, $stderr);
         $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
 
+        // Maintenance + delete workers are asynchronous; give extra time to observe cleanup.
         $this->assertEventually(function () use ($presenceIdServer, $projectId) {
             $getServer = $this->client->call(
                 Client::METHOD_GET,
@@ -93,6 +96,6 @@ class PresenceExpiryTest extends Scope
             );
 
             $this->assertEquals(404, $getServer['headers']['status-code']);
-        });
+        }, 30000, 1000);
     }
 }

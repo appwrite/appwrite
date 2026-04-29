@@ -33,7 +33,7 @@ class Get extends Base
             ->label('sdk', new Method(
                 namespace: 'presences',
                 group: 'presences',
-                name: 'get',
+                name: 'getPresence',
                 description: 'Get a presence log by its unique ID.',
                 auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
                 responses: [
