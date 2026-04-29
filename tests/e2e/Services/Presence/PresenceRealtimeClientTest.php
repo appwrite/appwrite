@@ -110,19 +110,6 @@ class PresenceRealtimeClientTest extends Scope
         }
 
         $this->fail('Timed out waiting for expected websocket frame. Last frame: ' . \json_encode($lastMessage));
-        return [];
-    }
-
-    private function drainSocketFor(WebSocketClient $client, int $timeoutMs = 500): void
-    {
-        $deadline = \microtime(true) + ($timeoutMs / 1000);
-        while (\microtime(true) < $deadline) {
-            try {
-                $client->receive();
-            } catch (TimeoutException) {
-                return;
-            }
-        }
     }
 
     private function assertQuietFor(WebSocketClient $client, callable $forbidden, int $timeoutMs = 150): void
