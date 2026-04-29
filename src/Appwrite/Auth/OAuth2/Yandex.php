@@ -31,7 +31,7 @@ class Yandex extends OAuth2
      */
     public function getName(): string
     {
-        return 'Yandex';
+        return 'yandex';
     }
 
     /**
