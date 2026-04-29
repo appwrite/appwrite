@@ -3697,15 +3697,24 @@ Http::post('/v1/account/recovery')
             Query::equal('email', [$email]),
         ]);
 
-        if ($profile->isEmpty()) {
-            throw new Exception(Exception::USER_NOT_FOUND);
+        if ($profile->isEmpty() || false === $profile->getAttribute('status')) {
+            // Return a generic 201 response without revealing whether the email address
+            // belongs to an existing (or active) account, preventing user enumeration.
+            $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_RECOVERY));
+            $placeholder = new Document([
+                '$id' => ID::unique(),
+                'userId' => ID::unique(),
+                'secret' => '',
+                'expire' => $expire,
+                'phrase' => '',
+            ]);
+            $response
+                ->setStatusCode(Response::STATUS_CODE_CREATED)
+                ->dynamic($placeholder, Response::MODEL_TOKEN);
+            return;
         }
 
         $user->setAttributes($profile->getArrayCopy());
-
-        if (false === $profile->getAttribute('status')) { // Account is blocked
-            throw new Exception(Exception::USER_BLOCKED);
-        }
 
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_RECOVERY));
 
