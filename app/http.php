@@ -13,7 +13,6 @@ use Swoole\Table;
 use Swoole\Timer;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Adapter\SQL as AuditAdapterSQL;
-use Utopia\Audit\Audit;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
 use Utopia\Console;
@@ -315,8 +314,11 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
 
             if ($dbForPlatform->getCollection(AuditAdapterSQL::COLLECTION)->isEmpty()) {
                 $adapter = new AdapterDatabase($dbForPlatform);
-                $audit = new Audit($adapter);
-                $audit->setup();
+                $dbForPlatform->createCollection(
+                    AuditAdapterSQL::COLLECTION,
+                    $adapter->getAttributeDocuments(),
+                    $adapter->getIndexDocuments(),
+                );
             }
 
             if ($dbForPlatform->getDocument('buckets', 'default')->isEmpty()) {
@@ -467,8 +469,11 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
 
             if ($dbForProject->getCollection(AuditAdapterSQL::COLLECTION)->isEmpty()) {
                 $adapter = new AdapterDatabase($dbForProject);
-                $audit = new Audit($adapter);
-                $audit->setup();
+                $dbForProject->createCollection(
+                    AuditAdapterSQL::COLLECTION,
+                    $adapter->getAttributeDocuments(),
+                    $adapter->getIndexDocuments(),
+                );
             }
 
             $collectionsCreated = 0;
