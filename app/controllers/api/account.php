@@ -2132,6 +2132,36 @@ Http::post('/v1/account/tokens/magic-url')
         $result = $dbForProject->findOne('users', [Query::equal('email', [$email])]);
         if (!$result->isEmpty()) {
             $user->setAttributes($result->getArrayCopy());
+        } elseif (!$user->isEmpty() && empty($user->getAttribute('email'))) {
+            // Logged-in anonymous user: associate the requested email with the
+            // existing account instead of creating a duplicate user record.
+
+            // Makes sure this email is not already used in another identity
+            $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+                Query::equal('providerEmail', [$email]),
+            ]);
+            if (!$identityWithMatchingEmail->isEmpty()) {
+                throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
+            }
+
+            try {
+                $emailCanonical = new Email($email);
+            } catch (Throwable) {
+                $emailCanonical = null;
+            }
+
+            $user
+                ->setAttribute('email', $email)
+                ->setAttribute('emailVerification', false)
+                ->setAttribute('search', implode(' ', [$user->getId(), $email]))
+                ->setAttribute('emailCanonical', $emailCanonical?->getCanonical())
+                ->setAttribute('emailIsCanonical', $emailCanonical?->isCanonicalSupported())
+                ->setAttribute('emailIsCorporate', $emailCanonical?->isCorporate())
+                ->setAttribute('emailIsDisposable', $emailCanonical?->isDisposable())
+                ->setAttribute('emailIsFree', $emailCanonical?->isFree());
+
+            $user = $authorization->skip(fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+            $dbForProject->purgeCachedDocument('users', $user->getId());
         } else {
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
