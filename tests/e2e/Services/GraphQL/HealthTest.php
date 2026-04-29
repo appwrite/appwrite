@@ -51,6 +51,8 @@ class HealthTest extends Scope
         $this->assertArrayNotHasKey('errors', $dbHealth['body']);
         $dbHealth = $dbHealth['body']['data']['healthGetDB'];
         $this->assertIsArray($dbHealth);
+        $this->assertIsArray($dbHealth['statuses']);
+        $this->assertGreaterThan(0, $dbHealth['total']);
 
         return $dbHealth;
     }
@@ -72,6 +74,8 @@ class HealthTest extends Scope
         $this->assertArrayNotHasKey('errors', $cacheHealth['body']);
         $cacheHealth = $cacheHealth['body']['data']['healthGetCache'];
         $this->assertIsArray($cacheHealth);
+        $this->assertIsArray($cacheHealth['statuses']);
+        $this->assertGreaterThan(0, $cacheHealth['total']);
 
         return $cacheHealth;
     }

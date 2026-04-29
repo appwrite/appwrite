@@ -7,6 +7,10 @@ use Appwrite\Utopia\Response\Model;
 
 class AlgoBcrypt extends Model
 {
+    public array $conditions = [
+        'type' => 'bcrypt',
+    ];
+
     public function __construct()
     {
         // No options, because this can only be imported, and verifying doesnt require any configuration

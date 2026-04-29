@@ -1,0 +1,21 @@
+{
+  "name": "astro-custom-start-command",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build && cp custom-server.js dist/custom-server.js && rm -rf node_modules && npm install --production",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/node": "^9.5.4",
+    "astro": "^5.2.5"
+  },
+  "devDependencies": {
+  },
+  "overrides": {
+    "rollup": ">=4.58.1",
+    "svgo": ">=4.0.1"
+  }
+}

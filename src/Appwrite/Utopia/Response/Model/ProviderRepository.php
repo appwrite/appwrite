@@ -47,12 +47,31 @@ class ProviderRepository extends Model
                 'default' => '',
                 'example' => 'main',
             ])
+            ->addRule('providerInstallationId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'VCS (Version Control System) installation ID.',
+                'default' => '',
+                'example' => '108104697',
+            ])
+            ->addRule('authorized', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Is VCS (Version Control System) repository authorized for the installation?',
+                'default' => false,
+                'example' => true,
+            ])
             ->addRule('pushedAt', [
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Last commit date in ISO 8601 format.',
                 'default' => APP_DATABASE_ATTRIBUTE_DATETIME,
                 'example' => APP_DATABASE_ATTRIBUTE_DATETIME,
                 'array' => false,
+            ])
+            ->addRule('variables', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Environment variables found in .env files',
+                'default' => [],
+                'array' => true,
+                'example' => ['PORT', 'NODE_ENV'],
             ]);
     }
 

@@ -41,7 +41,7 @@ class XList extends Base
                     description: <<<EOT
                     Get a list of all variables of a specific function.
                     EOT,
-                    auth: [AuthType::KEY],
+                    auth: [AuthType::ADMIN, AuthType::KEY],
                     responses: [
                         new SDKResponse(
                             code: Response::STATUS_CODE_OK,
@@ -50,7 +50,7 @@ class XList extends Base
                     ],
                 )
             )
-            ->param('functionId', '', new UID(), 'Function unique ID.', false)
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function unique ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->callback($this->action(...));

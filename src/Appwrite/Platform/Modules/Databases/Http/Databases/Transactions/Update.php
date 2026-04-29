@@ -2,16 +2,17 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
-use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
+use Appwrite\Functions\EventProcessor;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Usage\Context;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -25,7 +26,7 @@ use Utopia\Database\Exception\Transaction as TransactionException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 
 class Update extends Action
@@ -54,7 +55,7 @@ class Update extends Action
                 group: 'transactions',
                 name: 'updateTransaction',
                 description: '/docs/references/databases/update-transaction.md',
-                auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
+                auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
@@ -63,19 +64,23 @@ class Update extends Action
                 ],
                 contentType: ContentType::JSON
             ))
-            ->param('transactionId', '', new UID(), 'Transaction ID.')
+            ->param('transactionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Transaction ID.', false, ['dbForProject'])
             ->param('commit', false, new Boolean(), 'Commit transaction?', true)
             ->param('rollback', false, new Boolean(), 'Rollback transaction?', true)
+            ->inject('project')
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('getDatabasesDB')
             ->inject('user')
             ->inject('transactionState')
             ->inject('queueForDeletes')
             ->inject('queueForEvents')
-            ->inject('queueForStatsUsage')
+            ->inject('usage')
             ->inject('queueForRealtime')
             ->inject('queueForFunctions')
             ->inject('queueForWebhooks')
+            ->inject('authorization')
+            ->inject('eventProcessor')
             ->callback($this->action(...));
     }
 
@@ -85,24 +90,25 @@ class Update extends Action
      * @param bool $rollback
      * @param UtopiaResponse $response
      * @param Database $dbForProject
-     * @param Document $user
+     * @param callable $getDatabasesDB
+     * @param User $user
      * @param TransactionState $transactionState
      * @param Delete $queueForDeletes
      * @param Event $queueForEvents
-     * @param StatsUsage $queueForStatsUsage
+     * @param Context $usage
      * @param Event $queueForRealtime
      * @param Event $queueForFunctions
      * @param Event $queueForWebhooks
+     * @param EventProcessor $eventProcessor
      * @return void
      * @throws ConflictException
      * @throws Exception
      * @throws \Throwable
      * @throws \Utopia\Database\Exception
-     * @throws Authorization
-     * @throws Structure
-     * @throws \Utopia\Exception
+     * @throws StructureException
+     * @throws \Utopia\Http\Exception
      */
-    public function action(string $transactionId, bool $commit, bool $rollback, UtopiaResponse $response, Database $dbForProject, Document $user, TransactionState $transactionState, Delete $queueForDeletes, Event $queueForEvents, StatsUsage $queueForStatsUsage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks): void
+    public function action(string $transactionId, bool $commit, bool $rollback, Document $project, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, User $user, TransactionState $transactionState, Delete $queueForDeletes, Event $queueForEvents, Context $usage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, Authorization $authorization, EventProcessor $eventProcessor): void
     {
         if (!$commit && !$rollback) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Either commit or rollback must be true');
@@ -111,14 +117,14 @@ class Update extends Action
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Cannot commit and rollback at the same time');
         }
 
-        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+        $isAPIKey = $user->isApp($authorization->getRoles());
+        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         $transaction = ($isAPIKey || $isPrivilegedUser)
-            ? Authorization::skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
+            ? $authorization->skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
             : $dbForProject->getDocument('transactions', $transactionId);
         if ($transaction->isEmpty()) {
-            throw new Exception(Exception::TRANSACTION_NOT_FOUND);
+            throw new Exception(Exception::TRANSACTION_NOT_FOUND, params: [$transactionId]);
         }
         if ($transaction->getAttribute('status', '') !== 'pending') {
             throw new Exception(Exception::TRANSACTION_NOT_READY);
@@ -131,23 +137,77 @@ class Update extends Action
         }
 
         if ($commit) {
-
             $operations = [];
             $totalOperations = 0;
             $databaseOperations = [];
+            $currentDocumentId = null;
+
+            $firstOperation = $authorization->skip(fn () => $dbForProject->findOne('transactionLogs', [
+                Query::equal('transactionInternalId', [$transaction->getSequence()]),
+                Query::orderAsc(),
+            ]));
+
+            if ($firstOperation->isEmpty()) {
+                $transaction = $authorization->skip(fn () => $dbForProject->updateDocument(
+                    'transactions',
+                    $transactionId,
+                    new Document(['status' => 'committed'])
+                ));
+
+                $queueForDeletes
+                    ->setType(DELETE_TYPE_DOCUMENT)
+                    ->setDocument($transaction);
+
+                $response
+                    ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
+                    ->dynamic($transaction, $this->getResponseModel());
+
+                return;
+            }
+
+            $databaseDoc = null;
+            switch ($this->getDatabaseType()) {
+                case DATABASE_TYPE_DOCUMENTSDB:
+                case DATABASE_TYPE_VECTORSDB:
+                    $databaseDoc = $authorization->skip(fn () => $dbForProject->findOne('databases', [
+                        Query::equal('$sequence', [$firstOperation['databaseInternalId']])
+                    ]));
+                    break;
+                default:
+                    // Legacy/tablesdb: use project-level database
+                    $databaseDoc = new Document(['database' => $project->getAttribute('database')]);
+                    break;
+            }
+
+            $dbForDatabases = $getDatabasesDB($databaseDoc);
 
             try {
-                $dbForProject->withTransaction(function () use ($dbForProject, $transactionState, $queueForDeletes, $transactionId, &$transaction, &$operations, &$totalOperations, &$databaseOperations, $queueForEvents, $queueForStatsUsage, $queueForRealtime, $queueForFunctions, $queueForWebhooks) {
-                    Authorization::skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
-                        'status' => 'committing',
-                    ])));
+                $transaction = $authorization->skip(fn () => $dbForProject->updateDocument(
+                    'transactions',
+                    $transactionId,
+                    new Document(['status' => 'committing'])
+                ));
 
-                    $operations = Authorization::skip(fn () => $dbForProject->find('transactionLogs', [
-                        Query::equal('transactionInternalId', [$transaction->getSequence()]),
-                        Query::orderAsc(),
-                        Query::limit(PHP_INT_MAX),
-                    ]));
+                $operations = $authorization->skip(fn () => $dbForProject->find('transactionLogs', [
+                    Query::equal('transactionInternalId', [$transaction->getSequence()]),
+                    Query::orderAsc(),
+                    Query::limit(PHP_INT_MAX),
+                ]));
 
+                $collections = [];
+                foreach ($operations as $operation) {
+                    $databaseInternalId = $operation['databaseInternalId'];
+                    $collectionInternalId = $operation['collectionInternalId'];
+                    $collectionId = "database_{$databaseInternalId}_collection_{$collectionInternalId}";
+
+                    if (!isset($collections[$collectionId])) {
+                        $collections[$collectionId] = $authorization->skip(
+                            fn () => $dbForProject->getCollection($collectionId)
+                        );
+                    }
+                }
+
+                $dbForDatabases->withTransaction(function () use ($dbForDatabases, $transactionState, &$operations, &$totalOperations, &$databaseOperations, &$currentDocumentId, $collections) {
                     $state = [];
 
                     foreach ($operations as $operation) {
@@ -155,12 +215,23 @@ class Update extends Action
                         $collectionInternalId = $operation['collectionInternalId'];
                         $collectionId = "database_{$databaseInternalId}_collection_{$collectionInternalId}";
                         $documentId = $operation['documentId'];
+                        $currentDocumentId = $documentId;
                         $createdAt = new \DateTime($operation['$createdAt']);
                         $action = $operation['action'];
                         $data = $operation['data'];
 
+                        if ($data instanceof Document) {
+                            $data = $data->getArrayCopy();
+                        }
+
+                        $collection = $collections[$collectionId];
+
+                        if (\is_array($data) && !empty($data)) {
+                            $data = $this->parseOperators($data, $collection);
+                        }
+
                         if ($action === 'delete' && $documentId && empty($data)) {
-                            $doc = $dbForProject->getDocument($collectionId, $documentId);
+                            $doc = $dbForDatabases->getDocument($collectionId, $documentId);
                             if (!$doc->isEmpty()) {
                                 $operation['data'] = $doc->getArrayCopy();
                                 $data = $operation['data'];
@@ -172,105 +243,102 @@ class Update extends Action
                             $databaseOperations[$databaseInternalId] = ($databaseOperations[$databaseInternalId] ?? 0) + 1;
                         }
 
-                        if ($data instanceof Document) {
-                            $data = $data->getArrayCopy();
-                        }
-
                         switch ($action) {
                             case 'create':
-                                $this->handleCreateOperation($dbForProject, $collectionId, $documentId, $data, $createdAt, $state);
+                                $this->handleCreateOperation($dbForDatabases, $collectionId, $documentId, $data, $createdAt, $state);
                                 break;
                             case 'update':
-                                $this->handleUpdateOperation($dbForProject, $collectionId, $documentId, $data, $createdAt, $state);
+                                $this->handleUpdateOperation($dbForDatabases, $collectionId, $documentId, $data, $createdAt, $state);
                                 break;
                             case 'upsert':
-                                $this->handleUpsertOperation($dbForProject, $collectionId, $documentId, $data, $createdAt, $state);
+                                $this->handleUpsertOperation($dbForDatabases, $collectionId, $documentId, $data, $createdAt, $state);
                                 break;
                             case 'delete':
-                                $this->handleDeleteOperation($dbForProject, $collectionId, $documentId, $createdAt, $state);
+                                $this->handleDeleteOperation($dbForDatabases, $collectionId, $documentId, $createdAt, $state);
                                 break;
                             case 'increment':
-                                $this->handleIncrementOperation($dbForProject, $collectionId, $documentId, $data, $createdAt, $state);
+                                $this->handleIncrementOperation($dbForDatabases, $collectionId, $documentId, $data, $createdAt, $state);
                                 break;
                             case 'decrement':
-                                $this->handleDecrementOperation($dbForProject, $collectionId, $documentId, $data, $createdAt, $state);
+                                $this->handleDecrementOperation($dbForDatabases, $collectionId, $documentId, $data, $createdAt, $state);
                                 break;
                             case 'bulkCreate':
-                                $count = $this->handleBulkCreateOperation($dbForProject, $collectionId, $data, $createdAt, $state);
+                                $count = $this->handleBulkCreateOperation($dbForDatabases, $collectionId, $data, $createdAt, $state);
                                 $totalOperations += $count;
                                 $databaseOperations[$databaseInternalId] = ($databaseOperations[$databaseInternalId] ?? 0) + $count;
                                 break;
                             case 'bulkUpdate':
-                                $count = $this->handleBulkUpdateOperation($dbForProject, $transactionState, $collectionId, $data, $createdAt, $state);
+                                $count = $this->handleBulkUpdateOperation($dbForDatabases, $transactionState, $collectionId, $data, $createdAt, $state);
                                 $totalOperations += $count;
                                 $databaseOperations[$databaseInternalId] = ($databaseOperations[$databaseInternalId] ?? 0) + $count;
                                 break;
                             case 'bulkUpsert':
-                                $count = $this->handleBulkUpsertOperation($dbForProject, $transactionState, $collectionId, $data, $createdAt, $state);
+                                $count = $this->handleBulkUpsertOperation($dbForDatabases, $transactionState, $collectionId, $data, $createdAt, $state);
                                 $totalOperations += $count;
                                 $databaseOperations[$databaseInternalId] = ($databaseOperations[$databaseInternalId] ?? 0) + $count;
                                 break;
                             case 'bulkDelete':
-                                $count = $this->handleBulkDeleteOperation($dbForProject, $transactionState, $collectionId, $data, $createdAt, $state);
+                                $count = $this->handleBulkDeleteOperation($dbForDatabases, $transactionState, $collectionId, $data, $createdAt, $state);
                                 $totalOperations += $count;
                                 $databaseOperations[$databaseInternalId] = ($databaseOperations[$databaseInternalId] ?? 0) + $count;
                                 break;
                         }
                     }
 
-                    $transaction = Authorization::skip(fn () => $dbForProject->updateDocument(
-                        'transactions',
-                        $transactionId,
-                        new Document(['status' => 'committed'])
-                    ));
-
-                    $queueForDeletes
-                        ->setType(DELETE_TYPE_DOCUMENT)
-                        ->setDocument($transaction);
                 });
 
+                $transaction = $authorization->skip(fn () => $dbForProject->updateDocument(
+                    'transactions',
+                    $transactionId,
+                    new Document(['status' => 'committed'])
+                ));
+
+                $queueForDeletes
+                    ->setType(DELETE_TYPE_DOCUMENT)
+                    ->setDocument($transaction);
             } catch (NotFoundException $e) {
-                Authorization::skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
+                $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'failed',
                 ])));
-                throw new Exception(Exception::DOCUMENT_NOT_FOUND, previous: $e);
-            } catch (DuplicateException|ConflictException $e) {
-                Authorization::skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
+
+                throw new Exception(Exception::DOCUMENT_NOT_FOUND, previous: $e, params: [$currentDocumentId ?? 'unknown']);
+            } catch (DuplicateException | ConflictException $e) {
+                $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'failed',
                 ])));
                 throw new Exception(Exception::TRANSACTION_CONFLICT, previous: $e);
             } catch (StructureException $e) {
-                Authorization::skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
+                $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'failed',
                 ])));
                 throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
             } catch (LimitException $e) {
-                Authorization::skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
+                $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'failed',
                 ])));
                 throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED, $e->getMessage());
             } catch (TransactionException $e) {
-                Authorization::skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
+                $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'failed',
                 ])));
                 throw new Exception(Exception::TRANSACTION_FAILED, $e->getMessage());
             } catch (QueryException $e) {
-                Authorization::skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
+                $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'failed',
                 ])));
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
             }
 
-            $queueForStatsUsage
-                ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, $totalOperations);
+            $usage->addMetric($this->getDatabasesOperationWriteMetric(), $totalOperations);
 
             foreach ($databaseOperations as $sequence => $count) {
-                $queueForStatsUsage->addMetric(
-                    str_replace('{databaseInternalId}', $sequence, METRIC_DATABASE_ID_OPERATIONS_WRITES),
+                $usage->addMetric(
+                    str_replace('{databaseInternalId}', $sequence, $this->getDatabasesIdOperationWriteMetric()),
                     $count
                 );
             }
 
+            $dbCache = [];
             foreach ($operations as $operation) {
                 $databaseInternalId = $operation['databaseInternalId'];
                 $collectionInternalId = $operation['collectionInternalId'];
@@ -283,11 +351,21 @@ class Update extends Action
                     $data = $data->getArrayCopy();
                 }
 
-                $database = Authorization::skip(fn () => $dbForProject->findOne('databases', [
+                // using a dbCache so only one time database is set with databaseInternalId
+                if (!isset($dbCache[$databaseInternalId])) {
+                    $databaseDoc = $authorization->skip(fn () => $dbForProject->findOne('databases', [
+                        Query::equal('$sequence', [$databaseInternalId])
+                    ]));
+                    $dbCache[$databaseInternalId] = $getDatabasesDB($databaseDoc);
+                }
+
+                $dbForDatabases = $dbCache[$databaseInternalId];
+
+                $database = $authorization->skip(fn () => $dbForProject->findOne('databases', [
                     Query::equal('$sequence', [$databaseInternalId])
                 ]));
 
-                $collection = Authorization::skip(fn () => $dbForProject->findOne('database_' . $databaseInternalId, [
+                $collection = $authorization->skip(fn () => $dbForProject->findOne('database_' . $databaseInternalId, [
                     Query::equal('$sequence', [$collectionInternalId])
                 ]));
 
@@ -312,7 +390,7 @@ class Update extends Action
                         $eventAction = 'create';
                         $docId = $documentId ?? $data['$id'] ?? null;
                         if ($docId) {
-                            $doc = $dbForProject->getDocument($collectionId, $docId);
+                            $doc = $dbForDatabases->getDocument($collectionId, $docId);
                             if (!$doc->isEmpty()) {
                                 $documentsToTrigger[] = $doc;
                             }
@@ -323,7 +401,7 @@ class Update extends Action
                     case 'decrement':
                         $eventAction = 'update';
                         if ($documentId) {
-                            $doc = $dbForProject->getDocument($collectionId, $documentId);
+                            $doc = $dbForDatabases->getDocument($collectionId, $documentId);
                             if (!$doc->isEmpty()) {
                                 $documentsToTrigger[] = $doc;
                             }
@@ -339,7 +417,7 @@ class Update extends Action
                         $eventAction = 'update';
                         $docId = $documentId ?? $data['$id'] ?? null;
                         if ($docId) {
-                            $doc = $dbForProject->getDocument($collectionId, $docId);
+                            $doc = $dbForDatabases->getDocument($collectionId, $docId);
                             if (!$doc->isEmpty()) {
                                 $documentsToTrigger[] = $doc;
                             }
@@ -356,6 +434,11 @@ class Update extends Action
 
                 $queueForEvents->setEvent($eventString);
 
+                // Get project and function/webhook events (cached)
+                $project = $queueForEvents->getProject();
+                $functionsEvents = $eventProcessor->getFunctionsEvents($project, $dbForProject);
+                $webhooksEvents = $eventProcessor->getWebhooksEvents($project);
+
                 foreach ($documentsToTrigger as $doc) {
                     $payload = $doc->getArrayCopy();
                     $payload['$tableId'] = $collection->getId();
@@ -366,9 +449,33 @@ class Update extends Action
                         ->setParam('rowId', $doc->getId())
                         ->setPayload($payload);
 
+                    // Generate events for this document operation
+                    $generatedEvents = Event::generateEvents(
+                        $queueForEvents->getEvent(),
+                        $queueForEvents->getParams()
+                    );
+
                     $queueForRealtime->from($queueForEvents)->trigger();
-                    $queueForFunctions->from($queueForEvents)->trigger();
-                    $queueForWebhooks->from($queueForEvents)->trigger();
+
+                    // Only trigger functions if there are matching function events
+                    if (!empty($functionsEvents)) {
+                        foreach ($generatedEvents as $event) {
+                            if (isset($functionsEvents[$event])) {
+                                $queueForFunctions->from($queueForEvents)->trigger();
+                                break;
+                            }
+                        }
+                    }
+
+                    // Only trigger webhooks if there are matching webhook events
+                    if (!empty($webhooksEvents)) {
+                        foreach ($generatedEvents as $event) {
+                            if (isset($webhooksEvents[$event])) {
+                                $queueForWebhooks->from($queueForEvents)->trigger();
+                                break;
+                            }
+                        }
+                    }
                 }
 
                 $queueForEvents->reset();
@@ -379,7 +486,7 @@ class Update extends Action
         }
 
         if ($rollback) {
-            $transaction = Authorization::skip(fn () => $dbForProject->updateDocument(
+            $transaction = $authorization->skip(fn () => $dbForProject->updateDocument(
                 'transactions',
                 $transactionId,
                 new Document(['status' => 'failed'])

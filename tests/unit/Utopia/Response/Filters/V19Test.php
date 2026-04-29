@@ -3,15 +3,14 @@
 namespace Tests\Unit\Utopia\Response\Filters;
 
 use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Response\Filter;
 use Appwrite\Utopia\Response\Filters\V19;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class V19Test extends TestCase
 {
-    /**
-     * @var Filter
-     */
-    protected $filter = null;
+    protected Filter $filter;
 
     public function setUp(): void
     {
@@ -22,7 +21,7 @@ class V19Test extends TestCase
     {
     }
 
-    public function functionProvider(): array
+    public static function functionProvider(): array
     {
         return [
             'change deploymentId to deployment' => [
@@ -45,9 +44,7 @@ class V19Test extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider functionProvider
-     */
+    #[DataProvider('functionProvider')]
     public function testFunction(array $content, array $expected): void
     {
         $model = Response::MODEL_FUNCTION;
@@ -57,7 +54,7 @@ class V19Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public function functionListProvider(): array
+    public static function functionListProvider(): array
     {
         return [
             'convert list of functions' => [
@@ -101,9 +98,7 @@ class V19Test extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider functionListProvider
-     */
+    #[DataProvider('functionListProvider')]
     public function testFunctionList(array $content, array $expected): void
     {
         $model = Response::MODEL_FUNCTION_LIST;
@@ -113,7 +108,7 @@ class V19Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public function deploymentProvider(): array
+    public static function deploymentProvider(): array
     {
         return [
             'rename sourceSize to size and buildDuration to buildTime' => [
@@ -141,9 +136,7 @@ class V19Test extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider deploymentProvider
-     */
+    #[DataProvider('deploymentProvider')]
     public function testDeployment(array $content, array $expected): void
     {
         $model = Response::MODEL_DEPLOYMENT;
@@ -153,7 +146,7 @@ class V19Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public function proxyRuleProvider(): array
+    public static function proxyRuleProvider(): array
     {
         return [
             'rename deployment resource fields' => [
@@ -181,9 +174,7 @@ class V19Test extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider proxyRuleProvider
-     */
+    #[DataProvider('proxyRuleProvider')]
     public function testProxyRule(array $content, array $expected): void
     {
         $model = Response::MODEL_PROXY_RULE;
@@ -193,7 +184,7 @@ class V19Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public function migrationProvider(): array
+    public static function migrationProvider(): array
     {
         return [
             'remove resourceId field' => [
@@ -216,9 +207,7 @@ class V19Test extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider migrationProvider
-     */
+    #[DataProvider('migrationProvider')]
     public function testMigration(array $content, array $expected): void
     {
         $model = Response::MODEL_MIGRATION;
@@ -228,7 +217,7 @@ class V19Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public function projectProvider(): array
+    public static function projectProvider(): array
     {
         return [
             'remove devKeys field' => [
@@ -251,9 +240,7 @@ class V19Test extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider projectProvider
-     */
+    #[DataProvider('projectProvider')]
     public function testProject(array $content, array $expected): void
     {
         $model = Response::MODEL_PROJECT;
@@ -263,7 +250,7 @@ class V19Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public function providerRepositoryProvider(): array
+    public static function providerRepositoryProvider(): array
     {
         return [
             'remove runtime field' => [
@@ -286,9 +273,7 @@ class V19Test extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider providerRepositoryProvider
-     */
+    #[DataProvider('providerRepositoryProvider')]
     public function testProviderRepository(array $content, array $expected): void
     {
         $model = Response::MODEL_PROVIDER_REPOSITORY;
@@ -298,7 +283,7 @@ class V19Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public function templateVariableProvider(): array
+    public static function templateVariableProvider(): array
     {
         return [
             'remove secret field' => [
@@ -321,9 +306,7 @@ class V19Test extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider templateVariableProvider
-     */
+    #[DataProvider('templateVariableProvider')]
     public function testTemplateVariable(array $content, array $expected): void
     {
         $model = Response::MODEL_TEMPLATE_VARIABLE;
@@ -333,7 +316,7 @@ class V19Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public function usageFunctionProvider(): array
+    public static function usageFunctionProvider(): array
     {
         return [
             'remove build-related fields' => [
@@ -360,9 +343,7 @@ class V19Test extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider usageFunctionProvider
-     */
+    #[DataProvider('usageFunctionProvider')]
     public function testUsageFunction(array $content, array $expected): void
     {
         $model = Response::MODEL_USAGE_FUNCTION;
@@ -372,7 +353,7 @@ class V19Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public function usageFunctionsProvider(): array
+    public static function usageFunctionsProvider(): array
     {
         return [
             'remove build-related fields' => [
@@ -398,9 +379,7 @@ class V19Test extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider usageFunctionsProvider
-     */
+    #[DataProvider('usageFunctionsProvider')]
     public function testUsageFunctions(array $content, array $expected): void
     {
         $model = Response::MODEL_USAGE_FUNCTIONS;
@@ -410,7 +389,7 @@ class V19Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public function variableProvider(): array
+    public static function variableProvider(): array
     {
         return [
             'remove secret field' => [
@@ -433,9 +412,7 @@ class V19Test extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider variableProvider
-     */
+    #[DataProvider('variableProvider')]
     public function testVariable(array $content, array $expected): void
     {
         $model = Response::MODEL_VARIABLE;

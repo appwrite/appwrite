@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Utopia\Database\Documents\User;
 
 $member = [
     'global',
@@ -54,11 +55,23 @@ $admins = [
     'tables.write',
     'platforms.read',
     'platforms.write',
+    'oauth2.read',
+    'oauth2.write',
+    'mocks.read',
+    'mocks.write',
+    'policies.read',
+    'policies.write',
+    'templates.read',
+    'templates.write',
     'projects.write',
     'keys.read',
     'keys.write',
+    'devKeys.read',
+    'devKeys.write',
     'webhooks.read',
     'webhooks.write',
+    'project.read',
+    'project.write',
     'locale.read',
     'avatars.read',
     'health.read',
@@ -88,10 +101,12 @@ $admins = [
     'subscribers.read',
     'tokens.read',
     'tokens.write',
+    'schedules.read',
+    'schedules.write',
 ];
 
 return [
-    USER_ROLE_GUESTS => [
+    User::ROLE_GUESTS => [
         'label' => 'Guests',
         'scopes' => [
             'global',
@@ -111,23 +126,23 @@ return [
             'execution.write',
         ],
     ],
-    USER_ROLE_USERS => [
+    User::ROLE_USERS => [
         'label' => 'Users',
         'scopes' => \array_merge($member),
     ],
-    USER_ROLE_ADMIN => [
+    User::ROLE_ADMIN => [
         'label' => 'Admin',
         'scopes' => \array_merge($admins),
     ],
-    USER_ROLE_DEVELOPER => [
+    User::ROLE_DEVELOPER => [
         'label' => 'Developer',
         'scopes' => \array_merge($admins),
     ],
-    USER_ROLE_OWNER => [
+    User::ROLE_OWNER => [
         'label' => 'Owner',
         'scopes' => \array_merge($member, $admins),
     ],
-    USER_ROLE_APPS => [
+    User::ROLE_APPS => [
         'label' => 'Applications',
         'scopes' => ['global', 'health.read', 'graphql'],
     ],

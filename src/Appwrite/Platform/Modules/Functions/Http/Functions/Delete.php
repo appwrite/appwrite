@@ -13,6 +13,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -46,7 +47,7 @@ class Delete extends Base
                 description: <<<EOT
                 Delete a function by its unique ID.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_NOCONTENT,
@@ -55,12 +56,13 @@ class Delete extends Base
                 ],
                 contentType: ContentType::NONE
             ))
-            ->param('functionId', '', new UID(), 'Function ID.')
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForDeletes')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -70,7 +72,8 @@ class Delete extends Base
         Database $dbForProject,
         DeleteEvent $queueForDeletes,
         Event $queueForEvents,
-        Database $dbForPlatform
+        Database $dbForPlatform,
+        Authorization $authorization
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -84,10 +87,15 @@ class Delete extends Base
 
         // Inform scheduler to no longer run function
         $schedule = $dbForPlatform->getDocument('schedules', $function->getAttribute('scheduleId'));
-        $schedule
-            ->setAttribute('resourceUpdatedAt', DateTime::now())
-            ->setAttribute('active', false);
-        Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
+        if (!$schedule->isEmpty()) {
+            $schedule
+                ->setAttribute('resourceUpdatedAt', DateTime::now())
+                ->setAttribute('active', false);
+            $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), new Document([
+                'resourceUpdatedAt' => $schedule->getAttribute('resourceUpdatedAt'),
+                'active' => $schedule->getAttribute('active'),
+            ])));
+        }
 
         $queueForDeletes
             ->setType(DELETE_TYPE_DOCUMENT)

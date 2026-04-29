@@ -46,7 +46,7 @@ class Delete extends Action
                 description: <<<EOT
                 Delete a code deployment by its unique ID.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_NOCONTENT,
@@ -55,8 +55,8 @@ class Delete extends Action
                 ],
                 contentType: ContentType::NONE
             ))
-            ->param('functionId', '', new UID(), 'Function ID.')
-            ->param('deploymentId', '', new UID(), 'Deployment ID.')
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
+            ->param('deploymentId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Deployment ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForDeletes')
@@ -107,11 +107,12 @@ class Delete extends Action
             $function = $dbForProject->updateDocument(
                 'functions',
                 $function->getId(),
-                $function
-                ->setAttribute('latestDeploymentCreatedAt', $latestDeployment->isEmpty() ? '' : $latestDeployment->getCreatedAt())
-                ->setAttribute('latestDeploymentInternalId', $latestDeployment->isEmpty() ? '' : $latestDeployment->getSequence())
-                ->setAttribute('latestDeploymentId', $latestDeployment->isEmpty() ? '' : $latestDeployment->getId())
-                ->setAttribute('latestDeploymentStatus', $latestDeployment->isEmpty() ? '' : $latestDeployment->getAttribute('status', ''))
+                new Document([
+                    'latestDeploymentCreatedAt' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getCreatedAt(),
+                    'latestDeploymentInternalId' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getSequence(),
+                    'latestDeploymentId' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getId(),
+                    'latestDeploymentStatus' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getAttribute('status', ''),
+                ])
             );
         }
 

@@ -102,7 +102,7 @@ class AbuseTest extends Scope
         $maxQueries = System::getEnv('_APP_GRAPHQL_MAX_QUERIES', 10);
 
         $query = [];
-        for ($i = 0; $i <= $maxQueries + 1; $i++) {
+        for ($i = 0; $i <= ((int) $maxQueries) + 1; $i++) {
             $query[] = ['query' => $this->getQuery(self::LIST_COUNTRIES)];
         }
 
@@ -175,7 +175,14 @@ class AbuseTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $gqlPayload);
 
-        sleep(2);
+        $this->assertEventually(function () use ($databaseId, $collectionId, $projectId) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/name', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         return [
             'databaseId' => $databaseId,

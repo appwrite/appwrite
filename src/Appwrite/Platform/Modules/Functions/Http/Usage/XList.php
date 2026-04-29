@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Usage;
 
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -52,10 +53,11 @@ class XList extends Base
             ->param('range', '30d', new WhiteList(['24h', '30d', '90d']), 'Date range.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $range, Response $response, Database $dbForProject)
+    public function action(string $range, Response $response, Database $dbForProject, Authorization $authorization)
     {
         $periods = Config::getParam('usage', []);
         $stats = $usage = [];
@@ -75,7 +77,7 @@ class XList extends Base
             str_replace("{resourceType}", RESOURCE_TYPE_FUNCTIONS, METRIC_RESOURCE_TYPE_BUILDS_FAILED),
         ];
 
-        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
+        $authorization->skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
                 $result =  $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),
@@ -103,6 +105,7 @@ class XList extends Base
         $format = match ($days['period']) {
             '1h' => 'Y-m-d\TH:00:00.000P',
             '1d' => 'Y-m-d\T00:00:00.000P',
+            default => throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unsupported period "' . $days['period'] . '".'),
         };
 
         foreach ($metrics as $metric) {

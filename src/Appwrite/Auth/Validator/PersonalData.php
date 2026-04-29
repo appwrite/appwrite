@@ -33,7 +33,7 @@ class PersonalData extends Password
     /**
      * Is valid.
      *
-     * @param mixed $value
+     * @param mixed $password
      *
      * @return bool
      */
@@ -59,7 +59,7 @@ class PersonalData extends Password
             return false;
         }
 
-        if ($this->email && strpos($password, explode('@', $this->email)[0] ?? '') !== false) {
+        if ($this->email && strpos($password, explode('@', $this->email)[0]) !== false) {
             return false;
         }
 

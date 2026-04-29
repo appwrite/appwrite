@@ -13,8 +13,8 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Platform\Action;
-use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\WhiteList;
 
 class XList extends Action
@@ -22,6 +22,43 @@ class XList extends Action
     public static function getName(): string
     {
         return 'listDatabaseUsage';
+    }
+
+    protected $databaseType = DATABASE_TYPE_LEGACY;
+
+    public function setHttpPath(string $path): Action
+    {
+        $this->databaseType = match (true) {
+            str_contains($path, '/documentsdb') => DATABASE_TYPE_DOCUMENTSDB,
+            str_contains($path, '/vectorsdb') => DATABASE_TYPE_VECTORSDB,
+            default => DATABASE_TYPE_LEGACY,
+        };
+
+        return parent::setHttpPath($path);
+    }
+
+    protected function getMetrics(): array
+    {
+        $metrics = [
+            METRIC_DATABASES,
+            METRIC_COLLECTIONS,
+            METRIC_DOCUMENTS,
+            METRIC_DATABASES_STORAGE,
+            METRIC_DATABASES_OPERATIONS_READS,
+            METRIC_DATABASES_OPERATIONS_WRITES,
+        ];
+        if ($this->databaseType === DATABASE_TYPE_LEGACY || $this->databaseType === DATABASE_TYPE_TABLESDB) {
+            return $metrics;
+        }
+        return array_map(
+            fn ($metric) => "{$this->databaseType}.{$metric}",
+            $metrics
+        );
+    }
+
+    protected function getResponseModel(): string
+    {
+        return UtopiaResponse::MODEL_USAGE_DATABASES;
     }
 
     public function __construct()
@@ -56,25 +93,19 @@ class XList extends Action
             ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $range, UtopiaResponse $response, Database $dbForProject): void
+    public function action(string $range, UtopiaResponse $response, Database $dbForProject, Authorization $authorization): void
     {
 
         $periods = Config::getParam('usage', []);
         $stats = $usage = [];
         $days = $periods[$range];
-        $metrics = [
-            METRIC_DATABASES,
-            METRIC_COLLECTIONS,
-            METRIC_DOCUMENTS,
-            METRIC_DATABASES_STORAGE,
-            METRIC_DATABASES_OPERATIONS_READS,
-            METRIC_DATABASES_OPERATIONS_WRITES,
-        ];
+        $metrics = $this->getMetrics();
 
-        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
+        $authorization->skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
                 $result = $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),
@@ -102,6 +133,7 @@ class XList extends Action
         $format = match ($days['period']) {
             '1h' => 'Y-m-d\TH:00:00.000P',
             '1d' => 'Y-m-d\T00:00:00.000P',
+            default => throw new \LogicException('Unexpected period: ' . $days['period']),
         };
 
         foreach ($metrics as $metric) {
@@ -135,6 +167,6 @@ class XList extends Action
             'storage' => $usage[$metrics[3]]['data'],
             'databasesReads' => $usage[$metrics[4]]['data'],
             'databasesWrites' => $usage[$metrics[5]]['data'],
-        ]), UtopiaResponse::MODEL_USAGE_DATABASES);
+        ]), $this->getResponseModel());
     }
 }

@@ -23,10 +23,10 @@ class ComposeTest extends TestCase
 
     public function testServices(): void
     {
-        $this->assertCount(15, $this->object->getServices());
+        $this->assertCount(16, $this->object->getServices());
         $this->assertEquals('appwrite', $this->object->getService('appwrite')->getContainerName());
         $this->assertEquals('', $this->object->getService('appwrite')->getImageVersion());
-        $this->assertEquals('2.2', $this->object->getService('traefik')->getImageVersion());
+        $this->assertEquals('3.6', $this->object->getService('traefik')->getImageVersion());
         $this->assertEquals(['2080' => '80', '2443' => '443', '8080' => '8080'], $this->object->getService('traefik')->getPorts());
     }
 

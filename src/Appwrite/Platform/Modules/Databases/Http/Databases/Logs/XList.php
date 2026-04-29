@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Logs;
 
+use Appwrite\Detector\Detector;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -9,11 +10,9 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
-use DeviceDetector\DeviceDetector as Detector;
 use MaxMind\Db\Reader;
 use Utopia\Audit\Audit;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
@@ -22,9 +21,9 @@ use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Locale\Locale;
 use Utopia\Platform\Action;
-use Utopia\Swoole\Response as SwooleResponse;
 
 class XList extends Action
 {
@@ -62,21 +61,22 @@ class XList extends Action
                     )
                 ),
             ])
-            ->param('databaseId', '', new UID(), 'Database ID.')
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
             ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('locale')
             ->inject('geodb')
+            ->inject('audit')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, array $queries, UtopiaResponse $response, Database $dbForProject, Locale $locale, Reader $geodb): void
+    public function action(string $databaseId, array $queries, UtopiaResponse $response, Database $dbForProject, Locale $locale, Reader $geodb, Audit $audit): void
     {
         $database = $dbForProject->getDocument('databases', $databaseId);
 
         if ($database->isEmpty()) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
+            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
         try {
@@ -85,15 +85,13 @@ class XList extends Action
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        // Temp fix for logs
-        $queries[] = Query::or([
-            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-26T01:30+00:00'))),
-            Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+00:00'))),
-        ]);
 
-        $audit = new Audit($dbForProject);
+        $grouped = Query::groupByType($queries);
+        $limit = $grouped['limit'] ?? 25;
+        $offset = $grouped['offset'] ?? 0;
+
         $resource = 'database/' . $databaseId;
-        $logs = $audit->getLogsByResource($resource, $queries);
+        $logs = $audit->getLogsByResource($resource, limit: $limit, offset: $offset);
 
         $output = [];
 
@@ -105,6 +103,9 @@ class XList extends Action
             $os = $detector->getOS();
             $client = $detector->getClient();
             $device = $detector->getDevice();
+            $deviceName = $device['deviceName'] ?? '';
+            $deviceBrand = $device['deviceBrand'] ?? '';
+            $deviceModel = $device['deviceModel'] ?? '';
 
             $output[$i] = new Document([
                 'event' => $log['event'],
@@ -112,6 +113,7 @@ class XList extends Action
                 'userEmail' => $log['data']['userEmail'] ?? null,
                 'userName' => $log['data']['userName'] ?? null,
                 'mode' => $log['data']['mode'] ?? null,
+                'userType' => $log['data']['userType'] ?? null,
                 'ip' => $log['ip'],
                 'time' => $log['time'],
                 'osCode' => $os['osCode'],
@@ -123,9 +125,9 @@ class XList extends Action
                 'clientVersion' => $client['clientVersion'],
                 'clientEngine' => $client['clientEngine'],
                 'clientEngineVersion' => $client['clientEngineVersion'],
-                'deviceName' => $device['deviceName'],
-                'deviceBrand' => $device['deviceBrand'],
-                'deviceModel' => $device['deviceModel'],
+                'deviceName' => $deviceName,
+                'deviceBrand' => $deviceBrand,
+                'deviceModel' => $deviceModel,
             ]);
 
             $record = $geodb->get($log['ip']);
@@ -140,7 +142,7 @@ class XList extends Action
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByResource($resource, $queries),
+            'total' => $audit->countLogsByResource($resource),
             'logs' => $output,
         ]), UtopiaResponse::MODEL_LOG_LIST);
     }

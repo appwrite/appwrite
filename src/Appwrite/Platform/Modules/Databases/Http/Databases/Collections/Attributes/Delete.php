@@ -12,11 +12,12 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\IndexDependency as IndexDependencyValidator;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 
 class Delete extends Action
 {
@@ -47,7 +48,7 @@ class Delete extends Action
                 group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/delete-attribute.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_NOCONTENT,
@@ -60,31 +61,32 @@ class Delete extends Action
                     replaceWith: 'tablesDB.deleteColumn',
                 ),
             ))
-            ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('collectionId', '', new UID(), 'Collection ID.')
-            ->param('key', '', new Key(), 'Attribute Key.')
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
+            ->param('key', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Attribute Key.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $key, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents): void
+    public function action(string $databaseId, string $collectionId, string $key, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $authorization): void
     {
-        $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $db = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($db->isEmpty()) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
+            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
         $collection = $dbForProject->getDocument('database_' . $db->getSequence(), $collectionId);
         if ($collection->isEmpty()) {
-            throw new Exception($this->getParentNotFoundException());
+            throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         }
 
         $attribute = $dbForProject->getDocument('attributes', $db->getSequence() . '_' . $collection->getSequence() . '_' . $key);
         if ($attribute->isEmpty()) {
-            throw new Exception($this->getNotFoundException());
+            throw new Exception($this->getNotFoundException(), params: [$key]);
         }
 
         $validator = new IndexDependencyValidator(
@@ -93,11 +95,12 @@ class Delete extends Action
         );
 
         if (!$validator->isValid($attribute)) {
-            throw new Exception($this->getIndexDependencyException());
+            throw new Exception($this->getIndexDependencyException(), params: [$key]);
         }
 
         if ($attribute->getAttribute('status') === 'available') {
-            $attribute = $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'deleting'));
+            $attribute->setAttribute('status', 'deleting');
+            $attribute = $dbForProject->updateDocument('attributes', $attribute->getId(), new Document(['status' => 'deleting']));
         }
 
         $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $collectionId);
@@ -108,16 +111,17 @@ class Delete extends Action
             if ($options['twoWay']) {
                 $relatedCollection = $dbForProject->getDocument('database_' . $db->getSequence(), $options['relatedCollection']);
                 if ($relatedCollection->isEmpty()) {
-                    throw new Exception($this->getParentNotFoundException());
+                    throw new Exception($this->getParentNotFoundException(), params: [$options['relatedCollection']]);
                 }
 
                 $relatedAttribute = $dbForProject->getDocument('attributes', $db->getSequence() . '_' . $relatedCollection->getSequence() . '_' . $options['twoWayKey']);
                 if ($relatedAttribute->isEmpty()) {
-                    throw new Exception($this->getNotFoundException());
+                    throw new Exception($this->getNotFoundException(), params: [$options['twoWayKey']]);
                 }
 
                 if ($relatedAttribute->getAttribute('status') === 'available') {
-                    $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $relatedAttribute->setAttribute('status', 'deleting'));
+                    $relatedAttribute->setAttribute('status', 'deleting');
+                    $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), new Document(['status' => 'deleting']));
                 }
 
                 $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $options['relatedCollection']);

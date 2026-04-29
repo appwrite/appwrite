@@ -23,6 +23,10 @@ use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\IP\Create a
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\IP\Update as UpdateIP;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Line\Create as CreateLine;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Line\Update as UpdateLine;
+use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Longtext\Create as CreateLongtext;
+use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Longtext\Update as UpdateLongtext;
+use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Mediumtext\Create as CreateMediumtext;
+use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Mediumtext\Update as UpdateMediumtext;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Point\Create as CreatePoint;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Point\Update as UpdatePoint;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Polygon\Create as CreatePolygon;
@@ -31,8 +35,12 @@ use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Relationshi
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Relationship\Update as UpdateRelationship;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\String\Create as CreateString;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\String\Update as UpdateString;
+use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Text\Create as CreateText;
+use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Text\Update as UpdateText;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\URL\Create as CreateURL;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\URL\Update as UpdateURL;
+use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Varchar\Create as CreateVarchar;
+use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Varchar\Update as UpdateVarchar;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\XList as ListColumns;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Create as CreateTable;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Delete as DeleteTable;
@@ -170,6 +178,22 @@ class TablesDB extends Base
         // Column: URL
         $service->addAction(CreateURL::getName(), new CreateURL());
         $service->addAction(UpdateURL::getName(), new UpdateURL());
+
+        // Column: Varchar
+        $service->addAction(CreateVarchar::getName(), new CreateVarchar());
+        $service->addAction(UpdateVarchar::getName(), new UpdateVarchar());
+
+        // Column: Text
+        $service->addAction(CreateText::getName(), new CreateText());
+        $service->addAction(UpdateText::getName(), new UpdateText());
+
+        // Column: Mediumtext
+        $service->addAction(CreateMediumtext::getName(), new CreateMediumtext());
+        $service->addAction(UpdateMediumtext::getName(), new UpdateMediumtext());
+
+        // Column: Longtext
+        $service->addAction(CreateLongtext::getName(), new CreateLongtext());
+        $service->addAction(UpdateLongtext::getName(), new UpdateLongtext());
     }
 
     private function registerIndexActions(Service $service): void
