@@ -1634,7 +1634,7 @@ class ProjectsConsoleClientTest extends Scope
             foreach ($response['body']['oAuthProviders'] as $responseProvider) {
                 if ($responseProvider['key'] === $key) {
                     $this->assertEquals('AppId-' . ucfirst($key), $responseProvider['appId']);
-                    $this->assertEquals('Secret-' . ucfirst($key), $responseProvider['secret']);
+                    $this->assertEmpty($responseProvider['secret']);
                     $this->assertFalse($responseProvider['enabled']);
                     $asserted = true;
                     break;
