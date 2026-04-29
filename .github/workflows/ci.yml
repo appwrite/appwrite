@@ -456,8 +456,10 @@ jobs:
           name: ${{ env.IMAGE }}
           path: /tmp
 
-      - name: Set database environment
+      - name: Set environment
         run: |
+          echo "_APP_OPTIONS_ROUTER_PROTECTION=enabled" >> $GITHUB_ENV
+          
           if [ "${{ matrix.database }}" = "MariaDB" ]; then
             echo "COMPOSE_PROFILES=mariadb" >> $GITHUB_ENV
             echo "_APP_DB_ADAPTER=mariadb" >> $GITHUB_ENV
@@ -526,6 +528,8 @@ jobs:
 
             docker compose exec -T \
               -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
+              -e _TESTS_OAUTH2_GITHUB_CLIENT_ID="${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_ID }}" \
+              -e _TESTS_OAUTH2_GITHUB_CLIENT_SECRET="${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_SECRET }}" \
               appwrite vendor/bin/paratest --processes "$PARATEST_PROCESSES" $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --log-junit tests/e2e/Services/${{ matrix.service }}/junit.xml
 
       - name: Failure Logs

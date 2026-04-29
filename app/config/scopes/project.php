@@ -228,4 +228,12 @@ return [ // List of publicly visible scopes
         "description" =>
             "Access to create, update, and delete project\'s templates",
     ],
+    "oauth2.read" => [
+        "description" =>
+            "Access to read project\'s OAuth2 configuration",
+    ],
+    "oauth2.write" => [
+        "description" =>
+            "Access to update project\'s OAuth2 configuration",
+    ],
 ];

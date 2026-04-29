@@ -94,9 +94,12 @@ class Get extends Action
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
 
+        $body = $res->getBody();
         $doc = new DOMDocument();
         $doc->strictErrorChecking = false;
-        @$doc->loadHTML($res->getBody());
+        if (!empty($body)) {
+            @$doc->loadHTML($body);
+        }
 
         $links = $doc->getElementsByTagName('link');
         $outputHref = '';
