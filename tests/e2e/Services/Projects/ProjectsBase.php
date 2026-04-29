@@ -331,6 +331,7 @@ trait ProjectsBase
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/limit', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.1',
         ], $this->getHeaders()), [
             'limit' => 0,
         ]);

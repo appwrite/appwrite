@@ -109,7 +109,7 @@ class Install extends Action
             file_put_contents($this->path . '/' . $composeFileName . '.' . $time . '.backup', $data);
             $compose = new Compose($data);
             $appwrite = $compose->getService('appwrite');
-            $oldVersion = $appwrite?->getImageVersion();
+            $oldVersion = $appwrite->getImageVersion();
             try {
                 $ports = $compose->getService('traefik')->getPorts();
             } catch (\Throwable $th) {
@@ -122,10 +122,6 @@ class Install extends Action
 
             if ($oldVersion) {
                 foreach ($compose->getServices() as $service) {
-                    if (!$service) {
-                        continue;
-                    }
-
                     $env = $service->getEnvironment()->list();
 
                     foreach ($env as $key => $value) {
@@ -177,9 +173,6 @@ class Install extends Action
             // can be detected by the DB service name or _APP_DB_HOST.
             $existingDatabase = null;
             foreach ($compose->getServices() as $service) {
-                if (!$service) {
-                    continue;
-                }
                 $svcEnv = $service->getEnvironment()->list();
                 if (isset($svcEnv['_APP_DB_ADAPTER'])) {
                     $existingDatabase = $svcEnv['_APP_DB_ADAPTER'];
@@ -229,8 +222,8 @@ class Install extends Action
         $assistantExistsInOldCompose = false;
         if ($existingInstallation) {
             try {
-                $assistantService = $compose->getService('appwrite-assistant');
-                $assistantExistsInOldCompose = $assistantService !== null;
+                $compose->getService('appwrite-assistant');
+                $assistantExistsInOldCompose = true;
             } catch (\Throwable) {
                 /* ignore */
             }
@@ -290,7 +283,7 @@ class Install extends Action
                 continue;
             }
 
-            if ($var['name'] === '_APP_DB_ADAPTER' && $data !== false) {
+            if ($var['name'] === '_APP_DB_ADAPTER' && $data !== '') {
                 $userInput[$var['name']] = $database;
                 continue;
             }
@@ -334,7 +327,7 @@ class Install extends Action
 
         @unlink(InstallerServer::INSTALLER_COMPLETE_FILE);
 
-        $state = new State([]);
+        $state = new State();
         $state->clearStaleLock();
 
         $installerConfig = $this->readInstallerConfig();
@@ -608,7 +601,7 @@ class Install extends Action
                 $this->copyMongoEntrypointIfNeeded();
             }
 
-            if (!$noStart && $startIndex <= 2) {
+            if (!$noStart) {
                 $currentStep = InstallerServer::STEP_DOCKER_CONTAINERS;
                 $this->updateProgress($progress, InstallerServer::STEP_DOCKER_CONTAINERS, InstallerServer::STATUS_IN_PROGRESS, $messages);
                 $this->runDockerCompose($input, $isLocalInstall, $useExistingConfig, $isCLI, $progress, $isUpgrade);
@@ -838,7 +831,7 @@ class Install extends Action
                 'email' => $email,
                 'domain' => $domain,
                 'database' => $database,
-                'ip' => ($hostIp !== false && $hostIp !== $domain) ? $hostIp : null,
+                'ip' => ($hostIp !== $domain) ? $hostIp : null,
                 'os' => php_uname('s') . ' ' . php_uname('r'),
                 'arch' => php_uname('m'),
                 'cpus' => ((int) trim((string) \shell_exec('nproc'))) ?: null,
@@ -1365,9 +1358,6 @@ class Install extends Action
         }
 
         foreach ($compose->getServices() as $service) {
-            if (!$service) {
-                continue;
-            }
             $env = $service->getEnvironment()->list();
             $host = $env['_APP_DB_HOST'] ?? null;
             if ($host !== null && in_array($host, $dbServices, true)) {

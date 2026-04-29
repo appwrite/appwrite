@@ -85,7 +85,7 @@ return function (Container $container): void {
 
             return $dbForPlatform->findOne('rules', [
                 Query::equal('domain', [$domain]),
-            ]) ?? new Document();
+            ]);
         });
 
         $permitsCurrentProject = $rule->getAttribute('projectInternalId', '') === $project->getSequence();
@@ -139,7 +139,7 @@ return function (Container $container): void {
         $sdkValidator = new WhiteList($servers, true);
         $sdk = \strtolower($request->getHeader('x-sdk-name', 'UNKNOWN'));
 
-        if ($sdk !== 'UNKNOWN' && $sdkValidator->isValid($sdk)) {
+        if ($sdk !== 'unknown' && $sdkValidator->isValid($sdk)) {
             $sdks = $key->getAttribute('sdks', []);
 
             if (!\in_array($sdk, $sdks, true)) {
@@ -327,9 +327,11 @@ return function (Container $container): void {
             }
         }
 
-        $impersonateUserId = $request->getHeader('x-appwrite-impersonate-user-id', '');
-        $impersonateEmail = $request->getHeader('x-appwrite-impersonate-user-email', '');
-        $impersonatePhone = $request->getHeader('x-appwrite-impersonate-user-phone', '');
+        // Query params mirror the header fallback pattern used by ?project= and ?devKey=,
+        // allowing Console to embed impersonation in direct file/image URLs where headers cannot be set.
+        $impersonateUserId = $request->getHeader('x-appwrite-impersonate-user-id', (string)$request->getParam('impersonateUserId', ''));
+        $impersonateEmail = $request->getHeader('x-appwrite-impersonate-user-email', (string)$request->getParam('impersonateEmail', ''));
+        $impersonatePhone = $request->getHeader('x-appwrite-impersonate-user-phone', (string)$request->getParam('impersonatePhone', ''));
 
         if (!$user->isEmpty() && $user->getAttribute('impersonator', false)) {
             $userDb = ($mode === APP_MODE_ADMIN || $project->getId() === 'console') ? $dbForPlatform : $dbForProject;

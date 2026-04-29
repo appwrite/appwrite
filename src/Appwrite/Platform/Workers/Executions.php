@@ -34,7 +34,7 @@ class Executions extends Action
         Message $message,
         Database $dbForProject,
     ): void {
-        $executionMessage = Execution::fromArray($message->getPayload() ?? []);
+        $executionMessage = Execution::fromArray($message->getPayload());
         $execution = $executionMessage->execution;
 
         if ($execution->isEmpty()) {

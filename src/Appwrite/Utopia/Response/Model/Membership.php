@@ -46,6 +46,12 @@ class Membership extends Model
                 'default' => '',
                 'example' => 'john@appwrite.io',
             ])
+            ->addRule('userPhone', [
+                'type' => self::TYPE_STRING,
+                'description' => 'User phone number. Hide this attribute by toggling membership privacy in the Console.',
+                'default' => '',
+                'example' => '+1 555 555 5555',
+            ])
             ->addRule('teamId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Team ID.',

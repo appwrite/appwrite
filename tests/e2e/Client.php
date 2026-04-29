@@ -264,7 +264,7 @@ class Client
             $strpos = \is_bool($strpos) ? \strlen($responseType) : $strpos;
             switch (substr($responseType, 0, $strpos)) {
                 case 'multipart/form-data':
-                    $boundary = \explode('boundary=', $responseHeaders['content-type'] ?? '')[1] ?? '';
+                    $boundary = \explode('boundary=', $responseHeaders['content-type'])[1] ?? '';
                     $multipartResponse = new BodyMultipart($boundary);
                     $multipartResponse->load(\is_bool($responseBody) ? '' : $responseBody);
 

@@ -82,7 +82,7 @@ class Get extends Action
             }
 
             $certificatePayload = @openssl_x509_parse($peerCertificate);
-            if ($certificatePayload === false || !\is_array($certificatePayload)) {
+            if ($certificatePayload === false) {
                 throw new Exception(Exception::HEALTH_INVALID_HOST, 'Failed to parse peer certificate for ' . $domain);
             }
 

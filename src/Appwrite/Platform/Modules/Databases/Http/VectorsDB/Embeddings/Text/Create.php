@@ -98,7 +98,7 @@ class Create extends CreateDocumentAction
             $error = '';
             try {
                 $embedResult = $embeddingAgent->embed($text);
-                $embedding = $embedResult['embedding'] ?? [];
+                $embedding = $embedResult['embedding'];
                 $totalDuration += $embedResult['totalDuration'] ?? 0;
                 $totalTokens += $embedResult['tokensProcessed'] ?? 0;
             } catch (\Exception $e) {

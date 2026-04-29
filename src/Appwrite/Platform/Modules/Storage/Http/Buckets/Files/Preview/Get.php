@@ -200,7 +200,7 @@ class Get extends Action
 
             // when file extension is not provided and the mime type is not one of our supported outputs
             // we fallback to `jpg` output format
-            $output = empty($type) ? (array_search($mime, $outputs) ?? 'jpg') : $type;
+            $output = empty($type) ? (array_search($mime, $outputs) ?: 'jpg') : $type;
         }
 
         $startTime = \microtime(true);
@@ -243,7 +243,7 @@ class Get extends Action
 
         $image->crop((int) $width, (int) $height, $gravity);
 
-        if (!empty($opacity) || $opacity === 0) {
+        if (!empty($opacity)) {
             $image->setOpacity($opacity);
         }
 

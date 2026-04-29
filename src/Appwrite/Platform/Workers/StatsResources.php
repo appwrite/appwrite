@@ -68,7 +68,7 @@ class StatsResources extends Action
     {
         $this->logError = $logError;
 
-        $statsResources = StatsResourcesMessage::fromArray($message->getPayload() ?? []);
+        $statsResources = StatsResourcesMessage::fromArray($message->getPayload());
         if ($statsResources->project->isEmpty()) {
             throw new Exception('Missing payload');
         }

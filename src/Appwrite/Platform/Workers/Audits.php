@@ -58,7 +58,7 @@ class Audits extends Action
      */
     public function action(Message $message, callable $getAudit): Commit|NoCommit
     {
-        $payload = $message->getPayload() ?? [];
+        $payload = $message->getPayload();
 
         if (empty($payload)) {
             throw new Exception('Missing payload');

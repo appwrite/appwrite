@@ -60,7 +60,7 @@ class Server
     {
         $this->initPaths();
 
-        $this->state = new State($this->paths);
+        $this->state = new State();
 
         if (PHP_SAPI === 'cli') {
             $this->runCli();

@@ -23,7 +23,6 @@ class RequestTest extends TestCase
     public function testFilters(): void
     {
         $this->assertFalse($this->request->hasFilters());
-        $this->assertIsArray($this->request->getFilters());
         $this->assertEmpty($this->request->getFilters());
 
         $this->request->addFilter(new First());
@@ -160,6 +159,37 @@ class RequestTest extends TestCase
 
         $this->assertSame($firstRoute, $firstRequest->getRoute());
         $this->assertSame($secondRoute, $secondRequest->getRoute());
+    }
+
+    public function testGetHeaderReturnsStringValue(): void
+    {
+        $this->request->addHeader('referer', 'https://example.com');
+
+        $this->assertSame('https://example.com', $this->request->getHeader('referer'));
+    }
+
+    public function testGetHeaderReturnsDefaultWhenMissing(): void
+    {
+        $this->assertSame('', $this->request->getHeader('referer'));
+        $this->assertSame('fallback', $this->request->getHeader('referer', 'fallback'));
+    }
+
+    public function testGetHeaderCoercesArrayToFirstElement(): void
+    {
+        $swoole = new SwooleRequest();
+        $swoole->header = ['referer' => ['https://a.example', 'https://b.example']];
+        $request = new Request($swoole);
+
+        $this->assertSame('https://a.example', $request->getHeader('referer'));
+    }
+
+    public function testGetHeaderReturnsDefaultWhenValueNotString(): void
+    {
+        $swoole = new SwooleRequest();
+        $swoole->header = ['referer' => 123];
+        $request = new Request($swoole);
+
+        $this->assertSame('fallback', $request->getHeader('referer', 'fallback'));
     }
 
     /**

@@ -96,7 +96,7 @@ class Deletes extends Action
         DeleteEvent $queueForDeletes,
         callable $getAudit,
     ): void {
-        $payload = $message->getPayload() ?? [];
+        $payload = $message->getPayload();
 
         if (empty($payload)) {
             throw new Exception('Missing payload');
@@ -304,7 +304,8 @@ class Deletes extends Action
                 $collectionId = match ($document->getAttribute('resourceType')) {
                     'function' => 'functions',
                     'execution' => 'executions',
-                    'message' => 'messages'
+                    'message' => 'messages',
+                    default => throw new \Exception('Unknown resource type: ' . $document->getAttribute('resourceType')),
                 };
 
                 try {

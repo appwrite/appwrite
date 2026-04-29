@@ -936,7 +936,6 @@ trait DatabasesBase
     {
         if (!$this->getSupportForAttributes()) {
             $this->markTestSkipped('Attributes are not supported by this database adapter');
-            return;
         }
         // Use dedicated collections for this test to avoid conflicts with setupAttributes()
         $data = $this->setupDatabase();
@@ -1189,7 +1188,6 @@ trait DatabasesBase
     {
         if (!$this->getSupportForAttributes()) {
             $this->markTestSkipped('Attributes are not supported by this database adapter');
-            return;
         }
         $data = $this->setupAttributes();
         $databaseId = $data['databaseId'];
@@ -1221,7 +1219,6 @@ trait DatabasesBase
     {
         if (!$this->getSupportForAttributes()) {
             $this->markTestSkipped('Attributes are not supported by this database adapter');
-            return;
         }
         $data = $this->setupDatabase();
         $databaseId = $data['databaseId'];
@@ -1290,7 +1287,6 @@ trait DatabasesBase
     {
         if (!$this->getSupportForAttributes()) {
             $this->markTestSkipped('Attributes are not supported by this database adapter');
-            return;
         }
         $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), [
             'content-type' => 'application/json',
@@ -1351,7 +1347,6 @@ trait DatabasesBase
     {
         if (!$this->getSupportForAttributes()) {
             $this->markTestSkipped('Attributes are not supported by this database adapter');
-            return;
         }
         $data = $this->setupAttributes();
         $databaseId = $data['databaseId'];
@@ -3324,7 +3319,6 @@ trait DatabasesBase
     {
         if (!$this->getSupportForAttributes()) {
             $this->markTestSkipped('Attributes are not supported by this database adapter');
-            return;
         }
         $data = $this->setupDocuments();
         $databaseId = $data['databaseId'];
@@ -3368,7 +3362,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(200, $documents2['headers']['status-code']);
-        $this->assertEquals(3, $documents2['body']['total']);
+        $this->assertSame(3, $documents2['body']['total']);
         $this->assertCount(3, $documents2['body'][$this->getRecordResource()]);
         $this->assertEquals($documents1['body'][$this->getRecordResource()][0]['$id'], $documents2['body'][$this->getRecordResource()][0]['$id']);
         $this->assertEquals($documents1['body'][$this->getRecordResource()][0]['title'], $documents2['body'][$this->getRecordResource()][0]['title']);
@@ -3458,7 +3452,6 @@ trait DatabasesBase
     {
         if (!$this->getSupportForAttributes()) {
             $this->markTestSkipped('Attributes are not supported by this database adapter');
-            return;
         }
         $data = $this->setupDocuments();
         $databaseId = $data['databaseId'];
@@ -3531,7 +3524,6 @@ trait DatabasesBase
     {
         if (!$this->getSupportForAttributes()) {
             $this->markTestSkipped('Attributes are not supported by this database adapter');
-            return;
         }
         $data = $this->setupDocuments();
         $databaseId = $data['databaseId'];
@@ -3578,7 +3570,6 @@ trait DatabasesBase
     {
         if (!$this->getSupportForAttributes()) {
             $this->markTestSkipped('Attributes are not supported by this database adapter');
-            return;
         }
         $data = $this->setupDocuments();
         $databaseId = $data['databaseId'];
@@ -4929,7 +4920,6 @@ trait DatabasesBase
     {
         if (!$this->getSupportForAttributes()) {
             $this->markTestSkipped('Attributes are not supported by this database adapter');
-            return;
         }
         $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), array_merge([
             'content-type' => 'application/json',

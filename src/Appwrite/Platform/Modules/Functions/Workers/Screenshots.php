@@ -61,7 +61,7 @@ class Screenshots extends Action
     ): void {
         Console::log('Screenshot action started');
 
-        $payload = $message->getPayload() ?? [];
+        $payload = $message->getPayload();
 
         if (empty($payload)) {
             throw new \Exception('Missing payload');
@@ -167,7 +167,7 @@ class Screenshots extends Action
                     try {
                         $config = $configs[$key];
 
-                        $config['headers'] = \array_merge($config['headers'] ?? [], [
+                        $config['headers'] = \array_merge($config['headers'], [
                             'x-appwrite-key' => API_KEY_DYNAMIC . '_' . $apiKey
                         ]);
                         $config['sleep'] = 3000;

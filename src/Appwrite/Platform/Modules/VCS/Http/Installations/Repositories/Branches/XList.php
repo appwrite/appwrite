@@ -73,9 +73,9 @@ class XList extends Action
         $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
         $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
 
-        $owner = $github->getOwnerName($providerInstallationId) ?? '';
+        $owner = $github->getOwnerName($providerInstallationId);
         try {
-            $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+            $repositoryName = $github->getRepositoryName($providerRepositoryId);
             if (empty($repositoryName)) {
                 throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
             }
@@ -83,7 +83,7 @@ class XList extends Action
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
 
-        $branches = $github->listBranches($owner, $repositoryName) ?? [];
+        $branches = $github->listBranches($owner, $repositoryName);
 
         $response->dynamic(new Document([
             'branches' => \array_map(function ($branch) {

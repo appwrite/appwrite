@@ -73,9 +73,9 @@ class Get extends Action
         $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
         $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
 
-        $owner = $github->getOwnerName($providerInstallationId) ?? '';
+        $owner = $github->getOwnerName($providerInstallationId);
         try {
-            $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+            $repositoryName = $github->getRepositoryName($providerRepositoryId);
             if (empty($repositoryName)) {
                 throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
             }
@@ -97,7 +97,7 @@ class Get extends Action
             }
         }
 
-        $repository['id'] = \strval($repository['id']) ?? '';
+        $repository['id'] = \strval($repository['id']);
         $repository['pushedAt'] = $repository['pushed_at'] ?? '';
         $repository['organization'] = $installation->getAttribute('organization', '');
         $repository['provider'] = $installation->getAttribute('provider', '');

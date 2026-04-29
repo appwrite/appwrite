@@ -218,7 +218,7 @@ final class Config
     }
 
     /**
-     * @param string[] $value
+     * @param array<mixed> $value
      */
     public function setEnabledDatabases(array $value): void
     {
