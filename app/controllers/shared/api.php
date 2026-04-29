@@ -392,7 +392,7 @@ Http::init()
         if ($project->getId() !== 'console') {
             $accessedAt = $project->getAttribute('accessedAt', 0);
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
-                $lock->set('projects', $project->getId());
+                $lock->set('projects', $project->getId(), 'accessedAt', DateTime::now());
             }
         }
 

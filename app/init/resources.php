@@ -193,25 +193,12 @@ $container->set('cache', function (Group $pools, Telemetry $telemetry) {
 }, ['pools', 'telemetry']);
 
 $container->set('redis', function () {
-    // Prefer _APP_CONNECTIONS_CACHE (URI form, used by cloud and the pool layer)
-    // so that direct \Redis consumers (timelimit, Lock) match the same backend
-    // as the cache pool. Fall back to _APP_REDIS_* for CE-style configs.
-    $cacheDsn = System::getEnv('_APP_CONNECTIONS_CACHE', '');
-    if ($cacheDsn !== '') {
-        $first = explode(';', $cacheDsn)[0];
-        $uri = explode('=', $first, 2)[1] ?? $first;
-        $dsn = new DSN($uri);
-        $host = $dsn->getHost();
-        $port = (int) ($dsn->getPort() ?: 6379);
-        $pass = $dsn->getPassword() ?? '';
-    } else {
-        $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
-        $port = (int) System::getEnv('_APP_REDIS_PORT', 6379);
-        $pass = System::getEnv('_APP_REDIS_PASS', '');
-    }
+    $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
+    $port = System::getEnv('_APP_REDIS_PORT', 6379);
+    $pass = System::getEnv('_APP_REDIS_PASS', '');
 
     $redis = new \Redis();
-    @$redis->pconnect($host, $port);
+    @$redis->pconnect($host, (int) $port);
     if ($pass) {
         $redis->auth($pass);
     }

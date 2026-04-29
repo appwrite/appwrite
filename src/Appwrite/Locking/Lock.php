@@ -7,7 +7,6 @@ use Closure;
 use Throwable;
 use Utopia\Console;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Lock\Distributed as DistributedLock;
@@ -51,15 +50,15 @@ final class Lock
     public function set(
         string $collection,
         string $id,
-        string $attribute = 'accessedAt',
-        ?string $value = null,
+        string $attribute,
+        string $value,
     ): void {
         $key = "lock:platform:{$this->projectInternalId}:{$collection}:{$id}:{$attribute}";
         $this->execute($key, $collection, function () use ($collection, $id, $attribute, $value) {
             $this->authorization->skip(fn () => $this->dbForPlatform->updateDocument(
                 $collection,
                 $id,
-                new Document([$attribute => $value ?? DateTime::now()])
+                new Document([$attribute => $value])
             ));
         });
     }
