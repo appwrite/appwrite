@@ -210,10 +210,10 @@ jobs:
         uses: actions/github-script@v8
         with:
           script: |
-            const allDatabases = ['MariaDB', 'PostgreSQL', 'MongoDB'];
+            const allDatabases = ['MariaDB', 'PostgreSQL', 'MongoDB', 'SQLite'];
             const allModes = ['dedicated', 'shared'];
 
-            const defaultDatabases = ['MongoDB'];
+            const defaultDatabases = ['MongoDB', 'SQLite'];
             const defaultModes = ['dedicated'];
 
             const pr = context.payload.pull_request;
@@ -475,6 +475,12 @@ jobs:
             echo "_APP_DB_ADAPTER=postgresql" >> $GITHUB_ENV
             echo "_APP_DB_HOST=postgresql" >> $GITHUB_ENV
             echo "_APP_DB_PORT=5432" >> $GITHUB_ENV
+          elif [ "${{ matrix.database }}" = "SQLite" ]; then
+            echo "COMPOSE_PROFILES=mongodb" >> $GITHUB_ENV
+            echo "_APP_DB_ADAPTER=sqlite" >> $GITHUB_ENV
+            echo "_APP_DB_HOST=mongodb" >> $GITHUB_ENV
+            echo "_APP_DB_PORT=0" >> $GITHUB_ENV
+            echo "_APP_DB_SQLITE_PATH=/storage/sqlite/appwrite.db" >> $GITHUB_ENV
           fi
 
       - name: Login to Docker Hub

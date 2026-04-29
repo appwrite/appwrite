@@ -15,6 +15,7 @@ use Utopia\Database\Adapter\Mongo;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Adapter\Postgres;
 use Utopia\Database\Adapter\SQL;
+use Utopia\Database\Adapter\SQLite;
 use Utopia\Database\PDO;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\DSN\DSN;
@@ -190,13 +191,13 @@ $register->set('pools', function () {
             'type' => 'database',
             'dsns' => $fallbackForDB,
             'multiple' => false,
-            'schemes' => ['mariadb', 'mongodb', 'mysql', 'postgresql'],
+            'schemes' => ['mariadb', 'mongodb', 'mysql', 'postgresql', 'sqlite'],
         ],
         'database' => [
             'type' => 'database',
             'dsns' => $fallbackForDB,
             'multiple' => true,
-            'schemes' => ['mongodb','mariadb', 'mysql','postgresql'],
+            'schemes' => ['mongodb', 'mariadb', 'mysql', 'postgresql', 'sqlite'],
         ],
         'documentsdb' => [
             'type' => 'database',
@@ -214,7 +215,7 @@ $register->set('pools', function () {
             'type' => 'database',
             'dsns' => System::getEnv('_APP_CONNECTIONS_DB_LOGS', $fallbackForDB),
             'multiple' => false,
-            'schemes' => ['mongodb','mariadb', 'mysql','postgresql'],
+            'schemes' => ['mongodb', 'mariadb', 'mysql', 'postgresql', 'sqlite'],
         ],
         'publisher' => [
             'type' => 'publisher',
@@ -318,6 +319,20 @@ $register->set('pools', function () {
                         ));
                     });
                 },
+                'sqlite' => function () {
+                    $path = System::getEnv('_APP_DB_SQLITE_PATH', '/tmp/appwrite.db');
+                    return new PDOProxy(function () use ($path) {
+                        $pdo = new PDO("sqlite:{$path}", null, null, [
+                            \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+                            \PDO::ATTR_EMULATE_PREPARES => true,
+                            \PDO::ATTR_STRINGIFY_FETCHES => true,
+                        ]);
+                        $pdo->query('PRAGMA journal_mode=WAL');
+                        $pdo->query('PRAGMA busy_timeout=5000');
+                        $pdo->query('PRAGMA foreign_keys=ON');
+                        return $pdo;
+                    });
+                },
                 default => function () use ($dsnHost, $dsnPort, $dsnPass) {
                     $redis = new \Redis();
                     @$redis->pconnect($dsnHost, (int)$dsnPort);
@@ -341,6 +356,7 @@ $register->set('pools', function () {
                             'mysql' => new MySQL($resource()),
                             'mongodb' => new Mongo($resource()),
                             'postgresql' => new Postgres($resource()),
+                            'sqlite' => new SQLite($resource()),
                             default => null
                         };
 
@@ -415,6 +431,13 @@ $register->set('db', function () {
         case 'postgresql':
             $dsn = "pgsql:host={$dbHost};port={$dbPort};dbname={$dbSchema};connect_timeout=3";
             return new PDO($dsn, $dbUser, $dbPass, SQL::getPDOAttributes());
+        case 'sqlite':
+            $path = System::getEnv('_APP_DB_SQLITE_PATH', '/tmp/appwrite.db');
+            $pdo = new PDO("sqlite:{$path}", null, null, SQL::getPDOAttributes());
+            $pdo->query('PRAGMA journal_mode=WAL');
+            $pdo->query('PRAGMA busy_timeout=5000');
+            $pdo->query('PRAGMA foreign_keys=ON');
+            return $pdo;
         default:
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Invalid database adapter');
     }

@@ -55,6 +55,7 @@ services:
       - ./docs:/usr/src/code/docs
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
+      - appwrite-sqlite:/storage/sqlite:rw
     depends_on:
       - mariadb
       - redis
@@ -77,6 +78,7 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_DB_ADAPTER
+      - _APP_DB_SQLITE_PATH
       - _APP_USAGE_STATS
       - _APP_STORAGE_ANTIVIRUS=disabled
       - _APP_STORAGE_LIMIT
@@ -133,6 +135,8 @@ services:
     depends_on:
       - redis
       - mariadb
+    volumes:
+      - appwrite-sqlite:/storage/sqlite:rw
     environment:
       - _APP_ENV
       - _APP_REDIS_HOST
@@ -143,6 +147,7 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_DB_ADAPTER
+      - _APP_DB_SQLITE_PATH
 
   appwrite-worker-tasks:
     entrypoint: worker-tasks
@@ -155,6 +160,8 @@ services:
     depends_on:
       - redis
       - mariadb
+    volumes:
+      - appwrite-sqlite:/storage/sqlite:rw
     environment:
       - _APP_ENV
       - _APP_REDIS_HOST
@@ -165,6 +172,7 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_DB_ADAPTER
+      - _APP_DB_SQLITE_PATH
 
   appwrite-worker-deletes:
     entrypoint: worker-deletes
@@ -180,12 +188,14 @@ services:
     volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
+      - appwrite-sqlite:/storage/sqlite:rw
     environment:
       - _APP_ENV
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_DB_HOST
       - _APP_DB_ADAPTER
+      - _APP_DB_SQLITE_PATH
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
@@ -279,6 +289,8 @@ services:
       - redis
       - maildev
       # - smtp
+    volumes:
+      - appwrite-sqlite:/storage/sqlite:rw
     environment:
       - _APP_ENV
       - _APP_REDIS_HOST
@@ -289,6 +301,7 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_DB_ADAPTER
+      - _APP_DB_SQLITE_PATH
       - _APP_SMTP_HOST
       - _APP_SMTP_PORT
 
@@ -302,6 +315,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - appwrite-sqlite:/storage/sqlite:rw
     depends_on:
       - redis
       - mariadb
@@ -393,3 +407,4 @@ volumes:
   appwrite-certificates:
   appwrite-functions:
   appwrite-config:
+  appwrite-sqlite:
