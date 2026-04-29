@@ -174,7 +174,7 @@ class Amazon extends OAuth2
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $user = $this->request('GET', 'https://api.amazon.com/user/profile?access_token=' . \urlencode($accessToken));
+            $user = $this->request('GET', 'https://api.amazon.com/user/profile', ['Authorization: Bearer ' . \urlencode($accessToken)]);
             $this->user = \json_decode($user, true);
         }
         return $this->user;
