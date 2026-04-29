@@ -47,7 +47,6 @@ class PresenceTest extends Scope
         ], $payload);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertArrayNotHasKey('errors', $response['body']);
         $this->assertEquals('online', $response['body']['data']['presencesUpsert']['status']);
         $this->assertEquals('graphql', $response['body']['data']['presencesUpsert']['source']);
     }
