@@ -55,6 +55,8 @@ $admins = [
     'tables.write',
     'platforms.read',
     'platforms.write',
+    'oauth2.read',
+    'oauth2.write',
     'mocks.read',
     'mocks.write',
     'policies.read',

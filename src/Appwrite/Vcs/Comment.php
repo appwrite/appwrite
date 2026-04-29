@@ -31,7 +31,7 @@ class Comment
         'Trigger functions via HTTP, SDKs, events, webhooks, or scheduled cron jobs',
         'Each function runs in its own isolated container with custom environment variables',
         'Build commands execute in runtime containers during deployment',
-        'Dynamic API keys are generated automatically for each function execution',
+        'Ephemeral API keys are generated automatically for each function execution',
         'JWT tokens let functions act on behalf of users while preserving their permissions',
         'Storage files get ClamAV malware scanning and encryption by default',
         'Roll back Sites deployments instantly by switching between versions',

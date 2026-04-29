@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Console\Services;
 use Appwrite\Platform\Modules\Console\Http\Assistant\Create as CreateAssistantQuery;
 use Appwrite\Platform\Modules\Console\Http\Init\API;
 use Appwrite\Platform\Modules\Console\Http\Init\Web;
+use Appwrite\Platform\Modules\Console\Http\OAuth2Providers\XList as ListOAuth2Providers;
 use Appwrite\Platform\Modules\Console\Http\Redirects\Auth\Get as RedirectAuth;
 use Appwrite\Platform\Modules\Console\Http\Redirects\Card\Get as RedirectCard;
 use Appwrite\Platform\Modules\Console\Http\Redirects\Invite\Get as RedirectInvite;
@@ -28,6 +29,7 @@ class Http extends Service
         $this->addAction(Web::getName(), new Web());
 
         $this->addAction(GetVariables::getName(), new GetVariables());
+        $this->addAction(ListOAuth2Providers::getName(), new ListOAuth2Providers());
         $this->addAction(CreateAssistantQuery::getName(), new CreateAssistantQuery());
         $this->addAction(GetResourceAvailability::getName(), new GetResourceAvailability());
 

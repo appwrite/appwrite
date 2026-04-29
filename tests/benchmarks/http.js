@@ -90,6 +90,8 @@ const API_SCOPES = [
     'tokens.write',
     'platforms.read',
     'platforms.write',
+    'oauth2.read',
+    'oauth2.write',
 ];
 
 const BASE_PERMISSIONS = [
