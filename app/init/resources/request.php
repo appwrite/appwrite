@@ -38,7 +38,6 @@ use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
-use Utopia\Console;
 use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime as DatabaseDateTime;
@@ -50,7 +49,6 @@ use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
 use Utopia\Http\Http;
 use Utopia\Locale\Locale;
-use Utopia\Lock\Distributed as DistributedLock;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\Pools\Group;
@@ -77,154 +75,9 @@ return function (Container $container): void {
         return $register->get('logger');
     }, ['register']);
 
-    // Rate-limited to one push per 60s per (action, target) so a sustained
-    // backend outage doesn't flood Sentry across the pod fleet.
-    $lockErrorReporter = function (Log $log, ?Logger $logger, string $action, string $key, string $target, Throwable $e): void {
-        static $lastReportAt = [];
-
-        Console::warning("Lock {$action} for {$key}: {$e->getMessage()}");
-
-        if ($logger === null) {
-            return;
-        }
-
-        $bucket = $action . ':' . $target;
-        $now = time();
-        if (($lastReportAt[$bucket] ?? 0) + 60 > $now) {
-            return;
-        }
-        $lastReportAt[$bucket] = $now;
-
-        $log->setNamespace('http');
-        $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
-        $log->setVersion(APP_VERSION_STABLE);
-        $log->setType(Log::TYPE_WARNING);
-        $log->setMessage('Distributed lock ' . $action . ': ' . $e->getMessage());
-        $log->setAction("lock.{$action}");
-        $log->setEnvironment(System::getEnv('_APP_ENV', 'development') === 'production'
-            ? Log::ENVIRONMENT_PRODUCTION
-            : Log::ENVIRONMENT_STAGING);
-
-        $log->addTag('lock.target', $target);
-        // Strip trailing document ID to keep aggregator cardinality bounded.
-        $log->addTag('lock.key_pattern', preg_replace('/:[^:]+$/', ':*', $key));
-        $log->addTag('code', $e->getCode());
-
-        $log->addExtra('file', $e->getFile());
-        $log->addExtra('line', $e->getLine());
-        $log->addExtra('trace', $e->getTraceAsString());
-
-        try {
-            $logger->addLog($log);
-        } catch (Throwable) {
-        }
-    };
-
-    $lockTargetOf = function (string $key): string {
-        $parts = explode(':', $key, 4);
-        return $parts[2] ?? 'unknown';
-    };
-
-    /**
-     * Skip-on-contention. For idempotent writes where losing the race is correct
-     * (e.g., the winning pod's update covers ours). Fail-open on backend error.
-     */
-    $container->set('distributedLock', function (\Redis $redis, Telemetry $telemetry, Log $log, ?Logger $logger) use ($lockTargetOf, $lockErrorReporter) {
-        $enabled = System::getEnv('_APP_LOCKING_ENABLED', 'enabled') !== 'disabled';
-        $attempts = $telemetry->createCounter('lock.attempts', null, 'Distributed lock acquire outcomes');
-
-        if (! $enabled) {
-            return function (string $key, \Closure $fn, float $ttl = 5.0): void {
-                $fn();
-            };
-        }
-
-        return function (string $key, \Closure $fn, float $ttl = 5.0) use ($redis, $attempts, $log, $logger, $lockTargetOf, $lockErrorReporter): void {
-            $target = $lockTargetOf($key);
-            $lock = new DistributedLock($redis, $key, (int) $ttl);
-
-            try {
-                $acquired = $lock->tryAcquire();
-            } catch (\RedisException $e) {
-                $attempts->add(1, ['outcome' => 'backend_error', 'target' => $target]);
-                $lockErrorReporter($log, $logger, 'backend_error', $key, $target, $e);
-                $fn();
-                return;
-            }
-
-            if (! $acquired) {
-                $attempts->add(1, ['outcome' => 'skipped', 'target' => $target]);
-                return;
-            }
-
-            $attempts->add(1, ['outcome' => 'acquired', 'target' => $target]);
-            try {
-                $fn();
-            } finally {
-                try {
-                    $lock->release();
-                } catch (\Throwable $e) {
-                    $attempts->add(1, ['outcome' => 'release_error', 'target' => $target]);
-                    $lockErrorReporter($log, $logger, 'release_error', $key, $target, $e);
-                }
-            }
-        };
-    }, ['redis', 'telemetry', 'log', 'logger']);
-
-    /**
-     * Block-then-409 on contention. For read-modify-write on shared mutable state
-     * where silently dropping a request is wrong. Fail-open on backend error.
-     */
-    $container->set('distributedLockOrFail', function (\Redis $redis, Telemetry $telemetry, Log $log, ?Logger $logger) use ($lockTargetOf, $lockErrorReporter) {
-        $enabled = System::getEnv('_APP_LOCKING_ENABLED', 'enabled') !== 'disabled';
-        $attempts = $telemetry->createCounter('lock.attempts', null, 'Distributed lock acquire outcomes');
-
-        if (! $enabled) {
-            return function (string $key, \Closure $fn, float $ttl = 10.0, float $waitTimeout = 3.0): mixed {
-                return $fn();
-            };
-        }
-
-        return function (string $key, \Closure $fn, float $ttl = 10.0, float $waitTimeout = 3.0) use ($redis, $attempts, $log, $logger, $lockTargetOf, $lockErrorReporter): mixed {
-            $target = $lockTargetOf($key);
-            $lock = new DistributedLock($redis, $key, (int) $ttl);
-
-            try {
-                $acquired = $lock->acquire($waitTimeout);
-            } catch (\RedisException $e) {
-                $attempts->add(1, ['outcome' => 'backend_error', 'target' => $target]);
-                $lockErrorReporter($log, $logger, 'backend_error', $key, $target, $e);
-                return $fn();
-            }
-
-            if (! $acquired) {
-                $attempts->add(1, ['outcome' => 'contended', 'target' => $target]);
-                // No custom message — the lock key embeds collection + document id.
-                throw new Exception(Exception::GENERAL_RESOURCE_LOCKED);
-            }
-
-            $attempts->add(1, ['outcome' => 'acquired', 'target' => $target]);
-            try {
-                return $fn();
-            } finally {
-                try {
-                    $lock->release();
-                } catch (\Throwable $e) {
-                    $attempts->add(1, ['outcome' => 'release_error', 'target' => $target]);
-                    $lockErrorReporter($log, $logger, 'release_error', $key, $target, $e);
-                }
-            }
-        };
-    }, ['redis', 'telemetry', 'log', 'logger']);
-
-    $container->set('lock', function (callable $distributedLock, callable $distributedLockOrFail, Database $dbForPlatform, Authorization $authorization): Lock {
-        return new Lock(
-            \Closure::fromCallable($distributedLock),
-            \Closure::fromCallable($distributedLockOrFail),
-            $dbForPlatform,
-            $authorization,
-        );
-    }, ['distributedLock', 'distributedLockOrFail', 'dbForPlatform', 'authorization']);
+    $container->set('lock', function (\Redis $redis, Telemetry $telemetry, Database $dbForPlatform, Authorization $authorization, Log $log, ?Logger $logger): Lock {
+        return new Lock($redis, $telemetry, $dbForPlatform, $authorization, $log, $logger);
+    }, ['redis', 'telemetry', 'dbForPlatform', 'authorization', 'log', 'logger']);
 
     $container->set('authorization', function () {
         return new Authorization();
