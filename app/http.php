@@ -195,6 +195,35 @@ $container->set('bus', function ($register) use ($swooleAdapter) {
 
 include __DIR__ . '/controllers/general.php';
 
+/**
+ * Build index Documents from raw config, filtering out types the adapter
+ * doesn't support (e.g. fulltext on SQLite).
+ *
+ * @param array<int, array<string, mixed>> $rawIndexes
+ * @return array<int, Document>
+ */
+function buildSupportedIndexes(Database $database, array $rawIndexes): array
+{
+    $adapter = $database->getAdapter();
+    $supportsFulltext = $adapter->getSupportForFulltextIndex();
+
+    $documents = [];
+    foreach ($rawIndexes as $index) {
+        if ($index['type'] === Database::INDEX_FULLTEXT && !$supportsFulltext) {
+            continue;
+        }
+        $documents[] = new Document([
+            '$id' => ID::custom($index['$id']),
+            'type' => $index['type'],
+            'attributes' => $index['attributes'],
+            'lengths' => $index['lengths'] ?? [],
+            'orders' => $index['orders'] ?? [],
+        ]);
+    }
+
+    return $documents;
+}
+
 function createDatabase(Http $app, string $resourceKey, string $dbName, array $collections, mixed $pools, ?callable $extraSetup = null): void
 {
     $max = 15;
@@ -266,20 +295,7 @@ function createDatabase(Http $app, string $resourceKey, string $dbName, array $c
             'format' => $attr['format'] ?? ''
         ]), $collection['attributes']);
 
-        $supportsFulltext = $database->getAdapter()->getSupportForFulltextIndex();
-        $indexes = [];
-        foreach ($collection['indexes'] as $index) {
-            if ($index['type'] === Database::INDEX_FULLTEXT && !$supportsFulltext) {
-                continue;
-            }
-            $indexes[] = new Document([
-                '$id' => ID::custom($index['$id']),
-                'type' => $index['type'],
-                'attributes' => $index['attributes'],
-                'lengths' => $index['lengths'],
-                'orders' => $index['orders'],
-            ]);
-        }
+        $indexes = buildSupportedIndexes($database, $collection['indexes']);
 
         $database->createCollection($key, $attributes, $indexes);
         $collectionsCreated++;
@@ -361,13 +377,7 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
                     'format' => $attr['format'] ?? ''
                 ]), $files['attributes']);
 
-                $indexes = array_map(fn ($index) => new Document([
-                    '$id' => ID::custom($index['$id']),
-                    'type' => $index['type'],
-                    'attributes' => $index['attributes'],
-                    'lengths' => $index['lengths'],
-                    'orders' => $index['orders'],
-                ]), $files['indexes']);
+                $indexes = buildSupportedIndexes($dbForPlatform, $files['indexes']);
 
                 $dbForPlatform->createCollection('bucket_' . $bucket->getSequence(), $attributes, $indexes);
             }
@@ -407,13 +417,7 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
                     'format' => $attr['format'] ?? ''
                 ]), $files['attributes']);
 
-                $indexes = array_map(fn ($index) => new Document([
-                    '$id' => ID::custom($index['$id']),
-                    'type' => $index['type'],
-                    'attributes' => $index['attributes'],
-                    'lengths' => $index['lengths'],
-                    'orders' => $index['orders'],
-                ]), $files['indexes']);
+                $indexes = buildSupportedIndexes($dbForPlatform, $files['indexes']);
 
                 $authorization->skip(fn () => $dbForPlatform->createCollection('bucket_' . $bucket->getSequence(), $attributes, $indexes));
             }
@@ -486,7 +490,7 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
                 }
 
                 $attributes = \array_map(fn ($attribute) => new Document($attribute), $collection['attributes']);
-                $indexes = \array_map(fn (array $index) => new Document($index), $collection['indexes']);
+                $indexes = buildSupportedIndexes($dbForProject, $collection['indexes']);
 
                 $dbForProject->createCollection($key, $attributes, $indexes);
                 $collectionsCreated++;
