@@ -136,9 +136,6 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
     if (!$project->isEmpty() && $project->getId() !== 'console') {
         $accessedAt = $project->getAttribute('accessedAt', 0);
         if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
-            // Skip-on-contention: every concurrent router request would write
-            // the same throttled timestamp, so losing the race is correct —
-            // the winning pod's update covers ours.
             $distributedLock('lock:platform:projects:' . $project->getId(), function () use ($dbForPlatform, $project, $authorization) {
                 $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
                     'accessedAt' => DateTime::now()

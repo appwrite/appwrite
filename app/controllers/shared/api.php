@@ -250,9 +250,6 @@ Http::init()
                 }
 
                 if (! $updates->isEmpty()) {
-                    // Serialize concurrent per-request writes to this key across API nodes.
-                    // Skip on contention is safe: the winner applies the same idempotent update;
-                    // if this node observed a new SDK the other didn't, the next request catches up.
                     $distributedLock('lock:platform:keys:' . $dbKey->getId(), function () use ($dbForPlatform, $dbKey, $updates, $apiKey, $project, $user, $team) {
                         $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->updateDocument('keys', $dbKey->getId(), $updates));
 
