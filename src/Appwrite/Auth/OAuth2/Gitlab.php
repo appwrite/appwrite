@@ -56,9 +56,12 @@ class Gitlab extends OAuth2
     protected function getTokens(string $code): array
     {
         if (empty($this->tokens)) {
+            $headers = ['Content-Type: application/x-www-form-urlencoded'];
             $this->tokens = \json_decode($this->request(
                 'POST',
-                $this->getEndpoint() . '/oauth/token?' . \http_build_query([
+                $this->getEndpoint() . '/oauth/token',
+                $headers,
+                \http_build_query([
                     'code' => $code,
                     'client_id' => $this->appID,
                     'client_secret' => $this->getAppSecret()['clientSecret'],
@@ -78,9 +81,12 @@ class Gitlab extends OAuth2
      */
     public function refreshTokens(string $refreshToken): array
     {
+        $headers = ['Content-Type: application/x-www-form-urlencoded'];
         $this->tokens = \json_decode($this->request(
             'POST',
-            $this->getEndpoint() . '/oauth/token?' . \http_build_query([
+            $this->getEndpoint() . '/oauth/token',
+            $headers,
+            \http_build_query([
                 'refresh_token' => $refreshToken,
                 'client_id' => $this->appID,
                 'client_secret' => $this->getAppSecret()['clientSecret'],
@@ -163,7 +169,8 @@ class Gitlab extends OAuth2
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $user = $this->request('GET', $this->getEndpoint() . '/api/v4/user?access_token=' . \urlencode($accessToken));
+            $headers = ['Authorization: Bearer ' . \urlencode($accessToken)];
+            $user = $this->request('GET', $this->getEndpoint() . '/api/v4/user', $headers);
             $this->user = \json_decode($user, true);
         }
 
