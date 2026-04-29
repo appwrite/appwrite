@@ -325,7 +325,7 @@ class Update extends Action
                 $requestTimestamp,
                 fn () => $dbForDatabases->withPreserveDates(fn () => $dbForDatabases->updateDocument(
                     'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
-                    $document->getId(),
+                    $documentId,
                     $newDocument
                 ))
             );
