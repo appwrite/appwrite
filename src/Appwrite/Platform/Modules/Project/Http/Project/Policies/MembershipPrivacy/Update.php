@@ -60,7 +60,6 @@ class Update extends Action
             ->inject('project')
             ->inject('authorization')
             ->inject('queueForEvents')
-            ->inject('distributedLockOrFail')
             ->callback($this->action(...));
     }
 
@@ -75,33 +74,30 @@ class Update extends Action
         Document $project,
         Authorization $authorization,
         Event $queueForEvents,
-        callable $distributedLockOrFail,
     ): void {
-        $project = $distributedLockOrFail("lock:platform:projects:{$project->getId()}", function () use ($project, $userId, $userEmail, $userPhone, $userName, $userMFA, $dbForPlatform, $authorization) {
-            $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $project->getId()));
+        $auths = $project->getAttribute('auths', []);
 
-            $auths = $project->getAttribute('auths', []);
+        if ($userId !== null) {
+            $auths['membershipsUserId'] = $userId;
+        }
+        if ($userEmail !== null) {
+            $auths['membershipsUserEmail'] = $userEmail;
+        }
+        if ($userPhone !== null) {
+            $auths['membershipsUserPhone'] = $userPhone;
+        }
+        if ($userName !== null) {
+            $auths['membershipsUserName'] = $userName;
+        }
+        if ($userMFA !== null) {
+            $auths['membershipsMfa'] = $userMFA;
+        }
 
-            if ($userId !== null) {
-                $auths['membershipsUserId'] = $userId;
-            }
-            if ($userEmail !== null) {
-                $auths['membershipsUserEmail'] = $userEmail;
-            }
-            if ($userPhone !== null) {
-                $auths['membershipsUserPhone'] = $userPhone;
-            }
-            if ($userName !== null) {
-                $auths['membershipsUserName'] = $userName;
-            }
-            if ($userMFA !== null) {
-                $auths['membershipsMfa'] = $userMFA;
-            }
+        $updates = new Document([
+            'auths' => $auths,
+        ]);
 
-            return $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-                'auths' => $auths,
-            ])));
-        });
+        $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
 
         $queueForEvents
             ->setParam('projectId', $project->getId())

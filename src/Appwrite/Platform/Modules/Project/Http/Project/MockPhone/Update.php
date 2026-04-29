@@ -59,7 +59,6 @@ class Update extends Action
             ->inject('project')
             ->inject('dbForPlatform')
             ->inject('authorization')
-            ->inject('distributedLockOrFail')
             ->callback($this->action(...));
     }
 
@@ -71,41 +70,38 @@ class Update extends Action
         Document $project,
         Database $dbForPlatform,
         Authorization $authorization,
-        callable $distributedLockOrFail,
     ) {
-        $mockNumber = $distributedLockOrFail("lock:platform:projects:{$project->getId()}", function () use ($project, $number, $otp, $dbForPlatform, $authorization) {
-            $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $project->getId()));
+        $auths = $project->getAttribute('auths', []);
 
-            $auths = $project->getAttribute('auths', []);
-            $mockNumbers = $auths['mockNumbers'] ?? [];
+        $mockNumbers = $auths['mockNumbers'] ?? [];
 
-            $mockNumberIndex = null;
-            foreach ($mockNumbers as $index => $mock) {
-                if ($mock['phone'] === $number) {
-                    $mockNumberIndex = $index;
-                    break;
-                }
+        $mockNumberIndex = null;
+        foreach ($mockNumbers as $index => $mock) {
+            if ($mock['phone'] === $number) {
+                $mockNumberIndex = $index;
+                break;
             }
+        }
 
-            if (\is_null($mockNumberIndex)) {
-                throw new Exception(Exception::MOCK_NUMBER_NOT_FOUND);
-            }
+        if (\is_null($mockNumberIndex)) {
+            throw new Exception(Exception::MOCK_NUMBER_NOT_FOUND);
+        }
 
-            $mockNumbers[$mockNumberIndex]['otp'] = $otp;
-            $mockNumbers[$mockNumberIndex]['$updatedAt'] = DateTime::now();
-            $auths['mockNumbers'] = $mockNumbers;
+        $mockNumbers[$mockNumberIndex]['otp'] = $otp;
+        $mockNumbers[$mockNumberIndex]['$updatedAt'] = DateTime::now();
 
-            $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-                'auths' => $auths,
-            ])));
+        $auths['mockNumbers'] = $mockNumbers;
 
-            return $mockNumbers[$mockNumberIndex];
-        });
+        $updates = new Document([
+            'auths' => $auths,
+        ]);
+
+        $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
 
         $queueForEvents->setParam('number', $number);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_OK)
-            ->dynamic(new Document($mockNumber), Response::MODEL_MOCK_NUMBER);
+            ->dynamic(new Document($mockNumbers[$mockNumberIndex]), Response::MODEL_MOCK_NUMBER);
     }
 }

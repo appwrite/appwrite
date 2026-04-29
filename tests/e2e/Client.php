@@ -211,13 +211,7 @@ class Client
             }
         }
 
-        // CURLOPT_PATH_AS_IS isn't supported by Swoole's emulated cURL when the
-        // SWOOLE_HOOK_CURL coroutine hook is active. Skip it in that case so
-        // tests that need real parallel HTTP (Swoole\Coroutine\run + cURL hook)
-        // don't fatal-error here. Native (non-hooked) cURL keeps the option.
-        if (! \extension_loaded('swoole') || ! (\Swoole\Runtime::getHookFlags() & SWOOLE_HOOK_CURL)) {
-            curl_setopt($ch, CURLOPT_PATH_AS_IS, 1);
-        }
+        curl_setopt($ch, CURLOPT_PATH_AS_IS, 1);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, $followRedirects);
@@ -243,12 +237,9 @@ class Client
         if ($method === self::METHOD_HEAD) {
             curl_setopt($ch, CURLOPT_NOBODY, true); // This is crucial for HEAD requests
             curl_setopt($ch, CURLOPT_HEADER, false);
+        } else {
+            curl_setopt($ch, CURLOPT_NOBODY, false);
         }
-        // Note: explicit CURLOPT_NOBODY=false on non-HEAD requests is redundant
-        // (false is cURL's default) and actively breaks Swoole's emulated cURL
-        // on PATCH-with-body — Swoole strips the body and the request reaches
-        // the server as a method-without-body, hitting the framework's 404
-        // fallback. Just skip the redundant set.
 
         if ($method != self::METHOD_GET && $method != self::METHOD_HEAD) {
             curl_setopt($ch, CURLOPT_POSTFIELDS, $query);

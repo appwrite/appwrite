@@ -65,36 +65,29 @@ class Update extends Action
             ->param('legalTaxId', '', new Text(256), 'Project legal tax ID. Max length: 256 chars.', true)
             ->inject('response')
             ->inject('dbForPlatform')
-            ->inject('distributedLockOrFail')
             ->callback($this->action(...));
     }
 
-    public function action(string $projectId, string $name, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForPlatform, callable $distributedLockOrFail)
+    public function action(string $projectId, string $name, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForPlatform)
     {
-        // Re-fetch and write the full project doc inside the lock. This is the
-        // worst RMW window in the projects API — the endpoint passes the entire
-        // document back to updateDocument(), so a concurrent write to *any*
-        // attribute (services, auths, smtp, ...) would be silently overwritten.
-        $project = $distributedLockOrFail("lock:platform:projects:{$projectId}", function () use ($projectId, $name, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $dbForPlatform) {
-            $project = $dbForPlatform->getDocument('projects', $projectId);
+        $project = $dbForPlatform->getDocument('projects', $projectId);
 
-            if ($project->isEmpty()) {
-                throw new Exception(Exception::PROJECT_NOT_FOUND);
-            }
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
 
-            return $dbForPlatform->updateDocument('projects', $project->getId(), $project
-                ->setAttribute('name', $name)
-                ->setAttribute('description', $description)
-                ->setAttribute('logo', $logo)
-                ->setAttribute('url', $url)
-                ->setAttribute('legalName', $legalName)
-                ->setAttribute('legalCountry', $legalCountry)
-                ->setAttribute('legalState', $legalState)
-                ->setAttribute('legalCity', $legalCity)
-                ->setAttribute('legalAddress', $legalAddress)
-                ->setAttribute('legalTaxId', $legalTaxId)
-                ->setAttribute('search', implode(' ', [$projectId, $name])));
-        });
+        $project = $dbForPlatform->updateDocument('projects', $project->getId(), $project
+            ->setAttribute('name', $name)
+            ->setAttribute('description', $description)
+            ->setAttribute('logo', $logo)
+            ->setAttribute('url', $url)
+            ->setAttribute('legalName', $legalName)
+            ->setAttribute('legalCountry', $legalCountry)
+            ->setAttribute('legalState', $legalState)
+            ->setAttribute('legalCity', $legalCity)
+            ->setAttribute('legalAddress', $legalAddress)
+            ->setAttribute('legalTaxId', $legalTaxId)
+            ->setAttribute('search', implode(' ', [$projectId, $name])));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     }

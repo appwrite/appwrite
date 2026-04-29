@@ -55,37 +55,29 @@ class Update extends Action
             ->param('teamId', '', new UID(), 'Team ID of the team to transfer project to.')
             ->inject('response')
             ->inject('dbForPlatform')
-            ->inject('distributedLockOrFail')
             ->callback($this->action(...));
     }
 
-    public function action(string $projectId, string $teamId, Response $response, Database $dbForPlatform, callable $distributedLockOrFail)
+    public function action(string $projectId, string $teamId, Response $response, Database $dbForPlatform)
     {
-        // Lock around the project doc RMW. Cascade fan-out to installations,
-        // repositories and vcsComments runs after the lock is released —
-        // those write to separate collections, not the project doc.
-        [$project, $permissions] = $distributedLockOrFail("lock:platform:projects:{$projectId}", function () use ($projectId, $teamId, $dbForPlatform) {
-            $project = $dbForPlatform->getDocument('projects', $projectId);
-            $team = $dbForPlatform->getDocument('teams', $teamId);
+        $project = $dbForPlatform->getDocument('projects', $projectId);
+        $team = $dbForPlatform->getDocument('teams', $teamId);
 
-            if ($project->isEmpty()) {
-                throw new Exception(Exception::PROJECT_NOT_FOUND);
-            }
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
 
-            if ($team->isEmpty()) {
-                throw new Exception(Exception::TEAM_NOT_FOUND);
-            }
+        if ($team->isEmpty()) {
+            throw new Exception(Exception::TEAM_NOT_FOUND);
+        }
 
-            $permissions = $this->getPermissions($teamId, $projectId);
+        $permissions = $this->getPermissions($teamId, $projectId);
 
-            $project = $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-                'teamId' => $teamId,
-                'teamInternalId' => $team->getSequence(),
-                '$permissions' => $permissions,
-            ]));
-
-            return [$project, $permissions];
-        });
+        $project = $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+            'teamId' => $teamId,
+            'teamInternalId' => $team->getSequence(),
+            '$permissions' => $permissions,
+        ]));
 
         $installations = $dbForPlatform->find('installations', [
             Query::equal('projectInternalId', [$project->getSequence()]),

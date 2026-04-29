@@ -60,7 +60,6 @@ class Update extends Action
             ->inject('project')
             ->inject('authorization')
             ->inject('queueForEvents')
-            ->inject('distributedLockOrFail')
             ->callback($this->action(...));
     }
 
@@ -72,18 +71,13 @@ class Update extends Action
         Document $project,
         Authorization $authorization,
         Event $queueForEvents,
-        callable $distributedLockOrFail,
     ): void {
-        $project = $distributedLockOrFail("lock:platform:projects:{$project->getId()}", function () use ($project, $protocolId, $enabled, $dbForPlatform, $authorization) {
-            $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $project->getId()));
+        $protocols = $project->getAttribute('apis', []);
+        $protocols[$protocolId] = $enabled;
 
-            $protocols = $project->getAttribute('apis', []);
-            $protocols[$protocolId] = $enabled;
-
-            return $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-                'apis' => $protocols,
-            ])));
-        });
+        $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+            'apis' => $protocols,
+        ])));
 
         $queueForEvents->setParam('protocolId', $protocolId);
 

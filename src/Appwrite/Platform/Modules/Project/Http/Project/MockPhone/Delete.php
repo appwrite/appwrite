@@ -58,7 +58,6 @@ class Delete extends Action
             ->inject('project')
             ->inject('dbForPlatform')
             ->inject('authorization')
-            ->inject('distributedLockOrFail')
             ->callback($this->action(...));
     }
 
@@ -69,33 +68,33 @@ class Delete extends Action
         Document $project,
         Database $dbForPlatform,
         Authorization $authorization,
-        callable $distributedLockOrFail,
     ) {
-        $distributedLockOrFail("lock:platform:projects:{$project->getId()}", function () use ($project, $number, $dbForPlatform, $authorization) {
-            $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $project->getId()));
+        $auths = $project->getAttribute('auths', []);
 
-            $auths = $project->getAttribute('auths', []);
-            $mockNumbers = $auths['mockNumbers'] ?? [];
+        $mockNumbers = $auths['mockNumbers'] ?? [];
 
-            $mockNumberIndex = null;
-            foreach ($mockNumbers as $index => $mock) {
-                if ($mock['phone'] === $number) {
-                    $mockNumberIndex = $index;
-                    break;
-                }
+        $mockNumberIndex = null;
+        foreach ($mockNumbers as $index => $mock) {
+            if ($mock['phone'] === $number) {
+                $mockNumberIndex = $index;
+                break;
             }
+        }
 
-            if (\is_null($mockNumberIndex)) {
-                throw new Exception(Exception::MOCK_NUMBER_NOT_FOUND);
-            }
+        if (\is_null($mockNumberIndex)) {
+            throw new Exception(Exception::MOCK_NUMBER_NOT_FOUND);
+        }
 
-            unset($mockNumbers[$mockNumberIndex]);
-            $auths['mockNumbers'] = array_values($mockNumbers);
+        unset($mockNumbers[$mockNumberIndex]);
+        $mockNumbers = array_values($mockNumbers);
 
-            $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-                'auths' => $auths,
-            ])));
-        });
+        $auths['mockNumbers'] = $mockNumbers;
+
+        $updates = new Document([
+            'auths' => $auths,
+        ]);
+
+        $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
 
         $queueForEvents->setParam('number', $number);
 

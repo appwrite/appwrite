@@ -59,7 +59,6 @@ class Create extends Action
             ->inject('project')
             ->inject('dbForPlatform')
             ->inject('authorization')
-            ->inject('distributedLockOrFail')
             ->callback($this->action(...));
     }
 
@@ -71,8 +70,21 @@ class Create extends Action
         Document $project,
         Database $dbForPlatform,
         Authorization $authorization,
-        callable $distributedLockOrFail,
     ) {
+        $auths = $project->getAttribute('auths', []);
+
+        $mockNumbers = $auths['mockNumbers'] ?? [];
+
+        if (\count($mockNumbers) >= APP_LIMIT_COUNT) {
+            throw new Exception(Exception::MOCK_NUMBER_LIMIT_EXCEEDED);
+        }
+
+        foreach ($mockNumbers as $mockNumber) {
+            if ($mockNumber['phone'] === $number) {
+                throw new Exception(Exception::MOCK_NUMBER_ALREADY_EXISTS);
+            }
+        }
+
         // Set to now date
         $mockNumber = [
             'phone' => $number,
@@ -81,29 +93,14 @@ class Create extends Action
             '$updatedAt' => DateTime::now(),
         ];
 
-        $distributedLockOrFail("lock:platform:projects:{$project->getId()}", function () use ($project, $number, $mockNumber, $dbForPlatform, $authorization) {
-            $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $project->getId()));
+        $mockNumbers[] = $mockNumber;
+        $auths['mockNumbers'] = $mockNumbers;
 
-            $auths = $project->getAttribute('auths', []);
-            $mockNumbers = $auths['mockNumbers'] ?? [];
+        $updates = new Document([
+            'auths' => $auths,
+        ]);
 
-            if (\count($mockNumbers) >= APP_LIMIT_COUNT) {
-                throw new Exception(Exception::MOCK_NUMBER_LIMIT_EXCEEDED);
-            }
-
-            foreach ($mockNumbers as $existing) {
-                if ($existing['phone'] === $number) {
-                    throw new Exception(Exception::MOCK_NUMBER_ALREADY_EXISTS);
-                }
-            }
-
-            $mockNumbers[] = $mockNumber;
-            $auths['mockNumbers'] = $mockNumbers;
-
-            $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-                'auths' => $auths,
-            ])));
-        });
+        $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
 
         $queueForEvents->setParam('number', $number);
 

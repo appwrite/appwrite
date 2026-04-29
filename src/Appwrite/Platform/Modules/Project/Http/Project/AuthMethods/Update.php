@@ -60,7 +60,6 @@ class Update extends Action
             ->inject('project')
             ->inject('authorization')
             ->inject('queueForEvents')
-            ->inject('distributedLockOrFail')
             ->callback($this->action(...));
     }
 
@@ -71,22 +70,17 @@ class Update extends Action
         Database $dbForPlatform,
         Document $project,
         Authorization $authorization,
-        Event $queueForEvents,
-        callable $distributedLockOrFail,
+        Event $queueForEvents
     ): void {
         $auth = Config::getParam('auth')[$methodId] ?? [];
         $authKey = $auth['key'] ?? '';
 
-        $project = $distributedLockOrFail("lock:platform:projects:{$project->getId()}", function () use ($project, $authKey, $enabled, $dbForPlatform, $authorization) {
-            $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $project->getId()));
+        $auths = $project->getAttribute('auths', []);
+        $auths[$authKey] = $enabled;
 
-            $auths = $project->getAttribute('auths', []);
-            $auths[$authKey] = $enabled;
-
-            return $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-                'auths' => $auths,
-            ])));
-        });
+        $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+            'auths' => $auths,
+        ])));
 
         $queueForEvents->setParam('methodId', $methodId);
 
