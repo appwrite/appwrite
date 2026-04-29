@@ -267,13 +267,20 @@ function createDatabase(Http $app, string $resourceKey, string $dbName, array $c
             'format' => $attr['format'] ?? ''
         ]), $collection['attributes']);
 
-        $indexes = array_map(fn ($index) => new Document([
-            '$id' => ID::custom($index['$id']),
-            'type' => $index['type'],
-            'attributes' => $index['attributes'],
-            'lengths' => $index['lengths'],
-            'orders' => $index['orders'],
-        ]), $collection['indexes']);
+        $supportsFulltext = $database->getAdapter()->getSupportForFulltextIndex();
+        $indexes = [];
+        foreach ($collection['indexes'] as $index) {
+            if ($index['type'] === Database::INDEX_FULLTEXT && !$supportsFulltext) {
+                continue;
+            }
+            $indexes[] = new Document([
+                '$id' => ID::custom($index['$id']),
+                'type' => $index['type'],
+                'attributes' => $index['attributes'],
+                'lengths' => $index['lengths'],
+                'orders' => $index['orders'],
+            ]);
+        }
 
         $database->createCollection($key, $attributes, $indexes);
         $collectionsCreated++;
