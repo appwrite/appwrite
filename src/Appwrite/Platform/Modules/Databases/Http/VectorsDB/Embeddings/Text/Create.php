@@ -15,6 +15,7 @@ use Utopia\Agents\Agent;
 use Utopia\Database\Document;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Span\Span;
+use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -105,6 +106,9 @@ class Create extends CreateDocumentAction
                 $span = new Span('vectorsDB.createTextEmbeddings');
                 $span->set('level', 'error');
                 $span->set('logger', 'http');
+                $span->set('server.name', System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
+                $span->set('release', System::getEnv('_APP_VERSION', 'UNKNOWN'));
+                $span->set('environment', System::getEnv('_APP_ENV', 'development') === 'production' ? 'production' : 'staging');
                 $span->set('appwrite.error.publish', true);
                 $span->set('appwrite.error.action', 'vectorsDB.createTextEmbeddings');
                 $span->set('embeddingModel', $model);
