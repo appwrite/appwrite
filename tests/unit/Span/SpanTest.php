@@ -16,18 +16,19 @@ class SpanTest extends TestCase
 
     public function testStandaloneSpanExportsOnFinish(): void
     {
-        $exported = [];
-
-        Span::addExporter(new class ($exported) implements Exporter {
-            public function __construct(private array &$exported)
-            {
-            }
+        $exporter = new class () implements Exporter {
+            /**
+             * @var array<Span>
+             */
+            public array $exported = [];
 
             public function export(Span $span): void
             {
                 $this->exported[] = $span;
             }
-        });
+        };
+
+        Span::addExporter($exporter);
 
         $error = new RuntimeException('Worker failed');
         $span = new Span('worker.error');
@@ -35,8 +36,8 @@ class SpanTest extends TestCase
         $span->setError($error);
         $span->finish();
 
-        $this->assertCount(1, $exported);
-        $this->assertSame('worker.error', $exported[0]->getAction());
-        $this->assertSame($error, $exported[0]->getError());
+        $this->assertCount(1, $exporter->exported);
+        $this->assertSame('worker.error', $exporter->exported[0]->getAction());
+        $this->assertSame($error, $exporter->exported[0]->getError());
     }
 }
