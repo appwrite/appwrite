@@ -223,7 +223,7 @@ jobs:
 
             const pr = context.payload.pull_request;
             if (!pr) {
-              core.setOutput('databases', JSON.stringify([...defaultDatabases, ...fullMatrixDatabases]));
+              core.setOutput('databases', JSON.stringify(fullMatrixDatabases));
               core.setOutput('modes', JSON.stringify(fullMatrixModes));
               return;
             }
