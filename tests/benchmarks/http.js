@@ -75,8 +75,8 @@ const API_SCOPES = [
     'functions.write',
     'log.read',
     'log.write',
-    'execution.read',
-    'execution.write',
+    'executions.read',
+    'executions.write',
     'locale.read',
     'avatars.read',
     'rules.read',
@@ -90,6 +90,8 @@ const API_SCOPES = [
     'tokens.write',
     'platforms.read',
     'platforms.write',
+    'oauth2.read',
+    'oauth2.write',
 ];
 
 const BASE_PERMISSIONS = [

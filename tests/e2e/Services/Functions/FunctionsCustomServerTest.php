@@ -700,7 +700,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $function['headers']['status-code']);
         $this->assertEquals($deploymentId, $function['body']['deploymentId']);
 
-        // Test starter code is used and that dynamic keys work
+        // Test starter code is used and that ephemeral keys work
         $execution = $this->createExecution($functionId, [
             'path' => '/ping',
         ]);
@@ -1076,6 +1076,118 @@ class FunctionsCustomServerTest extends Scope
             $this->assertEquals('ready', $deployment['body']['status']);
             $this->assertEquals($deploymentSize, $deployment['body']['sourceSize']);
             $this->assertGreaterThan(1024 * 1024 * 10, $deployment['body']['buildSize']); // ~7MB video file + 10MB sample file
+        }, 120000, 500);
+    }
+
+    public function testCreateDeploymentOutOfOrder(): void
+    {
+        $data = $this->setupTestFunction();
+        $functionId = $data['functionId'];
+
+        // Prepare a code file that spans at least 3 chunks
+        $folder = 'large';
+        $folderPath = realpath(__DIR__ . '/../../../resources/functions') . "/$folder";
+        $code = "$folderPath/code.tar.gz";
+
+
+
+        $totalSize = filesize($code);
+        $chunkSize = 5 * 1024 * 1024; // 5MB chunks
+        $mimeType = 'application/x-gzip';
+        $chunksTotal = (int) ceil($totalSize / $chunkSize);
+
+        // Read all chunks into memory
+        $handle = fopen($code, "rb");
+        $this->assertNotFalse($handle, "Could not open test resource: $code");
+        $chunks = [];
+        for ($i = 0; $i < $chunksTotal; $i++) {
+            $start = $i * $chunkSize;
+            $end = min($start + $chunkSize, $totalSize);
+            $length = $end - $start;
+            $chunkData = fread($handle, $length);
+            $chunks[] = [
+                'data' => $chunkData,
+                'start' => $start,
+                'end' => $end - 1,
+                'index' => $i,
+            ];
+        }
+        fclose($handle);
+
+        // We need at least 2 chunks for a meaningful out-of-order test
+        $this->assertGreaterThanOrEqual(2, count($chunks), 'Test file must span at least 2 chunks');
+
+        // Upload chunks in out-of-order sequence: last chunk first, then first, then second
+        $uploadOrder = [count($chunks) - 1, 0, 1];
+        $deploymentId = '';
+        $deployment = null;
+
+        foreach ($uploadOrder as $chunkIndex) {
+            $chunk = $chunks[$chunkIndex];
+            $curlFile = new \CURLFile(
+                'data://' . $mimeType . ';base64,' . base64_encode($chunk['data']),
+                $mimeType,
+                'large-fx.tar.gz'
+            );
+
+            $headers = [
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'content-range' => 'bytes ' . $chunk['start'] . '-' . $chunk['end'] . '/' . $totalSize,
+            ];
+
+            if (!empty($deploymentId)) {
+                $headers['x-appwrite-id'] = $deploymentId;
+            }
+
+            $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge($headers, $this->getHeaders()), [
+                'entrypoint' => 'index.js',
+                'code' => $curlFile,
+                'activate' => true,
+            ]);
+
+            $this->assertEquals(202, $deployment['headers']['status-code']);
+            $deploymentId = $deployment['body']['$id'];
+        }
+
+        // Upload remaining chunks in any order to complete the file
+        $remainingChunks = [];
+        for ($i = 2; $i < count($chunks) - 1; $i++) {
+            $remainingChunks[] = $i;
+        }
+        shuffle($remainingChunks);
+
+        foreach ($remainingChunks as $chunkIndex) {
+            $chunk = $chunks[$chunkIndex];
+            $curlFile = new \CURLFile(
+                'data://' . $mimeType . ';base64,' . base64_encode($chunk['data']),
+                $mimeType,
+                'large-fx.tar.gz'
+            );
+
+            $headers = [
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'content-range' => 'bytes ' . $chunk['start'] . '-' . $chunk['end'] . '/' . $totalSize,
+                'x-appwrite-id' => $deploymentId,
+            ];
+
+            $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge($headers, $this->getHeaders()), [
+                'entrypoint' => 'index.js',
+                'code' => $curlFile,
+                'activate' => true,
+            ]);
+
+            $this->assertEquals(202, $deployment['headers']['status-code']);
+        }
+
+
+
+        // Wait for build to complete
+        $this->assertEventually(function () use ($functionId, $deploymentId) {
+            $deployment = $this->getDeployment($functionId, $deploymentId);
+            $this->assertEquals(200, $deployment['headers']['status-code']);
+            $this->assertEquals('ready', $deployment['body']['status']);
         }, 120000, 500);
     }
 
@@ -2129,7 +2241,7 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $deploymentId = $this->setupDeployment($functionId, [
-            'code' => $this->packageFunction('dynamic-api-key'),
+            'code' => $this->packageFunction('ephemeral-api-key'),
             'activate' => true,
         ]);
 
