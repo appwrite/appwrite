@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "766ebd92fb768ab71ec9d47bfc84d411",
+    "content-hash": "031916478b08f054016bbacc1ac972c6",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3850,22 +3850,23 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-feat-sqlite-fts",
+            "version": "dev-feat-redis-adapter",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "00d502fef7196440c1083ed391c7f8f7efce5c80"
+                "reference": "cfb1a91a8c015afef177b1999c4a9b491cef1815"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/00d502fef7196440c1083ed391c7f8f7efce5c80",
-                "reference": "00d502fef7196440c1083ed391c7f8f7efce5c80",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/cfb1a91a8c015afef177b1999c4a9b491cef1815",
+                "reference": "cfb1a91a8c015afef177b1999c4a9b491cef1815",
                 "shasum": ""
             },
             "require": {
                 "ext-mbstring": "*",
                 "ext-mongodb": "*",
                 "ext-pdo": "*",
+                "ext-redis": "*",
                 "php": ">=8.4",
                 "utopia-php/cache": "1.*",
                 "utopia-php/console": "0.1.*",
@@ -3933,10 +3934,10 @@
                 "utopia"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/database/tree/feat-sqlite-fts",
+                "source": "https://github.com/utopia-php/database/tree/feat-redis-adapter",
                 "issues": "https://github.com/utopia-php/database/issues"
             },
-            "time": "2026-04-30T04:34:35+00:00"
+            "time": "2026-04-30T10:47:28+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -8476,7 +8477,7 @@
     "aliases": [
         {
             "package": "utopia-php/database",
-            "version": "dev-feat-sqlite-fts",
+            "version": "dev-feat-redis-adapter",
             "alias": "5.999.0",
             "alias_normalized": "5.999.0.0"
         }
