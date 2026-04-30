@@ -215,38 +215,8 @@ jobs:
         uses: actions/github-script@v8
         with:
           script: |
-            const allDatabases = ['MariaDB', 'PostgreSQL', 'MongoDB', 'SQLite'];
-            const allModes = ['dedicated', 'shared'];
-
-            const defaultDatabases = ['MongoDB', 'SQLite'];
-            const defaultModes = ['dedicated'];
-
-            const pr = context.payload.pull_request;
-            if (!pr) {
-              core.setOutput('databases', JSON.stringify(allDatabases));
-              core.setOutput('modes', JSON.stringify(allModes));
-              return;
-            }
-
-            const getContent = (ref) => github.rest.repos.getContent({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              path: 'composer.lock',
-              ref,
-            });
-
-            const getDbVersion = (lock) => lock.packages?.find(p => p.name === 'utopia-php/database')?.version;
-
-            const [{ data: base }, { data: head }] = await Promise.all([
-              getContent(pr.base.sha),
-              getContent(pr.head.sha),
-            ]);
-
-            const decode = (content) => JSON.parse(Buffer.from(content, 'base64').toString());
-            const databaseChanged = getDbVersion(decode(base.content)) !== getDbVersion(decode(head.content));
-
-            core.setOutput('databases', JSON.stringify(databaseChanged ? allDatabases : defaultDatabases));
-            core.setOutput('modes', JSON.stringify(databaseChanged ? allModes : defaultModes));
+            core.setOutput('databases', JSON.stringify(['SQLite']));
+            core.setOutput('modes', JSON.stringify(['shared']));
 
   build:
     name: Build
