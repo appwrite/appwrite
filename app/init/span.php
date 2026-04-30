@@ -39,12 +39,16 @@ $addSentryExporter = function (string $loggingConfig, ?callable $sampler = null)
         $projectId = $loggingProvider->getUser();
         $apiKey = $loggingProvider->getPassword();
         $host = $loggingProvider->getHost();
+        $port = $loggingProvider->getPort();
+        $path = $loggingProvider->getPath();
 
         if (empty($projectId) || empty($apiKey) || empty($host)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Invalid Sentry DSN. Logging is disabled');
         }
 
-        $dsn = 'https://' . $apiKey . '@' . $host . '/' . $projectId;
+        $host = $host . (empty($port) ? '' : ':' . $port);
+        $path = empty($path) ? '' : \trim($path, '/') . '/';
+        $dsn = 'https://' . $apiKey . '@' . $host . '/' . $path . $projectId;
 
         Span::addExporter(
             new Exporter\Sentry(
