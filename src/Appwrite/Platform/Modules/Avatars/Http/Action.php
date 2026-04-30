@@ -12,7 +12,6 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Image\Image;
-use Utopia\Logger\Logger;
 
 class Action extends PlatformAction
 {
@@ -57,7 +56,7 @@ class Action extends PlatformAction
         unset($image);
     }
 
-    protected function getUserGitHub(string $userId, Document $project, Database $dbForProject, Database $dbForPlatform, ?Logger $logger, Authorization $authorization): array
+    protected function getUserGitHub(string $userId, Document $project, Database $dbForProject, Database $dbForPlatform, Authorization $authorization): array
     {
         try {
             $user = $authorization->skip(fn () => $dbForPlatform->getDocument('users', $userId));

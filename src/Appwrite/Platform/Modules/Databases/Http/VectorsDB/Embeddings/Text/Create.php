@@ -14,9 +14,7 @@ use Utopia\Agents\Adapters\Ollama;
 use Utopia\Agents\Agent;
 use Utopia\Database\Document;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
-use Utopia\Logger\Log;
-use Utopia\Logger\Logger;
-use Utopia\System\System;
+use Utopia\Span\Span;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -79,12 +77,10 @@ class Create extends CreateDocumentAction
             ->inject('project')
             ->inject('embeddingAgent')
             ->inject('usage')
-            ->inject('log')
-            ->inject('logger')
             ->callback($this->action(...));
     }
 
-    public function action(array $texts, string $model, UtopiaResponse $response, Document $project, Agent $embeddingAgent, Context $usage, Log $log, ?Logger $logger): void
+    public function action(array $texts, string $model, UtopiaResponse $response, Document $project, Agent $embeddingAgent, Context $usage): void
     {
         $results = [];
         $embeddingAgent->getAdapter()->setModel($model);
@@ -104,23 +100,18 @@ class Create extends CreateDocumentAction
             } catch (\Exception $e) {
                 $error = 'Error while generating embedding';
                 $totalErrors += 1;
-                if ($logger) {
-                    $log->setNamespace("http");
-                    $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
-                    $log->setVersion(System::getEnv('_APP_VERSION', 'UNKNOWN'));
-                    $log->setType(Log::TYPE_ERROR);
-                    $log->setMessage($e->getMessage());
-
-                    $log->addTag('embeddingModel', $model);
-                    $log->addTag('code', $e->getCode());
-                    $log->addTag('projectId', $project->getId());
-
-                    $log->addExtra('file', $e->getFile());
-                    $log->addExtra('line', $e->getLine());
-                    $log->addExtra('trace', $e->getTraceAsString());
-
-                    $logger->addLog($log);
-                }
+                Span::add('level', 'error');
+                Span::add('logger', 'http');
+                Span::add('appwrite.error.publish', true);
+                Span::add('appwrite.error.action', 'vectorsDB.createTextEmbeddings');
+                Span::add('embeddingModel', $model);
+                Span::add('code', $e->getCode());
+                Span::add('projectId', $project->getId());
+                Span::add('error.message', $e->getMessage());
+                Span::add('error.file', $e->getFile());
+                Span::add('error.line', $e->getLine());
+                Span::add('error.trace', $e->getTraceAsString());
+                Span::error($e);
             }
 
             $results[] = new Document([

@@ -6,7 +6,6 @@ use Appwrite\Template\Template;
 use Exception;
 use Swoole\Runtime;
 use Utopia\Database\Document;
-use Utopia\Logger\Log;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Adapter\Email\SMTP;
 use Utopia\Messaging\Messages\Email as EmailMessage;
@@ -14,6 +13,7 @@ use Utopia\Messaging\Messages\Email\Attachment;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Registry\Registry;
+use Utopia\Span\Span;
 use Utopia\System\System;
 
 class Mails extends Action
@@ -38,7 +38,6 @@ class Mails extends Action
             ->inject('message')
             ->inject('project')
             ->inject('register')
-            ->inject('log')
             ->callback($this->action(...));
     }
 
@@ -54,11 +53,10 @@ class Mails extends Action
      * @param Message $message
      * @param Document $project
      * @param Registry $register
-     * @param Log $log
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Document $project, Registry $register, Log $log): void
+    public function action(Message $message, Document $project, Registry $register): void
     {
         Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
         $payload = $message->getPayload();
@@ -74,7 +72,7 @@ class Mails extends Action
         }
 
         $type = empty($smtp) ? 'cloud' : 'smtp';
-        $log->addTag('type', $type);
+        Span::add('type', $type);
 
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
         $hostname = System::getEnv('_APP_CONSOLE_DOMAIN');

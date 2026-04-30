@@ -29,8 +29,6 @@ use Utopia\Database\Query;
 use Utopia\Http\Adapter\Swoole\Server;
 use Utopia\Http\Files;
 use Utopia\Http\Http;
-use Utopia\Logger\Log;
-use Utopia\Logger\Log\User;
 use Utopia\Span\Span;
 use Utopia\System\System;
 
@@ -552,71 +550,40 @@ $swooleAdapter->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files
 
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
-        $logger = $app->getResource("logger");
-        if ($logger) {
-            try {
-                /** @var Utopia\Database\Document $user */
-                $user = $app->getResource('user');
-            } catch (\Throwable $_th) {
-                // All good, user is optional information for logger
+        $route = $app->getRoute();
+        $sdk = $route?->getLabel("sdk", false);
+
+        $action = 'UNKNOWN_NAMESPACE.UNKNOWN.METHOD';
+        if (!empty($sdk)) {
+            if (\is_array($sdk)) {
+                $sdk = $sdk[0];
             }
-
-            $route = $app->getRoute();
-
-            $log = $app->getResource("log");
-
-            if (isset($user) && !$user->isEmpty()) {
-                $log->setUser(new User($user->getId()));
-            } else {
-                $log->setUser(new User('guest-' . hash('sha256', $request->getIP())));
-            }
-
-            $log->setNamespace("http");
-            $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
-            $log->setVersion($version);
-            $log->setType(Log::TYPE_ERROR);
-            $log->setMessage($th->getMessage());
-
-            $log->addTag('method', $route?->getMethod() ?? $request->getMethod());
-            $log->addTag('url', $route?->getPath() ?? $request->getURI());
-            $log->addTag('verboseType', get_class($th));
-            $log->addTag('code', $th->getCode());
-            // $log->addTag('projectId', $project->getId()); // TODO: Figure out how to get ProjectID, if it becomes relevant
-            $log->addTag('hostname', $request->getHostname());
-            $log->addTag('locale', (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', '')));
-
-            $log->addExtra('file', $th->getFile());
-            $log->addExtra('line', $th->getLine());
-            $log->addExtra('trace', $th->getTraceAsString());
-            $log->addExtra('roles', isset($authorization) ? $authorization->getRoles() : []);
-
-            $sdk = $route?->getLabel("sdk", false);
-
-            $action = 'UNKNOWN_NAMESPACE.UNKNOWN.METHOD';
-            if (!empty($sdk)) {
-                if (\is_array($sdk)) {
-                    $sdk = $sdk[0];
-                }
-                /** @var Appwrite\SDK\Method $sdk */
-                $action = $sdk->getNamespace() . '.' . $sdk->getMethodName();
-            } elseif ($route === null) {
-                $path = ltrim(parse_url($request->getURI(), PHP_URL_PATH) ?? '/', '/') ?: 'root';
-                $action = 'http.' . $request->getMethod() . '.' . $path;
-            }
-
-            $log->setAction($action);
-            $log->addTag('service', $action);
-
-            $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
-            $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
-
-            try {
-                $responseCode = $logger->addLog($log);
-                Console::info('Error log pushed with status code: ' . $responseCode);
-            } catch (Throwable $th) {
-                Console::error('Error pushing log: ' . $th->getMessage());
-            }
+            /** @var Appwrite\SDK\Method $sdk */
+            $action = $sdk->getNamespace() . '.' . $sdk->getMethodName();
+        } elseif ($route === null) {
+            $path = ltrim(parse_url($request->getURI(), PHP_URL_PATH) ?? '/', '/') ?: 'root';
+            $action = 'http.' . $request->getMethod() . '.' . $path;
         }
+
+        Span::add('level', 'error');
+        Span::add('logger', 'http');
+        Span::add('server.name', System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
+        Span::add('release', $version);
+        Span::add('environment', System::getEnv('_APP_ENV', 'development') === 'production' ? 'production' : 'staging');
+        Span::add('appwrite.error.publish', true);
+        Span::add('appwrite.error.action', $action);
+        Span::add('method', $route?->getMethod() ?? $request->getMethod());
+        Span::add('url', $route?->getPath() ?? $request->getURI());
+        Span::add('verboseType', get_class($th));
+        Span::add('code', $th->getCode());
+        Span::add('hostname', $request->getHostname());
+        Span::add('locale', (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', '')));
+        Span::add('service', $action);
+        Span::add('error.message', $th->getMessage());
+        Span::add('error.file', $th->getFile());
+        Span::add('error.line', $th->getLine());
+        Span::add('error.trace', $th->getTraceAsString());
+        Span::add('roles', isset($authorization) ? (\json_encode($authorization->getRoles()) ?: null) : '[]');
 
         $swooleResponse = $utopiaResponse->getSwooleResponse();
         $swooleResponse->setStatusCode(500);

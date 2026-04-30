@@ -9,13 +9,12 @@ use Swoole\Runtime;
 use Utopia\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Logger\Log;
-use Utopia\Logger\Logger;
 use Utopia\Platform\Service;
 use Utopia\Pools\Group;
 use Utopia\Queue\Adapter\Swoole;
 use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Server;
+use Utopia\Span\Span;
 use Utopia\System\System;
 
 Runtime::enableCoroutine();
@@ -34,8 +33,6 @@ $container->set('authorization', function () {
 }, []);
 
 $container->set('project', fn () => new Document([]), []);
-
-$container->set('log', fn () => new Log(), []);
 
 $container->set('consumer', function (Group $pools) {
     return new BrokerPool(consumer: $pools->get('consumer'));
@@ -113,37 +110,36 @@ try {
 $worker
     ->error()
     ->inject('error')
-    ->inject('logger')
-    ->inject('log')
     ->inject('project')
     ->inject('authorization')
-    ->action(function (Throwable $error, ?Logger $logger, Log $log, Document $project, Authorization $authorization) use ($queueName) {
+    ->action(function (Throwable $error, Document $project, Authorization $authorization) use ($queueName) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
+        $action = 'appwrite-queue-' . $queueName;
+        $span = Span::current();
+        $shouldFinish = false;
+        if ($span === null) {
+            $span = Span::init($action);
+            $shouldFinish = true;
+        }
 
-        if ($logger) {
-            $log->setNamespace('appwrite-worker');
-            $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
-            $log->setVersion($version);
-            $log->setType(Log::TYPE_ERROR);
-            $log->setMessage($error->getMessage());
-            $log->setAction('appwrite-queue-' . $queueName);
-            $log->addTag('verboseType', get_class($error));
-            $log->addTag('code', $error->getCode());
-            $log->addTag('projectId', $project->getId());
-            $log->addExtra('file', $error->getFile());
-            $log->addExtra('line', $error->getLine());
-            $log->addExtra('trace', $error->getTraceAsString());
-            $log->addExtra('roles', $authorization->getRoles());
-
-            $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
-            $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
-
-            try {
-                $responseCode = $logger->addLog($log);
-                Console::info('Error log pushed with status code: ' . $responseCode);
-            } catch (Throwable $th) {
-                Console::error('Error pushing log: ' . $th->getMessage());
-            }
+        Span::add('level', 'error');
+        Span::add('logger', 'appwrite-worker');
+        Span::add('server.name', System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
+        Span::add('release', $version);
+        Span::add('environment', System::getEnv('_APP_ENV', 'development') === 'production' ? 'production' : 'staging');
+        Span::add('appwrite.error.publish', true);
+        Span::add('appwrite.error.action', $action);
+        Span::add('verboseType', get_class($error));
+        Span::add('code', $error->getCode());
+        Span::add('projectId', $project->getId());
+        Span::add('error.message', $error->getMessage());
+        Span::add('error.file', $error->getFile());
+        Span::add('error.line', $error->getLine());
+        Span::add('error.trace', $error->getTraceAsString());
+        Span::add('roles', \json_encode($authorization->getRoles()) ?: null);
+        Span::error($error);
+        if ($shouldFinish) {
+            $span->finish();
         }
 
         Console::error('[Error] Type: ' . get_class($error));

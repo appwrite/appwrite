@@ -25,9 +25,9 @@ use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Query;
 use Utopia\DSN\DSN;
-use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\Span\Span;
 use Utopia\Storage\Device;
 use Utopia\System\System;
 
@@ -65,7 +65,6 @@ class Deletes extends Action
             ->inject('executionRetention')
             ->inject('executionsRetentionCount')
             ->inject('auditRetention')
-            ->inject('log')
             ->inject('queueForDeletes')
             ->inject('getAudit')
             ->callback($this->action(...));
@@ -92,7 +91,6 @@ class Deletes extends Action
         string $executionRetention,
         int $executionsRetentionCount,
         string $auditRetention,
-        Log $log,
         DeleteEvent $queueForDeletes,
         callable $getAudit,
     ): void {
@@ -109,8 +107,8 @@ class Deletes extends Action
         $resourceType = $payload['resourceType'] ?? null;
         $document = new Document($payload['document'] ?? []);
 
-        $log->addTag('projectId', $project->getId());
-        $log->addTag('type', $type);
+        Span::add('projectId', $project->getId());
+        Span::add('type', $type);
 
         switch (\strval($type)) {
             case DELETE_TYPE_DOCUMENT:

@@ -11,9 +11,9 @@ use Exception;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
-use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\Span\Span;
 use Utopia\System\System;
 
 class Webhooks extends Action
@@ -38,7 +38,6 @@ class Webhooks extends Action
             ->inject('dbForPlatform')
             ->inject('queueForMails')
             ->inject('publisherForUsage')
-            ->inject('log')
             ->inject('plan')
             ->callback($this->action(...));
     }
@@ -49,12 +48,11 @@ class Webhooks extends Action
      * @param Database $dbForPlatform
      * @param Mail $queueForMails
      * @param UsagePublisher $publisherForUsage
-     * @param Log $log
      * @param array $plan
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Document $project, Database $dbForPlatform, Mail $queueForMails, UsagePublisher $publisherForUsage, Log $log, array $plan): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, Mail $queueForMails, UsagePublisher $publisherForUsage, array $plan): void
     {
         $this->errors = [];
         $payload = $message->getPayload();
@@ -69,7 +67,7 @@ class Webhooks extends Action
         $webhookPayload = json_encode($payload['payload']);
         $user = new Document($payload['user'] ?? []);
 
-        $log->addTag('projectId', $project->getId());
+        Span::add('projectId', $project->getId());
 
         foreach ($project->getAttribute('webhooks', []) as $webhook) {
             if (array_intersect($webhook->getAttribute('events', []), $events)) {

@@ -22,10 +22,10 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\DSN\DSN;
-use Utopia\Logger\Log;
 use Utopia\Pools\Group;
 use Utopia\Queue\Publisher;
 use Utopia\Registry\Registry;
+use Utopia\Span\Span;
 use Utopia\Storage\Device\Telemetry as TelemetryDevice;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -36,8 +36,6 @@ use Utopia\Telemetry\Adapter as Telemetry;
  * must be fresh for each worker job.
  */
 return function (Container $container): void {
-    $container->set('log', fn () => new Log(), []);
-
     $container->set('usage', fn () => new Context(), []);
 
     $container->set('authorization', function () {
@@ -352,51 +350,45 @@ return function (Container $container): void {
         return new TelemetryDevice($telemetry, getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId()));
     }, ['project', 'telemetry']);
 
-    $container->set('logError', function (Registry $register, Document $project) {
-        return function (Throwable $error, string $namespace, string $action, ?array $extras = null) use ($register, $project) {
-            $logger = $register->get('logger');
+    $container->set('logError', function (Document $project) {
+        return function (Throwable $error, string $namespace, string $action, ?array $extras = null) use ($project) {
+            $span = Span::current();
+            $shouldFinish = false;
+            if ($span === null) {
+                $span = Span::init($action);
+                $shouldFinish = true;
+            }
 
-            if ($logger) {
-                $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
+            Span::add('level', 'error');
+            Span::add('logger', $namespace);
+            Span::add('server.name', System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
+            Span::add('release', System::getEnv('_APP_VERSION', 'UNKNOWN'));
+            Span::add('environment', System::getEnv('_APP_ENV', 'development') === 'production' ? 'production' : 'staging');
+            Span::add('appwrite.error.publish', true);
+            Span::add('appwrite.error.action', $action);
+            Span::add('code', $error->getCode());
+            Span::add('verboseType', \get_class($error));
+            Span::add('projectId', $project->getId());
+            Span::add('error.message', $error->getMessage());
+            Span::add('error.file', $error->getFile());
+            Span::add('error.line', $error->getLine());
+            Span::add('error.trace', $error->getTraceAsString());
 
-                $log = new Log();
-                $log->setNamespace($namespace);
-                $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
-                $log->setVersion($version);
-                $log->setType(Log::TYPE_ERROR);
-                $log->setMessage($error->getMessage());
-
-                $log->addTag('code', $error->getCode());
-                $log->addTag('verboseType', \get_class($error));
-                $log->addTag('projectId', $project->getId());
-
-                $log->addExtra('file', $error->getFile());
-                $log->addExtra('line', $error->getLine());
-                $log->addExtra('trace', $error->getTraceAsString());
-
-                if ($error->getPrevious() !== null) {
-                    if ($error->getPrevious()->getMessage() != $error->getMessage()) {
-                        $log->addExtra('previousMessage', $error->getPrevious()->getMessage());
-                    }
-                    $log->addExtra('previousFile', $error->getPrevious()->getFile());
-                    $log->addExtra('previousLine', $error->getPrevious()->getLine());
+            if ($error->getPrevious() !== null) {
+                if ($error->getPrevious()->getMessage() != $error->getMessage()) {
+                    Span::add('error.previous.message', $error->getPrevious()->getMessage());
                 }
+                Span::add('error.previous.file', $error->getPrevious()->getFile());
+                Span::add('error.previous.line', $error->getPrevious()->getLine());
+            }
 
-                foreach (($extras ?? []) as $key => $value) {
-                    $log->addExtra($key, $value);
-                }
+            foreach (($extras ?? []) as $key => $value) {
+                Span::add($key, \is_scalar($value) || $value === null ? $value : (\json_encode($value) ?: null));
+            }
 
-                $log->setAction($action);
-
-                $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
-                $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
-
-                try {
-                    $responseCode = $logger->addLog($log);
-                    Console::info('Error log pushed with status code: ' . $responseCode);
-                } catch (Throwable $th) {
-                    Console::error('Error pushing log: ' . $th->getMessage());
-                }
+            Span::error($error);
+            if ($shouldFinish) {
+                $span->finish();
             }
 
             Console::warning("Failed: {$error->getMessage()}");
@@ -409,7 +401,7 @@ return function (Container $container): void {
                 Console::warning("Previous File: {$error->getPrevious()->getFile()} Line: {$error->getPrevious()->getLine()}");
             }
         };
-    }, ['register', 'project']);
+    }, ['project']);
 
     $container->set('getAudit', function (Database $dbForPlatform, callable $getProjectDB) {
         return function (Document $project) use ($dbForPlatform, $getProjectDB) {

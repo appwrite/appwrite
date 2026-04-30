@@ -11,7 +11,6 @@ use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
 use Utopia\Http\Http;
-use Utopia\Logger\Logger;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Messages\Email as EmailMessage;
 use Utopia\Platform\Action;
@@ -129,7 +128,7 @@ class Doctor extends Action
 
             $providerName = $loggingProvider->getScheme();
 
-            if (empty($providerName) || !Logger::hasProvider($providerName)) {
+            if ($providerName !== 'sentry') {
                 Console::log('🔴 Logging adapter is disabled');
             } else {
                 Console::log('🟢 Logging adapter is enabled (' . $providerName . ')');

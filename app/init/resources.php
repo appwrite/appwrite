@@ -45,10 +45,6 @@ global $register;
 global $container;
 $container = new Container();
 
-$container->set('logger', function ($register) {
-    return $register->get('logger');
-}, ['register']);
-
 $container->set('hooks', function ($register) {
     return $register->get('hooks');
 }, ['register']);

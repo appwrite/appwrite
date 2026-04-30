@@ -48,7 +48,6 @@ use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
 use Utopia\Http\Http;
 use Utopia\Locale\Locale;
-use Utopia\Logger\Log;
 use Utopia\Pools\Group;
 use Utopia\Queue\Publisher;
 use Utopia\Storage\Device;
@@ -66,12 +65,6 @@ return function (Container $container): void {
     $container->set('utopia:graphql', function ($utopia) {
         return $utopia;
     }, ['utopia']);
-
-    $container->set('log', fn () => new Log(), []);
-
-    $container->set('logger', function ($register) {
-        return $register->get('logger');
-    }, ['register']);
 
     $container->set('authorization', function () {
         return new Authorization();

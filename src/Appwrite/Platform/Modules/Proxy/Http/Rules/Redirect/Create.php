@@ -15,7 +15,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\UID;
-use Utopia\Logger\Log;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\Domain as ValidatorDomain;
@@ -74,11 +73,10 @@ class Create extends Action
             ->inject('dbForPlatform')
             ->inject('dbForProject')
             ->inject('platform')
-            ->inject('log')
             ->callback($this->action(...));
     }
 
-    public function action(string $domain, string $url, int $statusCode, string $resourceId, string $resourceType, Response $response, Document $project, Certificate $publisherForCertificates, Event $queueForEvents, Database $dbForPlatform, Database $dbForProject, array $platform, Log $log)
+    public function action(string $domain, string $url, int $statusCode, string $resourceId, string $resourceType, Response $response, Document $project, Certificate $publisherForCertificates, Event $queueForEvents, Database $dbForPlatform, Database $dbForProject, array $platform)
     {
         $this->validateDomainRestrictions($domain, $platform);
 
@@ -123,7 +121,7 @@ class Create extends Action
 
         if ($rule->getAttribute('status', '') === RULE_STATUS_CREATED) {
             try {
-                $this->verifyRule($rule, $log);
+                $this->verifyRule($rule);
                 $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATING);
             } catch (Exception $err) {
                 $rule->setAttribute('logs', $err->getMessage());

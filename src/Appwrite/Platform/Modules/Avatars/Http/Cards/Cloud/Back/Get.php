@@ -12,7 +12,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
-use Utopia\Logger\Logger;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Range;
@@ -52,12 +51,11 @@ class Get extends Action
             ->inject('heroes')
             ->inject('contributors')
             ->inject('employees')
-            ->inject('logger')
             ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForPlatform, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger, Authorization $authorization)
+    public function action(string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForPlatform, Response $response, array $heroes, array $contributors, array $employees, Authorization $authorization)
     {
         $user = $authorization->skip(fn () => $dbForPlatform->getDocument('users', $userId));
 
@@ -69,7 +67,7 @@ class Get extends Action
             $userId = $user->getId();
             $email = $user->getAttribute('email', '');
 
-            $gitHub = $this->getUserGitHub($user->getId(), $project, $dbForProject, $dbForPlatform, $logger, $authorization);
+            $gitHub = $this->getUserGitHub($user->getId(), $project, $dbForProject, $dbForPlatform, $authorization);
             $githubId = $gitHub['id'] ?? '';
 
             $isHero = \array_key_exists($email, $heroes);

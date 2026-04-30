@@ -20,7 +20,6 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
-use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
@@ -49,7 +48,6 @@ class Functions extends Action
             ->inject('queueForRealtime')
             ->inject('queueForEvents')
             ->inject('bus')
-            ->inject('log')
             ->inject('executor')
             ->inject('isResourceBlocked')
             ->callback($this->action(...));
@@ -64,7 +62,6 @@ class Functions extends Action
         Realtime $queueForRealtime,
         Event $queueForEvents,
         Bus $bus,
-        Log $log,
         Executor $executor,
         callable $isResourceBlocked
     ): void {
@@ -112,9 +109,9 @@ class Functions extends Action
             $function = $dbForProject->getDocument('functions', $functionId);
         }
 
-        $log->addTag('functionId', $function->getId());
-        $log->addTag('projectId', $project->getId());
-        $log->addTag('type', $type);
+        Span::add('functionId', $function->getId());
+        Span::add('projectId', $project->getId());
+        Span::add('type', $type);
 
         if (empty($events) && !$function->isEmpty()) {
             $traceProjectId = System::getEnv('_APP_TRACE_PROJECT_ID', '');
@@ -168,7 +165,6 @@ class Functions extends Action
                     Console::success('Iterating function: ' . $function->getAttribute('name'));
 
                     $this->execute(
-                        log: $log,
                         dbForProject: $dbForProject,
                         queueForWebhooks: $queueForWebhooks,
                         queueForFunctions: $queueForFunctions,
@@ -212,7 +208,6 @@ class Functions extends Action
                 $execution = new Document($payload['execution'] ?? []);
                 $user = new Document($payload['user'] ?? []);
                 $this->execute(
-                    log: $log,
                     dbForProject: $dbForProject,
                     queueForWebhooks: $queueForWebhooks,
                     queueForFunctions: $queueForFunctions,
@@ -238,7 +233,6 @@ class Functions extends Action
             case 'schedule':
                 $execution = new Document($payload['execution'] ?? []);
                 $this->execute(
-                    log: $log,
                     dbForProject: $dbForProject,
                     queueForWebhooks: $queueForWebhooks,
                     queueForFunctions: $queueForFunctions,
@@ -342,7 +336,6 @@ class Functions extends Action
     }
 
     /**
-     * @param Log $log
      * @param Database $dbForProject
      * @param Func $queueForFunctions
      * @param Realtime $queueForRealtime
@@ -363,7 +356,6 @@ class Functions extends Action
      * @return void
      */
     private function execute(
-        Log $log,
         Database $dbForProject,
         Webhook $queueForWebhooks,
         Func $queueForFunctions,
@@ -390,7 +382,7 @@ class Functions extends Action
         $deploymentId = $function->getAttribute('deploymentId', '');
         $spec = Config::getParam('specifications')[$function->getAttribute('runtimeSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
 
-        $log->addTag('deploymentId', $deploymentId);
+        Span::add('deploymentId', $deploymentId);
 
         /** Check if deployment exists */
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);

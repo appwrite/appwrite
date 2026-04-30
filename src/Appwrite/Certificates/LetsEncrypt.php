@@ -7,7 +7,7 @@ use Exception;
 use Utopia\Console;
 use Utopia\Database\DateTime;
 use Utopia\Http\Http;
-use Utopia\Logger\Log;
+use Utopia\Span\Span;
 
 class LetsEncrypt implements Adapter
 {
@@ -95,7 +95,7 @@ class LetsEncrypt implements Adapter
         throw new CertificateStatusException('Certificate status retrieval is not supported for LetsEncrypt.');
     }
 
-    public function isRenewRequired(string $domain, ?string $domainType, Log $log): bool
+    public function isRenewRequired(string $domain, ?string $domainType): bool
     {
         $certPath = APP_STORAGE_CERTIFICATES . '/' . $domain . '/cert.pem';
         if (\file_exists($certPath)) {
@@ -103,15 +103,15 @@ class LetsEncrypt implements Adapter
             $validTo = $certData['validTo_time_t'] ?? 0;
 
             if (empty($validTo)) {
-                $log->addTag('certificateDomain', $domain);
+                Span::add('certificateDomain', $domain);
                 throw new Exception('Unable to read certificate file (cert.pem).');
             }
 
             // LetsEncrypt allows renewal 30 days before expiry
             $expiryInAdvance = (60 * 60 * 24 * 30);
             if ($validTo - $expiryInAdvance > \time()) {
-                $log->addTag('certificateDomain', $domain);
-                $log->addExtra('certificateData', \is_array($certData) ? \json_encode($certData) : \strval($certData));
+                Span::add('certificateDomain', $domain);
+                Span::add('certificateData', \is_array($certData) ? \json_encode($certData) : \strval($certData));
                 return false;
             }
         }

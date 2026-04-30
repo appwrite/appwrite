@@ -31,9 +31,9 @@ use Utopia\Database\Query;
 use Utopia\Detector\Detection\Rendering\SSR;
 use Utopia\Detector\Detection\Rendering\XStatic;
 use Utopia\Detector\Detector\Rendering;
-use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\Span\Span;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\System\System;
@@ -70,7 +70,6 @@ class Builds extends Action
             ->inject('deviceForSites')
             ->inject('isResourceBlocked')
             ->inject('deviceForFiles')
-            ->inject('log')
             ->inject('executor')
             ->inject('plan')
             ->callback($this->action(...));
@@ -96,7 +95,6 @@ class Builds extends Action
         Device $deviceForSites,
         callable $isResourceBlocked,
         Device $deviceForFiles,
-        Log $log,
         Executor $executor,
         array $plan
     ): void {
@@ -114,8 +112,8 @@ class Builds extends Action
         $template = new Document($payload['template'] ?? []);
         $platform = $payload['platform'] ?? Config::getParam('platform', []);
 
-        $log->addTag('projectId', $project->getId());
-        $log->addTag('type', $type);
+        Span::add('projectId', $project->getId());
+        Span::add('type', $type);
 
         switch ($type) {
             case BUILD_TYPE_DEPLOYMENT:
@@ -141,7 +139,6 @@ class Builds extends Action
                     $deployment,
                     $template,
                     $isResourceBlocked,
-                    $log,
                     $executor,
                     $plan,
                     $platform,
@@ -177,7 +174,6 @@ class Builds extends Action
         Document $deployment,
         Document $template,
         callable $isResourceBlocked,
-        Log $log,
         Executor $executor,
         array $plan,
         array $platform,
@@ -199,7 +195,7 @@ class Builds extends Action
             'functions' => $deviceForFunctions,
         };
 
-        $log->addTag($resourceKey, $resource->getId());
+        Span::add($resourceKey, $resource->getId());
 
         $resource = $dbForProject->getDocument($resource->getCollection(), $resource->getId());
         if ($resource->isEmpty()) {
@@ -210,7 +206,7 @@ class Builds extends Action
             throw new \Exception('Resource is blocked');
         }
 
-        $log->addTag('deploymentId', $deployment->getId());
+        Span::add('deploymentId', $deployment->getId());
 
         $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
         if ($deployment->isEmpty()) {

@@ -8,7 +8,7 @@ use Appwrite\Platform\Action as PlatformAction;
 use Utopia\Database\Document;
 use Utopia\DNS\Message\Record;
 use Utopia\Domains\Domain;
-use Utopia\Logger\Log;
+use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Validator\AnyOf;
 use Utopia\Validator\Domain as ValidatorDomain;
@@ -91,10 +91,9 @@ class Action extends PlatformAction
      * Verify or re-verify a rule
      *
      * @param Document $rule Rule to verify
-     * @param Log|null $log Log instance to add timings to
      * @return void
      */
-    protected function verifyRule(Document $rule, ?Log $log = null): void
+    protected function verifyRule(Document $rule): void
     {
         $dnsValidatorClass = $this->dnsValidatorClass;
         $dnsEnv = System::getEnv('_APP_DNS', '8.8.8.8');
@@ -117,10 +116,8 @@ class Action extends PlatformAction
             $validationStart = \microtime(true);
             $validator = new $dnsValidatorClass($caaTarget, Record::TYPE_CAA, $dnsServers);
             if (!$validator->isValid($domain->get())) {
-                if (!\is_null($log)) {
-                    $log->addExtra('dnsTimingCaa', \strval(\microtime(true) - $validationStart));
-                    $log->addTag('dnsDomain', $domain->get());
-                }
+                Span::add('dnsTimingCaa', \strval(\microtime(true) - $validationStart));
+                Span::add('dnsDomain', $domain->get());
                 throw new Exception(Exception::RULE_VERIFICATION_FAILED, $validator->getDescription());
             }
         }
@@ -200,10 +197,8 @@ class Action extends PlatformAction
 
         $validationStart = \microtime(true);
         if (!$validator->isValid($domain->get())) {
-            if (!\is_null($log)) {
-                $log->addExtra('dnsTiming', \strval(\microtime(true) - $validationStart));
-                $log->addTag('dnsDomain', $domain->get());
-            }
+            Span::add('dnsTiming', \strval(\microtime(true) - $validationStart));
+            Span::add('dnsDomain', $domain->get());
             throw new Exception(Exception::RULE_VERIFICATION_FAILED, $mainValidator->getDescription());
         }
     }

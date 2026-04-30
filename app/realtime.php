@@ -35,7 +35,6 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\DSN\DSN;
-use Utopia\Logger\Log;
 use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
 use Utopia\Span\Span;
@@ -282,45 +281,39 @@ $server = new Server($adapter);
 if (!function_exists('logError')) {
     function logError(Throwable $error, string $action, array $tags = [], ?Document $project = null, ?Document $user = null, ?Authorization $authorization = null): void
     {
-        global $register;
-
-        $logger = $register->get('realtimeLogger');
-
-        if ($logger && !$error instanceof Exception) {
-            $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
-
-            $log = new Log();
-            $log->setNamespace("realtime");
-            $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
-            $log->setVersion($version);
-            $log->setType(Log::TYPE_ERROR);
-            $log->setMessage($error->getMessage());
-
-            $log->addTag('code', $error->getCode());
-            $log->addTag('verboseType', get_class($error));
-            $log->addTag('projectId', $project?->getId() ?: 'n/a');
-            $log->addTag('userId', $user?->getId() ?: 'n/a');
-
-            foreach ($tags as $key => $value) {
-                $log->addTag($key, $value ?: 'n/a');
+        if (!$error instanceof Exception) {
+            $span = Span::current();
+            $shouldFinish = false;
+            if ($span === null) {
+                $span = Span::init($action);
+                $shouldFinish = true;
             }
 
-            $log->addExtra('file', $error->getFile());
-            $log->addExtra('line', $error->getLine());
-            $log->addExtra('trace', $error->getTraceAsString());
-            $log->addExtra('detailedTrace', $error->getTrace());
-            $log->addExtra('roles', $authorization?->getRoles() ?? []);
+            Span::add('level', 'error');
+            Span::add('logger', 'realtime');
+            Span::add('server.name', System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
+            Span::add('release', System::getEnv('_APP_VERSION', 'UNKNOWN'));
+            Span::add('environment', System::getEnv('_APP_ENV', 'development') === 'production' ? 'production' : 'staging');
+            Span::add('appwrite.error.publish', true);
+            Span::add('appwrite.error.action', $action);
+            Span::add('code', $error->getCode());
+            Span::add('verboseType', get_class($error));
+            Span::add('projectId', $project?->getId() ?: 'n/a');
+            Span::add('userId', $user?->getId() ?: 'n/a');
 
-            $log->setAction($action);
+            foreach ($tags as $key => $value) {
+                Span::add($key, \is_scalar($value) ? ($value ?: 'n/a') : (\json_encode($value) ?: 'n/a'));
+            }
 
-            $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
-            $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
-
-            try {
-                $responseCode = $logger->addLog($log);
-                Console::info('Error log pushed with status code: ' . $responseCode);
-            } catch (Throwable $th) {
-                Console::error('Error pushing log: ' . $th->getMessage());
+            Span::add('error.message', $error->getMessage());
+            Span::add('error.file', $error->getFile());
+            Span::add('error.line', $error->getLine());
+            Span::add('error.trace', $error->getTraceAsString());
+            Span::add('error.detailedTrace', \json_encode($error->getTrace()) ?: null);
+            Span::add('roles', \json_encode($authorization?->getRoles() ?? []) ?: null);
+            Span::error($error);
+            if ($shouldFinish) {
+                $span->finish();
             }
         }
 

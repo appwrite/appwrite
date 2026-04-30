@@ -72,7 +72,6 @@
         "utopia-php/validators": "0.2.*",
         "utopia-php/image": "0.8.*",
         "utopia-php/locale": "0.8.*",
-        "utopia-php/logger": "0.6.*",
         "utopia-php/messaging": "0.22.*",
         "utopia-php/migration": "1.9.*",
         "utopia-php/platform": "0.13.*",
