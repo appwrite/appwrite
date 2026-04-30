@@ -73,8 +73,8 @@ if (!empty($experimentalLoggingConfig)) {
     }
 
     $addSentryExporter(
-        $experimentalLoggingConfig,
-        fn (Span $span): bool => $span->getError() !== null
+        loggingConfig: $experimentalLoggingConfig,
+        sampler: fn (Span $span): bool => $span->getError() !== null
             && $span->get('appwrite.error.experimental') === true
             && \mt_rand() / \mt_getrandmax() <= $sampleRate,
     );
