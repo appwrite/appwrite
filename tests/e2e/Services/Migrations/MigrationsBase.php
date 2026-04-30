@@ -1303,7 +1303,6 @@ trait MigrationsBase
 
             $mimeType = match ($csvFileName) {
                 default => 'text/csv',
-                'missing-column.csv',
                 'missing-row.csv' => 'text/plain', // invalid csv structure, falls back to plain text!
             };
 
