@@ -287,6 +287,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_EXPERIMENT_LOGGING_CONFIG',
+                'description' => 'This variable enables experimental error logging using a provider DSN. This value is empty by default. Currently, Appwrite supports Sentry DSNs using the format `sentry://PROJECT_ID:SENTRY_API_KEY@SENTRY_HOST/?sample=0.01`.',
+                'introduction' => '1.9.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_USAGE_AGGREGATION_INTERVAL',
                 'description' => 'Interval value containing the number of seconds that the Appwrite usage process should wait before aggregating stats and syncing it to Database from TimeSeries data. The default value is 30 seconds. Reintroduced in 1.1.0.',
                 'introduction' => '1.1.0',

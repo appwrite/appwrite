@@ -46,7 +46,6 @@ $addSentryExporter = function (string $loggingConfig, ?callable $sampler = null)
                     'dnsDomain',
                     'embeddingModel',
                     'error.code',
-                    'error.type',
                     'hostname',
                     'locale',
                     'method',
