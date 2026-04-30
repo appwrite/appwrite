@@ -1191,8 +1191,6 @@ Http::error()
         $line = $error->getLine();
         $trace = $error->getTrace();
 
-        Span::error($error);
-
         switch ($class) {
             case Utopia\Http\Exception::class:
                 $error = new AppwriteException(AppwriteException::GENERAL_UNKNOWN, $message, $code, $error);
@@ -1251,6 +1249,8 @@ Http::error()
         }
 
         if ($publish) {
+            Span::error($error);
+
             try {
                 /** @var Utopia\Database\Document $user */
                 $user = $utopia->getResource('user');
