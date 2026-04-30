@@ -327,10 +327,20 @@ $register->set('pools', function () {
                             \PDO::ATTR_EMULATE_PREPARES => true,
                             \PDO::ATTR_STRINGIFY_FETCHES => true,
                         ]);
+                        // Tuned for high-concurrency test workloads. WAL allows
+                        // concurrent readers alongside one writer; busy_timeout
+                        // makes contending writers wait instead of failing.
+                        // synchronous=OFF skips fsync — fine for tests, never
+                        // for production data.
                         $pdo->query('PRAGMA journal_mode=WAL');
-                        $pdo->query('PRAGMA busy_timeout=30000');
+                        $pdo->query('PRAGMA busy_timeout=60000');
+                        $pdo->query('PRAGMA synchronous=OFF');
+                        $pdo->query('PRAGMA temp_store=MEMORY');
+                        $pdo->query('PRAGMA cache_size=-262144'); // 256 MB page cache
+                        $pdo->query('PRAGMA mmap_size=2147483648'); // 2 GB mmap window
+                        $pdo->query('PRAGMA wal_autocheckpoint=10000');
+                        $pdo->query('PRAGMA journal_size_limit=67108864'); // 64 MB WAL cap
                         $pdo->query('PRAGMA foreign_keys=ON');
-                        $pdo->query('PRAGMA synchronous=NORMAL');
                         return $pdo;
                     });
                 },
@@ -436,9 +446,14 @@ $register->set('db', function () {
             $path = System::getEnv('_APP_DB_SQLITE_PATH', '/tmp/appwrite.db');
             $pdo = new PDO("sqlite:{$path}", null, null, SQL::getPDOAttributes());
             $pdo->query('PRAGMA journal_mode=WAL');
-            $pdo->query('PRAGMA busy_timeout=30000');
+            $pdo->query('PRAGMA busy_timeout=60000');
+            $pdo->query('PRAGMA synchronous=OFF');
+            $pdo->query('PRAGMA temp_store=MEMORY');
+            $pdo->query('PRAGMA cache_size=-262144');
+            $pdo->query('PRAGMA mmap_size=2147483648');
+            $pdo->query('PRAGMA wal_autocheckpoint=10000');
+            $pdo->query('PRAGMA journal_size_limit=67108864');
             $pdo->query('PRAGMA foreign_keys=ON');
-            $pdo->query('PRAGMA synchronous=NORMAL');
             return $pdo;
         default:
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Invalid database adapter');

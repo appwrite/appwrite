@@ -1523,4 +1523,10 @@ volumes:
   appwrite-builds:
   appwrite-config:
   appwrite-models:
+  # tmpfs-backed so SQLite writes hit RAM rather than the docker volume
+  # filesystem; safe because the test DB is wiped between runs.
   appwrite-sqlite:
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+      o: size=2g
