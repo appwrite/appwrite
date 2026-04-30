@@ -434,7 +434,7 @@ class Functions extends Action
         ]);
 
         $headers['x-appwrite-execution-id'] = $executionId ?? '';
-        $headers['x-appwrite-key'] = API_KEY_DYNAMIC . '_' . $apiKey;
+        $headers['x-appwrite-key'] = API_KEY_EPHEMERAL . '_' . $apiKey;
         $headers['x-appwrite-trigger'] = $trigger;
         $headers['x-appwrite-event'] = $event ?? '';
         $headers['x-appwrite-user-id'] = $user->getId();

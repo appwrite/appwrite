@@ -391,6 +391,8 @@ class Migrations extends Action
                 'keys.write',
                 'platforms.read',
                 'platforms.write',
+                'oauth2.read',
+                'oauth2.write',
                 'mocks.read',
                 'mocks.write',
                 'policies.read',
@@ -400,7 +402,7 @@ class Migrations extends Action
             ]
         ]);
 
-        return API_KEY_DYNAMIC . '_' . $apiKey;
+        return API_KEY_EPHEMERAL . '_' . $apiKey;
     }
 
     /**

@@ -24,4 +24,54 @@ class ConsoleCustomServerTest extends Scope
 
         $this->assertEquals(401, $response['headers']['status-code']);
     }
+
+    public function testListOAuth2Providers(): void
+    {
+        // Public endpoint: must succeed without admin authentication. Drop the
+        // headers from getHeaders() and only pass project + content-type.
+        $response = $this->client->call(Client::METHOD_GET, '/console/oauth2-providers', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsInt($response['body']['total']);
+        $this->assertIsArray($response['body']['oAuth2Providers']);
+        $this->assertGreaterThan(0, $response['body']['total']);
+
+        $providerIds = \array_column($response['body']['oAuth2Providers'], '$id');
+        $this->assertContains('github', $providerIds);
+        $this->assertNotContains('mock', $providerIds);
+    }
+
+    public function testListKeyScopes(): void
+    {
+        // Public endpoint: must succeed without admin authentication. Drop the
+        // headers from getHeaders() and only pass project + content-type.
+        $response = $this->client->call(Client::METHOD_GET, '/console/scopes/project', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsInt($response['body']['total']);
+        $this->assertIsArray($response['body']['scopes']);
+        $this->assertGreaterThan(0, $response['body']['total']);
+
+        $scopeIds = \array_column($response['body']['scopes'], '$id');
+        $this->assertContains('users.read', $scopeIds);
+
+        $usersRead = null;
+        foreach ($response['body']['scopes'] as $scope) {
+            if ($scope['$id'] === 'users.read') {
+                $usersRead = $scope;
+                break;
+            }
+        }
+        $this->assertNotNull($usersRead);
+        $this->assertIsString($usersRead['description']);
+        $this->assertNotEmpty($usersRead['description']);
+        $this->assertArrayHasKey('deprecated', $usersRead);
+        $this->assertIsBool($usersRead['deprecated']);
+    }
 }

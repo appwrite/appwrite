@@ -39,7 +39,7 @@ class XList extends Base
             ->setHttpPath('/v1/functions/:functionId/executions')
             ->desc('List executions')
             ->groups(['api', 'functions'])
-            ->label('scope', 'execution.read')
+            ->label('scope', ['executions.read', 'execution.read'])
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('sdk', new Method(
                 namespace: 'functions',
