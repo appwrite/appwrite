@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Project\Http\Project\Keys\Standard;
+namespace Appwrite\Platform\Modules\Project\Http\Project\Keys;
 
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Extend\Exception;
@@ -30,17 +30,16 @@ class Create extends Base
 
     public static function getName()
     {
-        return 'createStandardProjectKey';
+        return 'createProjectKey';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
-            ->setHttpPath('/v1/project/keys/standard')
-            ->httpAlias('/v1/project/keys')
+            ->setHttpPath('/v1/project/keys')
             ->httpAlias('/v1/projects/:projectId/keys')
-            ->desc('Create standard project key')
+            ->desc('Create project key')
             ->groups(['api', 'project'])
             ->label('scope', 'keys.write')
             ->label('event', 'keys.[keyId].create')
@@ -49,9 +48,9 @@ class Create extends Base
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'keys',
-                name: 'createStandardKey',
+                name: 'createKey',
                 description: <<<EOT
-                Create a new standard API key. It's recommended to have multiple API keys with strict scopes for separate functions within your project.
+                Create a new API key. It's recommended to have multiple API keys with strict scopes for separate functions within your project.
                 
                 You can also create an ephemeral API key if you need a short-lived key instead.
                 EOT,

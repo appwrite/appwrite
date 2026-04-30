@@ -18,21 +18,21 @@ class XList extends Action
 
     public static function getName(): string
     {
-        return 'listKeyScopes';
+        return 'listConsoleProjectScopes';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/console/scopes/key')
-            ->desc('List key scopes')
+            ->setHttpPath('/v1/console/scopes/project')
+            ->desc('List project scopes')
             ->groups(['api'])
             ->label('scope', 'public')
             ->label('sdk', new Method(
                 namespace: 'console',
                 group: 'console',
-                name: 'listKeyScopes',
+                name: 'listProjectScopes',
                 description: 'List all scopes available for project API keys, along with a description for each scope.',
                 auth: [AuthType::ADMIN],
                 responses: [
@@ -56,6 +56,8 @@ class XList extends Action
             $scopes[] = new Document([
                 '$id' => $scopeId,
                 'description' => $scope['description'] ?? '',
+                'category' => $scope['category'] ?? '',
+                'deprecated' => $scope['deprecated'] ?? false,
             ]);
         }
 

@@ -22,6 +22,18 @@ class ConsoleKeyScope extends Model
                 'default' => '',
                 'example' => 'Access to read your project\'s users',
             ])
+            ->addRule('category', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Scope category.',
+                'default' => '',
+                'example' => 'Auth',
+            ])
+            ->addRule('deprecated', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Scope is deprecated.',
+                'default' => false,
+                'example' => true,
+            ])
         ;
     }
 

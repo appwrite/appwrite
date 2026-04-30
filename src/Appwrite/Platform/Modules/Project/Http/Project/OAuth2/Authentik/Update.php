@@ -105,7 +105,7 @@ class Update extends Base
             ))
             ->param(static::getClientIdParamName(), null, new Nullable(new Text(256, 0)), static::getClientIdDescription(), optional: true)
             ->param(static::getClientSecretParamName(), null, new Nullable(new Text(512, 0)), static::getClientSecretDescription(), optional: true)
-            ->param('endpoint', '', new Text(256, 1), 'Domain of Authentik instance. For example: example.authentik.com', optional: false)
+            ->param('endpoint', null, new Nullable(new Text(256, 0)), 'Domain of Authentik instance. For example: example.authentik.com', optional: true)
             ->param('enabled', null, new Nullable(new Boolean()), 'OAuth2 sign-in method status. Set to true to enable new session creation. Setting to true will trigger end-to-end credentials validation, and will throw if the credentials are invalid.', true)
             ->inject('response')
             ->inject('dbForPlatform')
@@ -138,7 +138,7 @@ class Update extends Base
     public function handle(
         ?string $clientId,
         ?string $clientSecret,
-        string $endpoint,
+        ?string $endpoint,
         ?bool $enabled,
         Response $response,
         Database $dbForPlatform,
@@ -151,7 +151,7 @@ class Update extends Base
 
         // The secret is stored as JSON `{"clientSecret": "...", "authentikDomain": "..."}`
         // to match the shape Authentik's OAuth2 adapter expects (getAuthentikDomain()).
-        // The `endpoint` param is required on every call, so it's always written.
+        // The `endpoint` param is optional; if omitted, the existing stored endpoint is preserved.
         // `clientSecret` is optional; if omitted, the existing stored secret is preserved.
         $storedRaw = $project->getAttribute('oAuthProviders', [])[$providerId . 'Secret'] ?? '';
         $existing = [];
@@ -160,7 +160,7 @@ class Update extends Base
         }
         $encodedSecret = \json_encode([
             'clientSecret' => $clientSecret ?? ($existing['clientSecret'] ?? ''),
-            'authentikDomain' => $endpoint,
+            'authentikDomain' => $endpoint ?? ($existing['authentikDomain'] ?? ''),
         ]);
 
         $project = $this->persistCredentials($project, $dbForPlatform, $authorization, $clientId, $encodedSecret, $enabled);

@@ -206,8 +206,6 @@ abstract class OAuth2
 
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-        \curl_close($ch);
-
         if ($code >= 400) {
             throw new Exception($response, $code);
         }

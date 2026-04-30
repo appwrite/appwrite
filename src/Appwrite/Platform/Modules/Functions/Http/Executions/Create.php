@@ -60,7 +60,7 @@ class Create extends Base
             ->setHttpPath('/v1/functions/:functionId/executions')
             ->desc('Create execution')
             ->groups(['api', 'functions'])
-            ->label('scope', 'execution.write')
+            ->label('scope', ['executions.write', 'execution.write'])
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('event', 'functions.[functionId].executions.[executionId].create')
             ->label('sdk', new Method(

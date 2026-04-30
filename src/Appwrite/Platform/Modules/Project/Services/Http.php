@@ -5,10 +5,10 @@ namespace Appwrite\Platform\Modules\Project\Services;
 use Appwrite\Platform\Modules\Project\Http\Init;
 use Appwrite\Platform\Modules\Project\Http\Project\AuthMethods\Update as UpdateAuthMethod;
 use Appwrite\Platform\Modules\Project\Http\Project\Delete as DeleteProject;
+use Appwrite\Platform\Modules\Project\Http\Project\Keys\Create as CreateKey;
 use Appwrite\Platform\Modules\Project\Http\Project\Keys\Delete as DeleteKey;
 use Appwrite\Platform\Modules\Project\Http\Project\Keys\Ephemeral\Create as CreateEphemeralKey;
 use Appwrite\Platform\Modules\Project\Http\Project\Keys\Get as GetKey;
-use Appwrite\Platform\Modules\Project\Http\Project\Keys\Standard\Create as CreateStandardKey;
 use Appwrite\Platform\Modules\Project\Http\Project\Keys\Update as UpdateKey;
 use Appwrite\Platform\Modules\Project\Http\Project\Keys\XList as ListKeys;
 use Appwrite\Platform\Modules\Project\Http\Project\Labels\Update as UpdateProjectLabels;
@@ -131,7 +131,7 @@ class Http extends Service
         $this->addAction(UpdateVariable::getName(), new UpdateVariable());
 
         // Keys
-        $this->addAction(CreateStandardKey::getName(), new CreateStandardKey());
+        $this->addAction(CreateKey::getName(), new CreateKey());
         $this->addAction(CreateEphemeralKey::getName(), new CreateEphemeralKey());
         $this->addAction(ListKeys::getName(), new ListKeys());
         $this->addAction(GetKey::getName(), new GetKey());

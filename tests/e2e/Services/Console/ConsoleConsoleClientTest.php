@@ -56,6 +56,8 @@ class ConsoleConsoleClientTest extends Scope
         $this->assertEquals($response['body']['total'], \count($response['body']['oAuth2Providers']));
 
         $providerIds = \array_column($response['body']['oAuth2Providers'], '$id');
+        $this->assertEquals('amazon', $providerIds[0]);
+        $this->assertEquals('zoom', $providerIds[\count($providerIds) - 1]);
 
         // Well-known providers must be present
         $this->assertContains('github', $providerIds);
@@ -99,7 +101,7 @@ class ConsoleConsoleClientTest extends Scope
         $this->assertCount(2, $github['parameters']);
         $clientId = $github['parameters'][0];
         $this->assertEquals('clientId', $clientId['$id']);
-        $this->assertEquals('OAuth 2 app Client ID, or App ID', $clientId['name']);
+        $this->assertEquals('OAuth2 app Client ID, or App ID', $clientId['name']);
         $this->assertEquals('e4d87900000000540733', $clientId['example']);
         $this->assertEquals('Example of wrong value: 370006', $clientId['hint']);
         $clientSecret = $github['parameters'][1];
@@ -131,7 +133,7 @@ class ConsoleConsoleClientTest extends Scope
 
     public function testListKeyScopes(): void
     {
-        $response = $this->client->call(Client::METHOD_GET, '/console/scopes/key', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/console/scopes/project', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -158,6 +160,8 @@ class ConsoleConsoleClientTest extends Scope
             $this->assertArrayHasKey('description', $scope);
             $this->assertIsString($scope['description']);
             $this->assertNotEmpty($scope['description']);
+            $this->assertArrayHasKey('deprecated', $scope);
+            $this->assertIsBool($scope['deprecated']);
         }
 
         // A specific scope has the expected description
@@ -169,6 +173,6 @@ class ConsoleConsoleClientTest extends Scope
             }
         }
         $this->assertNotNull($usersRead);
-        $this->assertEquals('Access to read your project\'s users', $usersRead['description']);
+        $this->assertEquals('Access to read users', $usersRead['description']);
     }
 }
