@@ -12,7 +12,7 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM appwrite/base:1.0.1 AS base
+FROM appwrite/base:1.2.1 AS base
 
 LABEL maintainer="team@appwrite.io"
 
@@ -24,6 +24,10 @@ ENV _APP_VERSION=$VERSION \
     _APP_HOME=https://appwrite.io
 
 RUN \
+    if [ "$DEBUG" != "true" ]; then \
+    rm -f /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini && \
+    rm -f /usr/local/lib/php/extensions/no-debug-non-zts-*/xdebug.so; \
+    fi && \
     if [ "$DEBUG" == "true" ]; then \
     apk add boost boost-dev; \
     fi
@@ -100,7 +104,8 @@ RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
 FROM base AS production
 
 RUN rm -rf /usr/src/code/app/config/specs && \
-    rm -f /usr/local/lib/php/extensions/no-debug-non-zts-20240924/xdebug.so && \
+    rm -f /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini && \
+    rm -f /usr/local/lib/php/extensions/no-debug-non-zts-*/xdebug.so && \
     find /usr -name '*.a' -delete 2>/dev/null || true && \
     find /usr -type d -name '__pycache__' -exec rm -rf {} + 2>/dev/null || true && \
     find /usr -name '*.pyc' -delete 2>/dev/null || true

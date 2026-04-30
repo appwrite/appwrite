@@ -35,7 +35,7 @@ class Create extends EnumCreate
             ->setHttpPath('/v1/tablesdb/:databaseId/tables/:tableId/columns/enum')
             ->desc('Create enum column')
             ->groups(['api', 'database', 'schema'])
-            ->label('scope', ['tables.write', 'collections.write'])
+            ->label('scope', ['tables.write', 'collections.write', 'columns.write', 'attributes.write'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].create')
             ->label('audits.event', 'column.create')

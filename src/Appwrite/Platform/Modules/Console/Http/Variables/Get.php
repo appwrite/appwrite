@@ -36,7 +36,7 @@ class Get extends Action
                 namespace: 'console',
                 group: 'console',
                 name: 'variables',
-                description: '/docs/references/console/variables.md',
+                description: 'Get all Environment Variables that are relevant for the console.',
                 auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(

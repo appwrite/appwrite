@@ -286,7 +286,7 @@ return [
         'name' => 'Migrations',
         'subtitle' => 'The Migrations service allows you to migrate third-party data to your Appwrite project.',
         'description' => '/docs/services/migrations.md',
-        'controller' => 'api/migrations.php',
+        'controller' => '', // Uses modules
         'sdk' => true,
         'docs' => true,
         'docsUrl' => 'https://appwrite.io/docs/migrations',

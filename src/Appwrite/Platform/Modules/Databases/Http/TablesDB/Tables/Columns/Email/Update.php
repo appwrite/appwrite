@@ -35,7 +35,7 @@ class Update extends EmailUpdate
             ->setHttpPath('/v1/tablesdb/:databaseId/tables/:tableId/columns/email/:key')
             ->desc('Update email column')
             ->groups(['api', 'database', 'schema'])
-            ->label('scope', ['tables.write', 'collections.write'])
+            ->label('scope', ['tables.write', 'collections.write', 'columns.write', 'attributes.write'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].update')
             ->label('audits.event', 'column.update')
