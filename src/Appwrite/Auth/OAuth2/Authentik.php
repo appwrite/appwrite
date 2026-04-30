@@ -37,6 +37,13 @@ class Authentik extends OAuth2
         return 'authentik';
     }
 
+    public function verifyCredentials(): void
+    {
+        if (empty($this->getAuthentikDomain())) {
+            throw new \Exception('Authentik endpoint is required.');
+        }
+    }
+
     /**
      * @return string
      */
