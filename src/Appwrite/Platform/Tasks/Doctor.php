@@ -131,10 +131,10 @@ class Doctor extends Action
 
                 $providerName = $loggingProvider->getScheme();
 
-                if ($providerName !== 'sentry') {
+                if (!\in_array($providerName, ['http', 'https'])) {
                     Console::log('🔴 Logging adapter is unsupported (' . $providerName . ')');
                 } else {
-                    Console::log('🟢 Logging adapter is enabled (' . $providerName . ')');
+                    Console::log('🟢 Logging adapter is enabled (sentry)');
                 }
             } catch (\Throwable) {
                 Console::log('🔴 Logging adapter is misconfigured');

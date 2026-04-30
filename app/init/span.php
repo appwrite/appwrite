@@ -1,6 +1,5 @@
 <?php
 
-use Appwrite\Extend\Exception;
 use Utopia\Console;
 use Utopia\DSN\DSN;
 use Utopia\Span\Exporter;
@@ -12,42 +11,12 @@ use Utopia\System\System;
 Span::setStorage(new Storage\Coroutine());
 
 $loggingConfig = System::getEnv('_APP_LOGGING_CONFIG', '');
-$legacyRealtimeLoggingConfig = System::getEnv('_APP_LOGGING_CONFIG_REALTIME', '');
-
-if (!empty($legacyRealtimeLoggingConfig)) {
-    Console::warning('_APP_LOGGING_CONFIG_REALTIME is no longer supported. Realtime errors use _APP_LOGGING_CONFIG.');
-}
-
-if (!empty($loggingConfig) && \str_contains($loggingConfig, ';')) {
-    Console::warning('Legacy semicolon-delimited _APP_LOGGING_CONFIG values are no longer supported. Set _APP_LOGGING_CONFIG to a provider DSN.');
-}
 
 $addSentryExporter = function (string $loggingConfig, ?callable $sampler = null): void {
     try {
-        $loggingProvider = new DSN($loggingConfig);
-        $providerName = $loggingProvider->getScheme();
-
-        if ($providerName !== 'sentry') {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Logging provider not supported. Logging is disabled');
-        }
-
-        $projectId = $loggingProvider->getUser();
-        $apiKey = $loggingProvider->getPassword();
-        $host = $loggingProvider->getHost();
-        $port = $loggingProvider->getPort();
-        $path = $loggingProvider->getPath();
-
-        if (empty($projectId) || empty($apiKey) || empty($host)) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Invalid Sentry DSN. Logging is disabled');
-        }
-
-        $host = $host . (empty($port) ? '' : ':' . $port);
-        $path = empty($path) ? '' : \trim($path, '/') . '/';
-        $dsn = 'https://' . $apiKey . '@' . $host . '/' . $path . $projectId;
-
         Span::addExporter(
             new Exporter\Sentry(
-                dsn: $dsn,
+                dsn: $loggingConfig,
                 environment: System::getEnv('_APP_ENV', 'development') === 'production' ? 'production' : 'staging',
                 release: System::getEnv('_APP_VERSION', 'UNKNOWN'),
                 serverName: System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()),

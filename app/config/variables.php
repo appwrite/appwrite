@@ -279,7 +279,7 @@ return [
             ],
             [
                 'name' => '_APP_LOGGING_CONFIG',
-                'description' => 'This variable enables error logging using a provider DSN. This value is empty by default. Currently, Appwrite supports Sentry DSNs using the format `sentry://PROJECT_ID:SENTRY_API_KEY@SENTRY_HOST/`.',
+                'description' => 'This variable enables error logging using a provider DSN. This value is empty by default. Currently, Appwrite supports Sentry DSNs using the format `https://SENTRY_PUBLIC_KEY@SENTRY_HOST/PROJECT_ID`.',
                 'introduction' => '0.12.0',
                 'default' => '',
                 'required' => false,
@@ -288,7 +288,7 @@ return [
             ],
             [
                 'name' => '_APP_EXPERIMENT_LOGGING_CONFIG',
-                'description' => 'This variable enables experimental error logging using a provider DSN. This value is empty by default. Currently, Appwrite supports Sentry DSNs using the format `sentry://PROJECT_ID:SENTRY_API_KEY@SENTRY_HOST/?sample=0.01`.',
+                'description' => 'This variable enables experimental error logging using a provider DSN. This value is empty by default. Currently, Appwrite supports Sentry DSNs using the format `https://SENTRY_PUBLIC_KEY@SENTRY_HOST/PROJECT_ID?sample=0.01`.',
                 'introduction' => '1.9.0',
                 'default' => '',
                 'required' => false,
