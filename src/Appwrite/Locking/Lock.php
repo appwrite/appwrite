@@ -129,7 +129,7 @@ final class Lock
 
         try {
             $acquired = $orFail ? $lock->acquire($waitTimeout) : $lock->tryAcquire();
-        } catch (Throwable $e) {
+        } catch (\RedisException $e) {
             $this->attempts->add(1, ['outcome' => 'backend_error', ...$labels]);
             $this->reportError('backend_error', $key, $target, $e);
 
