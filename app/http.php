@@ -219,71 +219,76 @@ function createDatabase(Http $app, string $resourceKey, string $dbName, array $c
     Span::init("database.setup");
     Span::add('database.name', $dbName);
 
-    $attempts = 0;
-    while (true) {
-        try {
-            $attempts++;
-            Console::info("  └── Creating database: $dbName...");
-            $database->create();
-            break; // exit loop on success
-        } catch (\Exception $e) {
-            if ($e instanceof DuplicateException) {
-                Span::add('database.exists', true);
-                Console::info("  └── Skip: metadata table already exists");
-                break;
+    try {
+        $attempts = 0;
+        while (true) {
+            try {
+                $attempts++;
+                Console::info("  └── Creating database: $dbName...");
+                $database->create();
+                break; // exit loop on success
+            } catch (\Exception $e) {
+                if ($e instanceof DuplicateException) {
+                    Span::add('database.exists', true);
+                    Console::info("  └── Skip: metadata table already exists");
+                    break;
+                }
+
+                Console::warning("  └── Database create failed. Retrying ({$attempts})...");
+                if ($attempts >= $max) {
+                    throw new \Exception('  └── Failed to create database: ' . $e->getMessage());
+                }
+
+                \sleep($sleep);
+            }
+        }
+
+        // Process collections
+        $collectionsCreated = 0;
+        foreach ($collections as $key => $collection) {
+            if (($collection['$collection'] ?? '') !== Database::METADATA) {
+                continue;
             }
 
-            Console::warning("  └── Database create failed. Retrying ({$attempts})...");
-            if ($attempts >= $max) {
-                throw new \Exception('  └── Failed to create database: ' . $e->getMessage());
+            if (!$database->getCollection($key)->isEmpty()) {
+                continue;
             }
 
-            \sleep($sleep);
+            $attributes = array_map(fn ($attr) => new Document([
+                '$id' => ID::custom($attr['$id']),
+                'type' => $attr['type'],
+                'size' => $attr['size'],
+                'required' => $attr['required'],
+                'signed' => $attr['signed'],
+                'array' => $attr['array'],
+                'filters' => $attr['filters'],
+                'default' => $attr['default'] ?? null,
+                'format' => $attr['format'] ?? ''
+            ]), $collection['attributes']);
+
+            $indexes = array_map(fn ($index) => new Document([
+                '$id' => ID::custom($index['$id']),
+                'type' => $index['type'],
+                'attributes' => $index['attributes'],
+                'lengths' => $index['lengths'],
+                'orders' => $index['orders'],
+            ]), $collection['indexes']);
+
+            $database->createCollection($key, $attributes, $indexes);
+            $collectionsCreated++;
         }
-    }
 
-    // Process collections
-    $collectionsCreated = 0;
-    foreach ($collections as $key => $collection) {
-        if (($collection['$collection'] ?? '') !== Database::METADATA) {
-            continue;
+        Span::add('database.collections_created', $collectionsCreated);
+
+        if ($extraSetup) {
+            $extraSetup($database);
         }
-
-        if (!$database->getCollection($key)->isEmpty()) {
-            continue;
-        }
-
-        $attributes = array_map(fn ($attr) => new Document([
-            '$id' => ID::custom($attr['$id']),
-            'type' => $attr['type'],
-            'size' => $attr['size'],
-            'required' => $attr['required'],
-            'signed' => $attr['signed'],
-            'array' => $attr['array'],
-            'filters' => $attr['filters'],
-            'default' => $attr['default'] ?? null,
-            'format' => $attr['format'] ?? ''
-        ]), $collection['attributes']);
-
-        $indexes = array_map(fn ($index) => new Document([
-            '$id' => ID::custom($index['$id']),
-            'type' => $index['type'],
-            'attributes' => $index['attributes'],
-            'lengths' => $index['lengths'],
-            'orders' => $index['orders'],
-        ]), $collection['indexes']);
-
-        $database->createCollection($key, $attributes, $indexes);
-        $collectionsCreated++;
+    } catch (\Throwable $th) {
+        Span::error($th);
+        throw $th;
+    } finally {
+        Span::current()?->finish();
     }
-
-    Span::add('database.collections_created', $collectionsCreated);
-
-    if ($extraSetup) {
-        $extraSetup($database);
-    }
-
-    Span::current()?->finish();
 }
 
 $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorkers, $swooleAdapter) {
@@ -517,6 +522,8 @@ $swooleAdapter->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $time) . ' GMT') // 45 days cache
             ->send($files->getFileContents($request->getURI()));
 
+        Span::add('http.response.status_code', $response->getStatusCode());
+        Span::current()?->finish();
         return;
     }
 
@@ -582,6 +589,7 @@ $swooleAdapter->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files
         Span::add('roles', isset($authorization) ? (\json_encode($authorization->getRoles()) ?: null) : '[]');
 
         $swooleResponse = $utopiaResponse->getSwooleResponse();
+        $response->setStatusCode(500);
         $swooleResponse->setStatusCode(500);
 
         $output = ((Http::isDevelopment())) ? [
@@ -599,7 +607,7 @@ $swooleAdapter->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files
 
         $swooleResponse->end(\json_encode($output));
     } finally {
-        Span::add('http.response.code', $response->getStatusCode());
+        Span::add('http.response.status_code', $response->getStatusCode());
         Span::current()?->finish();
     }
 });
