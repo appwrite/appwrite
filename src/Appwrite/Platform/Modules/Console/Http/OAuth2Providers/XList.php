@@ -54,9 +54,9 @@ class XList extends Action
         $actions = OAuth2Base::getProviderActions();
 
         $providers = [];
-        foreach ($actions as $providerId => $updateClass) {
-            $config = $providersConfig[$providerId] ?? null;
-            if ($config === null) {
+        foreach ($providersConfig as $providerId => $config) {
+            $updateClass = $actions[$providerId] ?? null;
+            if ($updateClass === null) {
                 continue;
             }
             if (!($config['enabled'] ?? false)) {

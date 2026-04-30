@@ -130,8 +130,14 @@ if (!function_exists('getProjectDB')) {
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
         if (\in_array($dsn->getHost(), $sharedTables)) {
+            $collections = Config::getParam('collections', []);
+            $projectCollections = $collections['projects'] ?? [];
+            $projectsGlobalCollections = array_keys($projectCollections);
+            $projectsGlobalCollections[] = 'audit';
+
             $database
                 ->setSharedTables(true)
+                ->setGlobalCollections($projectsGlobalCollections)
                 ->setTenant($project->getSequence())
                 ->setNamespace($dsn->getParam('namespace'));
         } else {

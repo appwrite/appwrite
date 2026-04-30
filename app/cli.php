@@ -158,12 +158,19 @@ $container->set('getProjectDB', function (Group $pools, Database $dbForPlatform,
         }
 
         if (isset($databases[$dsn->getHost()])) {
+            /** @var array $collections */
+            $collections = Config::getParam('collections', []);
+            $projectCollections = $collections['projects'] ?? [];
+            $projectsGlobalCollections = array_keys($projectCollections);
+            $projectsGlobalCollections[] = 'audit';
+
             $database = $databases[$dsn->getHost()];
             $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
             if (\in_array($dsn->getHost(), $sharedTables)) {
                 $database
                     ->setSharedTables(true)
+                    ->setGlobalCollections($projectsGlobalCollections)
                     ->setTenant($project->getSequence())
                     ->setNamespace($dsn->getParam('namespace'));
             } else {
@@ -183,9 +190,16 @@ $container->set('getProjectDB', function (Group $pools, Database $dbForPlatform,
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
         if (\in_array($dsn->getHost(), $sharedTables)) {
+            /** @var array $collections */
+            $collections = Config::getParam('collections', []);
+            $projectCollections = $collections['projects'] ?? [];
+            $projectsGlobalCollections = array_keys($projectCollections);
+            $projectsGlobalCollections[] = 'audit';
+
             $database
                 ->setSharedTables(true)
                 ->setTenant($project->getSequence())
+                ->setGlobalCollections($projectsGlobalCollections)
                 ->setNamespace($dsn->getParam('namespace'));
         } else {
             $database
@@ -213,6 +227,11 @@ $container->set('getLogsDB', function (Group $pools, Cache $cache, Authorization
             return $database;
         }
 
+        /** @var array $collections */
+        $collections = Config::getParam('collections', []);
+        $logsCollections = $collections['logs'] ?? [];
+        $logsCollections = array_keys($logsCollections);
+
         $adapter = new DatabasePool($pools->get('logs'));
         $database = new Database($adapter, $cache);
 
@@ -221,6 +240,7 @@ $container->set('getLogsDB', function (Group $pools, Cache $cache, Authorization
             ->setAuthorization($authorization)
             ->setSharedTables(true)
             ->setNamespace('logsV1')
+            ->setGlobalCollections($logsCollections)
             ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_TASK)
             ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
 

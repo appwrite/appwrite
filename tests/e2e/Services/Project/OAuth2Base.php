@@ -478,9 +478,8 @@ trait OAuth2Base
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertSame('apple', $response['body']['$id']);
         $this->assertSame('ip.appwrite.app.web', $response['body']['serviceId']);
-        // keyId / teamId / p8File are write-only — PATCH response must not echo them back.
-        $this->assertSame('', $response['body']['keyId']);
-        $this->assertSame('', $response['body']['teamId']);
+        $this->assertSame('P4000000N8', $response['body']['keyId']);
+        $this->assertSame('D4000000R6', $response['body']['teamId']);
         $this->assertSame('', $response['body']['p8File']);
         $this->assertSame(false, $response['body']['enabled']);
 
@@ -511,12 +510,10 @@ trait OAuth2Base
         ]);
 
         $this->assertSame(200, $response['headers']['status-code']);
-        // serviceId is the (non-secret) clientId; keyId/teamId are write-only
-        // and must not surface in the response. Persistence of the merged
-        // values is verified separately via the enable-after-merge tests.
         $this->assertSame('ip.appwrite.app.seed', $response['body']['serviceId']);
-        $this->assertSame('', $response['body']['keyId']);
-        $this->assertSame('', $response['body']['teamId']);
+        $this->assertSame('KEYUPDATED', $response['body']['keyId']);
+        $this->assertSame('TEAMSEED01', $response['body']['teamId']);
+        $this->assertSame('', $response['body']['p8File']);
 
         // Cleanup
         $this->updateOAuth2('apple', [
@@ -546,9 +543,9 @@ trait OAuth2Base
             'teamId' => 'TEAMROTATED',
         ]);
         $this->assertSame(200, $teamOnly['headers']['status-code']);
-        // teamId is write-only; verify only the non-secret serviceId echo.
-        // The actual merge is validated by the enable-after-merge call below.
-        $this->assertSame('', $teamOnly['body']['teamId']);
+        $this->assertSame('TEAMROTATED', $teamOnly['body']['teamId']);
+        $this->assertSame('KEYMERGE01', $teamOnly['body']['keyId']);
+        $this->assertSame('', $teamOnly['body']['p8File']);
         $this->assertSame('ip.appwrite.app.merge', $teamOnly['body']['serviceId']);
 
         // Patch only `serviceId` — keyId/teamId/p8File live in the JSON blob
@@ -669,9 +666,8 @@ trait OAuth2Base
 
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertSame('ip.appwrite.app.read', $response['body']['serviceId']);
-        // All three secret-bearing fields must be hidden on read.
-        $this->assertSame('', $response['body']['keyId']);
-        $this->assertSame('', $response['body']['teamId']);
+        $this->assertSame('KEYREAD', $response['body']['keyId']);
+        $this->assertSame('TEAMREAD', $response['body']['teamId']);
         $this->assertSame('', $response['body']['p8File']);
 
         // Cleanup
@@ -699,13 +695,13 @@ trait OAuth2Base
         $this->assertSame(200, $update['headers']['status-code']);
         $this->assertTrue($update['body']['enabled']);
 
-        // GET must hide all three secret-bearing fields while keeping serviceId.
+        // GET must hide p8File while keeping the non-secret fields.
         $get = $this->getOAuth2Provider('apple');
         $this->assertSame(200, $get['headers']['status-code']);
         $this->assertTrue($get['body']['enabled']);
         $this->assertSame('ip.appwrite.app.enable', $get['body']['serviceId']);
-        $this->assertSame('', $get['body']['keyId']);
-        $this->assertSame('', $get['body']['teamId']);
+        $this->assertSame('ENABLEKEY', $get['body']['keyId']);
+        $this->assertSame('ENABLETEAM', $get['body']['teamId']);
         $this->assertSame('', $get['body']['p8File']);
 
         // Cleanup

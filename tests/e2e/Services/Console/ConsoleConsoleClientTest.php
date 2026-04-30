@@ -56,6 +56,8 @@ class ConsoleConsoleClientTest extends Scope
         $this->assertEquals($response['body']['total'], \count($response['body']['oAuth2Providers']));
 
         $providerIds = \array_column($response['body']['oAuth2Providers'], '$id');
+        $this->assertEquals('amazon', $providerIds[0]);
+        $this->assertEquals('zoom', $providerIds[\count($providerIds) - 1]);
 
         // Well-known providers must be present
         $this->assertContains('github', $providerIds);
