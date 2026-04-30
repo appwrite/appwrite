@@ -215,16 +215,14 @@ jobs:
         uses: actions/github-script@v8
         with:
           script: |
-            // TEMP: forcing SQLite/shared on this PR until it goes green; revert before merge.
+            // PRs that bump utopia-php/database run the full DB matrix in
+            // both dedicated and shared modes; everything else gets the
+            // SQLite + Redis short matrix in shared mode only.
             const fullMatrixDatabases = ['MariaDB', 'PostgreSQL', 'MongoDB', 'Redis'];
             const fullMatrixModes = ['dedicated', 'shared'];
 
             const defaultDatabases = ['SQLite', 'Redis'];
             const defaultModes = ['shared'];
-
-            core.setOutput('databases', JSON.stringify(defaultDatabases));
-            core.setOutput('modes', JSON.stringify(defaultModes));
-            return;
 
             const pr = context.payload.pull_request;
             if (!pr) {

@@ -187,6 +187,15 @@ $register->set('pools', function () {
         'path' => System::getEnv('_APP_DB_SCHEMA', ''),
     ]);
 
+    /*
+     * NOTE on the `redis` scheme appearing in the `database` and `logs` pools:
+     * the Utopia Redis database adapter is wired here so the CI matrix can
+     * exercise it as a project-data backend. Redis is an in-memory store and
+     * MUST NOT be used as a project database in production — operators who
+     * misconfigure `_APP_DB_ADAPTER=redis` will lose data on cache eviction
+     * or process restart. Keep Redis OFF the `documentsdb` and `vectorsdb`
+     * pools, which have stricter durability and indexing requirements.
+     */
     $connections = [
         'console' => [
             'type' => 'database',
