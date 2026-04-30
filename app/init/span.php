@@ -12,6 +12,20 @@ use Utopia\System\System;
 Span::setStorage(new Storage\Coroutine());
 
 $loggingConfig = System::getEnv('_APP_LOGGING_CONFIG', '');
+$legacyLoggingProvider = System::getEnv('_APP_LOGGING_PROVIDER', '');
+$legacyRealtimeLoggingConfig = System::getEnv('_APP_LOGGING_CONFIG_REALTIME', '');
+
+if (!empty($legacyLoggingProvider)) {
+    Console::warning('_APP_LOGGING_PROVIDER is no longer supported. Set _APP_LOGGING_CONFIG to a provider DSN.');
+}
+
+if (!empty($legacyRealtimeLoggingConfig)) {
+    Console::warning('_APP_LOGGING_CONFIG_REALTIME is no longer supported. Realtime errors use _APP_LOGGING_CONFIG.');
+}
+
+if (!empty($loggingConfig) && \str_contains($loggingConfig, ';')) {
+    Console::warning('Legacy semicolon-delimited _APP_LOGGING_CONFIG values are no longer supported. Set _APP_LOGGING_CONFIG to a provider DSN.');
+}
 
 $addSentryExporter = function (string $loggingConfig, ?callable $sampler = null): void {
     try {
@@ -91,9 +105,11 @@ if (!empty($experimentalLoggingConfig)) {
     );
 }
 
-Span::addExporter(new Exporter\Pretty(), function (Span $span): bool {
-    if (\str_starts_with($span->getAction(), 'listener.')) {
-        return $span->getError() !== null;
-    }
-    return true;
-});
+if (System::getEnv('_APP_ENV', 'development') === 'development') {
+    Span::addExporter(new Exporter\Pretty(), function (Span $span): bool {
+        if (\str_starts_with($span->getAction(), 'listener.')) {
+            return $span->getError() !== null;
+        }
+        return true;
+    });
+}
