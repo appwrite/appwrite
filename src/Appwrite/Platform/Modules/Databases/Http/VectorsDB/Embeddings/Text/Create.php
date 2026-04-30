@@ -100,18 +100,22 @@ class Create extends CreateDocumentAction
             } catch (\Exception $e) {
                 $error = 'Error while generating embedding';
                 $totalErrors += 1;
-                Span::add('level', 'error');
-                Span::add('logger', 'http');
-                Span::add('appwrite.error.publish', true);
-                Span::add('appwrite.error.action', 'vectorsDB.createTextEmbeddings');
-                Span::add('embeddingModel', $model);
-                Span::add('code', $e->getCode());
-                Span::add('projectId', $project->getId());
-                Span::add('error.message', $e->getMessage());
-                Span::add('error.file', $e->getFile());
-                Span::add('error.line', $e->getLine());
-                Span::add('error.trace', $e->getTraceAsString());
-                Span::error($e);
+
+                // Export each failed text independently without overwriting the request span.
+                $span = new Span('vectorsDB.createTextEmbeddings');
+                $span->set('level', 'error');
+                $span->set('logger', 'http');
+                $span->set('appwrite.error.publish', true);
+                $span->set('appwrite.error.action', 'vectorsDB.createTextEmbeddings');
+                $span->set('embeddingModel', $model);
+                $span->set('code', $e->getCode());
+                $span->set('projectId', $project->getId());
+                $span->set('error.message', $e->getMessage());
+                $span->set('error.file', $e->getFile());
+                $span->set('error.line', $e->getLine());
+                $span->set('error.trace', $e->getTraceAsString());
+                $span->setError($e);
+                $span->finish();
             }
 
             $results[] = new Document([

@@ -352,6 +352,7 @@ return function (Container $container): void {
 
     $container->set('logError', function (Document $project) {
         return function (Throwable $error, string $namespace, string $action, ?array $extras = null) use ($project) {
+            // Export a standalone error span without mutating the active job span.
             $span = new Span($action);
 
             $span->set('level', 'error');
