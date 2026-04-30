@@ -3854,12 +3854,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "47e60b137d140b0cb515bfeffb3b1ac82870e5d2"
+                "reference": "00d502fef7196440c1083ed391c7f8f7efce5c80"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/47e60b137d140b0cb515bfeffb3b1ac82870e5d2",
-                "reference": "47e60b137d140b0cb515bfeffb3b1ac82870e5d2",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/00d502fef7196440c1083ed391c7f8f7efce5c80",
+                "reference": "00d502fef7196440c1083ed391c7f8f7efce5c80",
                 "shasum": ""
             },
             "require": {
@@ -3936,7 +3936,7 @@
                 "source": "https://github.com/utopia-php/database/tree/feat-sqlite-fts",
                 "issues": "https://github.com/utopia-php/database/issues"
             },
-            "time": "2026-04-30T02:56:16+00:00"
+            "time": "2026-04-30T04:34:35+00:00"
         },
         {
             "name": "utopia-php/detector",
