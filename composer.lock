@@ -3854,12 +3854,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "cfb1a91a8c015afef177b1999c4a9b491cef1815"
+                "reference": "ec93c4cc654acc4ef2952a830ff6d2ba7354720c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/cfb1a91a8c015afef177b1999c4a9b491cef1815",
-                "reference": "cfb1a91a8c015afef177b1999c4a9b491cef1815",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/ec93c4cc654acc4ef2952a830ff6d2ba7354720c",
+                "reference": "ec93c4cc654acc4ef2952a830ff6d2ba7354720c",
                 "shasum": ""
             },
             "require": {
@@ -3937,7 +3937,7 @@
                 "source": "https://github.com/utopia-php/database/tree/feat-redis-adapter",
                 "issues": "https://github.com/utopia-php/database/issues"
             },
-            "time": "2026-04-30T10:47:28+00:00"
+            "time": "2026-04-30T11:06:30+00:00"
         },
         {
             "name": "utopia-php/detector",
