@@ -188,13 +188,28 @@ $register->set('pools', function () {
     ]);
 
     /*
-     * NOTE on the `redis` scheme appearing in the `database` and `logs` pools:
-     * the Utopia Redis database adapter is wired here so the CI matrix can
-     * exercise it as a project-data backend. Redis is an in-memory store and
-     * MUST NOT be used as a project database in production — operators who
-     * misconfigure `_APP_DB_ADAPTER=redis` will lose data on cache eviction
-     * or process restart. Keep Redis OFF the `documentsdb` and `vectorsdb`
-     * pools, which have stricter durability and indexing requirements.
+     * !!! WARNING — `redis` scheme on the `database` and `console` pools !!!
+     *
+     * The Utopia Redis database adapter is intended for **logs/console only**.
+     * Project data (the `database` pool) MUST persist; Redis is an in-memory
+     * store and operators who set `_APP_DB_ADAPTER=redis` for project data
+     * WILL LOSE DATA on cache eviction, process restart, or `redis-cli FLUSHDB`.
+     *
+     * The `redis` scheme is currently still listed on the `database` pool
+     * because `.github/workflows/ci.yml` runs a CI matrix entry with
+     * `_APP_DB_ADAPTER=redis` that flows through the `database` pool to
+     * exercise the adapter end-to-end. Removing `redis` here would break
+     * that matrix. The proper fix is to either:
+     *   1. Reframe the CI matrix to point Redis at the `logs`/`console` pool
+     *      only (where in-memory storage is acceptable for ephemeral logs),
+     *      then remove `redis` from `database` here, OR
+     *   2. Drop the Redis matrix entry entirely and rely on the
+     *      utopia-php/database adapter test-suite for coverage.
+     *
+     * Until that decision is made, this comment is the operator-facing
+     * guardrail. NEVER add `redis` to the `documentsdb` or `vectorsdb` pool
+     * schemes — those backends require durable storage and proper indexing
+     * which Redis does not provide.
      */
     $connections = [
         'console' => [
