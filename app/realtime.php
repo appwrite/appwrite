@@ -1384,14 +1384,20 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register) {
     } catch (\Throwable $th) {
         // Log only; do not rethrow. If we let this bubble, Swoole dumps full coroutine
         // backtraces and unsubscribe() below would never run (connection cleanup would fail).
-        Console::error('Realtime onClose error: ' . $th->getMessage());
-        Span::error($th);
+        logError($th, 'realtimeClose', [
+            'connectionId' => $connection,
+            'projectId' => $projectId,
+            'userId' => $userId,
+        ]);
     } finally {
         try {
             $realtime->unsubscribe($connection);
         } catch (\Throwable $th) {
-            Console::error('Realtime onClose unsubscribe error: ' . $th->getMessage());
-            Span::error($th);
+            logError($th, 'realtimeCloseUnsubscribe', [
+                'connectionId' => $connection,
+                'projectId' => $projectId,
+                'userId' => $userId,
+            ]);
         }
 
         Span::add('realtime.success', $success);
