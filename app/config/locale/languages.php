@@ -729,6 +729,11 @@ return [
         "nativeName" => "සිංහල"
     ],
     [
+    'name' => 'Sign Language',
+    'code' => 'sgn',
+    'nativeName' => 'Sign Language',
+    ],
+    [
         "code" => "sk",
         "name" => "Slovak",
         "nativeName" => "Slovenčina"
