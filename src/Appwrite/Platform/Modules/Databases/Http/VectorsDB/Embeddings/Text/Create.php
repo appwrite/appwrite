@@ -15,6 +15,7 @@ use Utopia\Agents\Agent;
 use Utopia\Database\Document;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Span\Span;
+use Utopia\Span\Storage\Coroutine as SpanCoroutineStorage;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Text;
@@ -102,24 +103,30 @@ class Create extends CreateDocumentAction
                 $error = 'Error while generating embedding';
                 $totalErrors += 1;
 
-                // Export each failed text independently without overwriting the request span.
-                $span = new Span('vectorsDB.createTextEmbeddings');
-                $span->set('level', 'error');
-                $span->set('logger', 'http');
-                $span->set('server.name', System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
-                $span->set('release', System::getEnv('_APP_VERSION', 'UNKNOWN'));
-                $span->set('environment', System::getEnv('_APP_ENV', 'development') === 'production' ? 'production' : 'staging');
-                $span->set('appwrite.error.publish', true);
-                $span->set('appwrite.error.action', 'vectorsDB.createTextEmbeddings');
-                $span->set('embeddingModel', $model);
-                $span->set('code', $e->getCode());
-                $span->set('projectId', $project->getId());
-                $span->set('error.message', $e->getMessage());
-                $span->set('error.file', $e->getFile());
-                $span->set('error.line', $e->getLine());
-                $span->set('error.trace', $e->getTraceAsString());
-                $span->setError($e);
-                $span->finish();
+                // Export through Span::init(), then restore the active request span.
+                $activeSpan = Span::current();
+                $span = Span::init('vectorsDB.createTextEmbeddings');
+
+                try {
+                    $span->set('level', 'error');
+                    $span->set('logger', 'http');
+                    $span->set('server.name', System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
+                    $span->set('release', System::getEnv('_APP_VERSION', 'UNKNOWN'));
+                    $span->set('environment', System::getEnv('_APP_ENV', 'development') === 'production' ? 'production' : 'staging');
+                    $span->set('appwrite.error.publish', true);
+                    $span->set('appwrite.error.action', 'vectorsDB.createTextEmbeddings');
+                    $span->set('embeddingModel', $model);
+                    $span->set('code', $e->getCode());
+                    $span->set('projectId', $project->getId());
+                    $span->set('error.message', $e->getMessage());
+                    $span->set('error.file', $e->getFile());
+                    $span->set('error.line', $e->getLine());
+                    $span->set('error.trace', $e->getTraceAsString());
+                    $span->setError($e);
+                    $span->finish();
+                } finally {
+                    (new SpanCoroutineStorage())->set($activeSpan);
+                }
             }
 
             $results[] = new Document([

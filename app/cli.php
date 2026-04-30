@@ -35,6 +35,7 @@ use Utopia\Queue\Publisher;
 use Utopia\Queue\Queue;
 use Utopia\Registry\Registry;
 use Utopia\Span\Span;
+use Utopia\Span\Storage\Coroutine as SpanCoroutineStorage;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
 
@@ -276,34 +277,39 @@ $container->set('logError', function () {
         Console::error('[Error] Line: ' . $error->getLine());
         Console::error('[Error] Trace: ' . $error->getTraceAsString());
 
-        // Export a standalone error span without mutating the active CLI task span.
-        $span = new Span($action);
+        // Export through Span::init(), then restore the active CLI task span.
+        $activeSpan = Span::current();
+        $span = Span::init($action);
 
-        $span->set('level', 'error');
-        $span->set('logger', $namespace);
-        $span->set('server.name', System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
-        $span->set('release', System::getEnv('_APP_VERSION', 'UNKNOWN'));
-        $span->set('environment', System::getEnv('_APP_ENV', 'development') === 'production' ? 'production' : 'staging');
-        $span->set('appwrite.error.publish', true);
-        $span->set('appwrite.error.action', $action);
-        $span->set('error.message', $error->getMessage());
-        $span->set('verboseType', get_class($error));
-        $span->set('error.code', $error->getCode());
-        $span->set('error.file', $error->getFile());
-        $span->set('error.line', $error->getLine());
-        $span->set('error.trace', $error->getTraceAsString());
-        $span->set('error.detailedTrace', \json_encode($error->getTrace()) ?: null);
+        try {
+            $span->set('level', 'error');
+            $span->set('logger', $namespace);
+            $span->set('server.name', System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
+            $span->set('release', System::getEnv('_APP_VERSION', 'UNKNOWN'));
+            $span->set('environment', System::getEnv('_APP_ENV', 'development') === 'production' ? 'production' : 'staging');
+            $span->set('appwrite.error.publish', true);
+            $span->set('appwrite.error.action', $action);
+            $span->set('error.message', $error->getMessage());
+            $span->set('verboseType', get_class($error));
+            $span->set('error.code', $error->getCode());
+            $span->set('error.file', $error->getFile());
+            $span->set('error.line', $error->getLine());
+            $span->set('error.trace', $error->getTraceAsString());
+            $span->set('error.detailedTrace', \json_encode($error->getTrace()) ?: null);
 
-        if ($error->getPrevious() !== null) {
-            if ($error->getPrevious()->getMessage() != $error->getMessage()) {
-                $span->set('error.previous.message', $error->getPrevious()->getMessage());
+            if ($error->getPrevious() !== null) {
+                if ($error->getPrevious()->getMessage() != $error->getMessage()) {
+                    $span->set('error.previous.message', $error->getPrevious()->getMessage());
+                }
+                $span->set('error.previous.file', $error->getPrevious()->getFile());
+                $span->set('error.previous.line', $error->getPrevious()->getLine());
             }
-            $span->set('error.previous.file', $error->getPrevious()->getFile());
-            $span->set('error.previous.line', $error->getPrevious()->getLine());
-        }
 
-        $span->setError($error);
-        $span->finish();
+            $span->setError($error);
+            $span->finish();
+        } finally {
+            (new SpanCoroutineStorage())->set($activeSpan);
+        }
     };
 }, []);
 

@@ -38,6 +38,7 @@ use Utopia\DSN\DSN;
 use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
 use Utopia\Span\Span;
+use Utopia\Span\Storage\Coroutine as SpanCoroutineStorage;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
 use Utopia\WebSocket\Adapter;
@@ -281,33 +282,38 @@ $server = new Server($adapter);
 if (!function_exists('logError')) {
     function logError(Throwable $error, string $action, array $tags = [], ?Document $project = null, ?Document $user = null, ?Authorization $authorization = null): void
     {
-        // Export a standalone error span without mutating the active connection span.
-        $span = new Span($action);
+        // Export through Span::init(), then restore the active connection span.
+        $activeSpan = Span::current();
+        $span = Span::init($action);
 
-        $span->set('level', 'error');
-        $span->set('logger', 'realtime');
-        $span->set('server.name', System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
-        $span->set('release', System::getEnv('_APP_VERSION', 'UNKNOWN'));
-        $span->set('environment', System::getEnv('_APP_ENV', 'development') === 'production' ? 'production' : 'staging');
-        $span->set('appwrite.error.publish', true);
-        $span->set('appwrite.error.action', $action);
-        $span->set('code', $error->getCode());
-        $span->set('verboseType', get_class($error));
-        $span->set('projectId', $project?->getId() ?: 'n/a');
-        $span->set('userId', $user?->getId() ?: 'n/a');
+        try {
+            $span->set('level', 'error');
+            $span->set('logger', 'realtime');
+            $span->set('server.name', System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
+            $span->set('release', System::getEnv('_APP_VERSION', 'UNKNOWN'));
+            $span->set('environment', System::getEnv('_APP_ENV', 'development') === 'production' ? 'production' : 'staging');
+            $span->set('appwrite.error.publish', true);
+            $span->set('appwrite.error.action', $action);
+            $span->set('code', $error->getCode());
+            $span->set('verboseType', get_class($error));
+            $span->set('projectId', $project?->getId() ?: 'n/a');
+            $span->set('userId', $user?->getId() ?: 'n/a');
 
-        foreach ($tags as $key => $value) {
-            $span->set($key, \is_scalar($value) ? ($value ?: 'n/a') : (\json_encode($value) ?: 'n/a'));
+            foreach ($tags as $key => $value) {
+                $span->set($key, \is_scalar($value) ? ($value ?: 'n/a') : (\json_encode($value) ?: 'n/a'));
+            }
+
+            $span->set('error.message', $error->getMessage());
+            $span->set('error.file', $error->getFile());
+            $span->set('error.line', $error->getLine());
+            $span->set('error.trace', $error->getTraceAsString());
+            $span->set('error.detailedTrace', \json_encode($error->getTrace()) ?: null);
+            $span->set('roles', \json_encode($authorization?->getRoles() ?? []) ?: null);
+            $span->setError($error);
+            $span->finish();
+        } finally {
+            (new SpanCoroutineStorage())->set($activeSpan);
         }
-
-        $span->set('error.message', $error->getMessage());
-        $span->set('error.file', $error->getFile());
-        $span->set('error.line', $error->getLine());
-        $span->set('error.trace', $error->getTraceAsString());
-        $span->set('error.detailedTrace', \json_encode($error->getTrace()) ?: null);
-        $span->set('roles', \json_encode($authorization?->getRoles() ?? []) ?: null);
-        $span->setError($error);
-        $span->finish();
 
         Console::error('[Error] Type: ' . get_class($error));
         Console::error('[Error] Message: ' . $error->getMessage());

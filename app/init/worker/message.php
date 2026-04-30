@@ -26,6 +26,7 @@ use Utopia\Pools\Group;
 use Utopia\Queue\Publisher;
 use Utopia\Registry\Registry;
 use Utopia\Span\Span;
+use Utopia\Span\Storage\Coroutine as SpanCoroutineStorage;
 use Utopia\Storage\Device\Telemetry as TelemetryDevice;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -352,38 +353,43 @@ return function (Container $container): void {
 
     $container->set('logError', function (Document $project) {
         return function (Throwable $error, string $namespace, string $action, ?array $extras = null) use ($project) {
-            // Export a standalone error span without mutating the active job span.
-            $span = new Span($action);
+            // Export through Span::init(), then restore the active job span.
+            $activeSpan = Span::current();
+            $span = Span::init($action);
 
-            $span->set('level', 'error');
-            $span->set('logger', $namespace);
-            $span->set('server.name', System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
-            $span->set('release', System::getEnv('_APP_VERSION', 'UNKNOWN'));
-            $span->set('environment', System::getEnv('_APP_ENV', 'development') === 'production' ? 'production' : 'staging');
-            $span->set('appwrite.error.publish', true);
-            $span->set('appwrite.error.action', $action);
-            $span->set('code', $error->getCode());
-            $span->set('verboseType', \get_class($error));
-            $span->set('projectId', $project->getId());
-            $span->set('error.message', $error->getMessage());
-            $span->set('error.file', $error->getFile());
-            $span->set('error.line', $error->getLine());
-            $span->set('error.trace', $error->getTraceAsString());
+            try {
+                $span->set('level', 'error');
+                $span->set('logger', $namespace);
+                $span->set('server.name', System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
+                $span->set('release', System::getEnv('_APP_VERSION', 'UNKNOWN'));
+                $span->set('environment', System::getEnv('_APP_ENV', 'development') === 'production' ? 'production' : 'staging');
+                $span->set('appwrite.error.publish', true);
+                $span->set('appwrite.error.action', $action);
+                $span->set('code', $error->getCode());
+                $span->set('verboseType', \get_class($error));
+                $span->set('projectId', $project->getId());
+                $span->set('error.message', $error->getMessage());
+                $span->set('error.file', $error->getFile());
+                $span->set('error.line', $error->getLine());
+                $span->set('error.trace', $error->getTraceAsString());
 
-            if ($error->getPrevious() !== null) {
-                if ($error->getPrevious()->getMessage() != $error->getMessage()) {
-                    $span->set('error.previous.message', $error->getPrevious()->getMessage());
+                if ($error->getPrevious() !== null) {
+                    if ($error->getPrevious()->getMessage() != $error->getMessage()) {
+                        $span->set('error.previous.message', $error->getPrevious()->getMessage());
+                    }
+                    $span->set('error.previous.file', $error->getPrevious()->getFile());
+                    $span->set('error.previous.line', $error->getPrevious()->getLine());
                 }
-                $span->set('error.previous.file', $error->getPrevious()->getFile());
-                $span->set('error.previous.line', $error->getPrevious()->getLine());
-            }
 
-            foreach (($extras ?? []) as $key => $value) {
-                $span->set($key, \is_scalar($value) || $value === null ? $value : (\json_encode($value) ?: null));
-            }
+                foreach (($extras ?? []) as $key => $value) {
+                    $span->set($key, \is_scalar($value) || $value === null ? $value : (\json_encode($value) ?: null));
+                }
 
-            $span->setError($error);
-            $span->finish();
+                $span->setError($error);
+                $span->finish();
+            } finally {
+                (new SpanCoroutineStorage())->set($activeSpan);
+            }
 
             Console::warning("Failed: {$error->getMessage()}");
             Console::warning($error->getTraceAsString());

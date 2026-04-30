@@ -15,6 +15,7 @@ use Utopia\Queue\Adapter\Swoole;
 use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Server;
 use Utopia\Span\Span;
+use Utopia\Span\Storage\Coroutine as SpanCoroutineStorage;
 use Utopia\System\System;
 
 Runtime::enableCoroutine();
@@ -115,26 +116,31 @@ $worker
     ->action(function (Throwable $error, Document $project, Authorization $authorization) use ($queueName) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
         $action = 'appwrite-queue-' . $queueName;
-        // Export a standalone error span without mutating the active worker span.
-        $span = new Span($action);
+        // Export through Span::init(), then restore the active worker span.
+        $activeSpan = Span::current();
+        $span = Span::init($action);
 
-        $span->set('level', 'error');
-        $span->set('logger', 'appwrite-worker');
-        $span->set('server.name', System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
-        $span->set('release', $version);
-        $span->set('environment', System::getEnv('_APP_ENV', 'development') === 'production' ? 'production' : 'staging');
-        $span->set('appwrite.error.publish', true);
-        $span->set('appwrite.error.action', $action);
-        $span->set('verboseType', get_class($error));
-        $span->set('code', $error->getCode());
-        $span->set('projectId', $project->getId());
-        $span->set('error.message', $error->getMessage());
-        $span->set('error.file', $error->getFile());
-        $span->set('error.line', $error->getLine());
-        $span->set('error.trace', $error->getTraceAsString());
-        $span->set('roles', \json_encode($authorization->getRoles()) ?: null);
-        $span->setError($error);
-        $span->finish();
+        try {
+            $span->set('level', 'error');
+            $span->set('logger', 'appwrite-worker');
+            $span->set('server.name', System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
+            $span->set('release', $version);
+            $span->set('environment', System::getEnv('_APP_ENV', 'development') === 'production' ? 'production' : 'staging');
+            $span->set('appwrite.error.publish', true);
+            $span->set('appwrite.error.action', $action);
+            $span->set('verboseType', get_class($error));
+            $span->set('code', $error->getCode());
+            $span->set('projectId', $project->getId());
+            $span->set('error.message', $error->getMessage());
+            $span->set('error.file', $error->getFile());
+            $span->set('error.line', $error->getLine());
+            $span->set('error.trace', $error->getTraceAsString());
+            $span->set('roles', \json_encode($authorization->getRoles()) ?: null);
+            $span->setError($error);
+            $span->finish();
+        } finally {
+            (new SpanCoroutineStorage())->set($activeSpan);
+        }
 
         Console::error('[Error] Type: ' . get_class($error));
         Console::error('[Error] Message: ' . $error->getMessage());
