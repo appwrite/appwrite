@@ -129,7 +129,7 @@ final class Lock
 
         try {
             $acquired = $orFail ? $lock->acquire($waitTimeout) : $lock->tryAcquire();
-        } catch (\RedisException $e) {
+        } catch (Throwable $e) {
             $this->attempts->add(1, ['outcome' => 'backend_error', ...$labels]);
             $this->reportError('backend_error', $key, $target, $e);
 
@@ -186,26 +186,30 @@ final class Lock
         }
         self::$lastReportAt[$bucket] = $now;
 
-        $this->log->setNamespace('http');
-        $this->log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
-        $this->log->setVersion(APP_VERSION_STABLE);
-        $this->log->setType(Log::TYPE_WARNING);
-        $this->log->setMessage('Distributed lock '.$action.': '.$e->getMessage());
-        $this->log->setAction("lock.{$action}");
-        $this->log->setEnvironment(System::getEnv('_APP_ENV', 'development') === 'production'
+        // Clone the per-request Log so our lock-error fields don't bleed into the
+        // request-end submission of $this->log (action/message/tags get reset on the
+        // shared instance otherwise).
+        $lockLog = clone $this->log;
+        $lockLog->setNamespace('http');
+        $lockLog->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
+        $lockLog->setVersion(APP_VERSION_STABLE);
+        $lockLog->setType(Log::TYPE_WARNING);
+        $lockLog->setMessage('Distributed lock '.$action.': '.$e->getMessage());
+        $lockLog->setAction("lock.{$action}");
+        $lockLog->setEnvironment(System::getEnv('_APP_ENV', 'development') === 'production'
             ? Log::ENVIRONMENT_PRODUCTION
             : Log::ENVIRONMENT_STAGING);
-        $this->log->addTag('lock.target', $target);
-        $this->log->addTag('lock.project', $this->projectInternalId);
+        $lockLog->addTag('lock.target', $target);
+        $lockLog->addTag('lock.project', $this->projectInternalId);
         // Strip trailing document ID to keep aggregator cardinality bounded.
-        $this->log->addTag('lock.key_pattern', preg_replace('/:[^:]+$/', ':*', $key));
-        $this->log->addTag('code', $e->getCode());
-        $this->log->addExtra('file', $e->getFile());
-        $this->log->addExtra('line', $e->getLine());
-        $this->log->addExtra('trace', $e->getTraceAsString());
+        $lockLog->addTag('lock.key_pattern', preg_replace('/:[^:]+$/', ':*', $key));
+        $lockLog->addTag('code', $e->getCode());
+        $lockLog->addExtra('file', $e->getFile());
+        $lockLog->addExtra('line', $e->getLine());
+        $lockLog->addExtra('trace', $e->getTraceAsString());
 
         try {
-            $this->logger->addLog($this->log);
+            $this->logger->addLog($lockLog);
         } catch (Throwable) {
         }
     }
