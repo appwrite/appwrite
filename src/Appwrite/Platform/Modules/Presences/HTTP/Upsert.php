@@ -96,8 +96,11 @@ class Upsert extends PlatformAction
             ->param('userId', null, new Nullable(new UID()), 'User ID.', true)
             ->param('status', '', new Text(Database::LENGTH_KEY), 'Presence status.', false)
             ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE])), 'An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
-            // TODO: what shall be the min and max date here
-            ->param('expiresAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Presence expiry datetime.', true)
+            ->param('expiresAt', null, new Nullable(new DatetimeValidator(
+                new \DateTime(),
+                (new \DateTime())->modify('+30 days'),
+                requireDateInFuture: true
+            )), 'Presence expiry datetime.', true)
             ->param('metadata', [], new JSON(), 'Presence metadata object.', true)
             ->inject('response')
             ->inject('request')

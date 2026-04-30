@@ -92,7 +92,11 @@ class Update extends PlatformAction
             ->param('presenceId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Presence unique ID.', false, ['dbForProject'])
             ->param('userId', null, new Nullable(new UID()), 'User ID.', true)
             ->param('status', null, new Nullable(new Text(Database::LENGTH_KEY)), 'Presence status.', true)
-            ->param('expiresAt', null, new Nullable(new DatetimeValidator()), 'Presence expiry datetime.', true)
+            ->param('expiresAt', null, new Nullable(new DatetimeValidator(
+                new \DateTime(),
+                (new \DateTime())->modify('+30 days'),
+                requireDateInFuture: true
+            )), 'Presence expiry datetime.', true)
             ->param('metadata', null, new Nullable(new JSON()), 'Presence metadata object.', true)
             ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE])), 'An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->inject('response')
