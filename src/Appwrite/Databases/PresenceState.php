@@ -14,7 +14,6 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\System\System;
 
 class PresenceState
 {
@@ -66,7 +65,7 @@ class PresenceState
         $presenceCreated = false;
 
         try {
-            if ($this->getSupportForUniqueIndexBasedUpsert()) {
+            if ($dbForProject->getAdapter()->getSupportForUpsertOnUniqueIndex()) {
                 $presenceCreated = $dbForProject->findOne('presenceLogs', [Query::equal('userId', [$userId])])->isEmpty();
                 $presence = $dbForProject->upsertDocument('presenceLogs', $presenceDocument);
             } else {
@@ -125,12 +124,6 @@ class PresenceState
 
             return $dbForProject->updateDocument('presenceLogs', $currentPresence->getId(), $presenceDocument);
         });
-    }
-
-    private function getSupportForUniqueIndexBasedUpsert(): bool
-    {
-        $adapter = \strtolower(System::getEnv('_APP_DB_ADAPTER', 'mariadb'));
-        return !\in_array($adapter, ['mongodb', 'postgres', 'postgresql'], true);
     }
 
     private function assertPermissionsAgainstAuthorization(array $permissions, Authorization $authorization): void

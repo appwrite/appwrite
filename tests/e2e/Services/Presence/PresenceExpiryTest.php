@@ -37,8 +37,8 @@ class PresenceExpiryTest extends Scope
     {
         $projectId = $this->getProject()['$id'];
         $userId = $this->getUser()['$id'];
-        // Must match the format used by the maintenance worker query.
-        $expiredAt = DateTime::format((new \DateTime())->modify('-120 seconds'));
+        // Set a near-future expiry to satisfy validation, then wait until it is in the past.
+        $expiresAt = DateTime::format((new \DateTime())->modify('+2 seconds'));
 
         $createServer = $this->client->call(
             Client::METHOD_PUT,
@@ -68,15 +68,17 @@ class PresenceExpiryTest extends Scope
             ],
             [
                 'userId' => $userId,
-                'expiresAt' => $expiredAt,
+                'expiresAt' => $expiresAt,
             ]
         );
 
         $this->assertEquals(200, $expireServer['headers']['status-code']);
         $this->assertEquals(
-            (new \DateTime($expiredAt))->getTimestamp(),
+            (new \DateTime($expiresAt))->getTimestamp(),
             (new \DateTime($expireServer['body']['expiresAt']))->getTimestamp()
         );
+
+        \sleep(3);
 
         $stdout = '';
         $stderr = '';

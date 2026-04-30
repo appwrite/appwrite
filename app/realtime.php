@@ -313,7 +313,7 @@ if (!function_exists('triggerPresenceUsage')) {
     }
 }
 
-if (!function_exists('triggerPresenceEvent')) {
+if (!function_exists('getQueueForEventsForProject')) {
     function getQueueForEventsForProject(Document $project, User $user): QueueEvent
     {
         global $register;
@@ -330,7 +330,9 @@ if (!function_exists('triggerPresenceEvent')) {
 
         return $queueForEvents;
     }
+}
 
+if (!function_exists('triggerPresenceEvent')) {
     function triggerPresenceEvent(
         Server $server,
         Realtime $realtime,
@@ -344,13 +346,16 @@ if (!function_exists('triggerPresenceEvent')) {
         }
 
         try {
+            global $container;
             $queueForEvents = getQueueForEventsForProject($project, $user);
             $queueForEvents
                 ->setEvent($eventName)
                 ->setParam('presenceId', $presence->getId())
                 ->setPayload($presence->getArrayCopy());
 
-            (new QueueRealtime())
+            /** @var QueueRealtime $queueForRealtime */
+            $queueForRealtime = $container->get('queueForRealtime');
+            $queueForRealtime
                 ->setProject($project)
                 ->setUser($user)
                 ->from($queueForEvents)
@@ -399,6 +404,9 @@ global $container;
 $container->set('pools', function ($register) {
     return $register->get('pools');
 }, ['register']);
+$container->set('queueForRealtime', function () {
+    return new QueueRealtime();
+}, []);
 
 $realtime = getRealtime();
 $presenceState = new PresenceState();
