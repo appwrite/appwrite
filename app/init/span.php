@@ -13,10 +13,6 @@ Span::setStorage(new Storage\Coroutine());
 
 $loggingConfig = System::getEnv('_APP_LOGGING_CONFIG', '');
 
-if (\str_ends_with($_SERVER['SCRIPT_NAME'] ?? '', 'realtime.php')) {
-    $loggingConfig = System::getEnv('_APP_LOGGING_CONFIG_REALTIME', '') ?: $loggingConfig;
-}
-
 $addSentryExporter = function (string $loggingConfig, ?callable $sampler = null): void {
     try {
         $loggingProvider = new DSN($loggingConfig);
