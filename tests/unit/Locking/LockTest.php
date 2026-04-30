@@ -35,15 +35,15 @@ class LockTest extends TestCase
         $host = \getenv('_APP_REDIS_HOST') ?: 'redis';
         $port = (int) (\getenv('_APP_REDIS_PORT') ?: 6379);
 
-        $this->redis = new Redis;
+        $this->redis = new Redis();
         $this->redis->connect($host, $port, 1.0);
 
         $this->project = new Document([
             '$id' => 'test-project',
             '$sequence' => self::PROJECT_SEQUENCE,
         ]);
-        $this->authorization = new Authorization;
-        $this->log = new Log;
+        $this->authorization = new Authorization();
+        $this->log = new Log();
 
         $this->cleanupKeys();
     }
@@ -70,7 +70,7 @@ class LockTest extends TestCase
     {
         return new Lock(
             $this->redis,
-            new NoTelemetry,
+            new NoTelemetry(),
             $db ?? $this->createStub(Database::class),
             $auth ?? $this->authorization,
             $this->log,
@@ -231,10 +231,10 @@ class LockTest extends TestCase
 
     public function test_project_without_sequence_falls_back_to_unknown(): void
     {
-        $emptyProject = new Document;
+        $emptyProject = new Document();
         $lock = new Lock(
             $this->redis,
-            new NoTelemetry,
+            new NoTelemetry(),
             $this->createStub(Database::class),
             $this->authorization,
             $this->log,
