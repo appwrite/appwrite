@@ -59,7 +59,7 @@ class Create extends Base
                 ],
             ))
             ->param('scopes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.', optional: false)
-            ->param('duration', 900, new Range(1, 3600), 'Time in seconds before ephemeral key expires. Default duration is 900 seconds, and maximum is 3600 seconds.', true)
+            ->param('duration', null, new Range(1, 3600), 'Time in seconds before ephemeral key expires. Maximum duration is 3600 seconds.', optional: false)
             ->inject('response')
             ->inject('queueForEvents')
             ->inject('project')

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "805802552f7482eaeae4bdaa505ae982",
+    "content-hash": "4bee36b21a57e754d2b3417e72dc9599",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4530,16 +4530,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.9.3",
+            "version": "1.9.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "111f6221d04578a6f721c23ac872002375f176ae"
+                "reference": "969dc9477ea962f16da9254facdbd8944cf13477"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/111f6221d04578a6f721c23ac872002375f176ae",
-                "reference": "111f6221d04578a6f721c23ac872002375f176ae",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/969dc9477ea962f16da9254facdbd8944cf13477",
+                "reference": "969dc9477ea962f16da9254facdbd8944cf13477",
                 "shasum": ""
             },
             "require": {
@@ -4550,7 +4550,7 @@
                 "php": ">=8.1",
                 "utopia-php/database": "5.*",
                 "utopia-php/dsn": "0.2.*",
-                "utopia-php/storage": "1.0.*"
+                "utopia-php/storage": "2.*"
             },
             "require-dev": {
                 "ext-pdo": "*",
@@ -4579,9 +4579,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/1.9.3"
+                "source": "https://github.com/utopia-php/migration/tree/1.9.4"
             },
-            "time": "2026-04-22T07:13:26+00:00"
+            "time": "2026-04-27T12:42:51+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -5020,16 +5020,16 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "1.0.1",
+            "version": "2.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "f014be445f0baa635d0764e1673196f412511618"
+                "reference": "52d1f89a47165ef0d3deff63043cda182175adfb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/f014be445f0baa635d0764e1673196f412511618",
-                "reference": "f014be445f0baa635d0764e1673196f412511618",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/52d1f89a47165ef0d3deff63043cda182175adfb",
+                "reference": "52d1f89a47165ef0d3deff63043cda182175adfb",
                 "shasum": ""
             },
             "require": {
@@ -5043,9 +5043,8 @@
                 "utopia-php/validators": "0.2.*"
             },
             "require-dev": {
-                "laravel/pint": "1.2.*",
-                "phpunit/phpunit": "^9.3",
-                "vimeo/psalm": "4.0.1"
+                "laravel/pint": "^1.21",
+                "phpunit/phpunit": "^9.3"
             },
             "type": "library",
             "autoload": {
@@ -5067,9 +5066,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/1.0.1"
+                "source": "https://github.com/utopia-php/storage/tree/2.0.0"
             },
-            "time": "2026-02-23T05:59:32+00:00"
+            "time": "2026-04-27T11:39:32+00:00"
         },
         {
             "name": "utopia-php/system",
@@ -5466,16 +5465,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.24.0",
+            "version": "1.25.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "6d4d26659bc7a1c347c1d4d8dae3b77b5562e0cb"
+                "reference": "f21a556b9acdbf75bbdcdc90a078af641646eade"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/6d4d26659bc7a1c347c1d4d8dae3b77b5562e0cb",
-                "reference": "6d4d26659bc7a1c347c1d4d8dae3b77b5562e0cb",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/f21a556b9acdbf75bbdcdc90a078af641646eade",
+                "reference": "f21a556b9acdbf75bbdcdc90a078af641646eade",
                 "shasum": ""
             },
             "require": {
@@ -5511,9 +5510,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.24.0"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.25.1"
             },
-            "time": "2026-04-24T12:50:05+00:00"
+            "time": "2026-04-28T11:12:22+00:00"
         },
         {
             "name": "brianium/paratest",
@@ -6222,11 +6221,11 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "2.1.51",
+            "version": "2.1.52",
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/dc3b523c45e714c70de2ac5113b958223b55dc59",
-                "reference": "dc3b523c45e714c70de2ac5113b958223b55dc59",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/08a34f8db7ca4daabff74a474fe13c0e56e2b4e5",
+                "reference": "08a34f8db7ca4daabff74a474fe13c0e56e2b4e5",
                 "shasum": ""
             },
             "require": {
@@ -6271,7 +6270,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-04-21T18:22:01+00:00"
+            "time": "2026-04-28T12:17:53+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",

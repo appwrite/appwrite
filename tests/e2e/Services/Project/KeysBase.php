@@ -245,8 +245,11 @@ trait KeysBase
 
     public function testCreateEphemeralKey(): void
     {
+        $duration = 900;
+
         $key = $this->createEphemeralKey(
             ['users.read', 'users.write'],
+            $duration,
         );
 
         $this->assertSame(201, $key['headers']['status-code']);
@@ -271,12 +274,11 @@ trait KeysBase
         $this->assertNotEmpty($payload['projectId']);
         $this->assertSame(['users.read', 'users.write'], $payload['scopes']);
 
-        // Verify default duration (900 seconds)
         $expireDt = new \DateTime($key['body']['expire']);
         $now = new \DateTime();
         $diff = $expireDt->getTimestamp() - $now->getTimestamp();
-        $this->assertGreaterThanOrEqual(890, $diff);
-        $this->assertLessThanOrEqual(910, $diff);
+        $this->assertGreaterThanOrEqual($duration - 10, $diff);
+        $this->assertLessThanOrEqual($duration + 10, $diff);
     }
 
     public function testCreateEphemeralKeyWithDuration(): void
@@ -302,6 +304,7 @@ trait KeysBase
     {
         $key = $this->createEphemeralKey(
             [],
+            900,
         );
 
         $this->assertSame(201, $key['headers']['status-code']);
@@ -312,17 +315,27 @@ trait KeysBase
     {
         $response = $this->createEphemeralKey(
             ['users.read'],
-            null,
+            900,
             false
         );
 
         $this->assertSame(401, $response['headers']['status-code']);
     }
 
+    public function testCreateEphemeralKeyMissingDuration(): void
+    {
+        $response = $this->createEphemeralKey(
+            ['users.read'],
+        );
+
+        $this->assertSame(400, $response['headers']['status-code']);
+    }
+
     public function testCreateEphemeralKeyInvalidScope(): void
     {
         $response = $this->createEphemeralKey(
             ['invalid.scope'],
+            900,
         );
 
         $this->assertSame(400, $response['headers']['status-code']);

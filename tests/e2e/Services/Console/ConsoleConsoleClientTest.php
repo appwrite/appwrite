@@ -131,7 +131,7 @@ class ConsoleConsoleClientTest extends Scope
 
     public function testListKeyScopes(): void
     {
-        $response = $this->client->call(Client::METHOD_GET, '/console/scopes/key', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/console/scopes/project', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -158,6 +158,8 @@ class ConsoleConsoleClientTest extends Scope
             $this->assertArrayHasKey('description', $scope);
             $this->assertIsString($scope['description']);
             $this->assertNotEmpty($scope['description']);
+            $this->assertArrayHasKey('deprecated', $scope);
+            $this->assertIsBool($scope['deprecated']);
         }
 
         // A specific scope has the expected description
@@ -169,6 +171,6 @@ class ConsoleConsoleClientTest extends Scope
             }
         }
         $this->assertNotNull($usersRead);
-        $this->assertEquals('Access to read your project\'s users', $usersRead['description']);
+        $this->assertEquals('Access to read users', $usersRead['description']);
     }
 }

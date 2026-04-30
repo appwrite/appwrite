@@ -62,8 +62,8 @@ trait SchedulesBase
             'scopes' => [
                 'functions.read',
                 'functions.write',
-                'execution.read',
-                'execution.write',
+                'executions.read',
+                'executions.write',
                 'messages.read',
                 'messages.write',
             ],

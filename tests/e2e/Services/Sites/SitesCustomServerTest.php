@@ -906,6 +906,134 @@ class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testCreateDeploymentOutOfOrder(): void
+    {
+        $siteId = $this->setupSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Test Site Out of Order Upload',
+            'outputDirectory' => './',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+
+        // Create a temporary large site package for chunked upload
+        $tempDir = sys_get_temp_dir() . '/appwrite-test-site-' . uniqid();
+        mkdir($tempDir, 0777, true);
+        file_put_contents($tempDir . '/index.html', '<html><body>Hello World</body></html>');
+        // Add a large dummy file to make the package span multiple chunks
+        file_put_contents($tempDir . '/large.bin', random_bytes(12 * 1024 * 1024)); // 12MB non-compressible
+
+        $codePath = $tempDir . '/code.tar.gz';
+        Console::execute("cd $tempDir && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->stdout, $this->stderr);
+
+        $totalSize = filesize($codePath);
+        $chunkSize = 5 * 1024 * 1024; // 5MB chunks
+        $mimeType = 'application/x-gzip';
+        $chunksTotal = (int) ceil($totalSize / $chunkSize);
+
+        $this->assertGreaterThanOrEqual(2, $chunksTotal, 'Test file must span at least 2 chunks');
+
+        // Read all chunks into memory
+        $handle = fopen($codePath, "rb");
+        $this->assertNotFalse($handle, "Could not open test resource: $codePath");
+        $chunks = [];
+        for ($i = 0; $i < $chunksTotal; $i++) {
+            $start = $i * $chunkSize;
+            $end = min($start + $chunkSize, $totalSize);
+            $length = $end - $start;
+            $data = fread($handle, $length);
+            $chunks[] = [
+                'data' => $data,
+                'start' => $start,
+                'end' => $end - 1,
+                'index' => $i,
+            ];
+        }
+        fclose($handle);
+
+        // Upload chunks in out-of-order sequence: last chunk first, then first, then second
+        $uploadOrder = [count($chunks) - 1, 0, 1];
+        $deploymentId = '';
+        $deployment = null;
+
+        foreach ($uploadOrder as $chunkIndex) {
+            $chunk = $chunks[$chunkIndex];
+            $curlFile = new \CURLFile(
+                'data://' . $mimeType . ';base64,' . base64_encode($chunk['data']),
+                $mimeType,
+                'code.tar.gz'
+            );
+
+            $headers = [
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'content-range' => 'bytes ' . $chunk['start'] . '-' . $chunk['end'] . '/' . $totalSize,
+            ];
+
+            if (!empty($deploymentId)) {
+                $headers['x-appwrite-id'] = $deploymentId;
+            }
+
+            $deployment = $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/deployments', array_merge($headers, $this->getHeaders()), [
+                'code' => $curlFile,
+                'activate' => true,
+            ]);
+
+            $this->assertEquals(202, $deployment['headers']['status-code']);
+            $deploymentId = $deployment['body']['$id'];
+        }
+
+        // Upload remaining chunks in any order to complete the file
+        $remainingChunks = [];
+        for ($i = 2; $i < count($chunks) - 1; $i++) {
+            $remainingChunks[] = $i;
+        }
+        shuffle($remainingChunks);
+
+        foreach ($remainingChunks as $chunkIndex) {
+            $chunk = $chunks[$chunkIndex];
+            $curlFile = new \CURLFile(
+                'data://' . $mimeType . ';base64,' . base64_encode($chunk['data']),
+                $mimeType,
+                'code.tar.gz'
+            );
+
+            $headers = [
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'content-range' => 'bytes ' . $chunk['start'] . '-' . $chunk['end'] . '/' . $totalSize,
+                'x-appwrite-id' => $deploymentId,
+            ];
+
+            $deployment = $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/deployments', array_merge($headers, $this->getHeaders()), [
+                'code' => $curlFile,
+                'activate' => true,
+            ]);
+
+            $this->assertEquals(202, $deployment['headers']['status-code']);
+        }
+
+
+
+        // Wait for build to complete
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $deployment = $this->getDeployment($siteId, $deploymentId);
+            $this->assertEquals(200, $deployment['headers']['status-code']);
+            $this->assertEquals('ready', $deployment['body']['status']);
+        }, 120000, 500);
+
+        // Clean up temp files
+        unlink($codePath);
+        unlink($tempDir . '/index.html');
+        unlink($tempDir . '/large.bin');
+        rmdir($tempDir);
+
+        $this->cleanupSite($siteId);
+    }
+
     public function testCreateDeployment()
     {
         $siteId = $this->setupSite([

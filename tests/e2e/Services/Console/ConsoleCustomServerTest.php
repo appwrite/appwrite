@@ -48,7 +48,7 @@ class ConsoleCustomServerTest extends Scope
     {
         // Public endpoint: must succeed without admin authentication. Drop the
         // headers from getHeaders() and only pass project + content-type.
-        $response = $this->client->call(Client::METHOD_GET, '/console/scopes/key', [
+        $response = $this->client->call(Client::METHOD_GET, '/console/scopes/project', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]);
@@ -60,5 +60,18 @@ class ConsoleCustomServerTest extends Scope
 
         $scopeIds = \array_column($response['body']['scopes'], '$id');
         $this->assertContains('users.read', $scopeIds);
+
+        $usersRead = null;
+        foreach ($response['body']['scopes'] as $scope) {
+            if ($scope['$id'] === 'users.read') {
+                $usersRead = $scope;
+                break;
+            }
+        }
+        $this->assertNotNull($usersRead);
+        $this->assertIsString($usersRead['description']);
+        $this->assertNotEmpty($usersRead['description']);
+        $this->assertArrayHasKey('deprecated', $usersRead);
+        $this->assertIsBool($usersRead['deprecated']);
     }
 }

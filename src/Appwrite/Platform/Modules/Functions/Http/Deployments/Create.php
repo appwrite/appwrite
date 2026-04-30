@@ -175,15 +175,8 @@ class Create extends Action
                 throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
             }
 
-            // TODO remove the condition that checks `$end === $fileSize` in next breaking version
-            if ($end === $fileSize - 1 || $end === $fileSize) {
-                //if it's a last chunks the chunk size might differ, so we set the $chunks and $chunk to notify it's last chunk
-                $chunks = $chunk = -1;
-            } else {
-                // Calculate total number of chunks based on the chunk size i.e ($rangeEnd - $rangeStart)
-                $chunks = (int) ceil($fileSize / ($end + 1 - $start));
-                $chunk = (int) ($start / ($end + 1 - $start)) + 1;
-            }
+            $chunks = (int) ceil($fileSize / APP_LIMIT_UPLOAD_CHUNK_SIZE);
+            $chunk = (int) ($start / APP_LIMIT_UPLOAD_CHUNK_SIZE) + 1;
         }
 
         if (!$fileSizeValidator->isValid($fileSize) && $functionSizeLimit !== 0) { // Check if file size is exceeding allowed limit
@@ -202,15 +195,14 @@ class Create extends Action
         $metadata = ['content_type' => $deviceForLocal->getFileMimeType($fileTmpName)];
         if (!$deployment->isEmpty()) {
             $chunks = $deployment->getAttribute('sourceChunksTotal', 1);
+            $uploaded = $deployment->getAttribute('sourceChunksUploaded', 0);
             $metadata = $deployment->getAttribute('sourceMetadata', []);
-            if ($chunk === -1) {
-                $chunk = $chunks;
-            }
-        } else {
-            // Guard against manually setting range header for single chunk upload
-            if ($chunks === -1) {
-                $chunks = 1;
-                $chunk = 1;
+
+            if ($uploaded === $chunks) {
+                $response
+                    ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+                    ->dynamic($deployment, Response::MODEL_DEPLOYMENT);
+                return;
             }
         }
 
@@ -258,6 +250,8 @@ class Create extends Action
                     'sourcePath' => $path,
                     'sourceSize' => $fileSize,
                     'totalSize' => $fileSize,
+                    'sourceChunksTotal' => $chunks,
+                    'sourceChunksUploaded' => $chunksUploaded,
                     'activate' => $activate,
                     'sourceMetadata' => $metadata,
                     'type' => $type
@@ -272,6 +266,7 @@ class Create extends Action
             } else {
                 $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document([
                     'sourceSize' => $fileSize,
+                    'sourceChunksUploaded' => $chunksUploaded,
                     'sourceMetadata' => $metadata,
                 ]));
             }

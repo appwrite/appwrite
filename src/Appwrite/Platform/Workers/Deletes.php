@@ -633,6 +633,89 @@ class Deletes extends Action
             $dsn = new DSN('mysql://' . $document->getAttribute('database', 'console'));
         }
 
+        // Delete Platforms
+        try {
+            $this->deleteByGroup('platforms', [
+                Query::equal('projectInternalId', [$projectInternalId]),
+                Query::orderAsc()
+            ], $dbForPlatform);
+        } catch (Throwable $th) {
+            Console::error('Failed to delete platforms: ' . $th->getMessage());
+        }
+
+        // Delete project and function rules
+        try {
+            $this->deleteByGroup('rules', [
+                Query::equal('projectInternalId', [$projectInternalId]),
+                Query::orderAsc()
+            ], $dbForPlatform, function (Document $document) use ($dbForPlatform, $certificates) {
+                $this->deleteRule($dbForPlatform, $document, $certificates);
+            });
+        } catch (Throwable $th) {
+            Console::error('Failed to delete rules: ' . $th->getMessage());
+        }
+
+        // Delete Keys
+        try {
+            $this->deleteByGroup('keys', [
+                Query::equal('resourceType', ['projects']),
+                Query::equal('resourceInternalId', [$projectInternalId]),
+                Query::orderAsc()
+            ], $dbForPlatform);
+        } catch (Throwable $th) {
+            Console::error('Failed to delete keys: ' . $th->getMessage());
+        }
+
+        // Delete Webhooks
+        try {
+            $this->deleteByGroup('webhooks', [
+                Query::equal('projectInternalId', [$projectInternalId]),
+                Query::orderAsc()
+            ], $dbForPlatform);
+        } catch (Throwable $th) {
+            Console::error('Failed to delete webhooks: ' . $th->getMessage());
+        }
+
+        // Delete VCS Installations
+        try {
+            $this->deleteByGroup('installations', [
+                Query::equal('projectInternalId', [$projectInternalId]),
+                Query::orderAsc()
+            ], $dbForPlatform);
+        } catch (Throwable $th) {
+            Console::error('Failed to delete installations: ' . $th->getMessage());
+        }
+
+        // Delete VCS Repositories
+        try {
+            $this->deleteByGroup('repositories', [
+                Query::equal('projectInternalId', [$projectInternalId]),
+                Query::orderAsc()
+            ], $dbForPlatform);
+        } catch (Throwable $th) {
+            Console::error('Failed to delete repositories: ' . $th->getMessage());
+        }
+
+        // Delete VCS comments
+        try {
+            $this->deleteByGroup('vcsComments', [
+                Query::equal('projectInternalId', [$projectInternalId]),
+                Query::orderAsc()
+            ], $dbForPlatform);
+        } catch (Throwable $th) {
+            Console::error('Failed to delete VCS comments: ' . $th->getMessage());
+        }
+
+        // Delete Schedules
+        try {
+            $this->deleteByGroup('schedules', [
+                Query::equal('projectId', [$projectId]),
+                Query::orderAsc()
+            ], $dbForPlatform);
+        } catch (Throwable $th) {
+            Console::error('Failed to delete schedules: ' . $th->getMessage());
+        }
+
         /**
          * @var Database $dbForProject
          */
@@ -685,75 +768,35 @@ class Deletes extends Action
             };
 
             batch(array_map(
-                fn ($databaseDoc) => fn () => $this->cleanDatabase(
-                    $databaseDoc,
-                    $executionActionPerDatabase,
-                    $projectTables,
-                    $projectCollectionIds
-                ),
+                fn ($databaseDoc) => function () use ($databaseDoc, $executionActionPerDatabase, $projectTables, $projectCollectionIds) {
+                    try {
+                        $this->cleanDatabase(
+                            $databaseDoc,
+                            $executionActionPerDatabase,
+                            $projectTables,
+                            $projectCollectionIds
+                        );
+                    } catch (Throwable $th) {
+                        Console::error('Failed to delete database ' . $databaseDoc->getAttribute('database') . ': ' . $th->getMessage());
+                    }
+                },
                 $databasesToClean
             ));
-
-            // Delete Platforms
-            $this->deleteByGroup('platforms', [
-                Query::equal('projectInternalId', [$projectInternalId]),
-                Query::orderAsc()
-            ], $dbForPlatform);
-
-            // Delete project and function rules
-            $this->deleteByGroup('rules', [
-                Query::equal('projectInternalId', [$projectInternalId]),
-                Query::orderAsc()
-            ], $dbForPlatform, function (Document $document) use ($dbForPlatform, $certificates) {
-                $this->deleteRule($dbForPlatform, $document, $certificates);
-            });
-
-            // Delete Keys
-            $this->deleteByGroup('keys', [
-                Query::equal('resourceType', ['projects']),
-                Query::equal('resourceInternalId', [$projectInternalId]),
-                Query::orderAsc()
-            ], $dbForPlatform);
-
-            // Delete Webhooks
-            $this->deleteByGroup('webhooks', [
-                Query::equal('projectInternalId', [$projectInternalId]),
-                Query::orderAsc()
-            ], $dbForPlatform);
-
-            // Delete VCS Installations
-            $this->deleteByGroup('installations', [
-                Query::equal('projectInternalId', [$projectInternalId]),
-                Query::orderAsc()
-            ], $dbForPlatform);
-
-            // Delete VCS Repositories
-            $this->deleteByGroup('repositories', [
-                Query::equal('projectInternalId', [$projectInternalId]),
-                Query::orderAsc()
-            ], $dbForPlatform);
-
-            // Delete VCS comments
-            $this->deleteByGroup('vcsComments', [
-                Query::equal('projectInternalId', [$projectInternalId]),
-                Query::orderAsc()
-            ], $dbForPlatform);
-
-            // Delete Schedules
-            $this->deleteByGroup('schedules', [
-                Query::equal('projectId', [$projectId]),
-                Query::orderAsc()
-            ], $dbForPlatform);
 
             // Delete metadata table
             if ($projectTables) {
                 batch(array_map(
-                    fn ($databaseDoc) => fn () =>
-                        $executionActionPerDatabase(
-                            $databaseDoc,
-                            fn (Database $dbForDatabases) =>
-                                $dbForDatabases->deleteCollection(Database::METADATA)
-                        ),
+                    fn ($databaseDoc) => function () use ($databaseDoc, $executionActionPerDatabase) {
+                        try {
+                            $executionActionPerDatabase(
+                                $databaseDoc,
+                                fn (Database $dbForDatabases) =>
+                                    $dbForDatabases->deleteCollection(Database::METADATA)
+                            );
+                        } catch (Throwable $th) {
+                            Console::error('Failed to delete metadata table for database ' . $databaseDoc->getAttribute('database') . ': ' . $th->getMessage());
+                        }
+                    },
                     $databasesToClean
                 ));
             } else {
@@ -764,19 +807,47 @@ class Deletes extends Action
 
                 $queries[] = Query::orderAsc();
 
-                $this->deleteByGroup(
-                    Database::METADATA,
-                    $queries,
-                    $dbForProject
-                );
+                try {
+                    $this->deleteByGroup(
+                        Database::METADATA,
+                        $queries,
+                        $dbForProject
+                    );
+                } catch (Throwable $th) {
+                    Console::error('Failed to delete metadata documents: ' . $th->getMessage());
+                }
             }
 
             // Delete all storage directories
-            $deviceForFiles->delete($deviceForFiles->getRoot(), true);
-            $deviceForSites->delete($deviceForSites->getRoot(), true);
-            $deviceForFunctions->delete($deviceForFunctions->getRoot(), true);
-            $deviceForBuilds->delete($deviceForBuilds->getRoot(), true);
-            $deviceForCache->delete($deviceForCache->getRoot(), true);
+            try {
+                $deviceForFiles->delete($deviceForFiles->getRoot(), true);
+            } catch (Throwable $th) {
+                Console::error('Failed to delete files storage directory: ' . $th->getMessage());
+            }
+
+            try {
+                $deviceForSites->delete($deviceForSites->getRoot(), true);
+            } catch (Throwable $th) {
+                Console::error('Failed to delete sites storage directory: ' . $th->getMessage());
+            }
+
+            try {
+                $deviceForFunctions->delete($deviceForFunctions->getRoot(), true);
+            } catch (Throwable $th) {
+                Console::error('Failed to delete functions storage directory: ' . $th->getMessage());
+            }
+
+            try {
+                $deviceForBuilds->delete($deviceForBuilds->getRoot(), true);
+            } catch (Throwable $th) {
+                Console::error('Failed to delete builds storage directory: ' . $th->getMessage());
+            }
+
+            try {
+                $deviceForCache->delete($deviceForCache->getRoot(), true);
+            } catch (Throwable $th) {
+                Console::error('Failed to delete cache storage directory: ' . $th->getMessage());
+            }
 
         } finally {
             $dbForProject->enableValidation();
