@@ -44,11 +44,11 @@ jobs:
         run: |
           docker compose exec appwrite specs --version=${{ inputs.version }} --mode=normal --git=no
 
-      - name: Generate SDK examples
-        if: inputs.push
-        run: |
-          docker compose exec appwrite sdks --platform=* --sdk=* --version=${{ inputs.version }} --git=no --mode=examples
-          sudo chown -R $USER:$USER ./docs/examples/
+      # - name: Generate SDK examples
+      #   if: inputs.push
+      #   run: |
+      #     docker compose exec appwrite sdks --platform=* --sdk=* --version=${{ inputs.version }} --git=no --mode=examples
+      #     sudo chown -R $USER:$USER ./docs/examples/
 
       - name: Push to appwrite/specs and create PR
         if: inputs.push
