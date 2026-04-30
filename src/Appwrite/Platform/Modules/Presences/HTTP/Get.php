@@ -29,7 +29,7 @@ class Get extends PlatformAction
             ->setHttpPath('/v1/presences/:presenceId')
             ->desc('Get presence')
             ->groups(['api', 'presences'])
-            ->label('scope', 'presence.read')
+            ->label('scope', 'presences.read')
             ->label('sdk', new Method(
                 namespace: 'presences',
                 group: 'presences',

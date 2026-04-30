@@ -47,6 +47,7 @@ class PresenceState
 
         sort($permissions, SORT_STRING);
         $document->setAttribute('$permissions', $permissions);
+        $document->setAttribute('perms_md5', \md5(\json_encode($permissions)));
 
         return $document;
     }

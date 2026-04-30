@@ -32,14 +32,14 @@ class XList extends PlatformAction
 
     public function __construct()
     {
-        $allowedAttributes = ['userInternalId', 'userId', 'expiry', 'status', 'source'];
+        $allowedAttributes = ['userInternalId', 'userId', 'expiresAt', 'status', 'source'];
 
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/presences')
             ->desc('List presences')
             ->groups(['api', 'presences'])
-            ->label('scope', 'presence.read')
+            ->label('scope', 'presences.read')
             ->label('sdk', new Method(
                 namespace: 'presences',
                 group: 'presences',

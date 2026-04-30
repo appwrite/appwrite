@@ -77,7 +77,7 @@ class Presence extends Any
                 'default' => '',
                 'example' => 'HTTP',
             ])
-            ->addRule('expiry', [
+            ->addRule('expiresAt', [
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Presence expiry date in ISO 8601 format.',
                 'required' => false,

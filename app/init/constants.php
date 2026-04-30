@@ -411,7 +411,7 @@ const METRIC_REALTIME_INBOUND = 'realtime.inbound';
 const METRIC_REALTIME_OUTBOUND = 'realtime.outbound';
 
 // Presence API metrics
-const METRIC_PRESENCE_UPSERTED = 'presence.upserted';
+const METRIC_PRESENCE_UPSERTED = 'presences.upserted';
 const METRIC_PRESENCE_DELETED = 'presence.deleted';
 
 // Resource types

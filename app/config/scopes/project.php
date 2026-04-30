@@ -10,10 +10,10 @@ return [ // List of publicly visible scopes
     'users.write' => [
         'description' => 'Access to create, update, and delete your project\'s users',
     ],
-    'presence.read' => [
+    'presences.read' => [
         'description' => 'Access to read your project\'s presences',
     ],
-    'presence.write' => [
+    'presences.read' => [
         'description' => 'Access to create, update, and delete your project\'s presences',
     ],
     'teams.read' => [

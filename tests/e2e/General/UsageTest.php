@@ -231,8 +231,8 @@ class UsageTest extends Scope
     public function testPreparePresenceStats(array $data): array
     {
         $presenceKey = $this->getNewKey([
-            'presence.read',
-            'presence.write',
+            'presences.read',
+            'presences.read',
         ]);
         $projectId = $this->getProject()['$id'];
 

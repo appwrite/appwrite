@@ -2756,7 +2756,6 @@ return [
     ],
 
     // Naming it presenceLogs as later it might be only be used as a presence events table only and not for the actual presence
-    // TODO: check between var_string and var_id => userInternalId, userId(they can be null as well in case of guest login)
     'presenceLogs' => [
         '$collection' => ID::custom(Database::METADATA),
         '$id' => ID::custom('presenceLogs'),
@@ -2785,7 +2784,7 @@ return [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('expiry'),
+                '$id' => ID::custom('expiresAt'),
                 'type' => Database::VAR_DATETIME,
                 'format' => '',
                 'size' => 0,
@@ -2839,9 +2838,18 @@ return [
                 'array' => false,
                 'filters' => ['json'],
             ],
+            [
+                '$id' => ID::custom('perms_md5'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 32,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
         ],
-        // TODO: shall we create the perms_md5 now only for the upsertion based on perms_md5 or later via patch script?
-        // permissions must be sorted before md5 conversion to have deterministic hashes
         'indexes' => [
             [
                 '$id' => ID::custom('_unique_userId'),
@@ -2858,9 +2866,9 @@ return [
                 'orders' => [Database::ORDER_ASC]
             ],
             [
-                '$id' => ID::custom('_key_expiry'),
+                '$id' => ID::custom('_key_expiresAt'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['expiry'],
+                'attributes' => ['expiresAt'],
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC]
             ],
@@ -2884,6 +2892,13 @@ return [
                 'attributes' => ['source', 'status'],
                 'lengths' => [Database::LENGTH_KEY, Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC, Database::ORDER_ASC]
+            ],
+            [
+                '$id' => ID::custom('_key_perms_md5'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['perms_md5'],
+                'lengths' => [32],
+                'orders' => [Database::ORDER_ASC]
             ]
         ]
     ]

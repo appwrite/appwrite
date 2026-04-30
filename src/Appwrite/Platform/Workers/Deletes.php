@@ -1641,8 +1641,8 @@ class Deletes extends Action
         $dbForProject = $getProjectDB($project);
 
         $dbForProject->deleteDocuments('presenceLogs', [
-            Query::isNotNull('expiry'),
-            Query::lessThan('expiry', DateTime::format(new \DateTime())),
+            Query::isNotNull('expiresAt'),
+            Query::lessThan('expiresAt', DateTime::format(new \DateTime())),
         ], onError: function (Throwable $th) {
             // Swallow errors to avoid breaking the cleanup process
         });

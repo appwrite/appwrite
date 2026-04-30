@@ -26,8 +26,8 @@ class PresenceExpiryTest extends Scope
         }
 
         self::$presenceApiKeyCache[$projectId] = $this->getNewKey([
-            'presence.read',
-            'presence.write',
+            'presences.read',
+            'presences.read',
         ]);
 
         return self::$presenceApiKeyCache[$projectId];
@@ -68,14 +68,14 @@ class PresenceExpiryTest extends Scope
             ],
             [
                 'userId' => $userId,
-                'expiry' => $expiredAt,
+                'expiresAt' => $expiredAt,
             ]
         );
 
         $this->assertEquals(200, $expireServer['headers']['status-code']);
         $this->assertEquals(
             (new \DateTime($expiredAt))->getTimestamp(),
-            (new \DateTime($expireServer['body']['expiry']))->getTimestamp()
+            (new \DateTime($expireServer['body']['expiresAt']))->getTimestamp()
         );
 
         $stdout = '';

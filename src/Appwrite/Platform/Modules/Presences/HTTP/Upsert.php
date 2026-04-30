@@ -43,7 +43,7 @@ class Upsert extends PlatformAction
             ->setHttpPath('/v1/presences/:presenceId')
             ->desc('Upsert presence')
             ->groups(['api', 'presences'])
-            ->label('scope', 'presence.write')
+            ->label('scope', 'presences.read')
             ->label('event', 'presences.[presenceId].upsert')
             ->label('audits.event', 'presence.upsert')
             ->label('audits.resource', 'presence/{response.$id}')
@@ -65,7 +65,7 @@ class Upsert extends PlatformAction
                         new Parameter('presenceId', optional: false),
                         new Parameter('status', optional: false),
                         new Parameter('permissions', optional: true),
-                        new Parameter('expiry', optional: true),
+                        new Parameter('expiresAt', optional: true),
                         new Parameter('metadata', optional: true),
                     ],
                 ),
@@ -75,7 +75,7 @@ class Upsert extends PlatformAction
                     group: 'presences',
                     name: 'upsertPresence',
                     description: 'Create or update a presence log by its unique ID.',
-                    auth: [AuthType::KEY, AuthType::JWT],
+                    auth: [AuthType::KEY, AuthType::JWT, AuthType::ADMIN],
                     responses: [
                         new SDKResponse(
                             code: Response::STATUS_CODE_OK,
@@ -87,29 +87,7 @@ class Upsert extends PlatformAction
                         new Parameter('userId', optional: false),
                         new Parameter('status', optional: false),
                         new Parameter('permissions', optional: true),
-                        new Parameter('expiry', optional: true),
-                        new Parameter('metadata', optional: true),
-                    ],
-                ),
-                // Console SDK (admin): still operates with `userId`.
-                new Method(
-                    namespace: 'presences',
-                    group: 'presences',
-                    name: 'upsertPresence',
-                    description: 'Create or update a presence log by its unique ID.',
-                    auth: [AuthType::ADMIN],
-                    responses: [
-                        new SDKResponse(
-                            code: Response::STATUS_CODE_OK,
-                            model: Response::MODEL_PRESENCE,
-                        ),
-                    ],
-                    parameters: [
-                        new Parameter('presenceId', optional: false),
-                        new Parameter('userId', optional: false),
-                        new Parameter('status', optional: false),
-                        new Parameter('permissions', optional: true),
-                        new Parameter('expiry', optional: true),
+                        new Parameter('expiresAt', optional: true),
                         new Parameter('metadata', optional: true),
                     ],
                 ),
@@ -119,7 +97,7 @@ class Upsert extends PlatformAction
             ->param('status', '', new Text(Database::LENGTH_KEY), 'Presence status.', false)
             ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE])), 'An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             // TODO: what shall be the min and max date here
-            ->param('expiry', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Presence expiry datetime.', true)
+            ->param('expiresAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Presence expiry datetime.', true)
             ->param('metadata', [], new JSON(), 'Presence metadata object.', true)
             ->inject('response')
             ->inject('request')
@@ -136,7 +114,7 @@ class Upsert extends PlatformAction
         ?string $userId,
         ?string $status,
         ?array $permissions,
-        ?string $expiry,
+        ?string $expiresAt,
         array $metadata,
         Response $response,
         Request $request,
@@ -176,7 +154,7 @@ class Upsert extends PlatformAction
             'userId' => $resolvedUserId,
             'status' => $status,
             'source' => $isGraphQL ? 'graphql' : 'rest',
-            'expiry' => $expiry ?? DateTime::addSeconds(new \DateTime(), 15 * 60),
+            'expiresAt' => $expiresAt ?? DateTime::addSeconds(new \DateTime(), 15 * 60),
             // TODO: finding a way to find hostname
             // 'hostname' => $hostname,
             'metadata' => $metadata,

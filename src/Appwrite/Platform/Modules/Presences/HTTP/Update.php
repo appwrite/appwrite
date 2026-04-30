@@ -40,7 +40,7 @@ class Update extends PlatformAction
             ->setHttpPath('/v1/presences/:presenceId')
             ->desc('Update presence')
             ->groups(['api', 'presences'])
-            ->label('scope', 'presence.write')
+            ->label('scope', 'presences.read')
             ->label('event', 'presences.[presenceId].update')
             ->label('audits.event', 'presence.update')
             ->label('audits.resource', 'presence/{response.$id}')
@@ -61,7 +61,7 @@ class Update extends PlatformAction
                     parameters: [
                         new Parameter('presenceId', optional: false),
                         new Parameter('status', optional: true),
-                        new Parameter('expiry', optional: true),
+                        new Parameter('expiresAt', optional: true),
                         new Parameter('metadata', optional: true),
                         new Parameter('permissions', optional: true),
                     ],
@@ -83,7 +83,7 @@ class Update extends PlatformAction
                         new Parameter('presenceId', optional: false),
                         new Parameter('userId', optional: false),
                         new Parameter('status', optional: true),
-                        new Parameter('expiry', optional: true),
+                        new Parameter('expiresAt', optional: true),
                         new Parameter('metadata', optional: true),
                         new Parameter('permissions', optional: true),
                     ],
@@ -92,7 +92,7 @@ class Update extends PlatformAction
             ->param('presenceId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Presence unique ID.', false, ['dbForProject'])
             ->param('userId', null, new Nullable(new UID()), 'User ID.', true)
             ->param('status', null, new Nullable(new Text(Database::LENGTH_KEY)), 'Presence status.', true)
-            ->param('expiry', null, new Nullable(new DatetimeValidator()), 'Presence expiry datetime.', true)
+            ->param('expiresAt', null, new Nullable(new DatetimeValidator()), 'Presence expiry datetime.', true)
             ->param('metadata', null, new Nullable(new JSON()), 'Presence metadata object.', true)
             ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE])), 'An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->inject('response')
@@ -107,7 +107,7 @@ class Update extends PlatformAction
         string $presenceId,
         ?string $userId,
         ?string $status,
-        ?string $expiry,
+        ?string $expiresAt,
         ?array $metadata,
         ?array $permissions,
         Response $response,
@@ -145,8 +145,8 @@ class Update extends PlatformAction
             $updateData['status'] = $status;
         }
 
-        if ($expiry !== null) {
-            $updateData['expiry'] = $expiry;
+        if ($expiresAt !== null) {
+            $updateData['expiresAt'] = $expiresAt;
         }
 
         if ($metadata !== null) {

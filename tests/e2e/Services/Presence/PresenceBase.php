@@ -22,8 +22,8 @@ trait PresenceBase
         }
 
         self::$presenceApiKeyCache[$projectId] = $this->getNewKey([
-            'presence.read',
-            'presence.write',
+            'presences.read',
+            'presences.read',
         ]);
 
         return self::$presenceApiKeyCache[$projectId];
@@ -139,7 +139,7 @@ trait PresenceBase
             $this->assertEquals(200, $get['headers']['status-code']);
             $this->assertEquals($upsert['body']['$id'], $get['body']['$id']);
             $this->assertEquals($userId, $get['body']['userId']);
-            $this->assertArrayHasKey('expiry', $get['body']);
+            $this->assertArrayHasKey('expiresAt', $get['body']);
 
             return;
         }
@@ -158,7 +158,7 @@ trait PresenceBase
         $this->assertEquals(200, $get['headers']['status-code']);
         $this->assertEquals($presence['$id'], $get['body']['$id']);
         $this->assertEquals($presence['userId'], $get['body']['userId']);
-        $this->assertArrayHasKey('expiry', $get['body']);
+        $this->assertArrayHasKey('expiresAt', $get['body']);
     }
 
     public function testListPresences(): void
