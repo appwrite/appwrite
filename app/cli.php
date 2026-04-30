@@ -276,40 +276,34 @@ $container->set('logError', function () {
         Console::error('[Error] Line: ' . $error->getLine());
         Console::error('[Error] Trace: ' . $error->getTraceAsString());
 
-        $span = Span::current();
-        $shouldFinish = false;
-        if ($span === null) {
-            $span = Span::init($action);
-            $shouldFinish = true;
-        }
+        // Export a standalone error span without mutating the active CLI task span.
+        $span = new Span($action);
 
-        Span::add('level', 'error');
-        Span::add('logger', $namespace);
-        Span::add('server.name', System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
-        Span::add('release', System::getEnv('_APP_VERSION', 'UNKNOWN'));
-        Span::add('environment', System::getEnv('_APP_ENV', 'development') === 'production' ? 'production' : 'staging');
-        Span::add('appwrite.error.publish', true);
-        Span::add('appwrite.error.action', $action);
-        Span::add('error.message', $error->getMessage());
-        Span::add('verboseType', get_class($error));
-        Span::add('error.code', $error->getCode());
-        Span::add('error.file', $error->getFile());
-        Span::add('error.line', $error->getLine());
-        Span::add('error.trace', $error->getTraceAsString());
-        Span::add('error.detailedTrace', \json_encode($error->getTrace()) ?: null);
+        $span->set('level', 'error');
+        $span->set('logger', $namespace);
+        $span->set('server.name', System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
+        $span->set('release', System::getEnv('_APP_VERSION', 'UNKNOWN'));
+        $span->set('environment', System::getEnv('_APP_ENV', 'development') === 'production' ? 'production' : 'staging');
+        $span->set('appwrite.error.publish', true);
+        $span->set('appwrite.error.action', $action);
+        $span->set('error.message', $error->getMessage());
+        $span->set('verboseType', get_class($error));
+        $span->set('error.code', $error->getCode());
+        $span->set('error.file', $error->getFile());
+        $span->set('error.line', $error->getLine());
+        $span->set('error.trace', $error->getTraceAsString());
+        $span->set('error.detailedTrace', \json_encode($error->getTrace()) ?: null);
 
         if ($error->getPrevious() !== null) {
             if ($error->getPrevious()->getMessage() != $error->getMessage()) {
-                Span::add('error.previous.message', $error->getPrevious()->getMessage());
+                $span->set('error.previous.message', $error->getPrevious()->getMessage());
             }
-            Span::add('error.previous.file', $error->getPrevious()->getFile());
-            Span::add('error.previous.line', $error->getPrevious()->getLine());
+            $span->set('error.previous.file', $error->getPrevious()->getFile());
+            $span->set('error.previous.line', $error->getPrevious()->getLine());
         }
 
-        Span::error($error);
-        if ($shouldFinish) {
-            $span->finish();
-        }
+        $span->setError($error);
+        $span->finish();
     };
 }, []);
 
