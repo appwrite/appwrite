@@ -22,7 +22,15 @@ $addSentryExporter = function (string $loggingConfig, ?callable $sampler = null)
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Logging provider not supported. Logging is disabled');
         }
 
-        $dsn = 'https://' . $loggingProvider->getPassword() . '@' . $loggingProvider->getHost() . '/' . ($loggingProvider->getUser() ?? '');
+        $projectId = $loggingProvider->getUser();
+        $apiKey = $loggingProvider->getPassword();
+        $host = $loggingProvider->getHost();
+
+        if (empty($projectId) || empty($apiKey) || empty($host)) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Invalid Sentry DSN. Logging is disabled');
+        }
+
+        $dsn = 'https://' . $apiKey . '@' . $host . '/' . $projectId;
 
         Span::addExporter(
             new Exporter\Sentry(
