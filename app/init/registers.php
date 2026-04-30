@@ -319,8 +319,15 @@ $register->set('pools', function () {
                         ));
                     });
                 },
-                'sqlite' => function () {
+                'sqlite' => function () use ($key) {
                     $path = System::getEnv('_APP_DB_SQLITE_PATH', '/tmp/appwrite.db');
+                    // Split each pool category (console, database, documentsdb,
+                    // vectorsdb, logs) into its own SQLite file so they don't
+                    // serialise through one writer lock. Treat the configured
+                    // path as a "{dir}/{stem}.db" template and replace the
+                    // stem with the pool key.
+                    $dir = \dirname($path);
+                    $path = "{$dir}/{$key}.db";
                     return new PDOProxy(function () use ($path) {
                         $pdo = new PDO("sqlite:{$path}", null, null, [
                             \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
