@@ -58,7 +58,7 @@ class PresenceState
         Database $dbForProject,
         Document $presenceDocument,
         string $presenceId,
-        string $userId,
+        mixed $userInternalId,
         ?callable $onPresenceCreated = null
     ): Document {
         if ($presenceId !== 'unique()') {
@@ -69,14 +69,14 @@ class PresenceState
 
         try {
             if ($dbForProject->getAdapter()->getSupportForUpsertOnUniqueIndex()) {
-                $presenceCreated = $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userId', [$userId])])->isEmpty();
+                $presenceCreated = $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userInternalId', [$userInternalId])])->isEmpty();
                 $presence = $dbForProject->upsertDocument(self::COLLECTION_ID, $presenceDocument);
             } else {
                 $presence = $this->transactionalUpsertForUser(
                     $dbForProject,
                     $presenceDocument,
                     $presenceId,
-                    $userId,
+                    $userInternalId,
                     $presenceCreated
                 );
             }
@@ -101,18 +101,18 @@ class PresenceState
         Database $dbForProject,
         Document $presenceDocument,
         string $presenceId,
-        string $userId,
+        mixed $userInternalId,
         ?bool &$presenceCreated = null
     ): Document {
-        return $dbForProject->withTransaction(function () use ($dbForProject, $presenceDocument, $presenceId, $userId, &$presenceCreated) {
-            $existingPresence = $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userId', [$userId])]);
+        return $dbForProject->withTransaction(function () use ($dbForProject, $presenceDocument, $presenceId, $userInternalId, &$presenceCreated) {
+            $existingPresence = $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userInternalId', [$userInternalId])]);
 
             if ($existingPresence->isEmpty()) {
                 $presenceCreated = true;
                 return $dbForProject->createDocument(self::COLLECTION_ID, $presenceDocument);
             }
 
-            // Lock current state to avoid races while resolving upsert by userId.
+            // Lock current state to avoid races while resolving upsert by userInternalId.
             $currentPresence = $dbForProject->getDocument(self::COLLECTION_ID, $existingPresence->getId(), forUpdate: true);
 
             if ($currentPresence->isEmpty()) {

@@ -1527,7 +1527,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                     $database,
                     $presenceDocument,
                     $presenceId,
-                    $userId,
+                    (string) $user->getSequence(),
                     function () use ($project): void {
                         if ($project !== null && !$project->isEmpty()) {
                             triggerPresenceUsage(1, $project->getId());

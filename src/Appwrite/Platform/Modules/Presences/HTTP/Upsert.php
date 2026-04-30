@@ -147,8 +147,12 @@ class Upsert extends PlatformAction
                 throw new Exception(Exception::USER_NOT_FOUND, params: [$userId]);
             }
 
-            $userInternalId = $fetchedUser->getSequence();
+            $userInternalId = (string) $fetchedUser->getSequence();
             $resolvedUserId = $fetchedUser->getId();
+        }
+
+        if (empty($userInternalId)) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to resolve valid user internal ID.');
         }
         $isGraphQL = $request->getHeader('x-appwrite-source') === 'graphql';
 
@@ -170,7 +174,7 @@ class Upsert extends PlatformAction
             $dbForProject,
             $presenceDocument,
             $presenceId,
-            $resolvedUserId,
+            $userInternalId,
             fn () => $usage->addMetric(METRIC_USERS_PRESENCE, 1)
         );
         $queueForEvents->setParam('presenceId', $presence->getId());
