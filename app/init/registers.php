@@ -14,7 +14,9 @@ use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\Mongo;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Adapter\Postgres;
+use Utopia\Database\Adapter\Redis as RedisAdapter;
 use Utopia\Database\Adapter\SQL;
+use Utopia\Database\Adapter\SQLite;
 use Utopia\Database\PDO;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\DSN\DSN;
@@ -185,18 +187,42 @@ $register->set('pools', function () {
         'path' => System::getEnv('_APP_DB_SCHEMA', ''),
     ]);
 
+    /*
+     * !!! WARNING — `redis` scheme on the `database` and `console` pools !!!
+     *
+     * The Utopia Redis database adapter is intended for **logs/console only**.
+     * Project data (the `database` pool) MUST persist; Redis is an in-memory
+     * store and operators who set `_APP_DB_ADAPTER=redis` for project data
+     * WILL LOSE DATA on cache eviction, process restart, or `redis-cli FLUSHDB`.
+     *
+     * The `redis` scheme is currently still listed on the `database` pool
+     * because `.github/workflows/ci.yml` runs a CI matrix entry with
+     * `_APP_DB_ADAPTER=redis` that flows through the `database` pool to
+     * exercise the adapter end-to-end. Removing `redis` here would break
+     * that matrix. The proper fix is to either:
+     *   1. Reframe the CI matrix to point Redis at the `logs`/`console` pool
+     *      only (where in-memory storage is acceptable for ephemeral logs),
+     *      then remove `redis` from `database` here, OR
+     *   2. Drop the Redis matrix entry entirely and rely on the
+     *      utopia-php/database adapter test-suite for coverage.
+     *
+     * Until that decision is made, this comment is the operator-facing
+     * guardrail. NEVER add `redis` to the `documentsdb` or `vectorsdb` pool
+     * schemes — those backends require durable storage and proper indexing
+     * which Redis does not provide.
+     */
     $connections = [
         'console' => [
             'type' => 'database',
             'dsns' => $fallbackForDB,
             'multiple' => false,
-            'schemes' => ['mariadb', 'mongodb', 'mysql', 'postgresql'],
+            'schemes' => ['mariadb', 'mongodb', 'mysql', 'postgresql', 'redis', 'sqlite'],
         ],
         'database' => [
             'type' => 'database',
             'dsns' => $fallbackForDB,
             'multiple' => true,
-            'schemes' => ['mongodb','mariadb', 'mysql','postgresql'],
+            'schemes' => ['mariadb', 'mongodb', 'mysql', 'postgresql', 'redis', 'sqlite'],
         ],
         'documentsdb' => [
             'type' => 'database',
@@ -214,7 +240,7 @@ $register->set('pools', function () {
             'type' => 'database',
             'dsns' => System::getEnv('_APP_CONNECTIONS_DB_LOGS', $fallbackForDB),
             'multiple' => false,
-            'schemes' => ['mongodb','mariadb', 'mysql','postgresql'],
+            'schemes' => ['mariadb', 'mongodb', 'mysql', 'postgresql', 'redis', 'sqlite'],
         ],
         'publisher' => [
             'type' => 'publisher',
@@ -318,11 +344,49 @@ $register->set('pools', function () {
                         ));
                     });
                 },
-                default => function () use ($dsnHost, $dsnPort, $dsnPass) {
+                'sqlite' => function () use ($key) {
+                    $path = System::getEnv('_APP_DB_SQLITE_PATH', '/tmp/appwrite.db');
+                    // Split each pool category (console, database, documentsdb,
+                    // vectorsdb, logs) into its own SQLite file so they don't
+                    // serialise through one writer lock. Treat the configured
+                    // path as a "{dir}/{stem}.db" template and replace the
+                    // stem with the pool key.
+                    $dir = \dirname($path);
+                    $path = "{$dir}/{$key}.db";
+                    return new PDOProxy(function () use ($path) {
+                        $pdo = new PDO("sqlite:{$path}", null, null, [
+                            \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+                            \PDO::ATTR_EMULATE_PREPARES => true,
+                            \PDO::ATTR_STRINGIFY_FETCHES => true,
+                        ]);
+                        // Tuned for high-concurrency test workloads. WAL allows
+                        // concurrent readers alongside one writer; busy_timeout
+                        // makes contending writers wait instead of failing.
+                        // synchronous=OFF skips fsync — fine for tests, never
+                        // for production data.
+                        $pdo->query('PRAGMA journal_mode=WAL');
+                        $pdo->query('PRAGMA busy_timeout=60000');
+                        $pdo->query('PRAGMA synchronous=OFF');
+                        $pdo->query('PRAGMA temp_store=MEMORY');
+                        $pdo->query('PRAGMA cache_size=-262144'); // 256 MB page cache
+                        $pdo->query('PRAGMA mmap_size=2147483648'); // 2 GB mmap window
+                        $pdo->query('PRAGMA wal_autocheckpoint=10000');
+                        $pdo->query('PRAGMA journal_size_limit=67108864'); // 64 MB WAL cap
+                        $pdo->query('PRAGMA foreign_keys=ON');
+                        return $pdo;
+                    });
+                },
+                // DSN format: redis://[user:pass@]host:port[/db]
+                // - "db" segment is the logical Redis DB index (0-15) and is
+                //   optional. Query parameters are not supported.
+                'redis' => function () use ($dsnHost, $dsnPort, $dsnPass, $dsnDatabase) {
                     $redis = new \Redis();
                     @$redis->pconnect($dsnHost, (int)$dsnPort);
                     if ($dsnPass) {
                         $redis->auth($dsnPass);
+                    }
+                    if ($dsnDatabase !== '' && \is_numeric($dsnDatabase)) {
+                        $redis->select((int)$dsnDatabase);
                     }
                     $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
 
@@ -341,6 +405,8 @@ $register->set('pools', function () {
                             'mysql' => new MySQL($resource()),
                             'mongodb' => new Mongo($resource()),
                             'postgresql' => new Postgres($resource()),
+                            'redis' => new RedisAdapter($resource()),
+                            'sqlite' => (new SQLite($resource()))->setEmulateMySQL(true),
                             default => null
                         };
 
@@ -415,6 +481,19 @@ $register->set('db', function () {
         case 'postgresql':
             $dsn = "pgsql:host={$dbHost};port={$dbPort};dbname={$dbSchema};connect_timeout=3";
             return new PDO($dsn, $dbUser, $dbPass, SQL::getPDOAttributes());
+        case 'sqlite':
+            $path = System::getEnv('_APP_DB_SQLITE_PATH', '/tmp/appwrite.db');
+            $pdo = new PDO("sqlite:{$path}", null, null, SQL::getPDOAttributes());
+            $pdo->query('PRAGMA journal_mode=WAL');
+            $pdo->query('PRAGMA busy_timeout=60000');
+            $pdo->query('PRAGMA synchronous=OFF');
+            $pdo->query('PRAGMA temp_store=MEMORY');
+            $pdo->query('PRAGMA cache_size=-262144');
+            $pdo->query('PRAGMA mmap_size=2147483648');
+            $pdo->query('PRAGMA wal_autocheckpoint=10000');
+            $pdo->query('PRAGMA journal_size_limit=67108864');
+            $pdo->query('PRAGMA foreign_keys=ON');
+            return $pdo;
         default:
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Invalid database adapter');
     }

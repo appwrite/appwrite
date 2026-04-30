@@ -37,9 +37,10 @@ class ComposeTest extends TestCase
 
     public function testVolumes(): void
     {
-        $this->assertCount(7, $this->object->getVolumes());
+        $this->assertCount(8, $this->object->getVolumes());
         $this->assertEquals('appwrite-mariadb', $this->object->getVolumes()[0]);
         $this->assertEquals('appwrite-redis', $this->object->getVolumes()[1]);
         $this->assertEquals('appwrite-cache', $this->object->getVolumes()[2]);
+        $this->assertContains('appwrite-sqlite', $this->object->getVolumes());
     }
 }

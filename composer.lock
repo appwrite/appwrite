@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4bee36b21a57e754d2b3417e72dc9599",
+    "content-hash": "031916478b08f054016bbacc1ac972c6",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3850,22 +3850,23 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "5.4.1",
+            "version": "dev-feat-redis-adapter",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "688d9422b5ff42ac2ecc29397d94891cfd772e93"
+                "reference": "ec93c4cc654acc4ef2952a830ff6d2ba7354720c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/688d9422b5ff42ac2ecc29397d94891cfd772e93",
-                "reference": "688d9422b5ff42ac2ecc29397d94891cfd772e93",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/ec93c4cc654acc4ef2952a830ff6d2ba7354720c",
+                "reference": "ec93c4cc654acc4ef2952a830ff6d2ba7354720c",
                 "shasum": ""
             },
             "require": {
                 "ext-mbstring": "*",
                 "ext-mongodb": "*",
                 "ext-pdo": "*",
+                "ext-redis": "*",
                 "php": ">=8.4",
                 "utopia-php/cache": "1.*",
                 "utopia-php/console": "0.1.*",
@@ -3889,7 +3890,38 @@
                     "Utopia\\Database\\": "src/Database"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Tests\\E2E\\": "tests/e2e",
+                    "Tests\\Unit\\": "tests/unit"
+                }
+            },
+            "scripts": {
+                "build": [
+                    "Composer\\Config::disableProcessTimeout",
+                    "docker compose build"
+                ],
+                "start": [
+                    "Composer\\Config::disableProcessTimeout",
+                    "docker compose up -d"
+                ],
+                "test": [
+                    "Composer\\Config::disableProcessTimeout",
+                    "docker compose exec tests vendor/bin/phpunit --configuration phpunit.xml"
+                ],
+                "lint": [
+                    "php -d memory_limit=2G ./vendor/bin/pint --test"
+                ],
+                "format": [
+                    "php -d memory_limit=2G ./vendor/bin/pint"
+                ],
+                "check": [
+                    "./vendor/bin/phpstan analyse --level 7 src tests --memory-limit 2G"
+                ],
+                "coverage": [
+                    "./vendor/bin/coverage-check ./tmp/clover.xml 90"
+                ]
+            },
             "license": [
                 "MIT"
             ],
@@ -3902,10 +3934,10 @@
                 "utopia"
             ],
             "support": {
-                "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/5.4.1"
+                "source": "https://github.com/utopia-php/database/tree/feat-redis-adapter",
+                "issues": "https://github.com/utopia-php/database/issues"
             },
-            "time": "2026-04-29T07:32:59+00:00"
+            "time": "2026-04-30T11:06:30+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -8442,9 +8474,18 @@
             "time": "2024-11-07T12:36:22+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-feat-redis-adapter",
+            "alias": "5.999.0",
+            "alias_normalized": "5.999.0.0"
+        }
+    ],
     "minimum-stability": "dev",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/database": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {

@@ -7360,6 +7360,10 @@ trait DatabasesBase
 
     public function testTimeout(): void
     {
+        if (\getenv('_APP_DB_ADAPTER') === 'sqlite') {
+            $this->markTestSkipped('SQLite has no statement-level timeouts.');
+        }
+
         $data = $this->setupDatabase();
         $databaseId = $data['databaseId'];
 

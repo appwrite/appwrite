@@ -215,16 +215,19 @@ jobs:
         uses: actions/github-script@v8
         with:
           script: |
-            const allDatabases = ['MariaDB', 'PostgreSQL', 'MongoDB'];
-            const allModes = ['dedicated', 'shared'];
+            // PRs that bump utopia-php/database run the full DB matrix in
+            // both dedicated and shared modes; everything else gets the
+            // SQLite + Redis short matrix in shared mode only.
+            const fullMatrixDatabases = ['MariaDB', 'PostgreSQL', 'MongoDB', 'Redis'];
+            const fullMatrixModes = ['dedicated', 'shared'];
 
-            const defaultDatabases = ['MongoDB'];
-            const defaultModes = ['dedicated'];
+            const defaultDatabases = ['SQLite', 'Redis'];
+            const defaultModes = ['shared'];
 
             const pr = context.payload.pull_request;
             if (!pr) {
-              core.setOutput('databases', JSON.stringify(allDatabases));
-              core.setOutput('modes', JSON.stringify(allModes));
+              core.setOutput('databases', JSON.stringify(fullMatrixDatabases));
+              core.setOutput('modes', JSON.stringify(fullMatrixModes));
               return;
             }
 
@@ -245,8 +248,8 @@ jobs:
             const decode = (content) => JSON.parse(Buffer.from(content, 'base64').toString());
             const databaseChanged = getDbVersion(decode(base.content)) !== getDbVersion(decode(head.content));
 
-            core.setOutput('databases', JSON.stringify(databaseChanged ? allDatabases : defaultDatabases));
-            core.setOutput('modes', JSON.stringify(databaseChanged ? allModes : defaultModes));
+            core.setOutput('databases', JSON.stringify(databaseChanged ? fullMatrixDatabases : defaultDatabases));
+            core.setOutput('modes', JSON.stringify(databaseChanged ? fullMatrixModes : defaultModes));
 
   build:
     name: Build
@@ -485,6 +488,17 @@ jobs:
             echo "_APP_DB_ADAPTER=postgresql" >> $GITHUB_ENV
             echo "_APP_DB_HOST=postgresql" >> $GITHUB_ENV
             echo "_APP_DB_PORT=5432" >> $GITHUB_ENV
+          elif [ "${{ matrix.database }}" = "SQLite" ]; then
+            echo "COMPOSE_PROFILES=mongodb" >> $GITHUB_ENV
+            echo "_APP_DB_ADAPTER=sqlite" >> $GITHUB_ENV
+            echo "_APP_DB_HOST=mongodb" >> $GITHUB_ENV
+            echo "_APP_DB_PORT=0" >> $GITHUB_ENV
+            echo "_APP_DB_SQLITE_PATH=/storage/sqlite/appwrite.db" >> $GITHUB_ENV
+          elif [ "${{ matrix.database }}" = "Redis" ]; then
+            echo "COMPOSE_PROFILES=mongodb" >> $GITHUB_ENV
+            echo "_APP_DB_ADAPTER=redis" >> $GITHUB_ENV
+            echo "_APP_DB_HOST=redis-mirror" >> $GITHUB_ENV
+            echo "_APP_DB_PORT=6379" >> $GITHUB_ENV
           fi
 
       - name: Login to Docker Hub
@@ -545,6 +559,13 @@ jobs:
             PARATEST_PROCESSES="${{ matrix.paratest_processes }}"
             if [ -z "$PARATEST_PROCESSES" ]; then
               PARATEST_PROCESSES="$(nproc)"
+            fi
+
+            # SQLite serialises writes through a single file lock; running
+            # heavy services in parallel produces SQLITE_BUSY storms even
+            # with a 30s busy_timeout. Cap concurrency to 1 for SQLite.
+            if [ "${{ matrix.database }}" = "SQLite" ]; then
+              PARATEST_PROCESSES=1
             fi
 
             docker compose exec -T \
