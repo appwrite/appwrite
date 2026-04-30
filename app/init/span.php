@@ -12,12 +12,7 @@ use Utopia\System\System;
 Span::setStorage(new Storage\Coroutine());
 
 $loggingConfig = System::getEnv('_APP_LOGGING_CONFIG', '');
-$legacyLoggingProvider = System::getEnv('_APP_LOGGING_PROVIDER', '');
 $legacyRealtimeLoggingConfig = System::getEnv('_APP_LOGGING_CONFIG_REALTIME', '');
-
-if (!empty($legacyLoggingProvider)) {
-    Console::warning('_APP_LOGGING_PROVIDER is no longer supported. Set _APP_LOGGING_CONFIG to a provider DSN.');
-}
 
 if (!empty($legacyRealtimeLoggingConfig)) {
     Console::warning('_APP_LOGGING_CONFIG_REALTIME is no longer supported. Realtime errors use _APP_LOGGING_CONFIG.');
