@@ -1219,7 +1219,7 @@ Http::error()
             : ($code === 0 || $code >= 500);
 
         $providerConfig = System::getEnv('_APP_EXPERIMENT_LOGGING_CONFIG', '');
-        if (!empty($providerConfig) && $code >= 400 && $code < 500) {
+        if (!$publish && !empty($providerConfig) && $code >= 400 && $code < 500) {
             $publish = true;
             Span::add('appwrite.error.experimental', true);
         }
