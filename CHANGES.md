@@ -43,6 +43,7 @@
 * Refactor functions schedule in [#10913](https://github.com/appwrite/appwrite/pull/10913)
 * Refactor make Bus dispatch synchronous in [#11449](https://github.com/appwrite/appwrite/pull/11449)
 * Remove proxy container in [#11039](https://github.com/appwrite/appwrite/pull/11039)
+* Remove legacy logging providers and require a Sentry DSN in `_APP_LOGGING_CONFIG` in [#12184](https://github.com/appwrite/appwrite/pull/12184)
 
 ### Performance
 
