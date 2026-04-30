@@ -1422,6 +1422,27 @@ services:
       timeout: 5s
       retries: 12
 
+  # Dedicated Redis instance used as the primary database backend when
+  # _APP_DB_ADAPTER=redis. Kept separate from the cache instance above so
+  # that tuning (eviction policy, persistence) can be set for durability
+  # rather than cache semantics. maxmemory-policy=noeviction is mandatory:
+  # a database that silently evicts keys would lose user data.
+  redis-mirror:
+    image: redis:7.4-alpine
+    container_name: appwrite-redis-mirror
+    <<: *x-logging
+    command: redis-server --maxmemory 1gb --maxmemory-policy noeviction --appendonly yes --save ""
+    ports: []
+    networks:
+      - appwrite
+    volumes:
+      - appwrite-redis-mirror:/data:rw
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   coredns: # DNS server for testing purposes (Proxy APIs)
     image: coredns/coredns:1.12.4
     container_name: appwrite-coredns
@@ -1514,6 +1535,7 @@ volumes:
   appwrite-mongodb-keyfile:
   appwrite-postgresql:
   appwrite-redis:
+  appwrite-redis-mirror:
   appwrite-cache:
   appwrite-uploads:
   appwrite-imports:

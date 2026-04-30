@@ -216,10 +216,10 @@ jobs:
         with:
           script: |
             // TEMP: forcing SQLite/shared on this PR until it goes green; revert before merge.
-            const fullMatrixDatabases = ['MariaDB', 'PostgreSQL', 'MongoDB'];
+            const fullMatrixDatabases = ['MariaDB', 'PostgreSQL', 'MongoDB', 'Redis'];
             const fullMatrixModes = ['dedicated', 'shared'];
 
-            const defaultDatabases = ['SQLite'];
+            const defaultDatabases = ['SQLite', 'Redis'];
             const defaultModes = ['shared'];
 
             core.setOutput('databases', JSON.stringify(defaultDatabases));
@@ -496,6 +496,11 @@ jobs:
             echo "_APP_DB_HOST=mongodb" >> $GITHUB_ENV
             echo "_APP_DB_PORT=0" >> $GITHUB_ENV
             echo "_APP_DB_SQLITE_PATH=/storage/sqlite/appwrite.db" >> $GITHUB_ENV
+          elif [ "${{ matrix.database }}" = "Redis" ]; then
+            echo "COMPOSE_PROFILES=mongodb" >> $GITHUB_ENV
+            echo "_APP_DB_ADAPTER=redis" >> $GITHUB_ENV
+            echo "_APP_DB_HOST=redis-mirror" >> $GITHUB_ENV
+            echo "_APP_DB_PORT=6379" >> $GITHUB_ENV
           fi
 
       - name: Login to Docker Hub

@@ -61,7 +61,7 @@
         "utopia-php/compression": "0.1.*",
         "utopia-php/config": "1.*",
         "utopia-php/console": "0.1.*",
-        "utopia-php/database": "dev-feat-sqlite-fts as 5.999.0",
+        "utopia-php/database": "dev-feat-redis-adapter as 5.999.0",
         "utopia-php/detector": "0.2.*",
         "utopia-php/domains": "1.*",
         "utopia-php/emails": "0.6.*",

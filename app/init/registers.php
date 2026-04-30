@@ -14,6 +14,7 @@ use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\Mongo;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Adapter\Postgres;
+use Utopia\Database\Adapter\Redis as RedisAdapter;
 use Utopia\Database\Adapter\SQL;
 use Utopia\Database\Adapter\SQLite;
 use Utopia\Database\PDO;
@@ -191,13 +192,13 @@ $register->set('pools', function () {
             'type' => 'database',
             'dsns' => $fallbackForDB,
             'multiple' => false,
-            'schemes' => ['mariadb', 'mongodb', 'mysql', 'postgresql', 'sqlite'],
+            'schemes' => ['mariadb', 'mongodb', 'mysql', 'postgresql', 'redis', 'sqlite'],
         ],
         'database' => [
             'type' => 'database',
             'dsns' => $fallbackForDB,
             'multiple' => true,
-            'schemes' => ['mongodb', 'mariadb', 'mysql', 'postgresql', 'sqlite'],
+            'schemes' => ['mariadb', 'mongodb', 'mysql', 'postgresql', 'redis', 'sqlite'],
         ],
         'documentsdb' => [
             'type' => 'database',
@@ -215,7 +216,7 @@ $register->set('pools', function () {
             'type' => 'database',
             'dsns' => System::getEnv('_APP_CONNECTIONS_DB_LOGS', $fallbackForDB),
             'multiple' => false,
-            'schemes' => ['mongodb', 'mariadb', 'mysql', 'postgresql', 'sqlite'],
+            'schemes' => ['mariadb', 'mongodb', 'mysql', 'postgresql', 'redis', 'sqlite'],
         ],
         'publisher' => [
             'type' => 'publisher',
@@ -351,6 +352,22 @@ $register->set('pools', function () {
                         return $pdo;
                     });
                 },
+                // DSN format: redis://[user:pass@]host:port[/db]
+                // - "db" segment is the logical Redis DB index (0-15) and is
+                //   optional. Query parameters are not supported.
+                'redis' => function () use ($dsnHost, $dsnPort, $dsnPass, $dsnDatabase) {
+                    $redis = new \Redis();
+                    @$redis->pconnect($dsnHost, (int)$dsnPort);
+                    if ($dsnPass) {
+                        $redis->auth($dsnPass);
+                    }
+                    if ($dsnDatabase !== '' && \is_numeric($dsnDatabase)) {
+                        $redis->select((int)$dsnDatabase);
+                    }
+                    $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
+
+                    return $redis;
+                },
                 default => function () use ($dsnHost, $dsnPort, $dsnPass) {
                     $redis = new \Redis();
                     @$redis->pconnect($dsnHost, (int)$dsnPort);
@@ -374,6 +391,7 @@ $register->set('pools', function () {
                             'mysql' => new MySQL($resource()),
                             'mongodb' => new Mongo($resource()),
                             'postgresql' => new Postgres($resource()),
+                            'redis' => new RedisAdapter($resource()),
                             'sqlite' => (new SQLite($resource()))->setEmulateMySQL(true),
                             default => null
                         };

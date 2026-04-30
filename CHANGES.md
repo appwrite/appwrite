@@ -1,3 +1,7 @@
+# Unreleased
+
+- Add Redis as a supported database adapter for tests (use `_APP_DB_ADAPTER=redis _APP_DB_HOST=redis-mirror`)
+
 # Version 1.9.0
 
 ## What's Changed
