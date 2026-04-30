@@ -18,7 +18,7 @@ dev/yasd_init.php
 Makefile
 appwrite.config.json
 /.zed/
-# /app/config/specs/
+/app/config/specs/
 /docs/examples/
 .phpunit.cache
 .phpstan-cache
