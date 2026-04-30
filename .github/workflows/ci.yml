@@ -558,6 +558,13 @@ jobs:
               PARATEST_PROCESSES="$(nproc)"
             fi
 
+            # SQLite serialises writes through a single file lock; running
+            # heavy services in parallel produces SQLITE_BUSY storms even
+            # with a 30s busy_timeout. Cap concurrency to 1 for SQLite.
+            if [ "${{ matrix.database }}" = "SQLite" ]; then
+              PARATEST_PROCESSES=1
+            fi
+
             docker compose exec -T \
               -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
               -e _TESTS_OAUTH2_GITHUB_CLIENT_ID="${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_ID }}" \
