@@ -352,44 +352,37 @@ return function (Container $container): void {
 
     $container->set('logError', function (Document $project) {
         return function (Throwable $error, string $namespace, string $action, ?array $extras = null) use ($project) {
-            $span = Span::current();
-            $shouldFinish = false;
-            if ($span === null) {
-                $span = Span::init($action);
-                $shouldFinish = true;
-            }
+            $span = new Span($action);
 
-            Span::add('level', 'error');
-            Span::add('logger', $namespace);
-            Span::add('server.name', System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
-            Span::add('release', System::getEnv('_APP_VERSION', 'UNKNOWN'));
-            Span::add('environment', System::getEnv('_APP_ENV', 'development') === 'production' ? 'production' : 'staging');
-            Span::add('appwrite.error.publish', true);
-            Span::add('appwrite.error.action', $action);
-            Span::add('code', $error->getCode());
-            Span::add('verboseType', \get_class($error));
-            Span::add('projectId', $project->getId());
-            Span::add('error.message', $error->getMessage());
-            Span::add('error.file', $error->getFile());
-            Span::add('error.line', $error->getLine());
-            Span::add('error.trace', $error->getTraceAsString());
+            $span->set('level', 'error');
+            $span->set('logger', $namespace);
+            $span->set('server.name', System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
+            $span->set('release', System::getEnv('_APP_VERSION', 'UNKNOWN'));
+            $span->set('environment', System::getEnv('_APP_ENV', 'development') === 'production' ? 'production' : 'staging');
+            $span->set('appwrite.error.publish', true);
+            $span->set('appwrite.error.action', $action);
+            $span->set('code', $error->getCode());
+            $span->set('verboseType', \get_class($error));
+            $span->set('projectId', $project->getId());
+            $span->set('error.message', $error->getMessage());
+            $span->set('error.file', $error->getFile());
+            $span->set('error.line', $error->getLine());
+            $span->set('error.trace', $error->getTraceAsString());
 
             if ($error->getPrevious() !== null) {
                 if ($error->getPrevious()->getMessage() != $error->getMessage()) {
-                    Span::add('error.previous.message', $error->getPrevious()->getMessage());
+                    $span->set('error.previous.message', $error->getPrevious()->getMessage());
                 }
-                Span::add('error.previous.file', $error->getPrevious()->getFile());
-                Span::add('error.previous.line', $error->getPrevious()->getLine());
+                $span->set('error.previous.file', $error->getPrevious()->getFile());
+                $span->set('error.previous.line', $error->getPrevious()->getLine());
             }
 
             foreach (($extras ?? []) as $key => $value) {
-                Span::add($key, \is_scalar($value) || $value === null ? $value : (\json_encode($value) ?: null));
+                $span->set($key, \is_scalar($value) || $value === null ? $value : (\json_encode($value) ?: null));
             }
 
-            Span::error($error);
-            if ($shouldFinish) {
-                $span->finish();
-            }
+            $span->setError($error);
+            $span->finish();
 
             Console::warning("Failed: {$error->getMessage()}");
             Console::warning($error->getTraceAsString());
