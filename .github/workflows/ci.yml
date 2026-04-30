@@ -215,8 +215,38 @@ jobs:
         uses: actions/github-script@v8
         with:
           script: |
-            core.setOutput('databases', JSON.stringify(['SQLite']));
-            core.setOutput('modes', JSON.stringify(['shared']));
+            const fullMatrixDatabases = ['MariaDB', 'PostgreSQL', 'MongoDB'];
+            const fullMatrixModes = ['dedicated', 'shared'];
+
+            const defaultDatabases = ['SQLite'];
+            const defaultModes = ['shared'];
+
+            const pr = context.payload.pull_request;
+            if (!pr) {
+              core.setOutput('databases', JSON.stringify([...defaultDatabases, ...fullMatrixDatabases]));
+              core.setOutput('modes', JSON.stringify(fullMatrixModes));
+              return;
+            }
+
+            const getContent = (ref) => github.rest.repos.getContent({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              path: 'composer.lock',
+              ref,
+            });
+
+            const getDbVersion = (lock) => lock.packages?.find(p => p.name === 'utopia-php/database')?.version;
+
+            const [{ data: base }, { data: head }] = await Promise.all([
+              getContent(pr.base.sha),
+              getContent(pr.head.sha),
+            ]);
+
+            const decode = (content) => JSON.parse(Buffer.from(content, 'base64').toString());
+            const databaseChanged = getDbVersion(decode(base.content)) !== getDbVersion(decode(head.content));
+
+            core.setOutput('databases', JSON.stringify(databaseChanged ? fullMatrixDatabases : defaultDatabases));
+            core.setOutput('modes', JSON.stringify(databaseChanged ? fullMatrixModes : defaultModes));
 
   build:
     name: Build
