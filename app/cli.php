@@ -291,7 +291,7 @@ $container->set('logError', function () {
             $span->set('appwrite.error.action', $action);
             $span->set('error.message', $error->getMessage());
             $span->set('verboseType', get_class($error));
-            $span->set('error.code', $error->getCode());
+            $span->set('code', $error->getCode());
             $span->set('error.file', $error->getFile());
             $span->set('error.line', $error->getLine());
             $span->set('error.trace', $error->getTraceAsString());
