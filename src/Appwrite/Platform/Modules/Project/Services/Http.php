@@ -7,6 +7,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\AuthMethods\Update as UpdateA
 use Appwrite\Platform\Modules\Project\Http\Project\Delete as DeleteProject;
 use Appwrite\Platform\Modules\Project\Http\Project\Keys\Create as CreateKey;
 use Appwrite\Platform\Modules\Project\Http\Project\Keys\Delete as DeleteKey;
+use Appwrite\Platform\Modules\Project\Http\Project\Keys\Ephemeral\Create as CreateEphemeralKey;
 use Appwrite\Platform\Modules\Project\Http\Project\Keys\Get as GetKey;
 use Appwrite\Platform\Modules\Project\Http\Project\Keys\Update as UpdateKey;
 use Appwrite\Platform\Modules\Project\Http\Project\Keys\XList as ListKeys;
@@ -131,6 +132,7 @@ class Http extends Service
 
         // Keys
         $this->addAction(CreateKey::getName(), new CreateKey());
+        $this->addAction(CreateEphemeralKey::getName(), new CreateEphemeralKey());
         $this->addAction(ListKeys::getName(), new ListKeys());
         $this->addAction(GetKey::getName(), new GetKey());
         $this->addAction(DeleteKey::getName(), new DeleteKey());

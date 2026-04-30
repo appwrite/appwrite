@@ -34,7 +34,7 @@ class XList extends Action
                 namespace: 'console',
                 group: 'console',
                 name: 'listOAuth2Providers',
-                description: '/docs/references/console/list-oauth2-providers.md',
+                description: 'List all OAuth2 providers supported by the Appwrite server, along with the parameters required to configure each provider. The response excludes mock providers but includes sandbox providers.',
                 auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(

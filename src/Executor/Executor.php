@@ -378,7 +378,6 @@ class Executor
         $responseBody   = curl_exec($ch);
 
         if (isset($callback)) {
-            curl_close($ch);
             return [];
         }
 
@@ -417,8 +416,6 @@ class Executor
             }
             throw new Exception($curlErrorMessage . ' with status code ' . $responseStatus, $responseStatus);
         }
-
-        curl_close($ch);
 
         $responseHeaders['status-code'] = $responseStatus;
 
