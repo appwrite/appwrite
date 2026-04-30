@@ -51,6 +51,8 @@ class Create extends Base
                 name: 'createKey',
                 description: <<<EOT
                 Create a new API key. It's recommended to have multiple API keys with strict scopes for separate functions within your project.
+                
+                You can also create an ephemeral API key if you need a short-lived key instead.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [

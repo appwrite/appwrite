@@ -384,7 +384,7 @@ return [
     ],
     Exception::API_KEY_EXPIRED => [
         'name' => Exception::API_KEY_EXPIRED,
-        'description' => 'The dynamic API key has expired. Please don\'t use dynamic API keys for more than duration of the execution.',
+        'description' => 'The ephemeral API key has expired. Please don\'t use ephemeral API keys for more than duration of the execution.',
         'code' => 401,
     ],
 

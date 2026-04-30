@@ -624,7 +624,7 @@ class Builds extends Action
                     $vars = [
                         ...$vars,
                         'APPWRITE_FUNCTION_API_ENDPOINT' => $endpoint,
-                        'APPWRITE_FUNCTION_API_KEY' => API_KEY_DYNAMIC . '_' . $apiKey,
+                        'APPWRITE_FUNCTION_API_KEY' => API_KEY_EPHEMERAL . '_' . $apiKey,
                         'APPWRITE_FUNCTION_ID' => $resource->getId(),
                         'APPWRITE_FUNCTION_NAME' => $resource->getAttribute('name'),
                         'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
@@ -639,7 +639,7 @@ class Builds extends Action
                     $vars = [
                         ...$vars,
                         'APPWRITE_SITE_API_ENDPOINT' => $endpoint,
-                        'APPWRITE_SITE_API_KEY' => API_KEY_DYNAMIC . '_' . $apiKey,
+                        'APPWRITE_SITE_API_KEY' => API_KEY_EPHEMERAL . '_' . $apiKey,
                         'APPWRITE_SITE_ID' => $resource->getId(),
                         'APPWRITE_SITE_NAME' => $resource->getAttribute('name'),
                         'APPWRITE_SITE_DEPLOYMENT' => $deployment->getId(),

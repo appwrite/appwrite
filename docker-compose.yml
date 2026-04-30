@@ -251,6 +251,8 @@ services:
       - _APP_MIGRATION_HOST
       - _APP_GEO_SECRET
       - _APP_GEO_ENDPOINT
+      - _TESTS_OAUTH2_GITHUB_CLIENT_ID
+      - _TESTS_OAUTH2_GITHUB_CLIENT_SECRET
     extra_hosts:
       - "host.docker.internal:host-gateway"
 

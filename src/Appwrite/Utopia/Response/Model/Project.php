@@ -525,7 +525,7 @@ class Project extends Model
                 'key' => $key,
                 'name' => $provider['name'] ?? '',
                 'appId' => $providerValues[$key . 'Appid'] ?? '',
-                'secret' => $providerValues[$key . 'Secret'] ?? '',
+                'secret' => '', // Write-only: never expose the stored value
                 'enabled' => $providerValues[$key . 'Enabled'] ?? false,
             ]);
         }

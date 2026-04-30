@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Console\Services;
 use Appwrite\Platform\Modules\Console\Http\Assistant\Create as CreateAssistantQuery;
 use Appwrite\Platform\Modules\Console\Http\Init\API;
 use Appwrite\Platform\Modules\Console\Http\Init\Web;
+use Appwrite\Platform\Modules\Console\Http\OAuth2Providers\XList as ListOAuth2Providers;
 use Appwrite\Platform\Modules\Console\Http\Redirects\Auth\Get as RedirectAuth;
 use Appwrite\Platform\Modules\Console\Http\Redirects\Card\Get as RedirectCard;
 use Appwrite\Platform\Modules\Console\Http\Redirects\Invite\Get as RedirectInvite;
@@ -14,6 +15,7 @@ use Appwrite\Platform\Modules\Console\Http\Redirects\Recover\Get as RedirectReco
 use Appwrite\Platform\Modules\Console\Http\Redirects\Register\Get as RedirectRegister;
 use Appwrite\Platform\Modules\Console\Http\Redirects\Root\Get as RedirectRoot;
 use Appwrite\Platform\Modules\Console\Http\Resources\Get as GetResourceAvailability;
+use Appwrite\Platform\Modules\Console\Http\Scopes\Key\XList as ListKeyScopes;
 use Appwrite\Platform\Modules\Console\Http\Variables\Get as GetVariables;
 use Utopia\Platform\Service;
 
@@ -28,6 +30,8 @@ class Http extends Service
         $this->addAction(Web::getName(), new Web());
 
         $this->addAction(GetVariables::getName(), new GetVariables());
+        $this->addAction(ListOAuth2Providers::getName(), new ListOAuth2Providers());
+        $this->addAction(ListKeyScopes::getName(), new ListKeyScopes());
         $this->addAction(CreateAssistantQuery::getName(), new CreateAssistantQuery());
         $this->addAction(GetResourceAvailability::getName(), new GetResourceAvailability());
 
