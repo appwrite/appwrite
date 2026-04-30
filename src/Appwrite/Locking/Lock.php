@@ -17,6 +17,24 @@ use Utopia\Telemetry\Adapter as Telemetry;
 
 final class Lock
 {
+    private const SKIP_TTL_SECONDS = 5;
+
+    private const FAIL_TTL_SECONDS = 10;
+
+    private const FAIL_WAIT_SECONDS = 3.0;
+
+    private const REPORT_RATE_LIMIT_SECONDS = 60;
+
+    private const OUTCOME_ACQUIRED = 'acquired';
+
+    private const OUTCOME_SKIPPED = 'skipped';
+
+    private const OUTCOME_CONTENDED = 'contended';
+
+    private const OUTCOME_BACKEND_ERROR = 'backend_error';
+
+    private const OUTCOME_RELEASE_ERROR = 'release_error';
+
     private readonly bool $enabled;
 
     private readonly mixed $attempts;
@@ -82,7 +100,7 @@ final class Lock
     {
         $key = "lock:platform:{$this->projectInternalId}:{$collection}:{$id}";
 
-        return $this->execute($key, $collection, $fn, ttl: 10, orFail: true);
+        return $this->execute($key, $collection, $fn, ttl: self::FAIL_TTL_SECONDS, orFail: true);
     }
 
     /**
@@ -92,19 +110,19 @@ final class Lock
      *
      * Caller may pass `target` for telemetry; otherwise it's extracted by
      * position from the key (best-effort for keys following the standard
-     * `lock:<scope>:<...>:<target>:<...>` shape).
+     * `lock:platform:{project}:{target}:...` shape).
      */
     public function withKey(
         string $key,
         Closure $fn,
-        int $ttl = 5,
+        int $ttl = self::SKIP_TTL_SECONDS,
         bool $orFail = false,
-        float $waitTimeout = 3.0,
+        float $waitTimeout = self::FAIL_WAIT_SECONDS,
         ?string $target = null,
     ): mixed {
         return $this->execute(
             $key,
-            $target ?? self::targetOf($key),
+            $target ?? self::inferTargetFromKey($key),
             $fn,
             ttl: $ttl,
             orFail: $orFail,
@@ -116,9 +134,9 @@ final class Lock
         string $key,
         string $target,
         Closure $fn,
-        int $ttl = 5,
+        int $ttl = self::SKIP_TTL_SECONDS,
         bool $orFail = false,
-        float $waitTimeout = 3.0,
+        float $waitTimeout = self::FAIL_WAIT_SECONDS,
     ): mixed {
         if (! $this->enabled) {
             return $fn();
@@ -130,46 +148,51 @@ final class Lock
         try {
             $acquired = $orFail ? $lock->acquire($waitTimeout) : $lock->tryAcquire();
         } catch (\RedisException $e) {
-            $this->attempts->add(1, ['outcome' => 'backend_error', ...$labels]);
-            $this->reportError('backend_error', $key, $target, $e);
+            $this->attempts->add(1, ['outcome' => self::OUTCOME_BACKEND_ERROR, ...$labels]);
+            $this->reportError(self::OUTCOME_BACKEND_ERROR, $key, $target, $e);
 
             return $fn();
         }
 
         if (! $acquired) {
             if ($orFail) {
-                $this->attempts->add(1, ['outcome' => 'contended', ...$labels]);
+                $this->attempts->add(1, ['outcome' => self::OUTCOME_CONTENDED, ...$labels]);
                 // No custom message — the lock key embeds collection + document id.
                 throw new Exception(Exception::GENERAL_RESOURCE_LOCKED);
             }
-            $this->attempts->add(1, ['outcome' => 'skipped', ...$labels]);
+            $this->attempts->add(1, ['outcome' => self::OUTCOME_SKIPPED, ...$labels]);
 
             return null;
         }
 
-        $this->attempts->add(1, ['outcome' => 'acquired', ...$labels]);
+        $this->attempts->add(1, ['outcome' => self::OUTCOME_ACQUIRED, ...$labels]);
         try {
             return $fn();
         } finally {
             try {
                 $lock->release();
             } catch (Throwable $e) {
-                $this->attempts->add(1, ['outcome' => 'release_error', ...$labels]);
-                $this->reportError('release_error', $key, $target, $e);
+                $this->attempts->add(1, ['outcome' => self::OUTCOME_RELEASE_ERROR, ...$labels]);
+                $this->reportError(self::OUTCOME_RELEASE_ERROR, $key, $target, $e);
             }
         }
     }
 
-    private static function targetOf(string $key): string
+    /**
+     * Best-effort target extraction for telemetry. Assumes the standard
+     * `lock:platform:{project}:{target}:...` shape. For non-platform keys
+     * passed via withKey(), callers should pass `target` explicitly.
+     */
+    private static function inferTargetFromKey(string $key): string
     {
-        $parts = explode(':', $key, 4);
+        $parts = explode(':', $key, 5);
 
-        return $parts[2] ?? 'unknown';
+        return $parts[3] ?? 'unknown';
     }
 
     /**
-     * Rate-limited to one push per 60s per (action, target) so a sustained
-     * backend outage doesn't flood Sentry across the pod fleet.
+     * Rate-limited to one push per REPORT_RATE_LIMIT_SECONDS per (action, target)
+     * so a sustained backend outage doesn't flood Sentry across the pod fleet.
      */
     private function reportError(string $action, string $key, string $target, Throwable $e): void
     {
@@ -181,7 +204,7 @@ final class Lock
 
         $bucket = $action.':'.$target;
         $now = time();
-        if ((self::$lastReportAt[$bucket] ?? 0) + 60 > $now) {
+        if ((self::$lastReportAt[$bucket] ?? 0) + self::REPORT_RATE_LIMIT_SECONDS > $now) {
             return;
         }
         self::$lastReportAt[$bucket] = $now;
