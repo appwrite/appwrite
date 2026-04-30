@@ -232,37 +232,27 @@ Http::init()
                 $updates = new Document();
 
                 $accessedAt = $dbKey->getAttribute('accessedAt', 0);
-                $accessedAtStale = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt;
 
-                if ($accessedAtStale) {
+                if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
                     $updates->setAttribute('accessedAt', DateTime::now());
                 }
 
                 $sdkValidator = new WhiteList($servers, true);
                 $sdk = $request->getHeader('x-sdk-name', 'UNKNOWN');
-                $sdkCandidate = ($sdk !== 'UNKNOWN' && $sdkValidator->isValid($sdk) && ! in_array($sdk, $dbKey->getAttribute('sdks', []))) ? $sdk : null;
 
-                if (! $updates->isEmpty() || $sdkCandidate !== null) {
-                    $lock->run('keys', $dbKey->getId(), function () use ($dbForPlatform, $dbKey, $updates, $sdkCandidate, $apiKey, $project, $user, $team) {
-                        // Re-read inside the lock so two sequential acquirers don't clobber each other's
-                        // sdks-array appends. Skip semantics still drop concurrent acquirers' updates,
-                        // but a same-SDK retry on the next request will pick the registration up.
-                        if ($sdkCandidate !== null) {
-                            $current = $dbForPlatform->getAuthorization()->skip(
-                                fn () => $dbForPlatform->getDocument('keys', $dbKey->getId())
-                            );
-                            $sdks = $current->getAttribute('sdks', []);
-                            if (! in_array($sdkCandidate, $sdks)) {
-                                $sdks[] = $sdkCandidate;
-                                $updates->setAttribute('sdks', $sdks);
-                                $updates->setAttribute('accessedAt', DateTime::now());
-                            }
-                        }
+                if ($sdk !== 'UNKNOWN' && $sdkValidator->isValid($sdk)) {
+                    $sdks = $dbKey->getAttribute('sdks', []);
 
-                        if ($updates->isEmpty()) {
-                            return;
-                        }
+                    if (! in_array($sdk, $sdks)) {
+                        $sdks[] = $sdk;
 
+                        $updates->setAttribute('sdks', $sdks);
+                        $updates->setAttribute('accessedAt', DateTime::now());
+                    }
+                }
+
+                if (! $updates->isEmpty()) {
+                    $lock->run('keys', $dbKey->getId(), function () use ($dbForPlatform, $dbKey, $updates, $apiKey, $project, $user, $team) {
                         $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->updateDocument('keys', $dbKey->getId(), $updates));
 
                         if (! empty($apiKey->getProjectId())) {

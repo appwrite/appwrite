@@ -209,30 +209,26 @@ final class Lock
         }
         self::$lastReportAt[$bucket] = $now;
 
-        // Clone the per-request Log so our lock-error fields don't bleed into the
-        // request-end submission of $this->log (action/message/tags get reset on the
-        // shared instance otherwise).
-        $lockLog = clone $this->log;
-        $lockLog->setNamespace('http');
-        $lockLog->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
-        $lockLog->setVersion(APP_VERSION_STABLE);
-        $lockLog->setType(Log::TYPE_WARNING);
-        $lockLog->setMessage('Distributed lock '.$action.': '.$e->getMessage());
-        $lockLog->setAction("lock.{$action}");
-        $lockLog->setEnvironment(System::getEnv('_APP_ENV', 'development') === 'production'
+        $this->log->setNamespace('http');
+        $this->log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
+        $this->log->setVersion(APP_VERSION_STABLE);
+        $this->log->setType(Log::TYPE_WARNING);
+        $this->log->setMessage('Distributed lock '.$action.': '.$e->getMessage());
+        $this->log->setAction("lock.{$action}");
+        $this->log->setEnvironment(System::getEnv('_APP_ENV', 'development') === 'production'
             ? Log::ENVIRONMENT_PRODUCTION
             : Log::ENVIRONMENT_STAGING);
-        $lockLog->addTag('lock.target', $target);
-        $lockLog->addTag('lock.project', $this->projectInternalId);
+        $this->log->addTag('lock.target', $target);
+        $this->log->addTag('lock.project', $this->projectInternalId);
         // Strip trailing document ID to keep aggregator cardinality bounded.
-        $lockLog->addTag('lock.key_pattern', preg_replace('/:[^:]+$/', ':*', $key));
-        $lockLog->addTag('code', $e->getCode());
-        $lockLog->addExtra('file', $e->getFile());
-        $lockLog->addExtra('line', $e->getLine());
-        $lockLog->addExtra('trace', $e->getTraceAsString());
+        $this->log->addTag('lock.key_pattern', preg_replace('/:[^:]+$/', ':*', $key));
+        $this->log->addTag('code', $e->getCode());
+        $this->log->addExtra('file', $e->getFile());
+        $this->log->addExtra('line', $e->getLine());
+        $this->log->addExtra('trace', $e->getTraceAsString());
 
         try {
-            $this->logger->addLog($lockLog);
+            $this->logger->addLog($this->log);
         } catch (Throwable) {
         }
     }
