@@ -1220,6 +1220,10 @@ Http::error()
             $publish = $error->getCode() === 0 || $error->getCode() >= 500;
         }
 
+        if ($error->getCode() === 0 || $error->getCode() >= 500) {
+            $publish = true;
+        }
+
         $providerConfig = System::getEnv('_APP_EXPERIMENT_LOGGING_CONFIG', '');
         if (!empty($providerConfig) && $error->getCode() >= 400 && $error->getCode() < 500) {
             $publish = true;
