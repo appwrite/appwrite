@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Presences\HTTP;
 
+use Appwrite\Databases\PresenceState;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action as PlatformAction;
 use Appwrite\SDK\AuthType;
@@ -20,6 +21,7 @@ use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Range;
 
 class XList extends PlatformAction
 {
@@ -53,12 +55,13 @@ class XList extends PlatformAction
             ))
             ->param('queries', [], new PresencesQueries(), 'Array of query strings generated using the Query class provided by the SDK.', true)
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
+            ->param('ttl', 0, new Range(min: 0, max: 86400), 'TTL (seconds) for caching list responses. Responses are stored in an in-memory key-value cache, keyed per project, collection, schema version (attributes and indexes), caller authorization roles, and the exact query — so users with different permissions never share cached entries. Schema changes invalidate cached entries automatically; document writes do not, so choose a TTL you are comfortable serving as stale data. Set to 0 to disable caching. Must be between 0 and 86400 (24 hours).', true)
             ->inject('response')
             ->inject('dbForProject')
             ->callback($this->action(...));
     }
 
-    public function action(array $queries, bool $includeTotal, Response $response, Database $dbForProject): void
+    public function action(array $queries, bool $includeTotal, int $ttl, Response $response, Database $dbForProject): void
     {
         try {
             // TODO: make sure to add one more query here if not given -> send only not-expired presence -> presence will be cleared by the maintainance workers
@@ -87,11 +90,73 @@ class XList extends PlatformAction
             $cursor->setValue($cursorDocument);
         }
 
-        $filterQueries = Query::groupByType($queries)['filters'];
+        $groupedQueries = Query::groupByType($queries);
+        $filterQueries = $groupedQueries['filters'] ?? [];
 
         try {
-            $documents = $dbForProject->find('presenceLogs', $queries);
-            $total = $includeTotal ? $dbForProject->count('presenceLogs', $filterQueries, APP_LIMIT_COUNT) : 0;
+            if ((int)$ttl > 0) {
+                $presenceState = new PresenceState();
+                $roles = $dbForProject->getAuthorization()->getRoles();
+
+                $documentsCacheHit = false;
+                $cachedDocuments = $presenceState->loadListCacheField(
+                    $dbForProject,
+                    $roles,
+                    $queries,
+                    PresenceState::LIST_CACHE_FIELD_PRESENCES,
+                    $ttl
+                );
+
+                if ($cachedDocuments !== null &&
+                    $cachedDocuments !== false &&
+                    \is_array($cachedDocuments)) {
+                    $documents = \array_map(function ($doc) {
+                        return new Document($doc);
+                    }, $cachedDocuments);
+                    $documentsCacheHit = true;
+                } else {
+                    $documents = $dbForProject->find('presenceLogs', $queries);
+                    $documentsArray = \array_map(function ($doc) {
+                        return $doc->getArrayCopy();
+                    }, $documents);
+                    $presenceState->saveListCacheField(
+                        $dbForProject,
+                        $roles,
+                        $queries,
+                        PresenceState::LIST_CACHE_FIELD_PRESENCES,
+                        $documentsArray
+                    );
+                }
+
+                if ($includeTotal) {
+                    $cachedTotal = $presenceState->loadListCacheField(
+                        $dbForProject,
+                        $roles,
+                        $filterQueries,
+                        PresenceState::LIST_CACHE_FIELD_TOTAL,
+                        $ttl
+                    );
+                    if ($cachedTotal !== null && $cachedTotal !== false) {
+                        $total = (int) $cachedTotal;
+                    } else {
+                        $total = $dbForProject->count('presenceLogs', $filterQueries, APP_LIMIT_COUNT);
+                        $presenceState->saveListCacheField(
+                            $dbForProject,
+                            $roles,
+                            $filterQueries,
+                            PresenceState::LIST_CACHE_FIELD_TOTAL,
+                            $total
+                        );
+                    }
+                } else {
+                    $total = 0;
+                }
+
+                $response->addHeader('X-Appwrite-Cache', $documentsCacheHit ? 'hit' : 'miss');
+            } else {
+                $documents = $dbForProject->find('presenceLogs', $queries);
+                $total = $includeTotal ? $dbForProject->count('presenceLogs', $filterQueries, APP_LIMIT_COUNT) : 0;
+            }
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         } catch (StructureException $e) {

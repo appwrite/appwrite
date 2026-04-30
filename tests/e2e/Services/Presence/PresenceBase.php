@@ -531,6 +531,210 @@ trait PresenceBase
         $this->assertEquals(204, $delete['headers']['status-code']);
     }
 
+    public function testUpdatePresencePurgeListCache(): void
+    {
+        if ($this->getSide() === 'client') {
+            $upsert = $this->client->call(
+                Client::METHOD_PUT,
+                '/presences/' . ID::unique(),
+                \array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], $this->getHeaders(false)),
+                [
+                    'status' => 'cache-update-setup',
+                    'metadata' => ['cache' => 'update-setup'],
+                ]
+            );
+            $this->assertEquals(200, $upsert['headers']['status-code']);
+            $presence = $upsert['body'];
+            $headers = \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders(false));
+        } else {
+            $presence = $this->setupPresence([
+                'status' => 'cache-update-setup',
+                'metadata' => ['cache' => 'update-setup'],
+            ]);
+            $headers = \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getPresenceServerHeaders());
+        }
+
+        $listPayload = [
+            'queries' => [
+                Query::equal('userId', [$presence['userId']])->toString(),
+            ],
+            'ttl' => 60,
+        ];
+
+        $list1 = $this->client->call(Client::METHOD_GET, '/presences', $headers, $listPayload);
+        $this->assertEquals(200, $list1['headers']['status-code']);
+        $this->assertArrayHasKey('x-appwrite-cache', $list1['headers']);
+
+        $list2 = $this->client->call(Client::METHOD_GET, '/presences', $headers, $listPayload);
+        $this->assertEquals(200, $list2['headers']['status-code']);
+        $this->assertArrayHasKey('x-appwrite-cache', $list2['headers']);
+        $this->assertEquals('hit', $list2['headers']['x-appwrite-cache']);
+
+        $updatePayload = [
+            'status' => 'cache-update-applied',
+            'purge' => true,
+        ];
+
+        if ($this->getSide() !== 'client') {
+            $updatePayload['userId'] = $presence['userId'];
+        }
+
+        $update = $this->client->call(
+            Client::METHOD_PATCH,
+            '/presences/' . $presence['$id'],
+            $headers,
+            $updatePayload
+        );
+        $this->assertEquals(200, $update['headers']['status-code']);
+        $this->assertEquals('cache-update-applied', $update['body']['status']);
+
+        $list3 = $this->client->call(Client::METHOD_GET, '/presences', $headers, $listPayload);
+        $this->assertEquals(200, $list3['headers']['status-code']);
+        $this->assertArrayHasKey('x-appwrite-cache', $list3['headers']);
+        $this->assertEquals('miss', $list3['headers']['x-appwrite-cache']);
+    }
+
+    public function testUpdatePresencePurgeOnlyListCache(): void
+    {
+        if ($this->getSide() === 'client') {
+            $upsert = $this->client->call(
+                Client::METHOD_PUT,
+                '/presences/' . ID::unique(),
+                \array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], $this->getHeaders(false)),
+                [
+                    'status' => 'cache-purge-only-setup',
+                    'metadata' => ['cache' => 'purge-only-setup'],
+                ]
+            );
+            $this->assertEquals(200, $upsert['headers']['status-code']);
+            $presence = $upsert['body'];
+            $headers = \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders(false));
+        } else {
+            $presence = $this->setupPresence([
+                'status' => 'cache-purge-only-setup',
+                'metadata' => ['cache' => 'purge-only-setup'],
+            ]);
+            $headers = \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getPresenceServerHeaders());
+        }
+
+        $listPayload = [
+            'queries' => [
+                Query::equal('userId', [$presence['userId']])->toString(),
+            ],
+            'ttl' => 60,
+        ];
+
+        $list1 = $this->client->call(Client::METHOD_GET, '/presences', $headers, $listPayload);
+        $this->assertEquals(200, $list1['headers']['status-code']);
+        $this->assertArrayHasKey('x-appwrite-cache', $list1['headers']);
+
+        $list2 = $this->client->call(Client::METHOD_GET, '/presences', $headers, $listPayload);
+        $this->assertEquals(200, $list2['headers']['status-code']);
+        $this->assertArrayHasKey('x-appwrite-cache', $list2['headers']);
+        $this->assertEquals('hit', $list2['headers']['x-appwrite-cache']);
+
+        $updatePayload = [
+            'purge' => true,
+        ];
+
+        if ($this->getSide() !== 'client') {
+            $updatePayload['userId'] = $presence['userId'];
+        }
+
+        $update = $this->client->call(
+            Client::METHOD_PATCH,
+            '/presences/' . $presence['$id'],
+            $headers,
+            $updatePayload
+        );
+        $this->assertEquals(200, $update['headers']['status-code']);
+        $this->assertEquals($presence['$id'], $update['body']['$id']);
+
+        $list3 = $this->client->call(Client::METHOD_GET, '/presences', $headers, $listPayload);
+        $this->assertEquals(200, $list3['headers']['status-code']);
+        $this->assertArrayHasKey('x-appwrite-cache', $list3['headers']);
+        $this->assertEquals('miss', $list3['headers']['x-appwrite-cache']);
+    }
+
+    public function testDeletePresencePurgesListCache(): void
+    {
+        if ($this->getSide() === 'client') {
+            $upsert = $this->client->call(
+                Client::METHOD_PUT,
+                '/presences/' . ID::unique(),
+                \array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], $this->getHeaders(false)),
+                [
+                    'status' => 'cache-delete-setup',
+                    'metadata' => ['cache' => 'delete-setup'],
+                ]
+            );
+            $this->assertEquals(200, $upsert['headers']['status-code']);
+            $presence = $upsert['body'];
+            $headers = \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders(false));
+        } else {
+            $presence = $this->setupPresence([
+                'status' => 'cache-delete-setup',
+                'metadata' => ['cache' => 'delete-setup'],
+            ]);
+            $headers = \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getPresenceServerHeaders());
+        }
+
+        $listPayload = [
+            'queries' => [
+                Query::equal('userId', [$presence['userId']])->toString(),
+            ],
+            'ttl' => 60,
+        ];
+
+        $list1 = $this->client->call(Client::METHOD_GET, '/presences', $headers, $listPayload);
+        $this->assertEquals(200, $list1['headers']['status-code']);
+        $this->assertArrayHasKey('x-appwrite-cache', $list1['headers']);
+
+        $list2 = $this->client->call(Client::METHOD_GET, '/presences', $headers, $listPayload);
+        $this->assertEquals(200, $list2['headers']['status-code']);
+        $this->assertArrayHasKey('x-appwrite-cache', $list2['headers']);
+        $this->assertEquals('hit', $list2['headers']['x-appwrite-cache']);
+
+        $delete = $this->client->call(
+            Client::METHOD_DELETE,
+            '/presences/' . $presence['$id'],
+            $headers
+        );
+        $this->assertEquals(204, $delete['headers']['status-code']);
+
+        $list3 = $this->client->call(Client::METHOD_GET, '/presences', $headers, $listPayload);
+        $this->assertEquals(200, $list3['headers']['status-code']);
+        $this->assertArrayHasKey('x-appwrite-cache', $list3['headers']);
+        $this->assertEquals('miss', $list3['headers']['x-appwrite-cache']);
+    }
+
     public function testUpdateNotFound(): void
     {
         if ($this->getSide() === 'client') {

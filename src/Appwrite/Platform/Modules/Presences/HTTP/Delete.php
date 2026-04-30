@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Presences\HTTP;
 
+use Appwrite\Databases\PresenceState;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action as PlatformAction;
@@ -72,6 +73,8 @@ class Delete extends PlatformAction
         } catch (RestrictedException) {
             throw new Exception(Exception::DOCUMENT_UPDATE_CONFLICT);
         }
+
+        (new PresenceState())->purgeListCache($dbForProject);
 
         $usage->addMetric(METRIC_PRESENCE_DELETED, 1);
         $usage->addMetric(METRIC_USERS_PRESENCE, -1);

@@ -22,6 +22,7 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
@@ -64,6 +65,7 @@ class Update extends PlatformAction
                         new Parameter('expiresAt', optional: true),
                         new Parameter('metadata', optional: true),
                         new Parameter('permissions', optional: true),
+                        new Parameter('purge', optional: true),
                     ],
                 ),
                 // Server-side SDK: `userId` is required when authenticating with API keys/JWT.
@@ -86,6 +88,7 @@ class Update extends PlatformAction
                         new Parameter('expiresAt', optional: true),
                         new Parameter('metadata', optional: true),
                         new Parameter('permissions', optional: true),
+                        new Parameter('purge', optional: true),
                     ],
                 ),
             ])
@@ -99,6 +102,7 @@ class Update extends PlatformAction
             )), 'Presence expiry datetime.', true)
             ->param('metadata', null, new Nullable(new JSON()), 'Presence metadata object.', true)
             ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE])), 'An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
+            ->param('purge', false, new Boolean(true), 'When true, purge cached responses used by list presences endpoint.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('user')
@@ -114,6 +118,7 @@ class Update extends PlatformAction
         ?string $expiresAt,
         ?array $metadata,
         ?array $permissions,
+        bool $purge,
         Response $response,
         Database $dbForProject,
         User $user,
@@ -164,6 +169,9 @@ class Update extends PlatformAction
         }
 
         if (empty($updateData) && $permissions === null) {
+            if ($purge) {
+                $presenceState->purgeListCache($dbForProject);
+            }
             $response->dynamic($presence, Response::MODEL_PRESENCE);
             return;
         }
@@ -177,6 +185,11 @@ class Update extends PlatformAction
         } catch (ConflictException $e) {
             throw new Exception(Exception::DOCUMENT_UPDATE_CONFLICT, $e->getMessage(), previous: $e);
         }
+
+        if ($purge) {
+            $presenceState->purgeListCache($dbForProject);
+        }
+
         $queueForEvents->setParam('presenceId', $presence->getId());
 
         $response->dynamic($presence, Response::MODEL_PRESENCE);

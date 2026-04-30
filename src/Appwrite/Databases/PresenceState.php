@@ -17,6 +17,9 @@ use Utopia\Database\Validator\Authorization;
 
 class PresenceState
 {
+    public const LIST_CACHE_FIELD_PRESENCES = 'presences';
+    public const LIST_CACHE_FIELD_TOTAL = 'total';
+    public const COLLECTION_ID = 'presenceLogs';
     public function setPermissions(Document $document, ?array $permissions, User $user, Authorization $authorization): Document
     {
         $isAPIKey = $user->isApp($authorization->getRoles());
@@ -66,8 +69,8 @@ class PresenceState
 
         try {
             if ($dbForProject->getAdapter()->getSupportForUpsertOnUniqueIndex()) {
-                $presenceCreated = $dbForProject->findOne('presenceLogs', [Query::equal('userId', [$userId])])->isEmpty();
-                $presence = $dbForProject->upsertDocument('presenceLogs', $presenceDocument);
+                $presenceCreated = $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userId', [$userId])])->isEmpty();
+                $presence = $dbForProject->upsertDocument(self::COLLECTION_ID, $presenceDocument);
             } else {
                 $presence = $this->transactionalUpsertForUser(
                     $dbForProject,
@@ -102,15 +105,15 @@ class PresenceState
         ?bool &$presenceCreated = null
     ): Document {
         return $dbForProject->withTransaction(function () use ($dbForProject, $presenceDocument, $presenceId, $userId, &$presenceCreated) {
-            $existingPresence = $dbForProject->findOne('presenceLogs', [Query::equal('userId', [$userId])]);
+            $existingPresence = $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userId', [$userId])]);
 
             if ($existingPresence->isEmpty()) {
                 $presenceCreated = true;
-                return $dbForProject->createDocument('presenceLogs', $presenceDocument);
+                return $dbForProject->createDocument(self::COLLECTION_ID, $presenceDocument);
             }
 
             // Lock current state to avoid races while resolving upsert by userId.
-            $currentPresence = $dbForProject->getDocument('presenceLogs', $existingPresence->getId(), forUpdate: true);
+            $currentPresence = $dbForProject->getDocument(self::COLLECTION_ID, $existingPresence->getId(), forUpdate: true);
 
             if ($currentPresence->isEmpty()) {
                 throw new Exception(Exception::DOCUMENT_NOT_FOUND, params: [$existingPresence->getId()]);
@@ -118,11 +121,11 @@ class PresenceState
 
             if ($presenceId !== 'unique()' && $currentPresence->getId() !== $presenceId) {
                 $presenceDocument->setAttribute('$id', $presenceId);
-                $dbForProject->deleteDocument('presenceLogs', $currentPresence->getId());
-                return $dbForProject->createDocument('presenceLogs', $presenceDocument);
+                $dbForProject->deleteDocument(self::COLLECTION_ID, $currentPresence->getId());
+                return $dbForProject->createDocument(self::COLLECTION_ID, $presenceDocument);
             }
 
-            return $dbForProject->updateDocument('presenceLogs', $currentPresence->getId(), $presenceDocument);
+            return $dbForProject->updateDocument(self::COLLECTION_ID, $currentPresence->getId(), $presenceDocument);
         });
     }
 
@@ -146,5 +149,68 @@ class PresenceState
                 }
             }
         }
+    }
+
+    private function getListCacheKey(Database $dbForProject): string
+    {
+        return \sprintf(
+            '%s-cache:%s:%s:%s:collection:%s',
+            $dbForProject->getCacheName(),
+            $dbForProject->getAdapter()->getHostname(),
+            $dbForProject->getNamespace(),
+            $dbForProject->getTenant(),
+            self::COLLECTION_ID
+        );
+    }
+
+    private function getListCacheField(array $roles, array $queries, string $type): string
+    {
+        $serialized = \array_map(
+            static fn ($query) => $query instanceof Query ? $query->toArray() : $query,
+            $queries,
+        );
+
+        return \sprintf(
+            '%s:%s:%s',
+            \md5(\json_encode($roles)),
+            \md5(\json_encode($serialized)),
+            $type,
+        );
+    }
+
+    public function loadListCacheField(
+        Database $dbForProject,
+        array $roles,
+        array $queries,
+        string $type,
+        int $ttl
+    ): mixed {
+        $cacheField = $this->getListCacheField($roles, $queries, $type);
+
+        try {
+            return $dbForProject->getCache()->load($this->getListCacheKey($dbForProject), $ttl, $cacheField);
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    public function saveListCacheField(
+        Database $dbForProject,
+        array $roles,
+        array $queries,
+        string $type,
+        mixed $value
+    ): void {
+        $cacheField = $this->getListCacheField($roles, $queries, $type);
+
+        try {
+            $dbForProject->getCache()->save($this->getListCacheKey($dbForProject), $value, $cacheField);
+        } catch (\Throwable) {
+        }
+    }
+
+    public function purgeListCache(Database $dbForProject): bool
+    {
+        return $dbForProject->getCache()->purge($this->getListCacheKey($dbForProject));
     }
 }
