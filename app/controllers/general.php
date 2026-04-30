@@ -1214,15 +1214,9 @@ Http::error()
         $code = $error->getCode();
         $message = $error->getMessage();
 
-        if ($error instanceof AppwriteException) {
-            $publish = $error->isPublishable();
-        } else {
-            $publish = $error->getCode() === 0 || $error->getCode() >= 500;
-        }
-
-        if ($error->getCode() === 0 || $error->getCode() >= 500) {
-            $publish = true;
-        }
+        $publish = ($error instanceof AppwriteException && $error->isPublishable())
+            || $code === 0
+            || $code >= 500;
 
         $providerConfig = System::getEnv('_APP_EXPERIMENT_LOGGING_CONFIG', '');
         if (!empty($providerConfig) && $error->getCode() >= 400 && $error->getCode() < 500) {

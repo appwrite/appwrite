@@ -7,7 +7,6 @@ use Exception;
 use Utopia\Console;
 use Utopia\Database\DateTime;
 use Utopia\Http\Http;
-use Utopia\Span\Span;
 
 class LetsEncrypt implements Adapter
 {
@@ -103,15 +102,12 @@ class LetsEncrypt implements Adapter
             $validTo = $certData['validTo_time_t'] ?? 0;
 
             if (empty($validTo)) {
-                Span::add('certificateDomain', $domain);
-                throw new Exception('Unable to read certificate file (cert.pem).');
+                throw new Exception('Unable to read certificate file (cert.pem) for domain: ' . $domain);
             }
 
             // LetsEncrypt allows renewal 30 days before expiry
             $expiryInAdvance = (60 * 60 * 24 * 30);
             if ($validTo - $expiryInAdvance > \time()) {
-                Span::add('certificateDomain', $domain);
-                Span::add('certificateData', \is_array($certData) ? \json_encode($certData) : \strval($certData));
                 return false;
             }
         }
