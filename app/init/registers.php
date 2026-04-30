@@ -356,7 +356,7 @@ $register->set('pools', function () {
                             'mysql' => new MySQL($resource()),
                             'mongodb' => new Mongo($resource()),
                             'postgresql' => new Postgres($resource()),
-                            'sqlite' => new SQLite($resource()),
+                            'sqlite' => (new SQLite($resource()))->setEmulateMySQL(true),
                             default => null
                         };
 
