@@ -1214,12 +1214,12 @@ Http::error()
         $code = $error->getCode();
         $message = $error->getMessage();
 
-        $publish = ($error instanceof AppwriteException && $error->isPublishable())
-            || $code === 0
-            || $code >= 500;
+        $publish = $error instanceof AppwriteException
+            ? $error->isPublishable()
+            : ($code === 0 || $code >= 500);
 
         $providerConfig = System::getEnv('_APP_EXPERIMENT_LOGGING_CONFIG', '');
-        if (!empty($providerConfig) && $error->getCode() >= 400 && $error->getCode() < 500) {
+        if (!empty($providerConfig) && $code >= 400 && $code < 500) {
             $publish = true;
             Span::add('appwrite.error.experimental', true);
         }
