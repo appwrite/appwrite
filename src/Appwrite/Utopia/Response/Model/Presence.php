@@ -19,6 +19,9 @@ class Presence extends Any
 
     public function __construct()
     {
+        // Expose user-defined extras under "metadata" instead of the SDK default "data"
+        $this->setAdditionalPropertiesKey('metadata');
+
         $this
             ->addRule('$id', [
                 'type' => self::TYPE_STRING,
@@ -83,15 +86,10 @@ class Presence extends Any
                 'required' => false,
                 'default' => null,
                 'example' => self::TYPE_DATETIME_EXAMPLE,
-            ])
-            // not adding hostname here in the response model
-            ->addRule('metadata', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Presence metadata.',
-                'required' => false,
-                'default' => [],
-                'example' => ['device' => 'web'],
             ]);
+        // `hostname` is intentionally not exposed.
+        // User-defined extras flow through Any's generic mapping, surfaced under
+        // the "metadata" key declared via setAdditionalPropertiesKey() above.
     }
 
     public function filter(DatabaseDocument $document): DatabaseDocument
