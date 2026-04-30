@@ -131,10 +131,6 @@ $worker
             $span->set('verboseType', get_class($error));
             $span->set('code', $error->getCode());
             $span->set('projectId', $project->getId());
-            $span->set('error.message', $error->getMessage());
-            $span->set('error.file', $error->getFile());
-            $span->set('error.line', $error->getLine());
-            $span->set('error.trace', $error->getTraceAsString());
             $span->set('roles', \json_encode($authorization->getRoles()) ?: null);
             $span->setError($error);
             $span->finish();

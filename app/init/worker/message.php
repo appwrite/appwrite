@@ -406,10 +406,6 @@ return function (Container $container): void {
                 $span->set('code', $error->getCode());
                 $span->set('verboseType', \get_class($error));
                 $span->set('projectId', $project->getId());
-                $span->set('error.message', $error->getMessage());
-                $span->set('error.file', $error->getFile());
-                $span->set('error.line', $error->getLine());
-                $span->set('error.trace', $error->getTraceAsString());
 
                 if ($error->getPrevious() !== null) {
                     if ($error->getPrevious()->getMessage() != $error->getMessage()) {

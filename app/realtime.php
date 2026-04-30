@@ -309,11 +309,6 @@ if (!function_exists('logError')) {
                 $span->set($key, \is_scalar($value) ? ($value ?: 'n/a') : (\json_encode($value) ?: 'n/a'));
             }
 
-            $span->set('error.message', $error->getMessage());
-            $span->set('error.file', $error->getFile());
-            $span->set('error.line', $error->getLine());
-            $span->set('error.trace', $error->getTraceAsString());
-            $span->set('error.detailedTrace', \json_encode($error->getTrace()) ?: null);
             $span->set('roles', \json_encode($authorization?->getRoles() ?? []) ?: null);
             $span->setError($error);
             $span->finish();

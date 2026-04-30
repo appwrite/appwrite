@@ -1278,10 +1278,6 @@ Http::error()
             Span::add('hostname', $request->getHostname());
             Span::add('locale', (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', '')));
             Span::add('userId', isset($user) && !$user->isEmpty() ? $user->getId() : 'guest-' . hash('sha256', $request->getIP()));
-            Span::add('error.message', $error->getMessage());
-            Span::add('error.file', $error->getFile());
-            Span::add('error.line', $error->getLine());
-            Span::add('error.trace', $error->getTraceAsString());
             Span::add('roles', \json_encode($authorization->getRoles()) ?: null);
 
             try {

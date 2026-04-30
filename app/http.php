@@ -579,10 +579,6 @@ $swooleAdapter->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files
         Span::add('hostname', $request->getHostname());
         Span::add('locale', (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', '')));
         Span::add('service', $action);
-        Span::add('error.message', $th->getMessage());
-        Span::add('error.file', $th->getFile());
-        Span::add('error.line', $th->getLine());
-        Span::add('error.trace', $th->getTraceAsString());
         Span::add('roles', isset($authorization) ? (\json_encode($authorization->getRoles()) ?: null) : '[]');
 
         $swooleResponse = $utopiaResponse->getSwooleResponse();

@@ -118,10 +118,6 @@ class Create extends CreateDocumentAction
                     $span->set('embeddingModel', $model);
                     $span->set('code', $e->getCode());
                     $span->set('projectId', $project->getId());
-                    $span->set('error.message', $e->getMessage());
-                    $span->set('error.file', $e->getFile());
-                    $span->set('error.line', $e->getLine());
-                    $span->set('error.trace', $e->getTraceAsString());
                     $span->setError($e);
                     $span->finish();
                 } finally {

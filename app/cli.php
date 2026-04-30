@@ -309,13 +309,8 @@ $container->set('logError', function () {
             $span->set('environment', System::getEnv('_APP_ENV', 'development') === 'production' ? 'production' : 'staging');
             $span->set('appwrite.error.publish', true);
             $span->set('appwrite.error.action', $action);
-            $span->set('error.message', $error->getMessage());
             $span->set('verboseType', get_class($error));
             $span->set('code', $error->getCode());
-            $span->set('error.file', $error->getFile());
-            $span->set('error.line', $error->getLine());
-            $span->set('error.trace', $error->getTraceAsString());
-            $span->set('error.detailedTrace', \json_encode($error->getTrace()) ?: null);
 
             if ($error->getPrevious() !== null) {
                 if ($error->getPrevious()->getMessage() != $error->getMessage()) {
