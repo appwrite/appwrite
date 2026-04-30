@@ -75,7 +75,10 @@ $experimentalLoggingConfig = System::getEnv('_APP_EXPERIMENT_LOGGING_CONFIG', ''
 if (!empty($experimentalLoggingConfig)) {
     $sampleRate = 0.01;
     try {
-        $sampleRate = (float) (new DSN($experimentalLoggingConfig))->getParam('sample', $sampleRate);
+        $sample = (new DSN($experimentalLoggingConfig))->getParam('sample', $sampleRate);
+        if (\is_numeric($sample)) {
+            $sampleRate = \min(1, \max(0, (float) $sample));
+        }
     } catch (Throwable) {
     }
 
