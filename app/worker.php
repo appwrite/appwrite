@@ -115,32 +115,26 @@ $worker
     ->action(function (Throwable $error, Document $project, Authorization $authorization) use ($queueName) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
         $action = 'appwrite-queue-' . $queueName;
-        $span = Span::current();
-        $shouldFinish = false;
-        if ($span === null) {
-            $span = Span::init($action);
-            $shouldFinish = true;
-        }
+        // Export a standalone error span without mutating the active worker span.
+        $span = new Span($action);
 
-        Span::add('level', 'error');
-        Span::add('logger', 'appwrite-worker');
-        Span::add('server.name', System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
-        Span::add('release', $version);
-        Span::add('environment', System::getEnv('_APP_ENV', 'development') === 'production' ? 'production' : 'staging');
-        Span::add('appwrite.error.publish', true);
-        Span::add('appwrite.error.action', $action);
-        Span::add('verboseType', get_class($error));
-        Span::add('code', $error->getCode());
-        Span::add('projectId', $project->getId());
-        Span::add('error.message', $error->getMessage());
-        Span::add('error.file', $error->getFile());
-        Span::add('error.line', $error->getLine());
-        Span::add('error.trace', $error->getTraceAsString());
-        Span::add('roles', \json_encode($authorization->getRoles()) ?: null);
-        Span::error($error);
-        if ($shouldFinish) {
-            $span->finish();
-        }
+        $span->set('level', 'error');
+        $span->set('logger', 'appwrite-worker');
+        $span->set('server.name', System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
+        $span->set('release', $version);
+        $span->set('environment', System::getEnv('_APP_ENV', 'development') === 'production' ? 'production' : 'staging');
+        $span->set('appwrite.error.publish', true);
+        $span->set('appwrite.error.action', $action);
+        $span->set('verboseType', get_class($error));
+        $span->set('code', $error->getCode());
+        $span->set('projectId', $project->getId());
+        $span->set('error.message', $error->getMessage());
+        $span->set('error.file', $error->getFile());
+        $span->set('error.line', $error->getLine());
+        $span->set('error.trace', $error->getTraceAsString());
+        $span->set('roles', \json_encode($authorization->getRoles()) ?: null);
+        $span->setError($error);
+        $span->finish();
 
         Console::error('[Error] Type: ' . get_class($error));
         Console::error('[Error] Message: ' . $error->getMessage());

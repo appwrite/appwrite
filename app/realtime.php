@@ -282,39 +282,33 @@ if (!function_exists('logError')) {
     function logError(Throwable $error, string $action, array $tags = [], ?Document $project = null, ?Document $user = null, ?Authorization $authorization = null): void
     {
         if (!$error instanceof Exception) {
-            $span = Span::current();
-            $shouldFinish = false;
-            if ($span === null) {
-                $span = Span::init($action);
-                $shouldFinish = true;
-            }
+            // Export a standalone error span without mutating the active connection span.
+            $span = new Span($action);
 
-            Span::add('level', 'error');
-            Span::add('logger', 'realtime');
-            Span::add('server.name', System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
-            Span::add('release', System::getEnv('_APP_VERSION', 'UNKNOWN'));
-            Span::add('environment', System::getEnv('_APP_ENV', 'development') === 'production' ? 'production' : 'staging');
-            Span::add('appwrite.error.publish', true);
-            Span::add('appwrite.error.action', $action);
-            Span::add('code', $error->getCode());
-            Span::add('verboseType', get_class($error));
-            Span::add('projectId', $project?->getId() ?: 'n/a');
-            Span::add('userId', $user?->getId() ?: 'n/a');
+            $span->set('level', 'error');
+            $span->set('logger', 'realtime');
+            $span->set('server.name', System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
+            $span->set('release', System::getEnv('_APP_VERSION', 'UNKNOWN'));
+            $span->set('environment', System::getEnv('_APP_ENV', 'development') === 'production' ? 'production' : 'staging');
+            $span->set('appwrite.error.publish', true);
+            $span->set('appwrite.error.action', $action);
+            $span->set('code', $error->getCode());
+            $span->set('verboseType', get_class($error));
+            $span->set('projectId', $project?->getId() ?: 'n/a');
+            $span->set('userId', $user?->getId() ?: 'n/a');
 
             foreach ($tags as $key => $value) {
-                Span::add($key, \is_scalar($value) ? ($value ?: 'n/a') : (\json_encode($value) ?: 'n/a'));
+                $span->set($key, \is_scalar($value) ? ($value ?: 'n/a') : (\json_encode($value) ?: 'n/a'));
             }
 
-            Span::add('error.message', $error->getMessage());
-            Span::add('error.file', $error->getFile());
-            Span::add('error.line', $error->getLine());
-            Span::add('error.trace', $error->getTraceAsString());
-            Span::add('error.detailedTrace', \json_encode($error->getTrace()) ?: null);
-            Span::add('roles', \json_encode($authorization?->getRoles() ?? []) ?: null);
-            Span::error($error);
-            if ($shouldFinish) {
-                $span->finish();
-            }
+            $span->set('error.message', $error->getMessage());
+            $span->set('error.file', $error->getFile());
+            $span->set('error.line', $error->getLine());
+            $span->set('error.trace', $error->getTraceAsString());
+            $span->set('error.detailedTrace', \json_encode($error->getTrace()) ?: null);
+            $span->set('roles', \json_encode($authorization?->getRoles() ?? []) ?: null);
+            $span->setError($error);
+            $span->finish();
         }
 
         Console::error('[Error] Type: ' . get_class($error));
