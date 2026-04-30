@@ -2763,7 +2763,7 @@ return [
         'attributes' => [
             [
                 '$id' => ID::custom('userInternalId'),
-                'type' => Database::VAR_STRING,
+                'type' => Database::VAR_ID,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
                 'signed' => true,
@@ -2862,7 +2862,6 @@ return [
                 '$id' => ID::custom('_key_userInternal'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['userInternalId'],
-                'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC]
             ],
             [
