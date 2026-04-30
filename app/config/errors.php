@@ -715,6 +715,13 @@ return [
         'code' => 404,
     ],
 
+    /** Presence */
+    Exception::PRESENCE_NOT_FOUND => [
+        'name' => Exception::PRESENCE_NOT_FOUND,
+        'description' => 'Presence with the requested ID could not be found.',
+        'code' => 404,
+    ],
+
     /** Databases */
     Exception::DATABASE_NOT_FOUND => [
         'name' => Exception::DATABASE_NOT_FOUND,

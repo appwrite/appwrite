@@ -7,7 +7,7 @@ use Appwrite\Platform\Action as PlatformAction;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\Utopia\Database\Validator\Queries\Base as QueryValidator;
+use Appwrite\Utopia\Database\Validator\Queries\Presences as PresencesQueries;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -32,8 +32,6 @@ class XList extends PlatformAction
 
     public function __construct()
     {
-        $allowedAttributes = ['userInternalId', 'userId', 'expiresAt', 'status', 'source'];
-
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/presences')
@@ -53,7 +51,7 @@ class XList extends PlatformAction
                     ),
                 ],
             ))
-            ->param('queries', [], new QueryValidator('presenceLogs', $allowedAttributes), 'Array of query strings generated using the Query class provided by the SDK.', true)
+            ->param('queries', [], new PresencesQueries(), 'Array of query strings generated using the Query class provided by the SDK.', true)
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('response')
             ->inject('dbForProject')

@@ -200,6 +200,9 @@ class Exception extends \Exception
     /** Log */
     public const string LOG_NOT_FOUND = 'log_not_found';
 
+    /** Presence */
+    public const string PRESENCE_NOT_FOUND = 'presence_not_found';
+
     /** Databases */
     public const string DATABASE_NOT_FOUND = 'database_not_found';
     public const string DATABASE_ALREADY_EXISTS = 'database_already_exists';

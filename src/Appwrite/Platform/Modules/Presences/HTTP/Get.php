@@ -53,7 +53,7 @@ class Get extends PlatformAction
     {
         $presence = $dbForProject->getDocument('presenceLogs', $presenceId);
         if ($presence->isEmpty()) {
-            throw new Exception(Exception::DOCUMENT_NOT_FOUND);
+            throw new Exception(Exception::PRESENCE_NOT_FOUND);
         }
 
         $response->dynamic($presence, Response::MODEL_PRESENCE);

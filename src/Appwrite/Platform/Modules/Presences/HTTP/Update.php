@@ -131,7 +131,7 @@ class Update extends PlatformAction
         $presence = $dbForProject->getDocument('presenceLogs', $presenceId);
 
         if ($presence->isEmpty()) {
-            throw new Exception(Exception::DOCUMENT_NOT_FOUND, params: [$presenceId]);
+            throw new Exception(Exception::PRESENCE_NOT_FOUND, params: [$presenceId]);
         }
 
         $updateData = [];
