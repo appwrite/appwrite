@@ -328,8 +328,9 @@ $register->set('pools', function () {
                             \PDO::ATTR_STRINGIFY_FETCHES => true,
                         ]);
                         $pdo->query('PRAGMA journal_mode=WAL');
-                        $pdo->query('PRAGMA busy_timeout=5000');
+                        $pdo->query('PRAGMA busy_timeout=30000');
                         $pdo->query('PRAGMA foreign_keys=ON');
+                        $pdo->query('PRAGMA synchronous=NORMAL');
                         return $pdo;
                     });
                 },
@@ -435,8 +436,9 @@ $register->set('db', function () {
             $path = System::getEnv('_APP_DB_SQLITE_PATH', '/tmp/appwrite.db');
             $pdo = new PDO("sqlite:{$path}", null, null, SQL::getPDOAttributes());
             $pdo->query('PRAGMA journal_mode=WAL');
-            $pdo->query('PRAGMA busy_timeout=5000');
+            $pdo->query('PRAGMA busy_timeout=30000');
             $pdo->query('PRAGMA foreign_keys=ON');
+            $pdo->query('PRAGMA synchronous=NORMAL');
             return $pdo;
         default:
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Invalid database adapter');
