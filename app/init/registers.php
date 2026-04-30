@@ -392,16 +392,6 @@ $register->set('pools', function () {
 
                     return $redis;
                 },
-                default => function () use ($dsnHost, $dsnPort, $dsnPass) {
-                    $redis = new \Redis();
-                    @$redis->pconnect($dsnHost, (int)$dsnPort);
-                    if ($dsnPass) {
-                        $redis->auth($dsnPass);
-                    }
-                    $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
-
-                    return $redis;
-                },
             };
 
             $poolAdapter = System::getEnv('_APP_POOL_ADAPTER', default: 'stack') === 'swoole' ? new SwoolePool() : new StackPool();
