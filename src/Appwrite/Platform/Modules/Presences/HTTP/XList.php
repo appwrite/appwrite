@@ -91,7 +91,7 @@ class XList extends PlatformAction
         }
 
         $groupedQueries = Query::groupByType($queries);
-        $filterQueries = $groupedQueries['filters'] ?? [];
+        $filterQueries = $groupedQueries['filters'];
 
         try {
             if ((int)$ttl > 0) {
