@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attribu
 
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Deprecated;
@@ -88,6 +89,13 @@ class Create extends Action
         Event          $queueForEvents,
         Authorization $authorization
     ): void {
+        if ($default !== null) {
+            $scheme = \parse_url($default, PHP_URL_SCHEME);
+            if (!\in_array(\strtolower((string) $scheme), ['http', 'https'], true)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Default URL must use http or https scheme.');
+            }
+        }
+
         $attribute = $this->createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
             'type' => Database::VAR_STRING,
