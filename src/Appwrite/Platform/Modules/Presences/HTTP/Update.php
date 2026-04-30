@@ -2,9 +2,10 @@
 
 namespace Appwrite\Platform\Modules\Presences\HTTP;
 
+use Appwrite\Databases\PresenceState;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Presences\HTTP\Action as PresenceAction;
+use Appwrite\Platform\Action as PlatformAction;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Parameter;
@@ -25,7 +26,7 @@ use Utopia\Validator\JSON;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 
-class Update extends PresenceAction
+class Update extends PlatformAction
 {
     public static function getName()
     {
@@ -115,6 +116,7 @@ class Update extends PresenceAction
         Authorization $authorization,
         Event $queueForEvents
     ): void {
+        $presenceState = new PresenceState();
         $isAPIKey = $user->isApp($authorization->getRoles());
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
@@ -154,7 +156,7 @@ class Update extends PresenceAction
         $updates = new Document($updateData);
 
         if ($permissions !== null) {
-            $this->setPermission($updates, $permissions, $user, $authorization);
+            $presenceState->setPermissions($updates, $permissions, $user, $authorization);
         }
 
         if (empty($updateData) && $permissions === null) {

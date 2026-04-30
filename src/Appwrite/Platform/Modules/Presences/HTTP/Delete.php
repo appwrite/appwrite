@@ -4,7 +4,7 @@ namespace Appwrite\Platform\Modules\Presences\HTTP;
 
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Compute\Base;
+use Appwrite\Platform\Action as PlatformAction;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -16,12 +16,9 @@ use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Restricted as RestrictedException;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
-use Utopia\Platform\Scope\HTTP;
 
-class Delete extends Base
+class Delete extends PlatformAction
 {
-    use HTTP;
-
     public static function getName()
     {
         return 'deletePresence';

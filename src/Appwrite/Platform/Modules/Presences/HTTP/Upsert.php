@@ -5,7 +5,7 @@ namespace Appwrite\Platform\Modules\Presences\HTTP;
 use Appwrite\Databases\PresenceState;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Presences\HTTP\Action as PresenceAction;
+use Appwrite\Platform\Action as PlatformAction;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Parameter;
@@ -27,7 +27,7 @@ use Utopia\Validator\JSON;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 
-class Upsert extends PresenceAction
+class Upsert extends PlatformAction
 {
     use HTTP;
 

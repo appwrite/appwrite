@@ -3,7 +3,7 @@
 namespace Appwrite\Platform\Modules\Presences\HTTP\Usage;
 
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Compute\Base;
+use Appwrite\Platform\Action as PlatformAction;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -16,7 +16,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Validator\WhiteList;
 
-class Get extends Base
+class Get extends PlatformAction
 {
     public static function getName()
     {
