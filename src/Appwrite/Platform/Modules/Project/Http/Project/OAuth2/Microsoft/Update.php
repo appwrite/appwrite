@@ -115,7 +115,7 @@ class Update extends Base
             ))
             ->param(static::getClientIdParamName(), null, new Nullable(new Text(256, 0)), static::getClientIdDescription(), optional: true)
             ->param(static::getClientSecretParamName(), null, new Nullable(new Text(512, 0)), static::getClientSecretDescription(), optional: true)
-            ->param('tenant', '', new Text(256, 1), 'Microsoft Entra ID tenant identifier. Use \'common\', \'organizations\', \'consumers\' or a specific tenant ID. For example: common', optional: false)
+            ->param('tenant', null, new Nullable(new Text(256, 0)), 'Microsoft Entra ID tenant identifier. Use \'common\', \'organizations\', \'consumers\' or a specific tenant ID. For example: common', true)
             ->param('enabled', null, new Nullable(new Boolean()), 'OAuth2 sign-in method status. Set to true to enable new session creation. Setting to true will trigger end-to-end credentials validation, and will throw if the credentials are invalid.', true)
             ->inject('response')
             ->inject('dbForPlatform')
@@ -148,7 +148,7 @@ class Update extends Base
     public function handle(
         ?string $applicationId,
         ?string $applicationSecret,
-        string $tenant,
+        ?string $tenant,
         ?bool $enabled,
         Response $response,
         Database $dbForPlatform,
@@ -161,7 +161,7 @@ class Update extends Base
 
         // The secret is stored as JSON `{"clientSecret": "...", "tenantID": "..."}`
         // to match the shape Microsoft's OAuth2 adapter expects (getTenantID()).
-        // The `tenant` param is required on every call, so it's always written.
+        // The `tenant` param is optional; if omitted, the existing stored tenant is preserved.
         // `applicationSecret` is optional; if omitted, the existing stored secret is preserved.
         $storedRaw = $project->getAttribute('oAuthProviders', [])[$providerId . 'Secret'] ?? '';
         $existing = [];
@@ -170,7 +170,7 @@ class Update extends Base
         }
         $encodedSecret = \json_encode([
             'clientSecret' => $applicationSecret ?? ($existing['clientSecret'] ?? ''),
-            'tenantID' => $tenant,
+            'tenantID' => $tenant ?? ($existing['tenantID'] ?? ''),
         ]);
 
         $project = $this->persistCredentials($project, $dbForPlatform, $authorization, $applicationId, $encodedSecret, $enabled);
