@@ -123,18 +123,22 @@ class Doctor extends Action
 
         $providerConfig = System::getEnv('_APP_LOGGING_CONFIG', '');
 
-        try {
-            $loggingProvider = new DSN($providerConfig);
+        if (empty($providerConfig)) {
+            Console::log('🔴 Logging adapter is disabled');
+        } else {
+            try {
+                $loggingProvider = new DSN($providerConfig);
 
-            $providerName = $loggingProvider->getScheme();
+                $providerName = $loggingProvider->getScheme();
 
-            if ($providerName !== 'sentry') {
-                Console::log('🔴 Logging adapter is disabled');
-            } else {
-                Console::log('🟢 Logging adapter is enabled (' . $providerName . ')');
+                if ($providerName !== 'sentry') {
+                    Console::log('🔴 Logging adapter is unsupported (' . $providerName . ')');
+                } else {
+                    Console::log('🟢 Logging adapter is enabled (' . $providerName . ')');
+                }
+            } catch (\Throwable) {
+                Console::log('🔴 Logging adapter is misconfigured');
             }
-        } catch (\Throwable) {
-            Console::log('🔴 Logging adapter is misconfigured');
         }
 
         \usleep(200 * 1000); // Sleep for 0.2 seconds
