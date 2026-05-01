@@ -43,6 +43,13 @@ export const CREATE_FUNCTION_WIZARD_BROWSE_LIMIT = 48
 export const ROWS_DEFAULT_PAGE_SIZE = 25
 
 /**
+ * Table workspace: first-page tables list (header, TableSelector, rows loaders,
+ * Export / Import tab). Same limit as database child route `TABLES_PER_PAGE` prefetch.
+ * Must match `useProjectTables` in TableViewImpl and export-import route loader.
+ */
+export const TABLE_WORKSPACE_TABLES_LIST_LIMIT = 100
+
+/**
  * Default page size for database table columns and indexes lists
  */
 export const COLUMNS_INDEXES_DEFAULT_PAGE_SIZE = 100

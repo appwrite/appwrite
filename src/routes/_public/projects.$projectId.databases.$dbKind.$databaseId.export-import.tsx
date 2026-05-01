@@ -8,8 +8,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { listSearchSchema } from '@/lib/table-filters'
 import { pageTitle } from '@/lib/utils/page-title'
-
-const TABLES_PER_PAGE = 500
+import { TABLE_WORKSPACE_TABLES_LIST_LIMIT } from '@/lib/react-query/hooks/constants'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/export-import',
@@ -35,7 +34,13 @@ export const Route = createFileRoute(
       databaseQueryOptions(projectId, databaseId),
     )
     const tablesData = await queryClient.ensureQueryData(
-      tablesQueryOptions(projectId, databaseId, 0, TABLES_PER_PAGE, undefined),
+      tablesQueryOptions(
+        projectId,
+        databaseId,
+        0,
+        TABLE_WORKSPACE_TABLES_LIST_LIMIT,
+        undefined,
+      ),
     )
 
     const tableIds = (tablesData.tables || []).map(

@@ -358,7 +358,12 @@ export function databaseCsvMigrationsQueryOptions(
     ],
     queryFn: () => fetchDatabaseCsvMigrations(projectId!, resourceIds),
     enabled: !!projectId && resourceIds.length > 0,
-    staleTime: 30 * 1000,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && databaseId ? 5 * 60 * 1000 : 0,
   })
 }
 
