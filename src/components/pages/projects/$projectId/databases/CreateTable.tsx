@@ -10,6 +10,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { IdInput } from '@/components/ui/id-input'
+import type { DatabaseRouteKind } from '@/lib/database-routes'
 
 /**
  * Validates Appwrite table ID: 1–36 chars, alphanumeric, underscore, hyphen, period.
@@ -23,6 +24,15 @@ function validateTableId(id: string): boolean {
 }
 
 export type CreateTableVariant = 'tables' | 'documents' | 'vectors'
+
+/** Maps URL/database product segment to the create dialog variant. */
+export function createTableVariantForDbRoute(
+  kind: DatabaseRouteKind,
+): CreateTableVariant {
+  if (kind === 'vectorsdb') return 'vectors'
+  if (kind === 'documentsdb') return 'documents'
+  return 'tables'
+}
 
 interface CreateTableProps {
   open: boolean

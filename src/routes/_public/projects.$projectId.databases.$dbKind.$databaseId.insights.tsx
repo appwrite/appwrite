@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
-import { TableView } from '@/components/pages/projects/$projectId/databases/View'
+import { Workspace } from '@/components/pages/projects/$projectId/databases/View'
 import {
   projectQueryOptions,
   databaseQueryOptions,
@@ -60,7 +60,7 @@ export const Route = createFileRoute(
 function InsightsPage() {
   const { databaseId } = Route.useParams()
   return (
-    <TableView
+    <Workspace
       databaseId={databaseId}
       tableId="-"
       activeTab="rows"

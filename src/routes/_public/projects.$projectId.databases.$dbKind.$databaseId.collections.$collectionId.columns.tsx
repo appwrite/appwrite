@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { DatabaseType } from '@appwrite.io/console'
-import { TableView } from '@/components/pages/projects/$projectId/databases/View'
+import { Workspace } from '@/components/pages/projects/$projectId/databases/View'
 import {
   getLimit,
   getPage,
@@ -135,6 +135,6 @@ function ColumnsPage() {
   const { databaseId, collectionId } = Route.useParams()
 
   return (
-    <TableView databaseId={databaseId} tableId={collectionId} activeTab="columns" />
+    <Workspace databaseId={databaseId} tableId={collectionId} activeTab="columns" />
   )
 }

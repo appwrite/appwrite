@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { TableView } from '@/components/pages/projects/$projectId/databases/View'
+import { Workspace } from '@/components/pages/projects/$projectId/databases/View'
 import {
   getLimit,
   getPage,
@@ -122,6 +122,6 @@ function IndexesPage() {
   const { databaseId, tableId } = Route.useParams()
 
   return (
-    <TableView databaseId={databaseId} tableId={tableId} activeTab="indexes" />
+    <Workspace databaseId={databaseId} tableId={tableId} activeTab="indexes" />
   )
 }

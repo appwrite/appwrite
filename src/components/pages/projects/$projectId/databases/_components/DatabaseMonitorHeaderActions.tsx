@@ -31,7 +31,7 @@ export function getDefaultMonitorDateRange(): DateRange {
 type DatabaseMonitorHeaderActionsProps = {
   projectId: string
   databaseId: string
-  routeDbKind: DatabaseRouteKind
+  dbKind: DatabaseRouteKind
   dateRange: DateRange
   onDateRangeChange: (range: DateRange | undefined) => void
   onRefresh: () => void
@@ -41,7 +41,7 @@ type DatabaseMonitorHeaderActionsProps = {
 export function DatabaseMonitorHeaderActions({
   projectId,
   databaseId,
-  routeDbKind,
+  dbKind,
   dateRange,
   onDateRangeChange,
   onRefresh,
@@ -80,7 +80,7 @@ export function DatabaseMonitorHeaderActions({
           <Button variant="outline" size="sm" className="h-7 shrink-0 px-2 text-[12px]" asChild>
             <Link
               to="/projects/$projectId/databases/$dbKind/$databaseId/settings"
-              params={{ projectId, dbKind: routeDbKind, databaseId }}
+              params={{ projectId, dbKind, databaseId }}
             >
               {serverless ? 'Upgrade' : 'Change spec'}
             </Link>

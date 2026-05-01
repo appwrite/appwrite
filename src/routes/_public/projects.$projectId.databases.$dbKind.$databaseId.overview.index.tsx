@@ -7,11 +7,11 @@ export const Route = createFileRoute(
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/overview/',
 )({
   head: () => ({ meta: [{ title: pageTitle('Database', 'Databases') }] }),
-  component: DatabaseOverviewIndexRedirect,
+  component: OverviewIndexRedirect,
 })
 
 // Redirect to tables tab when accessing overview without specific tab
-function DatabaseOverviewIndexRedirect() {
+function OverviewIndexRedirect() {
   const { projectId, dbKind, databaseId } = Route.useParams()
   const navigate = useNavigate()
 

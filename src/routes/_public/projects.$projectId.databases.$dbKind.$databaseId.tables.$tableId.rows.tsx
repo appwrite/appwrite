@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { TableView } from '@/components/pages/projects/$projectId/databases/View'
+import { Workspace } from '@/components/pages/projects/$projectId/databases/View'
 import {
   tablesQueryOptions,
   databaseQueryOptions,
@@ -94,7 +94,7 @@ export const Route = createFileRoute(
           replace: true,
         })
       }
-      // No tables: stay on tables/-/rows and render TableView with database-level content
+      // No tables: stay on tables/-/rows and render Workspace with database-level content
       await queryClient.ensureQueryData(
         databaseQueryOptions(projectId, databaseId),
       )
@@ -206,6 +206,6 @@ function RowsPage() {
   const { databaseId, tableId } = Route.useParams()
 
   return (
-    <TableView databaseId={databaseId} tableId={tableId} activeTab="rows" />
+    <Workspace databaseId={databaseId} tableId={tableId} activeTab="rows" />
   )
 }

@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { TableView } from '@/components/pages/projects/$projectId/databases/View'
+import { Workspace } from '@/components/pages/projects/$projectId/databases/View'
 import {
   projectQueryOptions,
   tablesQueryOptions,
@@ -108,6 +108,6 @@ function SettingsPage() {
   const { databaseId, collectionId } = Route.useParams()
 
   return (
-    <TableView databaseId={databaseId} tableId={collectionId} activeTab="settings" />
+    <Workspace databaseId={databaseId} tableId={collectionId} activeTab="settings" />
   )
 }

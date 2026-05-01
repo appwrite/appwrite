@@ -1,13 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from '@tanstack/react-router'
-import { useQueryClient, useMutation } from '@tanstack/react-query'
-import {
-  useAllProjectTablesForVisualizer,
-  createProjectTableColumn,
-  createProjectTableIndex,
-  useProjectTableColumns,
-  useProjectTableIndexes,
-} from '@/lib/react-query/hooks'
+import { useAllProjectTablesForVisualizer } from '@/lib/react-query/hooks'
 import { getColumnIcon } from '@/lib/utils/column-icons'
 import {
   Table2,
@@ -17,7 +10,6 @@ import {
   Maximize2,
   ChevronDown,
   ChevronUp,
-  Plus,
   Map as MapIcon,
   Download,
   Copy,
@@ -51,15 +43,18 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu'
-import { ColumnDrawer, ColumnFormData } from './tables/Column'
-import { IndexDrawer, IndexFormData } from './tables/Index'
-import { toast } from 'sonner'
 import {
   fetchDatabaseSchema,
   formatSchemaAsJSON,
 } from '@/lib/utils/database-schema-export'
 import { useQuery } from '@tanstack/react-query'
 import { isHtmlDarkChrome } from '@/lib/html-theme'
+import {
+  dbNavLink,
+  type DatabaseRouteKind,
+} from '@/lib/database-routes'
+
+const DB_KIND = 'vectorsdb' as const satisfies DatabaseRouteKind
 
 interface SchemaVisualizerProps {
   databaseId: string
@@ -99,8 +94,8 @@ const MIN_NODE_GAP = 15 // Minimum gap between nodes
 export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
   const params = useParams({ strict: false })
   const projectId = params.projectId as string
-  const queryClient = useQueryClient()
   const navigate = useNavigate()
+  const dbNav = useMemo(() => dbNavLink(DB_KIND), [])
 
   const { tables, isLoading } = useAllProjectTablesForVisualizer(
     projectId,
@@ -115,9 +110,6 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const [selectedTable, setSelectedTable] = useState<string | null>(null)
   const [expandedColumns, setExpandedColumns] = useState<Set<string>>(new Set())
-  const [columnDialogOpen, setColumnDialogOpen] = useState(false)
-  const [indexDialogOpen, setIndexDialogOpen] = useState(false)
-  const [activeTableId, setActiveTableId] = useState<string | null>(null)
   const [hasAutoFocused, setHasAutoFocused] = useState(false)
   const [showMinimap, setShowMinimap] = useState(true)
   const [, setContextMenuTableId] = useState<string | null>(null)
@@ -562,110 +554,6 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       }
       return next
     })
-  }
-
-  // Get available tables for relationship columns
-  const availableTables = useMemo(() => {
-    return tables.map((table: unknown) => ({
-      $id: table.$id,
-      name: table.name,
-    }))
-  }, [tables])
-
-  // Get columns for the active table (for index creation)
-  const { columns: activeTableColumns } = useProjectTableColumns(
-    projectId,
-    databaseId,
-    activeTableId || undefined,
-  )
-
-  // Get indexes for the active table (to check for duplicates)
-  const { indexes: activeTableIndexes } = useProjectTableIndexes(
-    projectId,
-    databaseId,
-    activeTableId || undefined,
-  )
-
-  // Mutation to create column
-  const createColumnMutation = useMutation({
-    mutationFn: async (data: ColumnFormData) => {
-      if (!activeTableId) throw new Error('No table selected')
-      return await createProjectTableColumn(
-        projectId,
-        databaseId,
-        activeTableId,
-        data,
-      )
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['columns', 'project', projectId, databaseId, activeTableId],
-      })
-      queryClient.invalidateQueries({
-        queryKey: ['tables', 'visualizer', 'project', projectId, databaseId],
-      })
-      queryClient.invalidateQueries({
-        queryKey: ['tables', 'project', projectId, databaseId],
-      })
-      setColumnDialogOpen(false)
-      toast.success('Column created successfully')
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to create column')
-    },
-  })
-
-  // Mutation to create index
-  const createIndexMutation = useMutation({
-    mutationFn: async (data: IndexFormData) => {
-      if (!activeTableId) throw new Error('No table selected')
-
-      // Convert IndexFormData to API format
-      const apiData = {
-        key: data.key,
-        type: data.type,
-        columns: data.columns.map((col) => col.column),
-        orders: data.columns.map((col) => col.order || 'ASC'),
-        lengths: data.columns.map((col) => col.length || 0),
-      }
-
-      return await createProjectTableIndex(
-        projectId,
-        databaseId,
-        activeTableId,
-        apiData,
-      )
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['indexes', 'project', projectId, databaseId, activeTableId],
-      })
-      queryClient.invalidateQueries({
-        queryKey: ['tables', 'visualizer', 'project', projectId, databaseId],
-      })
-      queryClient.invalidateQueries({
-        queryKey: ['tables', 'project', projectId, databaseId],
-      })
-      setIndexDialogOpen(false)
-      toast.success('Index created successfully')
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to create index')
-    },
-  })
-
-  // Open column dialog
-  const handleOpenColumnDialog = (tableId: string, e: React.MouseEvent) => {
-    e.stopPropagation()
-    setActiveTableId(tableId)
-    setColumnDialogOpen(true)
-  }
-
-  // Open index dialog
-  const handleOpenIndexDialog = (tableId: string, e: React.MouseEvent) => {
-    e.stopPropagation()
-    setActiveTableId(tableId)
-    setIndexDialogOpen(true)
   }
 
   const handleExportSVG = () => {
@@ -1280,17 +1168,25 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
   }, [pan, zoom, minimapBounds])
 
   // Context menu handlers
-  const handleNavigateToTable = (tableId: string) => {
+  const handleNavigateToTable = (resourceId: string) => {
     navigate({
-      to: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/rows',
-      params: { projectId, databaseId, tableId },
+      ...dbNav.dataGrid({
+        projectId,
+        dbKind: DB_KIND,
+        databaseId,
+        resourceId,
+      }),
     })
   }
 
-  const handleNavigateToSettings = (tableId: string) => {
+  const handleNavigateToSettings = (resourceId: string) => {
     navigate({
-      to: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/settings',
-      params: { projectId, databaseId, tableId },
+      ...dbNav.settings({
+        projectId,
+        dbKind: DB_KIND,
+        databaseId,
+        resourceId,
+      }),
     })
   }
 
@@ -1803,27 +1699,6 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
                           </div>
                         )}
 
-                        {/* Action buttons */}
-                        <div className="mt-2 border-t border-border pt-2 px-2 pb-2 flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-7 flex-1 text-[11px]"
-                            onClick={(e) => handleOpenColumnDialog(node.id, e)}
-                          >
-                            <Plus className="h-3 w-3 mr-1.5" />
-                            Column
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-7 flex-1 text-[11px]"
-                            onClick={(e) => handleOpenIndexDialog(node.id, e)}
-                          >
-                            <Plus className="h-3 w-3 mr-1.5" />
-                            Index
-                          </Button>
-                        </div>
                       </div>
                     </div>
                   </div>
@@ -1837,26 +1712,6 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
                   >
                     <Eye className="h-4 w-4 mr-2" />
                     View rows
-                  </ContextMenuItem>
-                  <ContextMenuItem
-                    onClick={() => {
-                      setContextMenuTableId(node.id)
-                      setActiveTableId(node.id)
-                      setColumnDialogOpen(true)
-                    }}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create column
-                  </ContextMenuItem>
-                  <ContextMenuItem
-                    onClick={() => {
-                      setContextMenuTableId(node.id)
-                      setActiveTableId(node.id)
-                      setIndexDialogOpen(true)
-                    }}
-                  >
-                    <Key className="h-4 w-4 mr-2" />
-                    Create index
                   </ContextMenuItem>
                   <ContextMenuSeparator />
                   <ContextMenuItem
@@ -2014,37 +1869,6 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
         </Button>
       )}
 
-      {/* Column creation dialog */}
-      {activeTableId && (
-        <ColumnDrawer
-          open={columnDialogOpen}
-          onOpenChange={setColumnDialogOpen}
-          onSubmit={async (data) => {
-            await createColumnMutation.mutateAsync(data)
-          }}
-          availableTables={availableTables}
-          existingColumns={
-            nodes.find((n) => n.id === activeTableId)?.columns || []
-          }
-          isLoading={createColumnMutation.isPending}
-        />
-      )}
-
-      {/* Index creation dialog */}
-      {activeTableId && (
-        <IndexDrawer
-          open={indexDialogOpen}
-          onOpenChange={setIndexDialogOpen}
-          onSubmit={async (data) => {
-            await createIndexMutation.mutateAsync(data)
-          }}
-          availableColumns={activeTableColumns}
-          existingIndexes={activeTableIndexes.map((idx: unknown) => ({
-            key: idx.key,
-          }))}
-          isLoading={createIndexMutation.isPending}
-        />
-      )}
     </div>
   )
 }

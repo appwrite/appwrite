@@ -34,6 +34,10 @@ import {
 } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
 import { getDatabaseConsoleLabels } from '@/lib/database-console-labels'
+import {
+  isDatabaseRouteKind,
+  type DatabaseRouteKind,
+} from '@/lib/database-routes'
 import { FileText } from 'lucide-react'
 
 function documentPayloadJson(row: Record<string, unknown>): string {
@@ -89,7 +93,10 @@ export function DocumentsJsonSpreadsheet({
   const projectId = params.projectId as string
   const databaseId = params.databaseId as string
   const tableId = table.$id
-  const dbLabels = getDatabaseConsoleLabels('documentsdb')
+  const dbKindParam = params.dbKind as string | undefined
+  const dbKind: DatabaseRouteKind =
+    dbKindParam && isDatabaseRouteKind(dbKindParam) ? dbKindParam : 'tablesdb'
+  const dbLabels = getDatabaseConsoleLabels(dbKind)
   const prevTableIdForPreviewRef = useRef<string | null>(null)
   const location = useLocation()
   const queryClient = useQueryClient()

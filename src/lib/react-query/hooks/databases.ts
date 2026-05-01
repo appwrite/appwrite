@@ -2868,6 +2868,59 @@ export function useProjectTableIndexes(
 }
 
 /**
+ * Same React Query cache as {@link tableColumnsQueryOptions}; fetches collection
+ * attributes for Documents/Vectors via {@link fetchProjectTableColumns} (not
+ * `tablesDB.listColumns`). Use from Documents/Vectors UI instead of table-named exports.
+ */
+export const collectionAttributesQueryOptions = tableColumnsQueryOptions
+
+/**
+ * Collection schema fields for Documents DB / Vectors DB collections (attributes),
+ * with the same return shape as {@link useProjectTableColumns} for row UI compatibility.
+ */
+export function useProjectCollectionAttributes(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  tableId: string | null | undefined,
+  filterQueries?: string[],
+  page: number = 0,
+  limit: number = COLUMNS_INDEXES_DEFAULT_PAGE_SIZE,
+) {
+  return useProjectTableColumns(
+    projectId,
+    databaseId,
+    tableId,
+    filterQueries,
+    page,
+    limit,
+  )
+}
+
+/** Same cache as {@link tableIndexesQueryOptions}; use from Documents/Vectors UI. */
+export const collectionIndexesQueryOptions = tableIndexesQueryOptions
+
+/**
+ * Collection indexes for Documents/Vectors (same shape as {@link useProjectTableIndexes}).
+ */
+export function useProjectCollectionIndexes(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  tableId: string | null | undefined,
+  filterQueries?: string[],
+  page: number = 0,
+  limit: number = COLUMNS_INDEXES_DEFAULT_PAGE_SIZE,
+) {
+  return useProjectTableIndexes(
+    projectId,
+    databaseId,
+    tableId,
+    filterQueries,
+    page,
+    limit,
+  )
+}
+
+/**
  * Hook to fetch a single table by ID
  *
  * @param projectId - The project ID

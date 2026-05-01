@@ -22,7 +22,10 @@ import { Button } from '@/components/ui/button'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
-import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import {
+  GRID_DEFAULT_PAGE_SIZE,
+  TABLE_WORKSPACE_TABLES_LIST_LIMIT,
+} from '@/lib/react-query/hooks/constants'
 import {
   getPage,
   getLimit,
@@ -33,8 +36,6 @@ import {
   useDatabaseCsvMigrations,
 } from '@/lib/react-query/hooks'
 import type { Models } from '@appwrite.io/console'
-
-const TABLES_PAGE_SIZE = 500
 
 /** resourceId format is "databaseId:tableId" */
 function tableIdFromResourceId(resourceId: string): string {
@@ -95,7 +96,7 @@ export function ExportImportView({ databaseId }: ExportImportViewProps) {
     projectId,
     databaseId,
     0,
-    TABLES_PAGE_SIZE,
+    TABLE_WORKSPACE_TABLES_LIST_LIMIT,
     undefined,
   )
   const tableIds = useMemo(() => tables.map((t) => t.$id), [tables])
