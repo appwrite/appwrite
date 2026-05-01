@@ -20,7 +20,16 @@ class Notification extends Event
     protected array $customMailOptions = [];
 
     /**
-     * @var array<int, array{address: string, channel: string}>
+     * Recipients to deliver the notification to.
+     *
+     * Each entry has an `address` (channel-specific identifier — email,
+     * userId, or webhook URL) and a `channel`. Webhook recipients may
+     * additionally carry an optional `signatureKey`; when set, the
+     * webhook adapter signs the request body with HMAC-SHA256 and adds
+     * the `X-Appwrite-Webhook-Signature` header. Without a key the
+     * payload is sent unsigned.
+     *
+     * @var array<int, array{address: string, channel: string, signatureKey?: string}>
      */
     protected array $recipients = [];
 
@@ -296,7 +305,7 @@ class Notification extends Event
     }
 
     /**
-     * @param array<int, array{address: string, channel: string}> $recipients
+     * @param array<int, array{address: string, channel: string, signatureKey?: string}> $recipients
      */
     public function setRecipients(array $recipients): self
     {
@@ -305,16 +314,20 @@ class Notification extends Event
     }
 
     /**
-     * @return array<int, array{address: string, channel: string}>
+     * @return array<int, array{address: string, channel: string, signatureKey?: string}>
      */
     public function getRecipients(): array
     {
         return $this->recipients;
     }
 
-    public function addRecipient(string $address, string $channel = NOTIFICATION_CHANNEL_EMAIL): self
+    public function addRecipient(string $address, string $channel = NOTIFICATION_CHANNEL_EMAIL, ?string $signatureKey = null): self
     {
-        $this->recipients[] = ['address' => $address, 'channel' => $channel];
+        $recipient = ['address' => $address, 'channel' => $channel];
+        if ($signatureKey !== null && $signatureKey !== '') {
+            $recipient['signatureKey'] = $signatureKey;
+        }
+        $this->recipients[] = $recipient;
         return $this;
     }
 

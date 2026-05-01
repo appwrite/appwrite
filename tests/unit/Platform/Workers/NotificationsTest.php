@@ -25,17 +25,19 @@ require_once __DIR__ . '/../../../../app/init.php';
  */
 class SpyNotifications extends Notifications
 {
-    /** @var array<int, array{channel: string, address: string, payload: array<string, mixed>}> */
+    /** @var array<int, array{channel: string, address: string, signatureKey: ?string, payload: array<string, mixed>}> */
     public array $dispatched = [];
 
     /** @var array<string, \Throwable> */
     public array $throwOn = [];
 
-    protected function dispatch(string $channel, string $address, array $payload, Registry $register, Database $database, Log $log): void
+    protected function dispatch(array $recipient, array $payload, Registry $register, Database $database, Log $log): void
     {
+        $channel = $recipient['channel'];
         $this->dispatched[] = [
             'channel' => $channel,
-            'address' => $address,
+            'address' => $recipient['address'],
+            'signatureKey' => $recipient['signatureKey'] ?? null,
             'payload' => $payload,
         ];
 
@@ -217,6 +219,33 @@ class NotificationsTest extends TestCase
         $this->assertCount(1, $worker->dispatched);
         $this->assertSame('legacy@example.test', $worker->dispatched[0]['address']);
         $this->assertSame(NOTIFICATION_CHANNEL_EMAIL, $worker->dispatched[0]['channel']);
+    }
+
+    public function testWebhookRecipientForwardsSignatureKey(): void
+    {
+        $worker = new SpyNotifications();
+        $payload = [
+            'project' => ['$id' => 'project-x'],
+            'recipients' => [
+                [
+                    'address' => 'https://hooks.example.test/signed',
+                    'channel' => NOTIFICATION_CHANNEL_WEBHOOK,
+                    'signatureKey' => 'tenant-secret',
+                ],
+                [
+                    'address' => 'https://hooks.example.test/unsigned',
+                    'channel' => NOTIFICATION_CHANNEL_WEBHOOK,
+                ],
+            ],
+            'subject' => 's',
+            'body' => 'b',
+        ];
+
+        $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+
+        $this->assertCount(2, $worker->dispatched);
+        $this->assertSame('tenant-secret', $worker->dispatched[0]['signatureKey']);
+        $this->assertNull($worker->dispatched[1]['signatureKey']);
     }
 
     public function testDispatchErrorTagsLogAndPropagates(): void

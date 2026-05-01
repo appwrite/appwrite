@@ -80,7 +80,7 @@ class Notifications extends Action
         foreach ($recipients as $recipient) {
             $channel = $recipient['channel'];
             try {
-                $this->dispatch($channel, $recipient['address'], $payload, $register, $dbForProject, $log);
+                $this->dispatch($recipient, $payload, $register, $dbForProject, $log);
                 if ($messageId !== '') {
                     $this->persistAlert($dbForProject, $messageId, $channel, $recipient['address'], $payload);
                 }
@@ -93,7 +93,7 @@ class Notifications extends Action
     }
 
     /**
-     * @return array<int, array{address: string, channel: string}>
+     * @return array<int, array{address: string, channel: string, signatureKey?: string}>
      */
     private function resolveRecipients(array $payload): array
     {
@@ -120,8 +120,14 @@ class Notifications extends Action
         }
     }
 
-    protected function dispatch(string $channel, string $address, array $payload, Registry $register, Database $database, Log $log): void
+    /**
+     * @param array{address: string, channel: string, signatureKey?: string} $recipient
+     */
+    protected function dispatch(array $recipient, array $payload, Registry $register, Database $database, Log $log): void
     {
+        $channel = $recipient['channel'];
+        $address = $recipient['address'];
+
         switch ($channel) {
             case NOTIFICATION_CHANNEL_EMAIL:
                 $this->dispatchEmail($address, $payload, $register, $log);
@@ -130,7 +136,7 @@ class Notifications extends Action
                 $this->dispatchConsole($address, $payload, $database);
                 return;
             case NOTIFICATION_CHANNEL_WEBHOOK:
-                $this->dispatchWebhook($address, $payload);
+                $this->dispatchWebhook($address, $payload, $recipient['signatureKey'] ?? null, $log);
                 return;
             default:
                 throw new Exception('Unsupported notification channel: ' . $channel);
@@ -315,7 +321,7 @@ class Notifications extends Action
         $adapter->send($consoleMessage);
     }
 
-    protected function dispatchWebhook(string $address, array $payload): void
+    protected function dispatchWebhook(string $address, array $payload, ?string $signatureKey, Log $log): void
     {
         $body = [
             'subject' => $payload['subject'] ?? '',
@@ -327,12 +333,14 @@ class Notifications extends Action
             'events' => $payload['events'] ?? [],
         ];
 
-        $secret = System::getEnv('_APP_NOTIFICATIONS_WEBHOOK_SECRET', '') ?: null;
+        if ($signatureKey === null || $signatureKey === '') {
+            $log->addTag('webhook_signed', 'false');
+        }
 
         $message = new WebhookMessage(
             urls: [$address],
             payload: $body,
-            signingSecret: $secret,
+            signingSecret: $signatureKey,
         );
 
         $adapter = new WebhookAdapter();
