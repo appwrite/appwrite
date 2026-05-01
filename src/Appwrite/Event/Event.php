@@ -18,8 +18,8 @@ class Event
     public const AUDITS_QUEUE_NAME = 'v1-audits';
     public const AUDITS_CLASS_NAME = 'AuditsV1';
 
-    public const MAILS_QUEUE_NAME = 'v1-mails';
-    public const MAILS_CLASS_NAME = 'MailsV1';
+    public const NOTIFICATIONS_QUEUE_NAME = 'v1-notifications';
+    public const NOTIFICATIONS_CLASS_NAME = 'NotificationsV1';
 
     public const FUNCTIONS_QUEUE_NAME = 'v1-functions';
     public const FUNCTIONS_CLASS_NAME = 'FunctionsV1';
