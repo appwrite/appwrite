@@ -610,9 +610,10 @@ class Migrations extends Action
     }
 
     /**
-     * Returns a "{parentResourceId}:{resourceId}" string when both are set, or just
-     * the available ID otherwise. The utopia-php/migration library expects this
-     * compound shape on its source/destination constructors.
+     * Returns a "{parentResourceId}:{resourceId}" string when both are set,
+     * or the leaf resourceId on its own otherwise. Returning a parent-only
+     * value would feed the utopia-php/migration library a malformed
+     * compound, so an unanchored parent yields null instead.
      */
     protected function getCompoundResourceId(Document $migration): ?string
     {
@@ -623,7 +624,7 @@ class Migrations extends Action
             return $parentResourceId . ':' . $resourceId;
         }
 
-        return $resourceId ?? $parentResourceId;
+        return !empty($resourceId) ? $resourceId : null;
     }
 
     /**
@@ -916,8 +917,20 @@ class Migrations extends Action
         $tableInternalId = $resources['tableId'];
 
         if ($source === CSV::getName()) {
-            $database = $authorization->skip(fn () => $this->dbForProject->getDocument('databases', (string) $parentResourceId));
-            $table = $authorization->skip(fn () => $this->dbForProject->getDocument('database_' . $database->getSequence(), (string) $resourceId));
+            if (empty($parentResourceId) || empty($resourceId)) {
+                Console::warning("Skipping CSV migration usage stats: missing parent/leaf resource ID (parent: '{$parentResourceId}', leaf: '{$resourceId}')");
+                return;
+            }
+            $database = $authorization->skip(fn () => $this->dbForProject->getDocument('databases', $parentResourceId));
+            if ($database->isEmpty()) {
+                Console::warning("Skipping CSV migration usage stats: database '{$parentResourceId}' not found");
+                return;
+            }
+            $table = $authorization->skip(fn () => $this->dbForProject->getDocument('database_' . $database->getSequence(), $resourceId));
+            if ($table->isEmpty()) {
+                Console::warning("Skipping CSV migration usage stats: collection '{$resourceId}' not found in database '{$parentResourceId}'");
+                return;
+            }
             $databaseInternalId = (int) $database->getSequence();
             $tableInternalId = (int) $table->getSequence();
         }

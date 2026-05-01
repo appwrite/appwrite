@@ -91,25 +91,33 @@ class V25 extends Migration
         [$parentId, $childId] = \explode(':', $resourceId, 2);
         $parentResourceType = $document->getAttribute('resourceType');
 
-        $document
-            ->setAttribute('resourceId', $childId)
-            ->setAttribute('resourceType', 'collection')
-            ->setAttribute('parentResourceId', $parentId)
-            ->setAttribute('parentResourceType', $parentResourceType);
+        $parentResourceInternalId = '';
+        $resourceInternalId = '';
 
         try {
             $database = $this->dbForProject->getDocument('databases', $parentId);
             if (!$database->isEmpty()) {
-                $document->setAttribute('parentResourceInternalId', (string) $database->getSequence());
+                $parentResourceInternalId = (string) $database->getSequence();
 
                 $collection = $this->dbForProject->getDocument('database_' . $database->getSequence(), $childId);
                 if (!$collection->isEmpty()) {
-                    $document->setAttribute('resourceInternalId', (string) $collection->getSequence());
+                    $resourceInternalId = (string) $collection->getSequence();
                 }
             }
         } catch (Throwable $th) {
             Console::warning("Failed to backfill internal IDs for migration {$document->getId()}: {$th->getMessage()}");
+            // Lookup failed — leave the document untouched so the original
+            // composite resourceId is preserved and the doc can be retried.
+            return $document;
         }
+
+        $document
+            ->setAttribute('resourceId', $childId)
+            ->setAttribute('resourceInternalId', $resourceInternalId)
+            ->setAttribute('resourceType', 'collection')
+            ->setAttribute('parentResourceId', $parentId)
+            ->setAttribute('parentResourceInternalId', $parentResourceInternalId)
+            ->setAttribute('parentResourceType', $parentResourceType);
 
         return $document;
     }

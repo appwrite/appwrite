@@ -27,12 +27,15 @@ class V25 extends Filter
             return $content;
         }
 
-        if (\str_contains($content['resourceId'], ':')) {
-            [$databaseId, $collectionId] = \explode(':', $content['resourceId'], 2);
-            $content['databaseId'] = $content['databaseId'] ?? $databaseId;
-            $content['collectionId'] = $content['collectionId'] ?? $collectionId;
+        if (!\str_contains($content['resourceId'], ':')) {
+            // Leave malformed resourceId in place so the new UID validator
+            // surfaces it to the caller instead of silently scrubbing it.
+            return $content;
         }
 
+        [$databaseId, $collectionId] = \explode(':', $content['resourceId'], 2);
+        $content['databaseId'] = $content['databaseId'] ?? $databaseId;
+        $content['collectionId'] = $content['collectionId'] ?? $collectionId;
         unset($content['resourceId']);
 
         return $content;
