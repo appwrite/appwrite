@@ -189,7 +189,7 @@ class Migrations extends Action
     {
         $source = $migration->getAttribute('source');
         $destination = $migration->getAttribute('destination');
-        $resourceId = $migration->getAttribute('resourceId');
+        $resourceId = $this->getCompoundResourceId($migration);
         $credentials = $migration->getAttribute('credentials');
         $migrationOptions = $migration->getAttribute('options');
         /** @var Database|null $projectDB */
@@ -294,7 +294,7 @@ class Migrations extends Action
             ),
             DestinationCSV::getName() => new DestinationCSV(
                 $this->deviceForFiles,
-                $migration->getAttribute('resourceId'),
+                $this->getCompoundResourceId($migration),
                 $options['bucketId'],
                 $options['filename'],
                 $options['columns'],
@@ -305,7 +305,7 @@ class Migrations extends Action
             ),
             DestinationJSON::getName() => new DestinationJSON(
                 $this->deviceForFiles,
-                $migration->getAttribute('resourceId'),
+                $this->getCompoundResourceId($migration),
                 $options['bucketId'] ?? 'default',
                 $options['filename'],
                 $options['columns'] ?? [],
@@ -507,8 +507,8 @@ class Migrations extends Action
                         }
                         $this->updateMigrationDocument($migration, $project, $queueForRealtime);
                     },
-                    $migration->getAttribute('resourceId'),
-                    $migration->getAttribute('resourceType')
+                    $this->getCompoundResourceId($migration),
+                    $migration->getAttribute('parentResourceType')
                 );
 
                 $destination->shutdown();
@@ -578,6 +578,7 @@ class Migrations extends Action
                             $publisherForUsage,
                             $migration->getAttribute('source'),
                             $authorization,
+                            $migration->getAttribute('parentResourceId'),
                             $migration->getAttribute('resourceId')
                         );
                     }
@@ -606,6 +607,23 @@ class Migrations extends Action
         }
 
         return ($this->getDatabasesDB)($database);
+    }
+
+    /**
+     * Returns a "{parentResourceId}:{resourceId}" string when both are set, or just
+     * the available ID otherwise. The utopia-php/migration library expects this
+     * compound shape on its source/destination constructors.
+     */
+    protected function getCompoundResourceId(Document $migration): ?string
+    {
+        $parentResourceId = $migration->getAttribute('parentResourceId');
+        $resourceId = $migration->getAttribute('resourceId');
+
+        if (!empty($parentResourceId) && !empty($resourceId)) {
+            return $parentResourceId . ':' . $resourceId;
+        }
+
+        return $resourceId ?? $parentResourceId;
     }
 
     /**
@@ -890,7 +908,7 @@ class Migrations extends Action
         return $errors;
     }
 
-    private function processMigrationResourceStats(array $resources, Context $usage, Document $projectDocument, UsagePublisher $publisherForUsage, string $source, Authorization $authorization, ?string $resourceId)
+    private function processMigrationResourceStats(array $resources, Context $usage, Document $projectDocument, UsagePublisher $publisherForUsage, string $source, Authorization $authorization, ?string $parentResourceId, ?string $resourceId)
     {
         $resourceName = $resources['name'];
         $count = $resources['count'];
@@ -898,9 +916,8 @@ class Migrations extends Action
         $tableInternalId = $resources['tableId'];
 
         if ($source === CSV::getName()) {
-            [$databaseId, $tableId] = explode(':', $resourceId);
-            $database = $authorization->skip(fn () => $this->dbForProject->getDocument('databases', $databaseId));
-            $table = $authorization->skip(fn () => $this->dbForProject->getDocument('database_' . $database->getSequence(), $tableId));
+            $database = $authorization->skip(fn () => $this->dbForProject->getDocument('databases', (string) $parentResourceId));
+            $table = $authorization->skip(fn () => $this->dbForProject->getDocument('database_' . $database->getSequence(), (string) $resourceId));
             $databaseInternalId = (int) $database->getSequence();
             $tableInternalId = (int) $table->getSequence();
         }

@@ -1328,7 +1328,8 @@ trait MigrationsBase
             [
                 'fileId' => $fileIds['missing-column'],
                 'bucketId' => $bucketIds['missing-column'],
-                'resourceId' => $databaseId . ':' . $tableId,
+                'databaseId' => $databaseId,
+                'collectionId' => $tableId,
             ]
         );
 
@@ -1360,7 +1361,8 @@ trait MigrationsBase
             [
                 'fileId' => $fileIds['missing-row'],
                 'bucketId' => $bucketIds['missing-row'],
-                'resourceId' => $databaseId . ':' . $tableId,
+                'databaseId' => $databaseId,
+                'collectionId' => $tableId,
             ]
         );
 
@@ -1392,7 +1394,8 @@ trait MigrationsBase
             [
                 'fileId' => $fileIds['irrelevant-column'],
                 'bucketId' => $bucketIds['irrelevant-column'],
-                'resourceId' => $databaseId . ':' . $tableId,
+                'databaseId' => $databaseId,
+                'collectionId' => $tableId,
             ]
         );
 
@@ -1419,7 +1422,8 @@ trait MigrationsBase
                 'endpoint' => $this->webEndpoint,
                 'fileId' => $fileIds['default'],
                 'bucketId' => $bucketIds['default'],
-                'resourceId' => $databaseId . ':' . $tableId,
+                'databaseId' => $databaseId,
+                'collectionId' => $tableId,
             ]
         );
 
@@ -1461,7 +1465,8 @@ trait MigrationsBase
                 'endpoint' => $this->webEndpoint,
                 'fileId' => $fileIds['documents-internals'],
                 'bucketId' => $bucketIds['documents-internals'],
-                'resourceId' => $databaseId . ':' . $tableId,
+                'databaseId' => $databaseId,
+                'collectionId' => $tableId,
             ]
         );
 
@@ -1644,7 +1649,8 @@ trait MigrationsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()), [
-            'resourceId' => $databaseId . ':' . $collectionId,
+            'databaseId' => $databaseId,
+            'collectionId' => $collectionId,
             'filename' => 'test-export',
             'columns' => [],
             'delimiter' => ',',
@@ -2622,7 +2628,8 @@ trait MigrationsBase
             $migration = $this->performCsvMigration([
                 'fileId' => $fileId,
                 'bucketId' => $bucketId,
-                'resourceId' => $databaseId . ':' . $collectionId,
+                'databaseId' => $databaseId,
+                'collectionId' => $collectionId,
             ]);
 
             $this->assertEquals(202, $migration['headers']['status-code']);
@@ -2750,7 +2757,8 @@ trait MigrationsBase
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
-                'resourceId' => $databaseId . ':' . $collectionId,
+                'databaseId' => $databaseId,
+                'collectionId' => $collectionId,
                 'filename' => $filename,
                 'columns' => [],
                 'queries' => [],
@@ -3951,7 +3959,8 @@ trait MigrationsBase
             [
                 'fileId' => $fileIds['missing-column'],
                 'bucketId' => $bucketIds['missing-column'],
-                'resourceId' => $databaseId . ':' . $tableId,
+                'databaseId' => $databaseId,
+                'collectionId' => $tableId,
             ]
         );
 
@@ -3988,7 +3997,8 @@ trait MigrationsBase
             [
                 'fileId' => $fileIds['irrelevant-column'],
                 'bucketId' => $bucketIds['irrelevant-column'],
-                'resourceId' => $databaseId . ':' . $tableId,
+                'databaseId' => $databaseId,
+                'collectionId' => $tableId,
             ]
         );
 
@@ -4015,7 +4025,8 @@ trait MigrationsBase
                 'endpoint' => $this->endpoint,
                 'fileId' => $fileIds['default'],
                 'bucketId' => $bucketIds['default'],
-                'resourceId' => $databaseId . ':' . $tableId,
+                'databaseId' => $databaseId,
+                'collectionId' => $tableId,
             ]
         );
 
@@ -4057,7 +4068,8 @@ trait MigrationsBase
                 'endpoint' => $this->endpoint,
                 'fileId' => $fileIds['documents-internals'],
                 'bucketId' => $bucketIds['documents-internals'],
-                'resourceId' => $databaseId . ':' . $tableId,
+                'databaseId' => $databaseId,
+                'collectionId' => $tableId,
             ]
         );
 
@@ -4180,7 +4192,8 @@ trait MigrationsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()), [
-            'resourceId' => $databaseId . ':' . $collectionId,
+            'databaseId' => $databaseId,
+            'collectionId' => $collectionId,
             'filename' => 'test-json-export',
             'columns' => [],
             'queries' => [],
@@ -4291,7 +4304,8 @@ trait MigrationsBase
 
         // Trigger JSON export
         $migration = $this->client->call(Client::METHOD_POST, '/migrations/json/exports', $headers, [
-            'resourceId' => $databaseId . ':' . $collectionId,
+            'databaseId' => $databaseId,
+            'collectionId' => $collectionId,
             'filename' => 'vectorsdb-export-test',
             'columns' => [],
             'queries' => [],
@@ -4364,7 +4378,8 @@ trait MigrationsBase
         $migration = $this->performJsonMigration([
             'fileId' => $fileId,
             'bucketId' => $bucketId,
-            'resourceId' => $databaseId . ':' . $collectionId,
+            'databaseId' => $databaseId,
+            'collectionId' => $collectionId,
         ]);
         $this->assertEquals(202, $migration['headers']['status-code']);
 
@@ -4435,7 +4450,8 @@ trait MigrationsBase
 
         // Trigger JSON export
         $migration = $this->client->call(Client::METHOD_POST, '/migrations/json/exports', $headers, [
-            'resourceId' => $databaseId . ':' . $collectionId,
+            'databaseId' => $databaseId,
+            'collectionId' => $collectionId,
             'filename' => 'documentsdb-export-test',
             'columns' => [],
             'queries' => [],
@@ -4507,7 +4523,8 @@ trait MigrationsBase
         $migration = $this->performJsonMigration([
             'fileId' => $fileId,
             'bucketId' => $bucketId,
-            'resourceId' => $databaseId . ':' . $collectionId,
+            'databaseId' => $databaseId,
+            'collectionId' => $collectionId,
         ]);
         $this->assertEquals(202, $migration['headers']['status-code']);
 
