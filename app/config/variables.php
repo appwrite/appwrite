@@ -580,6 +580,21 @@ return [
         ],
     ],
     [
+        'category' => 'Notifications',
+        'description' => 'Settings for the notifications worker. Notifications fan out to email, in-app console alerts, and outbound webhooks via the dedicated worker.',
+        'variables' => [
+            [
+                'name' => '_APP_NOTIFICATIONS_WEBHOOK_SECRET',
+                'description' => 'Shared secret used to sign outbound notification webhooks with HMAC-SHA256. When set, every webhook delivery includes an X-Appwrite-Webhook-Signature header carrying `sha256=<hex>` over `<X-Appwrite-Webhook-Timestamp>.<body>`. Leave empty to deliver unsigned payloads. Empty by default.',
+                'introduction' => '',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+        ],
+    ],
+    [
         'category' => 'Phone',
         'description' => '',
         'variables' => [
