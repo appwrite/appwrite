@@ -115,7 +115,7 @@ class NotificationsTest extends TestCase
             ],
             'subject' => 'Hi',
             'body' => 'Body',
-            'dedupKey' => 'event-1',
+            'deduplicationKey' => 'event-1',
         ];
 
         $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
@@ -136,7 +136,7 @@ class NotificationsTest extends TestCase
             ],
             'subject' => 'Heads up',
             'body' => 'Read me',
-            'dedupKey' => 'evt-multi',
+            'deduplicationKey' => 'evt-multi',
             'permissions' => [Permission::read(Role::any())],
         ];
 
@@ -164,7 +164,7 @@ class NotificationsTest extends TestCase
             'recipients' => [['address' => 'user-1', 'channel' => NOTIFICATION_CHANNEL_CONSOLE]],
             'subject' => 'Sub',
             'body' => 'B',
-            'dedupKey' => 'dup-key',
+            'deduplicationKey' => 'dup-key',
         ];
 
         // First run delivers and persists.
@@ -229,7 +229,7 @@ class NotificationsTest extends TestCase
             'recipients' => [['address' => 'https://h.example.test', 'channel' => NOTIFICATION_CHANNEL_WEBHOOK]],
             'subject' => 's',
             'body' => 'b',
-            'dedupKey' => 'err-1',
+            'deduplicationKey' => 'err-1',
         ];
 
         try {

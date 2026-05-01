@@ -31,7 +31,7 @@ class Notification extends Event
 
     protected string $template = '';
     protected array $templateParams = [];
-    protected string $dedupKey = '';
+    protected string $deduplicationKey = '';
 
     /**
      * @var array<string>
@@ -357,15 +357,15 @@ class Notification extends Event
         return $this->templateParams;
     }
 
-    public function setDedupKey(string $dedupKey): self
+    public function setDeduplicationKey(string $deduplicationKey): self
     {
-        $this->dedupKey = $dedupKey;
+        $this->deduplicationKey = $deduplicationKey;
         return $this;
     }
 
-    public function getDedupKey(): string
+    public function getDeduplicationKey(): string
     {
-        return $this->dedupKey;
+        return $this->deduplicationKey;
     }
 
     /**
@@ -400,7 +400,7 @@ class Notification extends Event
         $this->channels = [];
         $this->template = '';
         $this->templateParams = [];
-        $this->dedupKey = '';
+        $this->deduplicationKey = '';
         $this->permissions = [];
         return $this;
     }
@@ -427,7 +427,7 @@ class Notification extends Event
             'channels' => $this->channels,
             'template' => $this->template,
             'templateParams' => $this->templateParams,
-            'dedupKey' => $this->dedupKey,
+            'deduplicationKey' => $this->deduplicationKey,
             'permissions' => $this->permissions,
             'name' => $this->name,
             'subject' => $this->subject,

@@ -64,8 +64,8 @@ class Notifications extends Action
             throw new Exception('Missing payload');
         }
 
-        $dedupKey = $payload['dedupKey'] ?? '';
-        $messageId = $dedupKey !== '' ? \md5($dedupKey) : '';
+        $deduplicationKey = $payload['deduplicationKey'] ?? '';
+        $messageId = $deduplicationKey !== '' ? \md5($deduplicationKey) : '';
 
         if ($messageId !== '' && $this->alreadyDelivered($dbForProject, $messageId)) {
             $log->addTag('dedup', 'hit');
@@ -299,8 +299,8 @@ class Notifications extends Action
 
         $recipients = [['userId' => $address]];
 
-        $dedupKey = $payload['dedupKey'] ?? '';
-        $messageId = $dedupKey !== '' ? \md5($dedupKey) : null;
+        $deduplicationKey = $payload['deduplicationKey'] ?? '';
+        $messageId = $deduplicationKey !== '' ? \md5($deduplicationKey) : null;
 
         $consoleMessage = new ConsoleMessage(
             recipients: $recipients,
@@ -323,7 +323,7 @@ class Notifications extends Action
             'template' => $payload['template'] ?? '',
             'params' => $payload['templateParams'] ?? [],
             'project' => \is_array($payload['project'] ?? null) ? ($payload['project']['$id'] ?? null) : null,
-            'dedupKey' => $payload['dedupKey'] ?? '',
+            'deduplicationKey' => $payload['deduplicationKey'] ?? '',
             'events' => $payload['events'] ?? [],
         ];
 
