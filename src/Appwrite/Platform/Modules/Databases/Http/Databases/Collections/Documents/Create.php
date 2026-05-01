@@ -145,8 +145,12 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, ?array $documents, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, User $user, Event $queueForEvents, Context $usage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, array $plan, Authorization $authorization, EventProcessor $eventProcessor): void
+    public function action(string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, ?array $documents, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, ?User $user, Event $queueForEvents, Context $usage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, array $plan, Authorization $authorization, EventProcessor $eventProcessor): void
     {
+        if ($user === null || $user->isEmpty()) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, 'Authentication required');
+        }
+
         $data = \is_string($data)
             ? \json_decode($data, true)
             : $data;
@@ -202,6 +206,7 @@ class Create extends Action
 
         $isAPIKey = $user->isApp($authorization->getRoles());
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
+        $userId = $user->getId();
 
         if ($isBulk && !$isAPIKey && !$isPrivilegedUser) {
             throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE);
@@ -226,7 +231,7 @@ class Create extends Action
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk create is not supported for ' . $this->getSDKNamespace() . ' with relationship ' . $this->getStructureContext());
         }
 
-        $setPermissions = function (Document $document, ?array $permissions) use ($user, $isAPIKey, $isPrivilegedUser, $isBulk, $authorization) {
+        $setPermissions = function (Document $document, ?array $permissions) use ($userId, $isAPIKey, $isPrivilegedUser, $isBulk, $authorization) {
             $allowedPermissions = [
                 Database::PERMISSION_READ,
                 Database::PERMISSION_UPDATE,
@@ -249,9 +254,9 @@ class Create extends Action
             // Add permissions for current the user if none were provided.
             if (\is_null($permissions)) {
                 $permissions = [];
-                if (!empty($user->getId()) && !$isPrivilegedUser) {
+                if (!empty($userId) && !$isPrivilegedUser) {
                     foreach ($allowedPermissions as $permission) {
-                        $permissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
+                        $permissions[] = (new Permission($permission, 'user', $userId))->toString();
                     }
                 }
             }
@@ -332,7 +337,6 @@ class Create extends Action
 
                     if ($relation instanceof Document) {
                         $relation = $this->removeReadonlyAttributes($relation, $isAPIKey || $isPrivilegedUser);
-
                         $current = $authorization->skip(
                             fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(), $relation->getId())
                         );
@@ -360,7 +364,7 @@ class Create extends Action
             }
         };
 
-        $documents = \array_map(function ($document) use ($collection, $permissions, $checkPermissions, $isBulk, $documentId, $setPermissions, $isAPIKey, $isPrivilegedUser) {
+        $documents = \array_map(function ($document) use ($collection, $permissions, $checkPermissions, $isBulk, $documentId, $setPermissions, $isAPIKey, $isPrivilegedUser, $userId) {
             $document['$collection'] = $collection->getId();
 
             // Determine the source ID depending on whether it's a bulk operation.
@@ -379,6 +383,20 @@ class Create extends Action
             // Assign a unique ID if needed, otherwise use the provided ID.
             $document['$id'] = $sourceId === 'unique()' ? ID::unique() : $sourceId;
             $document = $this->removeReadonlyAttributes($document, $isAPIKey || $isPrivilegedUser);
+
+            // Remove client-provided system-reserved fields to prevent impersonation
+            unset(
+                $document['$createdBy'],
+                $document['$owner'],
+                $document['userId'],
+                $document['createdBy'],
+                $document['ownerId'],
+                $document['permissions']
+            );
+
+            // Enforce server-controlled ownership
+            $document['$createdBy'] = $userId;
+
             $document = new Document($document);
             $setPermissions($document, $permissions);
             $checkPermissions($collection, $document, Database::PERMISSION_CREATE);
