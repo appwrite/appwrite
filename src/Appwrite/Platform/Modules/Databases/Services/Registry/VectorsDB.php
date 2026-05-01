@@ -18,6 +18,7 @@ use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Indexes\Creat
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Indexes\Delete as DeleteIndex;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Indexes\Get as GetIndex;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Indexes\XList as ListIndexes;
+use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Logs\XList as ListCollectionLogs;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Update as UpdateCollection;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Usage\Get as GetCollectionUsage;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\XList as ListCollections;
@@ -68,6 +69,7 @@ class VectorsDB extends Base
         $service->addAction(DeleteCollection::getName(), new DeleteCollection());
         $service->addAction(ListCollections::getName(), new ListCollections());
         $service->addAction(GetCollectionUsage::getName(), new GetCollectionUsage());
+        $service->addAction(ListCollectionLogs::getName(), new ListCollectionLogs());
     }
 
     private function registerIndexActions(Service $service): void

@@ -85,9 +85,8 @@ class XList extends Action
         }
 
         $collectionDocument = $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId);
-        $collection = $dbForProject->getCollection('database_' . $database->getSequence() . '_collection_' . $collectionDocument->getSequence());
 
-        if ($collection->isEmpty()) {
+        if ($collectionDocument->isEmpty()) {
             throw new Exception($this->getNotFoundException(), params: [$collectionId]);
         }
 
