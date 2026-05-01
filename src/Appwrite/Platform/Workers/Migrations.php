@@ -189,8 +189,7 @@ class Migrations extends Action
     {
         $source = $migration->getAttribute('source');
         $destination = $migration->getAttribute('destination');
-        $databaseId = (string) $migration->getAttribute('parentResourceId', '');
-        $tableId = (string) $migration->getAttribute('resourceId', '');
+        [$databaseId, $tableId] = $this->resolveResourceIds($migration);
         $credentials = $migration->getAttribute('credentials');
         $migrationOptions = $migration->getAttribute('options');
         /** @var Database|null $projectDB */
@@ -285,8 +284,7 @@ class Migrations extends Action
         $destination = $migration->getAttribute('destination');
         $options = $migration->getAttribute('options', []);
         $credentials = $migration->getAttribute('credentials');
-        $databaseId = (string) $migration->getAttribute('parentResourceId', '');
-        $tableId = (string) $migration->getAttribute('resourceId', '');
+        [$databaseId, $tableId] = $this->resolveResourceIds($migration);
 
         return match ($destination) {
             DestinationAppwrite::getName() => new DestinationAppwrite(
@@ -514,9 +512,9 @@ class Migrations extends Action
                         }
                         $this->updateMigrationDocument($migration, $project, $queueForRealtime);
                     },
-                    $migration->getAttribute('parentResourceId'),
-                    $migration->getAttribute('parentResourceType'),
-                    $migration->getAttribute('resourceId'),
+                    $this->resolveResourceIds($migration)[0],
+                    $migration->getAttribute('parentResourceType') ?: $migration->getAttribute('resourceType'),
+                    $this->resolveResourceIds($migration)[1],
                 );
 
                 $destination->shutdown();
@@ -586,8 +584,7 @@ class Migrations extends Action
                             $publisherForUsage,
                             $migration->getAttribute('source'),
                             $authorization,
-                            $migration->getAttribute('parentResourceId'),
-                            $migration->getAttribute('resourceId')
+                            ...$this->resolveResourceIds($migration),
                         );
                     }
                     $destination?->success();
@@ -615,6 +612,32 @@ class Migrations extends Action
         }
 
         return ($this->getDatabasesDB)($database);
+    }
+
+    /**
+     * Resolve [databaseId, tableId] from a migration document.
+     *
+     * Handles three input shapes so a 1.9.4 worker keeps working before V25
+     * has run, while in-flight migrations enqueued on 1.9.3 drain, and after
+     * a backup taken on 1.9.3 is restored:
+     *  - 1.9.4 (post-backfill): parentResourceId/resourceId set separately.
+     *  - 1.9.3 (legacy): resourceId is the composite "{databaseId}:{tableId}",
+     *    parentResourceId is empty.
+     *  - 1.9.4 mid-backfill: V25 attributes added but a given doc not yet
+     *    rewritten, same as the legacy case.
+     *
+     * @return array{0: string, 1: string}
+     */
+    protected function resolveResourceIds(Document $migration): array
+    {
+        $databaseId = (string) $migration->getAttribute('parentResourceId', '');
+        $tableId = (string) $migration->getAttribute('resourceId', '');
+
+        if ($databaseId === '' && \str_contains($tableId, ':')) {
+            [$databaseId, $tableId] = \explode(':', $tableId, 2);
+        }
+
+        return [$databaseId, $tableId];
     }
 
     /**

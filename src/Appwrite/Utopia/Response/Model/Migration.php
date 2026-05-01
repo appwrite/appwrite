@@ -152,6 +152,8 @@ class Migration extends Model
 
     public function filter(Document $document): Document
     {
+        $this->normalizeLegacyResourceId($document);
+
         $errors = $document->getAttribute('errors', []);
         if (empty($errors)) {
             return $document;
@@ -171,5 +173,35 @@ class Migration extends Model
         $document->setAttribute('errors', $errors);
 
         return $document;
+    }
+
+    /**
+     * Splits a legacy "{databaseId}:{tableId}" resourceId into resourceId /
+     * parentResourceId for documents that haven't been backfilled by V25 yet
+     * (or that were just restored from a pre-1.9.4 backup). The new attributes
+     * stay populated where they already are; this only fills gaps.
+     */
+    private function normalizeLegacyResourceId(Document $document): void
+    {
+        $resourceId = (string) $document->getAttribute('resourceId', '');
+        $parentResourceId = (string) $document->getAttribute('parentResourceId', '');
+
+        if ($parentResourceId !== '' || !\str_contains($resourceId, ':')) {
+            return;
+        }
+
+        [$databaseId, $tableId] = \explode(':', $resourceId, 2);
+
+        $document->setAttribute('resourceId', $tableId);
+        $document->setAttribute('parentResourceId', $databaseId);
+
+        // Pre-1.9.4 docs stored the database family ("database" / "documentsdb"
+        // / "vectorsdb") in resourceType. Promote it to parentResourceType and
+        // surface the leaf type so the response shape is consistent.
+        $legacyType = (string) $document->getAttribute('resourceType', '');
+        if ((string) $document->getAttribute('parentResourceType', '') === '' && $legacyType !== '') {
+            $document->setAttribute('parentResourceType', $legacyType);
+            $document->setAttribute('resourceType', 'collection');
+        }
     }
 }
