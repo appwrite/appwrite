@@ -55,7 +55,9 @@ class Notifications extends Action
 
     public function action(Message $message, Document $project, Registry $register, Database $dbForProject, Log $log): void
     {
-        Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
+        if (\class_exists(Runtime::class)) {
+            Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
+        }
         $payload = $message->getPayload();
 
         if (empty($payload)) {
@@ -118,7 +120,7 @@ class Notifications extends Action
         }
     }
 
-    private function dispatch(string $channel, string $address, array $payload, Registry $register, Database $database, Log $log): void
+    protected function dispatch(string $channel, string $address, array $payload, Registry $register, Database $database, Log $log): void
     {
         switch ($channel) {
             case NOTIFICATION_CHANNEL_EMAIL:
@@ -135,7 +137,7 @@ class Notifications extends Action
         }
     }
 
-    private function dispatchEmail(string $address, array $payload, Registry $register, Log $log): void
+    protected function dispatchEmail(string $address, array $payload, Registry $register, Log $log): void
     {
         $smtp = $payload['smtp'] ?? [];
         if (empty($smtp) && empty(System::getEnv('_APP_SMTP_HOST'))) {
@@ -279,7 +281,7 @@ class Notifications extends Action
         }
     }
 
-    private function dispatchConsole(string $address, array $payload, Database $database): void
+    protected function dispatchConsole(string $address, array $payload, Database $database): void
     {
         $project = $payload['project'] ?? null;
         $projectId = \is_array($project) ? ($project['$id'] ?? null) : null;
@@ -313,7 +315,7 @@ class Notifications extends Action
         $adapter->send($consoleMessage);
     }
 
-    private function dispatchWebhook(string $address, array $payload): void
+    protected function dispatchWebhook(string $address, array $payload): void
     {
         $body = [
             'subject' => $payload['subject'] ?? '',
