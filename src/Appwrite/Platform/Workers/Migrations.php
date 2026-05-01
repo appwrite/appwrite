@@ -189,7 +189,8 @@ class Migrations extends Action
     {
         $source = $migration->getAttribute('source');
         $destination = $migration->getAttribute('destination');
-        $resourceId = $this->getCompoundResourceId($migration);
+        $databaseId = (string) $migration->getAttribute('parentResourceId', '');
+        $tableId = (string) $migration->getAttribute('resourceId', '');
         $credentials = $migration->getAttribute('credentials');
         $migrationOptions = $migration->getAttribute('options');
         /** @var Database|null $projectDB */
@@ -253,14 +254,16 @@ class Migrations extends Action
                 $queries
             ),
             CSV::getName() => new CSV(
-                $resourceId,
+                $databaseId,
+                $tableId,
                 $migrationOptions['path'],
                 $this->deviceForMigrations,
                 $this->dbForProject,
                 $getDatabasesDB
             ),
             JSON::getName() => new JSON(
-                $resourceId,
+                $databaseId,
+                $tableId,
                 $migrationOptions['path'],
                 $this->deviceForMigrations,
                 $this->dbForProject,
@@ -282,6 +285,8 @@ class Migrations extends Action
         $destination = $migration->getAttribute('destination');
         $options = $migration->getAttribute('options', []);
         $credentials = $migration->getAttribute('credentials');
+        $databaseId = (string) $migration->getAttribute('parentResourceId', '');
+        $tableId = (string) $migration->getAttribute('resourceId', '');
 
         return match ($destination) {
             DestinationAppwrite::getName() => new DestinationAppwrite(
@@ -294,7 +299,8 @@ class Migrations extends Action
             ),
             DestinationCSV::getName() => new DestinationCSV(
                 $this->deviceForFiles,
-                $this->getCompoundResourceId($migration),
+                $databaseId,
+                $tableId,
                 $options['bucketId'],
                 $options['filename'],
                 $options['columns'],
@@ -305,7 +311,8 @@ class Migrations extends Action
             ),
             DestinationJSON::getName() => new DestinationJSON(
                 $this->deviceForFiles,
-                $this->getCompoundResourceId($migration),
+                $databaseId,
+                $tableId,
                 $options['bucketId'] ?? 'default',
                 $options['filename'],
                 $options['columns'] ?? [],
@@ -507,8 +514,9 @@ class Migrations extends Action
                         }
                         $this->updateMigrationDocument($migration, $project, $queueForRealtime);
                     },
-                    $this->getCompoundResourceId($migration),
-                    $migration->getAttribute('parentResourceType')
+                    $migration->getAttribute('parentResourceId'),
+                    $migration->getAttribute('parentResourceType'),
+                    $migration->getAttribute('resourceId'),
                 );
 
                 $destination->shutdown();
@@ -607,24 +615,6 @@ class Migrations extends Action
         }
 
         return ($this->getDatabasesDB)($database);
-    }
-
-    /**
-     * Returns a "{parentResourceId}:{resourceId}" string when both are set,
-     * or the leaf resourceId on its own otherwise. Returning a parent-only
-     * value would feed the utopia-php/migration library a malformed
-     * compound, so an unanchored parent yields null instead.
-     */
-    protected function getCompoundResourceId(Document $migration): ?string
-    {
-        $parentResourceId = $migration->getAttribute('parentResourceId');
-        $resourceId = $migration->getAttribute('resourceId');
-
-        if (!empty($parentResourceId) && !empty($resourceId)) {
-            return $parentResourceId . ':' . $resourceId;
-        }
-
-        return !empty($resourceId) ? $resourceId : null;
     }
 
     /**

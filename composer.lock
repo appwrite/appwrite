@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4bee36b21a57e754d2b3417e72dc9599",
+    "content-hash": "2fba7e6fed2dc298fcd3c77e71f7b188",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3850,16 +3850,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "5.4.1",
+            "version": "5.4.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "688d9422b5ff42ac2ecc29397d94891cfd772e93"
+                "reference": "a1bb3e2a4fba13032ea625b21a21039c43cffeda"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/688d9422b5ff42ac2ecc29397d94891cfd772e93",
-                "reference": "688d9422b5ff42ac2ecc29397d94891cfd772e93",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/a1bb3e2a4fba13032ea625b21a21039c43cffeda",
+                "reference": "a1bb3e2a4fba13032ea625b21a21039c43cffeda",
                 "shasum": ""
             },
             "require": {
@@ -3903,9 +3903,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/5.4.1"
+                "source": "https://github.com/utopia-php/database/tree/5.4.2"
             },
-            "time": "2026-04-29T07:32:59+00:00"
+            "time": "2026-04-30T09:59:57+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -4530,16 +4530,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.9.5",
+            "version": "dev-feat/drop-compound-resource-id",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "952a4dfe232702f80e45c35129466a8d8cb4c599"
+                "reference": "53a1426675df9c2d07e9706ed212d71c1e272294"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/952a4dfe232702f80e45c35129466a8d8cb4c599",
-                "reference": "952a4dfe232702f80e45c35129466a8d8cb4c599",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/53a1426675df9c2d07e9706ed212d71c1e272294",
+                "reference": "53a1426675df9c2d07e9706ed212d71c1e272294",
                 "shasum": ""
             },
             "require": {
@@ -4565,7 +4565,25 @@
                     "Utopia\\Migration\\": "src/Migration"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\Tests\\": "tests/Migration"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "./vendor/bin/phpunit"
+                ],
+                "lint": [
+                    "./vendor/bin/pint --test"
+                ],
+                "format": [
+                    "./vendor/bin/pint"
+                ],
+                "check": [
+                    "./vendor/bin/phpstan analyse --level 3 src tests --memory-limit 2G"
+                ]
+            },
             "license": [
                 "MIT"
             ],
@@ -4578,10 +4596,10 @@
                 "utopia"
             ],
             "support": {
-                "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/1.9.5"
+                "source": "https://github.com/utopia-php/migration/tree/feat/drop-compound-resource-id",
+                "issues": "https://github.com/utopia-php/migration/issues"
             },
-            "time": "2026-04-29T11:19:13+00:00"
+            "time": "2026-05-01T01:13:21+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -8442,9 +8460,18 @@
             "time": "2024-11-07T12:36:22+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/migration",
+            "version": "dev-feat/drop-compound-resource-id",
+            "alias": "1.9.7",
+            "alias_normalized": "1.9.7.0"
+        }
+    ],
     "minimum-stability": "dev",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/migration": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
@@ -8465,5 +8492,5 @@
     "platform-dev": {
         "ext-fileinfo": "*"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.9.0"
 }
