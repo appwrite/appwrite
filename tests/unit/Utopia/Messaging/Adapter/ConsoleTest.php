@@ -1,9 +1,9 @@
 <?php
 
-namespace Tests\Unit\Messaging\Adapter;
+namespace Tests\Unit\Utopia\Messaging\Adapter;
 
-use Appwrite\Messaging\Adapter\Console;
-use Appwrite\Messaging\Messages\Console as ConsoleMessage;
+use Appwrite\Utopia\Messaging\Adapter\Console;
+use Appwrite\Utopia\Messaging\Messages\Console as ConsoleMessage;
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
@@ -120,6 +120,6 @@ class ConsoleTest extends TestCase
         $this->expectExceptionMessage('Invalid message type.');
 
         // ConsoleMessage extends nothing — pass an unrelated Message implementation
-        $adapter->send(new \Appwrite\Messaging\Messages\Webhook(urls: ['https://example.test'], payload: []));
+        $adapter->send(new \Appwrite\Utopia\Messaging\Messages\Webhook(urls: ['https://example.test'], payload: []));
     }
 }

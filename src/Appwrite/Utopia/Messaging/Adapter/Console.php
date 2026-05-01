@@ -1,8 +1,8 @@
 <?php
 
-namespace Appwrite\Messaging\Adapter;
+namespace Appwrite\Utopia\Messaging\Adapter;
 
-use Appwrite\Messaging\Messages\Console as ConsoleMessage;
+use Appwrite\Utopia\Messaging\Messages\Console as ConsoleMessage;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;

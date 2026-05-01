@@ -2,11 +2,11 @@
 
 namespace Appwrite\Platform\Workers;
 
-use Appwrite\Messaging\Adapter\Console as ConsoleAdapter;
-use Appwrite\Messaging\Adapter\Webhook as WebhookAdapter;
-use Appwrite\Messaging\Messages\Console as ConsoleMessage;
-use Appwrite\Messaging\Messages\Webhook as WebhookMessage;
 use Appwrite\Template\Template;
+use Appwrite\Utopia\Messaging\Adapter\Console as ConsoleAdapter;
+use Appwrite\Utopia\Messaging\Adapter\Webhook as WebhookAdapter;
+use Appwrite\Utopia\Messaging\Messages\Console as ConsoleMessage;
+use Appwrite\Utopia\Messaging\Messages\Webhook as WebhookMessage;
 use Exception;
 use Swoole\Runtime;
 use Throwable;

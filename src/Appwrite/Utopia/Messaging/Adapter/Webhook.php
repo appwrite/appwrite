@@ -1,8 +1,8 @@
 <?php
 
-namespace Appwrite\Messaging\Adapter;
+namespace Appwrite\Utopia\Messaging\Adapter;
 
-use Appwrite\Messaging\Messages\Webhook as WebhookMessage;
+use Appwrite\Utopia\Messaging\Messages\Webhook as WebhookMessage;
 use Utopia\Messaging\Adapter;
 use Utopia\Messaging\Message;
 use Utopia\Messaging\Response;

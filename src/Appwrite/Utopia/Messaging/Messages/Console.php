@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Messaging\Messages;
+namespace Appwrite\Utopia\Messaging\Messages;
 
 use Utopia\Messaging\Message;
 

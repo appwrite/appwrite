@@ -1,9 +1,9 @@
 <?php
 
-namespace Tests\Unit\Messaging\Adapter;
+namespace Tests\Unit\Utopia\Messaging\Adapter;
 
-use Appwrite\Messaging\Adapter\Webhook;
-use Appwrite\Messaging\Messages\Webhook as WebhookMessage;
+use Appwrite\Utopia\Messaging\Adapter\Webhook;
+use Appwrite\Utopia\Messaging\Messages\Webhook as WebhookMessage;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -190,6 +190,6 @@ class WebhookTest extends TestCase
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('Invalid message type.');
 
-        $adapter->send(new \Appwrite\Messaging\Messages\Console(recipients: [['userId' => 'u']], title: 't', body: 'b'));
+        $adapter->send(new \Appwrite\Utopia\Messaging\Messages\Console(recipients: [['userId' => 'u']], title: 't', body: 'b'));
     }
 }
