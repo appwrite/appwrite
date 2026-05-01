@@ -1414,7 +1414,12 @@ function AddRoleDropdown({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         {emptyState ? (
-          <Button variant="secondary" size="icon" className="size-10">
+          <Button
+            variant="secondary"
+            size="icon"
+            className="size-10"
+            aria-label="Add role"
+          >
             <Plus className="size-4" />
           </Button>
         ) : (

@@ -110,9 +110,9 @@ export function FeedbackPopover({
               variant="ghost"
               size="icon"
               className="h-9 w-9 text-muted-foreground hover:bg-accent hover:text-foreground"
+              aria-label="Feedback"
             >
               <MessageSquarePlus className="h-4 w-4" />
-              <span className="sr-only">Feedback</span>
             </Button>
           </PopoverTrigger>
         </TooltipTrigger>

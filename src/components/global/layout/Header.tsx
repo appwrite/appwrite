@@ -631,7 +631,7 @@ export function ConsoleHeader({
               >
                 <Search className="h-3.5 w-3.5 shrink-0" />
                 <span className="hidden @[850px]:inline">Search...</span>
-                <kbd className="ml-2 hidden rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground @[850px]:inline shrink-0">
+                <kbd className="ml-2 hidden rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-foreground/85 @[850px]:inline shrink-0">
                   ⌘K
                 </kbd>
               </button>

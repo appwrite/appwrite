@@ -30,7 +30,8 @@ const badgeVariants = cva(
           'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
         active:
           'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
-        inactive: 'bg-muted text-muted-foreground border-border',
+        inactive:
+          'bg-muted text-foreground/80 dark:text-muted-foreground border-border',
         completed:
           'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
         failed:

@@ -2071,6 +2071,7 @@ export function AIChatPanel() {
                                     disabled={
                                       deleteConversationMutation.isPending
                                     }
+                                    aria-label="Delete conversation"
                                   >
                                     <Trash2 className="h-3 w-3" />
                                   </Button>

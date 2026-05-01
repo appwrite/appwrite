@@ -396,6 +396,7 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
                       size="sm"
                       className="h-8 w-8 p-0"
                       asChild
+                      aria-label="Open repository in new tab"
                     >
                       <a href={repository.url} target="_blank" rel="noreferrer">
                         <ExternalLink className="h-4 w-4" />

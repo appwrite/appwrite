@@ -1757,6 +1757,7 @@ function UpdateMFASection({
                               className="h-8 w-8 p-0"
                               onClick={() => handleDeleteAuthenticator(auth)}
                               disabled={deleteAuthenticator.isPending}
+                              aria-label="Remove authenticator"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -3124,6 +3125,7 @@ function SessionsTab({
                       onClick={() => handleDelete(session)}
                       disabled={deleteSession.isPending}
                       title="Revoke session"
+                      aria-label="Revoke session"
                     >
                       <LogOut className="h-4 w-4" />
                     </Button>

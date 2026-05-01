@@ -326,6 +326,7 @@ export function ApiKeyDrawer({
                             className="h-9 w-9 shrink-0"
                             onClick={() => setKeyRevealed((v) => !v)}
                             title={keyRevealed ? 'Hide key' : 'Show key'}
+                            aria-label={keyRevealed ? 'Hide key' : 'Show key'}
                           >
                             {keyRevealed ? (
                               <EyeOff className="h-4 w-4" />
@@ -340,6 +341,7 @@ export function ApiKeyDrawer({
                             className="h-9 w-9 shrink-0"
                             onClick={handleCopyKey}
                             title="Copy key"
+                            aria-label="Copy key"
                           >
                             {isCopied ? (
                               <Check className="h-4 w-4 text-emerald-500" />

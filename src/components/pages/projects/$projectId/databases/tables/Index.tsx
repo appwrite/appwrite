@@ -578,6 +578,7 @@ export function IndexDrawer({
                       className="h-9 w-9 shrink-0 mt-6"
                       onClick={() => removeColumn(index)}
                       disabled={isLoading}
+                      aria-label="Remove column"
                     >
                       <X className="h-4 w-4" />
                     </Button>

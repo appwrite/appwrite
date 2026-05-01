@@ -160,6 +160,7 @@ export function DatabaseSelector({
               className="h-8 w-8 shrink-0"
               onClick={onCreateClick}
               disabled={createDisabled}
+              aria-label="Create database"
             >
               <Plus className="h-4 w-4" />
             </Button>

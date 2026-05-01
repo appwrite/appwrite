@@ -13160,8 +13160,10 @@ function TableSettings({ table }: SpreadsheetProps) {
                       size="sm"
                       className="h-9 w-9 p-0 invisible"
                       disabled
+                      aria-hidden="true"
+                      tabIndex={-1}
                     >
-                      <X className="h-4 w-4" />
+                      <X className="h-4 w-4" aria-hidden />
                     </Button>
                   </>
                 ) : (
@@ -13191,6 +13193,7 @@ function TableSettings({ table }: SpreadsheetProps) {
                       className="h-9 w-9 p-0"
                       onClick={() => handleRemoveDisplayNameColumn(index)}
                       disabled={displayNames.length === 1}
+                      aria-label="Remove display name column"
                     >
                       <X className="h-4 w-4" />
                     </Button>

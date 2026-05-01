@@ -168,6 +168,7 @@ export function View() {
                   ? 'bg-foreground text-background hover:bg-foreground/90'
                   : 'bg-muted text-muted-foreground',
               )}
+              aria-label="Send message"
             >
               <ArrowUp className="h-3.5 w-3.5" />
             </Button>

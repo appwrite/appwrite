@@ -408,7 +408,13 @@ function FunctionLayoutContent() {
         <ServiceHeader
           title={
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" asChild className="h-7 w-7 p-0">
+              <Button
+                variant="ghost"
+                size="sm"
+                asChild
+                className="h-7 w-7 p-0"
+                aria-label="Back to functions"
+              >
                 <Link
                   to="/projects/$projectId/functions"
                   params={{ projectId: projectId! }}

@@ -25,6 +25,7 @@ export function InlinePaymentForm({
             size="sm"
             className="h-7 w-7 p-0"
             onClick={onCancel}
+            aria-label="Close"
           >
             <X className="h-4 w-4" />
           </Button>

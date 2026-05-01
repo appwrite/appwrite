@@ -490,6 +490,7 @@ export function AccountSessions() {
                         onClick={() => handleDeleteClick(session.$id)}
                         disabled={deleteSessionMutation.isPending}
                         title="Revoke session"
+                        aria-label="Revoke session"
                       >
                         <LogOut className="h-4 w-4" />
                       </Button>

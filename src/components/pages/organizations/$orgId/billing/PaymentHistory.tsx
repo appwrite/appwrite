@@ -442,6 +442,7 @@ export function PaymentHistory() {
               className="h-8 w-8 p-0"
               onClick={handlePrevPage}
               disabled={displayedPage === 0 || isPageTransitioning}
+              aria-label="Go to previous page"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
@@ -454,6 +455,7 @@ export function PaymentHistory() {
               className="h-8 w-8 p-0"
               onClick={handleNextPage}
               disabled={displayedPage === totalPages - 1 || isPageTransitioning}
+              aria-label="Go to next page"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
@@ -578,6 +580,7 @@ function InvoiceRow({
             size="sm"
             className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
             title="View invoice"
+            aria-label="View invoice"
             onClick={handleView}
             disabled={!orgId || rowBusy}
           >
@@ -588,6 +591,7 @@ function InvoiceRow({
             size="sm"
             className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
             title="Download invoice"
+            aria-label="Download invoice"
             onClick={handleDownload}
             disabled={!orgId || rowBusy}
           >

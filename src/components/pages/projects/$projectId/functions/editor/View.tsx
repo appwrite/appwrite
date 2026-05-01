@@ -899,6 +899,7 @@ export function View() {
                   size="icon"
                   className="h-8 w-8 shrink-0"
                   asChild
+                  aria-label="Back to functions"
                 >
                   <Link
                     to="/projects/$projectId/functions"

@@ -393,6 +393,7 @@ export function GitRepositoryCard({
                       size="sm"
                       className="h-8 w-8 p-0"
                       asChild
+                      aria-label="Open repository in new tab"
                     >
                       <a
                         href={(repository as { url?: string }).url!}

@@ -1512,6 +1512,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                     variant="ghost"
                     size="sm"
                     className="h-8 w-8 p-0 rounded-lg hover:bg-accent"
+                    aria-label="Create organization"
                     onClick={() => setCreateOrgDialogOpen(true)}
                   >
                     <Plus className="h-4 w-4" />
@@ -1585,7 +1586,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                           )}
                           {totalCount > 2 && (
                             <div
-                              className="relative flex h-8 w-8 items-center justify-center rounded-full border-2 border-background bg-muted text-[11px] font-medium text-muted-foreground"
+                              className="relative flex h-8 w-8 items-center justify-center rounded-full border-2 border-background bg-muted text-[11px] font-medium text-foreground/80"
                               style={{ zIndex: 0 }}
                             >
                               +{totalCount - 2}
@@ -2086,6 +2087,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                         variant="ghost"
                                                         size="icon"
                                                         className="h-8 w-8 rounded-md"
+                                                        aria-label="Unpin project"
                                                         onClick={(e) => {
                                                           e.preventDefault()
                                                           handlePinProject(
@@ -2245,6 +2247,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                           variant="ghost"
                                                           size="icon"
                                                           className="absolute right-2 top-2 h-8 w-8 rounded-md opacity-0 transition-opacity group-hover:opacity-100"
+                                                          aria-label="Pin project"
                                                           onClick={(e) => {
                                                             e.preventDefault()
                                                             handlePinProject(

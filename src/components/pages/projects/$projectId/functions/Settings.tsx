@@ -759,6 +759,7 @@ export function View() {
                           size="sm"
                           className="h-7 w-7 p-0"
                           onClick={() => handleRemoveEvent(event)}
+                          aria-label={`Remove event ${event}`}
                         >
                           <X className="h-4 w-4" />
                         </Button>

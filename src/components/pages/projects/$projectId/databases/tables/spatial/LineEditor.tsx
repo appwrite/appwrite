@@ -136,6 +136,7 @@ export function LineEditor({
                 className="h-7 w-7 shrink-0"
                 onClick={() => removePoint(index)}
                 disabled={disabled || points.length <= 2}
+                aria-label="Remove point"
               >
                 <X className="h-3.5 w-3.5" />
               </Button>

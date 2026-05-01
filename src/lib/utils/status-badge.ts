@@ -153,7 +153,7 @@ export function getPlanBadgeColor(plan: PlanType): string {
       return 'bg-purple-500/10 text-purple-600 dark:text-purple-300 border-purple-500/20'
     case 'pro':
     case 'education':
-      return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border-emerald-500/20'
+      return 'bg-emerald-500/10 text-emerald-900 dark:text-emerald-300 border-emerald-500/20'
     case 'free':
     default:
       return 'bg-muted text-muted-foreground border-border'

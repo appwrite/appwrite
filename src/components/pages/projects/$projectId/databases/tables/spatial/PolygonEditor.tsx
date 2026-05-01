@@ -152,6 +152,7 @@ export function PolygonEditor({
                       className="h-6 w-6"
                       onClick={() => removeRing(ringIndex)}
                       disabled={disabled}
+                      aria-label="Remove ring"
                     >
                       <X className="h-3 w-3" />
                     </Button>
@@ -249,6 +250,7 @@ export function PolygonEditor({
                               removePointFromRing(ringIndex, pointIndex)
                             }
                             disabled={disabled || ring.length <= 3}
+                            aria-label="Remove point"
                           >
                             <X className="h-3.5 w-3.5" />
                           </Button>
