@@ -615,29 +615,37 @@ class Migrations extends Action
     }
 
     /**
-     * Resolve [databaseId, tableId] from a migration document.
+     * Resolve [rootResourceId, rootResourceChildId] from a migration document.
      *
-     * Handles three input shapes so a 1.9.4 worker keeps working before V25
-     * has run, while in-flight migrations enqueued on 1.9.3 drain, and after
-     * a backup taken on 1.9.3 is restored:
-     *  - 1.9.4 (post-backfill): parentResourceId/resourceId set separately.
-     *  - 1.9.3 (legacy): resourceId is the composite "{databaseId}:{tableId}",
-     *    parentResourceId is empty.
-     *  - 1.9.4 mid-backfill: V25 attributes added but a given doc not yet
-     *    rewritten, same as the legacy case.
+     * Returns the root resource ID (e.g. databaseId for CSV/JSON or backup
+     * migrations) and an optional child filter under that root (the
+     * collection/table ID for CSV/JSON migrations). Three input shapes:
+     *
+     *  - 1.9.4 CSV/JSON migration: parentResourceId is set to the root,
+     *    resourceId is the leaf. Returns [parent, leaf].
+     *  - Pre-1.9.4 CSV/JSON migration (V25 not yet run, queue drain after
+     *    upgrade, restored backup): resourceId is the composite
+     *    "{databaseId}:{tableId}", parentResourceId is empty. Split it.
+     *  - Single-root migration (Backup, full Appwrite/Supabase/Firebase/
+     *    NHost imports): resourceId is the root resource ID with no leaf.
+     *    Returns [root, ''].
      *
      * @return array{0: string, 1: string}
      */
     protected function resolveResourceIds(Document $migration): array
     {
-        $databaseId = (string) $migration->getAttribute('parentResourceId', '');
-        $tableId = (string) $migration->getAttribute('resourceId', '');
+        $parent = (string) $migration->getAttribute('parentResourceId', '');
+        $resource = (string) $migration->getAttribute('resourceId', '');
 
-        if ($databaseId === '' && \str_contains($tableId, ':')) {
-            [$databaseId, $tableId] = \explode(':', $tableId, 2);
+        if ($parent !== '') {
+            return [$parent, $resource];
         }
 
-        return [$databaseId, $tableId];
+        if (\str_contains($resource, ':')) {
+            return \explode(':', $resource, 2);
+        }
+
+        return [$resource, ''];
     }
 
     /**
