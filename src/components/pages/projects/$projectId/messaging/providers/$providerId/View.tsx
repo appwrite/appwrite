@@ -24,8 +24,13 @@ import { MessagingProviderIcon } from '@/components/global/shared/MessagingProvi
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import type { Models } from '@appwrite.io/console'
 
-export function View() {
+export function View({
+  initialProvider,
+}: {
+  initialProvider?: Models.Provider
+} = {}) {
   const { projectId, providerId } = useParams({
     strict: false,
   })
@@ -34,10 +39,11 @@ export function View() {
   const queryClient = useQueryClient()
 
   // Fetch provider
-  const { data: provider, isLoading: providerLoading } = useProvider(
+  const { data: providerFromHook, isLoading: providerLoading } = useProvider(
     projectId,
     providerId,
   )
+  const provider = providerFromHook ?? initialProvider
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [name, setName] = useState('')
@@ -206,7 +212,7 @@ export function View() {
     })
   }
 
-  if (providerLoading) {
+  if (providerLoading && !initialProvider) {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="rounded-lg border border-border bg-card py-12 px-6 text-center">

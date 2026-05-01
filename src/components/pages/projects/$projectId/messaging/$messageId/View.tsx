@@ -19,8 +19,7 @@ import {
 import {
   useMessage,
   useMessageTargets,
-  fetchTopic,
-  fetchUser,
+  MESSAGE_DETAIL_TARGETS_LIMIT,
   useProjectTopics,
   useProjectUsers,
 } from '@/lib/react-query/hooks'
@@ -80,93 +79,57 @@ export function View() {
     return () => clearInterval(interval)
   }, [message, refetchMessage])
 
-  // Fetch message targets
-  const { data: targetsData, isLoading: targetsLoading } = useMessageTargets(
+  const { data: targetsData } = useMessageTargets(
     projectId,
     messageId,
     0,
-    100,
-  ) // Fetch all targets
+    MESSAGE_DETAIL_TARGETS_LIMIT,
+  )
 
   const targets = useMemo(
     () => targetsData?.targets || [],
     [targetsData?.targets],
   )
 
-  // Fetch all topics in parallel using Promise.allSettled
-  const [topicsById, setTopicsById] = useState<Record<string, Models.Topic>>({})
-  const [topicsLoading, setTopicsLoading] = useState(true)
-
-  useEffect(() => {
-    if (!projectId || !message?.topics || message.topics.length === 0) {
-      setTopicsLoading(false)
-      return
+  const topicsById = useMemo(() => {
+    if (!projectId || !message?.topics?.length) return {}
+    const map: Record<string, Models.Topic> = {}
+    for (const tid of message.topics) {
+      const t = queryClient.getQueryData<Models.Topic>([
+        'topic',
+        'project',
+        projectId,
+        tid,
+      ])
+      if (t) map[tid] = t
     }
+    return map
+  }, [projectId, message, queryClient])
 
-    setTopicsLoading(true)
-    Promise.allSettled(
-      message.topics.map((topicId) => fetchTopic(projectId, topicId)),
-    ).then((results) => {
-      const topicsMap: Record<string, Models.Topic> = {}
-      results.forEach((result) => {
-        if (result.status === 'fulfilled') {
-          const topic = result.value
-          topicsMap[topic.$id] = topic
-        }
-      })
-      setTopicsById(topicsMap)
-      setTopicsLoading(false)
-    })
-  }, [projectId, message?.topics])
-
-  // Fetch user details for targets and recipients
-  const [usersById, setUsersById] = useState<
-    Record<string, Models.User | null>
-  >({})
-  const [usersLoading, setUsersLoading] = useState(true)
-
-  useEffect(() => {
-    if (!projectId || targets.length === 0) {
-      setUsersLoading(false)
-      return
+  const usersById = useMemo(() => {
+    if (!projectId || !message) return {}
+    const ids = new Set<string>()
+    for (const t of targets) {
+      if (t.userId) ids.add(t.userId)
     }
-
-    setUsersLoading(true)
-    const userIds = new Set<string>()
-
-    // Collect all user IDs from targets
-    targets.forEach((target) => {
-      if (target.userId) {
-        userIds.add(target.userId)
+    const messageWithUsers = message as Models.Message & { users?: string[] }
+    if (messageWithUsers.users) {
+      for (const uid of messageWithUsers.users) {
+        ids.add(uid)
       }
-    })
-
-    // Collect user IDs from message recipients if available
-    if (message?.users) {
-      message.users.forEach((userId) => {
-        userIds.add(userId)
-      })
     }
-
-    if (userIds.size === 0) {
-      setUsersLoading(false)
-      return
-    }
-
-    Promise.allSettled(
-      Array.from(userIds).map((userId) =>
-        fetchUser(projectId, userId).catch(() => null),
-      ),
-    ).then((results) => {
-      const usersMap: Record<string, Models.User | null> = {}
-      Array.from(userIds).forEach((userId, index) => {
-        const result = results[index]
-        usersMap[userId] = result.status === 'fulfilled' ? result.value : null
-      })
-      setUsersById(usersMap)
-      setUsersLoading(false)
+    const map: Record<string, Models.User | null> = {}
+    ids.forEach((uid) => {
+      const data = queryClient.getQueryData<Models.User | null>([
+        'user',
+        'project',
+        projectId,
+        uid,
+      ])
+      map[uid] = data !== undefined ? data : null
     })
-  }, [projectId, targets, message?.users])
+    return map
+  }, [projectId, message, targets, queryClient])
 
   // Map targets by ID
   const targetsById = useMemo(() => {
@@ -449,19 +412,10 @@ export function View() {
     return null
   }
 
-  if (messageLoading) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <div className="rounded-lg border border-border bg-card py-12 px-6 text-center">
-          <p className="text-[13px] text-muted-foreground">
-            Loading message...
-          </p>
-        </div>
-      </div>
-    )
-  }
-
   if (!message) {
+    if (messageLoading) {
+      return null
+    }
     return (
       <div className="flex h-full items-center justify-center">
         <div className="rounded-lg border border-border bg-card py-12 px-6 text-center">
@@ -980,11 +934,7 @@ export function View() {
             </div>
             <div className="border-t border-border" />
             <div className="px-6 py-4">
-              {topicsLoading ? (
-                <p className="text-[13px] text-muted-foreground">
-                  Loading topics...
-                </p>
-              ) : selectedTopicIds.size > 0 ? (
+              {selectedTopicIds.size > 0 ? (
                 <div className="rounded-lg border border-border bg-card overflow-hidden">
                   <Table>
                     <TableHeader>
@@ -1106,11 +1056,7 @@ export function View() {
             </div>
             <div className="border-t border-border" />
             <div className="px-6 py-4">
-              {targetsLoading || usersLoading ? (
-                <p className="text-[13px] text-muted-foreground">
-                  Loading targets...
-                </p>
-              ) : selectedTargetIds.size > 0 ? (
+              {selectedTargetIds.size > 0 ? (
                 <div className="rounded-lg border border-border bg-card overflow-hidden">
                   <Table>
                     <TableHeader>

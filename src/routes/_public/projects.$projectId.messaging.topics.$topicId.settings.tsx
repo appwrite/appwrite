@@ -1,6 +1,7 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/messaging/TopicSettings'
-import { fetchTopic } from '@/lib/react-query/hooks'
+import { topicQueryOptions } from '@/lib/react-query/hooks'
+import type { Models } from '@appwrite.io/console'
 import { pageTitle } from '@/lib/utils/page-title'
 import { canAccessTopicSettings } from '@/lib/console-rbac-loader'
 
@@ -31,15 +32,15 @@ export const Route = createFileRoute(
       })
     }
 
-    await queryClient.fetchQuery({
-      queryKey: ['topic', 'project', projectId, topicId],
-      queryFn: () => fetchTopic(projectId, topicId),
-      staleTime: 30 * 1000,
-    })
+    const topicOpts = topicQueryOptions(projectId, topicId)
+    await queryClient.ensureQueryData(topicOpts)
+    const topic = queryClient.getQueryData<Models.Topic>(topicOpts.queryKey)
+    return { topic }
   },
   component: TopicSettingsPage,
 })
 
 function TopicSettingsPage() {
-  return <View />
+  const data = Route.useLoaderData()
+  return <View initialTopic={data?.topic} />
 }

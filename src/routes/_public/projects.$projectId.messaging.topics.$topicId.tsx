@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet } from '@tanstack/react-router'
-import { fetchTopic } from '@/lib/react-query/hooks'
+import { topicQueryOptions } from '@/lib/react-query/hooks'
+import type { Models } from '@appwrite.io/console'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute(
@@ -17,17 +18,10 @@ export const Route = createFileRoute(
     const { projectId, topicId } = params
     const { queryClient } = context
     if (!projectId || !topicId) return
-    await queryClient.ensureQueryData({
-      queryKey: ['topic', 'project', projectId, topicId],
-      queryFn: () => fetchTopic(projectId, topicId),
-      staleTime: 30 * 1000,
-    })
-    const topic = queryClient.getQueryData<{ name?: string }>([
-      'topic',
-      'project',
-      projectId,
-      topicId,
-    ])
+    await queryClient.ensureQueryData(topicQueryOptions(projectId, topicId))
+    const topic = queryClient.getQueryData<Models.Topic>(
+      topicQueryOptions(projectId, topicId).queryKey,
+    )
     return { topic }
   },
   component: TopicLayout,

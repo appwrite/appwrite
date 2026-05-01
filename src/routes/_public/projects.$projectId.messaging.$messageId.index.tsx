@@ -1,14 +1,20 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/messaging/$messageId/View'
-import { fetchMessage } from '@/lib/react-query/hooks'
+import { prefetchMessageDetailData } from '@/lib/react-query/hooks'
+import type { Models } from '@appwrite.io/console'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/messaging/$messageId/',
 )({
-  head: () => ({ meta: [{ title: pageTitle('Message', 'Messaging') }] }),
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: pageTitle(loaderData?.messageTitle ?? 'Message', 'Messaging'),
+      },
+    ],
+  }),
   loader: async ({ params, context }) => {
-    // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {
       return
     }
@@ -17,13 +23,22 @@ export const Route = createFileRoute(
     const { queryClient } = context
 
     if (projectId && messageId) {
-      // Fetch critical data before rendering to prevent layout shifts
-      // fetchQuery blocks navigation until ready
-      await queryClient.fetchQuery({
-        queryKey: ['message', 'project', projectId, messageId],
-        queryFn: () => fetchMessage(projectId, messageId),
-        staleTime: 30 * 1000, // 30 seconds
-      })
+      await prefetchMessageDetailData(queryClient, projectId, messageId)
+      const message = queryClient.getQueryData<Models.Message>([
+        'message',
+        'project',
+        projectId,
+        messageId,
+      ])
+      const messageTitle =
+        message?.providerType === 'email' && message.data?.subject
+          ? String(message.data.subject)
+          : message?.providerType === 'sms' && message.data?.content
+            ? String(message.data.content).slice(0, 80)
+            : message?.providerType === 'push' && message.data?.title
+              ? String(message.data.title)
+              : undefined
+      return { messageTitle }
     }
   },
   component: MessageDetailPage,

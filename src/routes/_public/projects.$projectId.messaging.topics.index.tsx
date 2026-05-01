@@ -2,6 +2,8 @@ import { createFileRoute } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/messaging/View'
 import {
   topicsQueryOptions,
+  messagesQueryOptions,
+  providersQueryOptions,
   fetchProject,
   organizationPlanQueryOptions,
 } from '@/lib/react-query/hooks'
@@ -32,11 +34,15 @@ export const Route = createFileRoute(
       // Fetch critical data before rendering to prevent layout shifts
       // ensureQueryData blocks navigation and uses cache if fresh, fetches if stale/missing
       await Promise.all([
-        // Fetch first page of topics - blocks navigation until ready
         queryClient.ensureQueryData(
           topicsQueryOptions(projectId, 0, DEFAULT_PAGE_SIZE, ''),
         ),
-        // Fetch organization plan if we have a teamId - CRITICAL for limit checking
+        queryClient.ensureQueryData(
+          messagesQueryOptions(projectId, 0, DEFAULT_PAGE_SIZE, ''),
+        ),
+        queryClient.ensureQueryData(
+          providersQueryOptions(projectId, 0, DEFAULT_PAGE_SIZE, ''),
+        ),
         projectData?.teamId
           ? queryClient.ensureQueryData(
               organizationPlanQueryOptions(projectData.teamId),

@@ -24,8 +24,13 @@ import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import type { Models } from '@appwrite.io/console'
 
-export function View() {
+export function View({
+  initialTopic,
+}: {
+  initialTopic?: Models.Topic
+} = {}) {
   const { projectId, topicId } = useParams({
     strict: false,
   })
@@ -33,8 +38,12 @@ export function View() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
-  // Fetch topic
-  const { data: topic, isLoading: topicLoading } = useTopic(projectId, topicId)
+  const { data: topicFromHook, isLoading: topicLoading } = useTopic(
+    projectId,
+    topicId,
+    initialTopic,
+  )
+  const topic = topicFromHook ?? initialTopic
   const { project } = useProject(projectId)
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
@@ -151,7 +160,7 @@ export function View() {
     [projectId, topicId, showSettingsTab],
   )
 
-  if (topicLoading) {
+  if (topicLoading && !initialTopic) {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="rounded-lg border border-border bg-card py-12 px-6 text-center">

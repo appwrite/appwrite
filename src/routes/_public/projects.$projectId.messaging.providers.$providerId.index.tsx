@@ -23,9 +23,7 @@ export const Route = createFileRoute(
     const { queryClient } = context
 
     if (projectId && providerId) {
-      // Fetch critical data before rendering to prevent layout shifts
-      // fetchQuery blocks navigation until ready
-      await queryClient.fetchQuery({
+      await queryClient.ensureQueryData({
         queryKey: ['provider', 'project', projectId, providerId],
         queryFn: () => fetchProvider(projectId, providerId),
         staleTime: 30 * 1000,
@@ -43,5 +41,6 @@ export const Route = createFileRoute(
 })
 
 function ProviderDetailPage() {
-  return <View />
+  const data = Route.useLoaderData()
+  return <View initialProvider={data?.provider} />
 }

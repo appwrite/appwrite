@@ -2526,8 +2526,11 @@ export function TableView({
               projectId={projectId}
               value={databaseId}
               selectedName={database?.name}
-              createDisabled={noCreateDbPermission}
-              createDisabledTooltip={createPermissionTooltip}
+              createTableMenuLabel={dbLabels.createContainer}
+              createDatabaseDisabled={noCreateDbPermission}
+              createDatabaseDisabledTooltip={createPermissionTooltip}
+              createTableDisabled={noCreateTablePermission}
+              createTableDisabledTooltip={createPermissionTooltip}
               onSelect={async (newDatabaseId) => {
                 try {
                   const newDb = await queryClient.ensureQueryData(
@@ -2583,7 +2586,7 @@ export function TableView({
                   })
                 }
               }}
-              onCreateClick={() =>
+              onCreateDatabaseClick={() =>
                 useCreateDatabaseWizard
                   ? navigate({
                     to: '/projects/$projectId/databases/create',
@@ -2591,6 +2594,7 @@ export function TableView({
                   })
                   : setCreateDatabaseDialogOpen(true)
               }
+              onCreateTableClick={() => setCreateTableDialogOpen(true)}
             />
           </div>
         </div>
@@ -3272,8 +3276,11 @@ export function TableView({
                   projectId={projectId}
                   value={databaseId}
                   selectedName={database?.name}
-                  createDisabled={noCreateDbPermission}
-                  createDisabledTooltip={createPermissionTooltip}
+                  createTableMenuLabel={dbLabels.createContainer}
+                  createDatabaseDisabled={noCreateDbPermission}
+                  createDatabaseDisabledTooltip={createPermissionTooltip}
+                  createTableDisabled={noCreateTablePermission}
+                  createTableDisabledTooltip={createPermissionTooltip}
                   onSelect={async (newDatabaseId) => {
                     try {
                       const newDb = await queryClient.ensureQueryData(
@@ -3331,7 +3338,7 @@ export function TableView({
                       })
                     }
                   }}
-                  onCreateClick={() =>
+                  onCreateDatabaseClick={() =>
                     useCreateDatabaseWizard
                       ? navigate({
                         to: '/projects/$projectId/databases/create',
@@ -3339,6 +3346,7 @@ export function TableView({
                       })
                       : setCreateDatabaseDialogOpen(true)
                   }
+                  onCreateTableClick={() => setCreateTableDialogOpen(true)}
                 />
                 <TableSelector
                   projectId={projectId}

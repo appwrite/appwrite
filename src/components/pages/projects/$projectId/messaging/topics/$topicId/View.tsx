@@ -1,10 +1,9 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from '@tanstack/react-router'
 import { ArrowLeft, Hash, Mail, Phone, Bell } from 'lucide-react'
 import {
   useTopic,
   useTopicSubscribers,
-  fetchUser,
   useProject,
   useOrganizationScopes,
 } from '@/lib/react-query/hooks'
@@ -32,7 +31,18 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { Models } from '@appwrite.io/console'
 
-export function View() {
+export type TopicSubscribersInitialData = {
+  subscribers: Models.Subscriber[]
+  total: number
+}
+
+export function View({
+  initialSubscribers,
+  initialTopic,
+}: {
+  initialSubscribers?: TopicSubscribersInitialData
+  initialTopic?: Models.Topic
+} = {}) {
   const { projectId, topicId } = useParams({
     strict: false,
   })
@@ -40,76 +50,116 @@ export function View() {
   const location = useLocation()
   const queryClient = useQueryClient()
 
-  // Fetch topic
-  const { data: topic, isLoading: topicLoading } = useTopic(projectId, topicId)
+  const { data: topic } = useTopic(projectId, topicId, initialTopic)
+  const topicResolved = topic ?? initialTopic
+
   const { project } = useProject(projectId)
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
   const showSettingsTab = canShowTopicSettingsTab(access, features)
 
   const [searchValue, setSearchValue] = useState('')
-  const [currentPage, setCurrentPage] = useState(1)
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+    searchDebounceRef.current = setTimeout(() => {
+      setDebouncedSearch(searchValue.trim())
+    }, 300)
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+    }
+  }, [searchValue])
+
+  const [requestedPage, setRequestedPage] = useState(1)
+  const [displayedPage, setDisplayedPage] = useState(1)
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
 
-  // Convert 1-indexed page to 0-indexed for API
-  const pageIndexed = currentPage - 1
+  useEffect(() => {
+    setRequestedPage(1)
+    setDisplayedPage(1)
+  }, [debouncedSearch])
 
-  // Fetch subscribers
+  const pageIndexedRequested = requestedPage - 1
+  const pageIndexedDisplayed = displayedPage - 1
+
   const {
-    subscribers,
-    total: subscribersTotal,
-    isLoading: subscribersLoading,
+    isLoading: requestedLoading,
+    isFetching: requestedFetching,
   } = useTopicSubscribers(
     projectId,
     topicId,
-    pageIndexed,
+    pageIndexedRequested,
     pageSize,
-    searchValue,
+    debouncedSearch || undefined,
   )
 
-  // Fetch users for subscribers (from target.userId)
-  const [usersById, setUsersById] = useState<
-    Record<string, Models.User | null>
-  >({})
-  const [usersLoading, setUsersLoading] = useState(true)
+  const {
+    subscribers: displayedSubscribersRaw,
+    total: displayedTotalRaw,
+    isLoading: displayedLoading,
+    isFetched: displayedFetched,
+  } = useTopicSubscribers(
+    projectId,
+    topicId,
+    pageIndexedDisplayed,
+    pageSize,
+    debouncedSearch || undefined,
+  )
 
   useEffect(() => {
-    if (!projectId || subscribers.length === 0) {
-      setUsersLoading(false)
-      return
+    if (requestedFetching || requestedLoading) return
+    if (requestedPage !== displayedPage) {
+      setDisplayedPage(requestedPage)
     }
+  }, [
+    requestedFetching,
+    requestedLoading,
+    requestedPage,
+    displayedPage,
+  ])
 
-    setUsersLoading(true)
-    const userIds = new Set<string>()
-
-    // Collect user IDs from subscriber targets
-    subscribers.forEach((subscriber) => {
-      if (subscriber.target?.userId) {
-        userIds.add(subscriber.target.userId)
-      }
-    })
-
-    if (userIds.size === 0) {
-      setUsersLoading(false)
-      return
+  const subscribers = useMemo(() => {
+    if (displayedFetched || displayedSubscribersRaw.length > 0) {
+      return displayedSubscribersRaw
     }
+    if (
+      displayedPage === 1 &&
+      !debouncedSearch &&
+      initialSubscribers?.subscribers?.length
+    ) {
+      return initialSubscribers.subscribers
+    }
+    return []
+  }, [
+    displayedFetched,
+    displayedSubscribersRaw,
+    displayedPage,
+    debouncedSearch,
+    initialSubscribers,
+  ])
 
-    Promise.allSettled(
-      Array.from(userIds).map((userId) =>
-        fetchUser(projectId, userId).catch(() => null),
-      ),
-    ).then((userResults) => {
-      const usersMap: Record<string, Models.User | null> = {}
-      Array.from(userIds).forEach((userId, index) => {
-        const result = userResults[index]
-        usersMap[userId] = result.status === 'fulfilled' ? result.value : null
-      })
-      setUsersById(usersMap)
-      setUsersLoading(false)
-    })
-  }, [projectId, subscribers])
+  const subscribersTotal = useMemo(() => {
+    if (displayedFetched || displayedTotalRaw > 0) {
+      return displayedTotalRaw
+    }
+    if (
+      displayedPage === 1 &&
+      !debouncedSearch &&
+      initialSubscribers != null
+    ) {
+      return initialSubscribers.total
+    }
+    return displayedTotalRaw
+  }, [
+    displayedFetched,
+    displayedTotalRaw,
+    displayedPage,
+    debouncedSearch,
+    initialSubscribers,
+  ])
 
-  // Delete topic mutation
   useMutation({
     mutationFn: async () => {
       if (!projectId || !topicId) {
@@ -119,7 +169,6 @@ export function View() {
       await projectSdk.messaging.deleteTopic({ topicId })
     },
     onSuccess: async () => {
-      // Refetch topics list so the list view shows updated data (uses refetchOnMount: false)
       await queryClient.refetchQueries({
         queryKey: ['topics', 'project', projectId],
       })
@@ -141,7 +190,6 @@ export function View() {
     })
   }
 
-  // Derive active tab from pathname
   const activeTab = useMemo(() => {
     const pathParts = location.pathname.split('/').filter(Boolean)
     const topicIndex = pathParts.findIndex(
@@ -186,7 +234,6 @@ export function View() {
     [projectId, topicId, showSettingsTab],
   )
 
-  // Redirect from settings when user lacks permission
   useEffect(() => {
     if (showSettingsTab || !projectId || !topicId) return
     if (activeTab === 'settings') {
@@ -205,17 +252,7 @@ export function View() {
     return Hash
   }
 
-  if (topicLoading) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <div className="rounded-lg border border-border bg-card py-12 px-6 text-center">
-          <p className="text-[13px] text-muted-foreground">Loading topic...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!topic) {
+  if (!topicResolved) {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="rounded-lg border border-border bg-card py-12 px-6 text-center">
@@ -225,8 +262,24 @@ export function View() {
     )
   }
 
+  const showSubscribersFullLoading =
+    activeTab === 'subscribers' &&
+    displayedLoading &&
+    subscribers.length === 0 &&
+    !(initialSubscribers && displayedPage === 1 && !debouncedSearch)
+
+  const handlePageChange = (page: number) => {
+    setRequestedPage(page)
+  }
+
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size)
+    setRequestedPage(1)
+    setDisplayedPage(1)
+  }
+
   return (
-    <div className="flex flex-col">
+    <div className="flex h-full flex-col">
       <ServiceHeader
         title={
           <div className="flex items-center gap-2">
@@ -238,7 +291,7 @@ export function View() {
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <span>{topic.name}</span>
+            <span>{topicResolved.name}</span>
           </div>
         }
         tabs={tabs}
@@ -251,7 +304,8 @@ export function View() {
           activeTab === 'subscribers'
             ? (value) => {
                 setSearchValue(value)
-                setCurrentPage(1)
+                setRequestedPage(1)
+                setDisplayedPage(1)
               }
             : undefined
         }
@@ -259,7 +313,6 @@ export function View() {
         onCreate={
           activeTab === 'subscribers'
             ? () => {
-                // TODO: Implement add subscriber dialog
                 toast.info('Add subscriber functionality coming soon')
               }
             : undefined
@@ -267,10 +320,10 @@ export function View() {
         fullWidthBorder
       />
 
-      <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6 pt-4 sm:pt-6">
+      <div className="mx-auto w-full max-w-7xl flex-1 min-h-0 overflow-y-auto px-4 pb-4 sm:px-6 sm:pb-6">
         {activeTab === 'subscribers' ? (
           <>
-            {subscribersLoading || usersLoading ? (
+            {showSubscribersFullLoading ? (
               <div className="rounded-lg border border-border bg-card py-12 text-center">
                 <p className="text-[13px] text-muted-foreground">
                   Loading subscribers...
@@ -305,22 +358,25 @@ export function View() {
                     <TableBody>
                       {subscribers.map((subscriber) => {
                         const target = subscriber.target
-                        const user = target?.userId
-                          ? usersById[target.userId]
-                          : null
                         const TypeIcon = getTypeIcon(subscriber.providerType)
+                        const nameLabel = (() => {
+                          if (!target) return '—'
+                          const fromName = target.name?.trim()
+                          if (fromName) return fromName
+                          const fromId = target.identifier?.trim()
+                          if (fromId) return fromId
+                          if (target.userId) return target.userId
+                          return '—'
+                        })()
 
                         return (
-                          <TableRow
-                            key={subscriber.$id}
-                            className="border-b border-border/50"
-                          >
+                          <TableRow key={subscriber.$id}>
                             <TableCell className="px-4 py-3">
                               <CopyableId id={subscriber.$id} size="xs" />
                             </TableCell>
                             <TableCell className="px-4 py-3">
                               <span className="text-[13px] text-foreground">
-                                {user?.name || user?.email || 'N/A'}
+                                {nameLabel}
                               </span>
                             </TableCell>
                             <TableCell className="px-4 py-3">
@@ -360,15 +416,13 @@ export function View() {
                   </Table>
                 </div>
                 <Pagination
-                  currentPage={currentPage}
+                  className="py-2"
+                  currentPage={displayedPage}
                   totalItems={subscribersTotal}
                   pageSize={pageSize}
                   pageSizeOptions={[10, 25, 50, 100]}
-                  onPageChange={setCurrentPage}
-                  onPageSizeChange={(size) => {
-                    setPageSize(size)
-                    setCurrentPage(1)
-                  }}
+                  onPageChange={handlePageChange}
+                  onPageSizeChange={handlePageSizeChange}
                   itemLabel="subscribers"
                 />
               </>
@@ -377,8 +431,8 @@ export function View() {
                 icon={Hash}
                 title="No subscribers yet"
                 description="Add subscribers to this topic to start sending messages"
-                isEmpty={!searchValue}
-                hasFilters={!!searchValue}
+                isEmpty={!debouncedSearch}
+                hasFilters={!!debouncedSearch}
                 variant="card"
               />
             )}

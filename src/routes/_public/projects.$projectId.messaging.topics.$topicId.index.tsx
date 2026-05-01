@@ -1,10 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { Route as TopicParentRoute } from './projects.$projectId.messaging.topics.$topicId'
 import { View } from '@/components/pages/projects/$projectId/messaging/topics/$topicId/View'
-import { fetchTopic, fetchTopicSubscribers } from '@/lib/react-query/hooks'
+import { topicQueryOptions, topicSubscribersQueryOptions } from '@/lib/react-query/hooks'
+import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import type { Models } from '@appwrite.io/console'
 
 import { pageTitle } from '@/lib/utils/page-title'
-
-const SUBSCRIBERS_PER_PAGE = 25
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/messaging/topics/$topicId/',
@@ -26,48 +27,46 @@ export const Route = createFileRoute(
     const { queryClient } = context
 
     if (projectId && topicId) {
-      // Fetch critical data before rendering to prevent layout shifts
-      // fetchQuery blocks navigation until ready
-      await Promise.all([
-        queryClient.fetchQuery({
-          queryKey: ['topic', 'project', projectId, topicId],
-          queryFn: () => fetchTopic(projectId, topicId),
-          staleTime: 30 * 1000,
-        }),
-        queryClient.fetchQuery({
-          queryKey: [
-            'subscribers',
-            'project',
-            projectId,
-            'topic',
-            topicId,
-            0,
-            SUBSCRIBERS_PER_PAGE,
-            '',
-          ],
-          queryFn: () =>
-            fetchTopicSubscribers(
-              projectId,
-              topicId,
-              0,
-              SUBSCRIBERS_PER_PAGE,
-              '',
-            ),
-          staleTime: 30 * 1000,
-        }),
-      ])
-      const topic = queryClient.getQueryData<{ name?: string }>([
-        'topic',
-        'project',
+      const subscribersOpts = topicSubscribersQueryOptions(
         projectId,
         topicId,
+        0,
+        DEFAULT_PAGE_SIZE,
+        '',
+      )
+      await Promise.all([
+        queryClient.ensureQueryData(topicQueryOptions(projectId, topicId)),
+        queryClient.ensureQueryData(subscribersOpts),
       ])
-      return { topic }
+      const topic = queryClient.getQueryData<Models.Topic>(
+        topicQueryOptions(projectId, topicId).queryKey,
+      )
+      const subscriberList = queryClient.getQueryData<Models.SubscriberList>(
+        subscribersOpts.queryKey,
+      )
+      return {
+        topic,
+        initialSubscribers:
+          subscriberList != null
+            ? {
+                subscribers: subscriberList.subscribers ?? [],
+                total: subscriberList.total ?? 0,
+              }
+            : undefined,
+      }
     }
   },
   component: TopicDetailPage,
 })
 
 function TopicDetailPage() {
-  return <View />
+  const loaderData = Route.useLoaderData()
+  const parentData = TopicParentRoute.useLoaderData()
+  const initialTopic = loaderData?.topic ?? parentData?.topic
+  return (
+    <View
+      initialSubscribers={loaderData?.initialSubscribers}
+      initialTopic={initialTopic}
+    />
+  )
 }

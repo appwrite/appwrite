@@ -4,12 +4,21 @@
  * Handles messages, topics, providers, subscribers, and targets.
  */
 
-import { useQuery, queryOptions } from '@tanstack/react-query'
+import {
+  useQuery,
+  queryOptions,
+  keepPreviousData,
+  type QueryClient,
+} from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { DEFAULT_STALE_TIME, DEFAULT_PAGE_SIZE } from './constants'
+import { fetchUser } from './users'
+
+/** Message detail: list targets page size (must match message detail View + route loader). */
+export const MESSAGE_DETAIL_TARGETS_LIMIT = 100
 
 // ============================================================================
 // QUERY FUNCTIONS
@@ -235,15 +244,30 @@ export function messagesQueryOptions(
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
 ) {
+  const normalizedSearch = search?.trim() || ''
   return queryOptions({
-    queryKey: ['messages', 'project', projectId, page, limit, search],
-    queryFn: () => fetchProjectMessages(projectId!, page, limit, search),
+    queryKey: [
+      'messages',
+      'project',
+      projectId,
+      page,
+      limit,
+      normalizedSearch,
+    ],
+    queryFn: () =>
+      fetchProjectMessages(
+        projectId!,
+        page,
+        limit,
+        normalizedSearch || undefined,
+      ),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false, // Don't retry on error
     refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
     refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
     refetchOnReconnect: false, // Prevent refetch on network reconnect
+    placeholderData: keepPreviousData,
     // Don't keep disabled queries in cache
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -260,15 +284,30 @@ export function topicsQueryOptions(
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
 ) {
+  const normalizedSearch = search?.trim() || ''
   return queryOptions({
-    queryKey: ['topics', 'project', projectId, page, limit, search],
-    queryFn: () => fetchProjectTopics(projectId!, page, limit, search),
+    queryKey: [
+      'topics',
+      'project',
+      projectId,
+      page,
+      limit,
+      normalizedSearch,
+    ],
+    queryFn: () =>
+      fetchProjectTopics(
+        projectId!,
+        page,
+        limit,
+        normalizedSearch || undefined,
+      ),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false, // Don't retry on error
     refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
     refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
     refetchOnReconnect: false, // Prevent refetch on network reconnect
+    placeholderData: keepPreviousData,
     // Don't keep disabled queries in cache
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -285,17 +324,195 @@ export function providersQueryOptions(
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
 ) {
+  const normalizedSearch = search?.trim() || ''
   return queryOptions({
-    queryKey: ['providers', 'project', projectId, page, limit, search],
-    queryFn: () => fetchProjectProviders(projectId!, page, limit, search),
+    queryKey: [
+      'providers',
+      'project',
+      projectId,
+      page,
+      limit,
+      normalizedSearch,
+    ],
+    queryFn: () =>
+      fetchProjectProviders(
+        projectId!,
+        page,
+        limit,
+        normalizedSearch || undefined,
+      ),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false, // Don't retry on error
     refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
     refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
     refetchOnReconnect: false, // Prevent refetch on network reconnect
+    placeholderData: keepPreviousData,
     // Don't keep disabled queries in cache
     gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
+ * Query options for a single messaging topic (detail + settings)
+ */
+export function topicQueryOptions(
+  projectId: string | null | undefined,
+  topicId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['topic', 'project', projectId, topicId],
+    queryFn: () => fetchTopic(projectId!, topicId!),
+    enabled: !!projectId && !!topicId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && topicId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
+ * Query options for message targets (paginated)
+ */
+export function messageTargetsQueryOptions(
+  projectId: string | null | undefined,
+  messageId: string | null | undefined,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+) {
+  return queryOptions({
+    queryKey: [
+      'message-targets',
+      'project',
+      projectId,
+      messageId,
+      page,
+      limit,
+    ],
+    queryFn: () =>
+      fetchMessageTargets(projectId!, messageId!, page, limit),
+    enabled: !!projectId && !!messageId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && messageId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
+ * Prefetch message, targets, related topics, and related users for the message detail screen.
+ * Call from the message detail route loader so navigation completes with data ready.
+ */
+export async function prefetchMessageDetailData(
+  queryClient: QueryClient,
+  projectId: string,
+  messageId: string,
+) {
+  const message = await queryClient.ensureQueryData({
+    queryKey: ['message', 'project', projectId, messageId],
+    queryFn: () => fetchMessage(projectId, messageId),
+    staleTime: DEFAULT_STALE_TIME,
+  })
+
+  await queryClient.ensureQueryData(
+    messageTargetsQueryOptions(
+      projectId,
+      messageId,
+      0,
+      MESSAGE_DETAIL_TARGETS_LIMIT,
+    ),
+  )
+
+  const targetsOpts = messageTargetsQueryOptions(
+    projectId,
+    messageId,
+    0,
+    MESSAGE_DETAIL_TARGETS_LIMIT,
+  )
+  const targetsData = queryClient.getQueryData<Models.TargetList>(
+    targetsOpts.queryKey,
+  )
+  const targets = targetsData?.targets ?? []
+
+  const topicIds = message.topics ?? []
+  await Promise.all(
+    topicIds.map((tid) =>
+      queryClient.ensureQueryData(topicQueryOptions(projectId, tid)),
+    ),
+  )
+
+  const userIds = new Set<string>()
+  for (const t of targets) {
+    if (t.userId) userIds.add(t.userId)
+  }
+  const messageWithUsers = message as Models.Message & { users?: string[] }
+  if (messageWithUsers.users) {
+    for (const uid of messageWithUsers.users) {
+      userIds.add(uid)
+    }
+  }
+
+  await Promise.all(
+    [...userIds].map((userId) =>
+      queryClient.prefetchQuery({
+        queryKey: ['user', 'project', projectId, userId],
+        queryFn: async (): Promise<Models.User | null> => {
+          try {
+            return await fetchUser(projectId, userId)
+          } catch {
+            return null
+          }
+        },
+        staleTime: DEFAULT_STALE_TIME,
+      }),
+    ),
+  )
+}
+
+/**
+ * Query options for paginated topic subscribers
+ *
+ * Use in route loaders and `useTopicSubscribers` so keys match exactly.
+ */
+export function topicSubscribersQueryOptions(
+  projectId: string | null | undefined,
+  topicId: string | null | undefined,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+  search?: string,
+) {
+  const normalizedSearch = search?.trim() || ''
+  return queryOptions({
+    queryKey: [
+      'subscribers',
+      'project',
+      projectId,
+      'topic',
+      topicId,
+      page,
+      limit,
+      normalizedSearch,
+    ],
+    queryFn: () =>
+      fetchTopicSubscribers(
+        projectId!,
+        topicId!,
+        page,
+        limit,
+        normalizedSearch || undefined,
+      ),
+    enabled: !!projectId && !!topicId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    placeholderData: keepPreviousData,
+    gcTime: projectId && topicId ? 5 * 60 * 1000 : 0,
   })
 }
 
@@ -365,12 +582,7 @@ export function useMessageTargets(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
 ) {
-  return useQuery({
-    queryKey: ['message-targets', 'project', projectId, messageId, page, limit],
-    queryFn: () => fetchMessageTargets(projectId!, messageId!, page, limit),
-    enabled: !!projectId && !!messageId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  return useQuery(messageTargetsQueryOptions(projectId, messageId, page, limit))
 }
 
 /**
@@ -413,16 +625,17 @@ export function useProjectTopics(
 
 /**
  * Hook to fetch a single topic by ID
+ *
+ * Pass `initialTopic` from the route loader so the first paint matches prefetched cache (no loading flash).
  */
 export function useTopic(
   projectId: string | null | undefined,
   topicId: string | null | undefined,
+  initialTopic?: Models.Topic,
 ) {
   return useQuery({
-    queryKey: ['topic', 'project', projectId, topicId],
-    queryFn: () => fetchTopic(projectId!, topicId!),
-    enabled: !!projectId && !!topicId,
-    staleTime: DEFAULT_STALE_TIME,
+    ...topicQueryOptions(projectId, topicId),
+    ...(initialTopic !== undefined ? { initialData: initialTopic } : {}),
   })
 }
 
@@ -440,24 +653,10 @@ export function useTopicSubscribers(
     data: subscribersData,
     isLoading,
     isFetching,
+    isFetched,
     error,
     refetch,
-  } = useQuery({
-    queryKey: [
-      'subscribers',
-      'project',
-      projectId,
-      'topic',
-      topicId,
-      page,
-      limit,
-      search,
-    ],
-    queryFn: () =>
-      fetchTopicSubscribers(projectId!, topicId!, page, limit, search),
-    enabled: !!projectId && !!topicId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  } = useQuery(topicSubscribersQueryOptions(projectId, topicId, page, limit, search))
 
   const subscribers = useMemo(() => {
     if (!subscribersData?.subscribers) return []
@@ -475,6 +674,7 @@ export function useTopicSubscribers(
     totalPages,
     isLoading,
     isFetching,
+    isFetched,
     error,
     refetch,
   }

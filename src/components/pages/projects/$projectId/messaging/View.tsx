@@ -238,41 +238,33 @@ export function View() {
       return {
         items: messages,
         total: displayedMessagesTotal ?? messagesTotal,
-        isLoading: messagesLoading && messages.length === 0,
       }
     }
     if (activeTab === 'topics') {
       return {
         items: topics,
         total: displayedTopicsTotal ?? topicsTotal,
-        isLoading: topicsLoading && topics.length === 0,
       }
     }
     if (activeTab === 'providers') {
       return {
         items: providers,
         total: displayedProvidersTotal ?? providersTotal,
-        isLoading: providersLoading && providers.length === 0,
       }
     }
-    return { items: [], total: 0, isLoading: false }
+    return { items: [], total: 0 }
   }, [
     activeTab,
     messages,
     displayedMessagesTotal,
     messagesTotal,
-    messagesLoading,
     topics,
     displayedTopicsTotal,
     topicsTotal,
-    topicsLoading,
     providers,
     displayedProvidersTotal,
     providersTotal,
-    providersLoading,
   ])
-
-  const showLoading = currentData.isLoading
 
   // Get project to get teamId for organization plan
   const { project } = useProject(projectId)
@@ -504,7 +496,7 @@ export function View() {
   }
 
   return (
-    <div className="flex flex-col">
+    <div className="flex h-full flex-col">
       <ServiceHeader
         title="Messaging"
         tabs={tabs}
@@ -531,14 +523,8 @@ export function View() {
         }
       />
 
-      <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
-        {showLoading ? (
-            <div className="rounded-lg border border-border bg-card py-12 text-center">
-              <p className="text-[13px] text-muted-foreground">
-                Loading {activeTab}...
-              </p>
-            </div>
-          ) : (currentData.items ?? []).length > 0 ? (
+      <div className="mx-auto w-full max-w-7xl flex-1 min-h-0 overflow-y-auto px-4 pb-4 sm:px-6 sm:pb-6">
+        {(currentData.items ?? []).length > 0 ? (
             <>
               <div className="rounded-lg border border-border bg-card overflow-hidden">
                 <Table>
