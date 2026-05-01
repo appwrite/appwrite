@@ -3,6 +3,8 @@
 namespace Appwrite\Utopia\Messaging\Adapter;
 
 use Appwrite\Utopia\Messaging\Messages\Webhook as WebhookMessage;
+use Utopia\Fetch\Client as FetchClient;
+use Utopia\Fetch\Exception as FetchException;
 use Utopia\Messaging\Adapter;
 use Utopia\Messaging\Message;
 use Utopia\Messaging\Response;
@@ -87,27 +89,36 @@ class Webhook extends Adapter
      */
     protected function dispatch(string $method, string $url, array $headers, string $body, int $timeout): array
     {
-        $handle = \curl_init();
-        \curl_setopt_array($handle, [
-            CURLOPT_CUSTOMREQUEST => $method,
-            CURLOPT_URL => $url,
-            CURLOPT_HTTPHEADER => $headers,
-            CURLOPT_POSTFIELDS => $body,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT => $timeout,
-            CURLOPT_CONNECTTIMEOUT => \min(10, $timeout),
-            CURLOPT_USERAGENT => 'Appwrite Webhook',
-        ]);
+        $client = new FetchClient();
+        $client
+            ->setTimeout($timeout * 1000)
+            ->setConnectTimeout(\min(10, $timeout) * 1000)
+            ->setAllowRedirects(false)
+            ->setUserAgent('Appwrite Webhook');
 
-        $output = \curl_exec($handle);
-        $statusCode = (int) \curl_getinfo($handle, CURLINFO_RESPONSE_CODE);
-        $error = \curl_error($handle);
-        \curl_close($handle);
+        foreach ($headers as $header) {
+            $parts = \explode(':', $header, 2);
+            if (\count($parts) === 2) {
+                $client->addHeader(\trim($parts[0]), \trim($parts[1]));
+            }
+        }
+
+        try {
+            $response = $client->fetch($url, $method, $body);
+        } catch (FetchException $exception) {
+            return [
+                'statusCode' => 0,
+                'response' => null,
+                'error' => $exception->getMessage(),
+            ];
+        }
+
+        $output = $response->getBody();
 
         return [
-            'statusCode' => $statusCode,
+            'statusCode' => $response->getStatusCode(),
             'response' => \is_string($output) ? $output : null,
-            'error' => $error !== '' ? $error : null,
+            'error' => null,
         ];
     }
 }
