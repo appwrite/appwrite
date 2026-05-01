@@ -154,12 +154,15 @@ $register->set('realtimeLogger', function () {
 $register->set('pools', function () {
     $group = new Group();
 
+    $dbAdapter = System::getEnv('_APP_DB_ADAPTER', 'mongodb');
     $fallbackForDB = 'db_main=' . AppwriteURL::unparse([
-        'scheme' => System::getEnv('_APP_DB_ADAPTER', 'mongodb'),
+        'scheme' => $dbAdapter,
         'host' => System::getEnv('_APP_DB_HOST', 'mongodb'),
         'port' => System::getEnv('_APP_DB_PORT', '27017'),
-        'user' => System::getEnv('_APP_DB_USER', ''),
-        'pass' => System::getEnv('_APP_DB_PASS', ''),
+        // Redis uses dedicated _APP_REDIS_* credentials; the SQL/Mongo
+        // _APP_DB_USER/PASS pair would otherwise force a spurious AUTH.
+        'user' => $dbAdapter === 'redis' ? System::getEnv('_APP_REDIS_USER', '') : System::getEnv('_APP_DB_USER', ''),
+        'pass' => $dbAdapter === 'redis' ? System::getEnv('_APP_REDIS_PASS', '') : System::getEnv('_APP_DB_PASS', ''),
         'path' => System::getEnv('_APP_DB_SCHEMA', ''),
     ]);
     $fallbackForRedis = 'redis_main=' . AppwriteURL::unparse([

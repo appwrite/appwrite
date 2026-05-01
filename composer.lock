@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "766ebd92fb768ab71ec9d47bfc84d411",
+    "content-hash": "718b3c14dc116c0d88e7aaf2feb886dc",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3850,22 +3850,23 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-feat-sqlite-fts",
+            "version": "5.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "00d502fef7196440c1083ed391c7f8f7efce5c80"
+                "reference": "609ebcd64be1ec6fab00c5f46fce54acb0031b3c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/00d502fef7196440c1083ed391c7f8f7efce5c80",
-                "reference": "00d502fef7196440c1083ed391c7f8f7efce5c80",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/609ebcd64be1ec6fab00c5f46fce54acb0031b3c",
+                "reference": "609ebcd64be1ec6fab00c5f46fce54acb0031b3c",
                 "shasum": ""
             },
             "require": {
                 "ext-mbstring": "*",
                 "ext-mongodb": "*",
                 "ext-pdo": "*",
+                "ext-redis": "*",
                 "php": ">=8.4",
                 "utopia-php/cache": "1.*",
                 "utopia-php/console": "0.1.*",
@@ -3889,38 +3890,7 @@
                     "Utopia\\Database\\": "src/Database"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Tests\\E2E\\": "tests/e2e",
-                    "Tests\\Unit\\": "tests/unit"
-                }
-            },
-            "scripts": {
-                "build": [
-                    "Composer\\Config::disableProcessTimeout",
-                    "docker compose build"
-                ],
-                "start": [
-                    "Composer\\Config::disableProcessTimeout",
-                    "docker compose up -d"
-                ],
-                "test": [
-                    "Composer\\Config::disableProcessTimeout",
-                    "docker compose exec tests vendor/bin/phpunit --configuration phpunit.xml"
-                ],
-                "lint": [
-                    "php -d memory_limit=2G ./vendor/bin/pint --test"
-                ],
-                "format": [
-                    "php -d memory_limit=2G ./vendor/bin/pint"
-                ],
-                "check": [
-                    "./vendor/bin/phpstan analyse --level 7 src tests --memory-limit 2G"
-                ],
-                "coverage": [
-                    "./vendor/bin/coverage-check ./tmp/clover.xml 90"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -3933,10 +3903,10 @@
                 "utopia"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/database/tree/feat-sqlite-fts",
-                "issues": "https://github.com/utopia-php/database/issues"
+                "issues": "https://github.com/utopia-php/database/issues",
+                "source": "https://github.com/utopia-php/database/tree/5.6.0"
             },
-            "time": "2026-04-30T04:34:35+00:00"
+            "time": "2026-05-01T01:28:07+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -4561,16 +4531,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.9.4",
+            "version": "1.9.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "969dc9477ea962f16da9254facdbd8944cf13477"
+                "reference": "b164631404ec759f8c368fe2321f44c22bc258ab"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/969dc9477ea962f16da9254facdbd8944cf13477",
-                "reference": "969dc9477ea962f16da9254facdbd8944cf13477",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/b164631404ec759f8c368fe2321f44c22bc258ab",
+                "reference": "b164631404ec759f8c368fe2321f44c22bc258ab",
                 "shasum": ""
             },
             "require": {
@@ -4610,9 +4580,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/1.9.4"
+                "source": "https://github.com/utopia-php/migration/tree/1.9.6"
             },
-            "time": "2026-04-27T12:42:51+00:00"
+            "time": "2026-04-30T08:11:07+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -5051,16 +5021,16 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "2.0.0",
+            "version": "2.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "52d1f89a47165ef0d3deff63043cda182175adfb"
+                "reference": "8a2e3a86fd01aaed675884146665308c2122264e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/52d1f89a47165ef0d3deff63043cda182175adfb",
-                "reference": "52d1f89a47165ef0d3deff63043cda182175adfb",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/8a2e3a86fd01aaed675884146665308c2122264e",
+                "reference": "8a2e3a86fd01aaed675884146665308c2122264e",
                 "shasum": ""
             },
             "require": {
@@ -5097,9 +5067,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/2.0.0"
+                "source": "https://github.com/utopia-php/storage/tree/2.0.1"
             },
-            "time": "2026-04-27T11:39:32+00:00"
+            "time": "2026-04-29T09:05:48+00:00"
         },
         {
             "name": "utopia-php/system",
@@ -8473,18 +8443,9 @@
             "time": "2024-11-07T12:36:22+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/database",
-            "version": "dev-feat-sqlite-fts",
-            "alias": "5.999.0",
-            "alias_normalized": "5.999.0.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "utopia-php/database": 20
-    },
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
