@@ -1,10 +1,17 @@
 import { useLoaderData, useNavigate, useLocation } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { clearConsoleImpersonateUser, sdk } from '@/lib/appwrite/sdk'
+import {
+  clearConsoleImpersonateUser,
+  clearConsoleSessionLocally,
+  sdk,
+} from '@/lib/appwrite/sdk'
 import { AppwriteException } from '@appwrite.io/console'
-import { ReactNode, useEffect } from 'react'
+import { ReactNode, useEffect, useRef } from 'react'
 import { useConsoleImpersonationRevision } from '@/hooks/use-console-impersonation-revision'
 import { clearConsoleImpersonationSession } from '@/lib/console-impersonation'
+import { isHttpForbiddenError } from '@/lib/utils/error-formatting'
+import { AccountAccessBlockedScreen } from '@/components/global/auth/AccountAccessBlockedScreen'
+import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
 
 // Helper function to check if we're on an auth page
 function isAuthPage(pathname: string): boolean {
@@ -105,6 +112,8 @@ export interface AuthData {
   account: unknown
   isLoading: boolean
   isAuthenticated: boolean
+  /** Present when `account.get` returned 403 (blocked / forbidden console access). */
+  accountAccessBlocked?: boolean
   signOut: (navigate?: (options: { to: string }) => void) => Promise<void>
 }
 
@@ -139,7 +148,8 @@ async function signOut(navigate?: (options: { to: string }) => void) {
     }
   } catch (error) {
     console.error('Error signing out:', error)
-    throw error
+    // Account APIs may be blocked (e.g. 403); clear local credentials only (no redirect).
+    clearConsoleSessionLocally()
   }
 }
 
@@ -154,6 +164,7 @@ interface RequireAuthProps {
  *
  * - Automatically checks authentication using the Console SDK
  * - Redirects to /sign-in on 401 errors
+ * - On 403, shows the blocked-account screen with support contact (no redirect to /sign-in)
  * - Shows loading state while checking auth
  * - Only renders children if authenticated
  *
@@ -261,33 +272,48 @@ export function RequireAuth({
     refetchOnMount: true, // Refetch when component mounts
   })
 
+  const accountAccessBlocked = !!error && isHttpForbiddenError(error)
   const isAuthenticated = !!account && !error
   const authData: AuthData = {
     currentUser,
     account,
     isLoading,
     isAuthenticated,
+    accountAccessBlocked,
     signOut: () => signOut(navigate),
   }
 
-  // Redirect to sign-in when we observe 401 (e.g. from shared cache when our queryFn didn't run)
+  // Redirect to sign-in when we observe 401 (e.g. from shared cache when our queryFn didn't run).
+  // Do not put `location` or `navigate` in deps — TanStack Router gives a new `location` reference
+  // most renders, which would re-fire this effect and call navigate in a tight loop.
   const is401 =
     error &&
     ((error as { code?: number }).code === 401 ||
       (error as { status?: number }).status === 401)
+  const navigateRef = useRef(navigate)
+  navigateRef.current = navigate
   useEffect(() => {
     if (!is401 || isAuthPage(location.pathname)) return
     const redirectUrl = getRelativeRedirectUrl(location as unknown)
     if (redirectUrl && isValidRelativeRedirect(redirectUrl)) {
-      navigate({ to: '/sign-in', search: { redirect: redirectUrl } })
+      navigateRef.current({ to: '/sign-in', search: { redirect: redirectUrl } })
     } else {
-      navigate({ to: '/sign-in' })
+      navigateRef.current({ to: '/sign-in' })
     }
-  }, [is401, location.pathname, location, navigate])
+  }, [is401, location.pathname])
 
   // Show loading state while checking auth
   if (isLoading) {
     return <>{loadingComponent}</>
+  }
+
+  if (accountAccessBlocked) {
+    return (
+      <div className="flex min-h-svh w-full flex-col bg-background">
+        <ConsoleImpersonationBanner sessionOnly />
+        <AccountAccessBlockedScreen layout="fill" />
+      </div>
+    )
   }
 
   // If not authenticated, the hook will redirect to /sign-in
@@ -298,7 +324,9 @@ export function RequireAuth({
 
   // User is authenticated - render children
   // Support both regular children and render prop pattern
-  return <>{typeof children === 'function' ? children(authData) : children}</>
+  return (
+    <>{typeof children === 'function' ? children(authData) : children}</>
+  )
 }
 
 /**
@@ -387,11 +415,14 @@ export function useAuth(): AuthData {
     refetchOnMount: true,
   })
 
+  const accountAccessBlocked = !!error && isHttpForbiddenError(error)
+
   return {
     currentUser,
     account,
     isLoading,
     isAuthenticated: !!account && !error,
+    accountAccessBlocked,
     signOut: () => signOut(navigate),
   }
 }

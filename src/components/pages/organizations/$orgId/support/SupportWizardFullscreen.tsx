@@ -39,6 +39,7 @@ import {
   X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { APPWRITE_SUPPORT_EMAIL } from '@/lib/utils/error-formatting'
 
 const SUBJECT_MAX = 128
 
@@ -73,7 +74,6 @@ function getMessagePlaceholder(category: SupportCategory | ''): string {
 const CONTACT_SALES_URL =
   import.meta.env.VITE_CONTACT_SALES_URL ||
   'https://appwrite.io/contact-us/enterprise'
-const SUPPORT_EMAIL = 'support@appwrite.io'
 const SUPPORT_DISCORD_URL = 'https://appwrite.io/discord'
 const SUPPORT_GITHUB_ISSUES_URL =
   'https://github.com/appwrite/appwrite/issues/new/choose'
@@ -491,7 +491,10 @@ export function SupportWizardFullscreen() {
                     We're having a temporary issue with the support portal,
                     and our engineering team are aware. In the meantime,
                     please reach out at{' '}
-                    <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>, on{' '}
+                    <a href={`mailto:${APPWRITE_SUPPORT_EMAIL}`}>
+                      {APPWRITE_SUPPORT_EMAIL}
+                    </a>
+                    , on{' '}
                     <a
                       href={SUPPORT_DISCORD_URL}
                       target="_blank"

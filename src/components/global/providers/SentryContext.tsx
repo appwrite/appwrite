@@ -2,11 +2,11 @@ import { useEffect } from 'react'
 import * as Sentry from '@sentry/tanstackstart-react'
 import { useLocation } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { sdk } from '@/lib/appwrite/sdk'
+import type { Models } from '@appwrite.io/console'
+import { useAuth } from '@/components/global/auth/RequireAuth'
 import { useProject } from '@/lib/react-query/hooks'
 import { organizationPlanQueryOptions } from '@/lib/react-query/hooks/organizations'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { useConsoleImpersonationRevision } from '@/hooks/use-console-impersonation-revision'
 
 const isSentryEnabled = () => !!import.meta.env.VITE_SENTRY_DSN
 
@@ -53,37 +53,18 @@ export function SentryContextProvider({
   children: React.ReactNode
 }) {
   const location = useLocation()
-  const consoleImpersonationRevision = useConsoleImpersonationRevision()
-
-  // Use same query key as RequireAuth/useAuth so we share cache (one account fetch).
-  // Do not swallow 401: rethrow so the shared cache has error state and RequireAuth can redirect.
-  const { data: account } = useQuery({
-    queryKey: ['account', 'console', consoleImpersonationRevision],
-    queryFn: async () => {
-      try {
-        return await sdk.forConsole.account.get()
-      } catch (err) {
-        const code = (err as { code?: number })?.code
-        const status = (err as { status?: number })?.status
-        if (code === 401 || status === 401) throw err
-        return null
-      }
-    },
-    retry: false,
-    staleTime: 5 * 60 * 1000,
-    enabled: typeof window !== 'undefined',
-  })
-
-  const isAuthenticated = !!account
+  const { account, isAuthenticated } = useAuth()
+  const accountUser = account as Models.User | undefined
   const { features } = useConsoleProfile()
 
   // Determine current org ID: URL (org pages) > project's org (project pages only when loaded) > user prefs
   const projectId = extractProjectId(location.pathname)
-  const { project } = useProject(projectId)
+  const { project } = useProject(projectId ?? undefined)
   const orgIdFromUrl = extractOrgId(location.pathname)
   const currentOrgId = projectId
     ? (project?.teamId ?? undefined)
-    : (orgIdFromUrl ?? (account?.prefs?.organization as string | undefined))
+    : (orgIdFromUrl ??
+        (accountUser?.prefs?.organization as string | undefined))
 
   // Use shared plan query so we don't duplicate API calls (loader already fetches on project pages)
   const { data: orgPlan } = useQuery({
@@ -94,28 +75,28 @@ export function SentryContextProvider({
   // Set user context when authenticated (no PII - only IDs and status flags)
   useEffect(() => {
     if (!isSentryEnabled()) return
-    if (isAuthenticated && account) {
+    if (isAuthenticated && accountUser) {
       // Only set user ID - no email or name to protect privacy
       Sentry.setUser({
-        id: account.$id,
+        id: accountUser.$id,
       })
 
       // Set additional user context (no PII)
       Sentry.setContext('user_details', {
-        userId: account.$id,
-        status: account.status,
-        emailVerification: account.emailVerification,
-        phoneVerification: account.phoneVerification,
-        mfaEnabled: account.mfa,
+        userId: accountUser.$id,
+        status: accountUser.status,
+        emailVerification: accountUser.emailVerification,
+        phoneVerification: accountUser.phoneVerification,
+        mfaEnabled: accountUser.mfa,
         // Current organization from prefs
-        preferredOrgId: account.prefs?.organization,
+        preferredOrgId: accountUser.prefs?.organization,
       })
     } else {
       // Clear user context when logged out
       Sentry.setUser(null)
       Sentry.setContext('user_details', null)
     }
-  }, [isAuthenticated, account])
+  }, [isAuthenticated, accountUser])
 
   // Set navigation context based on current route
   useEffect(() => {
@@ -144,8 +125,8 @@ export function SentryContextProvider({
       Sentry.setTag('org_id', orgId)
     } else {
       // Try to get org from user prefs if not in URL
-      if (account?.prefs?.organization) {
-        Sentry.setTag('org_id', account.prefs.organization as string)
+      if (accountUser?.prefs?.organization) {
+        Sentry.setTag('org_id', accountUser.prefs.organization as string)
       } else {
         Sentry.setTag('org_id', undefined)
       }
@@ -156,7 +137,7 @@ export function SentryContextProvider({
     } else {
       Sentry.setTag('service', undefined)
     }
-  }, [location.pathname, location.href, account])
+  }, [location.pathname, location.href, accountUser])
 
   // Set organization plan context
   useEffect(() => {

@@ -43,7 +43,10 @@ import {
   subscribeToDebugEndpointChange,
 } from '@/lib/debug-endpoint'
 import { wrapServiceObject } from '@/lib/appwrite/slow-call-reporting'
-import { CONSOLE_IMPERSONATION_TARGET_KEY } from '@/lib/console-impersonation'
+import {
+  CONSOLE_IMPERSONATION_TARGET_KEY,
+  clearConsoleImpersonationSession,
+} from '@/lib/console-impersonation'
 import {
   ensureFingerprintServerTimeSynced,
   resetFingerprintServerTimeCache,
@@ -280,6 +283,62 @@ export function applyConsoleImpersonateUserId(targetUserId: string) {
 export function clearConsoleImpersonateUser() {
   for (const client of [clientConsole, clientProject]) {
     clearImpersonationHeaders(client)
+  }
+}
+
+const CONSOLE_SDK_PROJECT_ID = 'console'
+
+/**
+ * Clears console auth state in the browser without calling Appwrite account APIs.
+ * Use when the session cookie cannot be revoked via the API (e.g. account blocked with 403).
+ *
+ * - Clears operator impersonation.
+ * - Removes Appwrite `cookieFallback` from localStorage (SDK uses it when cookies are restricted).
+ * - Clears in-memory session/JWT/key on the shared console and project clients.
+ * - Best-effort expiry of `a_session_console` on the current document host (only works for
+ *   non-httpOnly cookies; cross-site session cookies require a successful server sign-out).
+ */
+export function clearConsoleSessionLocally(): void {
+  if (typeof window === 'undefined') return
+
+  clearConsoleImpersonateUser()
+  clearConsoleImpersonationSession()
+
+  try {
+    window.localStorage.removeItem('cookieFallback')
+  } catch {
+    /* private mode */
+  }
+
+  const resetAuthOnClient = (client: Client) => {
+    client.config.jwt = ''
+    client.config.key = ''
+    const cfg = client.config as { session?: string; cookie?: string }
+    cfg.session = ''
+    cfg.cookie = ''
+    try {
+      client.setCookie('')
+    } catch {
+      /* noop */
+    }
+  }
+  resetAuthOnClient(clientConsole)
+  resetAuthOnClient(clientProject)
+
+  const cookieName = `a_session_${CONSOLE_SDK_PROJECT_ID}`
+  const expired = 'Thu, 01 Jan 1970 00:00:00 GMT'
+  const host = window.location.hostname
+  const expire = (domain?: string) => {
+    const d = domain ? `; domain=${domain}` : ''
+    document.cookie = `${cookieName}=; expires=${expired}; path=/${d}`
+  }
+  expire()
+  if (host) {
+    expire(host)
+    const parts = host.split('.')
+    if (parts.length > 1) {
+      expire(`.${parts.slice(-2).join('.')}`)
+    }
   }
 }
 

@@ -23,6 +23,26 @@ function getErrorCode(error: ErrorWithCode): number | undefined {
   return error.code ?? (error as ErrorWithCode & { status?: number }).status
 }
 
+/** True when the API responded with HTTP 403 (e.g. blocked console account). */
+export function isHttpForbiddenError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false
+  const e = error as { code?: number; status?: number }
+  return e.code === 403 || e.status === 403
+}
+
+/** Console / cloud support contact (e.g. blocked account screen). */
+export const APPWRITE_SUPPORT_EMAIL = 'support@appwrite.io'
+
+/**
+ * User-facing copy when `sdk.forConsole.account.get()` returns HTTP 403
+ * (blocked or restricted console access). Matches global error screen patterns.
+ */
+export const CONSOLE_ACCOUNT_ACCESS_BLOCKED: FormattedError = {
+  title: 'Account access blocked',
+  message: `This account cannot use the Appwrite Console - access is blocked or restricted, which may include a Terms of Service violation. For questions about this restriction or to request a review of your account, contact ${APPWRITE_SUPPORT_EMAIL}.`,
+  isUserFriendly: true,
+}
+
 /**
  * Formats an error into a user-friendly message
  * @param error - The error object (Error, ErrorWithCode, or unknown)

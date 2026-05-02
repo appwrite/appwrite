@@ -29,14 +29,14 @@ export function SiteVariablesCard({
     isLoading,
   } = useSiteVariables(projectId, siteId)
 
-  const { data: projectVariablesData } = useProjectVariables(projectId, 0, 100)
+  const { variables: projectVariablesList } = useProjectVariables(projectId)
 
   const createMutation = useCreateSiteVariable(projectId, siteId)
   const updateMutation = useUpdateSiteVariable(projectId, siteId)
   const deleteMutation = useDeleteSiteVariable(projectId, siteId)
 
   const globalVariableKeys = new Set(
-    (projectVariablesData?.variables || []).map((v) => v.key),
+    projectVariablesList.map((v) => v.key),
   )
 
   return (

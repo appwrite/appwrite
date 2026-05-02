@@ -94,3 +94,17 @@ export function notifyConsoleImpersonationChanged() {
   if (typeof window === 'undefined') return
   window.dispatchEvent(new Event(CONSOLE_IMPERSONATION_CHANGED_EVENT))
 }
+
+/** True when the account payload indicates impersonation or a session target is stored (e.g. before first account fetch). */
+export function isConsoleImpersonationActive(
+  account?: { impersonatorUserId?: string } | null,
+): boolean {
+  return (
+    !!account?.impersonatorUserId || !!readConsoleImpersonationTargetUserId()
+  )
+}
+
+/** Session-only check — no `account.get` required (e.g. blocked-account UI, exit FAB). */
+export function hasConsoleImpersonationSessionTarget(): boolean {
+  return !!readConsoleImpersonationTargetUserId()
+}

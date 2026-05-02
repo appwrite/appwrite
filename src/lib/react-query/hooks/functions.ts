@@ -382,63 +382,29 @@ export async function fetchFunctionExecutions(
 }
 
 /**
- * Query function to fetch function variables with pagination
- *
- * This is extracted so it can be reused in both hooks and route loaders.
- *
- * @param projectId - The project ID
- * @param functionId - The function ID
- * @param page - Page number (0-indexed)
- * @param limit - Number of items per page
- * @returns Paginated variables list response from the API
+ * Query function to fetch all function variables (API is not paginated).
+ * Sort by `$createdAt` descending; UI paginates via `useFunctionVariables`.
  */
 export async function fetchFunctionVariables(
   projectId: string,
   functionId: string,
-  page: number = 0,
-  limit: number = SMALL_PAGE_SIZE,
 ) {
   if (!projectId || !functionId) {
     return { variables: [], total: 0 }
   }
 
   const projectSdk = sdk.forProject(projectId)
-  const queries = [
-    Query.orderDesc('$createdAt'),
-    Query.limit(limit),
-    Query.offset(page * limit),
-  ]
+  const response = await projectSdk.functions.listVariables({ functionId })
+  const raw = response.variables || []
+  const variables = [...raw].sort((a, b) => {
+    const aTime = new Date(a.$createdAt || 0).getTime()
+    const bTime = new Date(b.$createdAt || 0).getTime()
+    return bTime - aTime
+  })
 
-  try {
-    // Try to pass queries - the API may support it even if SDK signature doesn't show it
-    const response = await projectSdk.functions.listVariables({
-      functionId,
-      queries,
-    } as unknown)
-
-    return {
-      variables: response.variables || [],
-      total: response.total || 0,
-    }
-  } catch {
-    // If queries aren't supported, fall back to fetching all and paginating client-side
-    const response = await projectSdk.functions.listVariables({ functionId })
-    const allVariables = (response.variables || []).sort((a, b) => {
-      const aTime = new Date(a.$createdAt || 0).getTime()
-      const bTime = new Date(b.$createdAt || 0).getTime()
-      return bTime - aTime
-    })
-    const total = response.total || 0
-
-    // Client-side pagination as fallback
-    const start = page * limit
-    const end = start + limit
-    const paginatedVariables = allVariables.slice(start, end)
-
-    return {
-      variables: paginatedVariables,
-      total,
-    }
+  return {
+    variables,
+    total: variables.length,
   }
 }
 
@@ -820,19 +786,15 @@ export function projectRuntimesQueryOptions(
 }
 
 /**
- * Query options for fetching function variables
- *
- * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ * Query options for fetching function variables (full list; paginate in the hook/UI).
  */
 export function functionVariablesQueryOptions(
   projectId: string | null | undefined,
   functionId: string | null | undefined,
-  page: number = 0,
-  limit: number = SMALL_PAGE_SIZE,
 ) {
   return queryOptions({
-    queryKey: ['variables', 'function', projectId, functionId, page, limit],
-    queryFn: () => fetchFunctionVariables(projectId!, functionId!, page, limit),
+    queryKey: ['variables', 'function', projectId, functionId],
+    queryFn: () => fetchFunctionVariables(projectId!, functionId!),
     enabled: !!projectId && !!functionId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -1067,13 +1029,24 @@ export function useFunctionVariables(
   limit: number = SMALL_PAGE_SIZE,
 ) {
   const { data, isLoading, error, refetch } = useQuery(
-    functionVariablesQueryOptions(projectId, functionId, page, limit),
+    functionVariablesQueryOptions(projectId, functionId),
   )
+
+  const all = data?.variables ?? []
+
+  const { variables, total } = useMemo(() => {
+    const totalCount = all.length
+    const start = page * limit
+    return {
+      variables: all.slice(start, start + limit),
+      total: totalCount,
+    }
+  }, [all, page, limit])
 
   return {
     data,
-    variables: data?.variables || [],
-    total: data?.total || 0,
+    variables,
+    total,
     isLoading,
     error,
     refetch,
@@ -1173,8 +1146,8 @@ export function useCreateFunctionVariable(
         secret,
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
         queryKey: ['variables', 'function', projectId, functionId],
       })
     },
@@ -1223,8 +1196,8 @@ export function useUpdateFunctionVariable(
         secret,
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
         queryKey: ['variables', 'function', projectId, functionId],
       })
     },
@@ -1252,8 +1225,8 @@ export function useDeleteFunctionVariable(
         variableId,
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
         queryKey: ['variables', 'function', projectId, functionId],
       })
     },

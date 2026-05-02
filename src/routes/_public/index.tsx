@@ -4,7 +4,9 @@ import {
   useLocation,
 } from '@tanstack/react-router'
 import { useEffect, useRef } from 'react'
+import { AccountAccessBlockedScreen } from '@/components/global/auth/AccountAccessBlockedScreen'
 import { useAuth } from '@/components/global/auth/RequireAuth'
+import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
 import { setLastLoginMethod } from '@/lib/utils/auth-storage'
 import { ensurePersonalOrgAndFirstProject } from '@/lib/ensure-personal-org'
 
@@ -13,14 +15,18 @@ export const Route = createFileRoute('/_public/')({
 })
 
 function RootRedirect() {
-  const { account } = useAuth()
+  const { account, accountAccessBlocked, isLoading } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const hasRedirectedRef = useRef(false)
   const isEnsuringOrgRef = useRef(false)
 
   useEffect(() => {
-    if (hasRedirectedRef.current || !account) return
+    if (hasRedirectedRef.current) return
+
+    if (accountAccessBlocked) return
+
+    if (!account) return
 
     // OAuth callback: persist GitHub as last login method
     const urlParams = new URLSearchParams(location.search)
@@ -65,7 +71,22 @@ function RootRedirect() {
         hasRedirectedRef.current = true
         navigate({ to: '/account', replace: true })
       })
-  }, [account, navigate, location.pathname, location.search])
+  }, [
+    account,
+    accountAccessBlocked,
+    navigate,
+    location.pathname,
+    location.search,
+  ])
+
+  if (!isLoading && accountAccessBlocked) {
+    return (
+      <div className="flex min-h-svh w-full flex-col bg-background">
+        <ConsoleImpersonationBanner sessionOnly />
+        <AccountAccessBlockedScreen layout="fill" />
+      </div>
+    )
+  }
 
   // Blank screen while redirecting - root shows branded loader; never show "Loading..." here
   return <div className="fixed inset-0 bg-background" aria-hidden />

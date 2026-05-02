@@ -26,7 +26,6 @@ import {
   DEFAULT_STALE_TIME,
   LONG_STALE_TIME,
   DEFAULT_PAGE_SIZE,
-  SMALL_PAGE_SIZE,
 } from './constants'
 
 // ============================================================================
@@ -369,43 +368,28 @@ async function updatePlatformForProject(
 }
 
 /**
- * Query function to fetch project variables
- *
- * This is extracted so it can be reused in both hooks and route loaders.
- *
- * @param projectId - The project ID
- * @param page - Page number (0-indexed)
- * @param limit - Number of items per page
- * @param queries - Optional additional query strings for filtering/sorting
- * @returns Paginated variables list response from the API
+ * Query function to fetch all project variables (API is not paginated).
+ * Sort by `$createdAt` descending; UI paginates via `useProjectVariables`.
  */
-export async function fetchProjectVariables(
-  projectId: string,
-  page: number = 0,
-  limit: number = SMALL_PAGE_SIZE,
-  queries?: string[],
-) {
+export async function fetchProjectVariables(projectId: string) {
   if (!projectId) {
     return { variables: [], total: 0 }
   }
 
   const projectSdk = sdk.forProject(projectId)
-  const defaultQueries = [
-    Query.orderDesc('$createdAt'),
-    Query.limit(limit),
-    Query.offset(page * limit),
-  ]
-  const finalQueries = queries
-    ? [...defaultQueries, ...queries]
-    : defaultQueries
-
   try {
     const response = await projectSdk.projectApi.listVariables({
-      queries: finalQueries,
+      queries: [Query.orderDesc('$createdAt')],
+    })
+    const raw = response.variables || []
+    const variables = [...raw].sort((a, b) => {
+      const aTime = new Date(a.$createdAt || 0).getTime()
+      const bTime = new Date(b.$createdAt || 0).getTime()
+      return bTime - aTime
     })
     return {
-      variables: response.variables || [],
-      total: response.total || 0,
+      variables,
+      total: variables.length,
     }
   } catch {
     return { variables: [], total: 0 }
@@ -469,18 +453,14 @@ export function pinnedProjectsQueryOptions(
 }
 
 /**
- * Query options for fetching project variables
- *
- * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ * Query options for fetching project variables (full list; paginate in the hook/UI).
  */
 export function projectVariablesQueryOptions(
   projectId: string | null | undefined,
-  page: number = 0,
-  limit: number = SMALL_PAGE_SIZE,
 ) {
   return queryOptions({
-    queryKey: ['variables', 'project', projectId, page, limit],
-    queryFn: () => fetchProjectVariables(projectId!, page, limit),
+    queryKey: ['variables', 'project', projectId],
+    queryFn: () => fetchProjectVariables(projectId!),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -1181,25 +1161,39 @@ export function useCreatePlatform(projectId: string | null | undefined) {
 }
 
 /**
- * Hook to fetch project variables
+ * Hook to fetch project variables.
+ * When `limit` is omitted, returns the full list (e.g. global-key lookup for sites).
  *
  * @param projectId - The project ID
- * @param page - Page number (0-indexed)
- * @param limit - Number of items per page
- * @returns Variables list with loading state
+ * @param page - Page number (0-indexed) when paginating
+ * @param limit - Page size when paginating; omit to return all variables
  */
 export function useProjectVariables(
   projectId: string | null | undefined,
   page: number = 0,
-  limit: number = SMALL_PAGE_SIZE,
+  limit?: number,
 ) {
   const { data, isLoading, error, refetch } = useQuery(
-    projectVariablesQueryOptions(projectId, page, limit),
+    projectVariablesQueryOptions(projectId),
   )
 
+  const all = data?.variables ?? []
+
+  const { variables, total } = useMemo(() => {
+    const totalCount = all.length
+    if (limit === undefined) {
+      return { variables: all, total: totalCount }
+    }
+    const start = page * limit
+    return {
+      variables: all.slice(start, start + limit),
+      total: totalCount,
+    }
+  }, [all, page, limit])
+
   return {
-    variables: data?.variables || [],
-    total: data?.total || 0,
+    variables,
+    total,
     isLoading,
     error,
     refetch,
@@ -1244,13 +1238,15 @@ export function useCreateProjectVariable(projectId: string | null | undefined) {
         secret,
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['variables', 'project', projectId],
-      })
-      queryClient.invalidateQueries({
-        queryKey: ['project-variables'],
-      })
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.refetchQueries({
+          queryKey: ['variables', 'project', projectId],
+        }),
+        queryClient.refetchQueries({
+          queryKey: ['project-variables'],
+        }),
+      ])
     },
   })
 }
@@ -1295,13 +1291,15 @@ export function useUpdateProjectVariable(projectId: string | null | undefined) {
         secret,
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['variables', 'project', projectId],
-      })
-      queryClient.invalidateQueries({
-        queryKey: ['project-variables'],
-      })
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.refetchQueries({
+          queryKey: ['variables', 'project', projectId],
+        }),
+        queryClient.refetchQueries({
+          queryKey: ['project-variables'],
+        }),
+      ])
     },
   })
 }
@@ -1323,13 +1321,15 @@ export function useDeleteProjectVariable(projectId: string | null | undefined) {
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.projectApi.deleteVariable({ variableId })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['variables', 'project', projectId],
-      })
-      queryClient.invalidateQueries({
-        queryKey: ['project-variables'],
-      })
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.refetchQueries({
+          queryKey: ['variables', 'project', projectId],
+        }),
+        queryClient.refetchQueries({
+          queryKey: ['project-variables'],
+        }),
+      ])
     },
   })
 }

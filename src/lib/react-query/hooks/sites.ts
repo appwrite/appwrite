@@ -212,7 +212,8 @@ export async function fetchSiteLogs(
 }
 
 /**
- * Query function to fetch site variables
+ * Query function to fetch all site variables (API is not paginated).
+ * Sort by `$createdAt` descending; UI paginates via `useSiteVariables` when a limit is set.
  */
 export async function fetchSiteVariables(projectId: string, siteId: string) {
   if (!projectId || !siteId) {
@@ -221,10 +222,16 @@ export async function fetchSiteVariables(projectId: string, siteId: string) {
 
   const projectSdk = sdk.forProject(projectId)
   const response = await projectSdk.sites.listVariables({ siteId })
+  const raw = response.variables || []
+  const variables = [...raw].sort((a, b) => {
+    const aTime = new Date(a.$createdAt || 0).getTime()
+    const bTime = new Date(b.$createdAt || 0).getTime()
+    return bTime - aTime
+  })
 
   return {
-    variables: response.variables || [],
-    total: response.total || 0,
+    variables,
+    total: variables.length,
   }
 }
 
@@ -855,19 +862,36 @@ export function useSiteLogs(
 }
 
 /**
- * Hook to fetch site variables
+ * Hook to fetch site variables.
+ * When `limit` is omitted, returns the full list. Otherwise slices client-side by `page`/`limit`.
  */
 export function useSiteVariables(
   projectId: string | null | undefined,
   siteId: string | null | undefined,
+  page: number = 0,
+  limit?: number,
 ) {
   const { data, isLoading, error, refetch } = useQuery(
     siteVariablesQueryOptions(projectId, siteId),
   )
 
+  const all = data?.variables ?? []
+
+  const { variables, total } = useMemo(() => {
+    const totalCount = all.length
+    if (limit === undefined) {
+      return { variables: all, total: totalCount }
+    }
+    const start = page * limit
+    return {
+      variables: all.slice(start, start + limit),
+      total: totalCount,
+    }
+  }, [all, page, limit])
+
   return {
-    variables: data?.variables || [],
-    total: data?.total || 0,
+    variables,
+    total,
     isLoading,
     error,
     refetch,
@@ -1369,8 +1393,8 @@ export function useCreateSiteVariable(
         secret: params.secret,
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
         queryKey: ['variables', 'site', projectId, siteId],
       })
     },
@@ -1419,8 +1443,8 @@ export function useUpdateSiteVariable(
         secret,
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
         queryKey: ['variables', 'site', projectId, siteId],
       })
     },
@@ -1448,8 +1472,8 @@ export function useDeleteSiteVariable(
         variableId,
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
         queryKey: ['variables', 'site', projectId, siteId],
       })
     },

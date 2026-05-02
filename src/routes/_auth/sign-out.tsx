@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { sdk } from '@/lib/appwrite/sdk'
+import { clearConsoleSessionLocally, sdk } from '@/lib/appwrite/sdk'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute('/_auth/sign-out')({
@@ -9,8 +9,8 @@ export const Route = createFileRoute('/_auth/sign-out')({
       // Delete all sessions (client-side) - await to ensure completion before redirect
       await sdk.forConsole.account.deleteSessions()
     } catch (error) {
-      // Ignore errors - we'll redirect anyway
       console.error('Error signing out:', error)
+      clearConsoleSessionLocally()
     }
     throw redirect({ to: '/' })
   },

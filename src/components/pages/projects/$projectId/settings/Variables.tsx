@@ -7,13 +7,14 @@ import {
   useCreateProjectVariable,
   useUpdateProjectVariable,
   useDeleteProjectVariable,
+  SMALL_PAGE_SIZE,
 } from '@/lib/react-query/hooks'
 
 export function Variables() {
   const params = useParams({ strict: false })
   const projectId = params.projectId as string
   const [page, setPage] = useState(0)
-  const limit = 10
+  const limit = SMALL_PAGE_SIZE
 
   const { project } = useProject(projectId)
   const { variables, total, isLoading } = useProjectVariables(

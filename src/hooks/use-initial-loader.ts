@@ -1,10 +1,50 @@
-import { useEffect, useState, useRef, useMemo } from 'react'
-import { useIsFetching, useIsMutating } from '@tanstack/react-query'
+import { useEffect, useState, useRef, useMemo, useReducer } from 'react'
+import { useIsFetching, useIsMutating, useQueryClient } from '@tanstack/react-query'
 import { useRouter, useLocation } from '@tanstack/react-router'
+import { isHttpForbiddenError } from '@/lib/utils/error-formatting'
+
+/**
+ * True when any `['account','console', ...]` query is in error with HTTP 403.
+ * Subscribes to the query cache so `/` can hide the fullscreen loader when the
+ * account is blocked (no redirect off `/`).
+ */
+function useConsoleAccountQueryForbidden403(): boolean {
+  const queryClient = useQueryClient()
+  const [cacheTick, bumpCache] = useReducer((n: number) => n + 1, 0)
+
+  useEffect(() => {
+    const lastForbiddenRef = { current: false }
+    return queryClient.getQueryCache().subscribe(() => {
+      const queries = queryClient.getQueryCache().findAll({
+        queryKey: ['account', 'console'],
+      })
+      const next = queries.some(
+        (q) =>
+          q.state.status === 'error' && isHttpForbiddenError(q.state.error),
+      )
+      if (next !== lastForbiddenRef.current) {
+        lastForbiddenRef.current = next
+        bumpCache()
+      }
+    })
+  }, [queryClient])
+
+  return useMemo(() => {
+    const queries = queryClient.getQueryCache().findAll({
+      queryKey: ['account', 'console'],
+    })
+    return queries.some(
+      (q) =>
+        q.state.status === 'error' && isHttpForbiddenError(q.state.error),
+    )
+  }, [queryClient, cacheTick])
+}
+
 export function useInitialLoader() {
   // Router + location need to be resolved before computing initial loader state
   const router = useRouter()
   const location = useLocation()
+  const isConsoleAccount403 = useConsoleAccountQueryForbidden403()
 
   // Track all active queries and mutations (including Appwrite calls)
   const isFetching = useIsFetching({
@@ -56,6 +96,7 @@ export function useInitialLoader() {
   const prevIsMutatingRef = useRef(isMutating)
   const prevRouterStatusRef = useRef(router.state.status)
   const prevPathnameRef = useRef(location.pathname)
+  const prevForbidden403Ref = useRef(isConsoleAccount403)
 
   useEffect(() => {
     // If initial load has already completed, never show loader again
@@ -100,13 +141,16 @@ export function useInitialLoader() {
     const pathnameChanged = prevPathnameRef.current !== location.pathname
     const fetchingChanged = prevIsFetchingRef.current !== isFetching
     const mutatingChanged = prevIsMutatingRef.current !== isMutating
+    const forbidden403Changed =
+      prevForbidden403Ref.current !== isConsoleAccount403
 
     // If nothing relevant changed, skip processing
     if (
       !routerStatusChanged &&
       !pathnameChanged &&
       !fetchingChanged &&
-      !mutatingChanged
+      !mutatingChanged &&
+      !forbidden403Changed
     ) {
       return
     }
@@ -116,6 +160,7 @@ export function useInitialLoader() {
     prevIsMutatingRef.current = isMutating
     prevRouterStatusRef.current = router.state.status
     prevPathnameRef.current = location.pathname
+    prevForbidden403Ref.current = isConsoleAccount403
 
     // Clear any existing timeouts
     if (timeoutRef.current) {
@@ -135,9 +180,9 @@ export function useInitialLoader() {
     const shouldShowLoadingState = isRouterLoading || currentHasActiveRequests
 
     // Hide loader when React Query is idle (don't wait for router).
-    // Never hide while still on "/" - wait for redirect so we don't flash content before first real page.
+    // On "/" we normally wait for redirect; exception: console account 403 (blocked) stays on "/".
     const shouldHideLoader =
-      location.pathname !== '/' &&
+      (location.pathname !== '/' || isConsoleAccount403) &&
       !currentHasActiveRequests &&
       wasLoadingRef.current
 
@@ -192,6 +237,7 @@ export function useInitialLoader() {
     location.pathname,
     isFetching,
     isMutating,
+    isConsoleAccount403,
   ])
 
   return { isLoading, isAuthRoute }
