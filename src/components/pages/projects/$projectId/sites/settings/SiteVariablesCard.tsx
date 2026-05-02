@@ -54,6 +54,7 @@ export function SiteVariablesCard({
       getVariableBadge={(v) =>
         globalVariableKeys.has(v.key) ? 'Global' : undefined
       }
+      projectVariableKeysForWarning={globalVariableKeys}
     />
   )
 }

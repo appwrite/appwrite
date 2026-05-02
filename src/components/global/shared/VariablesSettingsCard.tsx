@@ -19,6 +19,7 @@ import {
   Copy,
   Check,
   Key,
+  AlertTriangle,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -43,6 +44,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import {
   Table,
   TableBody,
@@ -185,6 +191,10 @@ export interface VariablesSettingsCardProps {
   itemLabel?: string
   isVariableEditable?: (v: VariableRecord) => boolean
   getVariableBadge?: (v: VariableRecord) => string | undefined
+  /** When set, rows whose key exists in this set show a warning (e.g. same name as a project variable). */
+  projectVariableKeysForWarning?: Set<string>
+  /** Tooltip for the duplicate project key warning; defaults to a message using `scopeLabel`. */
+  duplicateProjectKeyTooltip?: string
   emptyTitle?: string
   emptyDescription?: string
 }
@@ -205,6 +215,8 @@ export function VariablesSettingsCard({
   itemLabel = 'variables',
   isVariableEditable = () => true,
   getVariableBadge,
+  projectVariableKeysForWarning,
+  duplicateProjectKeyTooltip,
   emptyTitle = 'No environment variables yet',
   emptyDescription = 'Add a variable above or import from a .env file.',
 }: VariablesSettingsCardProps) {
@@ -232,6 +244,8 @@ export function VariablesSettingsCard({
 
   const currentPage = page + 1
   const hasPagination = limit > 0 && total > limit && onPageChange
+
+  const defaultDuplicateProjectKeyTooltip = `This key is also set on the project. The value in this row overwrites the project default for this ${scopeLabel.toLowerCase()}—only the value here is used in this context.`
 
   const envToObject = (content: string) => parseEnvFile(content)
   const jsonToObject = (content: string) => {
@@ -644,11 +658,34 @@ export function VariablesSettingsCard({
                         {variables.map((variable) => {
                           const editable = isVariableEditable(variable)
                           const badge = getVariableBadge?.(variable)
+                          const showProjectKeyWarning =
+                            projectVariableKeysForWarning?.has(variable.key) ??
+                            false
                           return (
                             <TableRow key={variable.$id}>
                               <TableCell className="px-4 py-3">
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 min-w-0">
                                   <CopyableText value={variable.key} />
+                                  {showProjectKeyWarning && (
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <button
+                                          type="button"
+                                          className="inline-flex shrink-0 text-amber-600 hover:text-amber-700 cursor-help rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                          aria-label="Same name as a project variable"
+                                        >
+                                          <AlertTriangle className="h-3.5 w-3.5" />
+                                        </button>
+                                      </TooltipTrigger>
+                                      <TooltipContent
+                                        side="top"
+                                        className="max-w-[280px] text-[12px]"
+                                      >
+                                        {duplicateProjectKeyTooltip ??
+                                          defaultDuplicateProjectKeyTooltip}
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  )}
                                   {badge && (
                                     <Badge
                                       variant="secondary"

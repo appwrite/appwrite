@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import {
   useFunctionVariables,
   useCreateFunctionVariable,
   useUpdateFunctionVariable,
   useDeleteFunctionVariable,
+  useProjectVariables,
 } from '@/lib/react-query/hooks'
 import { VariablesSettingsCard } from '@/components/global/shared/VariablesSettingsCard'
 import { SMALL_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
@@ -27,6 +28,12 @@ export function FunctionVariablesCard({
     limit,
   )
 
+  const { variables: projectVariablesList } = useProjectVariables(projectId)
+  const projectVariableKeysForWarning = useMemo(
+    () => new Set(projectVariablesList.map((v) => v.key)),
+    [projectVariablesList],
+  )
+
   const createMutation = useCreateFunctionVariable(projectId, functionId)
   const updateMutation = useUpdateFunctionVariable(projectId, functionId)
   const deleteMutation = useDeleteFunctionVariable(projectId, functionId)
@@ -46,6 +53,7 @@ export function FunctionVariablesCard({
       limit={limit}
       onPageChange={setPage}
       itemLabel="variables"
+      projectVariableKeysForWarning={projectVariableKeysForWarning}
     />
   )
 }

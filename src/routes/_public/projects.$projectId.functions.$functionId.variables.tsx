@@ -4,6 +4,7 @@ import {
   projectQueryOptions,
   projectFunctionQueryOptions,
   functionVariablesQueryOptions,
+  projectVariablesQueryOptions,
 } from '@/lib/react-query/hooks'
 import { canAccessFunctionSecuritySettings } from '@/lib/console-rbac-loader'
 import { pageTitle } from '@/lib/utils/page-title'
@@ -47,10 +48,10 @@ export const Route = createFileRoute(
       queryClient.ensureQueryData(
         projectFunctionQueryOptions(projectId, functionId),
       ),
-      // Fetch function variables - blocks navigation until ready
       queryClient.ensureQueryData(
         functionVariablesQueryOptions(projectId, functionId),
       ),
+      queryClient.ensureQueryData(projectVariablesQueryOptions(projectId)),
     ])
     const fn = queryClient.getQueryData<{ name?: string }>(
       projectFunctionQueryOptions(projectId, functionId).queryKey,
