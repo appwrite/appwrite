@@ -153,6 +153,13 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             }
         }
 
+        if (!$project->isEmpty() && $project->getId() !== 'console') {
+            $localRegion = System::getEnv('_APP_REGION', 'default');
+            if ($project->getAttribute('region', 'default') !== $localRegion) {
+                throw new AppwriteException(AppwriteException::PROJECT_NOT_FOUND, view: $errorView);
+            }
+        }
+
         /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
 
@@ -903,6 +910,12 @@ App::init()
                 $request->addFilter(new RequestV19());
             }
             if (version_compare($requestFormat, '1.8.0', '<')) {
+                if (!$project->isEmpty() && $project->getId() !== 'console') {
+                    $localRegion = System::getEnv('_APP_REGION', 'default');
+                    if ($project->getAttribute('region', 'default') !== $localRegion) {
+                        throw new AppwriteException(AppwriteException::PROJECT_NOT_FOUND);
+                    }
+                }
                 $dbForProject = $getProjectDB($project);
                 $request->addFilter(new RequestV20($dbForProject, $route->getPathValues($request)));
             }
@@ -1154,7 +1167,7 @@ App::options()
         $platformHostnames = $platform['hostnames'] ?? [];
         // Only run Router when external domain
         if (!in_array($request->getHostname(), $platformHostnames) || !empty($previewHostname)) {
-            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $log, $queueForEvents, $queueForStatsUsage, $queueForFunctions, $executor, $geodb, $isResourceBlocked, $platform, $previewHostname, $apiKey)) {
+            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $log, $queueForEvents, $queueForStatsUsage, $queueForFunctions, $executor, $geodb, $isResourceBlocked, $platform, $previewHostname, $authorization, $apiKey)) {
                 $utopia->getRoute()?->label('router', true);
             }
         }

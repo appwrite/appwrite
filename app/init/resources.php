@@ -515,6 +515,11 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform
         return $dbForPlatform;
     }
 
+    $localRegion = System::getEnv('_APP_REGION', 'default');
+    if ($project->getAttribute('region', 'default') !== $localRegion) {
+        throw new Exception(Exception::PROJECT_NOT_FOUND);
+    }
+
     try {
         $dsn = new DSN($project->getAttribute('database'));
     } catch (\InvalidArgumentException) {
@@ -574,6 +579,11 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
     return function (Document $project) use ($pools, $dbForPlatform, $cache, $authorization, &$databases) {
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $dbForPlatform;
+        }
+
+        $localRegion = System::getEnv('_APP_REGION', 'default');
+        if ($project->getAttribute('region', 'default') !== $localRegion) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
         try {
