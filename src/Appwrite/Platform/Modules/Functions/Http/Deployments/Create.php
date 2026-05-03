@@ -187,7 +187,7 @@ class Create extends Action
         }
 
         if (!$fileSizeValidator->isValid($fileSize) && $functionSizeLimit !== 0) { // Check if file size is exceeding allowed limit
-            throw new Exception(Exception::STORAGE_INVALID_FILE_SIZE);
+            throw new Exception(Exception::STORAGE_INVALID_FILE_SIZE, 'The file size is either not valid or exceeds the maximum allowed size. Please check the file or the value of the _APP_COMPUTE_SIZE_LIMIT environment variable.');
         }
 
         if (!$upload->isValid($fileTmpName)) {
