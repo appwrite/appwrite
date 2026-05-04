@@ -398,7 +398,7 @@ class PresenceRealtimeClientTest extends Scope
                 ],
             ]));
             $invalidPermissions = $this->receiveErrorMessage($client);
-            $this->assertStringContainsString('permissions must be an array', $invalidPermissions['data']['message'] ?? '');
+            $this->assertStringContainsString('permissions: Value must a valid array', $invalidPermissions['data']['message'] ?? '');
             $this->assertQuietFor(
                 $client,
                 fn (array $frame): bool => ($frame['type'] ?? null) === 'event'
