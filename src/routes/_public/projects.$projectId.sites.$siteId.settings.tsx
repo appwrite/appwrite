@@ -9,22 +9,11 @@ import {
   projectVariablesQueryOptions,
   vcsInstallationsQueryOptions,
 } from '@/lib/react-query/hooks'
-import { pageTitle } from '@/lib/utils/page-title'
 import { canAccessSiteSettings } from '@/lib/console-rbac-loader'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/sites/$siteId/settings',
 )({
-  head: ({ loaderData }) => ({
-    meta: [
-      {
-        title: pageTitle(
-          loaderData?.site?.name ?? loaderData?.site?.resourceId ?? 'Site',
-          'Sites',
-        ),
-      },
-    ],
-  }),
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return
 

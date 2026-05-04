@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import { getRouteApi } from '@tanstack/react-router'
 import { toast } from 'sonner'
-import { cn } from '@/lib/utils'
+import { cn, truncateMiddle } from '@/lib/utils'
 import {
   Activity,
   Plus,
@@ -59,6 +59,9 @@ import { UserTypeAvatar } from '@/components/pages/projects/$projectId/activity/
 
 const activityRouteApi = getRouteApi('/_public/projects/$projectId/activity')
 
+/** Max characters for resource id/name in the table before middle ellipsis. */
+const ACTIVITY_RESOURCE_DISPLAY_MAX = 40
+
 // Action types and their visual representation
 type ActionType =
   | 'create'
@@ -84,7 +87,7 @@ const actionIcons: Record<ActionType, React.ReactNode> = {
 const actionColors: Record<ActionType, string> = {
   create: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
   update: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
-  delete: 'bg-muted text-muted-foreground',
+  delete: 'bg-red-500/10 text-red-600 dark:text-red-400',
   execute: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
   upload: 'bg-violet-500/10 text-violet-600 dark:text-violet-400',
   login: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400',
@@ -670,6 +673,19 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
                 <TableBody>
                   {filteredRawEvents.map((rawEvent) => {
                     const activity = toDisplayActivity(rawEvent)
+                    const resourcePrimary =
+                      activity.resourceId?.trim() ||
+                      activity.resourceName ||
+                      '—'
+                    const resourceDisplay = truncateMiddle(
+                      resourcePrimary,
+                      ACTIVITY_RESOURCE_DISPLAY_MAX,
+                    )
+                    const resourceTitle =
+                      resourcePrimary !== '—' &&
+                      resourcePrimary.length > ACTIVITY_RESOURCE_DISPLAY_MAX
+                        ? resourcePrimary
+                        : undefined
                     return (
                     <TableRow
                       key={activity.$id}
@@ -716,10 +732,11 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
                             {resourceIcons[activity.resourceType]}
                           </div>
                           <div className="min-w-0 flex flex-col gap-1">
-                            <p className="break-words text-[13px] font-medium leading-snug text-foreground">
-                              {activity.resourceId?.trim() ||
-                                activity.resourceName ||
-                                '—'}
+                            <p
+                              className="min-w-0 max-w-full overflow-hidden whitespace-nowrap text-[13px] font-medium leading-snug text-foreground"
+                              title={resourceTitle}
+                            >
+                              {resourceDisplay}
                             </p>
                             <p className="text-[11px] capitalize text-muted-foreground">
                               {activity.resourceType}
@@ -793,7 +810,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
                 totalKnown={false}
                 hasNextPage={hasMore}
                 pageSize={pageSize}
-                pageSizeOptions={[10, 25, 50, 100]}
+                pageSizeOptions={[10, 25, 50, 100, 150]}
                 onPageChange={handlePageChange}
                 onPageSizeChange={(size) => {
                   setPageSize(size)

@@ -6,22 +6,11 @@ import {
   projectQueryOptions,
   projectVariablesQueryOptions,
 } from '@/lib/react-query/hooks'
-import { pageTitle } from '@/lib/utils/page-title'
 import { canAccessSiteSettings } from '@/lib/console-rbac-loader'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/sites/$siteId/variables',
 )({
-  head: ({ loaderData }) => ({
-    meta: [
-      {
-        title: pageTitle(
-          loaderData?.site?.name ?? loaderData?.site?.resourceId ?? 'Site',
-          'Sites',
-        ),
-      },
-    ],
-  }),
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return
 
@@ -37,17 +26,12 @@ export const Route = createFileRoute(
       })
     }
 
-    const site = await queryClient.ensureQueryData(
-      siteQueryOptions(projectId, siteId),
-    )
-
     await Promise.all([
+      queryClient.ensureQueryData(siteQueryOptions(projectId, siteId)),
       queryClient.ensureQueryData(projectQueryOptions(projectId)),
       queryClient.ensureQueryData(projectVariablesQueryOptions(projectId)),
       queryClient.ensureQueryData(siteVariablesQueryOptions(projectId, siteId)),
     ])
-
-    return { site }
   },
   component: SiteVariablesPage,
 })

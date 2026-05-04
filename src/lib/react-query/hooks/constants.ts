@@ -57,7 +57,7 @@ export const COLUMNS_INDEXES_DEFAULT_PAGE_SIZE = 100
 /**
  * Default page size for activity logs (larger for log-style lists)
  */
-export const ACTIVITY_DEFAULT_PAGE_SIZE = 25
+export const ACTIVITY_DEFAULT_PAGE_SIZE = 150
 
 /**
  * Default page size for proxy/domains lists (sites and functions domains tabs).

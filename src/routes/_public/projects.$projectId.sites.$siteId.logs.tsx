@@ -6,7 +6,6 @@ import {
   siteLogsQueryOptions,
   projectQueryOptions,
 } from '@/lib/react-query/hooks'
-import { pageTitle } from '@/lib/utils/page-title'
 import { listSearchSchema } from '@/lib/table-filters'
 
 const LOGS_PER_PAGE = 25
@@ -18,16 +17,6 @@ const searchSchema = listSearchSchema.extend({
 export const Route = createFileRoute(
   '/_public/projects/$projectId/sites/$siteId/logs',
 )({
-  head: ({ loaderData }) => ({
-    meta: [
-      {
-        title: pageTitle(
-          loaderData?.site?.name ?? loaderData?.site?.resourceId ?? 'Site',
-          'Sites',
-        ),
-      },
-    ],
-  }),
   validateSearch: searchSchema,
   loader: async ({ params, context, location }) => {
     // Only run on client side (SDK requires browser environment)

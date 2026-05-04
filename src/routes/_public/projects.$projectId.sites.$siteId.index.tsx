@@ -9,7 +9,6 @@ import {
   DEFAULT_PAGE_SIZE,
 } from '@/lib/react-query/hooks'
 import { Query } from '@appwrite.io/console'
-import { pageTitle } from '@/lib/utils/page-title'
 import { listSearchSchema } from '@/lib/table-filters'
 
 const DEPLOYMENTS_SELECT = [
@@ -36,16 +35,6 @@ const DEPLOYMENTS_SELECT = [
 export const Route = createFileRoute(
   '/_public/projects/$projectId/sites/$siteId/',
 )({
-  head: ({ loaderData }) => ({
-    meta: [
-      {
-        title: pageTitle(
-          loaderData?.site?.name ?? loaderData?.site?.resourceId ?? 'Site',
-          'Sites',
-        ),
-      },
-    ],
-  }),
   validateSearch: listSearchSchema,
   loader: async ({ params, context, location }) => {
     // Only run on client side (SDK requires browser environment)
