@@ -207,9 +207,16 @@ return function (Container $container): void {
             $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
             if (\in_array($dsn->getHost(), $sharedTables)) {
+                /** @var array $collections */
+                $collections = Config::getParam('collections', []);
+                $projectCollections = $collections['projects'] ?? [];
+                $projectsGlobalCollections = array_keys($projectCollections);
+                $projectsGlobalCollections[] = 'audit';
+
                 $database
                     ->setSharedTables(true)
                     ->setTenant($project->getSequence())
+                    ->setGlobalCollections($projectsGlobalCollections)
                     ->setNamespace($dsn->getParam('namespace'));
             } else {
                 $database
@@ -226,6 +233,11 @@ return function (Container $container): void {
         $adapter = null;
 
         return function (?Document $project = null) use ($pools, $cache, $authorization, &$adapter) {
+            /** @var array $collections */
+            $collections = Config::getParam('collections', []);
+            $logsCollections = $collections['logs'] ?? [];
+            $logsCollections = array_keys($logsCollections);
+
             $adapter ??= new DatabasePool($pools->get('logs'));
             $database = new Database($adapter, $cache);
 
@@ -233,6 +245,7 @@ return function (Container $container): void {
                 ->setDatabase(APP_DATABASE)
                 ->setAuthorization($authorization)
                 ->setSharedTables(true)
+                ->setGlobalCollections($logsCollections)
                 ->setNamespace('logsV1')
                 ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_API)
                 ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
@@ -693,8 +706,15 @@ return function (Container $container): void {
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
         if (\in_array($dsn->getHost(), $sharedTables)) {
+            /** @var array $collections */
+            $collections = Config::getParam('collections', []);
+            $projectCollections = $collections['projects'] ?? [];
+            $projectsGlobalCollections = array_keys($projectCollections);
+            $projectsGlobalCollections[] = 'audit';
+
             $database
                 ->setSharedTables(true)
+                ->setGlobalCollections($projectsGlobalCollections)
                 ->setTenant($project->getSequence())
                 ->setNamespace($dsn->getParam('namespace'));
         } else {
@@ -1295,6 +1315,12 @@ return function (Container $container): void {
             $database = new Database($adapter, $cache);
             $sharedTables = \array_filter(\explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', '')));
 
+            /** @var array $collections */
+            $collections = Config::getParam('collections', []);
+            $projectCollections = $collections['projects'] ?? [];
+            $projectsGlobalCollections = array_keys($projectCollections);
+            $projectsGlobalCollections[] = 'audit';
+
             $database
                 ->setDatabase(APP_DATABASE)
                 ->setAuthorization($authorization)
@@ -1317,6 +1343,7 @@ return function (Container $container): void {
                 if (\in_array($databaseHost, $dbTypeSharedTables)) {
                     $database
                         ->setSharedTables(true)
+                        ->setGlobalCollections($projectsGlobalCollections)
                         ->setTenant($project->getSequence())
                         ->setNamespace($databaseDSN->getParam('namespace'));
                 } else {
@@ -1328,6 +1355,7 @@ return function (Container $container): void {
             } elseif (\in_array($dsn->getHost(), $sharedTables)) {
                 $database
                     ->setSharedTables(true)
+                    ->setGlobalCollections($projectsGlobalCollections)
                     ->setTenant($project->getSequence())
                     ->setNamespace($dsn->getParam('namespace'));
             } else {

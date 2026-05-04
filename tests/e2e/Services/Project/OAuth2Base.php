@@ -478,9 +478,8 @@ trait OAuth2Base
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertSame('apple', $response['body']['$id']);
         $this->assertSame('ip.appwrite.app.web', $response['body']['serviceId']);
-        // keyId / teamId / p8File are write-only — PATCH response must not echo them back.
-        $this->assertSame('', $response['body']['keyId']);
-        $this->assertSame('', $response['body']['teamId']);
+        $this->assertSame('P4000000N8', $response['body']['keyId']);
+        $this->assertSame('D4000000R6', $response['body']['teamId']);
         $this->assertSame('', $response['body']['p8File']);
         $this->assertSame(false, $response['body']['enabled']);
 
@@ -511,12 +510,10 @@ trait OAuth2Base
         ]);
 
         $this->assertSame(200, $response['headers']['status-code']);
-        // serviceId is the (non-secret) clientId; keyId/teamId are write-only
-        // and must not surface in the response. Persistence of the merged
-        // values is verified separately via the enable-after-merge tests.
         $this->assertSame('ip.appwrite.app.seed', $response['body']['serviceId']);
-        $this->assertSame('', $response['body']['keyId']);
-        $this->assertSame('', $response['body']['teamId']);
+        $this->assertSame('KEYUPDATED', $response['body']['keyId']);
+        $this->assertSame('TEAMSEED01', $response['body']['teamId']);
+        $this->assertSame('', $response['body']['p8File']);
 
         // Cleanup
         $this->updateOAuth2('apple', [
@@ -546,9 +543,9 @@ trait OAuth2Base
             'teamId' => 'TEAMROTATED',
         ]);
         $this->assertSame(200, $teamOnly['headers']['status-code']);
-        // teamId is write-only; verify only the non-secret serviceId echo.
-        // The actual merge is validated by the enable-after-merge call below.
-        $this->assertSame('', $teamOnly['body']['teamId']);
+        $this->assertSame('TEAMROTATED', $teamOnly['body']['teamId']);
+        $this->assertSame('KEYMERGE01', $teamOnly['body']['keyId']);
+        $this->assertSame('', $teamOnly['body']['p8File']);
         $this->assertSame('ip.appwrite.app.merge', $teamOnly['body']['serviceId']);
 
         // Patch only `serviceId` — keyId/teamId/p8File live in the JSON blob
@@ -669,9 +666,8 @@ trait OAuth2Base
 
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertSame('ip.appwrite.app.read', $response['body']['serviceId']);
-        // All three secret-bearing fields must be hidden on read.
-        $this->assertSame('', $response['body']['keyId']);
-        $this->assertSame('', $response['body']['teamId']);
+        $this->assertSame('KEYREAD', $response['body']['keyId']);
+        $this->assertSame('TEAMREAD', $response['body']['teamId']);
         $this->assertSame('', $response['body']['p8File']);
 
         // Cleanup
@@ -699,13 +695,13 @@ trait OAuth2Base
         $this->assertSame(200, $update['headers']['status-code']);
         $this->assertTrue($update['body']['enabled']);
 
-        // GET must hide all three secret-bearing fields while keeping serviceId.
+        // GET must hide p8File while keeping the non-secret fields.
         $get = $this->getOAuth2Provider('apple');
         $this->assertSame(200, $get['headers']['status-code']);
         $this->assertTrue($get['body']['enabled']);
         $this->assertSame('ip.appwrite.app.enable', $get['body']['serviceId']);
-        $this->assertSame('', $get['body']['keyId']);
-        $this->assertSame('', $get['body']['teamId']);
+        $this->assertSame('ENABLEKEY', $get['body']['keyId']);
+        $this->assertSame('ENABLETEAM', $get['body']['teamId']);
         $this->assertSame('', $get['body']['p8File']);
 
         // Cleanup
@@ -876,30 +872,36 @@ trait OAuth2Base
     }
 
     // =========================================================================
-    // Update Authentik (clientId + clientSecret + REQUIRED endpoint)
+    // Update Authentik (clientId + clientSecret + optional endpoint)
     // =========================================================================
 
-    public function testUpdateOAuth2AuthentikRequiresEndpoint(): void
+    public function testUpdateOAuth2AuthentikAllowsOmittedEndpointWhenDisabled(): void
     {
-        // The `endpoint` param is required (Text(min=1)); omitting → 400.
         $response = $this->updateOAuth2('authentik', [
             'clientId' => 'whatever',
             'clientSecret' => 'whatever',
+            'enabled' => false,
         ]);
 
-        $this->assertSame(400, $response['headers']['status-code']);
-        $this->assertSame('general_argument_invalid', $response['body']['type']);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame('authentik', $response['body']['$id']);
+
+        // Cleanup
+        $this->updateOAuth2('authentik', [
+            'clientId' => '',
+            'clientSecret' => '',
+            'endpoint' => '',
+            'enabled' => false,
+        ]);
     }
 
-    public function testUpdateOAuth2AuthentikEmptyEndpointRejected(): void
+    public function testUpdateOAuth2AuthentikEmptyEndpointRejectedWhenEnabling(): void
     {
-        // The `endpoint` validator is Text(min=1). Sending `''` must be
-        // rejected the same way as omitting — the validator should treat the
-        // empty-string degenerate case as a missing required field.
         $response = $this->updateOAuth2('authentik', [
             'clientId' => 'whatever',
             'clientSecret' => 'whatever',
             'endpoint' => '',
+            'enabled' => true,
         ]);
 
         $this->assertSame(400, $response['headers']['status-code']);
@@ -924,15 +926,14 @@ trait OAuth2Base
         $this->updateOAuth2('authentik', [
             'clientId' => '',
             'clientSecret' => '',
-            'endpoint' => 'cleanup.authentik.com',
+            'endpoint' => '',
             'enabled' => false,
         ]);
     }
 
     public function testUpdateOAuth2AuthentikPartialPreservesSecret(): void
     {
-        // Authentik's `endpoint` is required on every call, so we always
-        // re-send it. The `clientSecret` lives in the JSON blob and must
+        // The `clientSecret` and `endpoint` live in the JSON blob and must
         // survive when omitted on a subsequent call that only changes clientId.
         $this->updateOAuth2('authentik', [
             'clientId' => 'authentik-merge-client',
@@ -943,27 +944,24 @@ trait OAuth2Base
 
         $response = $this->updateOAuth2('authentik', [
             'clientId' => 'authentik-rotated-client',
-            'endpoint' => 'merge.authentik.com',
         ]);
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertSame('authentik-rotated-client', $response['body']['clientId']);
         $this->assertSame('merge.authentik.com', $response['body']['endpoint']);
 
         // Confirm clientSecret survived the omitted-field merge by enabling
-        // — Authentik has no verifyCredentials() hook, so non-empty stored
-        // secret is enough. `endpoint` must be re-sent (required on enable too).
+        // without re-sending endpoint.
         $enable = $this->updateOAuth2('authentik', [
-            'endpoint' => 'merge.authentik.com',
             'enabled' => true,
         ]);
         $this->assertSame(200, $enable['headers']['status-code']);
         $this->assertTrue($enable['body']['enabled']);
 
-        // Cleanup — endpoint is required, use a placeholder.
+        // Cleanup
         $this->updateOAuth2('authentik', [
             'clientId' => '',
             'clientSecret' => '',
-            'endpoint' => 'cleanup.authentik.com',
+            'endpoint' => '',
             'enabled' => false,
         ]);
     }
@@ -988,40 +986,46 @@ trait OAuth2Base
         $this->assertSame('enable.authentik.com', $get['body']['endpoint']);
         $this->assertSame('', $get['body']['clientSecret']);
 
-        // Cleanup — endpoint is required (Text(min=1)) so use a placeholder.
+        // Cleanup
         $this->updateOAuth2('authentik', [
             'clientId' => '',
             'clientSecret' => '',
-            'endpoint' => 'cleanup.authentik.com',
+            'endpoint' => '',
             'enabled' => false,
         ]);
     }
 
     // =========================================================================
-    // Update FusionAuth (clientId + clientSecret + REQUIRED endpoint)
+    // Update FusionAuth (clientId + clientSecret + optional endpoint)
     // =========================================================================
 
-    public function testUpdateOAuth2FusionAuthRequiresEndpoint(): void
+    public function testUpdateOAuth2FusionAuthAllowsOmittedEndpointWhenDisabled(): void
     {
-        // The `endpoint` param is required (Text(min=1)); omitting → 400.
         $response = $this->updateOAuth2('fusionauth', [
             'clientId' => 'whatever',
             'clientSecret' => 'whatever',
+            'enabled' => false,
         ]);
 
-        $this->assertSame(400, $response['headers']['status-code']);
-        $this->assertSame('general_argument_invalid', $response['body']['type']);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame('fusionauth', $response['body']['$id']);
+
+        // Cleanup
+        $this->updateOAuth2('fusionauth', [
+            'clientId' => '',
+            'clientSecret' => '',
+            'endpoint' => '',
+            'enabled' => false,
+        ]);
     }
 
-    public function testUpdateOAuth2FusionAuthEmptyEndpointRejected(): void
+    public function testUpdateOAuth2FusionAuthEmptyEndpointRejectedWhenEnabling(): void
     {
-        // The `endpoint` validator is Text(min=1). Sending `''` must be
-        // rejected the same way as omitting — the validator should treat the
-        // empty-string degenerate case as a missing required field.
         $response = $this->updateOAuth2('fusionauth', [
             'clientId' => 'whatever',
             'clientSecret' => 'whatever',
             'endpoint' => '',
+            'enabled' => true,
         ]);
 
         $this->assertSame(400, $response['headers']['status-code']);
@@ -1046,15 +1050,14 @@ trait OAuth2Base
         $this->updateOAuth2('fusionauth', [
             'clientId' => '',
             'clientSecret' => '',
-            'endpoint' => 'cleanup.fusionauth.io',
+            'endpoint' => '',
             'enabled' => false,
         ]);
     }
 
     public function testUpdateOAuth2FusionAuthPartialPreservesSecret(): void
     {
-        // FusionAuth's `endpoint` is required on every call, so we always
-        // re-send it. The `clientSecret` lives in the JSON blob and must
+        // The `clientSecret` and `endpoint` live in the JSON blob and must
         // survive when omitted on a subsequent call that only changes clientId.
         $this->updateOAuth2('fusionauth', [
             'clientId' => 'fusionauth-merge-client',
@@ -1065,27 +1068,24 @@ trait OAuth2Base
 
         $response = $this->updateOAuth2('fusionauth', [
             'clientId' => 'fusionauth-rotated-client',
-            'endpoint' => 'merge.fusionauth.io',
         ]);
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertSame('fusionauth-rotated-client', $response['body']['clientId']);
         $this->assertSame('merge.fusionauth.io', $response['body']['endpoint']);
 
         // Confirm clientSecret survived the omitted-field merge by enabling
-        // — FusionAuth has no verifyCredentials() hook, so non-empty stored
-        // secret is enough. `endpoint` must be re-sent (required on enable too).
+        // without re-sending endpoint.
         $enable = $this->updateOAuth2('fusionauth', [
-            'endpoint' => 'merge.fusionauth.io',
             'enabled' => true,
         ]);
         $this->assertSame(200, $enable['headers']['status-code']);
         $this->assertTrue($enable['body']['enabled']);
 
-        // Cleanup — endpoint is required, use a placeholder.
+        // Cleanup
         $this->updateOAuth2('fusionauth', [
             'clientId' => '',
             'clientSecret' => '',
-            'endpoint' => 'cleanup.fusionauth.io',
+            'endpoint' => '',
             'enabled' => false,
         ]);
     }
@@ -1110,70 +1110,85 @@ trait OAuth2Base
         $this->assertSame('enable.fusionauth.io', $get['body']['endpoint']);
         $this->assertSame('', $get['body']['clientSecret']);
 
-        // Cleanup — endpoint is required (Text(min=1)) so use a placeholder.
+        // Cleanup
         $this->updateOAuth2('fusionauth', [
             'clientId' => '',
             'clientSecret' => '',
-            'endpoint' => 'cleanup.fusionauth.io',
+            'endpoint' => '',
             'enabled' => false,
         ]);
     }
 
     // =========================================================================
-    // Update Keycloak (clientId + clientSecret + REQUIRED endpoint + REQUIRED realmName)
+    // Update Keycloak (clientId + clientSecret + optional endpoint + optional realmName)
     // =========================================================================
 
-    public function testUpdateOAuth2KeycloakRequiresEndpoint(): void
+    public function testUpdateOAuth2KeycloakAllowsOmittedEndpointWhenDisabled(): void
     {
-        // The `endpoint` param is required (Text(min=1)); omitting → 400.
         $response = $this->updateOAuth2('keycloak', [
             'clientId' => 'whatever',
             'clientSecret' => 'whatever',
             'realmName' => 'appwrite-realm',
+            'enabled' => false,
         ]);
 
-        $this->assertSame(400, $response['headers']['status-code']);
-        $this->assertSame('general_argument_invalid', $response['body']['type']);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame('keycloak', $response['body']['$id']);
+
+        // Cleanup
+        $this->updateOAuth2('keycloak', [
+            'clientId' => '',
+            'clientSecret' => '',
+            'endpoint' => '',
+            'realmName' => '',
+            'enabled' => false,
+        ]);
     }
 
-    public function testUpdateOAuth2KeycloakEmptyEndpointRejected(): void
+    public function testUpdateOAuth2KeycloakEmptyEndpointRejectedWhenEnabling(): void
     {
-        // The `endpoint` validator is Text(min=1). Sending `''` must be
-        // rejected the same way as omitting — the validator should treat the
-        // empty-string degenerate case as a missing required field.
         $response = $this->updateOAuth2('keycloak', [
             'clientId' => 'whatever',
             'clientSecret' => 'whatever',
             'endpoint' => '',
             'realmName' => 'appwrite-realm',
+            'enabled' => true,
         ]);
 
         $this->assertSame(400, $response['headers']['status-code']);
         $this->assertSame('general_argument_invalid', $response['body']['type']);
     }
 
-    public function testUpdateOAuth2KeycloakRequiresRealmName(): void
+    public function testUpdateOAuth2KeycloakAllowsOmittedRealmNameWhenDisabled(): void
     {
-        // The `realmName` param is required (Text(min=1)); omitting → 400.
         $response = $this->updateOAuth2('keycloak', [
             'clientId' => 'whatever',
             'clientSecret' => 'whatever',
             'endpoint' => 'keycloak.example.com',
+            'enabled' => false,
         ]);
 
-        $this->assertSame(400, $response['headers']['status-code']);
-        $this->assertSame('general_argument_invalid', $response['body']['type']);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame('keycloak', $response['body']['$id']);
+
+        // Cleanup
+        $this->updateOAuth2('keycloak', [
+            'clientId' => '',
+            'clientSecret' => '',
+            'endpoint' => '',
+            'realmName' => '',
+            'enabled' => false,
+        ]);
     }
 
-    public function testUpdateOAuth2KeycloakEmptyRealmNameRejected(): void
+    public function testUpdateOAuth2KeycloakEmptyRealmNameRejectedWhenEnabling(): void
     {
-        // The `realmName` validator is Text(min=1). Sending `''` must be
-        // rejected the same way as omitting.
         $response = $this->updateOAuth2('keycloak', [
             'clientId' => 'whatever',
             'clientSecret' => 'whatever',
             'endpoint' => 'keycloak.example.com',
             'realmName' => '',
+            'enabled' => true,
         ]);
 
         $this->assertSame(400, $response['headers']['status-code']);
@@ -1200,16 +1215,15 @@ trait OAuth2Base
         $this->updateOAuth2('keycloak', [
             'clientId' => '',
             'clientSecret' => '',
-            'endpoint' => 'cleanup.keycloak.com',
-            'realmName' => 'cleanup-realm',
+            'endpoint' => '',
+            'realmName' => '',
             'enabled' => false,
         ]);
     }
 
     public function testUpdateOAuth2KeycloakPartialPreservesSecret(): void
     {
-        // Keycloak's `endpoint` and `realmName` are required on every call,
-        // so we always re-send them. The `clientSecret` lives in the JSON
+        // The `clientSecret`, `endpoint`, and `realmName` live in the JSON
         // blob and must survive when omitted on a subsequent call that only
         // changes clientId.
         $this->updateOAuth2('keycloak', [
@@ -1222,8 +1236,6 @@ trait OAuth2Base
 
         $response = $this->updateOAuth2('keycloak', [
             'clientId' => 'keycloak-rotated-client',
-            'endpoint' => 'merge.keycloak.com',
-            'realmName' => 'merge-realm',
         ]);
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertSame('keycloak-rotated-client', $response['body']['clientId']);
@@ -1231,23 +1243,19 @@ trait OAuth2Base
         $this->assertSame('merge-realm', $response['body']['realmName']);
 
         // Confirm clientSecret survived the omitted-field merge by enabling
-        // — Keycloak has no verifyCredentials() hook, so non-empty stored
-        // secret is enough. `endpoint`/`realmName` must be re-sent (required
-        // on enable too).
+        // without re-sending endpoint or realmName.
         $enable = $this->updateOAuth2('keycloak', [
-            'endpoint' => 'merge.keycloak.com',
-            'realmName' => 'merge-realm',
             'enabled' => true,
         ]);
         $this->assertSame(200, $enable['headers']['status-code']);
         $this->assertTrue($enable['body']['enabled']);
 
-        // Cleanup — endpoint and realmName are required, use placeholders.
+        // Cleanup
         $this->updateOAuth2('keycloak', [
             'clientId' => '',
             'clientSecret' => '',
-            'endpoint' => 'cleanup.keycloak.com',
-            'realmName' => 'cleanup-realm',
+            'endpoint' => '',
+            'realmName' => '',
             'enabled' => false,
         ]);
     }
@@ -1274,40 +1282,47 @@ trait OAuth2Base
         $this->assertSame('enable-realm', $get['body']['realmName']);
         $this->assertSame('', $get['body']['clientSecret']);
 
-        // Cleanup — endpoint and realmName are required (Text(min=1)) so use placeholders.
+        // Cleanup
         $this->updateOAuth2('keycloak', [
             'clientId' => '',
             'clientSecret' => '',
-            'endpoint' => 'cleanup.keycloak.com',
-            'realmName' => 'cleanup-realm',
+            'endpoint' => '',
+            'realmName' => '',
             'enabled' => false,
         ]);
     }
 
     // =========================================================================
-    // Update Microsoft (applicationId + applicationSecret + REQUIRED tenant)
+    // Update Microsoft (applicationId + applicationSecret + optional tenant)
     // =========================================================================
 
-    public function testUpdateOAuth2MicrosoftRequiresTenant(): void
+    public function testUpdateOAuth2MicrosoftAllowsOmittedTenantWhenDisabled(): void
     {
         $response = $this->updateOAuth2('microsoft', [
             'applicationId' => 'whatever',
             'applicationSecret' => 'whatever',
+            'enabled' => false,
         ]);
 
-        $this->assertSame(400, $response['headers']['status-code']);
-        $this->assertSame('general_argument_invalid', $response['body']['type']);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame('microsoft', $response['body']['$id']);
+
+        // Cleanup
+        $this->updateOAuth2('microsoft', [
+            'applicationId' => '',
+            'applicationSecret' => '',
+            'tenant' => '',
+            'enabled' => false,
+        ]);
     }
 
-    public function testUpdateOAuth2MicrosoftEmptyTenantRejected(): void
+    public function testUpdateOAuth2MicrosoftEmptyTenantRejectedWhenEnabling(): void
     {
-        // The `tenant` validator is Text(min=1). Sending `''` must be rejected
-        // the same way as omitting — the validator should treat the empty
-        // string as a missing required field.
         $response = $this->updateOAuth2('microsoft', [
             'applicationId' => 'whatever',
             'applicationSecret' => 'whatever',
             'tenant' => '',
+            'enabled' => true,
         ]);
 
         $this->assertSame(400, $response['headers']['status-code']);
@@ -1335,7 +1350,7 @@ trait OAuth2Base
         $this->updateOAuth2('microsoft', [
             'applicationId' => '',
             'applicationSecret' => '',
-            'tenant' => 'common',
+            'tenant' => '',
             'enabled' => false,
         ]);
     }
@@ -1350,23 +1365,21 @@ trait OAuth2Base
             'enabled' => false,
         ]);
 
-        // Patch with only `tenant` (it's required on every call) and a new
-        // applicationId, leaving applicationSecret omitted. The stored secret
-        // must not be wiped.
+        // Patch with only a new applicationId, leaving applicationSecret and
+        // tenant omitted. The stored JSON values must not be wiped.
         $response = $this->updateOAuth2('microsoft', [
             'applicationId' => 'updated-app-id',
-            'tenant' => 'organizations',
         ]);
 
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertSame('updated-app-id', $response['body']['applicationId']);
-        $this->assertSame('organizations', $response['body']['tenant']);
+        $this->assertSame('common', $response['body']['tenant']);
 
         // Cleanup
         $this->updateOAuth2('microsoft', [
             'applicationId' => '',
             'applicationSecret' => '',
-            'tenant' => 'common',
+            'tenant' => '',
             'enabled' => false,
         ]);
     }
@@ -1391,11 +1404,11 @@ trait OAuth2Base
         $this->assertSame('common', $get['body']['tenant']);
         $this->assertSame('', $get['body']['applicationSecret']);
 
-        // Cleanup — tenant is required (Text(min=1)) so use a placeholder.
+        // Cleanup
         $this->updateOAuth2('microsoft', [
             'applicationId' => '',
             'applicationSecret' => '',
-            'tenant' => 'common',
+            'tenant' => '',
             'enabled' => false,
         ]);
     }
@@ -2405,8 +2418,9 @@ trait OAuth2Base
     //
     // Ensures each provider's Update endpoint is wired up correctly: routing,
     // provider class, response model and `$id`. Custom-shaped providers
-    // (apple, auth0, authentik, gitlab, microsoft, oidc, okta, dropbox) and
-    // sandboxes (paypalSandbox, tradeshiftSandbox) have dedicated tests above.
+    // (apple, auth0, authentik, fusionauth, gitlab, keycloak, microsoft, oidc,
+    // okta, dropbox) and sandboxes (paypalSandbox, tradeshiftSandbox) have
+    // dedicated tests above.
     // Github is excluded because its `verifyCredentials()` hook is exercised
     // separately.
     // =========================================================================
