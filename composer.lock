@@ -3502,16 +3502,16 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "2.2.1",
+            "version": "2.2.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "e3e2d6ad5c7f6377d9237df296a12eb7943892fd"
+                "reference": "90886c202e7983999e6b6a8201004d5ab61d4b57"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/e3e2d6ad5c7f6377d9237df296a12eb7943892fd",
-                "reference": "e3e2d6ad5c7f6377d9237df296a12eb7943892fd",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/90886c202e7983999e6b6a8201004d5ab61d4b57",
+                "reference": "90886c202e7983999e6b6a8201004d5ab61d4b57",
                 "shasum": ""
             },
             "require": {
@@ -3545,9 +3545,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/audit/issues",
-                "source": "https://github.com/utopia-php/audit/tree/2.2.1"
+                "source": "https://github.com/utopia-php/audit/tree/2.2.2"
             },
-            "time": "2026-02-02T10:39:25+00:00"
+            "time": "2026-05-04T06:48:58+00:00"
         },
         {
             "name": "utopia-php/auth",
@@ -8444,7 +8444,7 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": [],
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
@@ -8465,5 +8465,5 @@
     "platform-dev": {
         "ext-fileinfo": "*"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.9.0"
 }
