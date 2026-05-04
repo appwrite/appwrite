@@ -386,14 +386,6 @@ export function BuildLogsView({
               lineRefs.current.delete(originalLineNumber)
             }
           }}
-          onClick={
-            isClickable
-              ? (e) => {
-                  e.preventDefault()
-                  onLineClick(originalLineNumber, e)
-                }
-              : undefined
-          }
           onMouseLeave={
             showLineActions
               ? () => {
@@ -404,8 +396,6 @@ export function BuildLogsView({
               : undefined
           }
           className={`grid min-w-0 items-stretch gap-4 group transition-colors ${rowPadding} ${
-            isClickable ? 'cursor-pointer' : ''
-          } ${
             isSelected
               ? 'bg-yellow-100/50 dark:bg-yellow-900/20'
               : showHover
@@ -413,20 +403,27 @@ export function BuildLogsView({
                 : ''
           }`}
           style={gridStyle}
-          title={
-            isClickable
-              ? `Toggle line ${originalLineNumber} (Shift-click adds a range)`
-              : highlightLineOnHover
-                ? `Line ${originalLineNumber}`
-                : undefined
-          }
+          title={highlightLineOnHover ? `Line ${originalLineNumber}` : undefined}
         >
           <div
+            onClick={
+              isClickable
+                ? (e) => {
+                    e.preventDefault()
+                    onLineClick(originalLineNumber, e)
+                  }
+                : undefined
+            }
             className={`flex select-none items-start justify-end border-r border-border/50 pr-2 font-mono tabular-nums transition-colors ${fontSizeClass} ${
               isSelected
                 ? 'text-yellow-600 dark:text-yellow-400 font-semibold'
                 : 'text-muted-foreground'
-            }`}
+            } ${isClickable ? 'cursor-pointer' : ''}`}
+            title={
+              isClickable
+                ? `Toggle line ${originalLineNumber} (Shift-click adds a range)`
+                : undefined
+            }
           >
             {originalLineNumber}
           </div>
@@ -523,7 +520,7 @@ export function BuildLogsView({
 
   return (
     <div
-      className={cn('min-h-full min-w-0', className, onLineClick && 'select-none')}
+      className={cn('min-h-full min-w-0', className)}
     >
       <div
         className={`${fontSizeClass} font-mono text-foreground flex min-w-0 max-w-full flex-col overflow-x-auto break-all`}
