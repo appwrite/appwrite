@@ -15,6 +15,8 @@ class Dispatcher
     public const PAYLOAD_SHAPE_OBJECT = 'object';
     public const PAYLOAD_SHAPE_LIST = 'list';
 
+    private const REQUIRED_PARAM_ERROR_FORMAT = 'Payload is not valid. %s is required';
+
     /**
      * @var array<string, Action>
      */
@@ -68,7 +70,8 @@ class Dispatcher
         }
 
         $shape = $labels[self::LABEL_PAYLOAD_SHAPE] ?? self::PAYLOAD_SHAPE_OBJECT;
-        $data = $message['data'] ?? [];
+        $dataPresent = \array_key_exists('data', $message);
+        $data = $dataPresent ? $message['data'] : null;
 
         $args = $this->resolveArgs($handler, $data, $shape, $container);
 
@@ -78,18 +81,24 @@ class Dispatcher
     /**
      * Resolves the ordered argument list for the handler callback by walking the action's
      * declared option sequence. Params come from the inbound `data` (for object shape) or
-     * the entire data list (for list shape). Injections come from the per-message container.
+     * the entire data value (for list shape). Injections come from the per-message container.
      *
      * @return array<int, mixed>
      */
-    private function resolveArgs(Action $handler, mixed $data, string $shape, Container $container): array
-    {
+    private function resolveArgs(
+        Action $handler,
+        mixed $data,
+        string $shape,
+        Container $container,
+    ): array {
         $values = [];
-
+        $dataPresent = $data !== null;
         foreach ($handler->getParams() as $key => $param) {
             if ($shape === self::PAYLOAD_SHAPE_LIST) {
-                $present = true;
-                $value = $data;
+                // The whole `data` field is the value of this single param. `present` reflects
+                // whether the inbound message actually contained the `data` key.
+                $present = $dataPresent;
+                $value = $dataPresent ? $data : $param['default'];
             } else {
                 $present = \is_array($data) && \array_key_exists($key, $data);
                 $value = $present ? $data[$key] : $param['default'];
@@ -98,7 +107,7 @@ class Dispatcher
             if (!$present && !$param['optional']) {
                 throw new Exception(
                     Exception::REALTIME_MESSAGE_FORMAT_INVALID,
-                    \sprintf('%s is required.', $key)
+                    \sprintf(self::REQUIRED_PARAM_ERROR_FORMAT, $key),
                 );
             }
 

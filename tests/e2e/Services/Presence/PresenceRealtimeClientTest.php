@@ -382,7 +382,7 @@ class PresenceRealtimeClientTest extends Scope
                 ],
             ]));
             $missingStatus = $this->receiveErrorMessage($client);
-            $this->assertStringContainsString('status is required', $missingStatus['data']['message'] ?? '');
+            $this->assertStringContainsString('Payload is not valid. status is required', $missingStatus['data']['message'] ?? '');
             $this->assertQuietFor(
                 $client,
                 fn (array $frame): bool => ($frame['type'] ?? null) === 'event'

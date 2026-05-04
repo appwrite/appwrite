@@ -24,7 +24,7 @@ class AuthenticationHandler extends Action
         $this
             ->desc('Authenticate the connection with a session token')
             ->label(Dispatcher::LABEL_MESSAGE_TYPE, 'authentication')
-            ->param('session', '', new Text(2048), 'Encoded session token', true)
+            ->param('session', '', new Text(2048), 'Encoded session token')
             ->inject('connection')
             ->inject('realtime')
             ->inject('database')
@@ -44,10 +44,6 @@ class AuthenticationHandler extends Action
         Registry $register,
         Response $response,
     ): array {
-        if ($session === '') {
-            throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Payload is not valid.');
-        }
-
         $store = new Store();
         $store->decode($session);
 

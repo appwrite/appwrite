@@ -1132,6 +1132,13 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
     Span::add('realtime.connectionId', $connection);
     Span::add('realtime.inboundBytes', $rawSize);
     Span::add('realtime.containerId', $containerId);
+    // Defaults so an exception thrown mid-handler still leaves these attrs on the span.
+    // Handlers (Subscribe/Unsubscribe/Authentication) override with real values via Span::add
+    // when their work succeeds.
+    Span::add('realtime.subscriptionDelta', 0);
+    Span::add('realtime.subscriptionsRequested', 0);
+    Span::add('realtime.subscriptionsRemoved', 0);
+    Span::add('realtime.subscribe.subscriptionsCount', 0);
 
     try {
         $response = new Response(new SwooleResponse());
