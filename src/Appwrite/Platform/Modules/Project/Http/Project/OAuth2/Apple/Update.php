@@ -146,13 +146,14 @@ class Update extends Base
     {
         $providerId = static::getProviderId();
         $oAuthProviders = $project->getAttribute('oAuthProviders', []);
+        $storedSecret = $this->decodeStoredSecret($project);
 
         return new Document([
             '$id' => $providerId,
             'enabled' => $oAuthProviders[$providerId . 'Enabled'] ?? false,
             static::getClientIdParamName() => $oAuthProviders[$providerId . 'Appid'] ?? '',
-            'keyId' => '',
-            'teamId' => '',
+            'keyId' => $storedSecret['keyID'] ?? '',
+            'teamId' => $storedSecret['teamID'] ?? '',
             'p8File' => '',
         ]);
     }
