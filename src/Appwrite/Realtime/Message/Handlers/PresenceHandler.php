@@ -7,6 +7,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Realtime\Message\Dispatcher;
 use Appwrite\Utopia\Database\Documents\User;
+use Closure;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
@@ -34,11 +35,15 @@ class PresenceHandler extends Action
             ->inject('authorization')
             ->inject('presenceState')
             ->inject('project')
+            ->inject('triggerPresenceUsage')
+            ->inject('triggerPresenceEvent')
             ->callback($this->action(...));
     }
 
     /**
      * @param array<int, string>|null $permissions
+     * @param Closure(int, string): void $triggerPresenceUsage
+     * @param Closure(Server, Realtime, ?Document, User, string, Document): void $triggerPresenceEvent
      * @return array<string, mixed>
      */
     public function action(
@@ -53,6 +58,8 @@ class PresenceHandler extends Action
         Authorization $authorization,
         PresenceState $presenceState,
         ?Document $project,
+        Closure $triggerPresenceUsage,
+        Closure $triggerPresenceEvent,
     ): array {
         $userId = $realtime->connections[$connection]['userId'] ?? '';
         if (empty($userId)) {
@@ -83,9 +90,9 @@ class PresenceHandler extends Action
             $presenceDocument,
             $presenceId,
             (string) $user->getSequence(),
-            function () use ($project): void {
+            function () use ($project, $triggerPresenceUsage): void {
                 if ($project !== null && !$project->isEmpty()) {
-                    \triggerPresenceUsage(1, $project->getId());
+                    $triggerPresenceUsage(1, $project->getId());
                 }
             },
         );
@@ -97,7 +104,7 @@ class PresenceHandler extends Action
             [$presence->getId()],
         );
 
-        \triggerPresenceEvent($server, $realtime, $project, $user, 'presences.[presenceId].upsert', $presence);
+        $triggerPresenceEvent($server, $realtime, $project, $user, 'presences.[presenceId].upsert', $presence);
 
         return [
             'type' => 'response',

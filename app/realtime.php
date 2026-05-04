@@ -1224,6 +1224,11 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
         $messageContainer->set('authorization', fn () => $authorization);
         $messageContainer->set('project', fn () => $project);
         $messageContainer->set('projectId', fn () => $projectId);
+        // Wrap the global helpers as first-class callables so handlers receive them via
+        // injection rather than reaching into the global namespace. Keeps PresenceHandler
+        // unit-testable without bootstrapping app/realtime.php.
+        $messageContainer->set('triggerPresenceUsage', fn () => triggerPresenceUsage(...));
+        $messageContainer->set('triggerPresenceEvent', fn () => triggerPresenceEvent(...));
 
         $responsePayload = $messageDispatcher->dispatch($messageContainer, $message);
 
