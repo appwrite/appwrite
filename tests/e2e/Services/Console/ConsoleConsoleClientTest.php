@@ -101,7 +101,7 @@ class ConsoleConsoleClientTest extends Scope
         $this->assertCount(2, $github['parameters']);
         $clientId = $github['parameters'][0];
         $this->assertEquals('clientId', $clientId['$id']);
-        $this->assertEquals('OAuth 2 app Client ID, or App ID', $clientId['name']);
+        $this->assertEquals('OAuth2 app Client ID, or App ID', $clientId['name']);
         $this->assertEquals('e4d87900000000540733', $clientId['example']);
         $this->assertEquals('Example of wrong value: 370006', $clientId['hint']);
         $clientSecret = $github['parameters'][1];
