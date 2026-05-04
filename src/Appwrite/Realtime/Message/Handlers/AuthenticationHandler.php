@@ -24,7 +24,7 @@ class AuthenticationHandler extends Action
         $this
             ->desc('Authenticate the connection with a session token')
             ->label(Dispatcher::LABEL_MESSAGE_TYPE, 'authentication')
-            ->param('session', '', new Text(2048), 'Encoded session token', optional: true)
+            ->param('session', '', new Text(2048), 'Encoded session token', true)
             ->inject('connection')
             ->inject('realtime')
             ->inject('database')

@@ -1118,8 +1118,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
     }
 });
 
-$server->onMessage(function (int $connection, string $message) use ($server, $realtime, $containerId, $register, $presenceState, $messageDispatcher) {
-    global $container;
+$server->onMessage(function (int $connection, string $message) use ($container, $server, $realtime, $containerId, $register, $presenceState, $messageDispatcher) {
     $project = null;
     $authorization = null;
     $projectId = $realtime->connections[$connection]['projectId'] ?? null;
@@ -1219,7 +1218,24 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         $messageContainer->set('project', fn () => $project);
         $messageContainer->set('projectId', fn () => $projectId);
 
-        $messageDispatcher->dispatch($messageContainer, $message, $outboundBytes);
+        $responsePayload = $messageDispatcher->dispatch($messageContainer, $message);
+
+        if ($responsePayload !== null) {
+            $responseJson = json_encode($responsePayload);
+            if ($responseJson === false) {
+                throw new \RuntimeException(
+                    'Failed to encode realtime response payload: ' . json_last_error_msg()
+                );
+            }
+
+            $server->send([$connection], $responseJson);
+            $bytes = \strlen($responseJson);
+            $outboundBytes += $bytes;
+
+            if ($project !== null && !$project->isEmpty()) {
+                triggerStats([METRIC_REALTIME_OUTBOUND => $bytes], $project->getId());
+            }
+        }
 
         $success = true;
     } catch (Throwable $th) {
