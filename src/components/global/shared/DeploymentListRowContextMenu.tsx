@@ -1,26 +1,23 @@
 import { useState } from 'react'
 import {
   Copy,
+  Download,
   ExternalLink,
+  FileCode,
   FileJson,
-  FolderGit,
-  Globe,
   LayoutList,
   Link2,
+  Package,
   Play,
   RefreshCw,
-  ScrollText,
-  Settings,
-  Shield,
   Square,
   Trash2,
-  Variable,
   XCircle,
 } from 'lucide-react'
 import { useNavigate } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import type { Models } from '@appwrite.io/console'
+import { DeploymentDownloadType, type Models } from '@appwrite.io/console'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -49,18 +46,14 @@ import {
 } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 import {
-  useProject,
-  useOrganizationScopes,
   deleteFunctionDeployment,
   deleteSiteDeployment,
   Dependencies,
 } from '@/lib/react-query/hooks'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
-  canShowFunctionSecuritySettings,
-  canShowSiteSettingsTab,
-} from '@/lib/console-access-checks'
-import { isDeploymentInProgress } from '@/lib/utils/deployment-status'
+  isDeploymentCompleted,
+  isDeploymentInProgress,
+} from '@/lib/utils/deployment-status'
 
 export type DeploymentListRowContextMenuDeployment = Pick<
   Models.Deployment,
@@ -91,15 +84,6 @@ export function DeploymentListRowContextMenu({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deletePending, setDeletePending] = useState(false)
 
-  const { project } = useProject(projectId)
-  const { features } = useConsoleProfile()
-  const { access } = useOrganizationScopes(project?.teamId)
-  const showFunctionSecuritySettings = canShowFunctionSecuritySettings(
-    access,
-    features,
-  )
-  const showSiteSettingsTab = canShowSiteSettingsTab(access, features)
-
   const deploymentPath =
     variant === 'function'
       ? `/projects/${projectId}/functions/${resourceId}/deployments/${deployment.$id}`
@@ -129,88 +113,6 @@ export function DeploymentListRowContextMenu({
     }
   }
 
-  const navigateParentTab = (tab: string) => {
-    if (variant === 'function') {
-      const params = { projectId, functionId: resourceId }
-      switch (tab) {
-        case 'deployments':
-          navigate({
-            to: '/projects/$projectId/functions/$functionId',
-            params,
-          })
-          break
-        case 'domains':
-          navigate({
-            to: '/projects/$projectId/functions/$functionId/domains',
-            params,
-          })
-          break
-        case 'executions':
-          navigate({
-            to: '/projects/$projectId/functions/$functionId/executions',
-            params,
-          })
-          break
-        case 'variables':
-          navigate({
-            to: '/projects/$projectId/functions/$functionId/variables',
-            params,
-          })
-          break
-        case 'security':
-          navigate({
-            to: '/projects/$projectId/functions/$functionId/security',
-            params,
-          })
-          break
-        case 'settings':
-          navigate({
-            to: '/projects/$projectId/functions/$functionId/settings',
-            params,
-          })
-          break
-        default:
-          break
-      }
-    } else {
-      const params = { projectId, siteId: resourceId }
-      switch (tab) {
-        case 'deployments':
-          navigate({
-            to: '/projects/$projectId/sites/$siteId',
-            params,
-          })
-          break
-        case 'domains':
-          navigate({
-            to: '/projects/$projectId/sites/$siteId/domains',
-            params,
-          })
-          break
-        case 'logs':
-          navigate({
-            to: '/projects/$projectId/sites/$siteId/logs',
-            params,
-          })
-          break
-        case 'variables':
-          navigate({
-            to: '/projects/$projectId/sites/$siteId/variables',
-            params,
-          })
-          break
-        case 'settings':
-          navigate({
-            to: '/projects/$projectId/sites/$siteId/settings',
-            params,
-          })
-          break
-        default:
-          break
-      }
-    }
-  }
-
   const jsonPayload = {
     $id: deployment.$id,
     status: deployment.status ?? null,
@@ -219,6 +121,7 @@ export function DeploymentListRowContextMenu({
   }
 
   const inProgress = isDeploymentInProgress(deployment.status)
+  const canDownloadBuild = isDeploymentCompleted(deployment.status)
   const canActivate = !isActive && deployment.status === 'ready'
   const showRedeploy =
     variant === 'site' ? true : !isActive
@@ -240,6 +143,53 @@ export function DeploymentListRowContextMenu({
     queryClient.invalidateQueries({
       queryKey: ['site', 'project', projectId, resourceId],
     })
+  }
+
+  const handleDownloadSource = () => {
+    try {
+      const projectSdk = sdk.forProject(projectId)
+      const url =
+        variant === 'function'
+          ? projectSdk.functions.getDeploymentDownload({
+              functionId: resourceId,
+              deploymentId: deployment.$id,
+              type: DeploymentDownloadType.Source,
+            })
+          : projectSdk.sites.getDeploymentDownload({
+              siteId: resourceId,
+              deploymentId: deployment.$id,
+              type: DeploymentDownloadType.Source,
+            })
+      const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
+      window.open(urlWithMode, '_blank')
+      toast.success('Download started')
+    } catch {
+      toast.error('Failed to download source code')
+    }
+  }
+
+  const handleDownloadBuild = () => {
+    if (!canDownloadBuild) return
+    try {
+      const projectSdk = sdk.forProject(projectId)
+      const url =
+        variant === 'function'
+          ? projectSdk.functions.getDeploymentDownload({
+              functionId: resourceId,
+              deploymentId: deployment.$id,
+              type: DeploymentDownloadType.Output,
+            })
+          : projectSdk.sites.getDeploymentDownload({
+              siteId: resourceId,
+              deploymentId: deployment.$id,
+              type: DeploymentDownloadType.Output,
+            })
+      const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
+      window.open(urlWithMode, '_blank')
+      toast.success('Download started')
+    } catch {
+      toast.error('Failed to download build output')
+    }
   }
 
   const handleConfirmDelete = async () => {
@@ -272,58 +222,31 @@ export function DeploymentListRowContextMenu({
             <ContextMenuIcon icon={LayoutList} />
             Overview
           </ContextMenuItem>
-          <ContextMenuItem onSelect={() => navigateParentTab('deployments')}>
-            <ContextMenuIcon icon={FolderGit} />
-            Deployments
-          </ContextMenuItem>
-          <ContextMenuItem onSelect={() => navigateParentTab('domains')}>
-            <ContextMenuIcon icon={Globe} />
-            Domains
-          </ContextMenuItem>
-          {variant === 'function' ? (
-            <ContextMenuItem onSelect={() => navigateParentTab('executions')}>
-              <ContextMenuIcon icon={Play} />
-              Executions
-            </ContextMenuItem>
-          ) : (
-            <ContextMenuItem onSelect={() => navigateParentTab('logs')}>
-              <ContextMenuIcon icon={ScrollText} />
-              Logs
-            </ContextMenuItem>
-          )}
-          {variant === 'function' && showFunctionSecuritySettings && (
-            <>
-              <ContextMenuItem
-                onSelect={() => navigateParentTab('variables')}
-              >
-                <ContextMenuIcon icon={Variable} />
-                Variables
-              </ContextMenuItem>
-              <ContextMenuItem onSelect={() => navigateParentTab('security')}>
-                <ContextMenuIcon icon={Shield} />
-                Security
-              </ContextMenuItem>
-              <ContextMenuItem onSelect={() => navigateParentTab('settings')}>
-                <ContextMenuIcon icon={Settings} />
-                Settings
-              </ContextMenuItem>
-            </>
-          )}
-          {variant === 'site' && showSiteSettingsTab && (
-            <>
-              <ContextMenuItem
-                onSelect={() => navigateParentTab('variables')}
-              >
-                <ContextMenuIcon icon={Variable} />
-                Variables
-              </ContextMenuItem>
-              <ContextMenuItem onSelect={() => navigateParentTab('settings')}>
-                <ContextMenuIcon icon={Settings} />
-                Settings
-              </ContextMenuItem>
-            </>
-          )}
           <ContextMenuSeparator />
+          <ContextMenuSub>
+            <ContextMenuSubTrigger>
+              <ContextMenuIcon icon={Download} />
+              Download
+            </ContextMenuSubTrigger>
+            <ContextMenuSubContent>
+              <ContextMenuItem onSelect={handleDownloadSource}>
+                <ContextMenuIcon icon={FileCode} />
+                Source code
+              </ContextMenuItem>
+              <ContextMenuItem
+                disabled={!canDownloadBuild}
+                title={
+                  !canDownloadBuild
+                    ? 'Build output is available after the deployment has completed.'
+                    : undefined
+                }
+                onSelect={handleDownloadBuild}
+              >
+                <ContextMenuIcon icon={Package} />
+                Build output
+              </ContextMenuItem>
+            </ContextMenuSubContent>
+          </ContextMenuSub>
           <ContextMenuSub>
             <ContextMenuSubTrigger>
               <ContextMenuIcon icon={Copy} />

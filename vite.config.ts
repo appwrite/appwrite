@@ -66,13 +66,26 @@ const config = defineConfig({
     hmr: true,
   },
   resolve: {
-    dedupe: ['react', 'react-dom'],
+    dedupe: ['react', 'react-dom', 'use-sync-external-store'],
   },
   optimizeDeps: {
     // Recharts uses decimal.js (via victory-vendor/d3-scale) for tick calculations.
     // Force ESM interop so `new Decimal()` works when pre-bundled.
-    needsInterop: ['decimal.js', 'decimal.js-light'],
-    include: ['decimal.js', 'decimal.js-light'],
+    needsInterop: [
+      'decimal.js',
+      'decimal.js-light',
+      // CJS entry re-exports `useSyncExternalStoreWithSelector`; pre-bundle so named ESM imports work
+      // (@tanstack/react-store, recharts).
+      'use-sync-external-store/shim/with-selector.js',
+    ],
+    include: [
+      'decimal.js',
+      'decimal.js-light',
+      '@tanstack/react-store',
+      'recharts',
+      'use-sync-external-store',
+      'use-sync-external-store/shim/with-selector.js',
+    ],
   },
   preview: {
     port: 4173,

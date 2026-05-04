@@ -2,6 +2,10 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/auth/View'
 import { pageTitle } from '@/lib/utils/page-title'
 import { canAccessAuthSecuritySettings } from '@/lib/console-rbac-loader'
+import {
+  consoleOAuth2CatalogQueryOptions,
+  projectOAuth2ProvidersQueryOptions,
+} from '@/lib/react-query/hooks/oauth2-providers'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/auth/settings',
@@ -23,6 +27,11 @@ export const Route = createFileRoute(
         replace: true,
       })
     }
+
+    await Promise.all([
+      queryClient.ensureQueryData(consoleOAuth2CatalogQueryOptions()),
+      queryClient.ensureQueryData(projectOAuth2ProvidersQueryOptions(projectId)),
+    ])
   },
   component: AuthSettingsPage,
 })

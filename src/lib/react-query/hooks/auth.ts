@@ -1,7 +1,7 @@
 /**
  * React Query hooks for Auth Security Features
  *
- * Handles auth limits, sessions, passwords, OAuth providers, and MFA.
+ * Handles auth limits, sessions, passwords, and MFA.
  */
 
 import { useCallback } from 'react'
@@ -393,46 +393,6 @@ export function useUpdateAuthMethod(projectId: string | null | undefined) {
       return await sdk.forProject(projectId).project.updateAuthMethod({
         methodId: method as MethodId,
         enabled: status,
-      })
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['project', projectId],
-      })
-    },
-  })
-}
-
-/**
- * Hook to update OAuth2 provider configuration
- *
- * @param projectId - The project ID
- */
-export function useUpdateOAuth2Provider(projectId: string | null | undefined) {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async ({
-      provider,
-      appId,
-      secret,
-      enabled,
-    }: {
-      provider: string
-      appId?: string
-      secret?: string
-      enabled?: boolean
-    }) => {
-      if (!projectId) {
-        throw new Error('Project ID is required')
-      }
-
-      return await sdk.forConsole.projects.updateOAuth2({
-        projectId,
-        provider: provider as unknown,
-        appId,
-        secret,
-        enabled,
       })
     },
     onSuccess: () => {

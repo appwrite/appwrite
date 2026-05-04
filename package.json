@@ -22,7 +22,7 @@
     "check": "tsc --noEmit"
   },
   "dependencies": {
-    "@appwrite.io/console": "https://pkg.vc/-/@appwrite/@appwrite.io/console@22b4fec",
+    "@appwrite.io/console": "https://pkg.vc/-/@appwrite/@appwrite.io/console@bdee97f",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
@@ -98,6 +98,9 @@
     "vaul": "^1.1.2",
     "vite-tsconfig-paths": "^5.1.4",
     "zod": "^4.1.11"
+  },
+  "overrides": {
+    "use-sync-external-store": "^1.6.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",

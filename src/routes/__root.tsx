@@ -7,6 +7,7 @@ import {
 import appCss from '../styles.css?url'
 
 import type { QueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { Toaster } from '@/components/ui/sonner'
 import { ThemeProvider, useTheme } from 'next-themes'
@@ -28,6 +29,7 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { getStatusBannerParts } from '@/lib/cloud-status-copy'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { useAppwriteCloudStatus } from '@/lib/react-query/hooks'
+import { consoleProjectScopesQueryOptions } from '@/lib/react-query/hooks/console-project-scopes'
 import { DynamicFavicon } from '@/components/global/shared/DynamicFavicon'
 import { UploadWarning } from '@/components/global/providers/UploadWarning'
 import { GlobalUploadProgress } from '@/components/global/shared/GlobalUploadProgress'
@@ -223,6 +225,7 @@ function isProjectRoute(pathname: string) {
 const STATUS_PAGE_URL = 'https://status.appwrite.online'
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  const queryClient = useQueryClient()
   const { isLoading, isAuthRoute } = useInitialLoader()
   const [clientMounted, setClientMounted] = useState(false)
   const location = useLocation()
@@ -234,6 +237,13 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setClientMounted(true)
   }, [])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    void queryClient
+      .prefetchQuery(consoleProjectScopesQueryOptions())
+      .catch(() => {})
+  }, [queryClient])
 
   const isLoaderVisible = isLoading || showFullscreenLoader
 

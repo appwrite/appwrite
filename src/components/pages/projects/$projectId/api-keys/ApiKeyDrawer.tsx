@@ -6,10 +6,7 @@ import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
-import {
-  ScopeEditor,
-  getAllAvailableScopes,
-} from '@/components/global/shared/ScopeEditor'
+import { ScopeEditor } from '@/components/global/shared/ScopeEditor'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
@@ -139,10 +136,10 @@ export function ApiKeyDrawer({
       setErrors({})
       setExpiryOption(getExpiryOptionFromDate(existingExpire))
     } else {
-      // Create mode: select all scopes by default
+      // Create mode: no scopes selected by default
       setName('')
       setExpire('')
-      setScopes(getAllAvailableScopes())
+      setScopes([])
       setErrors({})
       setExpiryOption('never')
     }
