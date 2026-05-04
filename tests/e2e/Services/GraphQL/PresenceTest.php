@@ -22,7 +22,7 @@ class PresenceTest extends Scope
         $payload = [
             'query' => <<<'GQL'
                 mutation upsertPresence($presenceId: String!, $userId: String!, $status: String!, $metadata: Json) {
-                    presencesUpsert(presenceId: $presenceId, userId: $userId, status: $status, metadata: $metadata) {
+                    presencesUpsertPresence(presenceId: $presenceId, userId: $userId, status: $status, metadata: $metadata) {
                         _id
                         userId
                         status
@@ -45,9 +45,8 @@ class PresenceTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apiKey,
         ], $payload);
-
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('online', $response['body']['data']['presencesUpsert']['status']);
-        $this->assertEquals('graphql', $response['body']['data']['presencesUpsert']['source']);
+        $this->assertEquals('online', $response['body']['data']['presencesUpsertPresence']['status']);
+        $this->assertEquals('graphql', $response['body']['data']['presencesUpsertPresence']['source']);
     }
 }
