@@ -8,6 +8,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use Appwrite\Vcs\Comment;
 use Appwrite\Vcs\Validator\BuildTrigger;
+use Appwrite\Vcs\Validator\CommitSkipPatterns;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -96,7 +97,7 @@ trait Deployment
                 $resource = $authorization->skip(fn () => $dbForProject->getDocument($resourceCollection, $resourceId));
                 $resourceInternalId = $resource->getSequence();
 
-                if (!$this->isResourceBuildable($resource, $providerBranch, $providerAffectedFiles, $logBase)) {
+                if (!$this->isResourceBuildable($resource, $providerBranch, $providerAffectedFiles, $logBase, $providerCommitMessage)) {
                     Span::add("{$logBase}.build.skipped", 'true');
                     continue;
                 }
@@ -568,7 +569,7 @@ trait Deployment
         return System::getEnv('_APP_BUILDS_QUEUE_NAME', Event::BUILDS_QUEUE_NAME);
     }
 
-    private function isResourceBuildable(Document $resource, string $providerBranch, array $providerAffectedFiles, string $logBase): bool
+    private function isResourceBuildable(Document $resource, string $providerBranch, array $providerAffectedFiles, string $logBase, string $providerCommitMessage = ''): bool
     {
         $branchTrigger = new BuildTrigger($resource->getAttribute('providerBranches', []));
         if (!$branchTrigger->isValid($providerBranch)) {
@@ -590,6 +591,12 @@ trait Deployment
                 Span::add("{$logBase}.build.skipped.reason", 'path');
                 return false;
             }
+        }
+
+        $commitSkip = new CommitSkipPatterns($resource->getAttribute('providerCommitSkipPatterns', []));
+        if (!$commitSkip->isValid($providerCommitMessage)) {
+            Span::add("{$logBase}.build.skipped.reason", 'commitMessage');
+            return false;
         }
 
         return true;
