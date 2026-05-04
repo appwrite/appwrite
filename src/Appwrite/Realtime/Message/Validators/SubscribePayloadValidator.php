@@ -6,11 +6,9 @@ use Utopia\Validator;
 
 class SubscribePayloadValidator extends Validator
 {
-    private string $message = 'Payload is not valid.';
-
     public function getDescription(): string
     {
-        return $this->message;
+        return 'Payload is not valid.';
     }
 
     public function isArray(): bool
@@ -25,32 +23,32 @@ class SubscribePayloadValidator extends Validator
 
     public function isValid(mixed $value): bool
     {
+        return $this->getValidationError($value) === null;
+    }
+
+    public function getValidationError(mixed $value): ?string
+    {
         if (!\is_array($value) || !\array_is_list($value)) {
-            $this->message = 'Payload is not valid.';
-            return false;
+            return 'Payload is not valid.';
         }
 
         foreach ($value as $payload) {
             if (!\is_array($payload)) {
-                $this->message = 'Each subscribe payload must be an object.';
-                return false;
+                return 'Each subscribe payload must be an object.';
             }
             if (!\array_key_exists('channels', $payload)) {
-                $this->message = 'channels is not present in payload.';
-                return false;
+                return 'channels is not present in payload.';
             }
             if (!\is_array($payload['channels']) || !\array_is_list($payload['channels'])) {
-                $this->message = 'channels is not a valid array.';
-                return false;
+                return 'channels is not a valid array.';
             }
             if (\array_key_exists('queries', $payload)
                 && (!\is_array($payload['queries']) || !\array_is_list($payload['queries']))
             ) {
-                $this->message = 'queries is not a valid array.';
-                return false;
+                return 'queries is not a valid array.';
             }
         }
 
-        return true;
+        return null;
     }
 }

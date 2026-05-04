@@ -117,9 +117,17 @@ class Dispatcher
                     $validator = $validator();
                 }
                 if (!$validator->isValid($value)) {
+                    // taking the error directly instead of the message attribute from the validator
+                    // to avoid the race condition between coroutines modifying each others static attributes
+                    // as the validator is a static class
+                    $description = $validator->getDescription();
+                    if (\is_callable([$validator, 'getValidationError'])) {
+                        $description = $validator->getValidationError($value) ?? $description;
+                    }
+
                     throw new Exception(
                         Exception::REALTIME_MESSAGE_FORMAT_INVALID,
-                        \sprintf('%s: %s', $key, $validator->getDescription())
+                        \sprintf('%s: %s', $key, $description)
                     );
                 }
             }
