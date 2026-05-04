@@ -455,7 +455,7 @@ export function BuildLogsView({
                 <Button
                   type="button"
                   variant="ghost"
-                  className="h-5 w-5 min-h-0 shrink-0 p-0 text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                  className="h-5 w-5 min-h-0 shrink-0 p-0 text-muted-foreground hover:bg-muted/60 hover:text-foreground focus-visible:ring-inset"
                   aria-label={`Copy line ${originalLineNumber}`}
                   title="Copy line"
                   onClick={async (e) => {
