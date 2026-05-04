@@ -1,0 +1,141 @@
+<?php
+
+namespace Tests\Unit\Vcs\Validator;
+
+use Appwrite\Vcs\Validator\CommitSkipPatterns;
+use PHPUnit\Framework\TestCase;
+
+class CommitSkipPatternsTest extends TestCase
+{
+    // -------------------------------------------------------------------------
+    // Empty patterns — never skip
+    // -------------------------------------------------------------------------
+
+    public function testEmptyPatternsNeverSkip(): void
+    {
+        $validator = new CommitSkipPatterns([]);
+        $this->assertTrue($validator->isValid('fix: update readme'));
+        $this->assertTrue($validator->isValid('[skip deploy] docs only'));
+        $this->assertTrue($validator->isValid(''));
+    }
+
+    // -------------------------------------------------------------------------
+    // Single pattern — exact substring
+    // -------------------------------------------------------------------------
+
+    public function testSinglePatternMatchSkips(): void
+    {
+        $validator = new CommitSkipPatterns(['[skip deploy]']);
+        $this->assertFalse($validator->isValid('[skip deploy] docs only'));
+        $this->assertFalse($validator->isValid('chore: update deps [skip deploy]'));
+        $this->assertFalse($validator->isValid('prefix [skip deploy] suffix'));
+    }
+
+    public function testSinglePatternNoMatchProceeds(): void
+    {
+        $validator = new CommitSkipPatterns(['[skip deploy]']);
+        $this->assertTrue($validator->isValid('fix: real bug fix'));
+        $this->assertTrue($validator->isValid('feat: add new feature'));
+        $this->assertTrue($validator->isValid('skip deploy without brackets'));
+    }
+
+    // -------------------------------------------------------------------------
+    // Case insensitivity
+    // -------------------------------------------------------------------------
+
+    public function testCaseInsensitiveMatch(): void
+    {
+        $validator = new CommitSkipPatterns(['[skip deploy]']);
+        $this->assertFalse($validator->isValid('[SKIP DEPLOY] uppercase'));
+        $this->assertFalse($validator->isValid('[Skip Deploy] mixed case'));
+        $this->assertFalse($validator->isValid('[skip DEPLOY] partial upper'));
+    }
+
+    public function testPatternItselfCaseInsensitive(): void
+    {
+        $validator = new CommitSkipPatterns(['[SKIP DEPLOY]']);
+        $this->assertFalse($validator->isValid('[skip deploy] lowercase message'));
+        $this->assertFalse($validator->isValid('[Skip Deploy] mixed message'));
+    }
+
+    // -------------------------------------------------------------------------
+    // Array of patterns — any match skips (OR semantics)
+    // -------------------------------------------------------------------------
+
+    public function testMultiplePatternsFirstMatches(): void
+    {
+        $validator = new CommitSkipPatterns(['[skip deploy]', '[skip ci]', '[no deploy]']);
+        $this->assertFalse($validator->isValid('[skip deploy] docs only'));
+    }
+
+    public function testMultiplePatternsSecondMatches(): void
+    {
+        $validator = new CommitSkipPatterns(['[skip deploy]', '[skip ci]', '[no deploy]']);
+        $this->assertFalse($validator->isValid('chore: update readme [skip ci]'));
+    }
+
+    public function testMultiplePatternsThirdMatches(): void
+    {
+        $validator = new CommitSkipPatterns(['[skip deploy]', '[skip ci]', '[no deploy]']);
+        $this->assertFalse($validator->isValid('[no deploy] just docs'));
+    }
+
+    public function testMultiplePatternsNoneMatchProceeds(): void
+    {
+        $validator = new CommitSkipPatterns(['[skip deploy]', '[skip ci]', '[no deploy]']);
+        $this->assertTrue($validator->isValid('feat: completely new feature'));
+        $this->assertTrue($validator->isValid('fix: important bug fix'));
+    }
+
+    // -------------------------------------------------------------------------
+    // Common real-world skip conventions
+    // -------------------------------------------------------------------------
+
+    public function testCommonSkipCiPattern(): void
+    {
+        $validator = new CommitSkipPatterns(['[skip ci]']);
+        $this->assertFalse($validator->isValid('[skip ci] update changelog'));
+        $this->assertFalse($validator->isValid('[SKIP CI]'));
+        $this->assertTrue($validator->isValid('feat: something real'));
+    }
+
+    public function testNoDeployPattern(): void
+    {
+        $validator = new CommitSkipPatterns(['[no deploy]']);
+        $this->assertFalse($validator->isValid('[no deploy] tweak docs'));
+        $this->assertTrue($validator->isValid('deploy this please'));
+    }
+
+    // -------------------------------------------------------------------------
+    // Edge cases
+    // -------------------------------------------------------------------------
+
+    public function testEmptyCommitMessageNeverSkipsWithPatterns(): void
+    {
+        $validator = new CommitSkipPatterns(['[skip deploy]']);
+        $this->assertTrue($validator->isValid(''));
+    }
+
+    public function testBlankPatternsInArrayAreIgnored(): void
+    {
+        $validator = new CommitSkipPatterns(['', '  ', '[skip deploy]']);
+        // empty/whitespace-only patterns must not cause a false positive on empty messages
+        $this->assertTrue($validator->isValid('normal commit message'));
+        // but the real pattern still works
+        $this->assertFalse($validator->isValid('[skip deploy] docs'));
+    }
+
+    public function testPatternAsSubstringOfLongerWord(): void
+    {
+        // "skip" is a substring of "skippy" — should NOT accidentally skip
+        $validator = new CommitSkipPatterns(['[skip deploy]']);
+        $this->assertTrue($validator->isValid('skippy the kangaroo'));
+    }
+
+    public function testMultilineCommitMessage(): void
+    {
+        $validator = new CommitSkipPatterns(['[skip deploy]']);
+        $msg = "feat: add new stuff\n\nMore detail here.\n\n[skip deploy]";
+        $this->assertFalse($validator->isValid($msg));
+    }
+}
