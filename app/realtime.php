@@ -1119,6 +1119,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 });
 
 $server->onMessage(function (int $connection, string $message) use ($server, $realtime, $containerId, $register, $presenceState, $messageDispatcher) {
+    global $container;
     $project = null;
     $authorization = null;
     $projectId = $realtime->connections[$connection]['projectId'] ?? null;
@@ -1183,6 +1184,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         }
 
         // Record realtime inbound bytes for this project
+        // not making this a part of the dispatcher as we need to get the inbound bytes as well even if we dont enter the dispatcher
         if ($project !== null && !$project->isEmpty()) {
             triggerStats([
                 METRIC_REALTIME_INBOUND => $rawSize,
@@ -1201,7 +1203,11 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
             throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Message type is not valid.');
         }
 
-        $messageContainer = new Container();
+        // Child of the global container: per-message values like $connection and $project
+        // live on this scope so concurrent message coroutines don't clobber each other,
+        // while globally-registered services (pools, queueForRealtime, ...) remain reachable
+        // via the parent.
+        $messageContainer = new Container($container);
         $messageContainer->set('connection', fn () => $connection);
         $messageContainer->set('server', fn () => $server);
         $messageContainer->set('realtime', fn () => $realtime);
