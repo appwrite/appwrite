@@ -544,18 +544,28 @@ trait Deployment
                 if ($e->getType() === Exception::PROJECT_NOT_FOUND) {
                     Console::warning("Skipping repository '{$repositoryId}': project '{$projectId}' not found");
                 } else {
-                    $errors[] = $e->getMessage();
+                    $errors[] = $e;
                 }
             } catch (\Throwable $e) {
                 Span::add("{$logBase}.error", $e->getMessage());
-                $errors[] = $e->getMessage();
+                $errors[] = $e;
             }
         }
 
         $queueForBuilds->reset(); // prevent shutdown hook from triggering again
 
         if (!empty($errors)) {
-            throw new Exception(Exception::GENERAL_UNKNOWN, \implode("\n", $errors));
+            foreach ($errors as $error) {
+                if ($error instanceof Exception && $error->getCode() >= 500) {
+                    throw $error;
+                }
+            }
+            foreach ($errors as $error) {
+                if ($error instanceof Exception && $error->getCode() >= 400) {
+                    throw $error;
+                }
+            }
+            throw new Exception(Exception::GENERAL_UNKNOWN);
         }
     }
 
