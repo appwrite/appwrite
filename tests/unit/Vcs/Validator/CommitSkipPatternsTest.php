@@ -20,7 +20,7 @@ class CommitSkipPatternsTest extends TestCase
     }
 
     // -------------------------------------------------------------------------
-    // Single pattern — exact substring
+    // Single pattern — directive match
     // -------------------------------------------------------------------------
 
     public function testSinglePatternMatchSkips(): void
@@ -37,6 +37,7 @@ class CommitSkipPatternsTest extends TestCase
         $this->assertTrue($validator->isValid('fix: real bug fix'));
         $this->assertTrue($validator->isValid('feat: add new feature'));
         $this->assertTrue($validator->isValid('skip deploy without brackets'));
+        $this->assertTrue($validator->isValid('prefix[skip deploy]suffix'));
     }
 
     // -------------------------------------------------------------------------
@@ -119,23 +120,35 @@ class CommitSkipPatternsTest extends TestCase
     public function testBlankPatternsInArrayAreIgnored(): void
     {
         $validator = new CommitSkipPatterns(['', '  ', '[skip deploy]']);
-        // empty/whitespace-only patterns must not cause a false positive on empty messages
         $this->assertTrue($validator->isValid('normal commit message'));
-        // but the real pattern still works
         $this->assertFalse($validator->isValid('[skip deploy] docs'));
     }
 
-    public function testPatternAsSubstringOfLongerWord(): void
+    public function testPatternMustBeStandaloneDirective(): void
     {
-        // "skip" is a substring of "skippy" — should NOT accidentally skip
         $validator = new CommitSkipPatterns(['[skip deploy]']);
         $this->assertTrue($validator->isValid('skippy the kangaroo'));
+        $this->assertTrue($validator->isValid('prefix[skip deploy]suffix'));
     }
 
     public function testMultilineCommitMessage(): void
     {
         $validator = new CommitSkipPatterns(['[skip deploy]']);
         $msg = "feat: add new stuff\n\nMore detail here.\n\n[skip deploy]";
+        $this->assertFalse($validator->isValid($msg));
+    }
+
+    public function testWhitespaceInsideDirectiveIsNormalized(): void
+    {
+        $validator = new CommitSkipPatterns([' [skip   deploy] ']);
+        $this->assertFalse($validator->isValid('[skip deploy] docs only'));
+        $this->assertFalse($validator->isValid('[SKIP   DEPLOY] docs only'));
+    }
+
+    public function testTrailerDirectiveCanSkip(): void
+    {
+        $validator = new CommitSkipPatterns(['skip-checks: true']);
+        $msg = "feat: add new stuff\n\nMore detail here.\n\nskip-checks:true";
         $this->assertFalse($validator->isValid($msg));
     }
 }
