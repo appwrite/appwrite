@@ -105,6 +105,26 @@ trait PresenceBase
         return $presence;
     }
 
+    protected function resolvePresenceForUser(string $userId, array $headers): array
+    {
+        $presence = $this->client->call(
+            Client::METHOD_GET,
+            '/presences',
+            $headers,
+            [
+                'queries' => [
+                    Query::equal('userId', [$userId])->toString(),
+                ],
+            ]
+        );
+
+        $this->assertEquals(200, $presence['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(1, $presence['body']['total'] ?? 0);
+        $this->assertNotEmpty($presence['body']['presences'][0] ?? []);
+
+        return $presence['body']['presences'][0];
+    }
+
     public function testUpsertAndGetPresence(): void
     {
         if ($this->getSide() === 'client') {
@@ -270,16 +290,12 @@ trait PresenceBase
         }
 
         $projectId = $this->getProject()['$id'];
-        $user1 = $this->getUser();
-        $headersUser1 = $this->getHeaders(false);
-
+        $user1 = $this->getUser(true);
         $user2 = $this->getUser(true);
-
-        // Avoid overwriting the cached user for the rest of the test run.
-        self::$user[$projectId] = $user1;
-
-        $headersUser2 = $this->getHeaders(false);
-        $headersUser2['cookie'] = 'a_session_' . $projectId . '=' . $user2['session'];
+        $headersUser2 = [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $user2['session'],
+        ];
 
         $permissionsForUser2 = [
             Permission::read(Role::user($user2['$id'])),
@@ -430,7 +446,14 @@ trait PresenceBase
             );
 
             $this->assertEquals(200, $upsert['headers']['status-code']);
-            $presenceId = $upsert['body']['$id'];
+            $presence = $this->resolvePresenceForUser(
+                $upsert['body']['userId'],
+                \array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], $this->getHeaders(false))
+            );
+            $presenceId = $presence['$id'];
 
             $update = $this->client->call(
                 Client::METHOD_PATCH,
@@ -498,7 +521,14 @@ trait PresenceBase
             );
 
             $this->assertEquals(200, $upsert['headers']['status-code']);
-            $presenceId = $upsert['body']['$id'];
+            $presence = $this->resolvePresenceForUser(
+                $upsert['body']['userId'],
+                \array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], $this->getHeaders(false))
+            );
+            $presenceId = $presence['$id'];
 
             $delete = $this->client->call(
                 Client::METHOD_DELETE,
@@ -547,11 +577,11 @@ trait PresenceBase
                 ]
             );
             $this->assertEquals(200, $upsert['headers']['status-code']);
-            $presence = $upsert['body'];
             $headers = \array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders(false));
+            $presence = $this->resolvePresenceForUser($upsert['body']['userId'], $headers);
         } else {
             $presence = $this->setupPresence([
                 'status' => 'cache-update-setup',
@@ -619,11 +649,11 @@ trait PresenceBase
                 ]
             );
             $this->assertEquals(200, $upsert['headers']['status-code']);
-            $presence = $upsert['body'];
             $headers = \array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders(false));
+            $presence = $this->resolvePresenceForUser($upsert['body']['userId'], $headers);
         } else {
             $presence = $this->setupPresence([
                 'status' => 'cache-purge-only-setup',
@@ -690,11 +720,11 @@ trait PresenceBase
                 ]
             );
             $this->assertEquals(200, $upsert['headers']['status-code']);
-            $presence = $upsert['body'];
             $headers = \array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders(false));
+            $presence = $this->resolvePresenceForUser($upsert['body']['userId'], $headers);
         } else {
             $presence = $this->setupPresence([
                 'status' => 'cache-delete-setup',

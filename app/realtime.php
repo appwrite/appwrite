@@ -404,15 +404,20 @@ $container->set('pools', function ($register) {
     return $register->get('pools');
 }, ['register']);
 
-$container->set('queueForEvents', function ($pools) {
-    return new QueueEvent(new BrokerPool(
-        publisher: $pools->get('publisher')
-    ));
-}, ['pools']);
+if (!$container->has('queueForEvents')) {
+    $container->set('queueForEvents', function ($pools) {
+        var_dump("ce");
+        return new QueueEvent(new BrokerPool(
+            publisher: $pools->get('publisher')
+        ));
+    }, ['pools']);
+}
 
-$container->set('queueForRealtime', function () {
-    return new QueueRealtime();
-}, []);
+if (!$container->has('queueForRealtime')) {
+    $container->set('queueForRealtime', function () {
+        return new QueueRealtime();
+    }, []);
+}
 
 $realtime = getRealtime();
 $presenceState = new PresenceState();
