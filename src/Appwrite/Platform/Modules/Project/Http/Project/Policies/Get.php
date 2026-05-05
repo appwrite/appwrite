@@ -27,7 +27,7 @@ class Get extends Action
             ->setHttpPath('/v1/project/policies/:policyId')
             ->desc('Get project policy')
             ->groups(['api', 'project'])
-            ->label('scope', 'policies.read')
+            ->label('scope', ['policies.read', 'project.policies.read'])
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'policies',

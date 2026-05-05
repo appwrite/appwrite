@@ -33,7 +33,7 @@ class XList extends Action
             ->setHttpPath('/v1/project/policies')
             ->desc('List project policies')
             ->groups(['api', 'project'])
-            ->label('scope', 'policies.read')
+            ->label('scope', ['policies.read', 'project.policies.read'])
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'policies',
