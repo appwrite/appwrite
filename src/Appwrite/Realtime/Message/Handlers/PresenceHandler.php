@@ -15,7 +15,6 @@ use Utopia\Platform\Action;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Text;
-use Utopia\WebSocket\Server;
 
 class PresenceHandler extends Action
 {
@@ -29,7 +28,6 @@ class PresenceHandler extends Action
             ->param('metadata', null, new JSON(), 'Optional metadata payload', true, [], true)
             ->param('permissions', null, new ArrayList(new Text(2048)), 'Optional permissions list', true)
             ->inject('connection')
-            ->inject('server')
             ->inject('realtime')
             ->inject('database')
             ->inject('authorization')
@@ -43,7 +41,7 @@ class PresenceHandler extends Action
     /**
      * @param array<int, string>|null $permissions
      * @param Closure(int, string): void $triggerPresenceUsage
-     * @param Closure(Server, Realtime, ?Document, User, string, Document): void $triggerPresenceEvent
+     * @param Closure(?Document, User, string, Document): void $triggerPresenceEvent
      * @return array<string, mixed>
      */
     public function action(
@@ -52,7 +50,6 @@ class PresenceHandler extends Action
         mixed $metadata,
         ?array $permissions,
         int $connection,
-        Server $server,
         Realtime $realtime,
         Database $database,
         Authorization $authorization,
@@ -104,7 +101,7 @@ class PresenceHandler extends Action
             [$presence->getId()],
         );
 
-        $triggerPresenceEvent($server, $realtime, $project, $user, 'presences.[presenceId].upsert', $presence);
+        $triggerPresenceEvent($project, $user, 'presences.[presenceId].upsert', $presence);
 
         return [
             'type' => 'response',
