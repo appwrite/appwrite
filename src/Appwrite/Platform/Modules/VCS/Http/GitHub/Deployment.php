@@ -539,6 +539,13 @@ trait Deployment
 
                 Span::add("{$logBase}.build.triggered", 'true');
                 //TODO: Add event?
+            } catch (Exception $e) {
+                Span::add("{$logBase}.error", $e->getMessage());
+                if ($e->getType() === Exception::PROJECT_NOT_FOUND) {
+                    Console::warning("Skipping repository '{$repositoryId}': project '{$projectId}' not found");
+                } else {
+                    $errors[] = $e->getMessage();
+                }
             } catch (\Throwable $e) {
                 Span::add("{$logBase}.error", $e->getMessage());
                 $errors[] = $e->getMessage();
