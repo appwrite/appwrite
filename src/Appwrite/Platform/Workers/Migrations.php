@@ -437,10 +437,7 @@ class Migrations extends Action
         $transfer = $source = $destination = null;
         $aggregatedResources = [];
 
-        $host = System::getEnv('_APP_MIGRATION_HOST');
-        if (empty($host)) {
-            throw new \Exception('_APP_MIGRATION_HOST is not set');
-        }
+        $host = System::getEnv('_APP_MIGRATION_HOST', 'appwrite');
 
         $endpoint = 'http://' . $host . '/v1';
 
