@@ -51,38 +51,49 @@ class Request extends UtopiaRequest
 
         if (!\is_array($methods)) {
             $id = $methods->getNamespace() . '.' . $methods->getMethodName();
+        } else {
+            $matched = null;
+            foreach ($methods as $method) {
+                /** @var Method|null $method */
+                if ($method === null) {
+                    continue;
+                }
+
+                // Find the method that matches the parameters passed
+                $methodParamNames = \array_map(fn ($param) => $param->getName(), $method->getParameters());
+                $invalidParams = \array_diff(\array_keys($parameters), $methodParamNames);
+
+                // No params defined, or all params are valid
+                if (empty($methodParamNames) || empty($invalidParams)) {
+                    $matched = $method;
+                    break;
+                }
+            }
+
+            $id = $matched !== null
+                ? $matched->getNamespace() . '.' . $matched->getMethodName()
+                : 'unknown.unknown';
+        }
+
+        try {
             foreach ($this->getFilters() as $filter) {
                 $parameters = $filter->parse($parameters, $id);
             }
-            $this->filteredParams = $parameters;
-            return $parameters;
-        }
-
-        $matched = null;
-        foreach ($methods as $method) {
-            /** @var Method|null $method */
-            if ($method === null) {
-                continue;
+        } catch (\Throwable $e) {
+            /*
+            * 4xx filter throws are user-input errors that the action layer
+            * revalidates and reports. Cache the raw, pre-filter parameters
+            * so a subsequent getParams() — e.g. when the framework builds
+            * arguments for an error hook — returns without re-running
+            * filters. Otherwise the second throw gets wrapped as
+            * "Error handler had an error: ..." (HTTP 500), masking the
+            * intended 400.
+            */
+            $code = $e->getCode();
+            if (\is_int($code) && $code >= 400 && $code < 500) {
+                $this->filteredParams = $parameters;
             }
-
-            // Find the method that matches the parameters passed
-            $methodParamNames = \array_map(fn ($param) => $param->getName(), $method->getParameters());
-            $invalidParams = \array_diff(\array_keys($parameters), $methodParamNames);
-
-            // No params defined, or all params are valid
-            if (empty($methodParamNames) || empty($invalidParams)) {
-                $matched = $method;
-                break;
-            }
-        }
-
-        $id = $matched !== null
-            ? $matched->getNamespace() . '.' . $matched->getMethodName()
-            : 'unknown.unknown';
-
-        // Apply filters
-        foreach ($this->getFilters() as $filter) {
-            $parameters = $filter->parse($parameters, $id);
+            throw $e;
         }
 
         $this->filteredParams = $parameters;
