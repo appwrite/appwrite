@@ -57,12 +57,12 @@ class Notifications extends Action
             ->inject('message')
             ->inject('project')
             ->inject('register')
-            ->inject('dbForProject')
+            ->inject('dbForPlatform')
             ->inject('log')
             ->callback($this->action(...));
     }
 
-    public function action(Message $message, Document $project, Registry $register, Database $dbForProject, Log $log): void
+    public function action(Message $message, Document $project, Registry $register, Database $dbForPlatform, Log $log): void
     {
         if (\class_exists(Runtime::class)) {
             Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
@@ -76,7 +76,7 @@ class Notifications extends Action
         $deduplicationKey = $payload['deduplicationKey'] ?? '';
         $messageId = $deduplicationKey !== '' ? \md5($deduplicationKey) : '';
 
-        if ($messageId !== '' && $this->alreadyDelivered($dbForProject, $messageId)) {
+        if ($messageId !== '' && $this->alreadyDelivered($dbForPlatform, $messageId)) {
             $log->addTag('dedup', 'hit');
             return;
         }
@@ -89,9 +89,9 @@ class Notifications extends Action
         foreach ($recipients as $recipient) {
             $channel = $recipient['channel'];
             try {
-                $alertId = $this->dispatch($recipient, $messageId, $payload, $project, $register, $dbForProject, $log);
+                $alertId = $this->dispatch($recipient, $messageId, $payload, $project, $register, $dbForPlatform, $log);
                 if ($messageId !== '' && $channel === NOTIFICATION_TYPE_WEBHOOK && $alertId === null) {
-                    $this->persistAlert($dbForProject, $messageId, $recipient, $payload);
+                    $this->persistAlert($dbForPlatform, $messageId, $recipient, $payload);
                 }
             } catch (Throwable $error) {
                 $log->addTag('channel', $channel);
@@ -126,10 +126,10 @@ class Notifications extends Action
      * compound `$id`s (messageId + recipient hash), so a direct
      * `getDocument($messageId)` would always miss. Query the attribute.
      */
-    private function alreadyDelivered(Database $database, string $messageId): bool
+    private function alreadyDelivered(Database $dbForPlatform, string $messageId): bool
     {
         try {
-            $matches = $database->find('alerts', [
+            $matches = $dbForPlatform->find('alerts', [
                 Query::equal('messageId', [$messageId]),
                 Query::limit(1),
             ]);
@@ -154,14 +154,14 @@ class Notifications extends Action
         array $payload,
         Document $project,
         Registry $register,
-        Database $database,
+        Database $dbForPlatform,
         Log $log,
     ): ?string {
         $channel = $recipient['channel'];
 
         return match ($channel) {
-            NOTIFICATION_TYPE_EMAIL => $this->dispatchEmail($recipient, $messageId, $payload, $project, $register, $database, $log),
-            NOTIFICATION_TYPE_CONSOLE => $this->dispatchConsole($recipient, $messageId, $payload, $database),
+            NOTIFICATION_TYPE_EMAIL => $this->dispatchEmail($recipient, $messageId, $payload, $project, $register, $dbForPlatform, $log),
+            NOTIFICATION_TYPE_CONSOLE => $this->dispatchConsole($recipient, $messageId, $payload, $dbForPlatform),
             NOTIFICATION_TYPE_WEBHOOK => $this->dispatchWebhook($recipient, $payload, $log),
             default => throw new Exception('Unsupported notification channel: ' . $channel),
         };
@@ -176,7 +176,7 @@ class Notifications extends Action
         array $payload,
         Document $project,
         Registry $register,
-        Database $database,
+        Database $dbForPlatform,
         Log $log,
     ): ?string {
         $address = $recipient['address'];
@@ -252,7 +252,7 @@ class Notifications extends Action
         // go out unsignals (we degrade gracefully).
         $alertId = null;
         if ($messageId !== '') {
-            $alertId = $this->persistAlert($database, $messageId, $recipient, $payload);
+            $alertId = $this->persistAlert($dbForPlatform, $messageId, $recipient, $payload);
         }
 
         // C3 tracking pixel: only injectable when we have a userId AND a
@@ -332,7 +332,7 @@ class Notifications extends Action
     /**
      * @param array{address: string, channel: string, signatureKey?: string, userId?: string, teamId?: string} $recipient
      */
-    protected function dispatchConsole(array $recipient, string $messageId, array $payload, Database $database): ?string
+    protected function dispatchConsole(array $recipient, string $messageId, array $payload, Database $dbForPlatform): ?string
     {
         $project = $payload['project'] ?? null;
         $projectId = \is_array($project) ? ($project['$id'] ?? null) : null;
@@ -368,7 +368,7 @@ class Notifications extends Action
             projectId: $projectId,
         );
 
-        $adapter = new ConsoleAdapter($database);
+        $adapter = new ConsoleAdapter($dbForPlatform);
         $result = $adapter->send($consoleMessage);
 
         // Greptile P1 #4: surface adapter failures. The Console adapter
@@ -434,7 +434,7 @@ class Notifications extends Action
      *
      * @param array{address: string, channel: string, signatureKey?: string, userId?: string, teamId?: string} $recipient
      */
-    protected function persistAlert(Database $database, string $messageId, array $recipient, array $payload): string
+    protected function persistAlert(Database $dbForPlatform, string $messageId, array $recipient, array $payload): string
     {
         $project = $payload['project'] ?? null;
         $projectId = \is_array($project) ? ($project['$id'] ?? null) : null;
@@ -473,10 +473,10 @@ class Notifications extends Action
         ]);
 
         try {
-            $database->createDocument('alerts', $document);
+            $dbForPlatform->createDocument('alerts', $document);
             return $alertId;
         } catch (DuplicateException) {
-            $existing = $database->getDocument('alerts', $alertId);
+            $existing = $dbForPlatform->getDocument('alerts', $alertId);
             return $existing->isEmpty() ? $alertId : $existing->getId();
         }
     }
