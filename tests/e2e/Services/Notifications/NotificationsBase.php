@@ -398,7 +398,7 @@ trait NotificationsBase
      * shared root user. Used to assert that strangers cannot mark someone
      * else's alert as read.
      *
-     * @return array{$id: string, email: string, session: string}
+     * @return array{'$id': string, email: string, session: string}
      */
     protected function createConsoleUser(): array
     {
