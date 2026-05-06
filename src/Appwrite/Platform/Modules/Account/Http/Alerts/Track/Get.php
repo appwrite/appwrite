@@ -2,15 +2,19 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Alerts\Track;
 
+use Ahc\Jwt\JWT;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\System\System;
 use Utopia\Validator\Text;
 
 class Get extends Action
@@ -48,6 +52,7 @@ class Get extends Action
             ->param('jwt', '', new Text(2048, 0), 'Tracking token.', true)
             ->inject('response')
             ->inject('dbForPlatform')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -56,9 +61,39 @@ class Get extends Action
         string $jwt,
         Response $response,
         Database $dbForPlatform,
+        Authorization $authorization,
     ): void {
-        // 1x1 transparent PNG. Wave 3 (ST14) will replace this body with
-        // JWT decode + read-flag flip; the skeleton always returns the pixel.
+        $secret = System::getEnv('_APP_OPENSSL_KEY_V1');
+
+        if ($secret !== '' && $jwt !== '') {
+            try {
+                $decoder = new JWT($secret, 'HS256', 2592000, 0);
+                $decoded = $decoder->decode($jwt);
+
+                if (
+                    isset($decoded['alertId'], $decoded['userId'])
+                    && $decoded['alertId'] === $alertId
+                ) {
+                    $authorization->skip(function () use ($dbForPlatform, $alertId, $decoded) {
+                        $alert = $dbForPlatform->getDocument('alerts', $alertId);
+
+                        if (
+                            !$alert->isEmpty()
+                            && $alert->getAttribute('userId') === $decoded['userId']
+                            && $alert->getAttribute('read') !== true
+                        ) {
+                            $dbForPlatform->updateDocument('alerts', $alertId, new Document([
+                                'read' => true,
+                            ]));
+                        }
+                    });
+                }
+            } catch (\Throwable) {
+                // Silent fail — never reveal JWT validity through response status
+            }
+        }
+
+        // 1x1 transparent PNG (canonical 67-byte payload)
         $pixel = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==');
 
         $response
