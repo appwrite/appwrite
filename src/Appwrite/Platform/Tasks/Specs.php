@@ -163,6 +163,12 @@ class Specs extends Action
                     'description' => 'Your secret dev API key',
                     'in' => 'header',
                 ],
+                'Cookie' => [
+                    'type' => 'apiKey',
+                    'name' => 'Cookie',
+                    'description' => 'The user cookie to authenticate with. Used by SDKs that forward an incoming Cookie header in server-side runtimes.',
+                    'in' => 'header',
+                ],
                 'ImpersonateUserId' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Impersonate-User-Id',
@@ -219,6 +225,18 @@ class Specs extends Action
                     'description' => 'The user agent string of the client that made the request',
                     'in' => 'header',
                 ],
+                'DevKey' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Dev-Key',
+                    'description' => 'Your secret dev API key',
+                    'in' => 'header',
+                ],
+                'Cookie' => [
+                    'type' => 'apiKey',
+                    'name' => 'Cookie',
+                    'description' => 'The user cookie to authenticate with. Used by SDKs that forward an incoming Cookie header in server-side runtimes.',
+                    'in' => 'header',
+                ],
                 'ImpersonateUserId' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Impersonate-User-Id',
@@ -272,7 +290,19 @@ class Specs extends Action
                 'Cookie' => [
                     'type' => 'apiKey',
                     'name' => 'Cookie',
-                    'description' => 'The user cookie to authenticate with',
+                    'description' => 'The user cookie to authenticate with. Used by SDKs that forward an incoming Cookie header in server-side runtimes.',
+                    'in' => 'header',
+                ],
+                'Session' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Session',
+                    'description' => 'The user session to authenticate with',
+                    'in' => 'header',
+                ],
+                'DevKey' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Dev-Key',
+                    'description' => 'Your secret dev API key',
                     'in' => 'header',
                 ],
                 'ImpersonateUserId' => [

@@ -5,6 +5,7 @@ namespace Tests\E2E\Services\Project;
 use PHPUnit\Framework\Attributes\Before;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\E2E\Client;
+use Utopia\Database\Query;
 
 trait OAuth2Base
 {
@@ -170,6 +171,40 @@ trait OAuth2Base
         $ids = \array_column($response['body']['providers'], '$id');
         $this->assertNotContains('mock', $ids);
         $this->assertNotContains('mock-unverified', $ids);
+    }
+
+    public function testListOAuth2ProvidersTotalFalse(): void
+    {
+        $response = $this->listOAuth2Providers(total: false);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(0, $response['body']['total']);
+        $this->assertGreaterThan(0, \count($response['body']['providers']));
+    }
+
+    public function testListOAuth2ProvidersWithLimit(): void
+    {
+        $response = $this->listOAuth2Providers([
+            Query::limit(1)->toString(),
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertCount(1, $response['body']['providers']);
+        $this->assertGreaterThan(1, $response['body']['total']);
+    }
+
+    public function testListOAuth2ProvidersWithOffset(): void
+    {
+        $listAll = $this->listOAuth2Providers();
+        $this->assertSame(200, $listAll['headers']['status-code']);
+
+        $listOffset = $this->listOAuth2Providers([
+            Query::offset(1)->toString(),
+        ]);
+
+        $this->assertSame(200, $listOffset['headers']['status-code']);
+        $this->assertCount(\count($listAll['body']['providers']) - 1, $listOffset['body']['providers']);
+        $this->assertSame($listAll['body']['total'], $listOffset['body']['total']);
     }
 
     // =========================================================================
@@ -2591,8 +2626,18 @@ trait OAuth2Base
         );
     }
 
-    protected function listOAuth2Providers(bool $authenticated = true): mixed
+    protected function listOAuth2Providers(?array $queries = null, ?bool $total = null, bool $authenticated = true): mixed
     {
+        $params = [];
+
+        if ($queries !== null) {
+            $params['queries'] = $queries;
+        }
+
+        if ($total !== null) {
+            $params['total'] = $total;
+        }
+
         $headers = [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2606,6 +2651,7 @@ trait OAuth2Base
             Client::METHOD_GET,
             '/project/oauth2',
             $headers,
+            $params,
         );
     }
 }

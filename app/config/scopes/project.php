@@ -45,10 +45,22 @@ return [
     ],
     "policies.read" => [
         "description" =>
+            "Access to read project\'s policies. Replaced by \'project.policies.read\' for more granular control",
+        "category" => "Project",
+        'deprecated' => true,
+    ],
+    "policies.write" => [
+        "description" =>
+            "Access to update project\'s policies. Replaces by \'project.policies.write\' for more granular control",
+        "category" => "Project",
+        'deprecated' => true,
+    ],
+    "project.policies.read" => [
+        "description" =>
             "Access to read project\'s policies",
         "category" => "Project",
     ],
-    "policies.write" => [
+    "project.policies.write" => [
         "description" =>
             "Access to update project\'s policies",
         "category" => "Project",
