@@ -5,7 +5,7 @@ namespace Appwrite\Realtime\Message\Handlers;
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Realtime\Message\Dispatcher;
-use Appwrite\Realtime\Message\Validators\SubscribePayloadValidator;
+use Appwrite\Realtime\Message\Validators\SubscribePayload as SubscribePayloadValidator;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
@@ -13,7 +13,7 @@ use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
 use Utopia\Span\Span;
 
-class SubscribeHandler extends Action
+class Subscribe extends Action
 {
     public function __construct()
     {

@@ -16,7 +16,7 @@ use Utopia\Validator\ArrayList;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Text;
 
-class PresenceHandler extends Action
+class Presence extends Action
 {
     public function __construct()
     {
@@ -58,6 +58,10 @@ class PresenceHandler extends Action
         Closure $triggerPresenceUsage,
         Closure $triggerPresenceEvent,
     ): array {
+        if ($project === null || $project->isEmpty()) {
+            throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Presence requires a project context.');
+        }
+
         $userId = $realtime->connections[$connection]['userId'] ?? '';
         if (empty($userId)) {
             throw new Exception(Exception::USER_UNAUTHORIZED, 'User must be authorized');
@@ -88,9 +92,7 @@ class PresenceHandler extends Action
             $presenceId,
             (string) $user->getSequence(),
             function () use ($project, $triggerPresenceUsage): void {
-                if ($project !== null && !$project->isEmpty()) {
-                    $triggerPresenceUsage(1, $project->getId());
-                }
+                $triggerPresenceUsage(1, $project->getId());
             },
         );
 

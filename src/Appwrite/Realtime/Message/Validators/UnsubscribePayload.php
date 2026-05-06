@@ -4,7 +4,7 @@ namespace Appwrite\Realtime\Message\Validators;
 
 use Utopia\Validator;
 
-class UnsubscribePayloadValidator extends Validator
+class UnsubscribePayload extends Validator
 {
     protected string $description = 'Payload is not valid.';
 

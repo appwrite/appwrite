@@ -4,12 +4,12 @@ namespace Appwrite\Realtime\Message\Handlers;
 
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Realtime\Message\Dispatcher;
-use Appwrite\Realtime\Message\Validators\UnsubscribePayloadValidator;
+use Appwrite\Realtime\Message\Validators\UnsubscribePayload as UnsubscribePayloadValidator;
 use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
 use Utopia\Span\Span;
 
-class UnsubscribeHandler extends Action
+class Unsubscribe extends Action
 {
     public function __construct()
     {

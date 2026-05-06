@@ -5,7 +5,7 @@ namespace Appwrite\Realtime\Message\Handlers;
 use Appwrite\Realtime\Message\Dispatcher;
 use Utopia\Platform\Action;
 
-class PingHandler extends Action
+class Ping extends Action
 {
     public function __construct()
     {

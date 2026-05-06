@@ -17,7 +17,7 @@ use Utopia\Registry\Registry;
 use Utopia\Span\Span;
 use Utopia\Validator\Text;
 
-class AuthenticationHandler extends Action
+class Authentication extends Action
 {
     public function __construct()
     {
