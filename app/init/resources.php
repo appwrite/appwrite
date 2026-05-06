@@ -374,12 +374,22 @@ $container->set(
 
 $container->set('executor', fn () => new Executor());
 
-$container->set('analyticsStorage', function (): AnalyticsClickHouse {
-    return new AnalyticsClickHouse(
+$container->set('analyticsStorage', function (Document $project): AnalyticsClickHouse {
+    $adapter = new AnalyticsClickHouse(
         host: System::getEnv('_APP_ANALYTICS_DB_HOST', 'clickhouse'),
         port: (int) System::getEnv('_APP_ANALYTICS_DB_PORT', 8123),
         user: System::getEnv('_APP_ANALYTICS_DB_USER', 'default'),
         pass: System::getEnv('_APP_ANALYTICS_DB_PASS', ''),
         database: System::getEnv('_APP_ANALYTICS_DB_NAME', 'appwrite'),
     );
-});
+
+    $adapter
+        ->setNamespace('analytics')
+        ->setSharedTables(true);
+
+    if (!$project->isEmpty() && $project->getId() !== 'console') {
+        $adapter->setTenant((string) $project->getSequence());
+    }
+
+    return $adapter;
+}, ['project']);

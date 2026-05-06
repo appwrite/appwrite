@@ -50,7 +50,6 @@ class Get extends Action
             ->param('dateRange', '30d', new Text(16), 'Date range shorthand (e.g. 7d, 30d).', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('project')
             ->inject('analyticsStorage')
             ->callback($this->action(...));
     }
@@ -60,7 +59,6 @@ class Get extends Action
         string $dateRange,
         Response $response,
         Database $dbForProject,
-        Document $project,
         AnalyticsClickHouse $analyticsStorage,
     ): void {
         $app = $dbForProject->getDocument('analyticsApps', $appId);
@@ -74,7 +72,7 @@ class Get extends Action
             ClickHouseQuery::between('timestamp', $start, $end),
         ];
 
-        $stats = $analyticsStorage->aggregate($project->getId(), $app->getId(), $queries);
+        $stats = $analyticsStorage->aggregate($app->getId(), $queries);
 
         $response->dynamic(new Document([
             'visitors' => $stats['visitors'],

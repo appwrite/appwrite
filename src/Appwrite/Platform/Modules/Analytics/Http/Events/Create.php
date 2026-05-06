@@ -10,7 +10,6 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -60,7 +59,6 @@ class Create extends Action
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('project')
             ->inject('analyticsStorage')
             ->callback($this->action(...));
     }
@@ -74,7 +72,6 @@ class Create extends Action
         Request $request,
         Response $response,
         Database $dbForProject,
-        Document $project,
         AnalyticsClickHouse $analyticsStorage,
     ): void {
         $apps = $dbForProject->find('analyticsApps', [
@@ -117,7 +114,6 @@ class Create extends Action
         }
 
         $event = [
-            'project_id' => $project->getId(),
             'app_id' => $app->getId(),
             'name' => $n,
             'timestamp' => \gmdate('Y-m-d H:i:s'),
