@@ -190,7 +190,8 @@ trait NotificationsBase
         $alertId = self::$seededAlertId ?? $this->seedWebhookFailureAlert();
         $this->assertNotEmpty($alertId);
 
-        $secret = System::getEnv('_APP_OPENSSL_KEY_V1') ?: 'your-secret-key';
+        $secret = System::getEnv('_APP_OPENSSL_KEY_V1');
+        $this->assertNotEmpty($secret, '_APP_OPENSSL_KEY_V1 must be set for tracking pixel test');
         $userId = $this->getRoot()['$id'];
 
         $jwt = (new JWT($secret, 'HS256', 2592000, 0))->encode([

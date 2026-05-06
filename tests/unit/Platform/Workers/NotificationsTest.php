@@ -172,6 +172,18 @@ class NotificationsTest extends TestCase
         $this->database->createAttribute('alerts', 'body', Database::VAR_STRING, 16384, true);
         $this->database->createAttribute('alerts', 'read', Database::VAR_BOOLEAN, 0, false, false);
 
+        // Mirror the production `_key_recipient` UNIQUE composite index so the
+        // duplicate-handling branch in persistAlert (catch DuplicateException →
+        // return existing alertId) is actually exercised by tests.
+        $this->database->createIndex(
+            'alerts',
+            '_key_recipient',
+            Database::INDEX_UNIQUE,
+            ['messageId', 'channel', 'userId', 'teamId'],
+            [Database::LENGTH_KEY, 64, Database::LENGTH_KEY, Database::LENGTH_KEY],
+            [Database::ORDER_ASC, Database::ORDER_ASC, Database::ORDER_ASC, Database::ORDER_ASC],
+        );
+
         $this->registry = new Registry();
         $this->project = new Document(['$id' => 'project-x']);
         $this->log = new Log();
@@ -552,6 +564,97 @@ class NotificationsTest extends TestCase
         $this->assertNotFalse($lastBodyClose, 'rendered email must include a closing </body>');
         $this->assertNotFalse($pixelPosition);
         $this->assertLessThan($lastBodyClose, $pixelPosition, 'pixel must be spliced before the final </body>');
+    }
+
+    public function testPersistAlertReturnsExistingAlertIdOnDuplicate(): void
+    {
+        $spy = new SpyEmailAdapter();
+        $this->registry->set('smtp', static fn () => $spy);
+
+        $previousSmtpHost = \getenv('_APP_SMTP_HOST');
+        \putenv('_APP_SMTP_HOST=spy.smtp.test');
+
+        try {
+            $worker = new CountingPersistAlertNotifications();
+
+            // All four unique-index fields populated so the
+            // `_key_recipient` UNIQUE composite (messageId, channel,
+            // userId, teamId) actually fires — SQL UNIQUE semantics treat
+            // NULL as not-equal, so any null in the tuple disables it.
+            $payload = [
+                'project' => ['$id' => 'project-x'],
+                'recipients' => [
+                    [
+                        'address' => 'user@example.test',
+                        'channel' => NOTIFICATION_TYPE_EMAIL,
+                        'userId' => 'user-7',
+                        'teamId' => 'team-7',
+                    ],
+                ],
+                'subject' => 'Heads up',
+                'body' => 'b',
+                'deduplicationKey' => 'persist-dup',
+            ];
+
+            // First dispatch: writes a row through the action loop and
+            // returns the deterministic alertId.
+            $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+
+            $this->assertSame(1, $worker->persistAlertCalls);
+            $firstAlertId = $worker->persistedIds[0];
+
+            $messageId = \md5('persist-dup');
+            $recipient = [
+                'address' => 'user@example.test',
+                'channel' => NOTIFICATION_TYPE_EMAIL,
+                'userId' => 'user-7',
+                'teamId' => 'team-7',
+            ];
+
+            // Second invocation with the SAME messageId/recipient. The
+            // action loop's alreadyDelivered() check short-circuits before
+            // persistAlert, so call persistAlert directly to actually hit
+            // the duplicate branch. The deterministic $id collides on the
+            // primary key → DuplicateException → branch returns the
+            // existing alertId without throwing.
+            $reflection = new \ReflectionMethod($worker, 'persistAlert');
+            $secondAlertId = $reflection->invoke($worker, $this->database, $messageId, $recipient, $payload);
+
+            $this->assertSame($firstAlertId, $secondAlertId, 'duplicate persist must return the existing alertId');
+
+            // Third write: bypass the deterministic $id path and use a
+            // distinct $id with the same recipient tuple. The
+            // `_key_recipient` UNIQUE composite must reject it — proving
+            // the unique-index (not just primary-key) is what backstops the
+            // duplicate-handling branch.
+            $sameTupleDoc = new Document([
+                '$id' => 'sibling-id-' . \uniqid(),
+                '$permissions' => [Permission::read(Role::any())],
+                'messageId' => $messageId,
+                'channel' => NOTIFICATION_TYPE_EMAIL,
+                'userId' => 'user-7',
+                'teamId' => 'team-7',
+                'projectId' => 'project-x',
+                'title' => 'sibling',
+                'body' => 'sibling',
+                'read' => false,
+            ]);
+
+            $threw = false;
+            try {
+                $this->database->createDocument('alerts', $sameTupleDoc);
+            } catch (\Utopia\Database\Exception\Duplicate) {
+                $threw = true;
+            }
+            $this->assertTrue($threw, 'unique-index `_key_recipient` must reject a second row sharing the recipient tuple');
+
+            $rows = $this->database->find('alerts', [
+                \Utopia\Database\Query::equal('messageId', [$messageId]),
+            ]);
+            $this->assertCount(1, $rows, 'unique-index must prevent a second row from being persisted');
+        } finally {
+            \putenv($previousSmtpHost === false ? '_APP_SMTP_HOST' : '_APP_SMTP_HOST=' . $previousSmtpHost);
+        }
     }
 
     public function testPersistAlertReturnsAlertIdAndStoresUserId(): void
