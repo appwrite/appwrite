@@ -12,6 +12,7 @@ use Appwrite\Platform\Modules\Account\Http\Account\MFA\RecoveryCodes\Create as C
 use Appwrite\Platform\Modules\Account\Http\Account\MFA\RecoveryCodes\Get as GetRecoveryCodes;
 use Appwrite\Platform\Modules\Account\Http\Account\MFA\RecoveryCodes\Update as UpdateRecoveryCodes;
 use Appwrite\Platform\Modules\Account\Http\Account\MFA\Update as UpdateMfa;
+use Appwrite\Platform\Modules\Account\Http\Alerts\Read\Update as UpdateAlertRead;
 use Appwrite\Platform\Modules\Account\Http\Alerts\Track\Get as TrackAlert;
 use Appwrite\Platform\Modules\Account\Http\Alerts\XList as ListAlerts;
 use Utopia\Platform\Service;
@@ -33,6 +34,7 @@ class Http extends Service
             ->addAction(CreateChallenge::getName(), new CreateChallenge())
             ->addAction(UpdateChallenge::getName(), new UpdateChallenge())
             ->addAction(ListAlerts::getName(), new ListAlerts())
+            ->addAction(UpdateAlertRead::getName(), new UpdateAlertRead())
             ->addAction(TrackAlert::getName(), new TrackAlert());
     }
 }
