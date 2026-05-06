@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Modules\Account\Http\Alerts\Track;
 
 use Ahc\Jwt\JWT;
-use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -39,7 +38,7 @@ class Get extends Action
                 group: 'alerts',
                 name: 'getAlertTrack',
                 description: '/docs/references/account/get-alert-track.md',
-                auth: [AuthType::SESSION, AuthType::JWT],
+                auth: [],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
