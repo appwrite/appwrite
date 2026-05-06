@@ -5,6 +5,7 @@ namespace Appwrite\Utopia\Messaging\Adapter;
 use Appwrite\Utopia\Messaging\Messages\Console as ConsoleMessage;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -82,6 +83,12 @@ class Console extends Adapter
                 ]);
 
                 $this->database->createDocument('alerts', $document);
+                $delivered++;
+                $response->addResult($key);
+            } catch (DuplicateException) {
+                // Idempotent retry: row already exists for this messageId/recipient.
+                // Treat as a successful (already-delivered) result so the worker
+                // does not throw and re-queue.
                 $delivered++;
                 $response->addResult($key);
             } catch (\Throwable $error) {

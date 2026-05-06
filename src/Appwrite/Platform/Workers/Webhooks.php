@@ -209,6 +209,11 @@ class Webhooks extends Action
      */
     public function sendAlert(int $attempts, mixed $statusCode, Document $webhook, Document $project, Database $dbForPlatform, Notification $queueForNotifications, array $plan): void
     {
+        // The DI-shared Notification event accumulates state across calls. Reset
+        // before configuring this alert so multiple webhook failures in a single
+        // worker invocation do not bleed recipients/subject/body between alerts.
+        $queueForNotifications->reset();
+
         $memberships = $dbForPlatform->find('memberships', [
             Query::equal('teamInternalId', [$project->getAttribute('teamInternalId')]),
             Query::limit(APP_LIMIT_SUBQUERY)
