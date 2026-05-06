@@ -5,6 +5,7 @@ require_once __DIR__ . '/init/span.php';
 
 $registerRequestResources = require __DIR__ . '/init/resources/request.php';
 
+use Appwrite\Platform\Modules\Analytics\Services\Http as AnalyticsHttpService;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Swoole\Constant;
@@ -483,6 +484,8 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
             Span::add('database.collections_created', $collectionsCreated);
             Span::current()?->finish();
         }
+
+        AnalyticsHttpService::bootstrap();
     });
 
     Span::init('http.server.start');
