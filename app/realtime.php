@@ -409,7 +409,6 @@ $container->set('pools', function ($register) {
 
 if (!$container->has('queueForEvents')) {
     $container->set('queueForEvents', function ($pools) {
-        var_dump("ce");
         return new QueueEvent(new BrokerPool(
             publisher: $pools->get('publisher')
         ));
