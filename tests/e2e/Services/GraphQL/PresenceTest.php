@@ -22,7 +22,7 @@ class PresenceTest extends Scope
         $payload = [
             'query' => <<<'GQL'
                 mutation upsertPresence($presenceId: String!, $userId: String!, $status: String!, $metadata: Json) {
-                    presencesUpsertPresence(presenceId: $presenceId, userId: $userId, status: $status, metadata: $metadata) {
+                    presencesUpsert(presenceId: $presenceId, userId: $userId, status: $status, metadata: $metadata) {
                         _id
                         userId
                         status

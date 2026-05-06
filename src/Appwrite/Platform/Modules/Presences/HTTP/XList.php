@@ -43,7 +43,7 @@ class XList extends PlatformAction
             ->label('sdk', new Method(
                 namespace: 'presences',
                 group: 'presences',
-                name: 'listPresences',
+                name: 'list',
                 description: 'List presence logs.',
                 auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
                 responses: [

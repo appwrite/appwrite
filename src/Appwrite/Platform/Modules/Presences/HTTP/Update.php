@@ -50,7 +50,7 @@ class Update extends PlatformAction
                 new Method(
                     namespace: 'presences',
                     group: 'presences',
-                    name: 'updatePresence',
+                    name: 'update',
                     description: 'Update a presence log by its unique ID.',
                     auth: [AuthType::SESSION],
                     responses: [
