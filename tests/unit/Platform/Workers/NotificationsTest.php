@@ -31,8 +31,15 @@ class SpyNotifications extends Notifications
     /** @var array<string, \Throwable> */
     public array $throwOn = [];
 
-    protected function dispatch(array $recipient, array $payload, Registry $register, Database $database, Log $log): void
-    {
+    protected function dispatch(
+        array $recipient,
+        string $messageId,
+        array $payload,
+        Document $project,
+        Registry $register,
+        Database $database,
+        Log $log,
+    ): ?string {
         $channel = $recipient['channel'];
         $this->dispatched[] = [
             'channel' => $channel,
@@ -44,6 +51,19 @@ class SpyNotifications extends Notifications
         if (isset($this->throwOn[$channel])) {
             throw $this->throwOn[$channel];
         }
+
+        // Mirror the real adapters' persistence contract so the action
+        // loop's branching (console/email persist internally; webhook
+        // persists in caller) is exercised end-to-end.
+        if ($messageId === '') {
+            return null;
+        }
+
+        if ($channel === NOTIFICATION_TYPE_CONSOLE || $channel === NOTIFICATION_TYPE_EMAIL) {
+            return $this->persistAlert($database, $messageId, $recipient, $payload);
+        }
+
+        return null;
     }
 }
 
@@ -82,6 +102,7 @@ class NotificationsTest extends TestCase
         $this->database->createAttribute('alerts', 'projectId', Database::VAR_STRING, 255, false);
         $this->database->createAttribute('alerts', 'title', Database::VAR_STRING, 256, true);
         $this->database->createAttribute('alerts', 'body', Database::VAR_STRING, 16384, true);
+        $this->database->createAttribute('alerts', 'read', Database::VAR_BOOLEAN, 0, false, false);
 
         $this->registry = new Registry();
         $this->project = new Document(['$id' => 'project-x']);
