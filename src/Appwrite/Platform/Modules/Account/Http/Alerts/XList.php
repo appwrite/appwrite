@@ -31,6 +31,7 @@ class XList extends Action
             ->label('scope', 'account')
             ->label('sdk', new Method(
                 namespace: 'account',
+                group: 'alerts',
                 name: 'listAlerts',
                 description: '/docs/references/account/list-alerts.md',
                 auth: [AuthType::SESSION, AuthType::JWT],

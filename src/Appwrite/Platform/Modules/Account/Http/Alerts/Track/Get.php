@@ -32,6 +32,7 @@ class Get extends Action
             ->label('scope', 'public')
             ->label('sdk', new Method(
                 namespace: 'account',
+                group: 'alerts',
                 name: 'getAlertTrack',
                 description: '/docs/references/account/get-alert-track.md',
                 auth: [AuthType::SESSION, AuthType::JWT],
