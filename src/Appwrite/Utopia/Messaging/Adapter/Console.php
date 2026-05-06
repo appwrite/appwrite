@@ -61,11 +61,17 @@ class Console extends Adapter
             $teamId = $recipient['teamId'] ?? '';
             $key = $userId !== '' ? $userId : $teamId;
 
+            $messageId = $message->getMessageId();
+            $recipientKey = $userId !== '' ? 'user:' . $userId : 'team:' . $teamId;
+            $documentId = $messageId !== null
+                ? $messageId . '_' . \substr(\md5($recipientKey), 0, 8)
+                : ID::unique();
+
             try {
                 $document = new Document([
-                    '$id' => $message->getMessageId() ?? ID::unique(),
+                    '$id' => $documentId,
                     '$permissions' => $this->buildPermissions($userId, $teamId),
-                    'messageId' => $message->getMessageId(),
+                    'messageId' => $messageId,
                     'type' => $message->getType(),
                     'channel' => self::TYPE,
                     'userId' => $userId !== '' ? $userId : null,
