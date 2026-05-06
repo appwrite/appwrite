@@ -17,7 +17,7 @@ class UnsubscribeHandler extends Action
             ->desc('Bulk remove subscriptions by id')
             ->label(Dispatcher::LABEL_MESSAGE_TYPE, 'unsubscribe')
             ->label(Dispatcher::LABEL_PAYLOAD_SHAPE, Dispatcher::PAYLOAD_SHAPE_LIST)
-            ->param('items', null, new UnsubscribePayloadValidator(), 'Subscriptions to remove')
+            ->param('items', null, fn () => new UnsubscribePayloadValidator(), 'Subscriptions to remove')
             ->inject('connection')
             ->inject('realtime')
             ->inject('register')

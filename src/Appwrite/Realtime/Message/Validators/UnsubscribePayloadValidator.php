@@ -6,9 +6,11 @@ use Utopia\Validator;
 
 class UnsubscribePayloadValidator extends Validator
 {
+    protected string $description = 'Payload is not valid.';
+
     public function getDescription(): string
     {
-        return 'Payload is not valid.';
+        return $this->description;
     }
 
     public function isArray(): bool
@@ -23,13 +25,9 @@ class UnsubscribePayloadValidator extends Validator
 
     public function isValid(mixed $value): bool
     {
-        return $this->getValidationError($value) === null;
-    }
-
-    public function getValidationError(mixed $value): ?string
-    {
         if (!\is_array($value) || !\array_is_list($value)) {
-            return 'Payload is not valid.';
+            $this->description = 'Payload is not valid.';
+            return false;
         }
 
         foreach ($value as $payload) {
@@ -39,10 +37,11 @@ class UnsubscribePayloadValidator extends Validator
                 || !\is_string($payload['subscriptionId'])
                 || $payload['subscriptionId'] === ''
             ) {
-                return 'Each unsubscribe payload must include a non-empty subscriptionId.';
+                $this->description = 'Each unsubscribe payload must include a non-empty subscriptionId.';
+                return false;
             }
         }
 
-        return null;
+        return true;
     }
 }

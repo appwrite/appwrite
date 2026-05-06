@@ -6,9 +6,11 @@ use Utopia\Validator;
 
 class SubscribePayloadValidator extends Validator
 {
+    protected string $description = 'Payload is not valid.';
+
     public function getDescription(): string
     {
-        return 'Payload is not valid.';
+        return $this->description;
     }
 
     public function isArray(): bool
@@ -23,32 +25,32 @@ class SubscribePayloadValidator extends Validator
 
     public function isValid(mixed $value): bool
     {
-        return $this->getValidationError($value) === null;
-    }
-
-    public function getValidationError(mixed $value): ?string
-    {
         if (!\is_array($value) || !\array_is_list($value)) {
-            return 'Payload is not valid.';
+            $this->description = 'Payload is not valid.';
+            return false;
         }
 
         foreach ($value as $payload) {
             if (!\is_array($payload)) {
-                return 'Each subscribe payload must be an object.';
+                $this->description = 'Each subscribe payload must be an object.';
+                return false;
             }
             if (!\array_key_exists('channels', $payload)) {
-                return 'channels is not present in payload.';
+                $this->description = 'channels is not present in payload.';
+                return false;
             }
             if (!\is_array($payload['channels']) || !\array_is_list($payload['channels'])) {
-                return 'channels is not a valid array.';
+                $this->description = 'channels is not a valid array.';
+                return false;
             }
             if (\array_key_exists('queries', $payload)
                 && (!\is_array($payload['queries']) || !\array_is_list($payload['queries']))
             ) {
-                return 'queries is not a valid array.';
+                $this->description = 'queries is not a valid array.';
+                return false;
             }
         }
 
-        return null;
+        return true;
     }
 }

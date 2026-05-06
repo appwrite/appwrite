@@ -21,7 +21,7 @@ class SubscribeHandler extends Action
             ->desc('Bulk subscribe to realtime channels')
             ->label(Dispatcher::LABEL_MESSAGE_TYPE, 'subscribe')
             ->label(Dispatcher::LABEL_PAYLOAD_SHAPE, Dispatcher::PAYLOAD_SHAPE_LIST)
-            ->param('items', null, new SubscribePayloadValidator(), 'Subscriptions to add')
+            ->param('items', null, fn () => new SubscribePayloadValidator(), 'Subscriptions to add')
             ->inject('connection')
             ->inject('realtime')
             ->inject('register')
