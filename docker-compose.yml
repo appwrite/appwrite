@@ -250,11 +250,11 @@ services:
       - _TESTS_OAUTH2_GITHUB_CLIENT_ID
       - _TESTS_OAUTH2_GITHUB_CLIENT_SECRET
       - _APP_ANALYTICS_ENABLED
-      - _APP_CLICKHOUSE_HOST
-      - _APP_CLICKHOUSE_PORT
-      - _APP_CLICKHOUSE_USER
-      - _APP_CLICKHOUSE_PASS
-      - _APP_CLICKHOUSE_DB
+      - _APP_ANALYTICS_DB_HOST
+      - _APP_ANALYTICS_DB_PORT
+      - _APP_ANALYTICS_DB_USER
+      - _APP_ANALYTICS_DB_PASS
+      - _APP_ANALYTICS_DB_NAME
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -1401,9 +1401,9 @@ services:
     volumes:
       - appwrite-clickhouse:/var/lib/clickhouse:rw
     environment:
-      - CLICKHOUSE_DB=${_APP_CLICKHOUSE_DB:-appwrite}
-      - CLICKHOUSE_USER=${_APP_CLICKHOUSE_USER:-default}
-      - CLICKHOUSE_PASSWORD=${_APP_CLICKHOUSE_PASS:-}
+      - CLICKHOUSE_DB=${_APP_ANALYTICS_DB_NAME:-appwrite}
+      - CLICKHOUSE_USER=${_APP_ANALYTICS_DB_USER:-default}
+      - CLICKHOUSE_PASSWORD=${_APP_ANALYTICS_DB_PASS:-}
       - CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8123/ping"]

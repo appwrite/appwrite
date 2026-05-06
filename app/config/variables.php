@@ -1385,8 +1385,8 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_CLICKHOUSE_HOST',
-                'description' => 'ClickHouse server hostname. Default value is: \'clickhouse\'.',
+                'name' => '_APP_ANALYTICS_DB_HOST',
+                'description' => 'Analytics database (ClickHouse) server hostname. Default value is: \'clickhouse\'.',
                 'introduction' => '',
                 'default' => 'clickhouse',
                 'required' => false,
@@ -1394,8 +1394,8 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_CLICKHOUSE_PORT',
-                'description' => 'ClickHouse HTTP interface TCP port. Default value is: \'8123\'.',
+                'name' => '_APP_ANALYTICS_DB_PORT',
+                'description' => 'Analytics database (ClickHouse) HTTP interface TCP port. Default value is: \'8123\'.',
                 'introduction' => '',
                 'default' => '8123',
                 'required' => false,
@@ -1403,8 +1403,8 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_CLICKHOUSE_USER',
-                'description' => 'ClickHouse username. Default value is: \'default\'.',
+                'name' => '_APP_ANALYTICS_DB_USER',
+                'description' => 'Analytics database (ClickHouse) username. Default value is: \'default\'.',
                 'introduction' => '',
                 'default' => 'default',
                 'required' => false,
@@ -1412,8 +1412,8 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_CLICKHOUSE_PASS',
-                'description' => 'ClickHouse password. Default value is empty.',
+                'name' => '_APP_ANALYTICS_DB_PASS',
+                'description' => 'Analytics database (ClickHouse) password. Default value is empty.',
                 'introduction' => '',
                 'default' => '',
                 'required' => false,
@@ -1421,8 +1421,8 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_CLICKHOUSE_DB',
-                'description' => 'ClickHouse database name used for analytics tables. Default value is: \'appwrite\'.',
+                'name' => '_APP_ANALYTICS_DB_NAME',
+                'description' => 'Analytics database name used for analytics tables. Default value is: \'appwrite\'.',
                 'introduction' => '',
                 'default' => 'appwrite',
                 'required' => false,

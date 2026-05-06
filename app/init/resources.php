@@ -376,10 +376,10 @@ $container->set('executor', fn () => new Executor());
 
 $container->set('analyticsStorage', function (): AnalyticsClickHouse {
     return new AnalyticsClickHouse(
-        host: System::getEnv('_APP_CLICKHOUSE_HOST', 'clickhouse'),
-        port: (int) System::getEnv('_APP_CLICKHOUSE_PORT', 8123),
-        user: System::getEnv('_APP_CLICKHOUSE_USER', 'default'),
-        pass: System::getEnv('_APP_CLICKHOUSE_PASS', ''),
-        database: System::getEnv('_APP_CLICKHOUSE_DB', 'appwrite'),
+        host: System::getEnv('_APP_ANALYTICS_DB_HOST', 'clickhouse'),
+        port: (int) System::getEnv('_APP_ANALYTICS_DB_PORT', 8123),
+        user: System::getEnv('_APP_ANALYTICS_DB_USER', 'default'),
+        pass: System::getEnv('_APP_ANALYTICS_DB_PASS', ''),
+        database: System::getEnv('_APP_ANALYTICS_DB_NAME', 'appwrite'),
     );
 });
