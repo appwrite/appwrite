@@ -111,9 +111,9 @@ class NotificationsTest extends TestCase
         $payload = [
             'project' => ['$id' => 'project-x'],
             'recipients' => [
-                ['address' => 'user@example.test', 'channel' => NOTIFICATION_CHANNEL_EMAIL],
-                ['address' => 'user-1', 'channel' => NOTIFICATION_CHANNEL_CONSOLE],
-                ['address' => 'https://hooks.example.test/in', 'channel' => NOTIFICATION_CHANNEL_WEBHOOK],
+                ['address' => 'user@example.test', 'channel' => NOTIFICATION_TYPE_EMAIL],
+                ['address' => 'user-1', 'channel' => NOTIFICATION_TYPE_CONSOLE],
+                ['address' => 'https://hooks.example.test/in', 'channel' => NOTIFICATION_TYPE_WEBHOOK],
             ],
             'subject' => 'Hi',
             'body' => 'Body',
@@ -124,7 +124,7 @@ class NotificationsTest extends TestCase
 
         $this->assertCount(3, $worker->dispatched);
         $channels = \array_map(static fn ($d) => $d['channel'], $worker->dispatched);
-        $this->assertSame([NOTIFICATION_CHANNEL_EMAIL, NOTIFICATION_CHANNEL_CONSOLE, NOTIFICATION_CHANNEL_WEBHOOK], $channels);
+        $this->assertSame([NOTIFICATION_TYPE_EMAIL, NOTIFICATION_TYPE_CONSOLE, NOTIFICATION_TYPE_WEBHOOK], $channels);
     }
 
     public function testPersistsOneAlertPerRecipientChannel(): void
@@ -133,8 +133,8 @@ class NotificationsTest extends TestCase
         $payload = [
             'project' => ['$id' => 'project-x'],
             'recipients' => [
-                ['address' => 'user-1', 'channel' => NOTIFICATION_CHANNEL_CONSOLE],
-                ['address' => 'user-2', 'channel' => NOTIFICATION_CHANNEL_CONSOLE],
+                ['address' => 'user-1', 'channel' => NOTIFICATION_TYPE_CONSOLE],
+                ['address' => 'user-2', 'channel' => NOTIFICATION_TYPE_CONSOLE],
             ],
             'subject' => 'Heads up',
             'body' => 'Read me',
@@ -163,7 +163,7 @@ class NotificationsTest extends TestCase
         $worker = new SpyNotifications();
         $payload = [
             'project' => ['$id' => 'project-x'],
-            'recipients' => [['address' => 'user-1', 'channel' => NOTIFICATION_CHANNEL_CONSOLE]],
+            'recipients' => [['address' => 'user-1', 'channel' => NOTIFICATION_TYPE_CONSOLE]],
             'subject' => 'Sub',
             'body' => 'B',
             'deduplicationKey' => 'dup-key',
@@ -218,7 +218,7 @@ class NotificationsTest extends TestCase
 
         $this->assertCount(1, $worker->dispatched);
         $this->assertSame('legacy@example.test', $worker->dispatched[0]['address']);
-        $this->assertSame(NOTIFICATION_CHANNEL_EMAIL, $worker->dispatched[0]['channel']);
+        $this->assertSame(NOTIFICATION_TYPE_EMAIL, $worker->dispatched[0]['channel']);
     }
 
     public function testWebhookRecipientForwardsSignatureKey(): void
@@ -229,12 +229,12 @@ class NotificationsTest extends TestCase
             'recipients' => [
                 [
                     'address' => 'https://hooks.example.test/signed',
-                    'channel' => NOTIFICATION_CHANNEL_WEBHOOK,
+                    'channel' => NOTIFICATION_TYPE_WEBHOOK,
                     'signatureKey' => 'tenant-secret',
                 ],
                 [
                     'address' => 'https://hooks.example.test/unsigned',
-                    'channel' => NOTIFICATION_CHANNEL_WEBHOOK,
+                    'channel' => NOTIFICATION_TYPE_WEBHOOK,
                 ],
             ],
             'subject' => 's',
@@ -251,11 +251,11 @@ class NotificationsTest extends TestCase
     public function testDispatchErrorTagsLogAndPropagates(): void
     {
         $worker = new SpyNotifications();
-        $worker->throwOn[NOTIFICATION_CHANNEL_WEBHOOK] = new \RuntimeException('boom');
+        $worker->throwOn[NOTIFICATION_TYPE_WEBHOOK] = new \RuntimeException('boom');
 
         $payload = [
             'project' => ['$id' => 'project-x'],
-            'recipients' => [['address' => 'https://h.example.test', 'channel' => NOTIFICATION_CHANNEL_WEBHOOK]],
+            'recipients' => [['address' => 'https://h.example.test', 'channel' => NOTIFICATION_TYPE_WEBHOOK]],
             'subject' => 's',
             'body' => 'b',
             'deduplicationKey' => 'err-1',
@@ -269,7 +269,7 @@ class NotificationsTest extends TestCase
         }
 
         $tags = $this->log->getTags();
-        $this->assertSame(NOTIFICATION_CHANNEL_WEBHOOK, $tags['channel'] ?? null);
+        $this->assertSame(NOTIFICATION_TYPE_WEBHOOK, $tags['channel'] ?? null);
         $this->assertSame('boom', $tags['error'] ?? null);
 
         $rows = $this->database->find('alerts');

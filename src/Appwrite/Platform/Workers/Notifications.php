@@ -107,7 +107,7 @@ class Notifications extends Action
             return [];
         }
 
-        return [['address' => $address, 'channel' => NOTIFICATION_CHANNEL_EMAIL]];
+        return [['address' => $address, 'channel' => NOTIFICATION_TYPE_EMAIL]];
     }
 
     private function alreadyDelivered(Database $database, string $messageId): bool
@@ -129,13 +129,13 @@ class Notifications extends Action
         $address = $recipient['address'];
 
         switch ($channel) {
-            case NOTIFICATION_CHANNEL_EMAIL:
+            case NOTIFICATION_TYPE_EMAIL:
                 $this->dispatchEmail($address, $payload, $register, $log);
                 return;
-            case NOTIFICATION_CHANNEL_CONSOLE:
+            case NOTIFICATION_TYPE_CONSOLE:
                 $this->dispatchConsole($address, $payload, $database);
                 return;
-            case NOTIFICATION_CHANNEL_WEBHOOK:
+            case NOTIFICATION_TYPE_WEBHOOK:
                 $this->dispatchWebhook($address, $payload, $recipient['signatureKey'] ?? null, $log);
                 return;
             default:
@@ -364,7 +364,7 @@ class Notifications extends Action
             'messageId' => $messageId,
             'type' => 'info',
             'channel' => $channel,
-            'userId' => $channel === NOTIFICATION_CHANNEL_CONSOLE ? $address : null,
+            'userId' => $channel === NOTIFICATION_TYPE_CONSOLE ? $address : null,
             'projectId' => $projectId,
             'title' => $payload['subject'] ?? '',
             'body' => $payload['body'] ?? '',

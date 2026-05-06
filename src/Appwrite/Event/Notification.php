@@ -321,7 +321,7 @@ class Notification extends Event
         return $this->recipients;
     }
 
-    public function addRecipient(string $address, string $channel = NOTIFICATION_CHANNEL_EMAIL, ?string $signatureKey = null): self
+    public function addRecipient(string $address, string $channel = NOTIFICATION_TYPE_EMAIL, ?string $signatureKey = null): self
     {
         $recipient = ['address' => $address, 'channel' => $channel];
         if ($signatureKey !== null && $signatureKey !== '') {
@@ -429,7 +429,7 @@ class Notification extends Event
         if (empty($recipients) && !empty($this->recipient)) {
             $recipients = [[
                 'address' => $this->recipient,
-                'channel' => NOTIFICATION_CHANNEL_EMAIL,
+                'channel' => NOTIFICATION_TYPE_EMAIL,
             ]];
         }
 
