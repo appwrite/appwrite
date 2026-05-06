@@ -48,6 +48,16 @@ class ConsoleTest extends TestCase
         $this->authorization->addRole(Role::any()->toString());
     }
 
+    /**
+     * Mirrors the per-recipient `$id` derivation in
+     * Appwrite\Utopia\Messaging\Adapter\Console::process().
+     */
+    private function alertId(string $messageId, string $userId = '', string $teamId = ''): string
+    {
+        $key = $userId !== '' ? 'user:' . $userId : 'team:' . $teamId;
+        return $messageId . '_' . \substr(\md5($key), 0, 8);
+    }
+
     public function testWritesAlertWithCorrectSchema(): void
     {
         $message = new ConsoleMessage(
@@ -64,7 +74,7 @@ class ConsoleTest extends TestCase
 
         $this->assertSame(1, $result['deliveredTo']);
 
-        $stored = $this->database->getDocument('alerts', 'msg-aaa');
+        $stored = $this->database->getDocument('alerts', $this->alertId('msg-aaa', userId: 'user-1'));
         $this->assertFalse($stored->isEmpty());
         $this->assertSame('msg-aaa', $stored->getAttribute('messageId'));
         $this->assertSame('console', $stored->getAttribute('channel'));
@@ -86,7 +96,7 @@ class ConsoleTest extends TestCase
 
         (new Console($this->database))->send($message);
 
-        $stored = $this->database->getDocument('alerts', 'msg-perms-user');
+        $stored = $this->database->getDocument('alerts', $this->alertId('msg-perms-user', userId: 'user-2'));
         $permissions = $stored->getPermissions();
 
         $this->assertContains(Permission::read(Role::user('user-2')), $permissions);
@@ -105,12 +115,49 @@ class ConsoleTest extends TestCase
 
         (new Console($this->database))->send($message);
 
-        $stored = $this->database->getDocument('alerts', 'msg-team');
+        $stored = $this->database->getDocument('alerts', $this->alertId('msg-team', teamId: 'team-9'));
         $permissions = $stored->getPermissions();
 
         $this->assertContains(Permission::read(Role::team('team-9')), $permissions);
         $this->assertContains(Permission::update(Role::team('team-9', 'owner')), $permissions);
         $this->assertContains(Permission::delete(Role::team('team-9', 'owner')), $permissions);
+    }
+
+    public function testMultiRecipientWithSameMessageIdGeneratesDistinctIds(): void
+    {
+        $message = new ConsoleMessage(
+            recipients: [
+                ['userId' => 'a'],
+                ['userId' => 'b'],
+            ],
+            title: 'Heads up',
+            body: 'multi',
+            messageId: ID::custom('same-msg'),
+        );
+
+        $adapter = new Console($this->database);
+        $result = $adapter->send($message);
+
+        $this->assertSame(2, $result['deliveredTo']);
+
+        $idA = $this->alertId('same-msg', userId: 'a');
+        $idB = $this->alertId('same-msg', userId: 'b');
+
+        $this->assertNotSame($idA, $idB, 'recipient suffixes must be distinct');
+
+        $rowA = $this->database->getDocument('alerts', $idA);
+        $rowB = $this->database->getDocument('alerts', $idB);
+        $this->assertFalse($rowA->isEmpty(), 'first recipient row must exist');
+        $this->assertFalse($rowB->isEmpty(), 'second recipient row must exist');
+
+        $this->assertSame('same-msg', $rowA->getAttribute('messageId'));
+        $this->assertSame('same-msg', $rowB->getAttribute('messageId'));
+        $this->assertSame('a', $rowA->getAttribute('userId'));
+        $this->assertSame('b', $rowB->getAttribute('userId'));
+
+        // $id values must be `messageId_<8-hex>` and the suffixes differ.
+        $this->assertMatchesRegularExpression('/^same-msg_[0-9a-f]{8}$/', $idA);
+        $this->assertMatchesRegularExpression('/^same-msg_[0-9a-f]{8}$/', $idB);
     }
 
     public function testRejectsForeignMessageType(): void

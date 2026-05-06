@@ -13,6 +13,8 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Logger\Log;
+use Utopia\Messaging\Adapter\Email as EmailAdapter;
+use Utopia\Messaging\Messages\Email as EmailMessage;
 use Utopia\Queue\Message;
 use Utopia\Registry\Registry;
 
@@ -64,6 +66,72 @@ class SpyNotifications extends Notifications
         }
 
         return null;
+    }
+}
+
+/**
+ * Worker that runs the real `dispatchConsole` (so the ConsoleAdapter writes
+ * the alert row) but counts how many times the action loop calls
+ * `persistAlert`. Used to assert that the loop does NOT double-persist for
+ * console recipients (Greptile P1 #3).
+ */
+class CountingPersistAlertNotifications extends Notifications
+{
+    public int $persistAlertCalls = 0;
+
+    /** @var array<int, string> */
+    public array $persistedIds = [];
+
+    protected function persistAlert(Database $database, string $messageId, array $recipient, array $payload): string
+    {
+        $this->persistAlertCalls++;
+        $alertId = parent::persistAlert($database, $messageId, $recipient, $payload);
+        $this->persistedIds[] = $alertId;
+        return $alertId;
+    }
+}
+
+/**
+ * Worker that simulates a console-adapter zero-delivery outcome (e.g.
+ * permission denied on createDocument) without depending on a real adapter
+ * failure mode.
+ */
+class ZeroDeliveryConsoleNotifications extends Notifications
+{
+    protected function dispatchConsole(array $recipient, string $messageId, array $payload, Database $database): ?string
+    {
+        // Simulate the Console adapter swallowing a per-recipient
+        // exception and reporting zero deliveries.
+        throw new \Exception('Console alert delivery failed: permission denied');
+    }
+}
+
+/**
+ * Captures the EmailMessage handed to the SMTP adapter so tests can assert
+ * on the rendered HTML body without touching a real mail server.
+ */
+class SpyEmailAdapter extends EmailAdapter
+{
+    public ?EmailMessage $captured = null;
+
+    public function getName(): string
+    {
+        return 'SpySMTP';
+    }
+
+    public function getMaxMessagesPerRequest(): int
+    {
+        return 1000;
+    }
+
+    protected function process(EmailMessage $message): array
+    {
+        $this->captured = $message;
+        return [
+            'deliveredTo' => 1,
+            'type' => $this->getType(),
+            'results' => [['recipient' => $message->getTo()[0]['email'] ?? '', 'status' => 'sent']],
+        ];
     }
 }
 
@@ -295,5 +363,235 @@ class NotificationsTest extends TestCase
 
         $rows = $this->database->find('alerts');
         $this->assertCount(0, $rows, 'failed dispatch must not persist alert');
+    }
+
+    public function testDedupQueriesByAttributeNotById(): void
+    {
+        $worker = new SpyNotifications();
+
+        // Seed an alert row with an arbitrary $id but the matching dedup
+        // messageId attribute. If alreadyDelivered() short-circuits via
+        // getDocument($messageId) it will miss this seed and dispatch
+        // anyway. Querying by the `messageId` attribute is the only way to
+        // see the seed.
+        $messageId = \md5('dup-key');
+        $this->database->createDocument('alerts', new Document([
+            '$id' => 'random-id-123',
+            '$permissions' => [Permission::read(Role::any())],
+            'messageId' => $messageId,
+            'channel' => 'console',
+            'title' => 'seed',
+            'body' => 'seed',
+        ]));
+
+        $payload = [
+            'project' => ['$id' => 'project-x'],
+            'recipients' => [['address' => 'user-1', 'channel' => NOTIFICATION_TYPE_CONSOLE]],
+            'subject' => 'Sub',
+            'body' => 'B',
+            'deduplicationKey' => 'dup-key',
+        ];
+
+        $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+
+        $this->assertCount(0, $worker->dispatched, 'attribute-keyed seed must trigger dedup short-circuit');
+        $this->assertSame('hit', $this->log->getTags()['dedup'] ?? null);
+    }
+
+    public function testConsoleChannelSkipsPersistAlert(): void
+    {
+        $worker = new CountingPersistAlertNotifications();
+
+        $payload = [
+            'project' => ['$id' => 'project-x'],
+            'recipients' => [
+                ['address' => 'user-1', 'channel' => NOTIFICATION_TYPE_CONSOLE, 'userId' => 'user-1'],
+            ],
+            'subject' => 'Heads up',
+            'body' => 'console body',
+            'deduplicationKey' => 'console-skip',
+        ];
+
+        $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+
+        // The Console adapter wrote exactly one alert; the action loop
+        // must NOT have called persistAlert (otherwise we'd see 2 rows or
+        // a duplicate-key swallow plus a non-zero counter).
+        $consoleRows = $this->database->find('alerts', [
+            \Utopia\Database\Query::equal('channel', ['console']),
+        ]);
+        $this->assertCount(1, $consoleRows);
+        $this->assertSame(0, $worker->persistAlertCalls, 'console channel must NOT trigger action-loop persistAlert');
+    }
+
+    public function testConsoleZeroDeliveryThrows(): void
+    {
+        $worker = new ZeroDeliveryConsoleNotifications();
+
+        $payload = [
+            'project' => ['$id' => 'project-x'],
+            'recipients' => [
+                ['address' => 'user-1', 'channel' => NOTIFICATION_TYPE_CONSOLE, 'userId' => 'user-1'],
+            ],
+            'subject' => 'Heads up',
+            'body' => 'console body',
+            'deduplicationKey' => 'console-fail',
+        ];
+
+        try {
+            $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+            $this->fail('expected console zero-delivery to throw');
+        } catch (\Throwable $error) {
+            $this->assertStringContainsString('Console alert delivery failed', $error->getMessage());
+        }
+
+        $this->assertCount(0, $this->database->find('alerts'), 'failed console dispatch must not persist alert');
+    }
+
+    public function testMultiRecipientFanoutNoCollision(): void
+    {
+        $worker = new CountingPersistAlertNotifications();
+
+        $payload = [
+            'project' => ['$id' => 'project-x'],
+            'recipients' => [
+                ['address' => 'user-1', 'channel' => NOTIFICATION_TYPE_CONSOLE, 'userId' => 'user-1'],
+                ['address' => 'user-2', 'channel' => NOTIFICATION_TYPE_CONSOLE, 'userId' => 'user-2'],
+            ],
+            'subject' => 'Heads up',
+            'body' => 'console body',
+            'deduplicationKey' => 'fanout',
+        ];
+
+        $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+
+        $rows = $this->database->find('alerts');
+        $this->assertCount(2, $rows, 'two recipients must produce two distinct alert rows');
+
+        $messageId = \md5('fanout');
+        $ids = [];
+        foreach ($rows as $row) {
+            $this->assertSame($messageId, $row->getAttribute('messageId'), 'all rows share the dedup messageId');
+            $ids[] = $row->getId();
+        }
+        $this->assertCount(2, \array_unique($ids), 'recipient suffixes must keep $id values distinct');
+    }
+
+    public function testRecipientStructRoundtripsUserIdAndTeamId(): void
+    {
+        $worker = new CountingPersistAlertNotifications();
+
+        $payload = [
+            'project' => ['$id' => 'project-x'],
+            'recipients' => [
+                [
+                    'address' => 'console-recipient',
+                    'channel' => NOTIFICATION_TYPE_CONSOLE,
+                    'userId' => 'u1',
+                    'teamId' => 't1',
+                ],
+            ],
+            'subject' => 'Heads up',
+            'body' => 'b',
+            'deduplicationKey' => 'roundtrip',
+        ];
+
+        $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+
+        $rows = $this->database->find('alerts');
+        $this->assertCount(1, $rows);
+        $this->assertSame('u1', $rows[0]->getAttribute('userId'));
+        $this->assertSame('t1', $rows[0]->getAttribute('teamId'));
+    }
+
+    public function testTrackingPixelInjectedIntoEmailHtml(): void
+    {
+        $spy = new SpyEmailAdapter();
+        $this->registry->set('smtp', static fn () => $spy);
+
+        // Force the cloud SMTP branch (project has no smtp config) and
+        // provide an OpenSSL key so injectTrackingPixel actually runs.
+        $previousSmtpHost = \getenv('_APP_SMTP_HOST');
+        $previousOpensslKey = \getenv('_APP_OPENSSL_KEY_V1');
+        \putenv('_APP_SMTP_HOST=spy.smtp.test');
+        \putenv('_APP_OPENSSL_KEY_V1=test-key-32bytes-min-aaaaaaaaaaaaaa');
+
+        try {
+            $worker = new Notifications();
+
+            $payload = [
+                'project' => ['$id' => 'project-x'],
+                'recipients' => [
+                    [
+                        'address' => 'user@example.test',
+                        'channel' => NOTIFICATION_TYPE_EMAIL,
+                        'userId' => 'user-7',
+                    ],
+                ],
+                'subject' => 'Heads up',
+                'body' => 'plain body',
+                'deduplicationKey' => 'pixel-key',
+            ];
+
+            $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+        } finally {
+            \putenv($previousSmtpHost === false ? '_APP_SMTP_HOST' : '_APP_SMTP_HOST=' . $previousSmtpHost);
+            \putenv($previousOpensslKey === false ? '_APP_OPENSSL_KEY_V1' : '_APP_OPENSSL_KEY_V1=' . $previousOpensslKey);
+        }
+
+        $this->assertNotNull($spy->captured, 'SpyEmailAdapter must capture exactly one EmailMessage');
+
+        $body = $spy->captured->getContent();
+        $this->assertStringContainsString('<img src=', $body, 'tracking pixel <img> must be present');
+        $this->assertStringContainsString('/v1/account/alerts/', $body);
+        $this->assertStringContainsString('/track?jwt=', $body);
+
+        // The pixel must sit BEFORE the last </body>.
+        $lastBodyClose = \strripos($body, '</body>');
+        $pixelPosition = \strripos($body, '<img src=');
+        $this->assertNotFalse($lastBodyClose, 'rendered email must include a closing </body>');
+        $this->assertNotFalse($pixelPosition);
+        $this->assertLessThan($lastBodyClose, $pixelPosition, 'pixel must be spliced before the final </body>');
+    }
+
+    public function testPersistAlertReturnsAlertIdAndStoresUserId(): void
+    {
+        $spy = new SpyEmailAdapter();
+        $this->registry->set('smtp', static fn () => $spy);
+
+        $previousSmtpHost = \getenv('_APP_SMTP_HOST');
+        \putenv('_APP_SMTP_HOST=spy.smtp.test');
+
+        try {
+            $worker = new CountingPersistAlertNotifications();
+
+            $payload = [
+                'project' => ['$id' => 'project-x'],
+                'recipients' => [
+                    [
+                        'address' => 'user@example.test',
+                        'channel' => NOTIFICATION_TYPE_EMAIL,
+                        'userId' => 'user-7',
+                    ],
+                ],
+                'subject' => 'Heads up',
+                'body' => 'b',
+                'deduplicationKey' => 'persist-email',
+            ];
+
+            $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+        } finally {
+            \putenv($previousSmtpHost === false ? '_APP_SMTP_HOST' : '_APP_SMTP_HOST=' . $previousSmtpHost);
+        }
+
+        $this->assertSame(1, $worker->persistAlertCalls, 'email channel must persist exactly once');
+        $this->assertCount(1, $worker->persistedIds);
+
+        $alertId = $worker->persistedIds[0];
+        $row = $this->database->getDocument('alerts', $alertId);
+        $this->assertFalse($row->isEmpty(), 'persistAlert must return an id resolvable via getDocument');
+        $this->assertSame('user-7', $row->getAttribute('userId'));
+        $this->assertFalse($row->getAttribute('read'), 'new alerts default to unread');
+        $this->assertSame(\md5('persist-email'), $row->getAttribute('messageId'));
     }
 }
