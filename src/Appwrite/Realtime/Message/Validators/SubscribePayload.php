@@ -2,6 +2,7 @@
 
 namespace Appwrite\Realtime\Message\Validators;
 
+use Appwrite\Utopia\Database\Validator\CustomId;
 use Utopia\Validator;
 
 class SubscribePayload extends Validator
@@ -30,9 +31,15 @@ class SubscribePayload extends Validator
             return false;
         }
 
+        $customId = new CustomId();
+
         foreach ($value as $payload) {
             if (!\is_array($payload)) {
                 $this->description = 'Each subscribe payload must be an object.';
+                return false;
+            }
+            if (\array_key_exists('subscriptionId', $payload) && !$customId->isValid($payload['subscriptionId'])) {
+                $this->description = 'subscriptionId is not a valid id.';
                 return false;
             }
             if (!\array_key_exists('channels', $payload)) {
@@ -43,12 +50,15 @@ class SubscribePayload extends Validator
                 $this->description = 'channels is not a valid array.';
                 return false;
             }
-            if (\array_key_exists('queries', $payload)
-                && (!\is_array($payload['queries']) || !\array_is_list($payload['queries']))
-            ) {
-                $this->description = 'queries is not a valid array.';
-                return false;
+            foreach ($payload['channels'] as $channel) {
+                if (!\is_string($channel)) {
+                    $this->description = 'channels must contain only strings.';
+                    return false;
+                }
             }
+
+            // not validating queries here as we will be doing it anyways during the controller level
+            // kind of expensive validating queries twice as we need to check a lot of cases
         }
 
         return true;
