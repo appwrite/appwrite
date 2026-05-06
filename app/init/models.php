@@ -2,6 +2,7 @@
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model\Account;
+use Appwrite\Utopia\Response\Model\Alert;
 use Appwrite\Utopia\Response\Model\AlgoArgon2;
 use Appwrite\Utopia\Response\Model\AlgoBcrypt;
 use Appwrite\Utopia\Response\Model\AlgoMd5;
@@ -237,6 +238,7 @@ Response::setModel(new BaseList('Column Indexes List', Response::MODEL_COLUMN_IN
 Response::setModel(new BaseList('Users List', Response::MODEL_USER_LIST, 'users', Response::MODEL_USER));
 Response::setModel(new BaseList('Sessions List', Response::MODEL_SESSION_LIST, 'sessions', Response::MODEL_SESSION));
 Response::setModel(new BaseList('Identities List', Response::MODEL_IDENTITY_LIST, 'identities', Response::MODEL_IDENTITY));
+Response::setModel(new BaseList('Alerts List', Response::MODEL_ALERT_LIST, 'alerts', Response::MODEL_ALERT));
 Response::setModel(new BaseList('Logs List', Response::MODEL_LOG_LIST, 'logs', Response::MODEL_LOG));
 Response::setModel(new BaseList('Files List', Response::MODEL_FILE_LIST, 'files', Response::MODEL_FILE));
 Response::setModel(new BaseList('Buckets List', Response::MODEL_BUCKET_LIST, 'buckets', Response::MODEL_BUCKET));
@@ -362,6 +364,7 @@ Response::setModel(new Account());
 Response::setModel(new Preferences());
 Response::setModel(new Session());
 Response::setModel(new Identity());
+Response::setModel(new Alert());
 Response::setModel(new Token());
 Response::setModel(new JWT());
 Response::setModel(new Locale());
