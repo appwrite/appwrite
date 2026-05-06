@@ -9,6 +9,12 @@ use Utopia\Query\Query;
 
 class ClickHouse
 {
+    protected string $namespace = Schema::DEFAULT_NAMESPACE;
+
+    protected bool $sharedTables = false;
+
+    protected ?string $tenant = null;
+
     private Client $client;
     private string $scheme;
 
@@ -29,6 +35,54 @@ class ClickHouse
     }
 
     /**
+     * Set the namespace prefix used for table names.
+     */
+    public function setNamespace(string $namespace): self
+    {
+        if ($namespace !== '' && !\preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $namespace)) {
+            throw new \InvalidArgumentException('Invalid analytics namespace: ' . $namespace);
+        }
+
+        $this->namespace = $namespace === '' ? Schema::DEFAULT_NAMESPACE : $namespace;
+        return $this;
+    }
+
+    public function getNamespace(): string
+    {
+        return $this->namespace;
+    }
+
+    /**
+     * Toggle shared-tables mode. When enabled, tables include a `tenant`
+     * column and reads/writes scope by the configured tenant.
+     */
+    public function setSharedTables(bool $shared): self
+    {
+        $this->sharedTables = $shared;
+        return $this;
+    }
+
+    public function isSharedTables(): bool
+    {
+        return $this->sharedTables;
+    }
+
+    /**
+     * Set the active tenant identifier. Required for shared-tables reads and
+     * writes; ignored otherwise.
+     */
+    public function setTenant(?string $tenant): self
+    {
+        $this->tenant = $tenant;
+        return $this;
+    }
+
+    public function getTenant(): ?string
+    {
+        return $this->tenant;
+    }
+
+    /**
      * Bootstrap the analytics database and tables. Idempotent.
      *
      * @throws Exception
@@ -39,7 +93,7 @@ class ClickHouse
         $this->execute('CREATE DATABASE IF NOT EXISTS ' . $this->quoteIdentifier($this->database), useDatabase: false);
 
         // Create events table
-        $this->execute(Schema::eventsTableSql());
+        $this->execute(Schema::eventsTableSql($this->namespace, $this->sharedTables));
     }
 
     /**
@@ -50,10 +104,19 @@ class ClickHouse
      */
     public function insertEvent(array $event): void
     {
+        if ($this->sharedTables) {
+            if ($this->tenant === null) {
+                throw new Exception('Analytics tenant must be set when sharedTables is enabled.');
+            }
+            $event['tenant'] = $this->tenant;
+        } else {
+            unset($event['tenant']);
+        }
+
         $payload = \json_encode($event, JSON_THROW_ON_ERROR);
 
         $url = $this->buildUrl([
-            'query' => 'INSERT INTO ' . $this->quoteIdentifier(Schema::TABLE_EVENTS) . ' FORMAT JSONEachRow',
+            'query' => 'INSERT INTO ' . $this->quoteIdentifier($this->eventsTable()) . ' FORMAT JSONEachRow',
         ]);
 
         $this->client->addHeader('X-ClickHouse-Database', $this->database);
@@ -75,19 +138,28 @@ class ClickHouse
     }
 
     /**
-     * Aggregate visitors and pageviews for the given project + app, with optional filters.
+     * Aggregate visitors and pageviews for the given app, scoped to the
+     * configured tenant when shared tables are enabled.
      *
      * @param  Query[]  $queries
      * @return array{visitors: int, pageviews: int}
      * @throws Exception
      */
-    public function aggregate(string $projectId, string $appId, array $queries): array
+    public function aggregate(string $appId, array $queries): array
     {
-        $where = ['project_id = {projectId:String}', 'app_id = {appId:String}'];
+        $where = ['app_id = {appId:String}'];
         $params = [
-            'param_projectId' => $projectId,
             'param_appId' => $appId,
         ];
+
+        if ($this->sharedTables) {
+            if ($this->tenant === null) {
+                throw new Exception('Analytics tenant must be set when sharedTables is enabled.');
+            }
+
+            $where[] = 'tenant = {tenant:String}';
+            $params['param_tenant'] = $this->tenant;
+        }
 
         foreach ($queries as $i => $query) {
             $clause = $this->compileQuery($query, $i, $params);
@@ -100,7 +172,7 @@ class ClickHouse
         $sql = 'SELECT '
             . 'uniqExact(visitor_id) AS visitors, '
             . 'countIf(name = \'pageview\') AS pageviews '
-            . 'FROM ' . $this->quoteIdentifier(Schema::TABLE_EVENTS) . ' '
+            . 'FROM ' . $this->quoteIdentifier($this->eventsTable()) . ' '
             . 'WHERE ' . $whereSql
             . ' FORMAT JSON';
 
@@ -112,6 +184,14 @@ class ClickHouse
             'visitors' => (int) ($row['visitors'] ?? 0),
             'pageviews' => (int) ($row['pageviews'] ?? 0),
         ];
+    }
+
+    /**
+     * Get the fully qualified events table name for the configured namespace.
+     */
+    private function eventsTable(): string
+    {
+        return Schema::eventsTable($this->namespace);
     }
 
     /**

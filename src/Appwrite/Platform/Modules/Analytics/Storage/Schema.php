@@ -7,20 +7,38 @@ use Utopia\Query\Schema\Table;
 
 class Schema
 {
-    public const TABLE_EVENTS = 'analytics_events';
+    public const DEFAULT_NAMESPACE = 'analytics';
+
+    public const TABLE_EVENTS = 'events';
 
     /**
-     * Build the CREATE TABLE statement for analytics_events.
-     *
-     * Uses the schema builder for the column scaffolding and falls back to a
-     * raw partition expression so we can keep monthly partitioning.
+     * Build the qualified events table name for a given namespace.
      */
-    public static function eventsTableSql(): string
+    public static function eventsTable(string $namespace = self::DEFAULT_NAMESPACE): string
     {
+        $namespace = $namespace === '' ? self::DEFAULT_NAMESPACE : $namespace;
+
+        return $namespace . '_' . self::TABLE_EVENTS;
+    }
+
+    /**
+     * Build the CREATE TABLE statement for the events table.
+     *
+     * When sharedTables is true, a nullable `tenant` column is added and the
+     * primary key / ORDER BY tuple is prefixed with `tenant` to keep per-tenant
+     * scans efficient.
+     */
+    public static function eventsTableSql(string $namespace = self::DEFAULT_NAMESPACE, bool $sharedTables = false): string
+    {
+        $tableName = self::eventsTable($namespace);
+
         $schema = new ClickHouseSchema();
 
-        $statement = $schema->create(self::TABLE_EVENTS, function (Table $table): void {
-            $table->string('project_id', 36);
+        $statement = $schema->create($tableName, function (Table $table) use ($sharedTables): void {
+            if ($sharedTables) {
+                $table->string('tenant', 36)->nullable();
+            }
+
             $table->string('app_id', 36);
             $table->string('name', 64);
             $table->datetime('timestamp');
@@ -33,7 +51,11 @@ class Schema
             $table->string('browser', 64);
             $table->string('operating_system', 64);
 
-            $table->primary(['project_id', 'app_id', 'name', 'visitor_id', 'timestamp']);
+            $primary = $sharedTables
+                ? ['tenant', 'app_id', 'name', 'visitor_id', 'timestamp']
+                : ['app_id', 'name', 'visitor_id', 'timestamp'];
+
+            $table->primary($primary);
             $table->partitionByRange('toYYYYMM(timestamp)');
         }, ifNotExists: true);
 
