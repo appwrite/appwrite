@@ -1370,5 +1370,65 @@ return [
                 'filter' => ''
             ]
         ]
+    ],
+    [
+        'category' => 'Analytics',
+        'description' => 'Appwrite Analytics is a privacy-first, ClickHouse-backed web analytics service. The following variables configure the connection to ClickHouse and feature toggle.',
+        'variables' => [
+            [
+                'name' => '_APP_ANALYTICS_ENABLED',
+                'description' => 'Toggle the Analytics service. Set to \'enabled\' to expose the analytics API endpoints. Default value is \'disabled\'.',
+                'introduction' => '',
+                'default' => 'disabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CLICKHOUSE_HOST',
+                'description' => 'ClickHouse server hostname. Default value is: \'clickhouse\'.',
+                'introduction' => '',
+                'default' => 'clickhouse',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CLICKHOUSE_PORT',
+                'description' => 'ClickHouse HTTP interface TCP port. Default value is: \'8123\'.',
+                'introduction' => '',
+                'default' => '8123',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CLICKHOUSE_USER',
+                'description' => 'ClickHouse username. Default value is: \'default\'.',
+                'introduction' => '',
+                'default' => 'default',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CLICKHOUSE_PASS',
+                'description' => 'ClickHouse password. Default value is empty.',
+                'introduction' => '',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CLICKHOUSE_DB',
+                'description' => 'ClickHouse database name used for analytics tables. Default value is: \'appwrite\'.',
+                'introduction' => '',
+                'default' => 'appwrite',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+        ]
     ]
 ];

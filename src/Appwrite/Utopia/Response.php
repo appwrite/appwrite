@@ -233,6 +233,10 @@ class Response extends SwooleResponse
     public const MODEL_PROXY_RULE = 'proxyRule';
     public const MODEL_PROXY_RULE_LIST = 'proxyRuleList';
 
+    // Analytics
+    public const MODEL_ANALYTICS_APP = 'analyticsApp';
+    public const MODEL_ANALYTICS_STATS = 'analyticsStats';
+
     // Schedules
     public const MODEL_SCHEDULE = 'schedule';
     public const MODEL_SCHEDULE_LIST = 'scheduleList';

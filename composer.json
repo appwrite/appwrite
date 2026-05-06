@@ -79,6 +79,7 @@
         "utopia-php/pools": "1.*",
         "utopia-php/span": "1.1.*",
         "utopia-php/preloader": "0.2.*",
+        "utopia-php/query": "0.2.*",
         "utopia-php/queue": "0.17.*",
         "utopia-php/servers": "0.3.*",
         "utopia-php/registry": "0.5.*",

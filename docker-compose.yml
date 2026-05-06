@@ -249,6 +249,12 @@ services:
       - _APP_MIGRATION_HOST
       - _TESTS_OAUTH2_GITHUB_CLIENT_ID
       - _TESTS_OAUTH2_GITHUB_CLIENT_SECRET
+      - _APP_ANALYTICS_ENABLED
+      - _APP_CLICKHOUSE_HOST
+      - _APP_CLICKHOUSE_PORT
+      - _APP_CLICKHOUSE_USER
+      - _APP_CLICKHOUSE_PASS
+      - _APP_CLICKHOUSE_DB
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -1378,6 +1384,33 @@ services:
       timeout: 5s
       retries: 12
 
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.8-alpine
+    <<: *x-logging
+    container_name: appwrite-clickhouse
+    profiles: ["analytics"]
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    networks:
+      - appwrite
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    volumes:
+      - appwrite-clickhouse:/var/lib/clickhouse:rw
+    environment:
+      - CLICKHOUSE_DB=${_APP_CLICKHOUSE_DB:-appwrite}
+      - CLICKHOUSE_USER=${_APP_CLICKHOUSE_USER:-default}
+      - CLICKHOUSE_PASSWORD=${_APP_CLICKHOUSE_PASS:-}
+      - CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8123/ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
   coredns: # DNS server for testing purposes (Proxy APIs)
     image: coredns/coredns:1.12.4
     container_name: appwrite-coredns
@@ -1470,6 +1503,7 @@ volumes:
   appwrite-mongodb-keyfile:
   appwrite-postgresql:
   appwrite-redis:
+  appwrite-clickhouse:
   appwrite-cache:
   appwrite-uploads:
   appwrite-imports:

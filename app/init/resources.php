@@ -8,6 +8,7 @@ use Appwrite\Event\Publisher\Migration as MigrationPublisher;
 use Appwrite\Event\Publisher\Screenshot as ScreenshotPublisher;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
+use Appwrite\Platform\Modules\Analytics\Storage\ClickHouse as AnalyticsClickHouse;
 use Appwrite\Utopia\Database\Documents\User;
 use Executor\Executor;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
@@ -372,3 +373,13 @@ $container->set(
 );
 
 $container->set('executor', fn () => new Executor());
+
+$container->set('analyticsStorage', function (): AnalyticsClickHouse {
+    return new AnalyticsClickHouse(
+        host: System::getEnv('_APP_CLICKHOUSE_HOST', 'clickhouse'),
+        port: (int) System::getEnv('_APP_CLICKHOUSE_PORT', 8123),
+        user: System::getEnv('_APP_CLICKHOUSE_USER', 'default'),
+        pass: System::getEnv('_APP_CLICKHOUSE_PASS', ''),
+        database: System::getEnv('_APP_CLICKHOUSE_DB', 'appwrite'),
+    );
+});

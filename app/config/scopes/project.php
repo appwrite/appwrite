@@ -359,4 +359,14 @@ return [
         'description' => 'Access to create, update, and delete proxy rules.',
         'category' => 'Other',
     ],
+
+    // Analytics
+    'analytics.read' => [
+        'description' => 'Access to read analytics apps and stats',
+        'category' => 'Analytics',
+    ],
+    'analytics.write' => [
+        'description' => 'Access to create, update, and delete analytics apps',
+        'category' => 'Analytics',
+    ],
 ];
