@@ -194,9 +194,13 @@ trait NotificationsBase
         $this->assertNotEmpty($secret, '_APP_OPENSSL_KEY_V1 must be set for tracking pixel test');
         $userId = $this->getRoot()['$id'];
 
+        // Track endpoint requires `purpose: 'alert_track'` — see C/M7 in
+        // PR #12195 review. Other claim purposes are silently ignored (which
+        // testTrackingPixelRejectsJwtWithoutPurposeClaim covers).
         $jwt = (new JWT($secret, 'HS256', 2592000, 0))->encode([
             'alertId' => $alertId,
             'userId' => $userId,
+            'purpose' => 'alert_track',
         ]);
 
         $response = $this->client->call(
@@ -227,6 +231,82 @@ trait NotificationsBase
         $this->assertTrue($found['read']);
 
         self::$seededAlertId = null;
+    }
+
+    /**
+     * Reviewer M7: a tracking JWT without a `purpose: 'alert_track'` claim
+     * must be silently rejected. Without the purpose check, any JWT minted
+     * with the same secret (sessions, password reset, etc.) could be
+     * replayed against this endpoint to mark arbitrary alerts as read.
+     *
+     * The endpoint always returns the 1x1 PNG (200 image/png) — the only
+     * observable difference is whether the alert flips to `read: true`.
+     */
+    public function testTrackingPixelRejectsJwtWithoutPurposeClaim(): void
+    {
+        $alertId = $this->seedWebhookFailureAlert();
+        $this->assertNotEmpty($alertId);
+
+        $secret = System::getEnv('_APP_OPENSSL_KEY_V1');
+        $this->assertNotEmpty($secret, '_APP_OPENSSL_KEY_V1 must be set for the JWT purpose-claim test');
+        $userId = $this->getRoot()['$id'];
+
+        // Mint a JWT with valid alertId/userId but NO purpose claim.
+        $jwtNoPurpose = (new JWT($secret, 'HS256', 2592000, 0))->encode([
+            'alertId' => $alertId,
+            'userId' => $userId,
+        ]);
+
+        $response = $this->client->call(
+            Client::METHOD_GET,
+            '/account/alerts/' . $alertId . '/track',
+            ['x-appwrite-project' => 'console'],
+            ['jwt' => $jwtNoPurpose]
+        );
+
+        $this->assertSame(200, $response['headers']['status-code'], 'endpoint must always return 200');
+        $this->assertStringContainsString('image/png', $response['headers']['content-type']);
+
+        $list = $this->client->call(Client::METHOD_GET, '/account/alerts', $this->getConsoleAlertHeaders());
+        $found = null;
+        foreach ($list['body']['alerts'] as $alert) {
+            if ($alert['$id'] === $alertId) {
+                $found = $alert;
+                break;
+            }
+        }
+        $this->assertNotNull($found);
+        $this->assertFalse($found['read'], 'JWT without purpose claim must not flip the read flag');
+
+        // Mint a JWT with a wrong purpose value — same expectation: silently rejected.
+        $jwtWrongPurpose = (new JWT($secret, 'HS256', 2592000, 0))->encode([
+            'alertId' => $alertId,
+            'userId' => $userId,
+            'purpose' => 'something_else',
+        ]);
+
+        $response = $this->client->call(
+            Client::METHOD_GET,
+            '/account/alerts/' . $alertId . '/track',
+            ['x-appwrite-project' => 'console'],
+            ['jwt' => $jwtWrongPurpose]
+        );
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertStringContainsString('image/png', $response['headers']['content-type']);
+
+        $list = $this->client->call(Client::METHOD_GET, '/account/alerts', $this->getConsoleAlertHeaders());
+        $found = null;
+        foreach ($list['body']['alerts'] as $alert) {
+            if ($alert['$id'] === $alertId) {
+                $found = $alert;
+                break;
+            }
+        }
+        $this->assertNotNull($found);
+        $this->assertFalse($found['read'], 'JWT with wrong purpose value must not flip the read flag');
+
+        self::$seededAlertId = $alertId;
     }
 
     public function testTrackingPixelInvalidTokenReturnsPng(): void

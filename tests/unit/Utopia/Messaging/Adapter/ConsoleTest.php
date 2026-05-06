@@ -169,4 +169,54 @@ class ConsoleTest extends TestCase
         // ConsoleMessage extends nothing — pass an unrelated Message implementation
         $adapter->send(new \Appwrite\Utopia\Messaging\Messages\Webhook(urls: ['https://example.test'], payload: []));
     }
+
+    /**
+     * Reviewer C4: a `DuplicateException` thrown by `createDocument` must be
+     * treated as a SUCCESSFUL delivery, not a failure. The adapter previously
+     * lumped Duplicate into the generic Throwable catch, which surfaced as a
+     * per-recipient `error` and caused the worker to throw — re-queueing the
+     * notification and never marking the duplicate as delivered.
+     */
+    public function testConsoleAdapterTreatsDuplicateAsDelivered(): void
+    {
+        $userId = 'user-dup';
+        $messageId = 'msg-dup';
+        $documentId = $this->alertId($messageId, userId: $userId);
+
+        // Pre-insert an alert with the SAME id the adapter will compute. The
+        // adapter's createDocument will hit the primary-key DuplicateException
+        // and must treat it as a successful (idempotent) send.
+        $this->database->createDocument('alerts', new \Utopia\Database\Document([
+            '$id' => $documentId,
+            '$permissions' => [Permission::read(Role::any())],
+            'messageId' => $messageId,
+            'channel' => 'console',
+            'userId' => $userId,
+            'title' => 'pre-existing',
+            'body' => 'pre-existing',
+        ]));
+
+        $message = new ConsoleMessage(
+            recipients: [['userId' => $userId]],
+            title: 'Same alert resent',
+            body: 'b',
+            messageId: ID::custom($messageId),
+            projectId: 'project-x',
+        );
+
+        $adapter = new Console($this->database);
+        $result = $adapter->send($message);
+
+        $this->assertSame(1, $result['deliveredTo'], 'duplicate must count as a successful delivery');
+        $this->assertCount(1, $result['results']);
+        $this->assertSame('success', $result['results'][0]['status'] ?? '', 'duplicate must report success status');
+        $this->assertSame('', $result['results'][0]['error'] ?? 'unset', 'duplicate must not surface a per-recipient error');
+
+        // Still exactly ONE row — the pre-existing one. The adapter must not
+        // overwrite it nor create a sibling.
+        $rows = $this->database->find('alerts');
+        $this->assertCount(1, $rows);
+        $this->assertSame($documentId, $rows[0]->getId());
+        $this->assertSame('pre-existing', $rows[0]->getAttribute('title'), 'duplicate path must not overwrite existing row');
+    }
 }
