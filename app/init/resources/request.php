@@ -12,6 +12,7 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
+use Appwrite\Event\Notification;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
@@ -122,6 +123,9 @@ return function (Container $container): void {
     }, ['publisher']);
     $container->set('queueForMails', function (Publisher $publisher) {
         return new Mail($publisher);
+    }, ['publisher']);
+    $container->set('queueForNotifications', function (Publisher $publisher) {
+        return new Notification($publisher);
     }, ['publisher']);
     $container->set('queueForBuilds', function (Publisher $publisher) {
         return new Build($publisher);
