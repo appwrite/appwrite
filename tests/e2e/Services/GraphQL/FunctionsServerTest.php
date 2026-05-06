@@ -55,10 +55,10 @@ class FunctionsServerTest extends Scope
 
         $query = '
             mutation createVariables($functionId: String!) {
-                var1: functionsCreateVariable(functionId: $functionId, key: "name", value: "John Doe") {
+                var1: functionsCreateVariable(functionId: $functionId, variableId: "unique()", key: "name", value: "John Doe") {
                     _id
                 }
-                var2: functionsCreateVariable(functionId: $functionId, key: "age", value: "42") {
+                var2: functionsCreateVariable(functionId: $functionId, variableId: "unique()", key: "age", value: "42") {
                     _id
                 }
             }

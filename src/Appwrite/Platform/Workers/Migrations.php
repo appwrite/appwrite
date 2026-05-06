@@ -388,8 +388,8 @@ class Migrations extends Action
             'oauth2.write',
             'mocks.read',
             'mocks.write',
-            'policies.read',
-            'policies.write',
+            'project.policies.read',
+            'project.policies.write',
             'templates.read',
             'templates.write',
         ];
