@@ -71,7 +71,8 @@ class Get extends Action
                 $decoded = $decoder->decode($jwt);
 
                 if (
-                    isset($decoded['alertId'], $decoded['userId'])
+                    isset($decoded['alertId'], $decoded['userId'], $decoded['purpose'])
+                    && $decoded['purpose'] === 'alert_track'
                     && $decoded['alertId'] === $alertId
                 ) {
                     $authorization->skip(function () use ($dbForPlatform, $alertId, $decoded) {

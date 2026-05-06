@@ -247,20 +247,20 @@ class Notifications extends Action
         }
         $subject = \strip_tags($subjectTemplate->render());
 
-        // Persist alert BEFORE adapter send so the alertId is available for
-        // the tracking pixel. Failure to persist still allows the email to
-        // go out unsignals (we degrade gracefully).
-        $alertId = null;
-        if ($messageId !== '') {
-            $alertId = $this->persistAlert($dbForPlatform, $messageId, $recipient, $payload);
-        }
+        // Pre-compute the alertId WITHOUT persisting so the tracking pixel
+        // URL is stable, but defer the database write until after a
+        // successful adapter send. Persisting first risks a dedup-by-attribute
+        // hit on retry if SMTP throws — the email would be permanently lost.
+        $deterministicAlertId = $messageId !== ''
+            ? self::buildAlertId($messageId, $recipient)
+            : null;
 
-        // C3 tracking pixel: only injectable when we have a userId AND a
-        // persisted alertId AND a signing key.
+        // Tracking pixel: only injectable when we have a userId AND a
+        // deterministic alertId AND a signing key.
         $userId = $recipient['userId'] ?? '';
         $opensslKey = System::getEnv('_APP_OPENSSL_KEY_V1');
-        if ($alertId !== null && $userId !== '' && !empty($opensslKey)) {
-            $body = $this->injectTrackingPixel($body, $alertId, $userId, $opensslKey);
+        if ($deterministicAlertId !== null && $userId !== '' && !empty($opensslKey)) {
+            $body = $this->injectTrackingPixel($body, $deterministicAlertId, $userId, $opensslKey);
         }
 
         /** @var EmailAdapter $adapter */
@@ -320,13 +320,21 @@ class Notifications extends Action
         try {
             $adapter->send($emailMessage);
         } catch (Throwable $error) {
-            if ($type === 'smtp') {
-                throw new Exception('Error sending notification: ' . $error->getMessage(), 401);
-            }
+            // Use 500 for any SMTP delivery failure: timeouts, DNS, refused
+            // connections, and authentication errors are all infrastructure
+            // problems, not HTTP-style 401s. The queue infrastructure handles
+            // retries based on the throw, not the code.
             throw new Exception('Error sending notification: ' . $error->getMessage(), 500);
         }
 
-        return $alertId;
+        // Persist the alert ONLY after a successful send. The Track endpoint
+        // tolerates a missing alert row, so a tracking pixel fetched between
+        // send and persistence is harmless.
+        if ($messageId !== '') {
+            return $this->persistAlert($dbForPlatform, $messageId, $recipient, $payload);
+        }
+
+        return null;
     }
 
     /**
@@ -448,10 +456,10 @@ class Notifications extends Action
         // userId is supplied (matches Console adapter's own bookkeeping).
         if ($channel === NOTIFICATION_TYPE_CONSOLE && $userId === '' && $teamId === '') {
             $userId = $address;
+            $recipient['userId'] = $userId;
         }
 
-        $idSuffix = \substr(\md5($channel . ':' . $address . ':' . $userId . ':' . $teamId), 0, 8);
-        $alertId = $messageId . '_' . $idSuffix;
+        $alertId = self::buildAlertId($messageId, $recipient);
 
         $permissions = $this->buildAlertPermissions($userId, $teamId);
         if (empty($permissions)) {
@@ -479,6 +487,24 @@ class Notifications extends Action
             $existing = $dbForPlatform->getDocument('alerts', $alertId);
             return $existing->isEmpty() ? $alertId : $existing->getId();
         }
+    }
+
+    /**
+     * Build the deterministic alertId composed of the messageId plus an
+     * 8-char hash over the recipient identity. Single source of truth used
+     * by both `persistAlert()` and `dispatchEmail()` so the tracking pixel
+     * URL matches the eventually-persisted row exactly.
+     *
+     * @param array{address: string, channel: string, signatureKey?: string, userId?: string, teamId?: string} $recipient
+     */
+    private static function buildAlertId(string $messageId, array $recipient): string
+    {
+        $channel = $recipient['channel'];
+        $address = $recipient['address'];
+        $userId = $recipient['userId'] ?? '';
+        $teamId = $recipient['teamId'] ?? '';
+
+        return $messageId . '_' . \substr(\md5($channel . ':' . $address . ':' . $userId . ':' . $teamId), 0, 8);
     }
 
     /**
@@ -542,6 +568,7 @@ class Notifications extends Action
             ->encode([
                 'alertId' => $alertId,
                 'userId' => $userId,
+                'purpose' => 'alert_track',
             ]);
 
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'disabled' ? 'http' : 'https';

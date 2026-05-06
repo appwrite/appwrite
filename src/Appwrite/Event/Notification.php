@@ -272,6 +272,7 @@ class Notification extends Event
         $this->name = '';
         $this->subject = '';
         $this->body = '';
+        $this->preview = '';
         $this->variables = [];
         $this->bodyTemplate = '';
         $this->attachment = [];
