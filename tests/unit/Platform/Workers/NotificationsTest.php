@@ -39,7 +39,7 @@ class SpyNotifications extends Notifications
         array $payload,
         Document $project,
         Registry $register,
-        Database $database,
+        Database $dbForPlatform,
         Log $log,
     ): ?string {
         $channel = $recipient['channel'];
@@ -62,7 +62,7 @@ class SpyNotifications extends Notifications
         }
 
         if ($channel === NOTIFICATION_TYPE_CONSOLE || $channel === NOTIFICATION_TYPE_EMAIL) {
-            return $this->persistAlert($database, $messageId, $recipient, $payload);
+            return $this->persistAlert($dbForPlatform, $messageId, $recipient, $payload);
         }
 
         return null;
@@ -82,10 +82,10 @@ class CountingPersistAlertNotifications extends Notifications
     /** @var array<int, string> */
     public array $persistedIds = [];
 
-    protected function persistAlert(Database $database, string $messageId, array $recipient, array $payload): string
+    protected function persistAlert(Database $dbForPlatform, string $messageId, array $recipient, array $payload): string
     {
         $this->persistAlertCalls++;
-        $alertId = parent::persistAlert($database, $messageId, $recipient, $payload);
+        $alertId = parent::persistAlert($dbForPlatform, $messageId, $recipient, $payload);
         $this->persistedIds[] = $alertId;
         return $alertId;
     }
@@ -98,7 +98,7 @@ class CountingPersistAlertNotifications extends Notifications
  */
 class ZeroDeliveryConsoleNotifications extends Notifications
 {
-    protected function dispatchConsole(array $recipient, string $messageId, array $payload, Database $database): ?string
+    protected function dispatchConsole(array $recipient, string $messageId, array $payload, Database $dbForPlatform): ?string
     {
         // Simulate the Console adapter swallowing a per-recipient
         // exception and reporting zero deliveries.
