@@ -97,23 +97,44 @@ class ClickHouse
     }
 
     /**
-     * Insert a single analytics event.
+     * Insert a single analytics event. Convenience wrapper around
+     * insertEvents() that keeps the single-row call sites concise.
      *
      * @param  array<string, mixed>  $event
      * @throws Exception
      */
     public function insertEvent(array $event): void
     {
-        if ($this->sharedTables) {
-            if ($this->tenant === null) {
-                throw new Exception('Analytics tenant must be set when sharedTables is enabled.');
-            }
-            $event['tenant'] = $this->tenant;
-        } else {
-            unset($event['tenant']);
+        $this->insertEvents([$event]);
+    }
+
+    /**
+     * Batch insert analytics events using ClickHouse's JSONEachRow bulk
+     * format. Auto-injects the tenant column when sharedTables is enabled.
+     *
+     * @param  array<int, array<string, mixed>>  $events
+     * @throws Exception
+     */
+    public function insertEvents(array $events): bool
+    {
+        if (empty($events)) {
+            return true;
         }
 
-        $payload = \json_encode($event, JSON_THROW_ON_ERROR);
+        if ($this->sharedTables && $this->tenant === null) {
+            throw new Exception('Analytics tenant must be set when sharedTables is enabled.');
+        }
+
+        $lines = [];
+        foreach ($events as $event) {
+            unset($event['tenant']);
+            if ($this->sharedTables) {
+                $event['tenant'] = $this->tenant;
+            }
+            $lines[] = \json_encode($event, JSON_THROW_ON_ERROR);
+        }
+
+        $body = \implode("\n", $lines);
 
         $url = $this->buildUrl([
             'query' => 'INSERT INTO ' . $this->quoteIdentifier($this->eventsTable()) . ' FORMAT JSONEachRow',
@@ -126,7 +147,7 @@ class ClickHouse
             $response = $this->client->fetch(
                 url: $url,
                 method: Client::METHOD_POST,
-                body: $payload,
+                body: $body,
             );
         } finally {
             $this->client->removeHeader('Content-Type');
@@ -135,6 +156,8 @@ class ClickHouse
         if ($response->getStatusCode() !== 200) {
             throw new Exception('ClickHouse insert failed (HTTP ' . $response->getStatusCode() . '): ' . $response->getBody());
         }
+
+        return true;
     }
 
     /**
