@@ -254,15 +254,12 @@ const FUNCTION_ALLOWLIST_HEADERS_RESPONSE = ['content-type', 'content-length'];
 const MESSAGE_TYPE_EMAIL = 'email';
 const MESSAGE_TYPE_SMS = 'sms';
 const MESSAGE_TYPE_PUSH = 'push';
-// Notification channels
-const NOTIFICATION_CHANNEL_EMAIL = 'email';
-const NOTIFICATION_CHANNEL_SMS = 'sms';
-const NOTIFICATION_CHANNEL_PUSH = 'push';
-const NOTIFICATION_CHANNEL_CONSOLE = 'console';
-const NOTIFICATION_CHANNEL_WEBHOOK = 'webhook';
-// Notification provider types (custom — extend MESSAGE_TYPE_*)
-const MESSAGE_TYPE_CONSOLE = 'console';
-const MESSAGE_TYPE_WEBHOOK = 'webhook';
+// Notification types
+const NOTIFICATION_TYPE_EMAIL = 'email';
+const NOTIFICATION_TYPE_SMS = 'sms';
+const NOTIFICATION_TYPE_PUSH = 'push';
+const NOTIFICATION_TYPE_CONSOLE = 'console';
+const NOTIFICATION_TYPE_WEBHOOK = 'webhook';
 const RESOURCE_TYPE_ALERTS = 'alerts';
 // API key types
 const API_KEY_STANDARD = 'standard';
