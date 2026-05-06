@@ -13,11 +13,9 @@ class Notification extends Event
     protected string $subject = '';
     protected string $body = '';
     protected string $preview = '';
-    protected array $smtp = [];
     protected array $variables = [];
     protected string $bodyTemplate = '';
     protected array $attachment = [];
-    protected array $customMailOptions = [];
 
     /**
      * Recipients to deliver the notification to.
@@ -27,9 +25,10 @@ class Notification extends Event
      * additionally carry an optional `signatureKey`; when set, the
      * webhook adapter signs the request body with HMAC-SHA256 and adds
      * the `X-Appwrite-Webhook-Signature` header. Without a key the
-     * payload is sent unsigned.
+     * payload is sent unsigned. Optional `userId` and `teamId` identify
+     * the owner of the alert (used by C2/C3 budget/limit alerts).
      *
-     * @var array<int, array{address: string, channel: string, signatureKey?: string}>
+     * @var array<int, array{address: string, channel: string, signatureKey?: string, userId?: string, teamId?: string}>
      */
     protected array $recipients = [];
 
@@ -122,105 +121,6 @@ class Notification extends Event
         return $this->bodyTemplate;
     }
 
-    public function setSmtpHost(string $host): self
-    {
-        $this->smtp['host'] = $host;
-        return $this;
-    }
-
-    public function setSmtpPort(int $port): self
-    {
-        $this->smtp['port'] = $port;
-        return $this;
-    }
-
-    public function setSmtpUsername(string $username): self
-    {
-        $this->smtp['username'] = $username;
-        return $this;
-    }
-
-    public function setSmtpPassword(string $password): self
-    {
-        $this->smtp['password'] = $password;
-        return $this;
-    }
-
-    public function setSmtpSecure(string $secure): self
-    {
-        $this->smtp['secure'] = $secure;
-        return $this;
-    }
-
-    public function setSmtpSenderEmail(string $senderEmail): self
-    {
-        $this->smtp['senderEmail'] = $senderEmail;
-        return $this;
-    }
-
-    public function setSmtpSenderName(string $senderName): self
-    {
-        $this->smtp['senderName'] = $senderName;
-        return $this;
-    }
-
-    public function setSmtpReplyToEmail(string $email): self
-    {
-        $this->smtp['replyToEmail'] = $email;
-        return $this;
-    }
-
-    public function setSmtpReplyToName(string $name): self
-    {
-        $this->smtp['replyToName'] = $name;
-        return $this;
-    }
-
-    public function getSmtpHost(): string
-    {
-        return $this->smtp['host'] ?? '';
-    }
-
-    public function getSmtpPort(): int
-    {
-        return $this->smtp['port'] ?? 0;
-    }
-
-    public function getSmtpUsername(): string
-    {
-        return $this->smtp['username'] ?? '';
-    }
-
-    public function getSmtpPassword(): string
-    {
-        return $this->smtp['password'] ?? '';
-    }
-
-    public function getSmtpSecure(): string
-    {
-        return $this->smtp['secure'] ?? '';
-    }
-
-    public function getSmtpSenderEmail(): string
-    {
-        return $this->smtp['senderEmail'] ?? '';
-    }
-
-    public function getSmtpSenderName(): string
-    {
-        return $this->smtp['senderName'] ?? '';
-    }
-
-    public function getSmtpReplyToEmail(): string
-    {
-        return $this->smtp['replyToEmail'] ?? '';
-    }
-
-    public function getSmtpReplyToName(): string
-    {
-        return $this->smtp['replyToName'] ?? '';
-    }
-
     public function getVariables(): array
     {
         return $this->variables;
@@ -260,52 +160,8 @@ class Notification extends Event
         return $this;
     }
 
-    public function setSenderEmail(string $email): self
-    {
-        $this->customMailOptions['senderEmail'] = $email;
-        return $this;
-    }
-
-    public function getSenderEmail(): string
-    {
-        return $this->customMailOptions['senderEmail'] ?? '';
-    }
-
-    public function setSenderName(string $name): self
-    {
-        $this->customMailOptions['senderName'] = $name;
-        return $this;
-    }
-
-    public function getSenderName(): string
-    {
-        return $this->customMailOptions['senderName'] ?? '';
-    }
-
-    public function setReplyToEmail(string $email): self
-    {
-        $this->customMailOptions['replyToEmail'] = $email;
-        return $this;
-    }
-
-    public function getReplyToEmail(): string
-    {
-        return $this->customMailOptions['replyToEmail'] ?? '';
-    }
-
-    public function setReplyToName(string $name): self
-    {
-        $this->customMailOptions['replyToName'] = $name;
-        return $this;
-    }
-
-    public function getReplyToName(): string
-    {
-        return $this->customMailOptions['replyToName'] ?? '';
-    }
-
     /**
-     * @param array<int, array{address: string, channel: string, signatureKey?: string}> $recipients
+     * @param array<int, array{address: string, channel: string, signatureKey?: string, userId?: string, teamId?: string}> $recipients
      */
     public function setRecipients(array $recipients): self
     {
@@ -314,18 +170,29 @@ class Notification extends Event
     }
 
     /**
-     * @return array<int, array{address: string, channel: string, signatureKey?: string}>
+     * @return array<int, array{address: string, channel: string, signatureKey?: string, userId?: string, teamId?: string}>
      */
     public function getRecipients(): array
     {
         return $this->recipients;
     }
 
-    public function addRecipient(string $address, string $channel = NOTIFICATION_CHANNEL_EMAIL, ?string $signatureKey = null): self
-    {
+    public function addRecipient(
+        string $address,
+        string $channel = NOTIFICATION_TYPE_EMAIL,
+        ?string $signatureKey = null,
+        ?string $userId = null,
+        ?string $teamId = null,
+    ): self {
         $recipient = ['address' => $address, 'channel' => $channel];
         if ($signatureKey !== null && $signatureKey !== '') {
             $recipient['signatureKey'] = $signatureKey;
+        }
+        if ($userId !== null && $userId !== '') {
+            $recipient['userId'] = $userId;
+        }
+        if ($teamId !== null && $teamId !== '') {
+            $recipient['teamId'] = $teamId;
         }
         $this->recipients[] = $recipient;
         return $this;
@@ -408,7 +275,6 @@ class Notification extends Event
         $this->variables = [];
         $this->bodyTemplate = '';
         $this->attachment = [];
-        $this->customMailOptions = [];
         $this->recipients = [];
         $this->channels = [];
         $this->template = '';
@@ -429,7 +295,7 @@ class Notification extends Event
         if (empty($recipients) && !empty($this->recipient)) {
             $recipients = [[
                 'address' => $this->recipient,
-                'channel' => NOTIFICATION_CHANNEL_EMAIL,
+                'channel' => NOTIFICATION_TYPE_EMAIL,
             ]];
         }
 
@@ -447,10 +313,8 @@ class Notification extends Event
             'bodyTemplate' => $this->bodyTemplate,
             'body' => $this->body,
             'preview' => $this->preview,
-            'smtp' => $this->smtp,
             'variables' => $this->variables,
             'attachment' => $this->attachment,
-            'customMailOptions' => $this->customMailOptions,
             'events' => Event::generateEvents($this->getEvent(), $this->getParams()),
             'platform' => $platform,
         ];
