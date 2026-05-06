@@ -56,9 +56,12 @@ class SubscribePayload extends Validator
                     return false;
                 }
             }
-
-            // not validating queries here as we will be doing it anyways during the controller level
-            // kind of expensive validating queries twice as we need to check a lot of cases
+            if (\array_key_exists('queries', $payload)
+                && (!\is_array($payload['queries']) || !\array_is_list($payload['queries']))
+            ) {
+                $this->description = 'queries is not a valid array.';
+                return false;
+            }
         }
 
         return true;
