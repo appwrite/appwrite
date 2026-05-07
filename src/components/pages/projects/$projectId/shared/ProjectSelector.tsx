@@ -151,7 +151,10 @@ export function ProjectSelector({
       placeholderData: keepPreviousData,
     })
 
-  // Fetch projects for selected team with infinite scroll (excluding pinned)
+  const projectSearchActive = Boolean(projectSearch.trim())
+  const listExcludePinnedIds = projectSearchActive ? undefined : pinnedIds
+
+  // Fetch projects for selected team with infinite scroll (exclude pinned only when not searching)
   const {
     projects: paginatedProjects,
     total: infiniteTotal,
@@ -163,7 +166,7 @@ export function ProjectSelector({
     resolvedTeam?.$id,
     projectsPageSize,
     projectSearch,
-    pinnedIds,
+    listExcludePinnedIds,
   )
 
   const queryClient = useQueryClient()
@@ -246,8 +249,14 @@ export function ProjectSelector({
     )
   }, [currentProjectTeam, organizations])
 
-  // Total project count = pinned + unpinned (from infinite query); no separate list call
-  const projectsCount = pinnedIds.length + (infiniteTotal ?? 0)
+  const lastFullProjectsCountRef = useRef(0)
+  if (!projectSearchActive && resolvedTeam?.$id) {
+    lastFullProjectsCountRef.current = pinnedIds.length + (infiniteTotal ?? 0)
+  }
+  // Plan limit uses full org count; while searching, `infiniteTotal` is search-scoped
+  const projectsCount = projectSearchActive
+    ? lastFullProjectsCountRef.current
+    : pinnedIds.length + (infiniteTotal ?? 0)
 
   const filteredTeams = useMemo(() => {
     if (!teams.length) return []
@@ -257,7 +266,7 @@ export function ProjectSelector({
     )
   }, [teamSearch, teams])
 
-  // Pinned projects in Project shape (order from pinnedIds), filtered by search
+  // Pinned projects in Project shape (order from pinnedIds); only prepended when not searching
   const pinnedProjects = useMemo(() => {
     if (!pinnedProjectsData?.projects?.length || !resolvedTeam) return []
     const raw = pinnedProjectsData.projects as Array<{
@@ -269,7 +278,7 @@ export function ProjectSelector({
       status?: string
     }>
     const byId = new Map(raw.map((p) => [p.$id, p]))
-    const list = pinnedIds
+    return pinnedIds
       .map((id) => byId.get(id))
       .filter((p): p is NonNullable<typeof p> => p != null)
       .map((p) => ({
@@ -281,27 +290,27 @@ export function ProjectSelector({
         icon: p.name.charAt(0).toUpperCase(),
         archived: p.status === 'archived',
       })) as Project[]
-    if (!projectSearch.trim()) return list
-    const q = projectSearch.toLowerCase()
-    return list.filter((p) => p.name?.toLowerCase().includes(q))
-  }, [pinnedProjectsData, pinnedIds, resolvedTeam, projectSearch])
+  }, [pinnedProjectsData, pinnedIds, resolvedTeam])
 
-  // Combine: current (if same team), then pinned, then paginated (excluding current and pinned)
+  // Combine: current (if same team), then pinned (idle only), then paginated (excluding current)
   const displayProjects = useMemo(() => {
     if (!resolvedTeam) return []
 
     const otherProjects = paginatedProjects.filter((p) => p.$id !== projectId)
-    const pinnedFiltered = pinnedProjects.filter((p) => p.$id !== projectId)
+    const pinnedForList = projectSearchActive
+      ? []
+      : pinnedProjects.filter((p) => p.$id !== projectId)
 
     if (currentProject && currentProject.teamId === resolvedTeam.$id) {
-      return [currentProject, ...pinnedFiltered, ...otherProjects]
+      return [currentProject, ...pinnedForList, ...otherProjects]
     }
-    return [...pinnedFiltered, ...otherProjects]
+    return [...pinnedForList, ...otherProjects]
   }, [
     currentProject,
     pinnedProjects,
     paginatedProjects,
     projectId,
+    projectSearchActive,
     resolvedTeam,
   ])
 

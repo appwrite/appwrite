@@ -802,6 +802,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const pinnedIds = useMemo(() => parsePinnedProjectIds(teamPrefs), [teamPrefs])
   const updateTeamPrefsMutation = useUpdateConsoleTeamPrefs(orgTeamId)
 
+  /** While searching, list API must include pinned rows if they match; pinned section is hidden in the UI. */
+  const projectsSearchActive = Boolean(searchQuery.trim())
+  const listExcludePinnedIds = projectsSearchActive ? undefined : pinnedIds
+
   const { data: pinnedProjectsData } = useQuery({
     ...pinnedProjectsQueryOptions(orgTeamId, pinnedIds),
     placeholderData: keepPreviousData,
@@ -813,7 +817,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     setDisplayedPage((p) => (p === urlProjectsPage ? p : urlProjectsPage))
   }, [urlProjectsPage])
 
-  // Fetch data for the requested page (triggers load when user changes page); exclude pinned
+  // Fetch data for the requested page (triggers load when user changes page); exclude pinned when not searching
   const {
     data: requestedProjectsData,
     isLoading: activeProjectsLoading,
@@ -825,12 +829,12 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       requestedPage - 1,
       urlProjectsLimit,
       searchQuery,
-      pinnedIds,
+      listExcludePinnedIds,
     ),
     placeholderData: keepPreviousData,
   })
 
-  // Fetch data for the displayed page (what we show - stays until new page is ready); exclude pinned
+  // Fetch data for the displayed page (what we show - stays until new page is ready); exclude pinned when not searching
   const { data: activeProjectsData, isLoading: displayedProjectsLoading } =
     useQuery({
       ...activeProjectsQueryOptions(
@@ -838,7 +842,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         displayedPage - 1,
         urlProjectsLimit,
         searchQuery,
-        pinnedIds,
+        listExcludePinnedIds,
       ),
       placeholderData: keepPreviousData,
     })
@@ -955,13 +959,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         }
       })
   }, [pinnedProjectsData, pinnedIds])
-
-  // Filter pinned by search (independent from main list filter)
-  const pinnedFiltered = useMemo(() => {
-    if (!searchQuery.trim()) return pinnedProjects
-    const q = searchQuery.toLowerCase()
-    return pinnedProjects.filter((p) => p.name?.toLowerCase().includes(q))
-  }, [pinnedProjects, searchQuery])
 
   const canPinProjectsResult = canPinProjects(access, features)
   const canReorderPinned =
@@ -1094,7 +1091,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     }
   }
 
-  // Get active projects from API (already filtered by team server-side, excludes pinned)
+  // Get active projects from API (team-scoped; pinned ids omitted from the list query only when not searching)
   const activeProjects = useMemo(() => {
     if (!activeProjectsData?.projects) return []
 
@@ -1312,9 +1309,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const filteredProjectsByTeam = projectsByTeam
     .map(({ team, projects }) => ({
       team,
-      projects: projects.filter((p) =>
-        p.name?.toLowerCase().includes(searchQuery.toLowerCase()),
-      ),
+      projects: projectsSearchActive
+        ? projects
+        : projects.filter((p) =>
+            p.name?.toLowerCase().includes(searchQuery.toLowerCase()),
+          ),
     }))
     .filter(({ projects }) => projects.length > 0)
 
@@ -1971,13 +1970,14 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                         ) : (
                           <>
                             {/* Pinned projects (keeps previous data visible while refetching) */}
-                            {pinnedFiltered.length > 0 && (
+                            {!projectsSearchActive &&
+                              pinnedProjects.length > 0 && (
                               <div className="mb-8">
                                 <h2 className="mb-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider">
                                   Pinned
                                 </h2>
                                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                                  {pinnedFiltered.map((project, index) => {
+                                  {pinnedProjects.map((project, index) => {
                                     const isDragActive =
                                       canReorderPinned &&
                                       pinnedDraggingIndex !== null
@@ -2168,7 +2168,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                               {displayedProjectsByTeam.map(
                                 ({ team, projects }) => (
                                   <div key={team.$id}>
-                                    {pinnedFiltered.length > 0 && (
+                                    {!projectsSearchActive &&
+                                      pinnedProjects.length > 0 && (
                                       <h2 className="mb-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider">
                                         All projects
                                       </h2>
@@ -2278,7 +2279,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                             </div>
 
                             {/* Empty State: no pinned and no other projects (not shown while search is fetching) */}
-                            {pinnedFiltered.length === 0 &&
+                            {(projectsSearchActive ||
+                              pinnedProjects.length === 0) &&
                               displayedProjectsByTeam.length === 0 && (
                                 <EmptyState
                                   icon={Search}

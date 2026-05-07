@@ -61,6 +61,17 @@ function projectListSearchOrQuery(trimmedSearch: string): string {
   ])
 }
 
+/** Console project custom ID rules (a–z, 0–9, hyphen; max 36; no leading special char). */
+function isProbableConsoleProjectId(value: string): boolean {
+  return /^[a-z0-9][a-z0-9-]{0,35}$/i.test(value)
+}
+
+function projectMatchesActiveListStatus(project: Models.Project): boolean {
+  if (!getActiveProfileFeatures().billing) return true
+  const status = project.status
+  return status == null || status !== 'archived'
+}
+
 // ============================================================================
 // QUERY FUNCTIONS
 // ============================================================================
@@ -126,6 +137,28 @@ export async function fetchActiveProjects(
       ? excludeProjectIds
       : []
 
+  // `projects.list` only documents filters on name/teamId/labels/search — not `$id`.
+  // Pasting a project ID never hits fulltext/labels, so resolve ID-shaped terms via get.
+  if (trimmedSearch && isProbableConsoleProjectId(trimmedSearch)) {
+    try {
+      const direct = await sdk.forConsole.projects.get({
+        projectId: trimmedSearch,
+      })
+      if (
+        !excludeIds.includes(direct.$id) &&
+        direct.teamId === teamId &&
+        projectMatchesActiveListStatus(direct)
+      ) {
+        return {
+          projects: page === 0 ? [direct] : [],
+          total: 1,
+        }
+      }
+    } catch {
+      // Not found, wrong console, or no access — fall through to list search.
+    }
+  }
+
   const queries =
     excludeIds.length > 0
       ? [
@@ -142,8 +175,6 @@ export async function fetchActiveProjects(
 
   const response = await sdk.forConsole.projects.list({
     queries,
-    // When using query-based search, omit `search` so behavior matches the legacy console.
-    ...(trimmedSearch ? {} : { search: search?.trim() || undefined }),
     total: true,
   })
 
