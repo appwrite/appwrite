@@ -57,6 +57,8 @@ class Subscribe extends Action
                 $convertedQueries = Realtime::convertQueries($queries);
             } catch (QueryException $e) {
                 throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Invalid query: ' . $e->getMessage());
+            } catch (\TypeError $e) {
+                throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Invalid query: query elements must be strings.');
             }
 
             $convertedChannels = \array_keys(Realtime::convertChannels($payload['channels'], $userId));
