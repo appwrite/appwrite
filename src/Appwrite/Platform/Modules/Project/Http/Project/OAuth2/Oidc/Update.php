@@ -82,13 +82,13 @@ class Update extends Base
                 'hint' => '',
             ],
             [
-                '$id' => 'tokenUrl',
+                '$id' => 'tokenURL',
                 'name' => 'Token URL',
                 'example' => 'https://myoauth.com/oauth2/token',
                 'hint' => '',
             ],
             [
-                '$id' => 'userInfoUrl',
+                '$id' => 'userInfoURL',
                 'name' => 'User Info URL',
                 'example' => 'https://myoauth.com/oauth2/userinfo',
                 'hint' => '',
@@ -127,8 +127,8 @@ class Update extends Base
             ->param(static::getClientSecretParamName(), null, new Nullable(new Text(512, 0)), static::getClientSecretDescription(), optional: true)
             ->param('wellKnownURL', null, new Nullable(new URL(allowEmpty: true)), 'OpenID Connect well-known configuration URL. When provided, authorization, token, and user info endpoints can be discovered automatically. For example: https://myoauth.com/.well-known/openid-configuration', optional: true)
             ->param('authorizationURL', null, new Nullable(new URL(allowEmpty: true)), 'OpenID Connect authorization endpoint URL. Required when wellKnownURL is not provided. For example: https://myoauth.com/oauth2/authorize', optional: true)
-            ->param('tokenUrl', null, new Nullable(new URL(allowEmpty: true)), 'OpenID Connect token endpoint URL. Required when wellKnownURL is not provided. For example: https://myoauth.com/oauth2/token', optional: true)
-            ->param('userInfoUrl', null, new Nullable(new URL(allowEmpty: true)), 'OpenID Connect user info endpoint URL. Required when wellKnownURL is not provided. For example: https://myoauth.com/oauth2/userinfo', optional: true)
+            ->param('tokenURL', null, new Nullable(new URL(allowEmpty: true)), 'OpenID Connect token endpoint URL. Required when wellKnownURL is not provided. For example: https://myoauth.com/oauth2/token', optional: true, aliases: ['tokenUrl'])
+            ->param('userInfoURL', null, new Nullable(new URL(allowEmpty: true)), 'OpenID Connect user info endpoint URL. Required when wellKnownURL is not provided. For example: https://myoauth.com/oauth2/userinfo', optional: true, aliases: ['userInfoUrl'])
             ->param('enabled', null, new Nullable(new Boolean()), 'OAuth2 sign-in method status. Set to true to enable new session creation. Setting to true will trigger end-to-end credentials validation, and will throw if the credentials are invalid.', true)
             ->inject('response')
             ->inject('dbForPlatform')
@@ -151,8 +151,8 @@ class Update extends Base
             static::getClientSecretParamName() => '',
             'wellKnownURL' => $decoded['wellKnownEndpoint'] ?? '',
             'authorizationURL' => $decoded['authorizationEndpoint'] ?? '',
-            'tokenUrl' => $decoded['tokenEndpoint'] ?? '',
-            'userInfoUrl' => $decoded['userInfoEndpoint'] ?? '',
+            'tokenURL' => $decoded['tokenEndpoint'] ?? '',
+            'userInfoURL' => $decoded['userInfoEndpoint'] ?? '',
         ]);
     }
 
@@ -174,8 +174,8 @@ class Update extends Base
         ?string $clientSecret,
         ?string $wellKnownURL,
         ?string $authorizationURL,
-        ?string $tokenUrl,
-        ?string $userInfoUrl,
+        ?string $tokenURL,
+        ?string $userInfoURL,
         ?bool $enabled,
         Response $response,
         Database $dbForPlatform,
@@ -201,8 +201,8 @@ class Update extends Base
             'clientSecret' => $clientSecret ?? ($existing['clientSecret'] ?? ''),
             'wellKnownEndpoint' => $wellKnownURL ?? ($existing['wellKnownEndpoint'] ?? ''),
             'authorizationEndpoint' => $authorizationURL ?? ($existing['authorizationEndpoint'] ?? ''),
-            'tokenEndpoint' => $tokenUrl ?? ($existing['tokenEndpoint'] ?? ''),
-            'userInfoEndpoint' => $userInfoUrl ?? ($existing['userInfoEndpoint'] ?? ''),
+            'tokenEndpoint' => $tokenURL ?? ($existing['tokenEndpoint'] ?? ''),
+            'userInfoEndpoint' => $userInfoURL ?? ($existing['userInfoEndpoint'] ?? ''),
         ];
 
         // When enabling, require either wellKnownEndpoint alone, or all three
@@ -215,7 +215,7 @@ class Update extends Base
                 && !empty($merged['userInfoEndpoint']);
 
             if (!$hasWellKnown && !$hasAllDiscovery) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Enabling OpenID Connect requires either wellKnownURL, or all of authorizationURL, tokenUrl, and userInfoUrl.');
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Enabling OpenID Connect requires either wellKnownURL, or all of authorizationURL, tokenURL, and userInfoURL.');
             }
         }
 

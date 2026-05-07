@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Variables;
 
+use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
@@ -33,6 +34,7 @@ class Delete extends Base
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.write')
             ->label('resourceType', RESOURCE_TYPE_SITES)
+            ->label('event', 'variables.[variableId].delete')
             ->label('audits.event', 'variable.delete')
             ->label('audits.resource', 'site/{request.siteId}')
             ->label('sdk', new Method(
@@ -54,11 +56,12 @@ class Delete extends Base
             ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site unique ID.', false, ['dbForProject'])
             ->param('variableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Variable unique ID.', false, ['dbForProject'])
             ->inject('response')
+            ->inject('queueForEvents')
             ->inject('dbForProject')
             ->callback($this->action(...));
     }
 
-    public function action(string $siteId, string $variableId, Response $response, Database $dbForProject)
+    public function action(string $siteId, string $variableId, Response $response, QueueEvent $queueForEvents, Database $dbForProject)
     {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -76,6 +79,8 @@ class Delete extends Base
         $dbForProject->updateDocument('sites', $site->getId(), new Document([
             'live' => false,
         ]));
+
+        $queueForEvents->setParam('variableId', $variable->getId());
 
         $response->noContent();
     }

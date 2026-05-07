@@ -623,6 +623,11 @@ return [
         'description' => 'Synchronous function execution timed out. Use asynchronous execution instead, or ensure the execution duration doesn\'t exceed 30 seconds.',
         'code' => 408,
     ],
+    Exception::FUNCTION_ASYNCHRONOUS_TIMEOUT => [
+        'name' => Exception::FUNCTION_ASYNCHRONOUS_TIMEOUT,
+        'description' => 'Asynchronous function execution timed out. Ensure the execution duration doesn\'t exceed the configured function timeout.',
+        'code' => 408,
+    ],
     Exception::FUNCTION_TEMPLATE_NOT_FOUND => [
         'name' => Exception::FUNCTION_TEMPLATE_NOT_FOUND,
         'description' => 'Function Template with the requested ID could not be found.',
@@ -686,6 +691,11 @@ return [
         'name' => Exception::BUILD_FAILED,
         'description' => 'Build with the requested ID failed. Please check the logs for more information.',
         'code' => 400,
+    ],
+    Exception::BUILD_TIMEOUT => [
+        'name' => Exception::BUILD_TIMEOUT,
+        'description' => 'Build timed out. Increase the build timeout via the `_APP_COMPUTE_BUILD_TIMEOUT` environment variable, or simplify the build to complete within the limit.',
+        'code' => 408,
     ],
 
     /** Deployments */

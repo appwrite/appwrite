@@ -11,7 +11,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
 class Get extends Action
 {
@@ -86,28 +86,28 @@ class Get extends Action
                     )
                 ]
             ))
-            ->param('provider', '', new Text(128), 'OAuth2 provider key. For example: github, google, apple.')
+            ->param('providerId', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders', [])), true), 'OAuth2 provider key. For example: github, google, apple.', aliases: ['provider'])
             ->inject('response')
             ->inject('project')
             ->callback($this->action(...));
     }
 
     public function action(
-        string $provider,
+        string $providerId,
         Response $response,
         Document $project,
     ): void {
         $providers = Config::getParam('oAuthProviders', []);
-        if (!\array_key_exists($provider, $providers) || !($providers[$provider]['enabled'] ?? false)) {
+        if (!\array_key_exists($providerId, $providers) || !($providers[$providerId]['enabled'] ?? false)) {
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
         $actions = Base::getProviderActions();
-        if (!isset($actions[$provider])) {
+        if (!isset($actions[$providerId])) {
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
-        $updateClass = $actions[$provider];
+        $updateClass = $actions[$providerId];
         $action = new $updateClass();
 
         $response->dynamic($action->buildReadResponse($project), $updateClass::getResponseModel());

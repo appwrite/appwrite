@@ -53,14 +53,17 @@ class FunctionsCustomServerTest extends Scope
         $functionId = $function['body']['$id'] ?? '';
 
         $variable = $this->createVariable($functionId, [
+            'variableId' => 'unique()',
             'key' => 'funcKey1',
             'value' => 'funcValue1',
         ]);
         $variable2 = $this->createVariable($functionId, [
+            'variableId' => 'unique()',
             'key' => 'funcKey2',
             'value' => 'funcValue2',
         ]);
         $variable3 = $this->createVariable($functionId, [
+            'variableId' => 'unique()',
             'key' => 'funcKey3',
             'value' => 'funcValue3',
         ]);
@@ -109,6 +112,7 @@ class FunctionsCustomServerTest extends Scope
 
         // Create a variable for later tests
         $variable = $this->createVariable($functionId, [
+            'variableId' => 'unique()',
             'key' => 'GLOBAL_VARIABLE',
             'value' => 'Global Variable Value',
         ]);
@@ -278,14 +282,17 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(10, $function['body']['timeout']);
 
         $variable = $this->createVariable($functionId, [
+            'variableId' => 'unique()',
             'key' => 'funcKey1',
             'value' => 'funcValue1',
         ]);
         $variable2 = $this->createVariable($functionId, [
+            'variableId' => 'unique()',
             'key' => 'funcKey2',
             'value' => 'funcValue2',
         ]);
         $variable3 = $this->createVariable($functionId, [
+            'variableId' => 'unique()',
             'key' => 'funcKey3',
             'value' => 'funcValue3',
         ]);
@@ -521,6 +528,7 @@ class FunctionsCustomServerTest extends Scope
 
         // Create a variable for later tests
         $variable = $this->createVariable($functionId, [
+            'variableId' => 'unique()',
             'key' => 'GLOBAL_VARIABLE',
             'value' => 'Global Variable Value',
         ]);
@@ -2011,6 +2019,7 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $variable = $this->createVariable($functionId, [
+            'variableId' => 'unique()',
             'key' => 'CUSTOM_VARIABLE',
             'value' => 'variable'
         ]);

@@ -62,6 +62,9 @@ class Collection extends Model
             ->addRule('attributes', [
                 'type' => [
                     Response::MODEL_ATTRIBUTE_BOOLEAN,
+                    // BigInt must come before Integer: response model dispatch is "first match wins",
+                    // and Integer matches all int types (including bigint), while BigInt is more specific (size=8).
+                    Response::MODEL_ATTRIBUTE_BIGINT,
                     Response::MODEL_ATTRIBUTE_INTEGER,
                     Response::MODEL_ATTRIBUTE_FLOAT,
                     Response::MODEL_ATTRIBUTE_EMAIL,

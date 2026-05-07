@@ -178,6 +178,7 @@ class Exception extends \Exception
     public const string FUNCTION_RUNTIME_UNSUPPORTED = 'function_runtime_unsupported';
     public const string FUNCTION_ENTRYPOINT_MISSING = 'function_entrypoint_missing';
     public const string FUNCTION_SYNCHRONOUS_TIMEOUT = 'function_synchronous_timeout';
+    public const string FUNCTION_ASYNCHRONOUS_TIMEOUT = 'function_asynchronous_timeout';
     public const string FUNCTION_TEMPLATE_NOT_FOUND = 'function_template_not_found';
     public const string FUNCTION_RUNTIME_NOT_DETECTED = 'function_runtime_not_detected';
     public const string FUNCTION_EXECUTE_PERMISSION_MISSING = 'function_execute_permission_missing';
@@ -192,6 +193,7 @@ class Exception extends \Exception
     public const string BUILD_ALREADY_COMPLETED = 'build_already_completed';
     public const string BUILD_CANCELED = 'build_canceled';
     public const string BUILD_FAILED = 'build_failed';
+    public const string BUILD_TIMEOUT = 'build_timeout';
 
     /** Execution */
     public const string EXECUTION_NOT_FOUND = 'execution_not_found';
