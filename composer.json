@@ -57,6 +57,7 @@
         "utopia-php/audit": "2.2.*",
         "utopia-php/auth": "0.5.*",
         "utopia-php/cache": "1.0.*",
+        "utopia-php/circuit-breaker": "0.1.*",
         "utopia-php/cli": "0.23.*",
         "utopia-php/compression": "0.1.*",
         "utopia-php/config": "1.*",
@@ -95,8 +96,7 @@
         "spomky-labs/otphp": "11.*",
         "webonyx/graphql-php": "15.32.*",
         "league/csv": "9.14.*",
-        "enshrined/svg-sanitize": "0.22.*",
-        "utopia-php/circuit-breaker": "0.1.*"
+        "enshrined/svg-sanitize": "0.22.*"
     },
     "require-dev": {
         "ext-fileinfo": "*",
