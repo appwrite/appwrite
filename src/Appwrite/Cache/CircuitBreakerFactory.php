@@ -11,12 +11,13 @@ class CircuitBreakerFactory
     private const TIMEOUT = 30;
     private const SUCCESS_THRESHOLD = 2;
 
-    public static function create(?Telemetry $telemetry = null): CircuitBreaker
+    public static function create(?Telemetry $telemetry = null, string $cacheKey = 'cache'): CircuitBreaker
     {
         return new CircuitBreaker(
             threshold: self::THRESHOLD,
             timeout: self::TIMEOUT,
             successThreshold: self::SUCCESS_THRESHOLD,
+            cacheKey: $cacheKey,
             telemetry: $telemetry,
         );
     }

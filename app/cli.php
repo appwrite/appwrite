@@ -74,10 +74,13 @@ $container->set('cache', function ($pools, Telemetry $telemetry) {
     $adapters = [];
 
     foreach ($list as $value) {
-        $adapters[] = new CachePool($pools->get($value));
+        $adapters[] = new CircuitBreakerCache(
+            new CachePool($pools->get($value)),
+            CircuitBreakerFactory::create($telemetry, "cache.{$value}")
+        );
     }
 
-    return new Cache(new CircuitBreakerCache(new Sharding($adapters), CircuitBreakerFactory::create($telemetry)));
+    return new Cache(new Sharding($adapters));
 }, ['pools', 'telemetry']);
 
 $container->set('pools', function (Registry $register) {

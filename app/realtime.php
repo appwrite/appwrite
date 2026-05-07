@@ -177,23 +177,26 @@ if (!function_exists('getCache')) {
         $list = Config::getParam('pools-cache', []);
         $adapters = [];
 
-        foreach ($list as $value) {
-            $adapters[] = new CachePool($pools->get($value));
-        }
+        static $breakers = [];
+        static $telemetry = null;
+        static $telemetryResolved = false;
 
-        static $breaker = null;
-
-        if ($breaker === null) {
+        if (!$telemetryResolved) {
             try {
                 $telemetry = $register->get('telemetry');
             } catch (\Throwable) {
                 $telemetry = null;
             }
 
-            $breaker = CircuitBreakerFactory::create($telemetry);
+            $telemetryResolved = true;
         }
 
-        return $ctx['cache'] = new Cache(new CircuitBreakerCache(new Sharding($adapters), $breaker));
+        foreach ($list as $value) {
+            $breakers[$value] ??= CircuitBreakerFactory::create($telemetry, "cache.{$value}");
+            $adapters[] = new CircuitBreakerCache(new CachePool($pools->get($value)), $breakers[$value]);
+        }
+
+        return $ctx['cache'] = new Cache(new Sharding($adapters));
     }
 }
 
