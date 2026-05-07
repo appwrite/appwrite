@@ -539,13 +539,6 @@ trait Deployment
 
                 Span::add("{$logBase}.build.triggered", 'true');
                 //TODO: Add event?
-            } catch (Exception $e) {
-                Span::add("{$logBase}.error", $e->getMessage());
-                if ($e->getType() === Exception::PROJECT_NOT_FOUND) {
-                    Console::warning("Skipping repository '{$repositoryId}': project '{$projectId}' not found");
-                } else {
-                    $errors[] = $e;
-                }
             } catch (\Throwable $e) {
                 Span::add("{$logBase}.error", $e->getMessage());
                 $errors[] = $e;
@@ -555,17 +548,14 @@ trait Deployment
         $queueForBuilds->reset(); // prevent shutdown hook from triggering again
 
         if (!empty($errors)) {
-            foreach ($errors as $error) {
-                if ($error instanceof Exception && $error->getCode() >= 500) {
-                    throw $error;
-                }
+            $errors = array_values(array_filter(
+                $errors,
+                fn (\Throwable $e) => $e instanceof Exception && $e->getCode() >= 400 && $e->getCode() < 500
+            ));
+
+            if (!empty($errors)) {
+                throw $errors[0];
             }
-            foreach ($errors as $error) {
-                if ($error instanceof Exception && $error->getCode() >= 400) {
-                    throw $error;
-                }
-            }
-            throw new Exception(Exception::GENERAL_UNKNOWN);
         }
     }
 
