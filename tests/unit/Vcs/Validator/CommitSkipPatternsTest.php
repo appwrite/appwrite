@@ -151,4 +151,65 @@ class CommitSkipPatternsTest extends TestCase
         $msg = "feat: add new stuff\n\nMore detail here.\n\nskip-checks:true";
         $this->assertFalse($validator->isValid($msg));
     }
+
+    // -------------------------------------------------------------------------
+    // Plain-word patterns: "skip appwrite" and "appwrite skip"
+    // -------------------------------------------------------------------------
+
+    public function testSkipAppwritePatternSkips(): void
+    {
+        $validator = new CommitSkipPatterns(['skip appwrite']);
+        $this->assertFalse($validator->isValid('docs: update readme skip appwrite'));
+        $this->assertFalse($validator->isValid('skip appwrite'));
+    }
+
+    public function testSkipAppwritePatternCaseInsensitive(): void
+    {
+        $validator = new CommitSkipPatterns(['skip appwrite']);
+        $this->assertFalse($validator->isValid('SKIP APPWRITE'));
+        $this->assertFalse($validator->isValid('Skip Appwrite'));
+        $this->assertFalse($validator->isValid('SKIP appwrite'));
+    }
+
+    public function testSkipAppwritePatternNoMatchProceeds(): void
+    {
+        $validator = new CommitSkipPatterns(['skip appwrite']);
+        $this->assertTrue($validator->isValid('feat: real feature'));
+        $this->assertTrue($validator->isValid('skipappwrite'));    // no space — not standalone
+        $this->assertTrue($validator->isValid('appwrite is great'));
+    }
+
+    public function testAppwriteSkipPatternSkips(): void
+    {
+        $validator = new CommitSkipPatterns(['appwrite skip']);
+        $this->assertFalse($validator->isValid('appwrite skip ci'));
+        $this->assertFalse($validator->isValid('docs appwrite skip'));
+        $this->assertFalse($validator->isValid('appwrite skip'));
+    }
+
+    public function testAppwriteSkipPatternCaseInsensitive(): void
+    {
+        $validator = new CommitSkipPatterns(['appwrite skip']);
+        $this->assertFalse($validator->isValid('APPWRITE SKIP'));
+        $this->assertFalse($validator->isValid('Appwrite Skip'));
+        $this->assertFalse($validator->isValid('appwrite SKIP'));
+    }
+
+    public function testAppwriteSkipPatternNoMatchProceeds(): void
+    {
+        $validator = new CommitSkipPatterns(['appwrite skip']);
+        $this->assertTrue($validator->isValid('feat: deploy appwrite changes'));
+        $this->assertTrue($validator->isValid('appwriteskip'));    // no space — not standalone
+        $this->assertTrue($validator->isValid('skip the appwrite stuff'));
+    }
+
+    public function testBothAppwritePatternsInArray(): void
+    {
+        $validator = new CommitSkipPatterns(['skip appwrite', 'appwrite skip']);
+        $this->assertFalse($validator->isValid('skip appwrite'));
+        $this->assertFalse($validator->isValid('appwrite skip'));
+        $this->assertFalse($validator->isValid('SKIP APPWRITE'));
+        $this->assertFalse($validator->isValid('APPWRITE SKIP'));
+        $this->assertTrue($validator->isValid('feat: deploy appwrite changes'));
+    }
 }

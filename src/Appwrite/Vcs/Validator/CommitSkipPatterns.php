@@ -12,8 +12,16 @@ class CommitSkipPatterns extends Validator
 
     /**
      * Returns false (skip deployment) when the commit message contains any of the
-     * configured skip directives.
+     * configured patterns as a standalone directive (case-insensitive).
      * Returns true (proceed) when no patterns are configured or none match.
+     *
+     * Matching rules:
+     * - Case-insensitive
+     * - The directive must be surrounded by whitespace or string boundaries, so
+     *   "prefix[skip deploy]suffix" does NOT accidentally skip
+     * - Internal whitespace in the pattern is normalised: tokens are split on \s+
+     *   and rejoined with \s* in the regex, so "[skip   deploy]" matches
+     *   "[skip deploy]" and "skip-checks: true" matches "skip-checks:true"
      */
     public function isValid($value): bool
     {
@@ -21,13 +29,38 @@ class CommitSkipPatterns extends Validator
             return false;
         }
 
-        $patterns = $this->normalizePatterns($this->patterns);
-        if (empty($patterns)) {
-            return true;
-        }
+        foreach ($this->patterns as $pattern) {
+            if (!is_string($pattern)) {
+                continue;
+            }
 
-        foreach ($this->extractDirectives($value) as $directive) {
-            if (isset($patterns[$directive])) {
+            $pattern = trim($pattern);
+            if ($pattern === '') {
+                continue;
+            }
+
+            // Split on whitespace; each token is regex-quoted. Tokens are rejoined
+            // with \s+ (required space) so that "skipappwrite" does NOT match the
+            // pattern "skip appwrite". The only exception: when the preceding token
+            // ends with ":" (git trailer style), \s* is used so that
+            // "skip-checks:true" still matches the pattern "skip-checks: true".
+            $tokens = preg_split('/\s+/', $pattern);
+            $regexParts = [];
+            $count = count($tokens);
+            for ($i = 0; $i < $count; $i++) {
+                $regexParts[] = preg_quote($tokens[$i], '~');
+                if ($i < $count - 1) {
+                    $regexParts[] = str_ends_with($tokens[$i], ':') ? '\s*' : '\s+';
+                }
+            }
+            $regexBody = implode('', $regexParts);
+
+            // (?<!\S) / (?!\S) assert whitespace (or string edge) on both sides,
+            // ensuring the directive is a standalone group, not buried inside a
+            // longer token like "prefix[skip deploy]suffix".
+            $regex = '~(?<!\S)' . $regexBody . '(?!\S)~i';
+
+            if (preg_match($regex, $value)) {
                 return false;
             }
         }
@@ -48,65 +81,5 @@ class CommitSkipPatterns extends Validator
     public function getType(): string
     {
         return self::TYPE_STRING;
-    }
-
-    /**
-     * @param array<mixed> $patterns
-     * @return array<string, true>
-     */
-    private function normalizePatterns(array $patterns): array
-    {
-        $normalized = [];
-
-        foreach ($patterns as $pattern) {
-            if (!\is_string($pattern)) {
-                continue;
-            }
-
-            $pattern = $this->normalizeDirective($pattern);
-            if ($pattern === '') {
-                continue;
-            }
-
-            $normalized[$pattern] = true;
-        }
-
-        return $normalized;
-    }
-
-    /**
-     * @return array<string>
-     */
-    private function extractDirectives(string $message): array
-    {
-        $directives = [];
-
-        if (\preg_match_all('/\[[^\]\r\n]+\]/u', $message, $matches) > 0) {
-            foreach ($matches[0] as $match) {
-                $directives[] = $this->normalizeDirective($match);
-            }
-        }
-
-        foreach (\preg_split("/\r\n|\n|\r/", $message) ?: [] as $line) {
-            $line = \trim($line);
-            if ($line === '' || !\str_contains($line, ':')) {
-                continue;
-            }
-
-            $directives[] = $this->normalizeDirective($line);
-        }
-
-        return \array_values(\array_filter(\array_unique($directives)));
-    }
-
-    private function normalizeDirective(string $value): string
-    {
-        $value = \trim($value);
-        if ($value === '') {
-            return '';
-        }
-
-        $value = (string) \preg_replace('/\s+/u', ' ', $value);
-        return \mb_strtolower($value);
     }
 }
