@@ -1218,7 +1218,7 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
         // while globally-registered services (pools, queueForRealtime, ...) remain reachable
         // via the parent.
         $messageContainer = new Container($container);
-        $messageContainer->set('connection', fn () => $connection);
+        $messageContainer->set('connectionId', fn () => $connection);
         $messageContainer->set('server', fn () => $server);
         $messageContainer->set('realtime', fn () => $realtime);
         $messageContainer->set('register', fn () => $register);

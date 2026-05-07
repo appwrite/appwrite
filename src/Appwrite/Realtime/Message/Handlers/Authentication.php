@@ -25,7 +25,7 @@ class Authentication extends Action
             ->desc('Authenticate the connection with a session token')
             ->label(Dispatcher::LABEL_MESSAGE_TYPE, 'authentication')
             ->param('session', '', new Text(2048), 'Encoded session token')
-            ->inject('connection')
+            ->inject('connectionId')
             ->inject('realtime')
             ->inject('database')
             ->inject('register')
@@ -38,7 +38,7 @@ class Authentication extends Action
      */
     public function action(
         string $session,
-        int $connection,
+        int $connectionId,
         Realtime $realtime,
         Database $database,
         Registry $register,
@@ -63,16 +63,16 @@ class Authentication extends Action
 
         $roles = $user->getRoles($database->getAuthorization());
 
-        $authorization = $realtime->connections[$connection]['authorization'] ?? null;
-        $projectId = $realtime->connections[$connection]['projectId'] ?? null;
+        $authorization = $realtime->connections[$connectionId]['authorization'] ?? null;
+        $projectId = $realtime->connections[$connectionId]['projectId'] ?? null;
         // Capture the pre-auth userId before unsubscribe() clears the connection entry,
         // so we can rebind any account channels that were stored under it.
-        $previousUserId = $realtime->connections[$connection]['userId'] ?? '';
+        $previousUserId = $realtime->connections[$connectionId]['userId'] ?? '';
 
-        $subscriptionsBefore = \count($realtime->getSubscriptionMetadata($connection));
-        $meta = $realtime->getSubscriptionMetadata($connection);
+        $subscriptionsBefore = \count($realtime->getSubscriptionMetadata($connectionId));
+        $meta = $realtime->getSubscriptionMetadata($connectionId);
 
-        $realtime->unsubscribe($connection);
+        $realtime->unsubscribe($connectionId);
 
         if (!empty($projectId)) {
             foreach ($meta as $subscriptionId => $subscription) {
@@ -85,7 +85,7 @@ class Authentication extends Action
 
                 $realtime->subscribe(
                     $projectId,
-                    $connection,
+                    $connectionId,
                     $subscriptionId,
                     $roles,
                     $channels,
@@ -96,10 +96,10 @@ class Authentication extends Action
         }
 
         if ($authorization !== null) {
-            $realtime->connections[$connection]['authorization'] = $authorization;
+            $realtime->connections[$connectionId]['authorization'] = $authorization;
         }
 
-        $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connection));
+        $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connectionId));
         $subscriptionDelta = $subscriptionsAfter - $subscriptionsBefore;
         if ($subscriptionDelta !== 0) {
             $register->get('telemetry.workerSubscriptionCounter')

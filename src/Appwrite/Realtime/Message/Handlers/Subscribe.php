@@ -22,7 +22,7 @@ class Subscribe extends Action
             ->label(Dispatcher::LABEL_MESSAGE_TYPE, 'subscribe')
             ->label(Dispatcher::LABEL_PAYLOAD_SHAPE, Dispatcher::PAYLOAD_SHAPE_LIST)
             ->param('items', null, fn () => new SubscribePayloadValidator(), 'Subscriptions to add')
-            ->inject('connection')
+            ->inject('connectionId')
             ->inject('realtime')
             ->inject('register')
             ->inject('projectId')
@@ -35,16 +35,16 @@ class Subscribe extends Action
      */
     public function action(
         array $items,
-        int $connection,
+        int $connectionId,
         Realtime $realtime,
         Registry $register,
         ?string $projectId,
     ): array {
-        $roles = $realtime->connections[$connection]['roles'] ?? [Role::guests()->toString()];
-        $userId = $realtime->connections[$connection]['userId'] ?? '';
+        $roles = $realtime->connections[$connectionId]['roles'] ?? [Role::guests()->toString()];
+        $userId = $realtime->connections[$connectionId]['userId'] ?? '';
 
         $parsedPayloads = [];
-        $subscriptionsBefore = \count($realtime->getSubscriptionMetadata($connection));
+        $subscriptionsBefore = \count($realtime->getSubscriptionMetadata($connectionId));
 
         foreach ($items as $payload) {
             $subscriptionId = \array_key_exists('subscriptionId', $payload)
@@ -72,7 +72,7 @@ class Subscribe extends Action
         foreach ($parsedPayloads as $parsedPayload) {
             $realtime->subscribe(
                 $projectId,
-                $connection,
+                $connectionId,
                 $parsedPayload['subscriptionId'],
                 $roles,
                 $parsedPayload['convertedChannels'],
@@ -80,7 +80,7 @@ class Subscribe extends Action
             );
         }
 
-        $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connection));
+        $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connectionId));
         $subscriptionDelta = $subscriptionsAfter - $subscriptionsBefore;
         $subscriptionsRequested = \count($parsedPayloads);
 

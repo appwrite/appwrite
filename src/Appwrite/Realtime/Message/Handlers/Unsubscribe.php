@@ -18,7 +18,7 @@ class Unsubscribe extends Action
             ->label(Dispatcher::LABEL_MESSAGE_TYPE, 'unsubscribe')
             ->label(Dispatcher::LABEL_PAYLOAD_SHAPE, Dispatcher::PAYLOAD_SHAPE_LIST)
             ->param('items', null, fn () => new UnsubscribePayloadValidator(), 'Subscriptions to remove')
-            ->inject('connection')
+            ->inject('connectionId')
             ->inject('realtime')
             ->inject('register')
             ->callback($this->action(...));
@@ -30,22 +30,22 @@ class Unsubscribe extends Action
      */
     public function action(
         array $items,
-        int $connection,
+        int $connectionId,
         Realtime $realtime,
         Registry $register,
     ): array {
-        $subscriptionsBefore = \count($realtime->getSubscriptionMetadata($connection));
+        $subscriptionsBefore = \count($realtime->getSubscriptionMetadata($connectionId));
 
         $unsubscribeResults = [];
         foreach ($items as $payload) {
             $subscriptionId = $payload['subscriptionId'];
             $unsubscribeResults[] = [
                 'subscriptionId' => $subscriptionId,
-                'removed' => $realtime->unsubscribeSubscription($connection, $subscriptionId),
+                'removed' => $realtime->unsubscribeSubscription($connectionId, $subscriptionId),
             ];
         }
 
-        $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connection));
+        $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connectionId));
         $subscriptionDelta = $subscriptionsAfter - $subscriptionsBefore;
         $subscriptionsRequested = \count($items);
         $subscriptionsRemoved = \count(\array_filter(

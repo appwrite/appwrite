@@ -27,7 +27,7 @@ class Presence extends Action
             ->param('presenceId', 'unique()', new Text(36), 'Presence document ID', true)
             ->param('metadata', null, new JSON(), 'Optional metadata payload', true, [], true)
             ->param('permissions', null, new ArrayList(new Text(2048)), 'Optional permissions list', true)
-            ->inject('connection')
+            ->inject('connectionId')
             ->inject('realtime')
             ->inject('database')
             ->inject('authorization')
@@ -49,7 +49,7 @@ class Presence extends Action
         string $presenceId,
         mixed $metadata,
         ?array $permissions,
-        int $connection,
+        int $connectionId,
         Realtime $realtime,
         Database $database,
         Authorization $authorization,
@@ -62,7 +62,7 @@ class Presence extends Action
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Presence requires a project context.');
         }
 
-        $userId = $realtime->connections[$connection]['userId'] ?? '';
+        $userId = $realtime->connections[$connectionId]['userId'] ?? '';
         if (empty($userId)) {
             throw new Exception(Exception::USER_UNAUTHORIZED, 'User must be authorized');
         }
@@ -98,8 +98,8 @@ class Presence extends Action
 
         $presence->removeAttribute('hostname');
 
-        $realtime->connections[$connection]['presences'] = \array_merge(
-            $realtime->connections[$connection]['presences'] ?? [],
+        $realtime->connections[$connectionId]['presences'] = \array_merge(
+            $realtime->connections[$connectionId]['presences'] ?? [],
             [$presence->getId()],
         );
 
