@@ -52,7 +52,7 @@ class Upsert extends PlatformAction
                 new Method(
                     namespace: 'presences',
                     group: 'presences',
-                    name: 'upsertPresence',
+                    name: 'upsert',
                     description: 'Create or update a presence log by its unique ID.',
                     auth: [AuthType::SESSION],
                     responses: [
@@ -73,7 +73,7 @@ class Upsert extends PlatformAction
                 new Method(
                     namespace: 'presences',
                     group: 'presences',
-                    name: 'upsertPresence',
+                    name: 'upsert',
                     description: 'Create or update a presence log by its unique ID.',
                     auth: [AuthType::KEY, AuthType::JWT, AuthType::ADMIN],
                     responses: [

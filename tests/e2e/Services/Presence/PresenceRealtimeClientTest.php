@@ -382,7 +382,7 @@ class PresenceRealtimeClientTest extends Scope
                 ],
             ]));
             $missingStatus = $this->receiveErrorMessage($client);
-            $this->assertStringContainsString('status must be provided', $missingStatus['data']['message'] ?? '');
+            $this->assertStringContainsString('Payload is not valid. status is required', $missingStatus['data']['message'] ?? '');
             $this->assertQuietFor(
                 $client,
                 fn (array $frame): bool => ($frame['type'] ?? null) === 'event'
@@ -398,7 +398,7 @@ class PresenceRealtimeClientTest extends Scope
                 ],
             ]));
             $invalidPermissions = $this->receiveErrorMessage($client);
-            $this->assertStringContainsString('permissions must be an array', $invalidPermissions['data']['message'] ?? '');
+            $this->assertStringContainsString('permissions: Value must a valid array', $invalidPermissions['data']['message'] ?? '');
             $this->assertQuietFor(
                 $client,
                 fn (array $frame): bool => ($frame['type'] ?? null) === 'event'

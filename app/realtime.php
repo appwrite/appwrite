@@ -10,6 +10,12 @@ use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
+use Appwrite\Realtime\Message\Dispatcher as MessageDispatcher;
+use Appwrite\Realtime\Message\Handlers\Authentication as AuthenticationHandler;
+use Appwrite\Realtime\Message\Handlers\Ping as PingHandler;
+use Appwrite\Realtime\Message\Handlers\Presence as PresenceHandler;
+use Appwrite\Realtime\Message\Handlers\Subscribe as SubscribeHandler;
+use Appwrite\Realtime\Message\Handlers\Unsubscribe as UnsubscribeHandler;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
@@ -22,9 +28,6 @@ use Swoole\Table;
 use Swoole\Timer;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
-use Utopia\Auth\Hashes\Sha;
-use Utopia\Auth\Proofs\Token;
-use Utopia\Auth\Store;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
@@ -406,7 +409,6 @@ $container->set('pools', function ($register) {
 
 if (!$container->has('queueForEvents')) {
     $container->set('queueForEvents', function ($pools) {
-        var_dump("ce");
         return new QueueEvent(new BrokerPool(
             publisher: $pools->get('publisher')
         ));
@@ -421,6 +423,13 @@ if (!$container->has('queueForRealtime')) {
 
 $realtime = getRealtime();
 $presenceState = new PresenceState();
+
+$messageDispatcher = (new MessageDispatcher())
+    ->register(new PingHandler())
+    ->register(new AuthenticationHandler())
+    ->register(new SubscribeHandler())
+    ->register(new UnsubscribeHandler())
+    ->register(new PresenceHandler());
 
 /**
  * Table for statistics across all workers.
@@ -1113,15 +1122,12 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
     }
 });
 
-$server->onMessage(function (int $connection, string $message) use ($server, $realtime, $containerId, $register, $presenceState) {
+$server->onMessage(function (int $connection, string $message) use ($container, $server, $realtime, $containerId, $register, $presenceState, $messageDispatcher) {
     $project = null;
     $authorization = null;
     $projectId = $realtime->connections[$connection]['projectId'] ?? null;
     $rawSize = \strlen($message);
     $messageType = 'invalid';
-    $subscriptionDelta = 0;
-    $subscriptionsRequested = 0;
-    $subscriptionsRemoved = 0;
     $outboundBytes = 0;
     $responseCode = 200;
     $success = false;
@@ -1130,6 +1136,13 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
     Span::add('realtime.connectionId', $connection);
     Span::add('realtime.inboundBytes', $rawSize);
     Span::add('realtime.containerId', $containerId);
+    // Defaults so an exception thrown mid-handler still leaves these attrs on the span.
+    // Handlers (Subscribe/Unsubscribe/Authentication) override with real values via Span::add
+    // when their work succeeds.
+    Span::add('realtime.subscriptionDelta', 0);
+    Span::add('realtime.subscriptionsRequested', 0);
+    Span::add('realtime.subscriptionsRemoved', 0);
+    Span::add('realtime.subscribe.subscriptionsCount', 0);
 
     try {
         $response = new Response(new SwooleResponse());
@@ -1181,6 +1194,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         }
 
         // Record realtime inbound bytes for this project
+        // not making this a part of the dispatcher as we need to get the inbound bytes as well even if we dont enter the dispatcher
         if ($project !== null && !$project->isEmpty()) {
             triggerStats([
                 METRIC_REALTIME_INBOUND => $rawSize,
@@ -1199,378 +1213,46 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
             throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Message type is not valid.');
         }
 
-        // Ping does not require project context; other messages do (e.g. after unsubscribe during auth)
-        if (empty($projectId) && ($message['type'] ?? '') !== 'ping') {
-            throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Missing project context. Reconnect to the project first.');
-        }
+        // Child of the global container: per-message values like $connection and $project
+        // live on this scope so concurrent message coroutines don't clobber each other,
+        // while globally-registered services (pools, queueForRealtime, ...) remain reachable
+        // via the parent.
+        $messageContainer = new Container($container);
+        $messageContainer->set('connectionId', fn () => $connection);
+        $messageContainer->set('server', fn () => $server);
+        $messageContainer->set('realtime', fn () => $realtime);
+        $messageContainer->set('register', fn () => $register);
+        $messageContainer->set('response', fn () => $response);
+        $messageContainer->set('presenceState', fn () => $presenceState);
+        $messageContainer->set('database', fn () => $database);
+        $messageContainer->set('authorization', fn () => $authorization);
+        $messageContainer->set('project', fn () => $project);
+        $messageContainer->set('projectId', fn () => $projectId);
+        // Wrap the global helpers as first-class callables so handlers receive them via
+        // injection rather than reaching into the global namespace. Keeps PresenceHandler
+        // unit-testable without bootstrapping app/realtime.php.
+        $messageContainer->set('triggerPresenceUsage', fn () => triggerPresenceUsage(...));
+        $messageContainer->set('triggerPresenceEvent', fn () => triggerPresenceEvent(...));
 
-        switch ($message['type']) {
-            case 'ping':
-                $pongPayloadJson = json_encode([
-                    'type' => 'pong'
-                ]);
+        $responsePayload = $messageDispatcher->dispatch($messageContainer, $message);
 
-                $server->send([$connection], $pongPayloadJson);
-                $outboundBytes += \strlen($pongPayloadJson);
-
-                if ($project !== null && !$project->isEmpty()) {
-                    $pongOutboundBytes = \strlen($pongPayloadJson);
-
-                    if ($pongOutboundBytes > 0) {
-                        triggerStats([
-                            METRIC_REALTIME_OUTBOUND => $pongOutboundBytes,
-                        ], $project->getId());
-                    }
-                }
-
-                break;
-            case 'authentication':
-                if (!array_key_exists('session', $message['data'])) {
-                    throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Payload is not valid.');
-                }
-
-                $store = new Store();
-
-                $store->decode($message['data']['session']);
-
-                /** @var User $user */
-                $user = $database->getDocument('users', $store->getProperty('id', ''));
-
-                /**
-                 * TODO:
-                 * Moving forward, we should try to use our dependency injection container
-                 * to inject the proof for token.
-                 * This way we will have one source of truth for the proof for token.
-                 */
-                $proofForToken = new Token();
-                $proofForToken->setHash(new Sha());
-
-                if (
-                    empty($user->getId()) // Check a document has been found in the DB
-                    || !$user->sessionVerify($store->getProperty('secret', ''), $proofForToken) // Validate user has valid login token
-                ) {
-                    // cookie not valid
-                    throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Session is not valid.');
-                }
-
-                $roles = $user->getRoles($database->getAuthorization());
-
-                $authorization = $realtime->connections[$connection]['authorization'] ?? null;
-                $projectId = $realtime->connections[$connection]['projectId'] ?? null;
-                // Capture the pre-auth userId so we can rebind any account channels
-                // that were stored under it (e.g. guest who subscribed to `account`
-                // and now authenticates). unsubscribe() below clears the connection
-                // entry, so we must read it first.
-                $previousUserId = $realtime->connections[$connection]['userId'] ?? '';
-
-                $subscriptionsBefore = \count($realtime->getSubscriptionMetadata($connection));
-                $meta = $realtime->getSubscriptionMetadata($connection);
-
-                $realtime->unsubscribe($connection);
-
-                if (!empty($projectId)) {
-                    foreach ($meta as $subscriptionId => $subscription) {
-                        $queries = Query::parseQueries($subscription['queries'] ?? []);
-                        $channels = Realtime::rebindAccountChannels(
-                            $subscription['channels'] ?? [],
-                            $previousUserId,
-                            $user->getId()
-                        );
-
-                        $realtime->subscribe(
-                            $projectId,
-                            $connection,
-                            $subscriptionId,
-                            $roles,
-                            $channels,
-                            $queries,
-                            $user->getId()
-                        );
-                    }
-                }
-
-                if ($authorization !== null) {
-                    $realtime->connections[$connection]['authorization'] = $authorization;
-                }
-
-                $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connection));
-                $subscriptionDelta = $subscriptionsAfter - $subscriptionsBefore;
-                if ($subscriptionDelta !== 0) {
-                    $register->get('telemetry.workerSubscriptionCounter')->add($subscriptionDelta, $register->get('telemetry.workerAttributes'));
-                }
-
-                $user = $response->output($user, Response::MODEL_ACCOUNT);
-
-                $authResponsePayloadJson = json_encode([
-                    'type' => 'response',
-                    'data' => [
-                        'to' => 'authentication',
-                        'success' => true,
-                        'user' => $user
-                    ]
-                ]);
-
-                $server->send([$connection], $authResponsePayloadJson);
-                $outboundBytes += \strlen($authResponsePayloadJson);
-
-                if ($project !== null && !$project->isEmpty()) {
-                    $authOutboundBytes = \strlen($authResponsePayloadJson);
-
-                    if ($authOutboundBytes > 0) {
-                        triggerStats([
-                            METRIC_REALTIME_OUTBOUND => $authOutboundBytes,
-                        ], $project->getId());
-                    }
-                }
-
-                break;
-
-            case 'subscribe':
-                /**
-                 * Message based upsertion of a subscription
-                 * If subscriptionId is given then it will match subId of the connection and update the subscription with channels and queries
-                 * If non-existing subid is given or not given a new subid will be generated
-                 * Similar to what we have now -> two subscribe() block with same channels and queries still two different subscriptions
-                 *
-                 * structure of the payload -> array of maps
-                 * 'data' : [subscriptionId:"" , channels:[] , queries:[]]
-                 */
-                if (!is_array($message['data']) || !array_is_list($message['data'])) {
-                    throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Payload is not valid.');
-                }
-
-                $roles = $realtime->connections[$connection]['roles'] ?? [Role::guests()->toString()];
-                $userId = $realtime->connections[$connection]['userId'] ?? '';
-
-                // bulk validation + parsing before subscribing
-                $parsedPayloads = [];
-                $subscriptionsBefore = \count($realtime->getSubscriptionMetadata($connection));
-                foreach ($message['data'] as $payload) {
-                    if (!\is_array($payload)) {
-                        throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Each subscribe payload must be an object.');
-                    }
-                    if (!array_key_exists('channels', $payload)) {
-                        throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'channels is not present in payload.');
-                    }
-                    if (!is_array($payload['channels']) || !array_is_list($payload['channels'])) {
-                        throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'channels is not a valid array.');
-                    }
-                    // registering the queries if not present and check in the same payload later on
-                    if (!array_key_exists('queries', $payload)) {
-                        $payload['queries'] = [];
-                    }
-                    if (!is_array($payload['queries']) || !array_is_list($payload['queries'])) {
-                        throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'queries is not a valid array.');
-                    }
-
-                    $subscriptionId = \array_key_exists('subscriptionId', $payload)
-                        ? $payload['subscriptionId']
-                        : ID::unique();
-
-                    try {
-                        $convertedQueries = Realtime::convertQueries($payload['queries']);
-                    } catch (QueryException $e) {
-                        throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Invalid query: ' . $e->getMessage());
-                    }
-
-                    $convertedChannels = \array_keys(Realtime::convertChannels($payload['channels'], $userId));
-
-                    $parsedPayloads[] = [
-                        'subscriptionId' => $subscriptionId,
-                        'channels' => $payload['channels'],
-                        'convertedChannels' => $convertedChannels,
-                        'queries' => $convertedQueries,
-                    ];
-                }
-
-                foreach ($parsedPayloads as $parsedPayload) {
-                    $subscriptionId = $parsedPayload['subscriptionId'];
-                    $channels = $parsedPayload['convertedChannels'];
-                    $queries = $parsedPayload['queries'];
-                    $realtime->subscribe($projectId, $connection, $subscriptionId, $roles, $channels, $queries);
-                }
-                $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connection));
-                $subscriptionDelta = $subscriptionsAfter - $subscriptionsBefore;
-                $subscriptionsRequested = \count($parsedPayloads);
-                if ($subscriptionDelta !== 0) {
-                    $register->get('telemetry.workerSubscriptionCounter')->add($subscriptionDelta, $register->get('telemetry.workerAttributes'));
-                }
-
-                $responsePayload = json_encode([
-                    'type' => 'response',
-                    'data' => [
-                        'to' => 'subscribe',
-                        'success' => true,
-                        'subscriptions' => \array_map(function (array $parsedPayload) {
-                            return [
-                                'subscriptionId' => $parsedPayload['subscriptionId'],
-                                'channels' => $parsedPayload['convertedChannels'],
-                                'queries' => \array_map(fn ($q) => $q->toString(), $parsedPayload['queries']),
-                            ];
-                        }, $parsedPayloads),
-                    ]
-                ]);
-
-                $server->send([$connection], $responsePayload);
-                $outboundBytes += \strlen($responsePayload);
-
-                if ($project !== null && !$project->isEmpty()) {
-                    $subscribeOutboundBytes = \strlen($responsePayload);
-
-                    if ($subscribeOutboundBytes > 0) {
-                        triggerStats([
-                            METRIC_REALTIME_OUTBOUND => $subscribeOutboundBytes,
-                        ], $project->getId());
-                    }
-                }
-
-                break;
-
-            case 'unsubscribe':
-                if (!\is_array($message['data']) || !\array_is_list($message['data'])) {
-                    throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Payload is not valid.');
-                }
-
-                $subscriptionsBefore = \count($realtime->getSubscriptionMetadata($connection));
-
-                // Validate every payload before executing any removal so an invalid entry
-                // later in the batch does not leave earlier entries half-applied on the server.
-                $validatedIds = [];
-                foreach ($message['data'] as $payload) {
-                    if (
-                        !\is_array($payload)
-                        || !\array_key_exists('subscriptionId', $payload)
-                        || !\is_string($payload['subscriptionId'])
-                        || $payload['subscriptionId'] === ''
-                    ) {
-                        throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Each unsubscribe payload must include a non-empty subscriptionId.');
-                    }
-                    $validatedIds[] = $payload['subscriptionId'];
-                }
-
-                $unsubscribeResults = [];
-                foreach ($validatedIds as $subscriptionId) {
-                    $wasRemoved = $realtime->unsubscribeSubscription($connection, $subscriptionId);
-                    $unsubscribeResults[] = [
-                        'subscriptionId' => $subscriptionId,
-                        'removed' => $wasRemoved,
-                    ];
-                }
-                $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connection));
-                $subscriptionDelta = $subscriptionsAfter - $subscriptionsBefore;
-                $subscriptionsRequested = \count($validatedIds);
-                $subscriptionsRemoved = \count(\array_filter($unsubscribeResults, fn (array $item) => $item['removed']));
-                if ($subscriptionDelta !== 0) {
-                    $register->get('telemetry.workerSubscriptionCounter')->add($subscriptionDelta, $register->get('telemetry.workerAttributes'));
-                }
-
-                $unsubscribeResponsePayload = json_encode([
-                    'type' => 'response',
-                    'data' => [
-                        'to' => 'unsubscribe',
-                        'success' => true,
-                        'subscriptions' => $unsubscribeResults,
-                    ],
-                ]);
-
-                $server->send([$connection], $unsubscribeResponsePayload);
-                $outboundBytes += \strlen($unsubscribeResponsePayload);
-
-                if ($project !== null && !$project->isEmpty()) {
-                    $unsubscribeOutboundBytes = \strlen($unsubscribeResponsePayload);
-
-                    if ($unsubscribeOutboundBytes > 0) {
-                        triggerStats([
-                            METRIC_REALTIME_OUTBOUND => $unsubscribeOutboundBytes,
-                        ], $project->getId());
-                    }
-                }
-
-                break;
-
-            case 'presence':
-                $userId = $realtime->connections[$connection]['userId'];
-                if (empty($userId)) {
-                    throw new Exception(Exception::USER_UNAUTHORIZED, 'User must be authorized');
-                }
-                /** @var User $user */
-                $user = $database->getDocument('users', $userId);
-
-                if ($user->isEmpty()) {
-                    throw new Exception(Exception::USER_NOT_FOUND, params:[$userId]);
-                }
-
-                if (!is_array($message['data'])) {
-                    throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Payload is not valid.');
-                }
-
-                if (!array_key_exists('status', $message['data'])) {
-                    throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Payload is not valid. status must be provided');
-                }
-
-                if (array_key_exists('permissions', $message['data']) && !\is_array($message['data']['permissions'])) {
-                    throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Payload is not valid. permissions must be an array.');
-                }
-
-                $presenceData = [
-                    'userInternalId' => $user->getSequence(),
-                    'userId' => $user->getId(),
-                    'source' => 'realtime',
-                    'status' => $message['data']['status']
-                ];
-
-                // TODO: add the created presence id to the connections connection id array for deletion at the end(bulk delete)
-
-                if (array_key_exists('metadata', $message['data'])) {
-                    $presenceData['metadata'] = $message['data']['metadata'];
-                }
-                $presenceDocument = new Document($presenceData);
-                $presenceState->setPermissions($presenceDocument, $message['data']['permissions'] ?? null, $user, $authorization);
-
-                $presenceId = $message['data']['presenceId'] ?? 'unique()';
-                $presence = $presenceState->upsertForUser(
-                    $database,
-                    $presenceDocument,
-                    $presenceId,
-                    (string) $user->getSequence(),
-                    function () use ($project): void {
-                        if ($project !== null && !$project->isEmpty()) {
-                            triggerPresenceUsage(1, $project->getId());
-                        }
-                    }
+        if ($responsePayload !== null) {
+            $responseJson = json_encode($responsePayload);
+            if ($responseJson === false) {
+                throw new \RuntimeException(
+                    'Failed to encode realtime response payload: ' . json_last_error_msg()
                 );
+            }
 
-                $presence->removeAttribute('hostname');
+            $server->send([$connection], $responseJson);
+            $bytes = \strlen($responseJson);
+            $outboundBytes += $bytes;
 
-                $realtime->connections[$connection]['presences'] = array_merge($realtime->connections[$connection]['presences'] ?? [], [$presence->getId()]);
-
-                $responsePayload = json_encode([
-                    'type' => 'response',
-                    'data' => [
-                        'to' => 'presence',
-                        'presence' => $presence->getArrayCopy()
-                    ]
-                ]);
-
-                $server->send([$connection], $responsePayload);
-
-                if ($project !== null && !$project->isEmpty()) {
-                    $subscribeOutboundBytes = \strlen($responsePayload);
-
-                    if ($subscribeOutboundBytes > 0) {
-                        triggerStats([
-                            METRIC_REALTIME_OUTBOUND => $subscribeOutboundBytes,
-                        ], $project->getId());
-                    }
-                }
-
-                triggerPresenceEvent($project, $user, 'presences.[presenceId].upsert', $presence);
-
-                break;
-
-            default:
-                throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Message type is not valid.');
+            if ($project !== null && !$project->isEmpty()) {
+                triggerStats([METRIC_REALTIME_OUTBOUND => $bytes], $project->getId());
+            }
         }
+
         $success = true;
     } catch (Throwable $th) {
         logError($th, 'realtimeMessage', project: $project, authorization: $authorization);
@@ -1606,10 +1288,6 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
     } finally {
         Span::add('realtime.success', $success);
         Span::add('realtime.responseCode', $responseCode);
-        Span::add('realtime.subscriptionDelta', $subscriptionDelta);
-        Span::add('realtime.subscriptionsRequested', $subscriptionsRequested);
-        Span::add('realtime.subscriptionsRemoved', $subscriptionsRemoved);
-        Span::add('realtime.subscribe.subscriptionsCount', $subscriptionsRequested);
         Span::add('realtime.outboundBytes', $outboundBytes);
         Span::add('realtime.projectId', $project?->getId() ?? $projectId);
         Span::add('realtime.userId', $realtime->connections[$connection]['userId'] ?? null);
