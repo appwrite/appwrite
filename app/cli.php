@@ -76,7 +76,7 @@ $container->set('cache', function ($pools, Telemetry $telemetry) {
     foreach ($list as $value) {
         $adapters[] = new CircuitBreakerCache(
             new CachePool($pools->get($value)),
-            CircuitBreakerFactory::create($telemetry, "cache.{$value}")
+            CircuitBreakerFactory::create($telemetry, 'cli.cache')
         );
     }
 

@@ -192,7 +192,7 @@ if (!function_exists('getCache')) {
         }
 
         foreach ($list as $value) {
-            $breakers[$value] ??= CircuitBreakerFactory::create($telemetry, "cache.{$value}");
+            $breakers[$value] ??= CircuitBreakerFactory::create($telemetry, 'realtime.cache');
             $adapters[] = new CircuitBreakerCache(new CachePool($pools->get($value)), $breakers[$value]);
         }
 
