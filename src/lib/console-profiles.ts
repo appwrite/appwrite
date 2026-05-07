@@ -59,6 +59,34 @@ export type ConsoleProfileFeatures = {
   userVerification: boolean
 }
 
+/** Short labels for debug UI (profile comparison, etc.). */
+export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
+  keyof ConsoleProfileFeatures,
+  string
+> = {
+  billing: 'Billing',
+  domains: 'Domains',
+  usageStats: 'Usage stats',
+  activity: 'Activity',
+  orgRoles: 'Org roles',
+  systemStatus: 'System status',
+  accountMfa: 'Account MFA',
+  accountIdentities: 'Account identities',
+  compliance: 'Compliance',
+  oauthApps: 'OAuth apps',
+  orgApiKeys: 'Org API keys',
+  aiAssistant: 'AI assistant',
+  databaseBackups: 'Database backups',
+  databaseInsights: 'Database insights',
+  dedicatedDbsSupport: 'Dedicated DBs (global)',
+  dedicatedDbsTablesDB: 'Dedicated DBs: Tables',
+  dedicatedDbsDocumentsDB: 'Dedicated DBs: Documents',
+  dedicatedDbsVectorsDB: 'Dedicated DBs: Vectors',
+  multiRegion: 'Multi-region',
+  edgeNetwork: 'Edge network',
+  userVerification: 'User verification',
+}
+
 export type ConsoleProfile = {
   id: ConsoleProfileId
   label: string

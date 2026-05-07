@@ -18,11 +18,12 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
  */
 export function ConsoleFooter() {
   const currentYear = new Date().getFullYear()
-  const { features } = useConsoleProfile()
+  const { isCloud, features } = useConsoleProfile()
+  const cloudStatusEnabled = isCloud && features.systemStatus
 
   const resourceLinks = [
     { label: 'Docs', href: 'https://appwrite.io/docs' },
-    ...(features.systemStatus
+    ...(cloudStatusEnabled
       ? [{ label: 'Status' as const, href: 'https://status.appwrite.online' }]
       : []),
   ]

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, type ComponentProps } from 'react'
 import {
   Bug,
   ChevronRight,
@@ -16,6 +16,9 @@ import {
   FlaskConical,
   AlertTriangle,
   Loader2,
+  Check,
+  Minus,
+  Columns2,
 } from 'lucide-react'
 import {
   Popover,
@@ -44,6 +47,7 @@ import {
   setDebugProfileOverride,
   setDebugProfileFeatureOverride,
   CONSOLE_PROFILES,
+  CONSOLE_PROFILE_FEATURE_LABELS,
 } from '@/lib/console-profiles'
 import {
   setDebugEndpointOverride,
@@ -55,6 +59,8 @@ import {
 import { useDebugEndpoint } from '@/hooks/use-debug-endpoint'
 import { useNavigate } from '@tanstack/react-router'
 import { Branch as DismissableLayerBranch } from '@radix-ui/react-dismissable-layer'
+import { cn } from '@/lib/utils'
+import type { ConsoleProfileFeatures } from '@/lib/console-profiles'
 interface DebugAction {
   label: string
   onClick: () => void
@@ -77,12 +83,133 @@ interface MenuItem {
   switchOnChange?: (checked: boolean) => void
   description?: string
   submenu?: MenuItem[]
+  /** Opens the profile comparison table instead of a submenu list. */
+  submenuVariant?: 'profileComparison'
 }
 
 interface MenuSection {
   title: string
   icon?: React.ReactNode
   items: MenuItem[]
+}
+
+const PROFILE_IDS = ['cloud', 'self-hosted'] as const
+
+function ConsoleProfileComparisonTable({
+  activeProfileId,
+}: {
+  activeProfileId: (typeof PROFILE_IDS)[number]
+}) {
+  const featureKeys = Object.keys(
+    CONSOLE_PROFILE_FEATURE_LABELS,
+  ) as (keyof ConsoleProfileFeatures)[]
+
+  return (
+    <div className="space-y-3">
+      <p className="px-1 text-[11px] leading-relaxed text-[#9B87F5]/90">
+        Canonical defaults from{' '}
+        <code className="rounded bg-black/30 px-1 py-0.5 text-[10px]">
+          CONSOLE_PROFILES
+        </code>
+        . Debug feature overrides are not reflected here.
+      </p>
+      <div className="overflow-x-auto rounded-lg border border-[#9B87F5]/20">
+        <table className="w-full border-collapse text-left text-[11px]">
+          <thead>
+            <TableRow className="border-b border-[#9B87F5]/20 bg-black/20">
+              <TableHead className="min-w-[140px]">Feature</TableHead>
+              {PROFILE_IDS.map((id) => (
+                <TableHead
+                  key={id}
+                  className={cn(
+                    'w-[88px] text-center font-semibold uppercase tracking-wider',
+                    id === activeProfileId && 'bg-[#9B87F5]/15 text-[#E5DEFF]',
+                  )}
+                >
+                  {CONSOLE_PROFILES[id].label}
+                </TableHead>
+              ))}
+            </TableRow>
+          </thead>
+          <tbody>
+            {featureKeys.map((key) => (
+              <TableRow
+                key={key}
+                className="border-b border-[#9B87F5]/10 last:border-0"
+              >
+                <TableCell className="text-[#E5DEFF]/95">
+                  {CONSOLE_PROFILE_FEATURE_LABELS[key]}
+                </TableCell>
+                {PROFILE_IDS.map((id) => {
+                  const on = CONSOLE_PROFILES[id].features[key]
+                  return (
+                    <TableCell
+                      key={id}
+                      className={cn(
+                        'text-center',
+                        id === activeProfileId && 'bg-[#9B87F5]/10',
+                      )}
+                    >
+                      {on ? (
+                        <Check
+                          className="mx-auto h-3.5 w-3.5 text-emerald-400"
+                          aria-label="On"
+                        />
+                      ) : (
+                        <Minus
+                          className="mx-auto h-3.5 w-3.5 text-[#9B87F5]/35"
+                          aria-label="Off"
+                        />
+                      )}
+                    </TableCell>
+                  )
+                })}
+              </TableRow>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+function TableRow({
+  className,
+  ...props
+}: ComponentProps<'tr'>) {
+  return (
+    <tr
+      className={cn('hover:bg-[#9B87F5]/5', className)}
+      {...props}
+    />
+  )
+}
+
+function TableHead({
+  className,
+  ...props
+}: ComponentProps<'th'>) {
+  return (
+    <th
+      className={cn(
+        'px-2 py-2 text-[10px] font-semibold text-[#9B87F5]/90',
+        className,
+      )}
+      {...props}
+    />
+  )
+}
+
+function TableCell({
+  className,
+  ...props
+}: ComponentProps<'td'>) {
+  return (
+    <td
+      className={cn('px-2 py-1.5 align-middle text-[#E5DEFF]', className)}
+      {...props}
+    />
+  )
 }
 
 export function DebugMenu({ actions = [] }: DebugMenuProps) {
@@ -368,6 +495,12 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 <Server className="h-3 w-3" />
               ),
             submenu: profileOptions,
+          },
+          {
+            label: 'Compare profiles',
+            description: 'Canonical Cloud vs self-hosted feature flags',
+            icon: <Columns2 className="h-3 w-3" />,
+            submenuVariant: 'profileComparison',
           },
           {
             label: 'Feature flags',
@@ -667,7 +800,16 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     for (const section of sections) {
       for (const item of section.items) {
         const itemKey = `${section.title}-${item.label}`
-        if (item.submenu && itemKey === activeSubmenu) {
+        if (itemKey !== activeSubmenu) continue
+        if (item.submenuVariant === 'profileComparison') {
+          return {
+            title: item.label,
+            items: [] as MenuItem[],
+            parentSection: section.title,
+            submenuVariant: 'profileComparison' as const,
+          }
+        }
+        if (item.submenu) {
           return {
             title: item.label,
             items: item.submenu,
@@ -708,7 +850,12 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           side="top"
           align="end"
           sideOffset={8}
-          className="z-[10060] w-80 max-h-[85dvh] overflow-hidden rounded-xl border border-[#9B87F5]/25 bg-[#1A1F2C] p-0 shadow-xl"
+          className={cn(
+            'z-[10060] max-h-[85dvh] overflow-hidden rounded-xl border border-[#9B87F5]/25 bg-[#1A1F2C] p-0 shadow-xl',
+            currentSubmenu?.submenuVariant === 'profileComparison'
+              ? 'w-[min(92vw,720px)]'
+              : 'w-80',
+          )}
         >
           <div className="sticky top-0 z-10 border-b border-[#9B87F5]/20 bg-[#1A1F2C]/95 px-4 py-3 backdrop-blur-sm">
             <div className="flex items-center gap-2">
@@ -732,6 +879,13 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             style={{ maxHeight: 'calc(85dvh - 52px)' }}
           >
             {currentSubmenu ? (
+              currentSubmenu.submenuVariant === 'profileComparison' ? (
+                <div className="px-1" aria-label={currentSubmenu.title}>
+                  <ConsoleProfileComparisonTable
+                    activeProfileId={profileId}
+                  />
+                </div>
+              ) : (
               <nav className="space-y-0.5" aria-label={currentSubmenu.title}>
                 {currentSubmenu.items.map((item, itemIndex) =>
                   item.variant === 'switch' ? (
@@ -790,6 +944,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                   ),
                 )}
               </nav>
+              )
             ) : (
               <nav className="space-y-5" aria-label="Debug options">
                 {sections.map((section) => (
@@ -827,7 +982,9 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                           )
                         }
 
-                        const hasSubmenu = !!item.submenu
+                        const hasSubmenu =
+                          Boolean(item.submenu?.length) ||
+                          item.submenuVariant === 'profileComparison'
                         const itemKey = `${section.title}-${item.label}`
 
                         return (

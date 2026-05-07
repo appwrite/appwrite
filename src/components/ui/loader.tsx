@@ -39,6 +39,8 @@ export type FullscreenLoaderStatusBanner = {
   reportTitle?: string
   /** Optional maintenance window (styled with text-foreground/70). */
   maintenanceWindow?: string
+  /** Optional affected regions line (matches CloudStatusBanner). */
+  regionsLine?: string
   href: string
   /** Used for banner color (matches CloudStatusBanner). */
   state: 'degraded' | 'downtime' | 'maintenance'
@@ -126,6 +128,14 @@ export function FullscreenLoader({
                           {' '}
                           <span className="text-foreground/70">
                             {statusBanner.maintenanceWindow}
+                          </span>
+                        </>
+                      ) : null}
+                      {statusBanner.regionsLine ? (
+                        <>
+                          {' '}
+                          <span className="text-foreground/70">
+                            {statusBanner.regionsLine}
                           </span>
                         </>
                       ) : null}

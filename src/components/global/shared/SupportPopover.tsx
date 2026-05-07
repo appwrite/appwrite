@@ -145,9 +145,10 @@ export function SupportPopover({ orgId }: SupportPopoverProps) {
 
   // Fetch organization plan to check for premium support
   const { plan: organizationPlan } = useOrganizationPlan(orgId)
-  const { features } = useConsoleProfile()
+  const { isCloud, features } = useConsoleProfile()
+  const cloudStatusEnabled = isCloud && features.systemStatus
   const { mockCloudStatusAlert } = useDebugOverrides()
-  const { data: statusData } = useAppwriteCloudStatus(features.systemStatus)
+  const { data: statusData } = useAppwriteCloudStatus(cloudStatusEnabled)
 
   // Check if the plan supports premium support
   const hasPremiumSupport = organizationPlan?.premiumSupport === true
@@ -372,7 +373,7 @@ export function SupportPopover({ orgId }: SupportPopoverProps) {
           </div>
         </div>
 
-        {features.systemStatus && (
+        {cloudStatusEnabled && (
           <>
             <Separator />
             <div className="p-4">

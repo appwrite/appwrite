@@ -229,9 +229,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   const { isLoading, isAuthRoute } = useInitialLoader()
   const [clientMounted, setClientMounted] = useState(false)
   const location = useLocation()
-  const { features } = useConsoleProfile()
+  const { isCloud, features } = useConsoleProfile()
+  const cloudStatusEnabled = isCloud && features.systemStatus
   const { data: statusData, isSuccess: isStatusSuccess } =
-    useAppwriteCloudStatus(features.systemStatus)
+    useAppwriteCloudStatus(cloudStatusEnabled)
   const { showFullscreenLoader } = useDebugOverrides()
 
   useEffect(() => {
@@ -248,6 +249,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   const isLoaderVisible = isLoading || showFullscreenLoader
 
   const statusBanner =
+    cloudStatusEnabled &&
     isLoaderVisible &&
     isStatusSuccess &&
     statusData?.aggregateState &&
@@ -257,6 +259,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             reportTitle: statusData.activeReport?.title,
             startsAt: statusData.activeReport?.startsAt,
             endsAt: statusData.activeReport?.endsAt,
+            regionsLine: statusData.regionsLine,
           }),
           href: STATUS_PAGE_URL,
           state: statusData.aggregateState,

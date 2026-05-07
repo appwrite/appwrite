@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { queryOptions, useQuery } from '@tanstack/react-query'
 
+import { formatStatusAffectedRegionsLine } from '@/lib/cloud-status-copy'
+
 const APPWRITE_CLOUD_STATUS_URL = 'https://status.appwrite.online/index.json'
 const STATUS_REFRESH_INTERVAL = 60 * 1000
 
@@ -21,20 +23,37 @@ type StatusReportAggregateState =
 
 type StatusReportType = 'automatic' | 'maintenance' | 'manual'
 
+type StatusReportAffectedResource = {
+  status_page_resource_id?: string | number
+  status?: string
+}
+
 type StatusReportItem = {
   type: 'status_report'
+  id?: string
   attributes?: {
     title?: string
     report_type?: string
     aggregate_state?: string
     starts_at?: string | null
     ends_at?: string | null
+    affected_resources?: StatusReportAffectedResource[]
+  }
+}
+
+type StatusPageSectionItem = {
+  type: 'status_page_section'
+  id?: string
+  attributes?: {
+    name?: string
   }
 }
 
 type StatusResourceItem = {
   type: 'status_page_resource'
+  id?: string | number
   attributes?: {
+    status_page_section_id?: number | string
     public_name?: string
     status?: string
   }
@@ -62,6 +81,11 @@ export type AppwriteCloudServiceSummary = {
 
 export type AppwriteCloudStatusSummary = {
   aggregateState: AppwriteCloudAggregateState
+  /**
+   * Affected regions (and similar) when the page is not fully operational.
+   * Uses the active incident report when present, otherwise live regional monitors.
+   */
+  regionsLine?: string
   activeReport?: {
     title: string
     reportType: StatusReportType
@@ -176,20 +200,137 @@ function parseTimestamp(value?: string | null): number | null {
   return Number.isNaN(timestamp) ? null : timestamp
 }
 
-export async function fetchAppwriteCloudStatus(): Promise<AppwriteCloudStatusSummary> {
-  const response = await fetch(APPWRITE_CLOUD_STATUS_URL)
-  if (!response.ok) {
-    throw new Error(`Failed to fetch Appwrite Cloud status: ${response.status}`)
-  }
+const CLOUD_SERVICES_SECTION = /^Cloud services - (.+)$/i
 
-  const payload = (await response.json()) as StatusPageResponse
+function buildCloudRegionSectionMap(
+  included: StatusPageResponse['included'],
+): { sectionIdToRegionCode: Map<number, string>; allRegionCodes: string[] } {
+  const sectionIdToRegionCode = new Map<number, string>()
+  for (const item of included ?? []) {
+    if (item.type !== 'status_page_section') continue
+    const section = item as StatusPageSectionItem
+    const name = section.attributes?.name?.trim()
+    if (!name) continue
+    const match = name.match(CLOUD_SERVICES_SECTION)
+    if (!match) continue
+    const code = match[1].trim()
+    const sectionId = Number(section.id)
+    if (!Number.isFinite(sectionId)) continue
+    sectionIdToRegionCode.set(sectionId, code)
+  }
+  const allRegionCodes = [...new Set(sectionIdToRegionCode.values())].sort(
+    (a, b) => a.localeCompare(b),
+  )
+  return { sectionIdToRegionCode, allRegionCodes }
+}
+
+function buildResourceRegionIndex(
+  included: StatusPageResponse['included'],
+): Map<string, { sectionId: number; status: AppwriteCloudServiceState }> {
+  const resourceById = new Map<
+    string,
+    { sectionId: number; status: AppwriteCloudServiceState }
+  >()
+  for (const item of included ?? []) {
+    if (item.type !== 'status_page_resource') continue
+    const resource = item as StatusResourceItem
+    if (resource.id === undefined || resource.id === null) continue
+    const rawSectionId = resource.attributes?.status_page_section_id
+    if (rawSectionId === undefined || rawSectionId === null) continue
+    const sectionId =
+      typeof rawSectionId === 'number' ? rawSectionId : Number(rawSectionId)
+    if (!Number.isFinite(sectionId)) continue
+    resourceById.set(String(resource.id), {
+      sectionId,
+      status: normalizeServiceState(resource.attributes?.status),
+    })
+  }
+  return resourceById
+}
+
+function regionCodesFromAffectedResources(
+  affected: StatusReportAffectedResource[] | undefined,
+  sectionIdToRegionCode: Map<number, string>,
+  resourceById: Map<string, { sectionId: number; status: AppwriteCloudServiceState }>,
+): string[] {
+  const refs = Array.isArray(affected) ? affected : []
+  const unresolved = refs.filter((r) => r.status !== 'resolved')
+  const toScan = unresolved.length > 0 ? unresolved : refs
+  const set = new Set<string>()
+  for (const ref of toScan) {
+    const resourceId = ref.status_page_resource_id
+    if (resourceId === undefined || resourceId === null) continue
+    const res = resourceById.get(String(resourceId))
+    if (!res) continue
+    const code = sectionIdToRegionCode.get(res.sectionId)
+    if (code) set.add(code)
+  }
+  return [...set].sort((a, b) => a.localeCompare(b))
+}
+
+function regionCodesFromLiveNonOperationalCloud(
+  sectionIdToRegionCode: Map<number, string>,
+  resourceById: Map<string, { sectionId: number; status: AppwriteCloudServiceState }>,
+): string[] {
+  const set = new Set<string>()
+  for (const res of resourceById.values()) {
+    if (res.status === 'operational' || res.status === 'not_monitored') continue
+    const code = sectionIdToRegionCode.get(res.sectionId)
+    if (code) set.add(code)
+  }
+  return [...set].sort((a, b) => a.localeCompare(b))
+}
+
+function emptyAppwriteCloudStatusSummary(): AppwriteCloudStatusSummary {
+  return {
+    aggregateState: 'operational',
+    services: [],
+  }
+}
+
+function buildStatusRegionsLine(
+  title: string,
+  affected: StatusReportAffectedResource[] | undefined,
+  sectionIdToRegionCode: Map<number, string>,
+  allRegionCodes: string[],
+  resourceById: Map<string, { sectionId: number; status: AppwriteCloudServiceState }>,
+): string | undefined {
+  let codes = regionCodesFromAffectedResources(
+    affected,
+    sectionIdToRegionCode,
+    resourceById,
+  )
+  if (codes.length === 0) {
+    codes = regionCodesFromLiveNonOperationalCloud(
+      sectionIdToRegionCode,
+      resourceById,
+    )
+  }
+  const titleSaysAll = /\ball regions\b/i.test(title)
+  const coversAll =
+    allRegionCodes.length > 0 &&
+    codes.length === allRegionCodes.length &&
+    allRegionCodes.every((c) => codes.includes(c))
+  const allRegionsAffected = titleSaysAll || coversAll
+  return formatStatusAffectedRegionsLine(allRegionsAffected, codes)
+}
+
+function parseAppwriteStatusPayload(
+  payload: StatusPageResponse,
+): AppwriteCloudStatusSummary {
+  const included = Array.isArray(payload.included) ? payload.included : []
+
   const aggregateState = normalizeAggregateState(
     payload.data?.attributes?.aggregate_state,
   )
 
+  const { sectionIdToRegionCode, allRegionCodes } =
+    buildCloudRegionSectionMap(included)
+  const resourceById = buildResourceRegionIndex(included)
+
   const reports =
-    payload.included
-      ?.filter(
+    included
+      .filter(
         (item): item is StatusReportItem => item.type === 'status_report',
       )
       .map((report) => ({
@@ -204,12 +345,15 @@ export async function fetchAppwriteCloudStatus(): Promise<AppwriteCloudStatusSum
         sortStartsAt: report.attributes?.starts_at
           ? Date.parse(report.attributes.starts_at)
           : 0,
+        affectedResources: Array.isArray(report.attributes?.affected_resources)
+          ? report.attributes.affected_resources
+          : [],
       }))
-      .sort((left, right) => right.sortStartsAt - left.sortStartsAt) ?? []
+      .sort((left, right) => right.sortStartsAt - left.sortStartsAt)
 
   const servicesMap = new Map<string, AppwriteCloudServiceState>()
-  payload.included
-    ?.filter(
+  included
+    .filter(
       (item): item is StatusResourceItem =>
         item.type === 'status_page_resource',
     )
@@ -256,8 +400,20 @@ export async function fetchAppwriteCloudStatus(): Promise<AppwriteCloudStatusSum
         ) ??
         activeReports[0])
 
+  const regionsLine =
+    aggregateState === 'operational'
+      ? undefined
+      : buildStatusRegionsLine(
+          activeReport?.title ?? '',
+          activeReport?.affectedResources,
+          sectionIdToRegionCode,
+          allRegionCodes,
+          resourceById,
+        )
+
   return {
     aggregateState,
+    regionsLine,
     activeReport: activeReport
       ? {
           title: activeReport.title,
@@ -268,6 +424,30 @@ export async function fetchAppwriteCloudStatus(): Promise<AppwriteCloudStatusSum
         }
       : undefined,
     services,
+  }
+}
+
+export async function fetchAppwriteCloudStatus(): Promise<AppwriteCloudStatusSummary> {
+  const response = await fetch(APPWRITE_CLOUD_STATUS_URL)
+  if (!response.ok) {
+    throw new Error(`Failed to fetch Appwrite Cloud status: ${response.status}`)
+  }
+
+  let payload: unknown
+  try {
+    payload = await response.json()
+  } catch {
+    return emptyAppwriteCloudStatusSummary()
+  }
+
+  if (!payload || typeof payload !== 'object') {
+    return emptyAppwriteCloudStatusSummary()
+  }
+
+  try {
+    return parseAppwriteStatusPayload(payload as StatusPageResponse)
+  } catch {
+    return emptyAppwriteCloudStatusSummary()
   }
 }
 

@@ -100,10 +100,32 @@ export function formatLocalMaintenanceWindow(
   return `${dateFormatter.format(startDate)}, ${timeFormatter.format(startDate)} - ${dateFormatter.format(endDate)}, ${timeFormatter.format(endDate)} local time.`
 }
 
+/**
+ * Human-readable scope line for Cloud status alerts (banner + fullscreen loader).
+ */
+export function formatStatusAffectedRegionsLine(
+  allRegionsAffected: boolean,
+  regionCodes: string[],
+): string | undefined {
+  if (allRegionsAffected) {
+    return 'All regions are affected.'
+  }
+  const codes = regionCodes.filter(Boolean)
+  if (codes.length === 0) {
+    return undefined
+  }
+  if (codes.length === 1) {
+    return `Affected region: ${codes[0]}.`
+  }
+  return `Affected regions: ${codes.join(', ')}.`
+}
+
 export interface StatusBannerCopyOptions {
   reportTitle?: string | null
   startsAt?: string | null
   endsAt?: string | null
+  /** Optional line after the report title (e.g. affected Cloud regions). */
+  regionsLine?: string | null
 }
 
 /**
@@ -114,11 +136,11 @@ export function getStatusBannerCopy(
   state: CloudStatusState,
   options?: StatusBannerCopyOptions,
 ): string {
-  const { title, reportTitle, maintenanceWindow } = getStatusBannerParts(
-    state,
-    options,
+  const { title, reportTitle, maintenanceWindow, regionsLine } =
+    getStatusBannerParts(state, options)
+  const parts = [title, reportTitle, maintenanceWindow, regionsLine].filter(
+    Boolean,
   )
-  const parts = [title, reportTitle, maintenanceWindow].filter(Boolean)
   return parts.join(' ')
 }
 
@@ -134,6 +156,7 @@ export function getStatusBannerParts(
   title: string
   reportTitle?: string
   maintenanceWindow?: string
+  regionsLine?: string
 } {
   const presentation = getStatusPresentation(state)
   const reportTitle = options?.reportTitle?.trim() || undefined
@@ -141,9 +164,11 @@ export function getStatusBannerParts(
     state === 'maintenance' && (options?.startsAt ?? options?.endsAt)
       ? formatLocalMaintenanceWindow(options.startsAt, options.endsAt)
       : undefined
+  const regionsLine = options?.regionsLine?.trim() || undefined
   return {
     title: presentation.title,
     reportTitle,
     maintenanceWindow,
+    regionsLine,
   }
 }

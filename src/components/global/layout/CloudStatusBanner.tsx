@@ -63,6 +63,9 @@ function CloudStatusBannerInner({
           )
       : undefined
 
+  const regionsLine =
+    mockCloudStatusAlert === 'live' ? data?.regionsLine : undefined
+
   const statusUrl = 'https://status.appwrite.online'
 
   return (
@@ -101,6 +104,12 @@ function CloudStatusBannerInner({
                   <span className="text-foreground/70">{maintenanceWindow}</span>
                 </>
               ) : null}
+              {regionsLine ? (
+                <>
+                  {' '}
+                  <span className="text-foreground/70">{regionsLine}</span>
+                </>
+              ) : null}
             </p>
           </div>
           <span
@@ -120,12 +129,13 @@ function CloudStatusBannerInner({
 }
 
 export function CloudStatusBanner() {
-  const { features } = useConsoleProfile()
+  const { isCloud, features } = useConsoleProfile()
+  const cloudStatusEnabled = isCloud && features.systemStatus
   const { mockCloudStatusAlert } = useDebugOverrides()
-  const { data, isSuccess } = useAppwriteCloudStatus(features.systemStatus)
+  const { data, isSuccess } = useAppwriteCloudStatus(cloudStatusEnabled)
 
   const aggregateState: AppwriteCloudAggregateState =
-    !features.systemStatus
+    !cloudStatusEnabled
       ? 'operational'
       : mockCloudStatusAlert !== 'live'
         ? mockCloudStatusAlert
@@ -139,7 +149,7 @@ export function CloudStatusBanner() {
     }
   }, [aggregateState])
 
-  if (!features.systemStatus) {
+  if (!cloudStatusEnabled) {
     return null
   }
 
