@@ -13,6 +13,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
@@ -39,12 +40,12 @@ class XList extends Action
             ->label('scope', 'rules.read')
             ->label('sdk', new Method(
                 namespace: 'proxy',
-                group: null,
+                group: 'rules',
                 name: 'listRules',
                 description: <<<EOT
                 Get a list of all the proxy rules. You can use the query params to filter your results.
                 EOT,
-                auth: [AuthType::ADMIN],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
@@ -53,21 +54,23 @@ class XList extends Action
                 ]
             ))
             ->param('queries', [], new Rules(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Rules::ALLOWED_ATTRIBUTES), true)
-            ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
+            ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true, deprecated: true)
             ->inject('response')
             ->inject('project')
             ->inject('dbForPlatform')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
     public function action(
         array $queries,
+        bool $total,
         string $search,
-        bool $includeTotal,
         Response $response,
         Document $project,
-        Database $dbForPlatform
+        Database $dbForPlatform,
+        Authorization $authorization,
     ) {
         try {
             $queries = Query::parseQueries($queries);
@@ -91,7 +94,7 @@ class XList extends Action
             }
 
             $ruleId = $cursor->getValue();
-            $cursorDocument = $dbForPlatform->getDocument('rules', $ruleId);
+            $cursorDocument = $authorization->skip(fn () => $dbForPlatform->getDocument('rules', $ruleId));
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Rule '{$ruleId}' for the 'cursor' value not found.");
@@ -102,9 +105,9 @@ class XList extends Action
 
         $filterQueries = Query::groupByType($queries)['filters'];
 
-        $rules = $dbForPlatform->find('rules', $queries);
+        $rules = $authorization->skip(fn () => $dbForPlatform->find('rules', $queries));
         foreach ($rules as $rule) {
-            $certificate = $dbForPlatform->getDocument('certificates', $rule->getAttribute('certificateId', ''));
+            $certificate = $authorization->skip(fn () => $dbForPlatform->getDocument('certificates', $rule->getAttribute('certificateId', '')));
 
             // Give priority to certificate generation logs if present
             if (!empty($certificate->getAttribute('logs', ''))) {
@@ -112,11 +115,18 @@ class XList extends Action
             }
 
             $rule->setAttribute('renewAt', $certificate->getAttribute('renewDate', ''));
+
+            // Rename 'created' status to 'unverified' for consistency.
+            // 'verifying' and 'verified' statuses stay as is.
+            // 'unverified' in the meaning of failed certificate generation stays as is.
+            if ($rule->getAttribute('status') === 'created') {
+                $rule->setAttribute('status', 'unverified');
+            }
         }
 
         $response->dynamic(new Document([
             'rules' => $rules,
-            'total' => $includeTotal ? $dbForPlatform->count('rules', $filterQueries, APP_LIMIT_COUNT) : 0,
+            'total' => $total ? $authorization->skip(fn () => $dbForPlatform->count('rules', $filterQueries, APP_LIMIT_COUNT)) : 0,
         ]), Response::MODEL_PROXY_RULE_LIST);
     }
 }

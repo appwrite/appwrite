@@ -437,6 +437,15 @@ class OpenAPI3 extends Format
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['x-example'] = ($param['example'] ?? '') ?: '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
                         break;
+                    case \Utopia\Database\Validator\BigInt::class:
+                        // BigInt validator reports Database::VAR_BIGINT, but OpenAPI expects scalar types.
+                        // We expose it as int64 to keep schema consistent with Column/Attribute models.
+                        $node['schema']['type'] = 'integer';
+                        $node['schema']['format'] = 'int64';
+                        if (!empty($param['example'])) {
+                            $node['schema']['x-example'] = $param['example'];
+                        }
+                        break;
                     case \Utopia\Validator\Boolean::class:
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['x-example'] = ($param['example'] ?? '') ?: false;

@@ -4163,4 +4163,72 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals(401, $verification3['headers']['status-code']);
     }
+
+    public function testRefreshEmailPasswordSession(): void
+    {
+        $email = uniqid() . 'user@localhost.test';
+
+        $account = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => 'password',
+        ]);
+
+        $this->assertEquals(201, $account['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $email,
+            'password' => 'password',
+        ]);
+
+        $this->assertEquals(201, $session['headers']['status-code']);
+        $this->assertNotEmpty($session['body']['$id']);
+
+        $sessionId = $session['body']['$id'];
+        $cookie = 'a_session_' . $this->getProject()['$id'] . '=' .$session['cookies']['a_session_' . $this->getProject()['$id']];
+
+        $session = $this->client->call(Client::METHOD_GET, '/account/sessions/current', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' =>  $cookie,
+        ]));
+
+        $this->assertEquals(200, $session['headers']['status-code']);
+        $this->assertNotEmpty($session['body']['expire']);
+        $expiryBefore = $session['body']['expire'];
+
+        \sleep(3); // Small delay to ensure expiry an expand
+
+        $session = $this->client->call(Client::METHOD_PATCH, '/account/sessions/' . $sessionId, array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' =>  $cookie,
+        ]));
+
+        $this->assertEquals(200, $session['headers']['status-code']);
+        $this->assertNotEmpty($session['body']['expire']);
+        $expiryAfter = $session['body']['expire'];
+
+        $this->assertGreaterThan(\strtotime($expiryBefore), \strtotime($expiryAfter));
+
+        $session = $this->client->call(Client::METHOD_GET, '/account/sessions/current', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' =>  $cookie,
+        ]));
+
+        $this->assertEquals(200, $session['headers']['status-code']);
+        $this->assertEquals(\strtotime($expiryAfter), \strtotime($session['body']['expire']));
+    }
 }
