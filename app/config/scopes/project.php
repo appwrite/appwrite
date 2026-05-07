@@ -298,6 +298,16 @@ return [
         'category' => 'Messaging',
     ],
 
+    // Proxy
+    'rules.read' => [
+        'description' => 'Access to read proxy rules.',
+        'category' => 'Proxy',
+    ],
+    'rules.write' => [
+        'description' => 'Access to create, update, and delete proxy rules.',
+        'category' => 'Proxy',
+    ],
+
     // Other
     "webhooks.read" => [
         "description" =>
@@ -349,14 +359,6 @@ return [
     ],
     'vcs.write' => [
         'description' => 'Access to create, update, and delete resources under VCS service.',
-        'category' => 'Other',
-    ],
-    'rules.read' => [
-        'description' => 'Access to read proxy rules.',
-        'category' => 'Other',
-    ],
-    'rules.write' => [
-        'description' => 'Access to create, update, and delete proxy rules.',
         'category' => 'Other',
     ],
 ];

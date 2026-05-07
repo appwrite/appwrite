@@ -72,6 +72,7 @@ class Response extends SwooleResponse
     public const MODEL_ATTRIBUTE_LIST = 'attributeList';
     public const MODEL_ATTRIBUTE_STRING = 'attributeString';
     public const MODEL_ATTRIBUTE_INTEGER = 'attributeInteger';
+    public const MODEL_ATTRIBUTE_BIGINT = 'attributeBigint';
     public const MODEL_ATTRIBUTE_FLOAT = 'attributeFloat';
     public const MODEL_ATTRIBUTE_BOOLEAN = 'attributeBoolean';
     public const MODEL_ATTRIBUTE_EMAIL = 'attributeEmail';
@@ -95,6 +96,7 @@ class Response extends SwooleResponse
     public const MODEL_COLUMN_LIST = 'columnList';
     public const MODEL_COLUMN_STRING = 'columnString';
     public const MODEL_COLUMN_INTEGER = 'columnInteger';
+    public const MODEL_COLUMN_BIGINT = 'columnBigint';
     public const MODEL_COLUMN_FLOAT = 'columnFloat';
     public const MODEL_COLUMN_BOOLEAN = 'columnBoolean';
     public const MODEL_COLUMN_EMAIL = 'columnEmail';

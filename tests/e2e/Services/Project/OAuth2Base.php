@@ -5,6 +5,7 @@ namespace Tests\E2E\Services\Project;
 use PHPUnit\Framework\Attributes\Before;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\E2E\Client;
+use Utopia\Database\Query;
 
 trait OAuth2Base
 {
@@ -172,6 +173,40 @@ trait OAuth2Base
         $this->assertNotContains('mock-unverified', $ids);
     }
 
+    public function testListOAuth2ProvidersTotalFalse(): void
+    {
+        $response = $this->listOAuth2Providers(total: false);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(0, $response['body']['total']);
+        $this->assertGreaterThan(0, \count($response['body']['providers']));
+    }
+
+    public function testListOAuth2ProvidersWithLimit(): void
+    {
+        $response = $this->listOAuth2Providers([
+            Query::limit(1)->toString(),
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertCount(1, $response['body']['providers']);
+        $this->assertGreaterThan(1, $response['body']['total']);
+    }
+
+    public function testListOAuth2ProvidersWithOffset(): void
+    {
+        $listAll = $this->listOAuth2Providers();
+        $this->assertSame(200, $listAll['headers']['status-code']);
+
+        $listOffset = $this->listOAuth2Providers([
+            Query::offset(1)->toString(),
+        ]);
+
+        $this->assertSame(200, $listOffset['headers']['status-code']);
+        $this->assertCount(\count($listAll['body']['providers']) - 1, $listOffset['body']['providers']);
+        $this->assertSame($listAll['body']['total'], $listOffset['body']['total']);
+    }
+
     // =========================================================================
     // Get OAuth2 provider
     // =========================================================================
@@ -186,6 +221,28 @@ trait OAuth2Base
         $this->assertArrayHasKey('clientId', $response['body']);
         $this->assertArrayHasKey('clientSecret', $response['body']);
         $this->assertSame('', $response['body']['clientSecret']);
+    }
+
+    public function testGetOAuth2ProviderWithAlias(): void
+    {
+        // The action declares the canonical param name as `providerId` and
+        // registers `provider` as an alias so that older SDK versions that
+        // send the provider in the query string continue to work.
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ];
+        $headers = \array_merge($headers, $this->getHeaders());
+
+        // Call with `provider` in query string (legacy behaviour)
+        $response = $this->client->call(
+            Client::METHOD_GET,
+            '/project/oauth2/github?provider=github',
+            $headers,
+        );
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame('github', $response['body']['$id']);
     }
 
     public function testGetOAuth2ProviderClientSecretWriteOnly(): void
@@ -221,19 +278,23 @@ trait OAuth2Base
 
     public function testGetOAuth2ProviderUnsupported(): void
     {
+        // The `providerId` param is validated by a WhiteList of registered
+        // OAuth2 provider keys, so an unknown value is rejected at validation
+        // time — before the action runs — and surfaces as a generic argument
+        // error rather than `project_provider_unsupported`.
         $response = $this->getOAuth2Provider('not-a-real-provider');
 
         $this->assertSame(400, $response['headers']['status-code']);
-        $this->assertSame('project_provider_unsupported', $response['body']['type']);
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
     }
 
     public function testGetOAuth2ProviderRegisteredInConfigButNoUpdateClass(): void
     {
-        // `mock` is present in oAuthProviders config (enabled: true) but is NOT
-        // registered in Base::getProviderActions(). Get::action has two
-        // separate `unsupported` throw branches — testGetOAuth2ProviderUnsupported
-        // covers the first (provider missing from config); this covers the
-        // second (provider in config but missing from the action registry).
+        // `mock` is present in oAuthProviders config (enabled: true) but is
+        // NOT registered in Base::getProviderActions(). It passes the
+        // WhiteList validator (which only checks config membership) and
+        // reaches the action body, where the action-registry check throws
+        // `project_provider_unsupported`.
         $response = $this->getOAuth2Provider('mock');
 
         $this->assertSame(400, $response['headers']['status-code']);
@@ -1590,8 +1651,8 @@ trait OAuth2Base
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertSame('https://idp.example.com/.well-known/openid-configuration', $response['body']['wellKnownURL']);
         $this->assertArrayHasKey('authorizationURL', $response['body']);
-        $this->assertArrayHasKey('tokenUrl', $response['body']);
-        $this->assertArrayHasKey('userInfoUrl', $response['body']);
+        $this->assertArrayHasKey('tokenURL', $response['body']);
+        $this->assertArrayHasKey('userInfoURL', $response['body']);
 
         // Cleanup
         $this->updateOAuth2('oidc', [
@@ -1599,8 +1660,8 @@ trait OAuth2Base
             'clientSecret' => '',
             'wellKnownURL' => '',
             'authorizationURL' => '',
-            'tokenUrl' => '',
-            'userInfoUrl' => '',
+            'tokenURL' => '',
+            'userInfoURL' => '',
             'enabled' => false,
         ]);
     }
@@ -1611,15 +1672,15 @@ trait OAuth2Base
             'clientId' => 'oidc-discovery',
             'clientSecret' => 'oidc-discovery-secret',
             'authorizationURL' => 'https://idp.example.com/oauth2/authorize',
-            'tokenUrl' => 'https://idp.example.com/oauth2/token',
-            'userInfoUrl' => 'https://idp.example.com/oauth2/userinfo',
+            'tokenURL' => 'https://idp.example.com/oauth2/token',
+            'userInfoURL' => 'https://idp.example.com/oauth2/userinfo',
             'enabled' => false,
         ]);
 
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertSame('https://idp.example.com/oauth2/authorize', $response['body']['authorizationURL']);
-        $this->assertSame('https://idp.example.com/oauth2/token', $response['body']['tokenUrl']);
-        $this->assertSame('https://idp.example.com/oauth2/userinfo', $response['body']['userInfoUrl']);
+        $this->assertSame('https://idp.example.com/oauth2/token', $response['body']['tokenURL']);
+        $this->assertSame('https://idp.example.com/oauth2/userinfo', $response['body']['userInfoURL']);
 
         // Cleanup
         $this->updateOAuth2('oidc', [
@@ -1627,8 +1688,8 @@ trait OAuth2Base
             'clientSecret' => '',
             'wellKnownURL' => '',
             'authorizationURL' => '',
-            'tokenUrl' => '',
-            'userInfoUrl' => '',
+            'tokenURL' => '',
+            'userInfoURL' => '',
             'enabled' => false,
         ]);
     }
@@ -1640,8 +1701,8 @@ trait OAuth2Base
             'clientSecret' => '',
             'wellKnownURL' => '',
             'authorizationURL' => '',
-            'tokenUrl' => '',
-            'userInfoUrl' => '',
+            'tokenURL' => '',
+            'userInfoURL' => '',
             'enabled' => false,
         ]);
 
@@ -1670,8 +1731,8 @@ trait OAuth2Base
             'clientSecret' => '',
             'wellKnownURL' => '',
             'authorizationURL' => '',
-            'tokenUrl' => '',
-            'userInfoUrl' => '',
+            'tokenURL' => '',
+            'userInfoURL' => '',
             'enabled' => false,
         ]);
 
@@ -1679,7 +1740,7 @@ trait OAuth2Base
             'clientId' => 'oidc-partial',
             'clientSecret' => 'oidc-partial-secret',
             'authorizationURL' => 'https://idp.example.com/oauth2/authorize',
-            'tokenUrl' => 'https://idp.example.com/oauth2/token',
+            'tokenURL' => 'https://idp.example.com/oauth2/token',
             'enabled' => true,
         ]);
 
@@ -1692,8 +1753,8 @@ trait OAuth2Base
             'clientSecret' => '',
             'wellKnownURL' => '',
             'authorizationURL' => '',
-            'tokenUrl' => '',
-            'userInfoUrl' => '',
+            'tokenURL' => '',
+            'userInfoURL' => '',
             'enabled' => false,
         ]);
     }
@@ -1724,8 +1785,8 @@ trait OAuth2Base
             'clientSecret' => '',
             'wellKnownURL' => '',
             'authorizationURL' => '',
-            'tokenUrl' => '',
-            'userInfoUrl' => '',
+            'tokenURL' => '',
+            'userInfoURL' => '',
             'enabled' => false,
         ]);
     }
@@ -1755,8 +1816,8 @@ trait OAuth2Base
             'clientSecret' => '',
             'wellKnownURL' => '',
             'authorizationURL' => '',
-            'tokenUrl' => '',
-            'userInfoUrl' => '',
+            'tokenURL' => '',
+            'userInfoURL' => '',
             'enabled' => false,
         ]);
     }
@@ -1770,8 +1831,8 @@ trait OAuth2Base
             'clientSecret' => '',
             'wellKnownURL' => '',
             'authorizationURL' => '',
-            'tokenUrl' => '',
-            'userInfoUrl' => '',
+            'tokenURL' => '',
+            'userInfoURL' => '',
             'enabled' => false,
         ]);
 
@@ -1780,7 +1841,7 @@ trait OAuth2Base
             'clientId' => 'oidc-split-discovery',
             'clientSecret' => 'oidc-split-discovery-secret',
             'authorizationURL' => 'https://idp.example.com/oauth2/authorize',
-            'tokenUrl' => 'https://idp.example.com/oauth2/token',
+            'tokenURL' => 'https://idp.example.com/oauth2/token',
             'enabled' => false,
         ]);
 
@@ -1788,19 +1849,19 @@ trait OAuth2Base
         // state must include the two stored URLs + the new one to satisfy
         // the all-three-discovery-URLs branch of the enable check.
         $enable = $this->updateOAuth2('oidc', [
-            'userInfoUrl' => 'https://idp.example.com/oauth2/userinfo',
+            'userInfoURL' => 'https://idp.example.com/oauth2/userinfo',
             'enabled' => true,
         ]);
         $this->assertSame(200, $enable['headers']['status-code']);
         $this->assertTrue($enable['body']['enabled']);
 
         // Confirm all three URLs ended up persisted (merge wrote the new
-        // userInfoUrl while preserving the previously stored two).
+        // userInfoURL while preserving the previously stored two).
         $get = $this->getOAuth2Provider('oidc');
         $this->assertSame(200, $get['headers']['status-code']);
         $this->assertSame('https://idp.example.com/oauth2/authorize', $get['body']['authorizationURL']);
-        $this->assertSame('https://idp.example.com/oauth2/token', $get['body']['tokenUrl']);
-        $this->assertSame('https://idp.example.com/oauth2/userinfo', $get['body']['userInfoUrl']);
+        $this->assertSame('https://idp.example.com/oauth2/token', $get['body']['tokenURL']);
+        $this->assertSame('https://idp.example.com/oauth2/userinfo', $get['body']['userInfoURL']);
 
         // Cleanup
         $this->updateOAuth2('oidc', [
@@ -1808,8 +1869,8 @@ trait OAuth2Base
             'clientSecret' => '',
             'wellKnownURL' => '',
             'authorizationURL' => '',
-            'tokenUrl' => '',
-            'userInfoUrl' => '',
+            'tokenURL' => '',
+            'userInfoURL' => '',
             'enabled' => false,
         ]);
     }
@@ -1822,8 +1883,8 @@ trait OAuth2Base
             'clientSecret' => 'oidc-clear-then-enable-secret',
             'wellKnownURL' => 'https://idp.example.com/.well-known/openid-configuration',
             'authorizationURL' => '',
-            'tokenUrl' => '',
-            'userInfoUrl' => '',
+            'tokenURL' => '',
+            'userInfoURL' => '',
             'enabled' => false,
         ]);
 
@@ -1846,8 +1907,8 @@ trait OAuth2Base
             'clientSecret' => '',
             'wellKnownURL' => '',
             'authorizationURL' => '',
-            'tokenUrl' => '',
-            'userInfoUrl' => '',
+            'tokenURL' => '',
+            'userInfoURL' => '',
             'enabled' => false,
         ]);
     }
@@ -1868,16 +1929,16 @@ trait OAuth2Base
         $switch = $this->updateOAuth2('oidc', [
             'wellKnownURL' => '',
             'authorizationURL' => 'https://idp.example.com/oauth2/authorize',
-            'tokenUrl' => 'https://idp.example.com/oauth2/token',
-            'userInfoUrl' => 'https://idp.example.com/oauth2/userinfo',
+            'tokenURL' => 'https://idp.example.com/oauth2/token',
+            'userInfoURL' => 'https://idp.example.com/oauth2/userinfo',
             'enabled' => true,
         ]);
         $this->assertSame(200, $switch['headers']['status-code']);
         $this->assertTrue($switch['body']['enabled']);
         $this->assertSame('', $switch['body']['wellKnownURL']);
         $this->assertSame('https://idp.example.com/oauth2/authorize', $switch['body']['authorizationURL']);
-        $this->assertSame('https://idp.example.com/oauth2/token', $switch['body']['tokenUrl']);
-        $this->assertSame('https://idp.example.com/oauth2/userinfo', $switch['body']['userInfoUrl']);
+        $this->assertSame('https://idp.example.com/oauth2/token', $switch['body']['tokenURL']);
+        $this->assertSame('https://idp.example.com/oauth2/userinfo', $switch['body']['userInfoURL']);
 
         // Cleanup
         $this->updateOAuth2('oidc', [
@@ -1885,8 +1946,8 @@ trait OAuth2Base
             'clientSecret' => '',
             'wellKnownURL' => '',
             'authorizationURL' => '',
-            'tokenUrl' => '',
-            'userInfoUrl' => '',
+            'tokenURL' => '',
+            'userInfoURL' => '',
             'enabled' => false,
         ]);
     }
@@ -1900,28 +1961,118 @@ trait OAuth2Base
             'clientSecret' => 'oidc-clear-secret',
             'wellKnownURL' => 'https://idp.example.com/.well-known/openid-configuration',
             'authorizationURL' => 'https://idp.example.com/oauth2/authorize',
-            'tokenUrl' => 'https://idp.example.com/oauth2/token',
-            'userInfoUrl' => 'https://idp.example.com/oauth2/userinfo',
+            'tokenURL' => 'https://idp.example.com/oauth2/token',
+            'userInfoURL' => 'https://idp.example.com/oauth2/userinfo',
             'enabled' => false,
         ]);
 
         $response = $this->updateOAuth2('oidc', [
             'wellKnownURL' => '',
             'authorizationURL' => '',
-            'tokenUrl' => '',
-            'userInfoUrl' => '',
+            'tokenURL' => '',
+            'userInfoURL' => '',
         ]);
 
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertSame('', $response['body']['wellKnownURL']);
         $this->assertSame('', $response['body']['authorizationURL']);
-        $this->assertSame('', $response['body']['tokenUrl']);
-        $this->assertSame('', $response['body']['userInfoUrl']);
+        $this->assertSame('', $response['body']['tokenURL']);
+        $this->assertSame('', $response['body']['userInfoURL']);
 
         // Cleanup
         $this->updateOAuth2('oidc', [
             'clientId' => '',
             'clientSecret' => '',
+            'enabled' => false,
+        ]);
+    }
+
+    public function testUpdateOAuth2OidcBackwardCompatibleResponseFormat(): void
+    {
+        // Reset to clean state
+        $this->updateOAuth2('oidc', [
+            'clientId' => '',
+            'clientSecret' => '',
+            'wellKnownURL' => '',
+            'authorizationURL' => '',
+            'tokenURL' => '',
+            'userInfoURL' => '',
+            'enabled' => false,
+        ]);
+
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.3',
+        ];
+        $headers = \array_merge($headers, $this->getHeaders());
+
+        // Update using OLD param names (aliases must still work)
+        $response = $this->client->call(
+            Client::METHOD_PATCH,
+            '/project/oauth2/oidc',
+            $headers,
+            [
+                'clientId' => 'oidc-compat-client',
+                'clientSecret' => 'oidc-compat-secret',
+                'tokenUrl' => 'https://idp.example.com/oauth2/token',
+                'userInfoUrl' => 'https://idp.example.com/oauth2/userinfo',
+                'enabled' => false,
+            ],
+        );
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertArrayHasKey('tokenUrl', $response['body']);
+        $this->assertArrayHasKey('userInfoUrl', $response['body']);
+        $this->assertArrayNotHasKey('tokenURL', $response['body']);
+        $this->assertArrayNotHasKey('userInfoURL', $response['body']);
+        $this->assertSame('https://idp.example.com/oauth2/token', $response['body']['tokenUrl']);
+        $this->assertSame('https://idp.example.com/oauth2/userinfo', $response['body']['userInfoUrl']);
+
+        // GET with 1.9.3 format must also return old param names
+        $get = $this->client->call(
+            Client::METHOD_GET,
+            '/project/oauth2/oidc',
+            $headers,
+        );
+
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertArrayHasKey('tokenUrl', $get['body']);
+        $this->assertArrayHasKey('userInfoUrl', $get['body']);
+        $this->assertArrayNotHasKey('tokenURL', $get['body']);
+        $this->assertArrayNotHasKey('userInfoURL', $get['body']);
+        $this->assertSame('https://idp.example.com/oauth2/token', $get['body']['tokenUrl']);
+        $this->assertSame('https://idp.example.com/oauth2/userinfo', $get['body']['userInfoUrl']);
+
+        // LIST with 1.9.3 format must also return old param names for OIDC
+        $list = $this->client->call(
+            Client::METHOD_GET,
+            '/project/oauth2',
+            $headers,
+        );
+
+        $this->assertSame(200, $list['headers']['status-code']);
+        $oidcEntry = null;
+        foreach ($list['body']['providers'] as $provider) {
+            if ($provider['$id'] === 'oidc') {
+                $oidcEntry = $provider;
+                break;
+            }
+        }
+        $this->assertNotNull($oidcEntry, 'OIDC provider missing from listOAuth2Providers response');
+        $this->assertArrayHasKey('tokenUrl', $oidcEntry);
+        $this->assertArrayHasKey('userInfoUrl', $oidcEntry);
+        $this->assertArrayNotHasKey('tokenURL', $oidcEntry);
+        $this->assertArrayNotHasKey('userInfoURL', $oidcEntry);
+        $this->assertSame('https://idp.example.com/oauth2/token', $oidcEntry['tokenUrl']);
+        $this->assertSame('https://idp.example.com/oauth2/userinfo', $oidcEntry['userInfoUrl']);
+
+        // Cleanup
+        $this->updateOAuth2('oidc', [
+            'clientId' => '',
+            'clientSecret' => '',
+            'tokenURL' => '',
+            'userInfoURL' => '',
             'enabled' => false,
         ]);
     }
@@ -2573,7 +2724,7 @@ trait OAuth2Base
         );
     }
 
-    protected function getOAuth2Provider(string $provider, bool $authenticated = true): mixed
+    protected function getOAuth2Provider(string $providerId, bool $authenticated = true): mixed
     {
         $headers = [
             'content-type' => 'application/json',
@@ -2586,13 +2737,23 @@ trait OAuth2Base
 
         return $this->client->call(
             Client::METHOD_GET,
-            '/project/oauth2/' . $provider,
+            '/project/oauth2/' . $providerId,
             $headers,
         );
     }
 
-    protected function listOAuth2Providers(bool $authenticated = true): mixed
+    protected function listOAuth2Providers(?array $queries = null, ?bool $total = null, bool $authenticated = true): mixed
     {
+        $params = [];
+
+        if ($queries !== null) {
+            $params['queries'] = $queries;
+        }
+
+        if ($total !== null) {
+            $params['total'] = $total;
+        }
+
         $headers = [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2606,6 +2767,7 @@ trait OAuth2Base
             Client::METHOD_GET,
             '/project/oauth2',
             $headers,
+            $params,
         );
     }
 }

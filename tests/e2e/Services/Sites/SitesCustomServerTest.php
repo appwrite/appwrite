@@ -104,14 +104,17 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals('./', $site['body']['outputDirectory']);
 
         $variable = $this->createVariable($siteId, [
+            'variableId' => ID::unique(),
             'key' => 'siteKey1',
             'value' => 'siteValue1',
         ]);
         $variable2 = $this->createVariable($siteId, [
+            'variableId' => ID::unique(),
             'key' => 'siteKey2',
             'value' => 'siteValue2',
         ]);
         $variable3 = $this->createVariable($siteId, [
+            'variableId' => ID::unique(),
             'key' => 'siteKey3',
             'value' => 'siteValue3',
         ]);
@@ -211,6 +214,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals('Test Site', $site['body']['name']);
 
         $variable = $this->createVariable($siteId, [
+            'variableId' => ID::unique(),
             'key' => 'siteKey1',
             'value' => 'siteValue1',
             'secret' => false,
@@ -223,6 +227,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(false, $variable['body']['secret']);
 
         $variable2 = $this->createVariable($siteId, [
+            'variableId' => ID::unique(),
             'key' => 'siteKey2',
             'value' => 'siteValue2',
             'secret' => false,
@@ -235,6 +240,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(false, $variable2['body']['secret']);
 
         $secretVariable = $this->createVariable($siteId, [
+            'variableId' => ID::unique(),
             'key' => 'siteKey3',
             'value' => 'siteValue3',
             'secret' => true,
@@ -330,6 +336,316 @@ class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testListVariablesWithLimit(): void
+    {
+        $site = $this->createSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Test List Variables Limit',
+            'outputDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+        $siteId = $site['body']['$id'] ?? '';
+        $this->assertEquals(201, $site['headers']['status-code']);
+
+        $variable1 = $this->createVariable($siteId, [
+            'variableId' => ID::unique(),
+            'key' => 'LIMIT_KEY_1',
+            'value' => 'limit-value-1',
+        ]);
+        $this->assertEquals(201, $variable1['headers']['status-code']);
+
+        $variable2 = $this->createVariable($siteId, [
+            'variableId' => ID::unique(),
+            'key' => 'LIMIT_KEY_2',
+            'value' => 'limit-value-2',
+        ]);
+        $this->assertEquals(201, $variable2['headers']['status-code']);
+
+        // List with limit of 1
+        $response = $this->listVariables($siteId, [
+            'queries' => [
+                Query::limit(1)->toString(),
+            ],
+            'total' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(1, $response['body']['variables']);
+        $this->assertGreaterThanOrEqual(2, $response['body']['total']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testListVariablesWithoutTotal(): void
+    {
+        $site = $this->createSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Test List Variables No Total',
+            'outputDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+        $siteId = $site['body']['$id'] ?? '';
+        $this->assertEquals(201, $site['headers']['status-code']);
+
+        $variable = $this->createVariable($siteId, [
+            'variableId' => ID::unique(),
+            'key' => 'NO_TOTAL_KEY',
+            'value' => 'no-total-value',
+        ]);
+        $this->assertEquals(201, $variable['headers']['status-code']);
+
+        // List with total=false
+        $response = $this->listVariables($siteId, [
+            'total' => false,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(0, $response['body']['total']);
+        $this->assertGreaterThanOrEqual(1, \count($response['body']['variables']));
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testListVariablesCursorPagination(): void
+    {
+        $site = $this->createSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Test List Variables Cursor',
+            'outputDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+        $siteId = $site['body']['$id'] ?? '';
+        $this->assertEquals(201, $site['headers']['status-code']);
+
+        $variable1 = $this->createVariable($siteId, [
+            'variableId' => ID::unique(),
+            'key' => 'CURSOR_KEY_1',
+            'value' => 'cursor-value-1',
+        ]);
+        $this->assertEquals(201, $variable1['headers']['status-code']);
+
+        $variable2 = $this->createVariable($siteId, [
+            'variableId' => ID::unique(),
+            'key' => 'CURSOR_KEY_2',
+            'value' => 'cursor-value-2',
+        ]);
+        $this->assertEquals(201, $variable2['headers']['status-code']);
+
+        // Get first page with limit 1
+        $page1 = $this->listVariables($siteId, [
+            'queries' => [
+                Query::limit(1)->toString(),
+            ],
+            'total' => true,
+        ]);
+
+        $this->assertEquals(200, $page1['headers']['status-code']);
+        $this->assertCount(1, $page1['body']['variables']);
+        $cursorId = $page1['body']['variables'][0]['$id'];
+
+        // Get next page using cursor
+        $page2 = $this->listVariables($siteId, [
+            'queries' => [
+                Query::limit(1)->toString(),
+                Query::cursorAfter(new Document(['$id' => $cursorId]))->toString(),
+            ],
+            'total' => true,
+        ]);
+
+        $this->assertEquals(200, $page2['headers']['status-code']);
+        $this->assertCount(1, $page2['body']['variables']);
+        $this->assertNotEquals($cursorId, $page2['body']['variables'][0]['$id']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testUpdateVariableKey(): void
+    {
+        $site = $this->createSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Test Update Variable Key',
+            'outputDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+        $siteId = $site['body']['$id'] ?? '';
+        $this->assertEquals(201, $site['headers']['status-code']);
+
+        $variable = $this->createVariable($siteId, [
+            'variableId' => ID::unique(),
+            'key' => 'KEY_BEFORE',
+            'value' => 'unchanged-value',
+            'secret' => false
+        ]);
+        $this->assertEquals(201, $variable['headers']['status-code']);
+        $variableId = $variable['body']['$id'];
+
+        // Update only key
+        $response = $this->updateVariable($siteId, $variableId, [
+            'key' => 'KEY_AFTER',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('KEY_AFTER', $response['body']['key']);
+        $this->assertEquals('unchanged-value', $response['body']['value']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testUpdateVariableValueOnly(): void
+    {
+        $site = $this->createSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Test Update Variable Value',
+            'outputDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+        $siteId = $site['body']['$id'] ?? '';
+        $this->assertEquals(201, $site['headers']['status-code']);
+
+        $variable = $this->createVariable($siteId, [
+            'variableId' => ID::unique(),
+            'key' => 'UNCHANGED_KEY',
+            'value' => 'value-before',
+            'secret' => false
+        ]);
+        $this->assertEquals(201, $variable['headers']['status-code']);
+        $variableId = $variable['body']['$id'];
+
+        // Update only value
+        $response = $this->updateVariable($siteId, $variableId, [
+            'value' => 'value-after',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('UNCHANGED_KEY', $response['body']['key']);
+        $this->assertEquals('value-after', $response['body']['value']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testUpdateVariableNoOp(): void
+    {
+        $site = $this->createSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Test Update Variable NoOp',
+            'outputDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+        $siteId = $site['body']['$id'] ?? '';
+        $this->assertEquals(201, $site['headers']['status-code']);
+
+        $variable = $this->createVariable($siteId, [
+            'variableId' => ID::unique(),
+            'key' => 'NOOP_KEY',
+            'value' => 'noop-value',
+            'secret' => false
+        ]);
+        $this->assertEquals(201, $variable['headers']['status-code']);
+        $variableId = $variable['body']['$id'];
+
+        // Update with no parameters should fail with 400
+        $response = $this->updateVariable($siteId, $variableId, []);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testUpdateVariableNotFound(): void
+    {
+        $site = $this->createSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Test Update Variable Not Found',
+            'outputDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+        $siteId = $site['body']['$id'] ?? '';
+        $this->assertEquals(201, $site['headers']['status-code']);
+
+        $response = $this->updateVariable($siteId, 'non-existent-id', [
+            'key' => 'NEW_KEY',
+            'value' => 'new-value',
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('variable_not_found', $response['body']['type']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testCreateVariableInvalidId(): void
+    {
+        $site = $this->createSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Test Invalid Variable ID',
+            'outputDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+        $siteId = $site['body']['$id'] ?? '';
+        $this->assertEquals(201, $site['headers']['status-code']);
+
+        $variable = $this->createVariable($siteId, [
+            'variableId' => '!invalid-id!',
+            'key' => 'INVALID_ID_KEY',
+            'value' => 'value',
+        ]);
+
+        $this->assertEquals(400, $variable['headers']['status-code']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testCreateVariableDuplicateId(): void
+    {
+        $site = $this->createSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Test Duplicate Variable ID',
+            'outputDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+        $siteId = $site['body']['$id'] ?? '';
+        $this->assertEquals(201, $site['headers']['status-code']);
+
+        $variableId = ID::unique();
+
+        $variable = $this->createVariable($siteId, [
+            'variableId' => $variableId,
+            'key' => 'DUP_ID_KEY_1',
+            'value' => 'value1',
+        ]);
+        $this->assertEquals(201, $variable['headers']['status-code']);
+
+        // Attempt to create with same ID
+        $duplicate = $this->createVariable($siteId, [
+            'variableId' => $variableId,
+            'key' => 'DUP_ID_KEY_2',
+            'value' => 'value2',
+        ]);
+
+        $this->assertEquals(409, $duplicate['headers']['status-code']);
+        $this->assertEquals('variable_already_exists', $duplicate['body']['type']);
+
+        $this->cleanupSite($siteId);
+    }
+
     // This is first Sites test with Proxy
     // If this fails, it may not be related to variables; but Router flow failing
     public function testVariablesE2E(): void
@@ -351,6 +667,7 @@ class SitesCustomServerTest extends Scope
         $domain = $this->setupSiteDomain($siteId);
 
         $secretVariable = $this->createVariable($siteId, [
+            'variableId' => ID::unique(),
             'key' => 'name',
             'value' => 'Appwrite',
         ]);
