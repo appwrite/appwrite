@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/init.php';
 
+use Appwrite\Cache\Adapter\CircuitBreaker as CircuitBreakerCache;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
@@ -18,6 +19,7 @@ use Swoole\Timer;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
+use Utopia\CircuitBreaker\CircuitBreaker;
 use Utopia\CLI\Adapters\Generic;
 use Utopia\CLI\CLI;
 use Utopia\Config\Config;
@@ -74,7 +76,12 @@ $container->set('cache', function ($pools) {
         $adapters[] = new CachePool($pools->get($value));
     }
 
-    return new Cache(new Sharding($adapters));
+    return new Cache(new CircuitBreakerCache(new Sharding($adapters), new CircuitBreaker(
+        threshold: 3,
+        timeout: 30,
+        successThreshold: 2,
+        metricPrefix: 'appwrite',
+    )));
 }, ['pools']);
 
 $container->set('pools', function (Registry $register) {

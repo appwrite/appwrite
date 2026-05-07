@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Cache\Adapter\CircuitBreaker as CircuitBreakerCache;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Audit as AuditPublisher;
 use Appwrite\Event\Publisher\Certificate as CertificatePublisher;
@@ -14,6 +15,7 @@ use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
+use Utopia\CircuitBreaker\CircuitBreaker;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Adapter\Pool as DatabasePool;
@@ -184,7 +186,15 @@ $container->set('getLogsDB', function (Group $pools, Cache $cache, Authorization
 
 $container->set('telemetry', fn () => new NoTelemetry());
 
-$container->set('cache', function (Group $pools, Telemetry $telemetry) {
+$container->set('breakerForCache', fn (Telemetry $telemetry): CircuitBreaker => new CircuitBreaker(
+    threshold: 3,
+    timeout: 30,
+    successThreshold: 2,
+    telemetry: $telemetry,
+    metricPrefix: 'appwrite',
+));
+
+$container->set('cache', function (Group $pools, CircuitBreaker $breaker, Telemetry $telemetry) {
     $list = Config::getParam('pools-cache', []);
     $adapters = [];
 
@@ -192,11 +202,11 @@ $container->set('cache', function (Group $pools, Telemetry $telemetry) {
         $adapters[] = new CachePool($pools->get($value));
     }
 
-    $cache = new Cache(new Sharding($adapters));
+    $cache = new Cache(new CircuitBreakerCache(new Sharding($adapters), $breaker));
     $cache->setTelemetry($telemetry);
 
     return $cache;
-}, ['pools', 'telemetry']);
+}, ['pools', 'breakerForCache', 'telemetry']);
 
 $container->set('redis', function () {
     $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
