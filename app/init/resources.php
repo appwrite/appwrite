@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Cache\Adapter\CircuitBreaker as CircuitBreakerCache;
+use Appwrite\Cache\CircuitBreakerFactory;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Audit as AuditPublisher;
 use Appwrite\Event\Publisher\Certificate as CertificatePublisher;
@@ -186,13 +187,7 @@ $container->set('getLogsDB', function (Group $pools, Cache $cache, Authorization
 
 $container->set('telemetry', fn () => new NoTelemetry());
 
-$container->set('breakerForCache', fn (Telemetry $telemetry): CircuitBreaker => new CircuitBreaker(
-    threshold: 3,
-    timeout: 30,
-    successThreshold: 2,
-    telemetry: $telemetry,
-    metricPrefix: 'appwrite',
-));
+$container->set('breakerForCache', fn (Telemetry $telemetry): CircuitBreaker => CircuitBreakerFactory::create($telemetry));
 
 $container->set('cache', function (Group $pools, CircuitBreaker $breaker, Telemetry $telemetry) {
     $list = Config::getParam('pools-cache', []);

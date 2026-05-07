@@ -26,15 +26,13 @@ class CircuitBreakerTest extends TestCase
 
     public function testReturnsFallbacksWhenCacheOperationsFail(): void
     {
-        $cache = new CircuitBreaker(new FailingAdapter(), new UtopiaCircuitBreaker(threshold: 1));
-
-        $this->assertFalse($cache->load('key', 60));
-        $this->assertFalse($cache->save('key', 'value'));
-        $this->assertSame([], $cache->list('key'));
-        $this->assertFalse($cache->purge('key'));
-        $this->assertFalse($cache->flush());
-        $this->assertFalse($cache->ping());
-        $this->assertSame(0, $cache->getSize());
+        $this->assertFalse($this->failingCache()->load('key', 60));
+        $this->assertFalse($this->failingCache()->save('key', 'value'));
+        $this->assertSame([], $this->failingCache()->list('key'));
+        $this->assertFalse($this->failingCache()->purge('key'));
+        $this->assertFalse($this->failingCache()->flush());
+        $this->assertFalse($this->failingCache()->ping());
+        $this->assertSame(0, $this->failingCache()->getSize());
     }
 
     public function testBreakerShortCircuitsAfterFailure(): void
@@ -45,6 +43,11 @@ class CircuitBreakerTest extends TestCase
         $this->assertFalse($cache->load('key', 60));
         $this->assertFalse($cache->load('key', 60));
         $this->assertSame(1, $adapter->loads);
+    }
+
+    private function failingCache(): CircuitBreaker
+    {
+        return new CircuitBreaker(new FailingAdapter(), new UtopiaCircuitBreaker(threshold: 1));
     }
 }
 

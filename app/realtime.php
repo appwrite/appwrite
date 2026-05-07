@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Cache\Adapter\CircuitBreaker as CircuitBreakerCache;
+use Appwrite\Cache\CircuitBreakerFactory;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Messaging\Adapter\Realtime;
@@ -23,7 +24,6 @@ use Utopia\Auth\Store;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
-use Utopia\CircuitBreaker\CircuitBreaker;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Adapter\Pool as DatabasePool;
@@ -181,12 +181,21 @@ if (!function_exists('getCache')) {
             $adapters[] = new CachePool($pools->get($value));
         }
 
-        return $ctx['cache'] = new Cache(new CircuitBreakerCache(new Sharding($adapters), new CircuitBreaker(
-            threshold: 3,
-            timeout: 30,
-            successThreshold: 2,
-            metricPrefix: 'appwrite',
-        )));
+        static $breaker = null;
+
+        if ($breaker === null) {
+            global $register;
+
+            try {
+                $telemetry = $register->get('telemetry');
+            } catch (\Throwable) {
+                $telemetry = null;
+            }
+
+            $breaker = CircuitBreakerFactory::create($telemetry);
+        }
+
+        return $ctx['cache'] = new Cache(new CircuitBreakerCache(new Sharding($adapters), $breaker));
     }
 }
 
