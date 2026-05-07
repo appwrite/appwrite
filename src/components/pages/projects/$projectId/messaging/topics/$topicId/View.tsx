@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from '@tanstack/react-router'
-import { ArrowLeft, Hash, Mail, Phone, Bell } from 'lucide-react'
+import { ArrowLeft, Hash, Mail, Phone, Bell, MoreHorizontal } from 'lucide-react'
 import {
   useTopic,
   useTopicSubscribers,
@@ -8,9 +8,13 @@ import {
   useOrganizationScopes,
 } from '@/lib/react-query/hooks'
 import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
-import { canShowTopicSettingsTab } from '@/lib/console-access-checks'
+import {
+  canShowTopicSettingsTab,
+  canWriteTopics,
+} from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { subscriberLogsQueryOptions } from '@/lib/react-query/hooks/messaging'
 import { ServiceHeader, type Tab } from '../../../shared/ServiceHeader'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -30,6 +34,31 @@ import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { Models } from '@appwrite.io/console'
+import { ID } from '@appwrite.io/console'
+import { MessagingTargetsModal } from '../../_components/MessagingTargetsModal'
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { MessagingActivityLogTable } from '../../_components/MessagingActivityLogTable'
 
 export type TopicSubscribersInitialData = {
   subscribers: Models.Subscriber[]
@@ -50,6 +79,16 @@ export function View({
   const location = useLocation()
   const queryClient = useQueryClient()
 
+  const [addTargetsOpen, setAddTargetsOpen] = useState(false)
+  const [subscriberPendingDelete, setSubscriberPendingDelete] =
+    useState<Models.Subscriber | null>(null)
+  const [subscriberLogFor, setSubscriberLogFor] =
+    useState<Models.Subscriber | null>(null)
+  const [subscriberLogRequestedPage, setSubscriberLogRequestedPage] =
+    useState(1)
+  const [subscriberLogDisplayedPage, setSubscriberLogDisplayedPage] =
+    useState(1)
+
   const { data: topic } = useTopic(projectId, topicId, initialTopic)
   const topicResolved = topic ?? initialTopic
 
@@ -57,6 +96,10 @@ export function View({
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
   const showSettingsTab = canShowTopicSettingsTab(access, features)
+  const canManageSubscribers = canWriteTopics(access, features)
+  const subscribersPermissionTooltip = !canManageSubscribers
+    ? "You don't have permission to manage topic subscribers."
+    : undefined
 
   const [searchValue, setSearchValue] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
@@ -79,7 +122,7 @@ export function View({
   useEffect(() => {
     setRequestedPage(1)
     setDisplayedPage(1)
-  }, [debouncedSearch])
+  }, [debouncedSearch, topicId])
 
   const pageIndexedRequested = requestedPage - 1
   const pageIndexedDisplayed = displayedPage - 1
@@ -160,28 +203,110 @@ export function View({
     initialSubscribers,
   ])
 
-  useMutation({
-    mutationFn: async () => {
+  const existingSubscriberTargetIds = useMemo(
+    () => new Set(subscribers.map((s) => s.targetId)),
+    [subscribers],
+  )
+
+  const addSubscribersMutation = useMutation({
+    mutationFn: async (targetIds: string[]) => {
       if (!projectId || !topicId) {
         throw new Error('Project ID and Topic ID are required')
       }
       const projectSdk = sdk.forProject(projectId)
-      await projectSdk.messaging.deleteTopic({ topicId })
+      await Promise.all(
+        targetIds.map((targetId) =>
+          projectSdk.messaging.createSubscriber({
+            topicId,
+            subscriberId: ID.unique(),
+            targetId,
+          }),
+        ),
+      )
+    },
+    onSuccess: async (_, targetIds) => {
+      await queryClient.refetchQueries({
+        queryKey: ['subscribers', 'project', projectId, 'topic', topicId],
+      })
+      toast.success(
+        `${targetIds.length} subscriber${targetIds.length !== 1 ? 's' : ''} added`,
+      )
+      setAddTargetsOpen(false)
+    },
+    onError: (e: Error) => {
+      toast.error(getErrorMessage(e) || 'Failed to add subscribers')
+    },
+  })
+
+  const deleteSubscriberMutation = useMutation({
+    mutationFn: async (subscriber: Models.Subscriber) => {
+      if (!projectId || !topicId) {
+        throw new Error('Project ID and Topic ID are required')
+      }
+      const projectSdk = sdk.forProject(projectId)
+      await projectSdk.messaging.deleteSubscriber({
+        topicId,
+        subscriberId: subscriber.$id,
+      })
     },
     onSuccess: async () => {
       await queryClient.refetchQueries({
-        queryKey: ['topics', 'project', projectId],
+        queryKey: ['subscribers', 'project', projectId, 'topic', topicId],
       })
-      toast.success('Topic deleted successfully')
-      navigate({
-        to: '/projects/$projectId/messaging/topics',
-        params: { projectId: projectId! },
-      })
+      toast.success('Subscriber removed')
+      setSubscriberPendingDelete(null)
     },
-    onError: (error: Error) => {
-      toast.error(getErrorMessage(error) || 'Failed to delete topic')
+    onError: (e: Error) => {
+      toast.error(getErrorMessage(e) || 'Failed to remove subscriber')
     },
   })
+
+  const subscriberLogPageReq = subscriberLogRequestedPage - 1
+  const subscriberLogPageDisp = subscriberLogDisplayedPage - 1
+
+  const {
+    isFetching: subscriberLogReqFetching,
+    isLoading: subscriberLogReqLoading,
+  } = useQuery({
+    ...subscriberLogsQueryOptions(
+      projectId,
+      subscriberLogFor?.$id ?? null,
+      subscriberLogPageReq,
+      DEFAULT_PAGE_SIZE,
+    ),
+    enabled: !!projectId && !!subscriberLogFor,
+  })
+
+  const { data: subscriberLogDataDisplayed } = useQuery({
+    ...subscriberLogsQueryOptions(
+      projectId,
+      subscriberLogFor?.$id ?? null,
+      subscriberLogPageDisp,
+      DEFAULT_PAGE_SIZE,
+    ),
+    enabled: !!projectId && !!subscriberLogFor,
+  })
+
+  useEffect(() => {
+    if (!subscriberLogFor) {
+      setSubscriberLogRequestedPage(1)
+      setSubscriberLogDisplayedPage(1)
+    }
+  }, [subscriberLogFor])
+
+  useEffect(() => {
+    if (!subscriberLogFor) return
+    if (subscriberLogReqFetching || subscriberLogReqLoading) return
+    if (subscriberLogRequestedPage !== subscriberLogDisplayedPage) {
+      setSubscriberLogDisplayedPage(subscriberLogRequestedPage)
+    }
+  }, [
+    subscriberLogFor,
+    subscriberLogReqFetching,
+    subscriberLogReqLoading,
+    subscriberLogRequestedPage,
+    subscriberLogDisplayedPage,
+  ])
 
   const handleBack = () => {
     navigate({
@@ -254,7 +379,7 @@ export function View({
 
   if (!topicResolved) {
     return (
-      <div className="flex h-full items-center justify-center">
+      <div className="flex items-center justify-center py-16">
         <div className="rounded-lg border border-border bg-card py-12 px-6 text-center">
           <p className="text-[13px] text-muted-foreground">Topic not found</p>
         </div>
@@ -278,8 +403,15 @@ export function View({
     setDisplayedPage(1)
   }
 
+  const subscriberLogRows = subscriberLogDataDisplayed?.logs ?? []
+  const subscriberLogTotal = subscriberLogDataDisplayed?.total ?? 0
+  const subscriberLogFullLoading =
+    !!subscriberLogFor &&
+    subscriberLogRows.length === 0 &&
+    (subscriberLogReqLoading || subscriberLogReqFetching)
+
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex flex-col">
       <ServiceHeader
         title={
           <div className="flex items-center gap-2">
@@ -312,15 +444,19 @@ export function View({
         createLabel={activeTab === 'subscribers' ? 'Add subscriber' : undefined}
         onCreate={
           activeTab === 'subscribers'
-            ? () => {
-                toast.info('Add subscriber functionality coming soon')
-              }
+            ? () => setAddTargetsOpen(true)
             : undefined
+        }
+        createDisabled={
+          activeTab === 'subscribers' ? !canManageSubscribers : undefined
+        }
+        createDisabledTooltip={
+          activeTab === 'subscribers' ? subscribersPermissionTooltip : undefined
         }
         fullWidthBorder
       />
 
-      <div className="mx-auto w-full max-w-7xl flex-1 min-h-0 overflow-y-auto px-4 pb-4 sm:px-6 sm:pb-6">
+      <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
         {activeTab === 'subscribers' ? (
           <>
             {showSubscribersFullLoading ? (
@@ -353,6 +489,7 @@ export function View({
                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
                           Created
                         </TableHead>
+                        <TableHead className="px-4 py-3 w-[52px]" />
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -409,6 +546,38 @@ export function View({
                                 </span>
                               )}
                             </TableCell>
+                            <TableCell className="px-4 py-3 text-right">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 w-8 p-0"
+                                    aria-label="Open subscriber menu"
+                                  >
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      setSubscriberLogFor(subscriber)
+                                    }
+                                  >
+                                    Activity log
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    disabled={!canManageSubscribers}
+                                    title={subscribersPermissionTooltip}
+                                    onClick={() =>
+                                      setSubscriberPendingDelete(subscriber)
+                                    }
+                                  >
+                                    Remove subscriber
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
                           </TableRow>
                         )
                       })}
@@ -439,6 +608,113 @@ export function View({
           </>
         ) : null}
       </div>
+
+      <MessagingTargetsModal
+        open={addTargetsOpen}
+        onOpenChange={setAddTargetsOpen}
+        title="Add subscribers"
+        description="Select user targets to subscribe to this topic. Targets already subscribed are skipped."
+        projectId={projectId}
+        initialSelectedById={{} as Record<string, Models.Target | undefined>}
+        onConfirm={(selectedById) => {
+          const newTargetIds = Object.keys(selectedById).filter(
+            (id) => !existingSubscriberTargetIds.has(id),
+          )
+          if (newTargetIds.length === 0) {
+            toast.info('No new targets selected (or all are already subscribed)')
+            return
+          }
+          addSubscribersMutation.mutate(newTargetIds)
+        }}
+      />
+
+      <Dialog
+        open={subscriberLogFor != null}
+        onOpenChange={(open) => {
+          if (!open) setSubscriberLogFor(null)
+        }}
+      >
+        <DialogContent className="sm:max-w-2xl p-0 max-h-[90dvh] flex flex-col">
+          <DialogHeader className="px-6 pt-6 text-left">
+            <DialogTitle>Subscriber activity</DialogTitle>
+            <DialogDescription className="text-[13px] mt-2">
+              Audit log events for subscriber{' '}
+              {subscriberLogFor ? (
+                <CopyableId id={subscriberLogFor.$id} size="xs" />
+              ) : null}
+              .
+            </DialogDescription>
+          </DialogHeader>
+          <div className="border-t border-border" />
+          <div className="px-6 pb-4 pt-0 flex-1 min-h-0 overflow-y-auto space-y-4">
+            {subscriberLogFullLoading ? (
+              <p className="text-[13px] text-muted-foreground py-6 text-center">
+                Loading activity…
+              </p>
+            ) : (
+              <>
+                <MessagingActivityLogTable
+                  logs={subscriberLogRows}
+                  emptyLabel="No log entries for this subscriber."
+                />
+                <Pagination
+                  className="py-1"
+                  currentPage={subscriberLogDisplayedPage}
+                  totalItems={subscriberLogTotal}
+                  pageSize={DEFAULT_PAGE_SIZE}
+                  pageSizeOptions={[10, 25, 50, 100]}
+                  onPageChange={setSubscriberLogRequestedPage}
+                  onPageSizeChange={() => {}}
+                  showPageSizeSelector={false}
+                  itemLabel="entries"
+                />
+              </>
+            )}
+          </div>
+          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button
+              variant="outline"
+              onClick={() => setSubscriberLogFor(null)}
+            >
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog
+        open={subscriberPendingDelete != null}
+        onOpenChange={(open) => {
+          if (!open) setSubscriberPendingDelete(null)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove subscriber?</AlertDialogTitle>
+            <AlertDialogDescription className="text-[13px]">
+              This subscriber will be removed from the topic. You can add them
+              again later.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteSubscriberMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <Button
+              disabled={
+                !canManageSubscribers || deleteSubscriberMutation.isPending
+              }
+              onClick={() => {
+                if (subscriberPendingDelete) {
+                  deleteSubscriberMutation.mutate(subscriberPendingDelete)
+                }
+              }}
+            >
+              Remove
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

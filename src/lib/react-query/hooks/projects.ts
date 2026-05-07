@@ -49,6 +49,18 @@ function getProjectStatusQueries(): string[] {
     : []
 }
 
+/**
+ * Legacy console project list search: fulltext on the `search` attribute OR
+ * substring match on `labels` (e.g. finding a project by ID used as a label).
+ * Prefer this over the list endpoint's `search` param, which does not mirror that OR.
+ */
+function projectListSearchOrQuery(trimmedSearch: string): string {
+  return Query.or([
+    Query.search('search', trimmedSearch),
+    Query.contains('labels', trimmedSearch),
+  ])
+}
+
 // ============================================================================
 // QUERY FUNCTIONS
 // ============================================================================
@@ -95,11 +107,14 @@ export async function fetchActiveProjects(
   }
 
   const statusQueries = getProjectStatusQueries()
+  const trimmedSearch = search?.trim() ?? ''
+  const searchQueries = trimmedSearch ? [projectListSearchOrQuery(trimmedSearch)] : []
 
   const baseQueries = [
     Query.select([...PROJECT_LIST_SELECT]),
     Query.equal('teamId', teamId),
     ...statusQueries,
+    ...searchQueries,
     Query.orderDesc('$createdAt'),
     Query.limit(limit),
     Query.offset(page * limit),
@@ -117,6 +132,7 @@ export async function fetchActiveProjects(
           Query.select([...PROJECT_LIST_SELECT]),
           Query.equal('teamId', teamId),
           ...statusQueries,
+          ...searchQueries,
           ...excludeIds.map((id) => Query.notEqual('$id', id)),
           Query.orderDesc('$createdAt'),
           Query.limit(limit),
@@ -126,7 +142,8 @@ export async function fetchActiveProjects(
 
   const response = await sdk.forConsole.projects.list({
     queries,
-    search: search?.trim() || undefined,
+    // When using query-based search, omit `search` so behavior matches the legacy console.
+    ...(trimmedSearch ? {} : { search: search?.trim() || undefined }),
     total: true,
   })
 

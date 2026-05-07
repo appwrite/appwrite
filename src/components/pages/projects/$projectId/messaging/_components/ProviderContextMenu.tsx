@@ -7,6 +7,7 @@ import {
   Square,
   FileJson,
   LayoutList,
+  Settings,
 } from 'lucide-react'
 import {
   ContextMenu,
@@ -89,6 +90,13 @@ export function ProviderContextMenu({
     })
   }
 
+  const navigateToSettings = () => {
+    navigate({
+      to: '/projects/$projectId/messaging/providers/$providerId/settings',
+      params: { projectId, providerId: provider.$id },
+    })
+  }
+
   const providerHref = buildConsoleUrl(
     `/projects/${projectId}/messaging/providers/${provider.$id}`,
   )
@@ -107,6 +115,10 @@ export function ProviderContextMenu({
           <ContextMenuItem onSelect={navigateToOverview}>
             <ContextMenuIcon icon={LayoutList} />
             Overview
+          </ContextMenuItem>
+          <ContextMenuItem onSelect={navigateToSettings}>
+            <ContextMenuIcon icon={Settings} />
+            Settings
           </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuSub>

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { ChevronDown, Loader2, Mail, Phone, Bell, Plus } from 'lucide-react'
+import { ChevronDown, Mail, Phone, Bell, Plus } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ID } from '@appwrite.io/console'
 import { Button } from '@/components/ui/button'
@@ -241,9 +241,6 @@ export function MessagingCreateControls({
                 onClick={() => createTopicMutation.mutate(topicName)}
                 disabled={!topicName.trim() || createTopicMutation.isPending}
               >
-                {createTopicMutation.isPending && (
-                  <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                )}
                 Create
               </Button>
             </div>
@@ -279,11 +276,7 @@ export function MessagingCreateControls({
           className="h-9 gap-2 px-4 text-[13px] font-medium"
           disabled={busy}
         >
-          {busy ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Plus className="h-4 w-4" />
-          )}
+          <Plus className="h-4 w-4" />
           Create message
           <ChevronDown className="h-3.5 w-3.5 opacity-70" />
         </Button>

@@ -1,18 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useLocation, Link } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
-import {
-  FileText,
-  Image,
-  Film,
-  Music,
-  Archive,
-  File,
-  List,
-  LayoutGrid,
-  ArrowLeft,
-  AlertCircle,
-} from 'lucide-react'
+import { File, List, LayoutGrid, ArrowLeft, AlertCircle } from 'lucide-react'
 import { formatBytes } from '@/lib/utils/mock-data'
 import {
   useBucket,
@@ -51,27 +40,13 @@ import { useNavigate, useParams } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
-import { useAvifSupport } from '@/lib/avif-support'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { UploadFileDialog } from './UploadFileDialog'
 import { BucketSettings } from './BucketSettings'
 import { BucketSecurity } from './BucketSecurity'
 import { useUploadQueue } from '@/lib/upload-queue/use-upload-queue'
-import { ImageFormat, type Models } from '@appwrite.io/console'
-
-function getFileIcon(type: string) {
-  if (type.startsWith('image/')) return Image
-  if (type.startsWith('video/')) return Film
-  if (type.startsWith('audio/')) return Music
-  if (type.includes('pdf') || type.includes('document')) return FileText
-  if (type.includes('zip') || type.includes('archive')) return Archive
-  return File
-}
-
-function getFileIconColor() {
-  // Use muted colors per UI guidelines
-  return 'bg-muted text-muted-foreground'
-}
+import type { Models } from '@appwrite.io/console'
+import { StorageFilePreviewThumb } from '@/components/global/shared/StorageFilePreviewThumb'
 
 export function BucketDetailView() {
   const { projectId, bucketId } = useParams({
@@ -112,7 +87,6 @@ export function BucketDetailView() {
   const [uploadFileDialogOpen, setUploadFileDialogOpen] = useState(false)
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set())
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const avifSupported = useAvifSupport()
 
   // Refetch files list when an upload completes (list uses refetchOnMount: false)
   const refetchFiles = useCallback(() => {
@@ -440,10 +414,6 @@ export function BucketDetailView() {
                         </TableHeader>
                         <TableBody>
                           {files.map((file) => {
-                            const FileIcon = getFileIcon(file.mimeType)
-                            const iconColorClass = getFileIconColor(
-                              file.mimeType,
-                            )
                             const pending = isFilePending(file)
                             const fileLinkParams = {
                               projectId: projectId!,
@@ -492,72 +462,30 @@ export function BucketDetailView() {
                                 </TableCell>
                                 <TableCell className="px-4 py-3">
                                   {pending ? (
-                                    <>
-                                      {file.mimeType?.startsWith('image/') &&
-                                      projectId &&
-                                      bucketId ? (
-                                        <img
-                                          src={
-                                            sdk
-                                              .forProject(projectId)
-                                              .storage.getFilePreview({
-                                                bucketId,
-                                                fileId: file.$id,
-                                                width: 80,
-                                                output: avifSupported
-                                                  ? ImageFormat.Avif
-                                                  : undefined,
-                                              }) + '&mode=admin'
-                                          }
-                                          alt={file.name}
-                                          className="h-10 w-10 rounded-md object-cover border border-border"
-                                        />
-                                      ) : (
-                                        <div
-                                          className={cn(
-                                            'flex h-10 w-10 items-center justify-center rounded-md',
-                                            iconColorClass,
-                                          )}
-                                        >
-                                          <FileIcon className="h-5 w-5" />
-                                        </div>
-                                      )}
-                                    </>
+                                    <StorageFilePreviewThumb
+                                      projectId={projectId!}
+                                      bucketId={bucketId!}
+                                      fileId={file.$id}
+                                      mimeType={file.mimeType}
+                                      name={file.name}
+                                      variant="table"
+                                      pending={pending}
+                                    />
                                   ) : (
                                     <Link
                                       to="/projects/$projectId/storage/$bucketId/files/$fileId"
                                       params={fileLinkParams}
                                       className="block"
                                     >
-                                      {file.mimeType?.startsWith('image/') &&
-                                      projectId &&
-                                      bucketId ? (
-                                        <img
-                                          src={
-                                            sdk
-                                              .forProject(projectId)
-                                              .storage.getFilePreview({
-                                                bucketId,
-                                                fileId: file.$id,
-                                                width: 80,
-                                                output: avifSupported
-                                                  ? ImageFormat.Avif
-                                                  : undefined,
-                                              }) + '&mode=admin'
-                                          }
-                                          alt={file.name}
-                                          className="h-10 w-10 rounded-md object-cover border border-border"
-                                        />
-                                      ) : (
-                                        <div
-                                          className={cn(
-                                            'flex h-10 w-10 items-center justify-center rounded-md',
-                                            iconColorClass,
-                                          )}
-                                        >
-                                          <FileIcon className="h-5 w-5" />
-                                        </div>
-                                      )}
+                                      <StorageFilePreviewThumb
+                                        projectId={projectId!}
+                                        bucketId={bucketId!}
+                                        fileId={file.$id}
+                                        mimeType={file.mimeType}
+                                        name={file.name}
+                                        variant="table"
+                                        pending={pending}
+                                      />
                                     </Link>
                                   )}
                                 </TableCell>
@@ -685,8 +613,6 @@ export function BucketDetailView() {
                   {files.length > 0 ? (
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                       {files.map((file) => {
-                        const FileIcon = getFileIcon(file.mimeType)
-                        const iconColorClass = getFileIconColor(file.mimeType)
                         const pending = isFilePending(file)
                         return (
                           <div
@@ -708,39 +634,15 @@ export function BucketDetailView() {
                               }
                             }}
                           >
-                            {/* Preview */}
-                            {!pending &&
-                            file.mimeType?.startsWith('image/') &&
-                            projectId &&
-                            bucketId ? (
-                              <div className="h-32 w-full overflow-hidden border-b border-border">
-                                <img
-                                  src={
-                                    sdk
-                                      .forProject(projectId)
-                                      .storage.getFilePreview({
-                                        bucketId,
-                                        fileId: file.$id,
-                                        width: 400,
-                                        output: avifSupported
-                                          ? ImageFormat.Avif
-                                          : undefined,
-                                      }) + '&mode=admin'
-                                  }
-                                  alt={file.name}
-                                  className="h-full w-full object-cover"
-                                />
-                              </div>
-                            ) : (
-                              <div
-                                className={cn(
-                                  'flex h-32 items-center justify-center border-b border-border',
-                                  iconColorClass,
-                                )}
-                              >
-                                <FileIcon className="h-12 w-12" />
-                              </div>
-                            )}
+                            <StorageFilePreviewThumb
+                              projectId={projectId!}
+                              bucketId={bucketId!}
+                              fileId={file.$id}
+                              mimeType={file.mimeType}
+                              name={file.name}
+                              variant="grid"
+                              pending={pending}
+                            />
                             {/* File info */}
                             <div className="p-3">
                               <div className="flex items-start justify-between gap-2">

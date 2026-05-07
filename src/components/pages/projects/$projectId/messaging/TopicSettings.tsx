@@ -129,7 +129,6 @@ export function View({
     }
 
     return 'subscribers'
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname, topicId])
 
   const tabs: Tab[] = useMemo(
@@ -162,7 +161,7 @@ export function View({
 
   if (topicLoading && !initialTopic) {
     return (
-      <div className="flex h-full items-center justify-center">
+      <div className="flex items-center justify-center py-16">
         <div className="rounded-lg border border-border bg-card py-12 px-6 text-center">
           <p className="text-[13px] text-muted-foreground">Loading topic...</p>
         </div>
@@ -172,7 +171,7 @@ export function View({
 
   if (!topic) {
     return (
-      <div className="flex h-full items-center justify-center">
+      <div className="flex items-center justify-center py-16">
         <div className="rounded-lg border border-border bg-card py-12 px-6 text-center">
           <p className="text-[13px] text-muted-foreground">Topic not found</p>
         </div>

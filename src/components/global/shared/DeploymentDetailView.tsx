@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronDown,
+  ChevronUp,
   Play,
   ArrowUp,
   ArrowDown,
@@ -67,6 +68,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from '@/components/ui/drawer'
 import { toast } from 'sonner'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useLocation } from '@tanstack/react-router'
@@ -100,6 +109,9 @@ const WIZARD_PORTAL_Z_DROPDOWN = 'z-[10050]'
 const WIZARD_PORTAL_Z_POPOVER = 'z-[10050]'
 const WIZARD_DIALOG_OVERLAY_Z = 'z-[10050]'
 const WIZARD_DIALOG_CONTENT_Z = 'z-[10051]'
+/** Drawer must stack above fullscreen WizardLayout (z-[9998]); close drawer before opening dialogs (z-[10050]). */
+const WIZARD_DRAWER_OVERLAY_Z = 'z-[10052]'
+const WIZARD_DRAWER_CONTENT_Z = 'z-[10053]'
 
 const SCREENSHOTS_BUCKET_ID = 'screenshots'
 const SCREENSHOT_PREVIEW_WIDTH = 1280
@@ -466,6 +478,8 @@ export function DeploymentDetailView({
   const [cancelBuildDialogOpen, setCancelBuildDialogOpen] = useState(false)
   const [redeployDialogOpen, setRedeployDialogOpen] = useState(false)
   const [activateDialogOpen, setActivateDialogOpen] = useState(false)
+  const [deploymentActionsDrawerOpen, setDeploymentActionsDrawerOpen] =
+    useState(false)
   const logsContainerRef = useRef<HTMLDivElement>(null)
   const lineRefs = useRef<Map<number, HTMLDivElement>>(new Map())
   /** Set on first scroll; until then we auto-scroll so initial load follows tail. */
@@ -1698,150 +1712,305 @@ export function DeploymentDetailView({
       }}
       contentClassName="flex min-h-0 flex-1 flex-col gap-0 overflow-hidden lg:flex-row"
       footer={
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-2 w-full">
-          {/* Left side - Cancel (when building) or Delete button */}
-          <div className="flex items-center">
-            {deployment &&
-            isDeploymentInProgress(deployment.status) &&
-            onCancelBuild ? (
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => setCancelBuildDialogOpen(true)}
-                disabled={cancelBuildMutation.isPending}
-                className="h-9 text-[13px]"
-              >
-                <XCircle className="mr-1.5 h-4 w-4" />
-                Cancel
-              </Button>
-            ) : (
+        <>
+          <div className="hidden w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-2 lg:flex">
+            {/* Left side - Cancel (when building) or Delete button */}
+            <div className="flex items-center">
+              {deployment &&
+              isDeploymentInProgress(deployment.status) &&
+              onCancelBuild ? (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setCancelBuildDialogOpen(true)}
+                  disabled={cancelBuildMutation.isPending}
+                  className="h-9 text-[13px]"
+                >
+                  <XCircle className="mr-1.5 h-4 w-4" />
+                  Cancel
+                </Button>
+              ) : (
+                <TooltipProvider delayDuration={0}>
+                  <TooltipPrimitive.Root>
+                    <TooltipTrigger asChild>
+                      <span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setDeleteDialogOpen(true)}
+                          disabled={isActiveDeployment}
+                          className="h-9 text-[13px] border-destructive/35 text-destructive hover:bg-destructive/10 hover:text-destructive hover:border-destructive/50"
+                        >
+                          <Trash2 className="mr-1.5 h-4 w-4" />
+                          Delete
+                        </Button>
+                      </span>
+                    </TooltipTrigger>
+                    {isActiveDeployment && (
+                      <TooltipContent
+                        sideOffset={4}
+                        className={WIZARD_PORTAL_Z_POPOVER}
+                      >
+                        <p>
+                          Cannot delete the active deployment. Please activate
+                          another deployment first.
+                        </p>
+                      </TooltipContent>
+                    )}
+                  </TooltipPrimitive.Root>
+                </TooltipProvider>
+              )}
+            </div>
+
+            {/* Right side - Individual buttons */}
+            <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-9 text-[13px]"
+                  >
+                    <Download className="mr-1.5 h-4 w-4" />
+                    Download
+                    <ChevronDown className="ml-1.5 h-3.5 w-3.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className={WIZARD_PORTAL_Z_DROPDOWN}
+                >
+                  <DropdownMenuItem onClick={handleDownloadSource}>
+                    <FileCode className="mr-2 h-4 w-4" />
+                    Source code
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={handleDownloadBuild}
+                    disabled={!isDeploymentCompleted(deployment?.status)}
+                    title={
+                      !isDeploymentCompleted(deployment?.status)
+                        ? 'Build output is available after the deployment has completed.'
+                        : undefined
+                    }
+                  >
+                    <Package className="mr-2 h-4 w-4" />
+                    Build output
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              {onRedeploy && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setRedeployDialogOpen(true)}
+                  disabled={redeployMutation.isPending}
+                  className="h-9 text-[13px]"
+                >
+                  <RefreshCw className="mr-1.5 h-4 w-4" />
+                  Redeploy
+                </Button>
+              )}
               <TooltipProvider delayDuration={0}>
                 <TooltipPrimitive.Root>
                   <TooltipTrigger asChild>
                     <span>
                       <Button
+                        type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => setDeleteDialogOpen(true)}
-                        disabled={isActiveDeployment}
-                        className="h-9 text-[13px] border-destructive/35 text-destructive hover:bg-destructive/10 hover:text-destructive hover:border-destructive/50"
+                        onClick={() => {
+                          if (onActivate) {
+                            setActivateDialogOpen(true)
+                          } else {
+                            toast.info(
+                              'Activate deployment functionality coming soon',
+                            )
+                          }
+                        }}
+                        disabled={
+                          isActiveDeployment ||
+                          activateMutation.isPending ||
+                          deployment?.status !== 'ready'
+                        }
+                        className="h-9 text-[13px]"
                       >
-                        <Trash2 className="mr-1.5 h-4 w-4" />
-                        Delete
+                        <Play className="mr-1.5 h-4 w-4" />
+                        Activate
                       </Button>
                     </span>
                   </TooltipTrigger>
-                  {isActiveDeployment && (
+                  {(isActiveDeployment || deployment?.status !== 'ready') && (
                     <TooltipContent
                       sideOffset={4}
                       className={WIZARD_PORTAL_Z_POPOVER}
                     >
                       <p>
-                        Cannot delete the active deployment. Please activate
-                        another deployment first.
+                        {isActiveDeployment
+                          ? 'This deployment is already active.'
+                          : 'Build must be ready before activating.'}
                       </p>
                     </TooltipContent>
                   )}
                 </TooltipPrimitive.Root>
               </TooltipProvider>
-            )}
+            </div>
           </div>
 
-          {/* Right side - Individual buttons */}
-          <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+          <div className="w-full lg:hidden">
+            <Drawer
+              open={deploymentActionsDrawerOpen}
+              onOpenChange={setDeploymentActionsDrawerOpen}
+            >
+              <DrawerTrigger asChild>
                 <Button
                   type="button"
                   variant="outline"
-                  size="sm"
-                  className="h-9 text-[13px]"
+                  className="h-10 w-full justify-between gap-2 text-[13px]"
                 >
-                  <Download className="mr-1.5 h-4 w-4" />
-                  Download
-                  <ChevronDown className="ml-1.5 h-3.5 w-3.5" />
+                  <span>Deployment actions</span>
+                  <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" />
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className={WIZARD_PORTAL_Z_DROPDOWN}
+              </DrawerTrigger>
+              <DrawerContent
+                overlayClassName={WIZARD_DRAWER_OVERLAY_Z}
+                className={cn(WIZARD_DRAWER_CONTENT_Z, 'max-h-[85dvh]')}
               >
-                <DropdownMenuItem onClick={handleDownloadSource}>
-                  <FileCode className="mr-2 h-4 w-4" />
-                  Source code
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={handleDownloadBuild}
-                  disabled={!isDeploymentCompleted(deployment?.status)}
-                  title={
-                    !isDeploymentCompleted(deployment?.status)
-                      ? 'Build output is available after the deployment has completed.'
-                      : undefined
-                  }
-                >
-                  <Package className="mr-2 h-4 w-4" />
-                  Build output
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            {onRedeploy && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setRedeployDialogOpen(true)}
-                disabled={redeployMutation.isPending}
-                className="h-9 text-[13px]"
-              >
-                <RefreshCw className="mr-1.5 h-4 w-4" />
-                Redeploy
-              </Button>
-            )}
-            <TooltipProvider delayDuration={0}>
-              <TooltipPrimitive.Root>
-                <TooltipTrigger asChild>
-                  <span>
+                <DrawerHeader className="!text-left">
+                  <DrawerTitle className="text-[15px] font-semibold">
+                    Deployment actions
+                  </DrawerTitle>
+                  <DrawerDescription className="sr-only">
+                    Download, redeploy, activate, cancel or delete this
+                    deployment.
+                  </DrawerDescription>
+                </DrawerHeader>
+                <div className="flex max-h-[min(65dvh,24rem)] flex-col gap-2 overflow-y-auto px-4 pb-6">
+                  {deployment &&
+                    isDeploymentInProgress(deployment.status) &&
+                    onCancelBuild && (
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        className="h-10 w-full justify-start text-[13px]"
+                        onClick={() => {
+                          setDeploymentActionsDrawerOpen(false)
+                          setCancelBuildDialogOpen(true)
+                        }}
+                        disabled={cancelBuildMutation.isPending}
+                      >
+                        <XCircle className="mr-2 h-4 w-4" />
+                        Cancel build
+                      </Button>
+                    )}
+                  {!(
+                    deployment &&
+                    isDeploymentInProgress(deployment.status) &&
+                    onCancelBuild
+                  ) && (
                     <Button
                       type="button"
                       variant="outline"
-                      size="sm"
+                      className="h-10 w-full justify-start border-destructive/35 text-[13px] text-destructive hover:bg-destructive/10 hover:text-destructive hover:border-destructive/50"
                       onClick={() => {
-                        if (onActivate) {
-                          setActivateDialogOpen(true)
-                        } else {
-                          toast.info(
-                            'Activate deployment functionality coming soon',
-                          )
-                        }
+                        setDeploymentActionsDrawerOpen(false)
+                        setDeleteDialogOpen(true)
                       }}
-                      disabled={
-                        isActiveDeployment ||
-                        activateMutation.isPending ||
-                        deployment?.status !== 'ready'
+                      disabled={isActiveDeployment}
+                      title={
+                        isActiveDeployment
+                          ? 'Cannot delete the active deployment. Activate another deployment first.'
+                          : undefined
                       }
-                      className="h-9 text-[13px]"
                     >
-                      <Play className="mr-1.5 h-4 w-4" />
-                      Activate
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete deployment
                     </Button>
-                  </span>
-                </TooltipTrigger>
-                {(isActiveDeployment || deployment?.status !== 'ready') && (
-                  <TooltipContent
-                    sideOffset={4}
-                    className={WIZARD_PORTAL_Z_POPOVER}
+                  )}
+                  <div className="my-1 h-px bg-border" />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-10 w-full justify-start text-[13px]"
+                    onClick={() => {
+                      handleDownloadSource()
+                      setDeploymentActionsDrawerOpen(false)
+                    }}
                   >
-                    <p>
-                      {isActiveDeployment
+                    <FileCode className="mr-2 h-4 w-4" />
+                    Download source code
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-10 w-full justify-start text-[13px]"
+                    onClick={() => {
+                      handleDownloadBuild()
+                      setDeploymentActionsDrawerOpen(false)
+                    }}
+                    disabled={!isDeploymentCompleted(deployment?.status)}
+                    title={
+                      !isDeploymentCompleted(deployment?.status)
+                        ? 'Build output is available after the deployment has completed.'
+                        : undefined
+                    }
+                  >
+                    <Package className="mr-2 h-4 w-4" />
+                    Download build output
+                  </Button>
+                  {onRedeploy && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-10 w-full justify-start text-[13px]"
+                      onClick={() => {
+                        setDeploymentActionsDrawerOpen(false)
+                        setRedeployDialogOpen(true)
+                      }}
+                      disabled={redeployMutation.isPending}
+                    >
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      Redeploy
+                    </Button>
+                  )}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-10 w-full justify-start text-[13px]"
+                    onClick={() => {
+                      setDeploymentActionsDrawerOpen(false)
+                      if (onActivate) {
+                        setActivateDialogOpen(true)
+                      } else {
+                        toast.info(
+                          'Activate deployment functionality coming soon',
+                        )
+                      }
+                    }}
+                    disabled={
+                      isActiveDeployment ||
+                      activateMutation.isPending ||
+                      deployment?.status !== 'ready'
+                    }
+                    title={
+                      isActiveDeployment
                         ? 'This deployment is already active.'
-                        : 'Build must be ready before activating.'}
-                    </p>
-                  </TooltipContent>
-                )}
-              </TooltipPrimitive.Root>
-            </TooltipProvider>
+                        : activateMutation.isPending
+                          ? undefined
+                          : deployment?.status !== 'ready'
+                            ? 'Build must be ready before activating.'
+                            : undefined
+                    }
+                  >
+                    <Play className="mr-2 h-4 w-4" />
+                    Activate
+                  </Button>
+                </div>
+              </DrawerContent>
+            </Drawer>
           </div>
-        </div>
+        </>
       }
     >
       <>
@@ -1917,7 +2086,7 @@ export function DeploymentDetailView({
             </div>
           </div>
 
-          <aside className="flex max-h-[min(45dvh,22rem)] min-h-0 w-full shrink-0 flex-col overflow-y-auto border-t border-border bg-muted/15 px-4 py-3 sm:px-5 lg:max-h-none lg:w-[min(100%,20rem)] lg:px-6 xl:w-[min(100%,22rem)] lg:border-t-0 lg:bg-muted/10 lg:py-3">
+          <aside className="hidden min-h-0 w-[min(100%,20rem)] shrink-0 flex-col overflow-y-auto bg-muted/10 px-6 py-3 lg:flex xl:w-[min(100%,22rem)]">
             {deploymentDetailSidebar}
           </aside>
         </div>

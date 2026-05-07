@@ -11,21 +11,25 @@ import {
   Plus,
   Loader2,
   Calendar,
-  Send,
   AlertCircle,
-  Users,
   Hash,
+  Users,
+  Target,
+  Paperclip,
 } from 'lucide-react'
 import {
   useMessage,
   useMessageTargets,
   MESSAGE_DETAIL_TARGETS_LIMIT,
   useProjectTopics,
-  useProjectUsers,
+  useProjectBuckets,
 } from '@/lib/react-query/hooks'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ServiceHeader } from '../../shared/ServiceHeader'
+import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { messageLogsQueryOptions } from '@/lib/react-query/hooks/messaging'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { ServiceHeader, type Tab } from '../../shared/ServiceHeader'
 import { CopyableId } from '@/components/global/shared/CopyableId'
+import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Label } from '@/components/ui/label'
@@ -52,22 +56,87 @@ import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { Models } from '@appwrite.io/console'
+import { ID, MessagePriority } from '@appwrite.io/console'
 import { formatDateTime } from '@/lib/date-utils'
+import { trimForPageTitle } from '@/lib/utils/page-title'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { StorageFileExplorerDialog } from '@/components/global/shared/StorageFileExplorerDialog'
 
-export function View() {
+function parseIdArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return []
+  return value.filter(
+    (x): x is string => typeof x === 'string' && x.trim().length > 0,
+  )
+}
+
+/** Email attachments: API may return `bucketId:fileId` strings or `{ bucketId, fileId }` objects. */
+function parseMessagingEmailAttachments(value: unknown): string[] {
+  if (value == null) return []
+  if (!Array.isArray(value)) return []
+  const out: string[] = []
+  for (const item of value) {
+    if (typeof item === 'string') {
+      const t = item.trim()
+      if (t.length > 0) out.push(t)
+      continue
+    }
+    if (item && typeof item === 'object') {
+      const o = item as Record<string, unknown>
+      const bucketId =
+        typeof o.bucketId === 'string'
+          ? o.bucketId
+          : typeof o.bucket_id === 'string'
+            ? o.bucket_id
+            : undefined
+      const fileId =
+        typeof o.fileId === 'string'
+          ? o.fileId
+          : typeof o.file_id === 'string'
+            ? o.file_id
+            : typeof o.$id === 'string'
+              ? o.$id
+              : undefined
+      if (bucketId && fileId) out.push(`${bucketId}:${fileId}`)
+    }
+  }
+  return out
+}
+import {
+  MessageSendDialog,
+  MessageScheduleDialog,
+  MessageCancelScheduleDialog,
+} from '../_components/MessageDeliveryDialogs'
+import { MessagingTargetsModal } from '../_components/MessagingTargetsModal'
+import { MessagingRecipientUsersModal } from '../_components/MessagingRecipientUsersModal'
+import { MessagingActivityLogTable } from '../_components/MessagingActivityLogTable'
+import { EmailAttachmentRow } from '../_components/EmailAttachmentRow'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+
+export function View({
+  initialMessage,
+}: {
+  initialMessage?: Models.Message
+} = {}) {
   const { projectId, messageId } = useParams({
     strict: false,
   })
   const navigate = useNavigate()
-  useLocation()
+  const location = useLocation()
   const queryClient = useQueryClient()
 
   const {
     data: message,
     isLoading: messageLoading,
     refetch: refetchMessage,
-  } = useMessage(projectId, messageId)
+  } = useMessage(projectId, messageId, initialMessage)
+
+  const { buckets } = useProjectBuckets(projectId ?? null, 0, 100, '')
 
   useEffect(() => {
     if (!message || message.status !== 'processing') {
@@ -153,37 +222,6 @@ export function View() {
     Array<{ key: string; value: string }>
   >([{ key: '', value: '' }])
 
-  // Initialize form state when message loads
-  useEffect(() => {
-    if (message) {
-      if (message.providerType === 'email') {
-        setEmailSubject(message.data?.subject || '')
-        setEmailContent(message.data?.content || '')
-        setEmailHtml(message.data?.html || false)
-      } else if (message.providerType === 'sms') {
-        setSmsContent(message.data?.content || '')
-      } else if (message.providerType === 'push') {
-        setPushTitle(message.data?.title || '')
-        setPushBody(message.data?.body || '')
-        // Parse custom data object into key-value pairs
-        if (message.data?.data && typeof message.data.data === 'object') {
-          const dataPairs = Object.entries(message.data.data).map(
-            ([key, value]) => ({
-              key,
-              value: String(value),
-            }),
-          )
-          setPushCustomData(
-            dataPairs.length > 0 ? dataPairs : [{ key: '', value: '' }],
-          )
-        } else {
-          setPushCustomData([{ key: '', value: '' }])
-        }
-      }
-    }
-  }, [message])
-
-  // Selected topics and targets for updates
   const [selectedTopicIds, setSelectedTopicIds] = useState<Set<string>>(
     new Set(),
   )
@@ -191,25 +229,141 @@ export function View() {
     new Set(),
   )
 
-  // Initialize selected items from message
-  useEffect(() => {
-    if (message) {
-      setSelectedTopicIds(new Set(message.topics || []))
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [message?.topics])
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set())
+  const [ccTargetIds, setCcTargetIds] = useState<Set<string>>(new Set())
+  const [bccTargetIds, setBccTargetIds] = useState<Set<string>>(new Set())
+  const [attachmentCompoundIds, setAttachmentCompoundIds] = useState<string[]>(
+    [],
+  )
+  const [draftTargetDetailsById, setDraftTargetDetailsById] = useState<
+    Record<string, Models.Target>
+  >({})
 
-  // Initialize selected targets separately to avoid infinite loop
-  const targetIds = useMemo(() => targets.map((t) => t.$id), [targets])
+  const displayTargetById = useMemo(
+    () => ({ ...targetsById, ...draftTargetDetailsById }),
+    [targetsById, draftTargetDetailsById],
+  )
+
+  const [pushBucketId, setPushBucketId] = useState('')
+  const [pushAction, setPushAction] = useState('')
+  const [pushIcon, setPushIcon] = useState('')
+  const [pushSound, setPushSound] = useState('')
+  const [pushColor, setPushColor] = useState('')
+  const [pushTag, setPushTag] = useState('')
+  const [pushBadge, setPushBadge] = useState('')
+  const [pushPriority, setPushPriority] = useState<MessagePriority>(
+    MessagePriority.Normal,
+  )
+  const [pushContentAvailable, setPushContentAvailable] = useState(false)
+  const [pushCritical, setPushCritical] = useState(false)
+
+  const [sendDialogOpen, setSendDialogOpen] = useState(false)
+  const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false)
+  const [cancelScheduleOpen, setCancelScheduleOpen] = useState(false)
+  const [recipientUsersModalOpen, setRecipientUsersModalOpen] = useState(false)
+  const [attachmentExplorerOpen, setAttachmentExplorerOpen] = useState(false)
+  const [targetPickerFor, setTargetPickerFor] = useState<
+    'primary' | 'cc' | 'bcc' | null
+  >(null)
+
+  /** Sync topics / users / targets from the server only when those lists actually change (avoids wiping local draft edits on unrelated message refetches). */
+  const messageServerListsKey = useMemo(() => {
+    if (!message) return ''
+    return [
+      message.$id,
+      [...(message.targets ?? [])].sort().join('|'),
+      [...(message.topics ?? [])].sort().join('|'),
+      [...(message.users ?? [])].sort().join('|'),
+    ].join('\0')
+  }, [message])
+
   useEffect(() => {
-    if (targetIds.length > 0) {
-      setSelectedTargetIds(new Set(targetIds))
-    }
+    if (!message) return
+    setSelectedUserIds(new Set(message.users || []))
+    setSelectedTopicIds(new Set(message.topics || []))
+    setSelectedTargetIds(new Set(message.targets || []))
+    // `message` omitted on purpose: including it would reset lists on every refetch even when server lists are unchanged.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [targetIds.join(',')]) // Use join to create stable dependency
+  }, [messageServerListsKey])
+
+  /** Message body / options from API — only re-hydrate when id, channel, or payload changes. */
+  const messagePayloadSyncKey = useMemo(
+    () =>
+      message?.data != null ? JSON.stringify(message.data) : '',
+    [message?.data],
+  )
+
+  // Initialize form state when opening a different message or when server payload changes
+  useEffect(() => {
+    if (!message) return
+
+    if (message.providerType === 'email') {
+      setEmailSubject(message.data?.subject || '')
+      setEmailContent(message.data?.content || '')
+      setEmailHtml(message.data?.html || false)
+      const raw = message.data as Record<string, unknown>
+      setCcTargetIds(new Set(parseIdArray(raw?.cc)))
+      setBccTargetIds(new Set(parseIdArray(raw?.bcc)))
+      setAttachmentCompoundIds(parseMessagingEmailAttachments(raw?.attachments))
+    } else if (message.providerType === 'sms') {
+      setSmsContent(message.data?.content || '')
+    } else if (message.providerType === 'push') {
+      setPushTitle(message.data?.title || '')
+      setPushBody(message.data?.body || '')
+      const d = message.data as Record<string, unknown>
+      setPushAction(typeof d?.action === 'string' ? d.action : '')
+      setPushIcon(typeof d?.icon === 'string' ? d.icon : '')
+      setPushSound(typeof d?.sound === 'string' ? d.sound : '')
+      setPushColor(typeof d?.color === 'string' ? d.color : '')
+      setPushTag(typeof d?.tag === 'string' ? d.tag : '')
+      setPushBadge(
+        typeof d?.badge === 'number'
+          ? String(d.badge)
+          : typeof d?.badge === 'string'
+            ? d.badge
+            : '',
+      )
+      setPushPriority(
+        d?.priority === MessagePriority.High
+          ? MessagePriority.High
+          : MessagePriority.Normal,
+      )
+      setPushContentAvailable(Boolean(d?.contentAvailable))
+      setPushCritical(Boolean(d?.critical))
+      if (message.data?.data && typeof message.data.data === 'object') {
+        const dataPairs = Object.entries(message.data.data).map(
+          ([key, value]) => ({
+            key,
+            value: String(value),
+          }),
+        )
+        setPushCustomData(
+          dataPairs.length > 0 ? dataPairs : [{ key: '', value: '' }],
+        )
+      } else {
+        setPushCustomData([{ key: '', value: '' }])
+      }
+    }
+    setPushImage(null)
+    // Intentionally not depending on `message` — same keys as before avoid re-hydrating from every refetch.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [message?.$id, message?.providerType, messagePayloadSyncKey])
+
+  useEffect(() => {
+    setDraftTargetDetailsById({})
+  }, [messageId])
+
+  useEffect(() => {
+    setDraftTargetDetailsById((prev) => {
+      const next = { ...prev }
+      for (const t of targets) {
+        next[t.$id] = t
+      }
+      return next
+    })
+  }, [targets])
 
   const [topicsModalOpen, setTopicsModalOpen] = useState(false)
-  const [targetsModalOpen, setTargetsModalOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [errorDetailsDialogOpen, setErrorDetailsDialogOpen] = useState(false)
 
@@ -227,16 +381,29 @@ export function View() {
         html: emailHtml,
         topics: Array.from(selectedTopicIds),
         targets: Array.from(selectedTargetIds),
+        users: Array.from(selectedUserIds),
+        cc: Array.from(ccTargetIds),
+        bcc: Array.from(bccTargetIds),
+        attachments: attachmentCompoundIds.filter((s) => s.includes(':')),
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['message', 'project', projectId, messageId],
+    onSuccess: async (updatedMessage) => {
+      // Keep the API response as cache truth. Refetching getMessage can return a different
+      // `data.attachments` shape and the payload sync effect would clear local attachment state.
+      queryClient.setQueryData(
+        ['message', 'project', projectId, messageId],
+        updatedMessage,
+      )
+      await queryClient.invalidateQueries({
+        queryKey: ['messages', 'project', projectId],
       })
-      toast.success('Message updated successfully')
+      await queryClient.refetchQueries({
+        queryKey: ['message-targets', 'project', projectId, messageId],
+      })
+      toast.success('Draft updated')
     },
     onError: (error: Error) => {
-      toast.error(getErrorMessage(error) || 'Failed to update message')
+      toast.error(getErrorMessage(error) || 'Failed to update draft')
     },
   })
 
@@ -252,11 +419,15 @@ export function View() {
         content: smsContent,
         topics: Array.from(selectedTopicIds),
         targets: Array.from(selectedTargetIds),
+        users: Array.from(selectedUserIds),
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
         queryKey: ['message', 'project', projectId, messageId],
+      })
+      await queryClient.refetchQueries({
+        queryKey: ['message-targets', 'project', projectId, messageId],
       })
       toast.success('Message updated successfully')
     },
@@ -273,7 +444,6 @@ export function View() {
       }
       const projectSdk = sdk.forProject(projectId)
 
-      // Filter out empty keys from custom data
       const customData: Record<string, string> = {}
       pushCustomData.forEach(({ key, value }) => {
         if (key.trim()) {
@@ -281,8 +451,24 @@ export function View() {
         }
       })
 
-      // TODO: Handle image upload (need to upload to storage first, then get compound ID)
-      const image = pushImage ? undefined : message?.data?.image
+      let image: string | undefined =
+        typeof message?.data?.image === 'string'
+          ? (message.data.image as string)
+          : undefined
+      if (pushImage) {
+        if (!pushBucketId) {
+          throw new Error('Select a storage bucket before uploading an image')
+        }
+        const uploaded = await projectSdk.storage.createFile({
+          bucketId: pushBucketId,
+          fileId: ID.unique(),
+          file: pushImage,
+        })
+        image = `${pushBucketId}:${uploaded.$id}`
+      }
+
+      const badgeNum =
+        pushBadge.trim() === '' ? undefined : parseInt(pushBadge, 10)
 
       return await projectSdk.messaging.updatePush({
         messageId,
@@ -292,12 +478,26 @@ export function View() {
         image,
         topics: Array.from(selectedTopicIds),
         targets: Array.from(selectedTargetIds),
+        users: Array.from(selectedUserIds),
+        action: pushAction.trim() || undefined,
+        icon: pushIcon.trim() || undefined,
+        sound: pushSound.trim() || undefined,
+        color: pushColor.trim() || undefined,
+        tag: pushTag.trim() || undefined,
+        badge: Number.isFinite(badgeNum) ? badgeNum : undefined,
+        priority: pushPriority,
+        contentAvailable: pushContentAvailable || undefined,
+        critical: pushCritical || undefined,
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
         queryKey: ['message', 'project', projectId, messageId],
       })
+      await queryClient.refetchQueries({
+        queryKey: ['message-targets', 'project', projectId, messageId],
+      })
+      setPushImage(null)
       toast.success('Message updated successfully')
     },
     onError: (error: Error) => {
@@ -336,38 +536,6 @@ export function View() {
     },
   })
 
-  // Check if message content has changed - must be before early returns
-  const hasEmailChanges = useMemo(() => {
-    if (!message || message.providerType !== 'email') return false
-    return (
-      emailSubject !== (message.data?.subject || '') ||
-      emailContent !== (message.data?.content || '') ||
-      emailHtml !== (message.data?.html || false)
-    )
-  }, [message, emailSubject, emailContent, emailHtml])
-
-  const hasSMSChanges = useMemo(() => {
-    if (!message || message.providerType !== 'sms') return false
-    return smsContent !== (message.data?.content || '')
-  }, [message, smsContent])
-
-  const hasPushChanges = useMemo(() => {
-    if (!message || message.providerType !== 'push') return false
-    const titleChanged = pushTitle !== (message.data?.title || '')
-    const bodyChanged = pushBody !== (message.data?.body || '')
-    const imageChanged = pushImage !== null
-    // Check custom data changes
-    const currentData = message.data?.data || {}
-    const newData: Record<string, string> = {}
-    pushCustomData.forEach(({ key, value }) => {
-      if (key.trim()) {
-        newData[key] = value
-      }
-    })
-    const dataChanged = JSON.stringify(currentData) !== JSON.stringify(newData)
-    return titleChanged || bodyChanged || imageChanged || dataChanged
-  }, [message, pushTitle, pushBody, pushImage, pushCustomData])
-
   // Check if topics/targets have changed - must be before early returns
   const hasTopicsChanged = useMemo(() => {
     if (!message) return false
@@ -380,13 +548,146 @@ export function View() {
   }, [message, selectedTopicIds])
 
   const hasTargetsChanged = useMemo(() => {
-    const currentTargets = new Set(targets.map((t) => t.$id))
+    if (!message) return false
+    const currentTargets = new Set(message.targets || [])
     return (
       selectedTargetIds.size !== currentTargets.size ||
       Array.from(selectedTargetIds).some((id) => !currentTargets.has(id)) ||
       Array.from(currentTargets).some((id) => !selectedTargetIds.has(id))
     )
-  }, [targets, selectedTargetIds])
+  }, [message, selectedTargetIds])
+
+  const hasUsersChanged = useMemo(() => {
+    if (!message) return false
+    const cur = new Set(message.users || [])
+    return (
+      selectedUserIds.size !== cur.size ||
+      Array.from(selectedUserIds).some((id) => !cur.has(id)) ||
+      Array.from(cur).some((id) => !selectedUserIds.has(id))
+    )
+  }, [message, selectedUserIds])
+
+  const parseDataStringIds = (key: string) => {
+    if (!message || message.providerType !== 'email') return new Set<string>()
+    const raw = message.data as Record<string, unknown>
+    return new Set(parseIdArray(raw?.[key]))
+  }
+
+  const hasCcChanged = useMemo(() => {
+    if (!message || message.providerType !== 'email') return false
+    const cur = parseDataStringIds('cc')
+    return (
+      ccTargetIds.size !== cur.size ||
+      Array.from(ccTargetIds).some((id) => !cur.has(id)) ||
+      Array.from(cur).some((id) => !ccTargetIds.has(id))
+    )
+  }, [message, ccTargetIds])
+
+  const hasBccChanged = useMemo(() => {
+    if (!message || message.providerType !== 'email') return false
+    const cur = parseDataStringIds('bcc')
+    return (
+      bccTargetIds.size !== cur.size ||
+      Array.from(bccTargetIds).some((id) => !cur.has(id)) ||
+      Array.from(cur).some((id) => !bccTargetIds.has(id))
+    )
+  }, [message, bccTargetIds])
+
+  const hasAttachmentsChanged = useMemo(() => {
+    if (!message || message.providerType !== 'email') return false
+    const cur = parseMessagingEmailAttachments(
+      (message.data as Record<string, unknown>)?.attachments,
+    )
+    if (cur.length !== attachmentCompoundIds.length) return true
+    return cur.some((id, i) => id !== attachmentCompoundIds[i])
+  }, [message, attachmentCompoundIds])
+
+  const hasEmailChanges = useMemo(() => {
+    if (!message || message.providerType !== 'email') return false
+    return (
+      emailSubject !== (message.data?.subject || '') ||
+      emailContent !== (message.data?.content || '') ||
+      emailHtml !== (message.data?.html || false) ||
+      hasUsersChanged ||
+      hasCcChanged ||
+      hasBccChanged ||
+      hasAttachmentsChanged
+    )
+  }, [
+    message,
+    emailSubject,
+    emailContent,
+    emailHtml,
+    hasUsersChanged,
+    hasCcChanged,
+    hasBccChanged,
+    hasAttachmentsChanged,
+  ])
+
+  const hasSMSChanges = useMemo(() => {
+    if (!message || message.providerType !== 'sms') return false
+    return (
+      smsContent !== (message.data?.content || '') || hasUsersChanged
+    )
+  }, [message, smsContent, hasUsersChanged])
+
+  const hasPushChanges = useMemo(() => {
+    if (!message || message.providerType !== 'push') return false
+    const titleChanged = pushTitle !== (message.data?.title || '')
+    const bodyChanged = pushBody !== (message.data?.body || '')
+    const imageChanged = pushImage !== null
+    const currentData = message.data?.data || {}
+    const newData: Record<string, string> = {}
+    pushCustomData.forEach(({ key, value }) => {
+      if (key.trim()) {
+        newData[key] = value
+      }
+    })
+    const dataChanged = JSON.stringify(currentData) !== JSON.stringify(newData)
+    const d = message.data as Record<string, unknown>
+    const advChanged =
+      pushAction !== (typeof d?.action === 'string' ? d.action : '') ||
+      pushIcon !== (typeof d?.icon === 'string' ? d.icon : '') ||
+      pushSound !== (typeof d?.sound === 'string' ? d.sound : '') ||
+      pushColor !== (typeof d?.color === 'string' ? d.color : '') ||
+      pushTag !== (typeof d?.tag === 'string' ? d.tag : '') ||
+      pushBadge !==
+        (typeof d?.badge === 'number'
+          ? String(d.badge)
+          : typeof d?.badge === 'string'
+            ? d.badge
+            : '') ||
+      pushPriority !==
+        (d?.priority === MessagePriority.High
+          ? MessagePriority.High
+          : MessagePriority.Normal) ||
+      pushContentAvailable !== Boolean(d?.contentAvailable) ||
+      pushCritical !== Boolean(d?.critical)
+    return (
+      titleChanged ||
+      bodyChanged ||
+      imageChanged ||
+      dataChanged ||
+      advChanged ||
+      hasUsersChanged
+    )
+  }, [
+    message,
+    pushTitle,
+    pushBody,
+    pushImage,
+    pushCustomData,
+    pushAction,
+    pushIcon,
+    pushSound,
+    pushColor,
+    pushTag,
+    pushBadge,
+    pushPriority,
+    pushContentAvailable,
+    pushCritical,
+    hasUsersChanged,
+  ])
 
   const handleBack = () => {
     navigate({
@@ -394,6 +695,39 @@ export function View() {
       params: { projectId: projectId! },
     })
   }
+
+  const topicsForEstimate = useMemo(() => {
+    if (!message) return []
+    return message.topics
+      .map((id) => topicsById[id])
+      .filter((t): t is Models.Topic => Boolean(t))
+  }, [message, topicsById])
+
+  const { data: messageLogsData } = useQuery({
+    ...messageLogsQueryOptions(projectId, messageId, 0, DEFAULT_PAGE_SIZE),
+    enabled: Boolean(projectId && messageId && message),
+  })
+
+  const messagingModalInitialSelection = useMemo(() => {
+    if (!targetPickerFor) return {}
+    const ids =
+      targetPickerFor === 'cc'
+        ? ccTargetIds
+        : targetPickerFor === 'bcc'
+          ? bccTargetIds
+          : selectedTargetIds
+    const map: Record<string, Models.Target | undefined> = {}
+    for (const id of ids) {
+      map[id] = displayTargetById[id]
+    }
+    return map
+  }, [
+    targetPickerFor,
+    ccTargetIds,
+    bccTargetIds,
+    selectedTargetIds,
+    displayTargetById,
+  ])
 
   // Get message description for delete dialog
   const getMessageDescription = () => {
@@ -412,41 +746,144 @@ export function View() {
     return null
   }
 
+  const isMessageSettingsPath = useMemo(
+    () => location.pathname.replace(/\/$/, '').endsWith('/settings'),
+    [location.pathname],
+  )
+
+  const hasComposeSettingsTabs =
+    message?.providerType === 'email' ||
+    message?.providerType === 'sms' ||
+    message?.providerType === 'push'
+
+  const messageDetailTabs: Tab[] | undefined = useMemo(() => {
+    if (!hasComposeSettingsTabs || !projectId || !messageId) {
+      return undefined
+    }
+    return [
+      {
+        id: 'compose',
+        label: 'Compose',
+        to: '/projects/$projectId/messaging/$messageId',
+        params: { projectId, messageId },
+      },
+      {
+        id: 'settings',
+        label: 'Settings',
+        to: '/projects/$projectId/messaging/$messageId/settings',
+        params: { projectId, messageId },
+      },
+    ]
+  }, [hasComposeSettingsTabs, projectId, messageId])
+
+  const messageDetailActiveTab = isMessageSettingsPath ? 'settings' : 'compose'
+
+  const showMessageMain =
+    !!message && (!hasComposeSettingsTabs || !isMessageSettingsPath)
+  const showMessageSettings =
+    !!message && hasComposeSettingsTabs && isMessageSettingsPath
+
+  const messageServiceHeaderTitle = useMemo(() => {
+    if (message?.providerType === 'email') {
+      const full = emailSubject.trim()
+      if (!full) {
+        return { label: 'Message', nativeTitle: undefined as string | undefined }
+      }
+      const label = trimForPageTitle(full)
+      return {
+        label,
+        nativeTitle: label !== full ? full : undefined,
+      }
+    }
+    if (message?.providerType === 'sms') {
+      const full = smsContent.trim()
+      if (!full) {
+        return { label: 'SMS', nativeTitle: undefined as string | undefined }
+      }
+      const label = trimForPageTitle(full)
+      return {
+        label,
+        nativeTitle: label !== full ? full : undefined,
+      }
+    }
+    if (message?.providerType === 'push') {
+      const full = pushTitle.trim()
+      if (!full) {
+        return { label: 'Push', nativeTitle: undefined as string | undefined }
+      }
+      const label = trimForPageTitle(full)
+      return {
+        label,
+        nativeTitle: label !== full ? full : undefined,
+      }
+    }
+    return {
+      label: 'Message',
+      nativeTitle: undefined as string | undefined,
+    }
+  }, [message?.providerType, emailSubject, smsContent, pushTitle])
+
   if (!message) {
     if (messageLoading) {
       return null
     }
     return (
-      <div className="flex h-full items-center justify-center">
-        <div className="rounded-lg border border-border bg-card py-12 px-6 text-center">
-          <p className="text-[13px] text-muted-foreground">Message not found</p>
-        </div>
+      <div className="flex items-center justify-center p-6 py-16">
+        <EmptyState
+          icon={AlertCircle}
+          title="Message not found"
+          description="This message may have been deleted or the link is incorrect."
+          variant="card"
+          iconSize="md"
+        />
       </div>
     )
   }
 
   const getMessageStatusBadge = () => {
     if (message.status === 'sent') {
-      return <Badge variant="success">Sent</Badge>
+      return (
+        <Badge variant="success" className="text-[10px] shrink-0">
+          Sent
+        </Badge>
+      )
     }
     if (message.status === 'processing') {
       return (
         <div className="flex items-center gap-2">
           <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
-          <Badge variant="secondary">Processing</Badge>
+          <Badge variant="processing" className="text-[10px] shrink-0">
+            Processing
+          </Badge>
         </div>
       )
     }
     if (message.status === 'failed') {
-      return <Badge variant="error">Failed</Badge>
+      return (
+        <Badge variant="error" className="text-[10px] shrink-0">
+          Failed
+        </Badge>
+      )
     }
     if (message.status === 'draft') {
-      return <Badge variant="secondary">Draft</Badge>
+      return (
+        <Badge variant="info" className="text-[10px] shrink-0">
+          Draft
+        </Badge>
+      )
     }
     if (message.status === 'scheduled') {
-      return <Badge variant="secondary">Scheduled</Badge>
+      return (
+        <Badge variant="warning" className="text-[10px] shrink-0">
+          Scheduled
+        </Badge>
+      )
     }
-    return <Badge variant="secondary">{message.status}</Badge>
+    return (
+      <Badge variant="info" className="text-[10px] shrink-0 capitalize">
+        {message.status}
+      </Badge>
+    )
   }
 
   const getMessageTypeIcon = () => {
@@ -498,7 +935,7 @@ export function View() {
     <div className="flex flex-col">
       <ServiceHeader
         title={
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
             <Button
               variant="ghost"
               size="sm"
@@ -507,150 +944,41 @@ export function View() {
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <span>Message Details</span>
+            <span
+              className="min-w-0 truncate"
+              title={messageServiceHeaderTitle.nativeTitle}
+            >
+              {messageServiceHeaderTitle.label}
+            </span>
           </div>
         }
+        tabs={messageDetailTabs}
+        activeTab={messageDetailTabs ? messageDetailActiveTab : undefined}
+        titleRightContent={getMessageStatusBadge()}
         fullWidthBorder
       />
 
       <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6 pt-4 sm:pt-6">
         <div className="space-y-6">
-          {/* Overview Card */}
-          <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-            <div className="px-6 py-4">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
-                    <TypeIcon className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <div>
-                    <h3 className="text-[15px] font-semibold text-foreground capitalize">
-                      {message.providerType}
-                    </h3>
-                    <CopyableId id={message.$id} size="xs" className="mt-1" />
-                  </div>
-                </div>
-                <div className="flex shrink-0 items-center gap-2 sm:pt-1">
-                  {getMessageStatusBadge()}
-                </div>
-              </div>
-            </div>
-            <div className="border-t border-border" />
-            <div className="px-6 py-4">
-              <div className="space-y-1 text-[13px] text-muted-foreground">
-                {message.$createdAt && (
-                  <p>
-                    Created:{' '}
-                    <span className="text-foreground">
-                      {formatDateTime(message.$createdAt)}
-                    </span>
-                  </p>
-                )}
-                {message.scheduledAt && (
-                  <p>
-                    Scheduled at:{' '}
-                    <span className="text-foreground">
-                      {formatDateTime(message.scheduledAt)}
-                    </span>
-                  </p>
-                )}
-                {message.deliveredAt && (
-                  <p>
-                    Sent at:{' '}
-                    <span className="text-foreground">
-                      {formatDateTime(message.deliveredAt)}
-                    </span>
-                  </p>
-                )}
-              </div>
-            </div>
-            {/* Footer Actions - Only show for draft/scheduled/failed */}
-            {message.status !== 'processing' && message.status !== 'sent' && (
-              <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">
-                <div className="flex items-center gap-2">
-                  {message.status === 'draft' && (
-                    <>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-9 text-[13px]"
-                        onClick={() => {
-                          // TODO: Implement schedule functionality
-                          toast.info('Schedule functionality coming soon')
-                        }}
-                      >
-                        Schedule
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        className="h-9 text-[13px]"
-                        onClick={() => {
-                          // TODO: Implement send functionality
-                          toast.info('Send functionality coming soon')
-                        }}
-                      >
-                        <Send className="mr-1.5 h-4 w-4" />
-                        Send message
-                      </Button>
-                    </>
-                  )}
-                  {message.status === 'scheduled' && (
-                    <>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-9 text-[13px]"
-                        onClick={() => {
-                          // TODO: Implement cancel scheduling
-                          toast.info(
-                            'Cancel scheduling functionality coming soon',
-                          )
-                        }}
-                      >
-                        Cancel scheduling
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        className="h-9 text-[13px]"
-                        onClick={() => {
-                          // TODO: Implement reschedule
-                          toast.info('Reschedule functionality coming soon')
-                        }}
-                      >
-                        <Calendar className="mr-1.5 h-4 w-4" />
-                        Reschedule
-                      </Button>
-                    </>
-                  )}
-                  {message.status === 'failed' && message.deliveryErrors && (
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      className="h-9 text-[13px]"
-                      onClick={() => setErrorDetailsDialogOpen(true)}
-                    >
-                      <AlertCircle className="mr-1.5 h-4 w-4" />
-                      View logs
-                    </Button>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Provider-specific Message Content Card */}
-          {message.providerType === 'email' && (
+          {/* Email: compose (metadata and delete live under Settings) */}
+          {message.providerType === 'email' && showMessageMain && (
             <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
               <div className="px-6 py-4">
                 <h3 className="text-[15px] font-semibold text-foreground">
-                  Email Message
+                  Content
                 </h3>
               </div>
               <div className="border-t border-border" />
-              <div className="px-6 py-4">
-                <div className="max-w-2xl space-y-4">
+              <div className="px-6 py-4 @container">
+                <div className="flex flex-col gap-6 @[600px]:flex-row">
+                  <div className="@[600px]:w-64 shrink-0">
+                    <p className="text-[13px] text-muted-foreground">
+                      Write the subject and body, enable HTML if your content uses tags,
+                      add optional CC and BCC targets, and attach files from Storage.
+                    </p>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="w-full min-w-0 space-y-4">
                     <div>
                       <Label
                         htmlFor="email-subject"
@@ -672,7 +1000,7 @@ export function View() {
                         htmlFor="email-content"
                         className="text-[13px] font-medium text-foreground"
                       >
-                        Message
+                        Body
                       </Label>
                       <Textarea
                         id="email-content"
@@ -703,76 +1031,380 @@ export function View() {
                         disabled={!isDraft}
                       />
                     </div>
-                </div>
-              </div>
-              {isDraft && (
-                <div className="px-6 py-4 border-t border-border bg-muted/30">
-                  <Button
-                    size="sm"
-                    className="h-9 text-[13px]"
-                    disabled={!hasEmailChanges || updateEmailMutation.isPending}
-                    onClick={handleUpdateMessage}
-                  >
-                    Update
-                  </Button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {message.providerType === 'sms' && (
-            <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-              <div className="px-6 py-4">
-                <h3 className="text-[15px] font-semibold text-foreground">
-                  SMS Message
-                </h3>
-              </div>
-              <div className="border-t border-border" />
-              <div className="px-6 py-4">
-                <div className="max-w-2xl">
-                  <div>
-                    <Label
-                      htmlFor="sms-content"
-                      className="text-[13px] font-medium text-foreground"
-                    >
-                      Message
-                    </Label>
-                    <Textarea
-                      id="sms-content"
-                      value={smsContent}
-                      onChange={(e) => setSmsContent(e.target.value)}
-                      disabled={!isDraft}
-                      placeholder="SMS content"
-                      className="mt-1.5 min-h-32 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                    />
+                    <div className="space-y-3 border-t border-border pt-4 mt-4">
+                      <div className="flex items-center justify-between gap-2">
+                        <Label className="text-[13px] font-medium text-foreground">
+                          CC targets
+                        </Label>
+                        {isDraft && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 text-[12px]"
+                            onClick={() => setTargetPickerFor('cc')}
+                          >
+                            <Plus className="mr-1.5 h-3.5 w-3.5" />
+                            Add
+                          </Button>
+                        )}
+                      </div>
+                      {ccTargetIds.size > 0 ? (
+                        <ul className="space-y-1 text-[13px] text-muted-foreground">
+                          {[...ccTargetIds].map((id) => (
+                            <li
+                              key={id}
+                              className="flex items-center justify-between gap-2"
+                            >
+                              <span className="font-mono text-[12px] break-all">
+                                {displayTargetById[id]?.identifier || id}
+                              </span>
+                              {isDraft && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 w-7 p-0"
+                                  onClick={() => {
+                                    const n = new Set(ccTargetIds)
+                                    n.delete(id)
+                                    setCcTargetIds(n)
+                                  }}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-[12px] text-muted-foreground">
+                          No CC targets
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-3 border-t border-border pt-4 mt-4">
+                      <div className="flex items-center justify-between gap-2">
+                        <Label className="text-[13px] font-medium text-foreground">
+                          BCC targets
+                        </Label>
+                        {isDraft && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 text-[12px]"
+                            onClick={() => setTargetPickerFor('bcc')}
+                          >
+                            <Plus className="mr-1.5 h-3.5 w-3.5" />
+                            Add
+                          </Button>
+                        )}
+                      </div>
+                      {bccTargetIds.size > 0 ? (
+                        <ul className="space-y-1 text-[13px] text-muted-foreground">
+                          {[...bccTargetIds].map((id) => (
+                            <li
+                              key={id}
+                              className="flex items-center justify-between gap-2"
+                            >
+                              <span className="font-mono text-[12px] break-all">
+                                {displayTargetById[id]?.identifier || id}
+                              </span>
+                              {isDraft && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 w-7 p-0"
+                                  onClick={() => {
+                                    const n = new Set(bccTargetIds)
+                                    n.delete(id)
+                                    setBccTargetIds(n)
+                                  }}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-[12px] text-muted-foreground">
+                          No BCC targets
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-3 border-t border-border pt-4 mt-4">
+                      <div className="flex items-center justify-between gap-2">
+                        <Label className="text-[13px] font-medium text-foreground">
+                          Attachments
+                        </Label>
+                        {isDraft && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 text-[12px]"
+                            onClick={() => setAttachmentExplorerOpen(true)}
+                          >
+                            <Plus className="mr-1.5 h-3.5 w-3.5" />
+                            Add
+                          </Button>
+                        )}
+                      </div>
+                      {attachmentCompoundIds.length === 0 ? (
+                        <EmptyState
+                          icon={Paperclip}
+                          title="No attachments"
+                          description="Add files from your project's Storage buckets."
+                          variant="card"
+                          iconSize="md"
+                        />
+                      ) : projectId ? (
+                        <ul className="space-y-2">
+                          {attachmentCompoundIds.map((val, idx) => (
+                            <EmailAttachmentRow
+                              key={`${val}-${idx}`}
+                              projectId={projectId}
+                              compoundId={val}
+                              buckets={buckets}
+                              isDraft={isDraft}
+                              onRemove={() =>
+                                setAttachmentCompoundIds((rows) =>
+                                  rows.filter((_, i) => i !== idx),
+                                )
+                              }
+                            />
+                          ))}
+                        </ul>
+                      ) : (
+                        <ul className="space-y-2">
+                          {attachmentCompoundIds.map((val, idx) => (
+                            <li
+                              key={`${val}-${idx}`}
+                              className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2"
+                            >
+                              <span className="min-w-0 flex-1 font-mono text-[12px] text-foreground break-all">
+                                {val}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                    </div>
                   </div>
                 </div>
               </div>
-              {isDraft && (
+              {(message.status === 'draft' ||
+                message.status === 'scheduled' ||
+                message.status === 'failed') && (
                 <div className="px-6 py-4 border-t border-border bg-muted/30">
-                  <Button
-                    size="sm"
-                    className="h-9 text-[13px]"
-                    disabled={!hasSMSChanges || updateSMSMutation.isPending}
-                    onClick={handleUpdateMessage}
-                  >
-                    Update
-                  </Button>
+                  {message.status === 'draft' && (
+                    <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-9 text-[13px]"
+                          onClick={() => setScheduleDialogOpen(true)}
+                        >
+                          Schedule
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="h-9 text-[13px]"
+                          disabled={
+                            !hasEmailChanges || updateEmailMutation.isPending
+                          }
+                          onClick={handleUpdateMessage}
+                        >
+                          Update draft
+                        </Button>
+                      </div>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="h-9 w-full text-[13px] sm:w-auto sm:shrink-0"
+                        onClick={() => setSendDialogOpen(true)}
+                      >
+                        Send message
+                      </Button>
+                    </div>
+                  )}
+                  {message.status === 'scheduled' && (
+                    <div className="flex flex-col-reverse gap-2 sm:flex-row sm:flex-wrap sm:gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-9 text-[13px]"
+                        onClick={() => setCancelScheduleOpen(true)}
+                      >
+                        Cancel scheduling
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="h-9 text-[13px]"
+                        onClick={() => setScheduleDialogOpen(true)}
+                      >
+                        <Calendar className="mr-1.5 h-4 w-4" />
+                        Reschedule
+                      </Button>
+                    </div>
+                  )}
+                  {message.status === 'failed' && (
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="h-9 text-[13px]"
+                        onClick={() => setErrorDetailsDialogOpen(true)}
+                      >
+                        <AlertCircle className="mr-1.5 h-4 w-4" />
+                        View logs
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           )}
 
-          {message.providerType === 'push' && (
+          {message.providerType === 'sms' && showMessageMain && (
             <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
               <div className="px-6 py-4">
                 <h3 className="text-[15px] font-semibold text-foreground">
-                  Push Notification
+                  Content
                 </h3>
               </div>
               <div className="border-t border-border" />
+              <div className="px-6 py-4 @container">
+                <div className="flex flex-col gap-6 @[600px]:flex-row">
+                  <div className="@[600px]:w-64 shrink-0">
+                    <p className="text-[13px] text-muted-foreground">
+                      Enter the SMS body for this message. Delivery uses topics,
+                      users, and targets you add on this page.
+                    </p>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="w-full min-w-0 space-y-4">
+                      <div>
+                        <Label
+                          htmlFor="sms-content"
+                          className="text-[13px] font-medium text-foreground"
+                        >
+                          Body
+                        </Label>
+                        <Textarea
+                          id="sms-content"
+                          value={smsContent}
+                          onChange={(e) => setSmsContent(e.target.value)}
+                          disabled={!isDraft}
+                          placeholder="SMS content"
+                          className="mt-1.5 min-h-32 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {(message.status === 'draft' ||
+                message.status === 'scheduled' ||
+                message.status === 'failed') && (
+                <div className="px-6 py-4 border-t border-border bg-muted/30">
+                  {message.status === 'draft' && (
+                    <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-9 text-[13px]"
+                          onClick={() => setScheduleDialogOpen(true)}
+                        >
+                          Schedule
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="h-9 text-[13px]"
+                          disabled={
+                            !hasSMSChanges || updateSMSMutation.isPending
+                          }
+                          onClick={handleUpdateMessage}
+                        >
+                          Update draft
+                        </Button>
+                      </div>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="h-9 w-full text-[13px] sm:w-auto sm:shrink-0"
+                        onClick={() => setSendDialogOpen(true)}
+                      >
+                        Send message
+                      </Button>
+                    </div>
+                  )}
+                  {message.status === 'scheduled' && (
+                    <div className="flex flex-col-reverse gap-2 sm:flex-row sm:flex-wrap sm:gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-9 text-[13px]"
+                        onClick={() => setCancelScheduleOpen(true)}
+                      >
+                        Cancel scheduling
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="h-9 text-[13px]"
+                        onClick={() => setScheduleDialogOpen(true)}
+                      >
+                        <Calendar className="mr-1.5 h-4 w-4" />
+                        Reschedule
+                      </Button>
+                    </div>
+                  )}
+                  {message.status === 'failed' && (
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="h-9 text-[13px]"
+                        onClick={() => setErrorDetailsDialogOpen(true)}
+                      >
+                        <AlertCircle className="mr-1.5 h-4 w-4" />
+                        View logs
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {message.providerType === 'push' && showMessageMain && (
+            <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
               <div className="px-6 py-4">
-                <div className="max-w-2xl space-y-4">
+                <h3 className="text-[15px] font-semibold text-foreground">
+                  Content
+                </h3>
+              </div>
+              <div className="border-t border-border" />
+              <div className="px-6 py-4 @container">
+                <div className="flex flex-col gap-6 @[600px]:flex-row">
+                  <div className="@[600px]:w-64 shrink-0">
+                    <p className="text-[13px] text-muted-foreground">
+                      Build title, body, optional image and custom data. Advanced fields
+                      control action, appearance, and iOS-specific options.
+                    </p>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="w-full min-w-0 space-y-4">
                     <div>
                       <Label
                         htmlFor="push-title"
@@ -794,7 +1426,7 @@ export function View() {
                         htmlFor="push-body"
                         className="text-[13px] font-medium text-foreground"
                       >
-                        Message
+                        Body
                       </Label>
                       <Textarea
                         id="push-body"
@@ -834,6 +1466,35 @@ export function View() {
                         )}
                       </div>
                     </div>
+                    {isDraft && buckets.length > 0 && (
+                      <div className="space-y-2">
+                        <Label
+                          htmlFor="push-bucket"
+                          className="text-[13px] font-medium text-foreground"
+                        >
+                          Upload bucket
+                        </Label>
+                        <Select
+                          value={pushBucketId || undefined}
+                          onValueChange={setPushBucketId}
+                        >
+                          <SelectTrigger id="push-bucket" className="h-9">
+                            <SelectValue placeholder="Select bucket for image upload" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {buckets.map((b) => (
+                              <SelectItem key={b.$id} value={b.$id}>
+                                {b.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <p className="text-[12px] text-muted-foreground">
+                          Uploading replaces the push image with a Storage file
+                          reference (bucket:file).
+                        </p>
+                      </div>
+                    )}
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <Label className="text-[13px] font-medium text-foreground">
@@ -851,7 +1512,7 @@ export function View() {
                           }
                         >
                           <Plus className="mr-1 h-3.5 w-3.5" />
-                          Add data
+                          Add
                         </Button>
                       </div>
                       <div className="space-y-2">
@@ -897,133 +1558,353 @@ export function View() {
                         ))}
                       </div>
                     </div>
+                    <div className="border-t border-border pt-4 space-y-3">
+                      <h4 className="text-[13px] font-semibold text-foreground">
+                        Advanced
+                      </h4>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <div>
+                          <Label htmlFor="push-action" className="text-[12px]">
+                            Action
+                          </Label>
+                          <Input
+                            id="push-action"
+                            value={pushAction}
+                            onChange={(e) => setPushAction(e.target.value)}
+                            disabled={!isDraft}
+                            className="mt-1 h-9 text-[13px]"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="push-icon" className="text-[12px]">
+                            Icon
+                          </Label>
+                          <Input
+                            id="push-icon"
+                            value={pushIcon}
+                            onChange={(e) => setPushIcon(e.target.value)}
+                            disabled={!isDraft}
+                            className="mt-1 h-9 text-[13px]"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="push-sound" className="text-[12px]">
+                            Sound
+                          </Label>
+                          <Input
+                            id="push-sound"
+                            value={pushSound}
+                            onChange={(e) => setPushSound(e.target.value)}
+                            disabled={!isDraft}
+                            className="mt-1 h-9 text-[13px]"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="push-color" className="text-[12px]">
+                            Color
+                          </Label>
+                          <Input
+                            id="push-color"
+                            value={pushColor}
+                            onChange={(e) => setPushColor(e.target.value)}
+                            disabled={!isDraft}
+                            className="mt-1 h-9 text-[13px]"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="push-tag" className="text-[12px]">
+                            Tag
+                          </Label>
+                          <Input
+                            id="push-tag"
+                            value={pushTag}
+                            onChange={(e) => setPushTag(e.target.value)}
+                            disabled={!isDraft}
+                            className="mt-1 h-9 text-[13px]"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="push-badge" className="text-[12px]">
+                            Badge (iOS)
+                          </Label>
+                          <Input
+                            id="push-badge"
+                            value={pushBadge}
+                            onChange={(e) => setPushBadge(e.target.value)}
+                            disabled={!isDraft}
+                            className="mt-1 h-9 text-[13px]"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-[12px]">Priority</Label>
+                        <Select
+                          value={pushPriority}
+                          onValueChange={(v) =>
+                            setPushPriority(v as MessagePriority)
+                          }
+                          disabled={!isDraft}
+                        >
+                          <SelectTrigger className="mt-1 h-9">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value={MessagePriority.Normal}>
+                              Normal
+                            </SelectItem>
+                            <SelectItem value={MessagePriority.High}>
+                              High
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="flex flex-col gap-3 rounded-md border border-border bg-card p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label
+                              htmlFor="push-bg"
+                              className="text-[13px] font-medium"
+                            >
+                              Content available (iOS)
+                            </Label>
+                            <p className="text-[12px] text-muted-foreground mt-0.5">
+                              Deliver in the background when possible.
+                            </p>
+                          </div>
+                          <Switch
+                            id="push-bg"
+                            checked={pushContentAvailable}
+                            onCheckedChange={setPushContentAvailable}
+                            disabled={!isDraft}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label
+                              htmlFor="push-critical"
+                              className="text-[13px] font-medium"
+                            >
+                              Critical (iOS)
+                            </Label>
+                            <p className="text-[12px] text-muted-foreground mt-0.5">
+                              Requires critical notification entitlement.
+                            </p>
+                          </div>
+                          <Switch
+                            id="push-critical"
+                            checked={pushCritical}
+                            onCheckedChange={setPushCritical}
+                            disabled={!isDraft}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-              {isDraft && (
+              {(message.status === 'draft' ||
+                message.status === 'scheduled' ||
+                message.status === 'failed') && (
                 <div className="px-6 py-4 border-t border-border bg-muted/30">
-                  <Button
-                    size="sm"
-                    className="h-9 text-[13px]"
-                    disabled={!hasPushChanges || updatePushMutation.isPending}
-                    onClick={handleUpdateMessage}
-                  >
-                    Update
-                  </Button>
+                  {message.status === 'draft' && (
+                    <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-9 text-[13px]"
+                          onClick={() => setScheduleDialogOpen(true)}
+                        >
+                          Schedule
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="h-9 text-[13px]"
+                          disabled={
+                            !hasPushChanges || updatePushMutation.isPending
+                          }
+                          onClick={handleUpdateMessage}
+                        >
+                          Update draft
+                        </Button>
+                      </div>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="h-9 w-full text-[13px] sm:w-auto sm:shrink-0"
+                        onClick={() => setSendDialogOpen(true)}
+                      >
+                        Send message
+                      </Button>
+                    </div>
+                  )}
+                  {message.status === 'scheduled' && (
+                    <div className="flex flex-col-reverse gap-2 sm:flex-row sm:flex-wrap sm:gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-9 text-[13px]"
+                        onClick={() => setCancelScheduleOpen(true)}
+                      >
+                        Cancel scheduling
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="h-9 text-[13px]"
+                        onClick={() => setScheduleDialogOpen(true)}
+                      >
+                        <Calendar className="mr-1.5 h-4 w-4" />
+                        Reschedule
+                      </Button>
+                    </div>
+                  )}
+                  {message.status === 'failed' && (
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="h-9 text-[13px]"
+                        onClick={() => setErrorDetailsDialogOpen(true)}
+                      >
+                        <AlertCircle className="mr-1.5 h-4 w-4" />
+                        View logs
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           )}
 
+          {showMessageMain && (
+          <>
           {/* Update Topics Card */}
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-            <div className="px-6 py-4 flex items-center justify-between">
-              <h3 className="text-[15px] font-semibold text-foreground">
-                Topics
-              </h3>
-              {isDraft && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 text-[12px]"
-                  onClick={() => setTopicsModalOpen(true)}
-                >
-                  <Plus className="mr-1.5 h-3.5 w-3.5" />
-                  Add
-                </Button>
-              )}
+            <div className="px-6 py-4">
+              <div className="flex items-center justify-between gap-4">
+                <h3 className="text-[15px] font-semibold text-foreground">
+                  Topics
+                </h3>
+                {isDraft && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 shrink-0 text-[12px]"
+                    onClick={() => setTopicsModalOpen(true)}
+                  >
+                    <Plus className="mr-1.5 h-3.5 w-3.5" />
+                    Add
+                  </Button>
+                )}
+              </div>
             </div>
             <div className="border-t border-border" />
-            <div className="px-6 py-4">
-              {selectedTopicIds.size > 0 ? (
-                <div className="rounded-lg border border-border bg-card overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="hover:bg-transparent border-b border-border">
-                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                          Topic name
-                        </TableHead>
-                        {isDraft && (
-                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[80px]" />
-                        )}
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {Array.from(selectedTopicIds).map((topicId) => {
-                        const topic = topicsById[topicId]
-                        const totalSubscribers = topic
-                          ? (topic.emailTotal || 0) +
-                            (topic.smsTotal || 0) +
-                            (topic.pushTotal || 0)
-                          : 0
-                        return (
-                          <TableRow
-                            key={topicId}
-                            className="border-b border-border/50"
-                          >
-                            <TableCell className="px-4 py-3">
-                              {topic ? (
-                                <div>
-                                  <p className="text-[13px] font-medium text-foreground">
-                                    {topic.name} ({totalSubscribers} targets)
-                                  </p>
-                                  <CopyableId id={topic.$id} size="xs" />
-                                </div>
-                              ) : (
-                                <div>
-                                  <p className="text-[13px] text-muted-foreground">
-                                    Topic not found
-                                  </p>
-                                  <CopyableId id={topicId} size="xs" />
-                                </div>
-                              )}
-                            </TableCell>
+            <div className="px-6 py-4 @container">
+              <div className="flex flex-col gap-6 @[600px]:flex-row">
+                <div className="@[600px]:w-64 shrink-0">
+                  <p className="text-[13px] text-muted-foreground">
+                    Link topics so this message reaches their subscribers when you
+                    send. Subscriber counts reflect targets registered on each topic.
+                  </p>
+                </div>
+                <div className="flex-1 min-w-0">
+                  {selectedTopicIds.size > 0 ? (
+                    <div className="rounded-lg border border-border bg-card overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="hover:bg-transparent border-b border-border">
+                            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                              Topic name
+                            </TableHead>
                             {isDraft && (
-                              <TableCell className="px-4 py-3 text-right">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-7 w-7 p-0"
-                                  onClick={() => {
-                                    const newSelected = new Set(
-                                      selectedTopicIds,
-                                    )
-                                    newSelected.delete(topicId)
-                                    setSelectedTopicIds(newSelected)
-                                  }}
-                                >
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </TableCell>
+                              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[80px]" />
                             )}
                           </TableRow>
-                        )
-                      })}
-                    </TableBody>
-                  </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {Array.from(selectedTopicIds).map((topicId) => {
+                            const topic = topicsById[topicId]
+                            const totalSubscribers = topic
+                              ? (topic.emailTotal || 0) +
+                                (topic.smsTotal || 0) +
+                                (topic.pushTotal || 0)
+                              : 0
+                            return (
+                              <TableRow
+                                key={topicId}
+                                className="border-b border-border/50"
+                              >
+                                <TableCell className="px-4 py-3">
+                                  {topic ? (
+                                    <div>
+                                      <p className="text-[13px] font-medium text-foreground">
+                                        {topic.name} ({totalSubscribers} targets)
+                                      </p>
+                                      <CopyableId id={topic.$id} size="xs" />
+                                    </div>
+                                  ) : (
+                                    <div>
+                                      <p className="text-[13px] text-muted-foreground">
+                                        Topic not found
+                                      </p>
+                                      <CopyableId id={topicId} size="xs" />
+                                    </div>
+                                  )}
+                                </TableCell>
+                                {isDraft && (
+                                  <TableCell className="px-4 py-3 text-right">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-7 w-7 p-0"
+                                      onClick={() => {
+                                        const newSelected = new Set(
+                                          selectedTopicIds,
+                                        )
+                                        newSelected.delete(topicId)
+                                        setSelectedTopicIds(newSelected)
+                                      }}
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </TableCell>
+                                )}
+                              </TableRow>
+                            )
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  ) : isDraft ? (
+                    <EmptyState
+                      icon={Hash}
+                      title="No topics yet"
+                      description="Select topics using Add to reach their subscribers when you send."
+                      variant="card"
+                      iconSize="md"
+                    />
+                  ) : (
+                    <EmptyState
+                      icon={Hash}
+                      title="No topics"
+                      description="This message has no linked topics."
+                      variant="card"
+                      iconSize="md"
+                    />
+                  )}
                 </div>
-              ) : isDraft ? (
-                <div
-                  className="flex cursor-pointer items-center justify-center rounded-lg border border-dashed border-border bg-card py-8 transition-colors hover:bg-muted/50"
-                  onClick={() => setTopicsModalOpen(true)}
-                >
-                  <p className="text-[13px] text-muted-foreground">
-                    Add a topic
-                  </p>
-                </div>
-              ) : (
-                <div className="rounded-lg border border-border bg-card py-8 text-center">
-                  <p className="text-[13px] text-muted-foreground">
-                    No topics were selected
-                  </p>
-                </div>
-              )}
+              </div>
             </div>
-            {isDraft && hasTopicsChanged && (
-              <div className="px-6 py-4 border-t border-border bg-muted/30">
+            {isDraft && (
+              <div className="flex justify-end px-6 py-4 border-t border-border bg-muted/30">
                 <Button
                   size="sm"
                   className="h-9 text-[13px]"
                   disabled={
+                    !hasTopicsChanged ||
                     updateEmailMutation.isPending ||
                     updateSMSMutation.isPending ||
                     updatePushMutation.isPending
@@ -1035,123 +1916,256 @@ export function View() {
               </div>
             )}
           </div>
+
+          {isDraft && (
+            <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+              <div className="px-6 py-4">
+                <div className="flex items-center justify-between gap-4">
+                  <h3 className="text-[15px] font-semibold text-foreground">
+                    Users
+                  </h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 shrink-0 text-[12px]"
+                    onClick={() => setRecipientUsersModalOpen(true)}
+                  >
+                    <Plus className="mr-1.5 h-3.5 w-3.5" />
+                    Add
+                  </Button>
+                </div>
+              </div>
+              <div className="border-t border-border" />
+              <div className="px-6 py-4 @container">
+                <div className="flex flex-col gap-6 @[600px]:flex-row">
+                  <div className="@[600px]:w-64 shrink-0">
+                    <p className="text-[13px] text-muted-foreground">
+                      Add project users to deliver to every matching channel target
+                      on their account (email, SMS, or push), alongside any topics you
+                      selected.
+                    </p>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    {selectedUserIds.size > 0 ? (
+                      <div className="rounded-lg border border-border bg-card overflow-hidden">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="hover:bg-transparent border-b border-border">
+                              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                                User
+                              </TableHead>
+                              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[80px]" />
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {[...selectedUserIds].map((uid) => {
+                              const u = usersById[uid]
+                              return (
+                                <TableRow key={uid} className="border-b border-border/50">
+                                  <TableCell className="px-4 py-3">
+                                    <p className="text-[13px] font-medium text-foreground">
+                                      {u?.name || u?.email || uid}
+                                    </p>
+                                    <CopyableId id={uid} size="xs" />
+                                  </TableCell>
+                                  <TableCell className="px-4 py-3 text-right">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-7 w-7 p-0"
+                                      onClick={() => {
+                                        const n = new Set(selectedUserIds)
+                                        n.delete(uid)
+                                        setSelectedUserIds(n)
+                                      }}
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </TableCell>
+                                </TableRow>
+                              )
+                            })}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    ) : (
+                      <EmptyState
+                        icon={Users}
+                        title="No users"
+                        description="Choose users to target every matching channel target for each user."
+                        variant="card"
+                        iconSize="md"
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-end px-6 py-4 border-t border-border bg-muted/30">
+                <Button
+                  size="sm"
+                  className="h-9 text-[13px]"
+                  disabled={
+                    !hasUsersChanged ||
+                    updateEmailMutation.isPending ||
+                    updateSMSMutation.isPending ||
+                    updatePushMutation.isPending
+                  }
+                  onClick={handleUpdateMessage}
+                >
+                  Update
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Update Targets Card */}
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-            <div className="px-6 py-4 flex items-center justify-between">
-              <h3 className="text-[15px] font-semibold text-foreground">
-                Targets
-              </h3>
-              {isDraft && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 text-[12px]"
-                  onClick={() => setTargetsModalOpen(true)}
-                >
-                  <Plus className="mr-1.5 h-3.5 w-3.5" />
-                  Add
-                </Button>
-              )}
+            <div className="px-6 py-4">
+              <div className="flex items-center justify-between gap-4">
+                <h3 className="text-[15px] font-semibold text-foreground">
+                  Targets
+                </h3>
+                {isDraft && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 shrink-0 text-[12px]"
+                    onClick={() => setTargetPickerFor('primary')}
+                  >
+                    <Plus className="mr-1.5 h-3.5 w-3.5" />
+                    Add
+                  </Button>
+                )}
+              </div>
             </div>
             <div className="border-t border-border" />
-            <div className="px-6 py-4">
-              {selectedTargetIds.size > 0 ? (
-                <div className="rounded-lg border border-border bg-card overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="hover:bg-transparent border-b border-border">
-                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                          Target
-                        </TableHead>
-                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                          Identifier
-                        </TableHead>
-                        {isDraft && (
-                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[80px]" />
-                        )}
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {Array.from(selectedTargetIds).map((targetId) => {
-                        const target = targetsById[targetId]
-                        const user = target?.userId
-                          ? usersById[target.userId]
-                          : null
-                        return target ? (
-                          <TableRow
-                            key={targetId}
-                            className="border-b border-border/50"
-                          >
-                            <TableCell className="px-4 py-3">
-                              {target.providerType === 'push' ? (
-                                <span className="text-[13px] text-foreground">
-                                  {target.name || target.identifier}
-                                </span>
-                              ) : (
-                                <span className="text-[13px] text-foreground">
-                                  {target.identifier}
-                                </span>
-                              )}
-                            </TableCell>
-                            <TableCell className="px-4 py-3">
-                              {user ? (
-                                <span className="text-[13px] text-muted-foreground">
-                                  {user.name || user.email}
-                                </span>
-                              ) : (
-                                <span className="text-[13px] text-muted-foreground">
-                                  N/A
-                                </span>
-                              )}
-                            </TableCell>
+            <div className="px-6 py-4 @container">
+              <div className="flex flex-col gap-6 @[600px]:flex-row">
+                <div className="@[600px]:w-64 shrink-0">
+                  <p className="text-[13px] text-muted-foreground">
+                    Pick specific channel targets for this message. Targets must match
+                    the message provider (email, SMS, or push).
+                  </p>
+                </div>
+                <div className="flex-1 min-w-0">
+                  {selectedTargetIds.size > 0 ? (
+                    <div className="rounded-lg border border-border bg-card overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="hover:bg-transparent border-b border-border">
+                            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                              Target
+                            </TableHead>
+                            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                              User
+                            </TableHead>
                             {isDraft && (
-                              <TableCell className="px-4 py-3 text-right">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-7 w-7 p-0"
-                                  onClick={() => {
-                                    const newSelected = new Set(
-                                      selectedTargetIds,
-                                    )
-                                    newSelected.delete(targetId)
-                                    setSelectedTargetIds(newSelected)
-                                  }}
-                                >
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </TableCell>
+                              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[80px]" />
                             )}
                           </TableRow>
-                        ) : null
-                      })}
-                    </TableBody>
-                  </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {Array.from(selectedTargetIds).map((targetId) => {
+                            const target = displayTargetById[targetId]
+                            const user = target?.userId
+                              ? usersById[target.userId]
+                              : null
+                            return (
+                              <TableRow
+                                key={targetId}
+                                className="border-b border-border/50"
+                              >
+                                <TableCell className="px-4 py-3">
+                                  {target ? (
+                                    target.providerType === 'push' ? (
+                                      <span className="text-[13px] text-foreground">
+                                        {target.name || target.identifier}
+                                      </span>
+                                    ) : (
+                                      <span className="text-[13px] text-foreground">
+                                        {target.identifier}
+                                      </span>
+                                    )
+                                  ) : (
+                                    <div className="space-y-1">
+                                      <CopyableId id={targetId} size="xs" />
+                                      <p className="text-[12px] text-muted-foreground">
+                                        Loading target details…
+                                      </p>
+                                    </div>
+                                  )}
+                                </TableCell>
+                                <TableCell className="px-4 py-3">
+                                  {user ? (
+                                    <span className="text-[13px] text-muted-foreground">
+                                      {user.name || user.email}
+                                    </span>
+                                  ) : (
+                                    <span className="text-[13px] text-muted-foreground">
+                                      {target?.userId ? (
+                                        <CopyableId id={target.userId} size="xs" />
+                                      ) : (
+                                        '—'
+                                      )}
+                                    </span>
+                                  )}
+                                </TableCell>
+                                {isDraft && (
+                                  <TableCell className="px-4 py-3 text-right">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-7 w-7 p-0"
+                                      onClick={() => {
+                                        const newSelected = new Set(
+                                          selectedTargetIds,
+                                        )
+                                        newSelected.delete(targetId)
+                                        setSelectedTargetIds(newSelected)
+                                        setDraftTargetDetailsById((prev) => {
+                                          const next = { ...prev }
+                                          delete next[targetId]
+                                          return next
+                                        })
+                                      }}
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </TableCell>
+                                )}
+                              </TableRow>
+                            )
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  ) : isDraft ? (
+                    <EmptyState
+                      icon={Target}
+                      title="No targets yet"
+                      description="Select targets using Add to deliver this message on the matching channel."
+                      variant="card"
+                      iconSize="md"
+                    />
+                  ) : (
+                    <EmptyState
+                      icon={Target}
+                      title="No targets"
+                      description="No targets have been selected for this message."
+                      variant="card"
+                      iconSize="md"
+                    />
+                  )}
                 </div>
-              ) : isDraft ? (
-                <div
-                  className="flex cursor-pointer items-center justify-center rounded-lg border border-dashed border-border bg-card py-8 transition-colors hover:bg-muted/50"
-                  onClick={() => setTargetsModalOpen(true)}
-                >
-                  <p className="text-[13px] text-muted-foreground">
-                    Add a target
-                  </p>
-                </div>
-              ) : (
-                <div className="rounded-lg border border-border bg-card py-8 text-center">
-                  <p className="text-[13px] text-muted-foreground">
-                    No targets have been selected.
-                  </p>
-                </div>
-              )}
+              </div>
             </div>
-            {isDraft && hasTargetsChanged && (
-              <div className="px-6 py-4 border-t border-border bg-muted/30">
+            {isDraft && (
+              <div className="flex justify-end px-6 py-4 border-t border-border bg-muted/30">
                 <Button
                   size="sm"
                   className="h-9 text-[13px]"
                   disabled={
+                    !hasTargetsChanged ||
                     updateEmailMutation.isPending ||
                     updateSMSMutation.isPending ||
                     updatePushMutation.isPending
@@ -1163,9 +2177,91 @@ export function View() {
               </div>
             )}
           </div>
+          </>
+          )}
+
+          {showMessageSettings && (
+            <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+              <div className="px-6 py-4">
+                <h3 className="text-[15px] font-semibold text-foreground">
+                  Details
+                </h3>
+                <p className="text-[13px] text-muted-foreground mt-2">
+                  Message ID and delivery timestamps.
+                </p>
+              </div>
+              <div className="border-t border-border" />
+              <div className="px-6 py-4">
+                <div className="space-y-4">
+                  <div className="min-w-0">
+                    <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                      Message ID
+                    </p>
+                    <CopyableId id={message.$id} size="sm" />
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                        Created
+                      </p>
+                      {message.$createdAt ? (
+                        <DateTooltip
+                          date={message.$createdAt}
+                          showFormattedDate
+                          className="text-[13px] text-foreground"
+                        />
+                      ) : (
+                        <span className="text-[13px] text-muted-foreground/50 italic">
+                          N/A
+                        </span>
+                      )}
+                    </div>
+                    <div>
+                      <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                        Updated
+                      </p>
+                      <DateTooltip
+                        date={message.$updatedAt || message.$createdAt}
+                        showFormattedDate
+                        className="text-[13px] text-foreground"
+                      />
+                    </div>
+                  </div>
+                  {(message.scheduledAt || message.deliveredAt) && (
+                    <div className="grid gap-4 border-t border-border pt-4 sm:grid-cols-2">
+                      {message.scheduledAt && (
+                        <div>
+                          <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                            Scheduled for
+                          </p>
+                          <DateTooltip
+                            date={message.scheduledAt}
+                            showFormattedDate
+                            className="text-[13px] text-foreground"
+                          />
+                        </div>
+                      )}
+                      {message.deliveredAt && (
+                        <div>
+                          <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                            Sent
+                          </p>
+                          <DateTooltip
+                            date={message.deliveredAt}
+                            showFormattedDate
+                            className="text-[13px] text-foreground"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Delete Message Card */}
-          {message.status !== 'processing' && (
+          {message.status !== 'processing' && showMessageSettings && (
             <div className="rounded-xl border border-red-500/30 bg-card/50 overflow-hidden">
               <div className="px-6 py-4">
                 <h3 className="text-[15px] font-semibold text-foreground">
@@ -1228,18 +2324,92 @@ export function View() {
           existingTopicIds={selectedTopicIds}
         />
 
-        {/* Targets Selection Modal */}
-        <TargetsSelectionModal
-          open={targetsModalOpen}
-          onOpenChange={setTargetsModalOpen}
-          onSelect={(targetIds) => {
-            setSelectedTargetIds(new Set(targetIds))
-            setTargetsModalOpen(false)
+        <MessagingTargetsModal
+          open={targetPickerFor !== null}
+          onOpenChange={(o) => {
+            if (!o) setTargetPickerFor(null)
           }}
+          title={
+            targetPickerFor === 'cc'
+              ? 'Select CC targets'
+              : targetPickerFor === 'bcc'
+                ? 'Select BCC targets'
+                : 'Select targets'
+          }
+          description={
+            targetPickerFor === 'cc' || targetPickerFor === 'bcc'
+              ? 'Choose email targets for copy. Targets must match the email channel.'
+              : 'Choose user targets for this message. Each user can have multiple targets per channel.'
+          }
           projectId={projectId}
-          providerType={message.providerType}
-          existingTargetIds={selectedTargetIds}
+          providerType={
+            targetPickerFor === 'cc' || targetPickerFor === 'bcc'
+              ? 'email'
+              : message.providerType
+          }
+          initialSelectedById={messagingModalInitialSelection}
+          onConfirm={(selectedById) => {
+            const ids = new Set(Object.keys(selectedById))
+            if (targetPickerFor === 'cc') setCcTargetIds(ids)
+            else if (targetPickerFor === 'bcc') setBccTargetIds(ids)
+            else {
+              setSelectedTargetIds(ids)
+              setDraftTargetDetailsById((prev) => ({ ...prev, ...selectedById }))
+            }
+            setTargetPickerFor(null)
+          }}
         />
+
+        {projectId ? (
+          <>
+            <MessageSendDialog
+              open={sendDialogOpen}
+              onOpenChange={setSendDialogOpen}
+              projectId={projectId}
+              message={message}
+              topics={topicsForEstimate}
+              onSuccess={() => void refetchMessage()}
+            />
+            <MessageScheduleDialog
+              open={scheduleDialogOpen}
+              onOpenChange={setScheduleDialogOpen}
+              projectId={projectId}
+              message={message}
+              topics={topicsForEstimate}
+              onSuccess={() => void refetchMessage()}
+            />
+            <MessageCancelScheduleDialog
+              open={cancelScheduleOpen}
+              onOpenChange={setCancelScheduleOpen}
+              projectId={projectId}
+              message={message}
+              onSuccess={() => void refetchMessage()}
+            />
+            <MessagingRecipientUsersModal
+              open={recipientUsersModalOpen}
+              onOpenChange={setRecipientUsersModalOpen}
+              projectId={projectId}
+              existingUserIds={selectedUserIds}
+              onConfirm={(ids) => setSelectedUserIds(new Set(ids))}
+            />
+            <StorageFileExplorerDialog
+              open={attachmentExplorerOpen}
+              onOpenChange={setAttachmentExplorerOpen}
+              projectId={projectId}
+              title="Add attachment"
+              description="Pick a bucket and file from Storage. It will be referenced as bucketId:fileId on the message."
+              confirmLabel="Add"
+              onConfirm={(sel) => {
+                const compound = `${sel.bucketId}:${sel.fileId}`
+                if (attachmentCompoundIds.includes(compound)) {
+                  toast.error('This file is already attached')
+                  return false
+                }
+                setAttachmentCompoundIds((rows) => [...rows, compound])
+              }}
+            />
+          </>
+        ) : null}
 
         {/* Delete Confirmation Dialog */}
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -1280,24 +2450,40 @@ export function View() {
           </DialogContent>
         </Dialog>
 
-        {/* Error Details Dialog */}
-        {message.deliveryErrors && (
+        {message.status === 'failed' && (
           <Dialog
             open={errorDetailsDialogOpen}
             onOpenChange={setErrorDetailsDialogOpen}
           >
-            <DialogContent className="sm:max-w-2xl p-0">
+            <DialogContent className="sm:max-w-2xl p-0 max-h-[90dvh] flex flex-col">
               <DialogHeader className="px-6 pt-6 text-left">
-                <DialogTitle>Delivery Errors</DialogTitle>
+                <DialogTitle>Message delivery details</DialogTitle>
                 <DialogDescription className="text-[13px] mt-2">
-                  The following errors occurred while delivering this message.
+                  Delivery errors from the API response and recent message
+                  activity from audit logs.
                 </DialogDescription>
               </DialogHeader>
               <div className="border-t border-border" />
-              <div className="px-6 pb-4 pt-0">
-                <pre className="mt-4 max-h-[400px] overflow-auto rounded-md border border-border bg-muted/30 p-4 text-[12px]">
-                  {JSON.stringify(message.deliveryErrors, null, 2)}
-                </pre>
+              <div className="px-6 pb-4 pt-0 flex-1 min-h-0 overflow-y-auto space-y-6">
+                {message.deliveryErrors && message.deliveryErrors.length > 0 ? (
+                  <div>
+                    <h4 className="text-[13px] font-semibold text-foreground mb-2">
+                      Delivery errors
+                    </h4>
+                    <pre className="max-h-[220px] overflow-auto rounded-md border border-border bg-muted/30 p-4 text-[12px]">
+                      {JSON.stringify(message.deliveryErrors, null, 2)}
+                    </pre>
+                  </div>
+                ) : null}
+                <div>
+                  <h4 className="text-[13px] font-semibold text-foreground mb-2">
+                    Activity log
+                  </h4>
+                  <MessagingActivityLogTable
+                    logs={messageLogsData?.logs ?? []}
+                    emptyLabel="No log entries returned for this message."
+                  />
+                </div>
               </div>
               <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                 <Button
@@ -1484,163 +2670,6 @@ function TopicsSelectionModal({
           </Button>
           <Button onClick={handleAdd} disabled={selectedTopicIds.size === 0}>
             Add {selectedTopicIds.size > 0 ? `(${selectedTopicIds.size})` : ''}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  )
-}
-
-// Targets Selection Modal
-// Note: Since targets are user-specific, we'll use users for selection
-// Targets will be created/selected based on selected users
-function TargetsSelectionModal({
-  open,
-  onOpenChange,
-  onSelect,
-  projectId,
-}: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onSelect: (targetIds: string[]) => void
-  projectId?: string
-  providerType?: string
-  existingTargetIds: Set<string>
-}) {
-  const [search, setSearch] = useState('')
-  const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set())
-  const [page, setPage] = useState(0)
-  const pageSize = 25
-
-  // For now, we'll use users - targets will be created from selected users
-  // TODO: Implement proper target listing when API supports it
-  const { users, isLoading } = useProjectUsers(
-    projectId || null,
-    page,
-    pageSize,
-    search,
-  )
-
-  const handleToggleUser = (userId: string) => {
-    const newSelected = new Set(selectedUserIds)
-    if (newSelected.has(userId)) {
-      newSelected.delete(userId)
-    } else {
-      newSelected.add(userId)
-    }
-    setSelectedUserIds(newSelected)
-  }
-
-  const handleAdd = () => {
-    const userIds = Array.from(selectedUserIds)
-    if (userIds.length > 0) {
-      // For now, we'll use user IDs as target identifiers
-      // TODO: Create actual targets from users when API supports it
-      // This is a simplified version - in production, you'd create targets from users
-      onSelect(userIds) // Using user IDs as placeholders for target IDs
-      setSelectedUserIds(new Set())
-      setSearch('')
-      onOpenChange(false)
-    }
-  }
-
-  const handleCancel = () => {
-    setSelectedUserIds(new Set())
-    setSearch('')
-    onOpenChange(false)
-  }
-
-  useEffect(() => {
-    if (!open) {
-      setSelectedUserIds(new Set())
-      setSearch('')
-      setPage(0)
-    }
-  }, [open])
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl p-0 max-h-[80dvh] flex flex-col">
-        <DialogHeader className="px-6 pt-6 text-left">
-          <DialogTitle>Select targets</DialogTitle>
-          <DialogDescription className="text-[13px] mt-2">
-            Select users to send this message to. Targets will be created from
-            selected users.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="border-t border-border" />
-
-        <div className="px-6 pb-4 pt-0 flex-1 overflow-hidden flex flex-col">
-          <div className="space-y-4">
-            <Input
-              placeholder="Search users by name, email, or ID..."
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value)
-                setPage(0)
-              }}
-              className="h-9"
-            />
-
-            <div className="flex-1 overflow-y-auto space-y-1 min-h-0">
-              {isLoading ? (
-                <div className="text-center py-8 text-sm text-muted-foreground">
-                  Loading users...
-                </div>
-              ) : users.length === 0 ? (
-                <EmptyState
-                  icon={Users}
-                  isEmpty={!search}
-                  hasFilters={!!search}
-                  className="py-8"
-                />
-              ) : (
-                users.map((user) => {
-                  const isSelected = selectedUserIds.has(user.$id)
-                  const displayName =
-                    user.name || user.email || user.phone || user.$id
-
-                  return (
-                    <div
-                      key={user.$id}
-                      onClick={() => handleToggleUser(user.$id)}
-                      className={cn(
-                        'flex items-center gap-3 rounded-lg border p-3 transition-colors cursor-pointer',
-                        isSelected
-                          ? 'border-primary bg-primary/5'
-                          : 'border-border hover:bg-muted/50',
-                      )}
-                    >
-                      <Checkbox
-                        checked={isSelected}
-                        onCheckedChange={() => handleToggleUser(user.$id)}
-                        onClick={(e) => e.stopPropagation()}
-                        className="cursor-pointer"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">
-                          {displayName}
-                        </p>
-                        {user.email && (
-                          <p className="text-xs text-muted-foreground truncate">
-                            {user.email}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Button variant="outline" onClick={handleCancel}>
-            Cancel
-          </Button>
-          <Button onClick={handleAdd} disabled={selectedUserIds.size === 0}>
-            Add {selectedUserIds.size > 0 ? `(${selectedUserIds.size})` : ''}
           </Button>
         </div>
       </DialogContent>

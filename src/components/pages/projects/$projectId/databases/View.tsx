@@ -137,6 +137,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from '@/components/ui/alert'
 
 export type {
   OverviewContentTab,
@@ -372,6 +377,9 @@ export function View() {
     databases: apiDatabases,
     total: displayedDatabasesTotal,
     isLoading: displayedLoading,
+    isFetching: displayedDatabasesFetching,
+    error: displayedDatabasesError,
+    refetch: refetchDisplayedDatabases,
   } = useProjectDatabases(
     projectId,
     displayedPage - 1,
@@ -379,6 +387,10 @@ export function View() {
     displayedSearch ?? undefined,
     displayedFilterQueries,
   )
+
+  const databasesListErrorMessage = displayedDatabasesError
+    ? getErrorMessage(displayedDatabasesError)
+    : null
 
   useEffect(() => {
     if (
@@ -760,9 +772,49 @@ export function View() {
       />
 
       <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
+        {databasesListErrorMessage && paginatedDatabases.length > 0 ? (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Couldn&apos;t refresh databases</AlertTitle>
+            <AlertDescription className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-[13px]">{databasesListErrorMessage}</p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="shrink-0 border-destructive/40 bg-background"
+                onClick={() => void refetchDisplayedDatabases()}
+                disabled={displayedDatabasesFetching}
+              >
+                Try again
+              </Button>
+            </AlertDescription>
+          </Alert>
+        ) : null}
+
         {showLoading ? (
           <div className="rounded-lg border border-border bg-card py-12 text-center">
             <div className="text-muted-foreground">Loading databases...</div>
+          </div>
+        ) : databasesListErrorMessage && paginatedDatabases.length === 0 ? (
+          <div className="rounded-lg border border-destructive/30 bg-card py-12 px-6 text-center">
+            <AlertCircle className="mx-auto h-9 w-9 text-destructive" />
+            <h3 className="mt-4 text-[15px] font-semibold text-foreground">
+              Failed to load databases
+            </h3>
+            <p className="mt-2 text-[13px] text-muted-foreground">
+              {databasesListErrorMessage}
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="mt-6"
+              onClick={() => void refetchDisplayedDatabases()}
+              disabled={displayedDatabasesFetching}
+            >
+              Try again
+            </Button>
           </div>
         ) : viewMode === 'list' ? (
           paginatedDatabases.length > 0 ? (

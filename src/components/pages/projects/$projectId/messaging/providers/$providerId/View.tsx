@@ -1,9 +1,9 @@
 import { useState, useMemo } from 'react'
-import { useParams, useNavigate } from '@tanstack/react-router'
+import { useParams, useNavigate, useLocation } from '@tanstack/react-router'
 import { ArrowLeft, Trash2 } from 'lucide-react'
 import { useProvider, useProject } from '@/lib/react-query/hooks'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ServiceHeader } from '../../../shared/ServiceHeader'
+import { ServiceHeader, type Tab } from '../../../shared/ServiceHeader'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Switch } from '@/components/ui/switch'
@@ -36,14 +36,57 @@ export function View({
   })
   const { project } = useProject(projectId)
   const navigate = useNavigate()
+  const location = useLocation()
   const queryClient = useQueryClient()
 
   // Fetch provider
   const { data: providerFromHook, isLoading: providerLoading } = useProvider(
     projectId,
     providerId,
+    initialProvider,
   )
   const provider = providerFromHook ?? initialProvider
+
+  const activeTab = useMemo(() => {
+    const pathParts = location.pathname.split('/').filter(Boolean)
+    const idx = pathParts.findIndex(
+      (part, i) =>
+        part === 'providers' &&
+        providerId != null &&
+        pathParts[i + 1] === providerId,
+    )
+    if (idx >= 0 && pathParts[idx + 2] === 'settings') {
+      return 'settings' as const
+    }
+    return 'overview' as const
+  }, [location.pathname, providerId])
+
+  const tabs: Tab[] = useMemo(
+    () => [
+      {
+        id: 'overview',
+        label: 'Overview',
+        to: '/projects/$projectId/messaging/providers/$providerId',
+        params: {
+          projectId: projectId as string,
+          providerId: providerId as string,
+        },
+      },
+      {
+        id: 'settings',
+        label: 'Settings',
+        to: '/projects/$projectId/messaging/providers/$providerId/settings',
+        params: {
+          projectId: projectId as string,
+          providerId: providerId as string,
+        },
+      },
+    ],
+    [projectId, providerId],
+  )
+
+  const showOverview = activeTab === 'overview'
+  const showSettings = activeTab === 'settings'
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [name, setName] = useState('')
@@ -145,7 +188,7 @@ export function View({
         }
       } else if (provider?.type === 'push') {
         // Push Providers (FCM, APNS)
-        if (provider.name === 'fcm') {
+        if (provider.provider === 'fcm') {
           // FCM uses serviceAccountJSON
           const serviceAccountJSON = settings.serviceAccountJSON
           params.credentials = {
@@ -154,7 +197,7 @@ export function View({
                 ? serviceAccountJSON
                 : JSON.stringify(serviceAccountJSON),
           }
-        } else if (provider.name === 'apns') {
+        } else if (provider.provider === 'apns') {
           // APNS uses authKey, authKeyId, teamId, bundleId
           params.credentials = {
             authKey: settings.authKey,
@@ -214,7 +257,7 @@ export function View({
 
   if (providerLoading && !initialProvider) {
     return (
-      <div className="flex h-full items-center justify-center">
+      <div className="flex items-center justify-center py-16">
         <div className="rounded-lg border border-border bg-card py-12 px-6 text-center">
           <p className="text-[13px] text-muted-foreground">
             Loading provider...
@@ -226,7 +269,7 @@ export function View({
 
   if (!provider) {
     return (
-      <div className="flex h-full items-center justify-center">
+      <div className="flex items-center justify-center py-16">
         <div className="rounded-lg border border-border bg-card py-12 px-6 text-center">
           <p className="text-[13px] text-muted-foreground">
             Provider not found
@@ -253,13 +296,13 @@ export function View({
       settings.replyToName = provider.options?.replyToName || ''
     } else if (provider.type === 'push') {
       // Push providers
-      if (provider.name === 'fcm') {
+      if (provider.provider === 'fcm') {
         const serviceAccountJSON = provider.credentials?.serviceAccountJSON
         settings.serviceAccountJSON =
           typeof serviceAccountJSON === 'string'
             ? serviceAccountJSON
             : JSON.stringify(serviceAccountJSON || {})
-      } else if (provider.name === 'apns') {
+      } else if (provider.provider === 'apns') {
         settings.authKey = provider.credentials?.authKey || ''
         settings.authKeyId = provider.credentials?.authKeyId || ''
         settings.teamId = provider.credentials?.teamId || ''
@@ -288,10 +331,13 @@ export function View({
             <span>{provider.name}</span>
           </div>
         }
+        tabs={tabs}
+        activeTab={activeTab}
         fullWidthBorder
       />
 
-      <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6 pt-4 sm:pt-6">
+      <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 pt-4 sm:px-6 sm:pb-6 sm:pt-6">
+        {showOverview && (
         <div className="space-y-6">
           {/* Update Name Section - First Card */}
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
@@ -333,9 +379,10 @@ export function View({
           {/* Update Status Section */}
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
             <div className="px-6 py-4">
-              <h3 className="text-[15px] font-semibold text-foreground">
-                {provider.name}
-              </h3>
+              <h3 className="text-[15px] font-semibold text-foreground">Status</h3>
+              <p className="text-[13px] text-muted-foreground mt-2">
+                Enable or disable this provider for your project.
+              </p>
             </div>
             <div className="border-t border-border" />
             <div className="px-6 py-4">
@@ -354,38 +401,6 @@ export function View({
                     {enabled ? 'Enabled' : 'Disabled'}
                   </Label>
                 </div>
-              </div>
-              <div className="mt-4 space-y-1">
-                <p className="text-[13px] text-muted-foreground">
-                  Provider ID:{' '}
-                  <span className="ml-1.5">
-                    <CopyableId id={provider.$id} size="sm" />
-                  </span>
-                </p>
-                <p className="text-[13px] text-muted-foreground">
-                  Type:{' '}
-                  <span className="text-foreground capitalize">
-                    {provider.type}
-                  </span>
-                </p>
-                {provider.$createdAt && (
-                  <p className="text-[13px] text-muted-foreground">
-                    Created:{' '}
-                    <DateTooltip
-                      date={provider.$createdAt}
-                      showFormattedDate
-                      className="text-foreground"
-                    />
-                  </p>
-                )}
-                <p className="text-[13px] text-muted-foreground">
-                  Last updated:{' '}
-                  <DateTooltip
-                    date={provider.$updatedAt || provider.$createdAt}
-                    showFormattedDate
-                    className="text-foreground"
-                  />
-                </p>
               </div>
             </div>
             <div className="px-6 py-4 border-t border-border bg-muted/30">
@@ -406,12 +421,15 @@ export function View({
             </div>
           </div>
 
-          {/* Update Settings Section */}
+          {/* Provider credentials / channel configuration */}
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
             <div className="px-6 py-4">
               <h3 className="text-[15px] font-semibold text-foreground">
-                Settings
+                Configuration
               </h3>
+              <p className="text-[13px] text-muted-foreground mt-2">
+                Connection details for this provider instance.
+              </p>
             </div>
             <div className="border-t border-border" />
             <div className="px-6 py-4">
@@ -476,7 +494,7 @@ export function View({
                     </div>
                   </>
                 )}
-                {provider.type === 'push' && provider.name === 'fcm' && (
+                {provider.type === 'push' && provider.provider === 'fcm' && (
                   <div>
                     <Label
                       htmlFor="service-account-json"
@@ -493,7 +511,7 @@ export function View({
                     />
                   </div>
                 )}
-                {provider.type === 'push' && provider.name === 'apns' && (
+                {provider.type === 'push' && provider.provider === 'apns' && (
                   <>
                     <div>
                       <Label
@@ -569,107 +587,117 @@ export function View({
               </Button>
             </div>
           </div>
+        </div>
+        )}
 
-          {/* Overview Section */}
-          <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-            <div className="px-6 py-4">
-              <h3 className="text-[15px] font-semibold text-foreground">
-                Overview
-              </h3>
-            </div>
-            <div className="border-t border-border" />
-            <div className="px-6 py-4">
-              <div className="space-y-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5">
+        {showSettings && (
+          <div className="space-y-6">
+            <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+              <div className="px-6 py-4">
+                <h3 className="text-[15px] font-semibold text-foreground">Details</h3>
+                <p className="text-[13px] text-muted-foreground mt-2">
+                  Provider ID, channel type, and timestamps.
+                </p>
+              </div>
+              <div className="border-t border-border" />
+              <div className="px-6 py-4">
+                <div className="space-y-4">
+                  <div className="min-w-0">
+                    <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                       Provider ID
                     </p>
                     <CopyableId id={provider.$id} size="sm" />
                   </div>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5">
-                      Created
+                    <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                      Channel type
                     </p>
-                    {provider.$createdAt ? (
+                    <p className="text-[13px] text-foreground capitalize">
+                      {provider.type}
+                    </p>
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                        Created
+                      </p>
+                      {provider.$createdAt ? (
+                        <DateTooltip
+                          date={provider.$createdAt}
+                          className="text-[13px] text-foreground"
+                          showFormattedDate
+                        />
+                      ) : (
+                        <span className="text-[13px] text-muted-foreground/50 italic">
+                          N/A
+                        </span>
+                      )}
+                    </div>
+                    <div>
+                      <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                        Updated
+                      </p>
                       <DateTooltip
-                        date={provider.$createdAt}
+                        date={provider.$updatedAt || provider.$createdAt}
                         className="text-[13px] text-foreground"
                         showFormattedDate
                       />
-                    ) : (
-                      <span className="text-[13px] text-muted-foreground/50 italic">
-                        N/A
-                      </span>
-                    )}
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5">
-                      Updated
-                    </p>
-                    <DateTooltip
-                      date={provider.$updatedAt || provider.$createdAt}
-                      className="text-[13px] text-foreground"
-                      showFormattedDate
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden">
+              <div className="px-6 py-4">
+                <h3 className="text-[15px] font-semibold text-foreground">
+                  Delete provider
+                </h3>
+                <p className="text-[13px] text-muted-foreground mt-2">
+                  The provider&apos;s instance will be permanently deleted. This action
+                  is irreversible.
+                </p>
+              </div>
+              <div className="border-t border-destructive/20" />
+              <div className="px-6 py-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+                    <MessagingProviderIcon
+                      serviceKey={provider.provider}
+                      providerName={provider.name}
+                      providerType={provider.type as 'email' | 'sms' | 'push'}
+                      size="md"
+                      className="h-5 w-5"
                     />
                   </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Delete Provider Card */}
-          <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden">
-            <div className="px-6 py-4">
-              <h3 className="text-[15px] font-semibold text-foreground">
-                Delete provider
-              </h3>
-              <p className="text-[13px] text-muted-foreground mt-2">
-                The provider's instance will be permanently deleted. This action
-                is irreversible.
-              </p>
-            </div>
-            <div className="border-t border-red-500/20" />
-            <div className="px-6 py-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-                  <MessagingProviderIcon
-                    providerName={provider.name}
-                    providerType={provider.type as 'email' | 'sms' | 'push'}
-                    size="md"
-                    className="h-5 w-5"
-                  />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[14px] font-medium text-foreground truncate">
-                    {provider.name}
-                  </p>
-                  {provider.$updatedAt && (
-                    <p className="text-[12px] text-muted-foreground">
-                      Last updated: {formatDateTime(provider.$updatedAt)}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[14px] font-medium text-foreground truncate">
+                      {provider.name}
                     </p>
-                  )}
+                    {provider.$updatedAt && (
+                      <p className="text-[12px] text-muted-foreground">
+                        Last updated: {formatDateTime(provider.$updatedAt)}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="px-6 py-4 border-t border-red-500/20 bg-destructive/5">
-              <Button
-                variant="destructive"
-                size="sm"
-                className="h-9 text-[13px]"
-                onClick={() => setDeleteDialogOpen(true)}
-                disabled={deleteProviderMutation.isPending}
-              >
-                <Trash2 className="mr-1.5 h-4 w-4" />
-                Delete
-              </Button>
+              <div className="px-6 py-4 border-t border-destructive/20 bg-destructive/5">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="h-9 text-[13px]"
+                  onClick={() => setDeleteDialogOpen(true)}
+                  disabled={deleteProviderMutation.isPending}
+                >
+                  <Trash2 className="mr-1.5 h-4 w-4" />
+                  Delete
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Delete Confirmation Dialog */}
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <DialogContent className="sm:max-w-md p-0">
             <DialogHeader className="px-6 pt-6 text-left">

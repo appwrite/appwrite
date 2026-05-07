@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/messaging/TopicSettings'
-import { topicQueryOptions } from '@/lib/react-query/hooks'
+import { topicQueryOptions } from '@/lib/react-query/hooks/messaging'
 import type { Models } from '@appwrite.io/console'
 import { pageTitle } from '@/lib/utils/page-title'
 import { canAccessTopicSettings } from '@/lib/console-rbac-loader'

@@ -1,10 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/messaging/providers/$providerId/View'
 import { providerQueryOptions } from '@/lib/react-query/hooks'
+import type { Models } from '@appwrite.io/console'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute(
-  '/_public/projects/$projectId/messaging/providers/$providerId/',
+  '/_public/projects/$projectId/messaging/providers/$providerId/settings',
 )({
   head: ({ loaderData }) => ({
     meta: [
@@ -14,28 +15,29 @@ export const Route = createFileRoute(
     ],
   }),
   loader: async ({ params, context }) => {
-    // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {
-      return
+      return { provider: undefined }
     }
 
     const { projectId, providerId } = params
     const { queryClient } = context
 
-    if (projectId && providerId) {
-      await queryClient.ensureQueryData(
-        providerQueryOptions(projectId, providerId),
-      )
-      const provider = queryClient.getQueryData<{ name?: string }>(
-        providerQueryOptions(projectId, providerId).queryKey,
-      )
-      return { provider }
+    if (!projectId || !providerId) {
+      return { provider: undefined }
     }
+
+    const providerOpts = providerQueryOptions(projectId, providerId)
+    await queryClient.ensureQueryData(providerOpts)
+
+    const provider = queryClient.getQueryData<Models.Provider>(
+      providerOpts.queryKey,
+    )
+    return { provider }
   },
-  component: ProviderDetailPage,
+  component: ProviderSettingsPage,
 })
 
-function ProviderDetailPage() {
+function ProviderSettingsPage() {
   const data = Route.useLoaderData()
   return <View initialProvider={data?.provider} />
 }

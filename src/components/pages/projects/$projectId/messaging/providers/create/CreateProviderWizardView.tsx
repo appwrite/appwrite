@@ -8,7 +8,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ID, SmtpEncryption } from '@appwrite.io/console'
-import { ChevronRight, Loader2, Mail, Phone, Bell } from 'lucide-react'
+import { ChevronRight, Mail, Phone, Bell } from 'lucide-react'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -528,9 +528,6 @@ export function CreateProviderWizardView() {
           disabled={!canSubmit}
           onClick={() => mutation.mutate()}
         >
-          {mutation.isPending && (
-            <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-          )}
           Create provider
         </Button>
       </div>

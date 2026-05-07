@@ -7,6 +7,7 @@ import {
   Square,
   FileJson,
   LayoutList,
+  Settings,
 } from 'lucide-react'
 import {
   ContextMenu,
@@ -42,6 +43,7 @@ import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 
 export type MessageContextMenuMessage = {
   $id: string
+  providerType?: string
 }
 
 interface MessageContextMenuProps {
@@ -81,12 +83,24 @@ export function MessageContextMenu({
     return <>{children}</>
   }
 
-  const navigateToDetail = () => {
+  const navigateToCompose = () => {
     navigate({
       to: '/projects/$projectId/messaging/$messageId',
       params: { projectId, messageId: message.$id },
     })
   }
+
+  const navigateToSettings = () => {
+    navigate({
+      to: '/projects/$projectId/messaging/$messageId/settings',
+      params: { projectId, messageId: message.$id },
+    })
+  }
+
+  const hasComposeSettingsTabs =
+    message.providerType === 'email' ||
+    message.providerType === 'sms' ||
+    message.providerType === 'push'
 
   const messageHref = buildConsoleUrl(
     `/projects/${projectId}/messaging/${message.$id}`,
@@ -101,10 +115,16 @@ export function MessageContextMenu({
       <ContextMenu>
         <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
         <ContextMenuContent className="w-56">
-          <ContextMenuItem onSelect={navigateToDetail}>
+          <ContextMenuItem onSelect={navigateToCompose}>
             <ContextMenuIcon icon={LayoutList} />
-            Overview
+            Compose
           </ContextMenuItem>
+          {hasComposeSettingsTabs ? (
+            <ContextMenuItem onSelect={navigateToSettings}>
+              <ContextMenuIcon icon={Settings} />
+              Settings
+            </ContextMenuItem>
+          ) : null}
           <ContextMenuSeparator />
           <ContextMenuSub>
             <ContextMenuSubTrigger>

@@ -8,7 +8,7 @@ import type { Models } from '@appwrite.io/console'
 import { pageTitle, trimForPageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute(
-  '/_public/projects/$projectId/messaging/$messageId/',
+  '/_public/projects/$projectId/messaging/$messageId/settings',
 )({
   head: ({ loaderData }) => ({
     meta: [
@@ -41,10 +41,10 @@ export const Route = createFileRoute(
       return { messageTitle, message }
     }
   },
-  component: MessageDetailPage,
+  component: MessageSettingsPage,
 })
 
-function MessageDetailPage() {
+function MessageSettingsPage() {
   const { messageId } = Route.useParams()
   const data = Route.useLoaderData()
   return (

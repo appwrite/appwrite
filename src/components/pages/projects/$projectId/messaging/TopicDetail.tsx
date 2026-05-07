@@ -193,7 +193,7 @@ export function TopicDetailView() {
 
   if (topicLoading) {
     return (
-      <div className="flex h-full items-center justify-center">
+      <div className="flex items-center justify-center py-16">
         <div className="rounded-lg border border-border bg-card py-12 px-6 text-center">
           <p className="text-[13px] text-muted-foreground">Loading topic...</p>
         </div>
@@ -203,7 +203,7 @@ export function TopicDetailView() {
 
   if (!topic) {
     return (
-      <div className="flex h-full items-center justify-center">
+      <div className="flex items-center justify-center py-16">
         <div className="rounded-lg border border-border bg-card py-12 px-6 text-center">
           <p className="text-[13px] text-muted-foreground">Topic not found</p>
         </div>
@@ -253,7 +253,7 @@ export function TopicDetailView() {
         fullWidthBorder
       />
 
-      <div className="mx-auto w-full max-w-7xl flex-1 overflow-y-auto px-4 pb-4 sm:px-6 sm:pb-6 pt-4 sm:pt-6">
+      <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6 pt-4 sm:pt-6">
         {activeTab === 'subscribers' ? (
           <>
             {subscribersLoading || usersLoading ? (

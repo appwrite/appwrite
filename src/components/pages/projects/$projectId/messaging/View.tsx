@@ -110,6 +110,11 @@ export function View() {
   const [requestedPage, setRequestedPage] = useState(1)
   const [displayedPage, setDisplayedPage] = useState(1)
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
+
+  useEffect(() => {
+    setRequestedPage(1)
+    setDisplayedPage(1)
+  }, [projectId])
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set())
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deliveryErrorLines, setDeliveryErrorLines] = useState<string[] | null>(
@@ -120,7 +125,6 @@ export function View() {
   // Fetch requested page (triggers load when user changes page) - active tab only
   const {
     total: messagesTotal,
-    isLoading: messagesLoading,
     isFetching: messagesFetching,
     refetch: refetchMessages,
   } = useProjectMessages(
@@ -131,7 +135,6 @@ export function View() {
   )
   const {
     total: topicsTotal,
-    isLoading: topicsLoading,
     isFetching: topicsFetching,
   } = useProjectTopics(
     activeTab === 'topics' ? projectId : null,
@@ -141,7 +144,6 @@ export function View() {
   )
   const {
     total: providersTotal,
-    isLoading: providersLoading,
     isFetching: providersFetching,
   } = useProjectProviders(
     activeTab === 'providers' ? projectId : null,
@@ -180,19 +182,12 @@ export function View() {
       : activeTab === 'topics'
         ? topicsFetching
         : providersFetching
-  const activeLoading =
-    activeTab === 'messages'
-      ? messagesLoading
-      : activeTab === 'topics'
-        ? topicsLoading
-        : providersLoading
-
   // Update displayed page only when requested page data is ready (no flash)
   useEffect(() => {
-    if (!activeFetching && requestedPage !== displayedPage && !activeLoading) {
+    if (!activeFetching && requestedPage !== displayedPage) {
       setDisplayedPage(requestedPage)
     }
-  }, [activeFetching, activeLoading, requestedPage, displayedPage])
+  }, [activeFetching, requestedPage, displayedPage])
 
   // Poll message list while any visible message is still processing (matches legacy console behavior)
   useEffect(() => {
@@ -441,13 +436,19 @@ export function View() {
     deliveryErrors?: unknown,
   ) => {
     if (status === 'sent') {
-      return <Badge variant="success">Sent</Badge>
+      return (
+        <Badge variant="success" className="text-[10px] shrink-0">
+          Sent
+        </Badge>
+      )
     }
     if (status === 'processing') {
       return (
         <div className="flex items-center gap-2">
           <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
-          <Badge variant="secondary">Processing</Badge>
+          <Badge variant="processing" className="text-[10px] shrink-0">
+            Processing
+          </Badge>
         </div>
       )
     }
@@ -455,7 +456,9 @@ export function View() {
       const lines = formatDeliveryErrors(deliveryErrors)
       return (
         <div className="flex items-center gap-2">
-          <Badge variant="error">Failed</Badge>
+          <Badge variant="error" className="text-[10px] shrink-0">
+            Failed
+          </Badge>
           {lines.length > 0 && (
             <Button
               variant="ghost"
@@ -473,12 +476,24 @@ export function View() {
       )
     }
     if (status === 'draft') {
-      return <Badge variant="secondary">Draft</Badge>
+      return (
+        <Badge variant="info" className="text-[10px] shrink-0">
+          Draft
+        </Badge>
+      )
     }
     if (status === 'scheduled') {
-      return <Badge variant="info">Scheduled</Badge>
+      return (
+        <Badge variant="warning" className="text-[10px] shrink-0">
+          Scheduled
+        </Badge>
+      )
     }
-    return <Badge variant="secondary">{status}</Badge>
+    return (
+      <Badge variant="info" className="text-[10px] shrink-0 capitalize">
+        {status}
+      </Badge>
+    )
   }
 
   // Get message content preview
@@ -496,7 +511,7 @@ export function View() {
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex flex-col">
       <ServiceHeader
         title="Messaging"
         tabs={tabs}
@@ -523,7 +538,7 @@ export function View() {
         }
       />
 
-      <div className="mx-auto w-full max-w-7xl flex-1 min-h-0 overflow-y-auto px-4 pb-4 sm:px-6 sm:pb-6">
+      <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
         {(currentData.items ?? []).length > 0 ? (
             <>
               <div className="rounded-lg border border-border bg-card overflow-hidden">
@@ -609,7 +624,10 @@ export function View() {
                             <MessageContextMenu
                               key={message.$id}
                               projectId={projectId!}
-                              message={{ $id: message.$id }}
+                              message={{
+                                $id: message.$id,
+                                providerType: message.providerType,
+                              }}
                             >
                               <TableRow
                                 className={cn(
@@ -919,6 +937,7 @@ export function View() {
                                   >
                                     <div className="flex items-center gap-2">
                                       <MessagingProviderIcon
+                                        serviceKey={provider.provider}
                                         providerName={provider.name}
                                         providerType={
                                           provider.type as
@@ -945,12 +964,20 @@ export function View() {
                                 </TableCell>
                                 <TableCell className="px-4 py-3">
                                   {provider.enabled ? (
-                                    <Badge variant="success" className="gap-1">
+                                    <Badge
+                                      variant="success"
+                                      className="gap-1 text-[10px] shrink-0"
+                                    >
                                       <span className="h-1.5 w-1.5 rounded-full bg-current" />
                                       Enabled
                                     </Badge>
                                   ) : (
-                                    <Badge variant="secondary">Disabled</Badge>
+                                    <Badge
+                                      variant="inactive"
+                                      className="text-[10px] shrink-0"
+                                    >
+                                      Disabled
+                                    </Badge>
                                   )}
                                 </TableCell>
                                 <TableCell className="px-4 py-3">
@@ -1016,7 +1043,7 @@ export function View() {
         {selectedItems.size > 0 && (
           <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
             <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
-              <Badge variant="secondary" className="h-6 px-2.5">
+              <Badge variant="info" className="h-6 shrink-0 px-2.5 text-[10px]">
                 {selectedItems.size} {activeTab.slice(0, -1)}
                 {selectedItems.size > 1 ? 's' : ''} selected
               </Badge>

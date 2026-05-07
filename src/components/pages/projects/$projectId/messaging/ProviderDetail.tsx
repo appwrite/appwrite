@@ -140,7 +140,7 @@ export function ProviderDetailView() {
         }
       } else if (provider?.type === 'push') {
         // Push Providers (FCM, APNS)
-        if (provider.name === 'fcm') {
+        if (provider.provider === 'fcm') {
           // FCM uses serviceAccountJSON
           const serviceAccountJSON = settings.serviceAccountJSON
           params.credentials = {
@@ -149,7 +149,7 @@ export function ProviderDetailView() {
                 ? serviceAccountJSON
                 : JSON.stringify(serviceAccountJSON),
           }
-        } else if (provider.name === 'apns') {
+        } else if (provider.provider === 'apns') {
           // APNS uses authKey, authKeyId, teamId, bundleId
           params.credentials = {
             authKey: settings.authKey,
@@ -208,7 +208,7 @@ export function ProviderDetailView() {
 
   if (providerLoading) {
     return (
-      <div className="flex h-full items-center justify-center">
+      <div className="flex items-center justify-center py-16">
         <div className="rounded-lg border border-border bg-card py-12 px-6 text-center">
           <p className="text-[13px] text-muted-foreground">
             Loading provider...
@@ -220,7 +220,7 @@ export function ProviderDetailView() {
 
   if (!provider) {
     return (
-      <div className="flex h-full items-center justify-center">
+      <div className="flex items-center justify-center py-16">
         <div className="rounded-lg border border-border bg-card py-12 px-6 text-center">
           <p className="text-[13px] text-muted-foreground">
             Provider not found
@@ -247,13 +247,13 @@ export function ProviderDetailView() {
       settings.replyToName = provider.options?.replyToName || ''
     } else if (provider.type === 'push') {
       // Push providers
-      if (provider.name === 'fcm') {
+      if (provider.provider === 'fcm') {
         const serviceAccountJSON = provider.credentials?.serviceAccountJSON
         settings.serviceAccountJSON =
           typeof serviceAccountJSON === 'string'
             ? serviceAccountJSON
             : JSON.stringify(serviceAccountJSON || {})
-      } else if (provider.name === 'apns') {
+      } else if (provider.provider === 'apns') {
         settings.authKey = provider.credentials?.authKey || ''
         settings.authKeyId = provider.credentials?.authKeyId || ''
         settings.teamId = provider.credentials?.teamId || ''
@@ -285,7 +285,7 @@ export function ProviderDetailView() {
         fullWidthBorder
       />
 
-      <div className="mx-auto w-full max-w-7xl flex-1 overflow-y-auto px-4 pb-4 sm:px-6 sm:pb-6 pt-4 sm:pt-6">
+      <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6 pt-4 sm:pt-6">
         <div className="space-y-6">
           {/* Update Name Section - First Card */}
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
@@ -470,7 +470,7 @@ export function ProviderDetailView() {
                     </div>
                   </>
                 )}
-                {provider.type === 'push' && provider.name === 'fcm' && (
+                {provider.type === 'push' && provider.provider === 'fcm' && (
                   <div>
                     <Label
                       htmlFor="service-account-json"
@@ -487,7 +487,7 @@ export function ProviderDetailView() {
                     />
                   </div>
                 )}
-                {provider.type === 'push' && provider.name === 'apns' && (
+                {provider.type === 'push' && provider.provider === 'apns' && (
                   <>
                     <div>
                       <Label
@@ -630,6 +630,7 @@ export function ProviderDetailView() {
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
                   <MessagingProviderIcon
+                    serviceKey={provider.provider}
                     providerName={provider.name}
                     providerType={provider.type as 'email' | 'sms' | 'push'}
                     size="md"

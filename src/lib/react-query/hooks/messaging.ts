@@ -16,6 +16,7 @@ import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { DEFAULT_STALE_TIME, DEFAULT_PAGE_SIZE } from './constants'
 import { fetchUser } from './users'
+import { bucketsQueryOptions } from './storage'
 
 /** Message detail: list targets page size (must match message detail View + route loader). */
 export const MESSAGE_DETAIL_TARGETS_LIMIT = 100
@@ -274,6 +275,28 @@ export function messagesQueryOptions(
 }
 
 /**
+ * Query options for a single message (detail + settings)
+ *
+ * Use in route loaders and `useMessage` so keys match exactly.
+ */
+export function messageQueryOptions(
+  projectId: string | null | undefined,
+  messageId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['message', 'project', projectId, messageId],
+    queryFn: () => fetchMessage(projectId!, messageId!),
+    enabled: !!projectId && !!messageId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && messageId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
  * Query options for fetching paginated topics for a project
  *
  * This can be used in both route loaders and hooks to ensure consistent query configuration.
@@ -374,6 +397,28 @@ export function topicQueryOptions(
 }
 
 /**
+ * Query options for a single messaging provider (detail + settings)
+ *
+ * Use in route loaders and `useProvider` so keys match exactly.
+ */
+export function providerQueryOptions(
+  projectId: string | null | undefined,
+  providerId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['provider', 'project', projectId, providerId],
+    queryFn: () => fetchProvider(projectId!, providerId!),
+    enabled: !!projectId && !!providerId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && providerId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
  * Query options for message targets (paginated)
  */
 export function messageTargetsQueryOptions(
@@ -399,6 +444,7 @@ export function messageTargetsQueryOptions(
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
+    placeholderData: keepPreviousData,
     gcTime: projectId && messageId ? 5 * 60 * 1000 : 0,
   })
 }
@@ -412,20 +458,24 @@ export async function prefetchMessageDetailData(
   projectId: string,
   messageId: string,
 ) {
-  const message = await queryClient.ensureQueryData({
-    queryKey: ['message', 'project', projectId, messageId],
-    queryFn: () => fetchMessage(projectId, messageId),
-    staleTime: DEFAULT_STALE_TIME,
-  })
-
-  await queryClient.ensureQueryData(
-    messageTargetsQueryOptions(
-      projectId,
-      messageId,
-      0,
-      MESSAGE_DETAIL_TARGETS_LIMIT,
-    ),
+  const message = await queryClient.ensureQueryData(
+    messageQueryOptions(projectId, messageId),
   )
+
+  await Promise.all([
+    queryClient.ensureQueryData(
+      messageTargetsQueryOptions(
+        projectId,
+        messageId,
+        0,
+        MESSAGE_DETAIL_TARGETS_LIMIT,
+      ),
+    ),
+    queryClient.ensureQueryData(
+      messageLogsQueryOptions(projectId, messageId, 0, DEFAULT_PAGE_SIZE),
+    ),
+    queryClient.ensureQueryData(bucketsQueryOptions(projectId, 0, 100, '')),
+  ])
 
   const targetsOpts = messageTargetsQueryOptions(
     projectId,
@@ -564,12 +614,11 @@ export function useProjectMessages(
 export function useMessage(
   projectId: string | null | undefined,
   messageId: string | null | undefined,
+  initialMessage?: Models.Message,
 ) {
   return useQuery({
-    queryKey: ['message', 'project', projectId, messageId],
-    queryFn: () => fetchMessage(projectId!, messageId!),
-    enabled: !!projectId && !!messageId,
-    staleTime: DEFAULT_STALE_TIME,
+    ...messageQueryOptions(projectId, messageId),
+    ...(initialMessage !== undefined ? { initialData: initialMessage } : {}),
   })
 }
 
@@ -724,11 +773,215 @@ export function useProjectProviders(
 export function useProvider(
   projectId: string | null | undefined,
   providerId: string | null | undefined,
+  initialProvider?: Models.Provider,
 ) {
   return useQuery({
-    queryKey: ['provider', 'project', projectId, providerId],
-    queryFn: () => fetchProvider(projectId!, providerId!),
+    ...providerQueryOptions(projectId, providerId),
+    ...(initialProvider !== undefined ? { initialData: initialProvider } : {}),
+  })
+}
+
+/** Page size for messaging target picker (users with targets). */
+export const MESSAGING_TARGET_PICKER_PAGE_SIZE = 25
+
+/**
+ * List users for the messaging target picker (same filters as legacy console).
+ * Targets on each user are filtered client-side when `providerType` is set.
+ */
+export async function fetchUsersForMessagingTargetPicker(
+  projectId: string,
+  page: number = 0,
+  limit: number = MESSAGING_TARGET_PICKER_PAGE_SIZE,
+  search?: string,
+  providerType?: string | null,
+): Promise<{ users: Models.User[]; total: number }> {
+  if (!projectId) {
+    return { users: [], total: 0 }
+  }
+
+  const projectSdk = sdk.forProject(projectId)
+  const queries = [
+    Query.orderDesc('$createdAt'),
+    Query.limit(limit),
+    Query.offset(page * limit),
+  ]
+  if (providerType === 'email') {
+    queries.push(Query.notEqual('email', ''))
+  } else if (providerType === 'sms') {
+    queries.push(Query.notEqual('phone', ''))
+  }
+
+  const response = await projectSdk.users.list({
+    queries,
+    search: search?.trim() || undefined,
+  })
+
+  return {
+    users: response.users || [],
+    total: response.total || 0,
+  }
+}
+
+export function messagingTargetPickerUsersQueryOptions(
+  projectId: string | null | undefined,
+  page: number,
+  limit: number,
+  search: string,
+  providerType: string | null | undefined,
+) {
+  const normalizedSearch = search?.trim() || ''
+  return queryOptions({
+    queryKey: [
+      'messaging-target-picker-users',
+      'project',
+      projectId,
+      page,
+      limit,
+      normalizedSearch,
+      providerType ?? 'all',
+    ],
+    queryFn: () =>
+      fetchUsersForMessagingTargetPicker(
+        projectId!,
+        page,
+        limit,
+        normalizedSearch || undefined,
+        providerType,
+      ),
+    enabled: !!projectId,
+    staleTime: 30 * 1000,
+    retry: false,
+  })
+}
+
+export async function fetchMessageLogs(
+  projectId: string,
+  messageId: string,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+): Promise<Models.LogList> {
+  const projectSdk = sdk.forProject(projectId)
+  const queries = [
+    Query.orderDesc('$createdAt'),
+    Query.limit(limit),
+    Query.offset(page * limit),
+  ]
+  return projectSdk.messaging.listMessageLogs({ messageId, queries })
+}
+
+export function messageLogsQueryOptions(
+  projectId: string | null | undefined,
+  messageId: string | null | undefined,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+) {
+  return queryOptions({
+    queryKey: ['message-logs', 'project', projectId, messageId, page, limit],
+    queryFn: () => fetchMessageLogs(projectId!, messageId!, page, limit),
+    enabled: !!projectId && !!messageId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    placeholderData: keepPreviousData,
+    gcTime: projectId && messageId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export async function fetchTopicLogs(
+  projectId: string,
+  topicId: string,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+): Promise<Models.LogList> {
+  const projectSdk = sdk.forProject(projectId)
+  const queries = [
+    Query.orderDesc('$createdAt'),
+    Query.limit(limit),
+    Query.offset(page * limit),
+  ]
+  return projectSdk.messaging.listTopicLogs({ topicId, queries })
+}
+
+export function topicLogsQueryOptions(
+  projectId: string | null | undefined,
+  topicId: string | null | undefined,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+) {
+  return queryOptions({
+    queryKey: ['topic-logs', 'project', projectId, topicId, page, limit],
+    queryFn: () => fetchTopicLogs(projectId!, topicId!, page, limit),
+    enabled: !!projectId && !!topicId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    placeholderData: keepPreviousData,
+  })
+}
+
+export async function fetchProviderLogs(
+  projectId: string,
+  providerId: string,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+): Promise<Models.LogList> {
+  const projectSdk = sdk.forProject(projectId)
+  // API only allows limit and offset for provider logs (not orderAsc/orderDesc).
+  const queries = [Query.limit(limit), Query.offset(page * limit)]
+  return projectSdk.messaging.listProviderLogs({ providerId, queries })
+}
+
+export function providerLogsQueryOptions(
+  projectId: string | null | undefined,
+  providerId: string | null | undefined,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+) {
+  return queryOptions({
+    queryKey: ['provider-logs', 'project', projectId, providerId, page, limit],
+    queryFn: () => fetchProviderLogs(projectId!, providerId!, page, limit),
     enabled: !!projectId && !!providerId,
     staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    placeholderData: keepPreviousData,
+  })
+}
+
+export async function fetchSubscriberLogs(
+  projectId: string,
+  subscriberId: string,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+): Promise<Models.LogList> {
+  const projectSdk = sdk.forProject(projectId)
+  const queries = [
+    Query.orderDesc('$createdAt'),
+    Query.limit(limit),
+    Query.offset(page * limit),
+  ]
+  return projectSdk.messaging.listSubscriberLogs({ subscriberId, queries })
+}
+
+export function subscriberLogsQueryOptions(
+  projectId: string | null | undefined,
+  subscriberId: string | null | undefined,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+) {
+  return queryOptions({
+    queryKey: [
+      'subscriber-logs',
+      'project',
+      projectId,
+      subscriberId,
+      page,
+      limit,
+    ],
+    queryFn: () => fetchSubscriberLogs(projectId!, subscriberId!, page, limit),
+    enabled: !!projectId && !!subscriberId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    placeholderData: keepPreviousData,
   })
 }
