@@ -80,9 +80,8 @@ class StatsResources extends Action
         // Reset documents for each job
         $this->documents = [];
 
-        $gauges = $payload['gauges'] ?? [];
-        if (!empty($gauges)) {
-            $this->writeGauges($getLogsDB, $project, $gauges);
+        if ($statsResources->gauges !== []) {
+            $this->writeGauges($getLogsDB, $project, $statsResources->gauges);
             return;
         }
 
@@ -105,12 +104,10 @@ class StatsResources extends Action
         $region = $project->getAttribute('region', '');
 
         foreach ($gauges as $gauge) {
-            $metric = $gauge['metric'] ?? '';
-            if ($metric === '') {
+            if ($gauge['metric'] === '') {
                 continue;
             }
-            $value = (int) ($gauge['value'] ?? 0);
-            $this->createStatsDocuments($region, $metric, $value);
+            $this->createStatsDocuments($region, $gauge['metric'], $gauge['value']);
         }
 
         if ($this->documents === []) {
