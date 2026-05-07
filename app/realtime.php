@@ -184,8 +184,6 @@ if (!function_exists('getCache')) {
         static $breaker = null;
 
         if ($breaker === null) {
-            global $register;
-
             try {
                 $telemetry = $register->get('telemetry');
             } catch (\Throwable) {
