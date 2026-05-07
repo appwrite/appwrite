@@ -30,6 +30,7 @@ use Utopia\Migration\Destination;
 use Utopia\Migration\Destinations\Appwrite as DestinationAppwrite;
 use Utopia\Migration\Destinations\CSV as DestinationCSV;
 use Utopia\Migration\Destinations\JSON as DestinationJSON;
+use Utopia\Migration\Destinations\OnDuplicate;
 use Utopia\Migration\Exception as MigrationException;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Resources\Database\Database as ResourceDatabase;
@@ -291,6 +292,7 @@ class Migrations extends Action
                 $this->dbForProject,
                 $this->getDatabasesDB,
                 Config::getParam('collections', [])['databases']['collections'],
+                OnDuplicate::tryFrom($options['onDuplicate'] ?? '') ?? OnDuplicate::Fail,
             ),
             DestinationCSV::getName() => new DestinationCSV(
                 $this->deviceForFiles,
@@ -339,6 +341,55 @@ class Migrations extends Action
     }
 
     /**
+     * @return array<string>
+     */
+    protected function getAPIKeyScopes(): array
+    {
+        return [
+            'users.read',
+            'users.write',
+            'teams.read',
+            'teams.write',
+            'buckets.read',
+            'buckets.write',
+            'files.read',
+            'files.write',
+            'functions.read',
+            'functions.write',
+            'sites.read',
+            'sites.write',
+            'tokens.read',
+            'tokens.write',
+            'providers.read',
+            'providers.write',
+            'topics.read',
+            'topics.write',
+            'subscribers.read',
+            'subscribers.write',
+            'messages.read',
+            'messages.write',
+            'targets.read',
+            'targets.write',
+            'webhooks.read',
+            'webhooks.write',
+            'project.read',
+            'project.write',
+            'keys.read',
+            'keys.write',
+            'platforms.read',
+            'platforms.write',
+            'oauth2.read',
+            'oauth2.write',
+            'mocks.read',
+            'mocks.write',
+            'project.policies.read',
+            'project.policies.write',
+            'templates.read',
+            'templates.write',
+        ];
+    }
+
+    /**
      * @throws Exception
      */
     protected function generateAPIKey(Document $project): string
@@ -358,51 +409,10 @@ class Migrations extends Action
                 METRIC_NETWORK_INBOUND,
                 METRIC_NETWORK_OUTBOUND,
             ],
-            'scopes' => [
-                'users.read',
-                'users.write',
-                'teams.read',
-                'teams.write',
-                'buckets.read',
-                'buckets.write',
-                'files.read',
-                'files.write',
-                'functions.read',
-                'functions.write',
-                'sites.read',
-                'sites.write',
-                'tokens.read',
-                'tokens.write',
-                'providers.read',
-                'providers.write',
-                'topics.read',
-                'topics.write',
-                'subscribers.read',
-                'subscribers.write',
-                'messages.read',
-                'messages.write',
-                'targets.read',
-                'targets.write',
-                'webhooks.read',
-                'webhooks.write',
-                'project.read',
-                'project.write',
-                'keys.read',
-                'keys.write',
-                'platforms.read',
-                'platforms.write',
-                'oauth2.read',
-                'oauth2.write',
-                'mocks.read',
-                'mocks.write',
-                'policies.read',
-                'policies.write',
-                'templates.read',
-                'templates.write',
-            ]
+            'scopes' => $this->getAPIKeyScopes(),
         ]);
 
-        return API_KEY_DYNAMIC . '_' . $apiKey;
+        return API_KEY_EPHEMERAL . '_' . $apiKey;
     }
 
     /**

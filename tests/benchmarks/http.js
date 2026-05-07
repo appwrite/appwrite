@@ -75,8 +75,8 @@ const API_SCOPES = [
     'functions.write',
     'log.read',
     'log.write',
-    'execution.read',
-    'execution.write',
+    'executions.read',
+    'executions.write',
     'locale.read',
     'avatars.read',
     'rules.read',
@@ -380,6 +380,7 @@ function computeFlow(ctx) {
     api('GET', '/functions/runtimes', null, ctx.sessionHeaders, [200], 'functions.runtimes.list');
     api('GET', '/functions/specifications', null, ctx.apiHeaders, [200], 'functions.specifications.list');
     const functionVariable = api('POST', `/functions/${functionId}/variables`, {
+        variableId: 'unique()',
         key: 'BENCHMARK',
         value: 'true',
         secret: false,

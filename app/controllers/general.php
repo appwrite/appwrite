@@ -27,6 +27,8 @@ use Appwrite\Utopia\Request\Filters\V20 as RequestV20;
 use Appwrite\Utopia\Request\Filters\V21 as RequestV21;
 use Appwrite\Utopia\Request\Filters\V22 as RequestV22;
 use Appwrite\Utopia\Request\Filters\V23 as RequestV23;
+use Appwrite\Utopia\Request\Filters\V24 as RequestV24;
+use Appwrite\Utopia\Request\Filters\V25 as RequestV25;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filters\V16 as ResponseV16;
 use Appwrite\Utopia\Response\Filters\V17 as ResponseV17;
@@ -36,7 +38,10 @@ use Appwrite\Utopia\Response\Filters\V20 as ResponseV20;
 use Appwrite\Utopia\Response\Filters\V21 as ResponseV21;
 use Appwrite\Utopia\Response\Filters\V22 as ResponseV22;
 use Appwrite\Utopia\Response\Filters\V23 as ResponseV23;
+use Appwrite\Utopia\Response\Filters\V24 as ResponseV24;
+use Appwrite\Utopia\Response\Filters\V25 as ResponseV25;
 use Appwrite\Utopia\View;
+use Executor\Exception\Timeout as ExecutorTimeout;
 use Executor\Executor;
 use MaxMind\Db\Reader;
 use Swoole\Http\Request as SwooleRequest;
@@ -397,7 +402,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             'projectId' => $project->getId(),
             'scopes' => $resource->getAttribute('scopes', [])
         ]);
-        $headers['x-appwrite-key'] = API_KEY_DYNAMIC . '_' . $jwtKey;
+        $headers['x-appwrite-key'] = API_KEY_EPHEMERAL . '_' . $jwtKey;
         $headers['x-appwrite-trigger'] = 'http';
         $headers['x-appwrite-user-jwt'] = '';
 
@@ -577,26 +582,30 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 'site' => '',
             };
 
-            $executionResponse = $executor->createExecution(
-                projectId: $project->getId(),
-                deploymentId: $deployment->getId(),
-                body: \strlen($body) > 0 ? $body : null,
-                variables: $vars,
-                timeout: $resource->getAttribute('timeout', 30),
-                image: $runtime['image'],
-                source: $source,
-                entrypoint: $entrypoint,
-                version: $version,
-                path: $path,
-                method: $method,
-                headers: $headers,
-                runtimeEntrypoint: $runtimeEntrypoint,
-                cpus: $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT,
-                memory: $spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT,
-                logging: $resource->getAttribute('logging', true),
-                requestTimeout: 30,
-                responseFormat: Executor::RESPONSE_FORMAT_ARRAY_HEADERS
-            );
+            try {
+                $executionResponse = $executor->createExecution(
+                    projectId: $project->getId(),
+                    deploymentId: $deployment->getId(),
+                    body: \strlen($body) > 0 ? $body : null,
+                    variables: $vars,
+                    timeout: $resource->getAttribute('timeout', 30),
+                    image: $runtime['image'],
+                    source: $source,
+                    entrypoint: $entrypoint,
+                    version: $version,
+                    path: $path,
+                    method: $method,
+                    headers: $headers,
+                    runtimeEntrypoint: $runtimeEntrypoint,
+                    cpus: $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT,
+                    memory: $spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT,
+                    logging: $resource->getAttribute('logging', true),
+                    requestTimeout: 30,
+                    responseFormat: Executor::RESPONSE_FORMAT_ARRAY_HEADERS
+                );
+            } catch (ExecutorTimeout $th) {
+                throw new AppwriteException(AppwriteException::FUNCTION_SYNCHRONOUS_TIMEOUT, previous: $th);
+            }
 
             $headerOverrides = [];
 
@@ -899,6 +908,12 @@ Http::init()
             if (version_compare($requestFormat, '1.9.2', '<')) {
                 $request->addFilter(new RequestV23());
             }
+            if (version_compare($requestFormat, '1.9.3', '<')) {
+                $request->addFilter(new RequestV24());
+            }
+            if (version_compare($requestFormat, '1.9.4', '<')) {
+                $request->addFilter(new RequestV25());
+            }
         }
 
         $localeParam = (string) $request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
@@ -923,6 +938,12 @@ Http::init()
          */
         $responseFormat = $request->getHeader('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
         if ($responseFormat) {
+            if (version_compare($responseFormat, '1.9.4', '<')) {
+                $response->addFilter(new ResponseV25());
+            }
+            if (version_compare($responseFormat, '1.9.3', '<')) {
+                $response->addFilter(new ResponseV24());
+            }
             if (version_compare($responseFormat, '1.9.2', '<')) {
                 $response->addFilter(new ResponseV23());
             }

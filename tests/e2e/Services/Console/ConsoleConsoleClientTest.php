@@ -56,6 +56,8 @@ class ConsoleConsoleClientTest extends Scope
         $this->assertEquals($response['body']['total'], \count($response['body']['oAuth2Providers']));
 
         $providerIds = \array_column($response['body']['oAuth2Providers'], '$id');
+        $this->assertEquals('amazon', $providerIds[0]);
+        $this->assertEquals('zoom', $providerIds[\count($providerIds) - 1]);
 
         // Well-known providers must be present
         $this->assertContains('github', $providerIds);
@@ -99,7 +101,7 @@ class ConsoleConsoleClientTest extends Scope
         $this->assertCount(2, $github['parameters']);
         $clientId = $github['parameters'][0];
         $this->assertEquals('clientId', $clientId['$id']);
-        $this->assertEquals('OAuth 2 app Client ID, or App ID', $clientId['name']);
+        $this->assertEquals('OAuth2 app Client ID, or App ID', $clientId['name']);
         $this->assertEquals('e4d87900000000540733', $clientId['example']);
         $this->assertEquals('Example of wrong value: 370006', $clientId['hint']);
         $clientSecret = $github['parameters'][1];
@@ -127,5 +129,50 @@ class ConsoleConsoleClientTest extends Scope
 
         // Sandbox providers (e.g. paypalSandbox) are included
         $this->assertContains('paypalSandbox', $providerIds);
+    }
+
+    public function testListKeyScopes(): void
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/console/scopes/project', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsInt($response['body']['total']);
+        $this->assertIsArray($response['body']['scopes']);
+        $this->assertGreaterThan(0, $response['body']['total']);
+        $this->assertEquals($response['body']['total'], \count($response['body']['scopes']));
+
+        $scopeIds = \array_column($response['body']['scopes'], '$id');
+
+        // Well-known scopes must be present
+        $this->assertContains('users.read', $scopeIds);
+        $this->assertContains('users.write', $scopeIds);
+        $this->assertContains('functions.read', $scopeIds);
+        $this->assertContains('functions.write', $scopeIds);
+
+        // Every scope has the expected shape
+        foreach ($response['body']['scopes'] as $scope) {
+            $this->assertArrayHasKey('$id', $scope);
+            $this->assertIsString($scope['$id']);
+            $this->assertNotEmpty($scope['$id']);
+            $this->assertArrayHasKey('description', $scope);
+            $this->assertIsString($scope['description']);
+            $this->assertNotEmpty($scope['description']);
+            $this->assertArrayHasKey('deprecated', $scope);
+            $this->assertIsBool($scope['deprecated']);
+        }
+
+        // A specific scope has the expected description
+        $usersRead = null;
+        foreach ($response['body']['scopes'] as $scope) {
+            if ($scope['$id'] === 'users.read') {
+                $usersRead = $scope;
+                break;
+            }
+        }
+        $this->assertNotNull($usersRead);
+        $this->assertEquals('Access to read users', $usersRead['description']);
     }
 }

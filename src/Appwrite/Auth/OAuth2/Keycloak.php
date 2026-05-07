@@ -37,6 +37,17 @@ class Keycloak extends OAuth2
         return 'keycloak';
     }
 
+    public function verifyCredentials(): void
+    {
+        if (empty($this->getKeycloakDomain())) {
+            throw new \Exception('Keycloak endpoint is required.');
+        }
+
+        if (empty($this->getKeycloakRealm())) {
+            throw new \Exception('Keycloak realm name is required.');
+        }
+    }
+
     /**
      * @return string
      */

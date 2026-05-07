@@ -2,9 +2,9 @@
 
 namespace Executor;
 
-use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Utopia\Fetch\BodyMultipart;
-use Exception;
+use Executor\Exception as ExecutorException;
+use Executor\Exception\Timeout as ExecutorTimeout;
 use Utopia\System\System;
 
 class Executor
@@ -104,7 +104,7 @@ class Executor
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
             $message = \is_string($response['body']) ? $response['body'] : $response['body']['message'];
-            throw new \Exception($message, $status);
+            throw new ExecutorException($message, $status);
         }
 
         return $response['body'];
@@ -163,7 +163,7 @@ class Executor
         }
 
         if ($status >= 400) {
-            throw new \Exception($message, $status);
+            throw new ExecutorException($message, $status);
         }
 
         return $response['body'];
@@ -247,7 +247,7 @@ class Executor
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
             $message = \is_string($response['body']) ? $response['body'] : $response['body']['message'];
-            throw new \Exception($message, $status);
+            throw new ExecutorException($message, $status);
         }
 
         $headers = $response['body']['headers'] ?? [];
@@ -281,7 +281,7 @@ class Executor
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
             $message = \is_string($response['body']) ? $response['body'] : $response['body']['message'];
-            throw new \Exception($message, $status);
+            throw new ExecutorException($message, $status);
         }
 
         return $response['body'];
@@ -378,7 +378,6 @@ class Executor
         $responseBody   = curl_exec($ch);
 
         if (isset($callback)) {
-            curl_close($ch);
             return [];
         }
 
@@ -402,7 +401,7 @@ class Executor
                     $json = json_decode($responseBody, true);
 
                     if ($json === null) {
-                        throw new Exception('Failed to parse response: ' . $responseBody);
+                        throw new ExecutorException('Failed to parse response: ' . $responseBody);
                     }
 
                     $responseBody = $json;
@@ -413,12 +412,10 @@ class Executor
 
         if ($curlError) {
             if ($curlError == CURLE_OPERATION_TIMEDOUT) {
-                throw new AppwriteException(AppwriteException::FUNCTION_SYNCHRONOUS_TIMEOUT);
+                throw new ExecutorTimeout('Executor request timed out', $timeout);
             }
-            throw new Exception($curlErrorMessage . ' with status code ' . $responseStatus, $responseStatus);
+            throw new ExecutorException($curlErrorMessage . ' with status code ' . $responseStatus, $responseStatus);
         }
-
-        curl_close($ch);
 
         $responseHeaders['status-code'] = $responseStatus;
 

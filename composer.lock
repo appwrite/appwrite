@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "805802552f7482eaeae4bdaa505ae982",
+    "content-hash": "ec2ad489c60f0102f0dfab223b6d1fe4",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -161,16 +161,16 @@
         },
         {
             "name": "appwrite/php-runtimes",
-            "version": "0.19.5",
+            "version": "0.20.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/runtimes.git",
-                "reference": "aa2f7760cd0493c0880209b92df812c9386b3546"
+                "reference": "7d9b7f4eef5c0a142a60907b06de2219d025c5c3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/runtimes/zipball/aa2f7760cd0493c0880209b92df812c9386b3546",
-                "reference": "aa2f7760cd0493c0880209b92df812c9386b3546",
+                "url": "https://api.github.com/repos/appwrite/runtimes/zipball/7d9b7f4eef5c0a142a60907b06de2219d025c5c3",
+                "reference": "7d9b7f4eef5c0a142a60907b06de2219d025c5c3",
                 "shasum": ""
             },
             "require": {
@@ -210,9 +210,9 @@
             ],
             "support": {
                 "issues": "https://github.com/appwrite/runtimes/issues",
-                "source": "https://github.com/appwrite/runtimes/tree/0.19.5"
+                "source": "https://github.com/appwrite/runtimes/tree/0.20.0"
             },
-            "time": "2026-04-01T01:39:23+00:00"
+            "time": "2026-05-01T07:47:07+00:00"
         },
         {
             "name": "brick/math",
@@ -2708,16 +2708,16 @@
         },
         {
             "name": "symfony/http-client",
-            "version": "v7.4.8",
+            "version": "v7.4.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/http-client.git",
-                "reference": "01933e626c3de76bea1e22641e205e78f6a34342"
+                "reference": "7e941c6abf4e3bf7dca160bf0e11ef36a9f832f6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/http-client/zipball/01933e626c3de76bea1e22641e205e78f6a34342",
-                "reference": "01933e626c3de76bea1e22641e205e78f6a34342",
+                "url": "https://api.github.com/repos/symfony/http-client/zipball/7e941c6abf4e3bf7dca160bf0e11ef36a9f832f6",
+                "reference": "7e941c6abf4e3bf7dca160bf0e11ef36a9f832f6",
                 "shasum": ""
             },
             "require": {
@@ -2785,7 +2785,7 @@
                 "http"
             ],
             "support": {
-                "source": "https://github.com/symfony/http-client/tree/v7.4.8"
+                "source": "https://github.com/symfony/http-client/tree/v7.4.9"
             },
             "funding": [
                 {
@@ -2805,7 +2805,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-03-30T12:55:43+00:00"
+            "time": "2026-04-29T13:25:15+00:00"
         },
         {
             "name": "symfony/http-client-contracts",
@@ -3351,16 +3351,16 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "1.2.2",
+            "version": "1.2.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "20bee84fd14dbe81d50ecabf1ffd81cceca06152"
+                "reference": "53f4274939353522ba331f55bcff6e6011ffc56c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/20bee84fd14dbe81d50ecabf1ffd81cceca06152",
-                "reference": "20bee84fd14dbe81d50ecabf1ffd81cceca06152",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/53f4274939353522ba331f55bcff6e6011ffc56c",
+                "reference": "53f4274939353522ba331f55bcff6e6011ffc56c",
                 "shasum": ""
             },
             "require": {
@@ -3397,9 +3397,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/1.2.2"
+                "source": "https://github.com/utopia-php/abuse/tree/1.2.3"
             },
-            "time": "2026-02-02T10:43:10+00:00"
+            "time": "2026-04-29T11:19:08+00:00"
         },
         {
             "name": "utopia-php/agents",
@@ -3502,16 +3502,16 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "2.2.1",
+            "version": "2.2.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "e3e2d6ad5c7f6377d9237df296a12eb7943892fd"
+                "reference": "90886c202e7983999e6b6a8201004d5ab61d4b57"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/e3e2d6ad5c7f6377d9237df296a12eb7943892fd",
-                "reference": "e3e2d6ad5c7f6377d9237df296a12eb7943892fd",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/90886c202e7983999e6b6a8201004d5ab61d4b57",
+                "reference": "90886c202e7983999e6b6a8201004d5ab61d4b57",
                 "shasum": ""
             },
             "require": {
@@ -3545,9 +3545,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/audit/issues",
-                "source": "https://github.com/utopia-php/audit/tree/2.2.1"
+                "source": "https://github.com/utopia-php/audit/tree/2.2.2"
             },
-            "time": "2026-02-02T10:39:25+00:00"
+            "time": "2026-05-04T06:48:58+00:00"
         },
         {
             "name": "utopia-php/auth",
@@ -3658,21 +3658,21 @@
         },
         {
             "name": "utopia-php/cli",
-            "version": "0.23.2",
+            "version": "0.23.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cli.git",
-                "reference": "145b91fef827853bcceaa3ab8ca2b1d6faaca2ab"
+                "reference": "3c45ae5bcdcd3c7916e1909d74c60b8e771610db"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cli/zipball/145b91fef827853bcceaa3ab8ca2b1d6faaca2ab",
-                "reference": "145b91fef827853bcceaa3ab8ca2b1d6faaca2ab",
+                "url": "https://api.github.com/repos/utopia-php/cli/zipball/3c45ae5bcdcd3c7916e1909d74c60b8e771610db",
+                "reference": "3c45ae5bcdcd3c7916e1909d74c60b8e771610db",
                 "shasum": ""
             },
             "require": {
                 "php": ">=7.4",
-                "utopia-php/servers": "0.3.*"
+                "utopia-php/servers": "0.4.0"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
@@ -3703,9 +3703,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cli/issues",
-                "source": "https://github.com/utopia-php/cli/tree/0.23.2"
+                "source": "https://github.com/utopia-php/cli/tree/0.23.3"
             },
-            "time": "2026-04-27T09:19:04+00:00"
+            "time": "2026-05-05T04:38:59+00:00"
         },
         {
             "name": "utopia-php/compression",
@@ -3850,22 +3850,23 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "5.3.22",
+            "version": "5.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "d765945da6b3141852014b2f96ecf1fe7e3d6ba7"
+                "reference": "eb35e68f7f90932d5a60bd72e70158ae7a4e0511"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/d765945da6b3141852014b2f96ecf1fe7e3d6ba7",
-                "reference": "d765945da6b3141852014b2f96ecf1fe7e3d6ba7",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/eb35e68f7f90932d5a60bd72e70158ae7a4e0511",
+                "reference": "eb35e68f7f90932d5a60bd72e70158ae7a4e0511",
                 "shasum": ""
             },
             "require": {
                 "ext-mbstring": "*",
                 "ext-mongodb": "*",
                 "ext-pdo": "*",
+                "ext-redis": "*",
                 "php": ">=8.4",
                 "utopia-php/cache": "1.*",
                 "utopia-php/console": "0.1.*",
@@ -3903,9 +3904,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/5.3.22"
+                "source": "https://github.com/utopia-php/database/tree/5.7.0"
             },
-            "time": "2026-04-20T07:12:46+00:00"
+            "time": "2026-05-06T01:04:08+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -4062,16 +4063,16 @@
         },
         {
             "name": "utopia-php/domains",
-            "version": "1.0.5",
+            "version": "1.0.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/domains.git",
-                "reference": "0edf6bb2b07f30db849a267027077bf5abb994c6"
+                "reference": "c87ba0a1da4cbf75d2cff9d3ea0262b78f1d86f6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/domains/zipball/0edf6bb2b07f30db849a267027077bf5abb994c6",
-                "reference": "0edf6bb2b07f30db849a267027077bf5abb994c6",
+                "url": "https://api.github.com/repos/utopia-php/domains/zipball/c87ba0a1da4cbf75d2cff9d3ea0262b78f1d86f6",
+                "reference": "c87ba0a1da4cbf75d2cff9d3ea0262b78f1d86f6",
                 "shasum": ""
             },
             "require": {
@@ -4118,9 +4119,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/domains/issues",
-                "source": "https://github.com/utopia-php/domains/tree/1.0.5"
+                "source": "https://github.com/utopia-php/domains/tree/1.0.6"
             },
-            "time": "2026-03-03T09:20:50+00:00"
+            "time": "2026-04-29T11:08:10+00:00"
         },
         {
             "name": "utopia-php/dsn",
@@ -4271,23 +4272,23 @@
         },
         {
             "name": "utopia-php/http",
-            "version": "0.34.24",
+            "version": "0.34.25",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "d1eced0627c5a9fceddf53992ed97d664b810d33"
+                "reference": "76be330d4197bae680eb4ccc29c573456fe91904"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/d1eced0627c5a9fceddf53992ed97d664b810d33",
-                "reference": "d1eced0627c5a9fceddf53992ed97d664b810d33",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/76be330d4197bae680eb4ccc29c573456fe91904",
+                "reference": "76be330d4197bae680eb4ccc29c573456fe91904",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.3",
                 "utopia-php/compression": "0.1.*",
                 "utopia-php/di": "0.3.*",
-                "utopia-php/servers": "0.3.*",
+                "utopia-php/servers": "0.4.0",
                 "utopia-php/telemetry": "0.2.*",
                 "utopia-php/validators": "0.2.*"
             },
@@ -4321,9 +4322,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/0.34.24"
+                "source": "https://github.com/utopia-php/http/tree/0.34.25"
             },
-            "time": "2026-04-24T12:16:53+00:00"
+            "time": "2026-05-05T04:39:15+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -4530,16 +4531,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.9.3",
+            "version": "1.10.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "111f6221d04578a6f721c23ac872002375f176ae"
+                "reference": "55f4863d690e775f44fec3cae4bd1f4491fed5ea"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/111f6221d04578a6f721c23ac872002375f176ae",
-                "reference": "111f6221d04578a6f721c23ac872002375f176ae",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/55f4863d690e775f44fec3cae4bd1f4491fed5ea",
+                "reference": "55f4863d690e775f44fec3cae4bd1f4491fed5ea",
                 "shasum": ""
             },
             "require": {
@@ -4550,7 +4551,7 @@
                 "php": ">=8.1",
                 "utopia-php/database": "5.*",
                 "utopia-php/dsn": "0.2.*",
-                "utopia-php/storage": "1.0.*"
+                "utopia-php/storage": "2.*"
             },
             "require-dev": {
                 "ext-pdo": "*",
@@ -4579,9 +4580,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/1.9.3"
+                "source": "https://github.com/utopia-php/migration/tree/1.10.0"
             },
-            "time": "2026-04-22T07:13:26+00:00"
+            "time": "2026-05-06T04:35:32+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -4646,26 +4647,26 @@
         },
         {
             "name": "utopia-php/platform",
-            "version": "0.13.0",
+            "version": "0.13.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/platform.git",
-                "reference": "d23af5349a7ea9ee11f9920a13626226f985522e"
+                "reference": "a20cb8b20a1e4c9886309c2d033a0292ba0937b9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/platform/zipball/d23af5349a7ea9ee11f9920a13626226f985522e",
-                "reference": "d23af5349a7ea9ee11f9920a13626226f985522e",
+                "url": "https://api.github.com/repos/utopia-php/platform/zipball/a20cb8b20a1e4c9886309c2d033a0292ba0937b9",
+                "reference": "a20cb8b20a1e4c9886309c2d033a0292ba0937b9",
                 "shasum": ""
             },
             "require": {
                 "ext-json": "*",
                 "ext-redis": "*",
-                "php": ">=8.1",
-                "utopia-php/cli": "0.23.*",
-                "utopia-php/http": "0.34.*",
-                "utopia-php/queue": "0.17.*",
-                "utopia-php/servers": "0.3.*"
+                "php": ">=8.3",
+                "utopia-php/cli": "0.23.3",
+                "utopia-php/http": "0.34.25",
+                "utopia-php/queue": "0.18.2",
+                "utopia-php/servers": "0.4.0"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
@@ -4691,9 +4692,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/platform/issues",
-                "source": "https://github.com/utopia-php/platform/tree/0.13.0"
+                "source": "https://github.com/utopia-php/platform/tree/0.13.2"
             },
-            "time": "2026-04-17T09:57:18+00:00"
+            "time": "2026-05-05T06:00:26+00:00"
         },
         {
             "name": "utopia-php/pools",
@@ -4803,25 +4804,24 @@
         },
         {
             "name": "utopia-php/queue",
-            "version": "0.17.0",
+            "version": "0.18.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "0fbc7d7312f5cf76ec112513fb93317000901f5f"
+                "reference": "f85ca003c99ff475708c05466643d067403c0c22"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/0fbc7d7312f5cf76ec112513fb93317000901f5f",
-                "reference": "0fbc7d7312f5cf76ec112513fb93317000901f5f",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/f85ca003c99ff475708c05466643d067403c0c22",
+                "reference": "f85ca003c99ff475708c05466643d067403c0c22",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.3",
                 "php-amqplib/php-amqplib": "^3.7",
                 "utopia-php/di": "0.3.*",
-                "utopia-php/fetch": "0.5.*",
                 "utopia-php/pools": "1.*",
-                "utopia-php/servers": "0.3.*",
+                "utopia-php/servers": "0.4.0",
                 "utopia-php/telemetry": "0.2.*",
                 "utopia-php/validators": "0.2.*"
             },
@@ -4864,9 +4864,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/queue/issues",
-                "source": "https://github.com/utopia-php/queue/tree/0.17.0"
+                "source": "https://github.com/utopia-php/queue/tree/0.18.2"
             },
-            "time": "2026-03-23T16:21:31+00:00"
+            "time": "2026-05-05T04:38:59+00:00"
         },
         {
             "name": "utopia-php/registry",
@@ -4922,16 +4922,16 @@
         },
         {
             "name": "utopia-php/servers",
-            "version": "0.3.0",
+            "version": "0.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/servers.git",
-                "reference": "235be31200df9437fc96a1c270ffef4c64fafe52"
+                "reference": "7db346ef377503efe0acafe0791085270cd9ed70"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/servers/zipball/235be31200df9437fc96a1c270ffef4c64fafe52",
-                "reference": "235be31200df9437fc96a1c270ffef4c64fafe52",
+                "url": "https://api.github.com/repos/utopia-php/servers/zipball/7db346ef377503efe0acafe0791085270cd9ed70",
+                "reference": "7db346ef377503efe0acafe0791085270cd9ed70",
                 "shasum": ""
             },
             "require": {
@@ -4970,9 +4970,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/servers/issues",
-                "source": "https://github.com/utopia-php/servers/tree/0.3.0"
+                "source": "https://github.com/utopia-php/servers/tree/0.4.0"
             },
-            "time": "2026-03-13T11:31:42+00:00"
+            "time": "2026-05-05T04:08:30+00:00"
         },
         {
             "name": "utopia-php/span",
@@ -5020,16 +5020,16 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "1.0.1",
+            "version": "2.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "f014be445f0baa635d0764e1673196f412511618"
+                "reference": "64e132a3768e22243eda36fe4262da22fd204f3c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/f014be445f0baa635d0764e1673196f412511618",
-                "reference": "f014be445f0baa635d0764e1673196f412511618",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/64e132a3768e22243eda36fe4262da22fd204f3c",
+                "reference": "64e132a3768e22243eda36fe4262da22fd204f3c",
                 "shasum": ""
             },
             "require": {
@@ -5043,9 +5043,8 @@
                 "utopia-php/validators": "0.2.*"
             },
             "require-dev": {
-                "laravel/pint": "1.2.*",
-                "phpunit/phpunit": "^9.3",
-                "vimeo/psalm": "4.0.1"
+                "laravel/pint": "^1.21",
+                "phpunit/phpunit": "^9.3"
             },
             "type": "library",
             "autoload": {
@@ -5067,22 +5066,22 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/1.0.1"
+                "source": "https://github.com/utopia-php/storage/tree/2.0.2"
             },
-            "time": "2026-02-23T05:59:32+00:00"
+            "time": "2026-05-01T15:06:16+00:00"
         },
         {
             "name": "utopia-php/system",
-            "version": "0.10.1",
+            "version": "0.10.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/system.git",
-                "reference": "7c1669533bb9c285de19191270c8c1439161a78a"
+                "reference": "04229a822b147c1abaf1a92fb42c2d7aad4625df"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/system/zipball/7c1669533bb9c285de19191270c8c1439161a78a",
-                "reference": "7c1669533bb9c285de19191270c8c1439161a78a",
+                "url": "https://api.github.com/repos/utopia-php/system/zipball/04229a822b147c1abaf1a92fb42c2d7aad4625df",
+                "reference": "04229a822b147c1abaf1a92fb42c2d7aad4625df",
                 "shasum": ""
             },
             "require": {
@@ -5123,9 +5122,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/system/issues",
-                "source": "https://github.com/utopia-php/system/tree/0.10.1"
+                "source": "https://github.com/utopia-php/system/tree/0.10.2"
             },
-            "time": "2026-03-15T21:07:41+00:00"
+            "time": "2026-05-05T14:33:41+00:00"
         },
         {
             "name": "utopia-php/telemetry",
@@ -5385,16 +5384,16 @@
         },
         {
             "name": "webonyx/graphql-php",
-            "version": "v15.31.5",
+            "version": "v15.32.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/webonyx/graphql-php.git",
-                "reference": "089c4ef7e112df85788cfe06596278a8f99f4aa9"
+                "reference": "993bf0bea17f870412ad8a90f60c41cb8d5f1145"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/webonyx/graphql-php/zipball/089c4ef7e112df85788cfe06596278a8f99f4aa9",
-                "reference": "089c4ef7e112df85788cfe06596278a8f99f4aa9",
+                "url": "https://api.github.com/repos/webonyx/graphql-php/zipball/993bf0bea17f870412ad8a90f60c41cb8d5f1145",
+                "reference": "993bf0bea17f870412ad8a90f60c41cb8d5f1145",
                 "shasum": ""
             },
             "require": {
@@ -5403,16 +5402,16 @@
                 "php": "^7.4 || ^8"
             },
             "require-dev": {
-                "amphp/amp": "^2.6",
-                "amphp/http-server": "^2.1",
+                "amphp/amp": "^2.6 || ^3",
+                "amphp/http-server": "^2.1 || ^3",
                 "dms/phpunit-arraysubset-asserts": "dev-master",
                 "ergebnis/composer-normalize": "^2.28",
-                "friendsofphp/php-cs-fixer": "3.94.2",
+                "friendsofphp/php-cs-fixer": "3.95.1",
                 "mll-lab/php-cs-fixer-config": "5.13.0",
                 "nyholm/psr7": "^1.5",
                 "phpbench/phpbench": "^1.2",
                 "phpstan/extension-installer": "^1.1",
-                "phpstan/phpstan": "2.1.46",
+                "phpstan/phpstan": "2.1.51",
                 "phpstan/phpstan-phpunit": "2.0.16",
                 "phpstan/phpstan-strict-rules": "2.0.10",
                 "phpunit/phpunit": "^9.5 || ^10.5.21 || ^11",
@@ -5426,6 +5425,7 @@
                 "ticketswap/phpstan-error-formatter": "1.3.0"
             },
             "suggest": {
+                "amphp/amp": "To leverage async resolving on AMPHP platform (v3 with AmpFutureAdapter, v2 with AmpPromiseAdapter)",
                 "amphp/http-server": "To leverage async resolving with webserver on AMPHP platform",
                 "psr/http-message": "To use standard GraphQL server",
                 "react/promise": "To leverage async resolving on React PHP platform"
@@ -5448,7 +5448,7 @@
             ],
             "support": {
                 "issues": "https://github.com/webonyx/graphql-php/issues",
-                "source": "https://github.com/webonyx/graphql-php/tree/v15.31.5"
+                "source": "https://github.com/webonyx/graphql-php/tree/v15.32.3"
             },
             "funding": [
                 {
@@ -5460,22 +5460,22 @@
                     "type": "open_collective"
                 }
             ],
-            "time": "2026-04-11T18:06:15+00:00"
+            "time": "2026-04-24T13:49:35+00:00"
         }
     ],
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.24.0",
+            "version": "1.27.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "6d4d26659bc7a1c347c1d4d8dae3b77b5562e0cb"
+                "reference": "9faa38b48d422f3da764a719712905c83b3922cb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/6d4d26659bc7a1c347c1d4d8dae3b77b5562e0cb",
-                "reference": "6d4d26659bc7a1c347c1d4d8dae3b77b5562e0cb",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/9faa38b48d422f3da764a719712905c83b3922cb",
+                "reference": "9faa38b48d422f3da764a719712905c83b3922cb",
                 "shasum": ""
             },
             "require": {
@@ -5511,9 +5511,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.24.0"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.27.5"
             },
-            "time": "2026-04-24T12:50:05+00:00"
+            "time": "2026-05-05T12:09:40+00:00"
         },
         {
             "name": "brianium/paratest",
@@ -6222,11 +6222,11 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "2.1.51",
+            "version": "2.1.54",
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/dc3b523c45e714c70de2ac5113b958223b55dc59",
-                "reference": "dc3b523c45e714c70de2ac5113b958223b55dc59",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/8be50c3992107dc837b17da4d140fbbdf9a5c5bd",
+                "reference": "8be50c3992107dc837b17da4d140fbbdf9a5c5bd",
                 "shasum": ""
             },
             "require": {
@@ -6271,7 +6271,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-04-21T18:22:01+00:00"
+            "time": "2026-04-29T13:31:09+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
@@ -6620,16 +6620,16 @@
         },
         {
             "name": "phpunit/phpunit",
-            "version": "12.5.23",
+            "version": "12.5.24",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "c54fcf3d6bcb6e96ac2f7e40097dc37b5f139969"
+                "reference": "d75dd30597caa80e72fad2ef7904601a30ef1046"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/c54fcf3d6bcb6e96ac2f7e40097dc37b5f139969",
-                "reference": "c54fcf3d6bcb6e96ac2f7e40097dc37b5f139969",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/d75dd30597caa80e72fad2ef7904601a30ef1046",
+                "reference": "d75dd30597caa80e72fad2ef7904601a30ef1046",
                 "shasum": ""
             },
             "require": {
@@ -6698,7 +6698,7 @@
             "support": {
                 "issues": "https://github.com/sebastianbergmann/phpunit/issues",
                 "security": "https://github.com/sebastianbergmann/phpunit/security/policy",
-                "source": "https://github.com/sebastianbergmann/phpunit/tree/12.5.23"
+                "source": "https://github.com/sebastianbergmann/phpunit/tree/12.5.24"
             },
             "funding": [
                 {
@@ -6706,7 +6706,7 @@
                     "type": "other"
                 }
             ],
-            "time": "2026-04-18T06:12:49+00:00"
+            "time": "2026-05-01T04:21:04+00:00"
         },
         {
             "name": "sebastian/cli-parser",
@@ -7691,16 +7691,16 @@
         },
         {
             "name": "symfony/console",
-            "version": "v8.0.8",
+            "version": "v8.0.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/console.git",
-                "reference": "5b66d385dc58f69652e56f78a4184615e3f2b7f7"
+                "reference": "7113778e2e91f4709cb3194a75dfa9c0d028d94d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/console/zipball/5b66d385dc58f69652e56f78a4184615e3f2b7f7",
-                "reference": "5b66d385dc58f69652e56f78a4184615e3f2b7f7",
+                "url": "https://api.github.com/repos/symfony/console/zipball/7113778e2e91f4709cb3194a75dfa9c0d028d94d",
+                "reference": "7113778e2e91f4709cb3194a75dfa9c0d028d94d",
                 "shasum": ""
             },
             "require": {
@@ -7757,7 +7757,7 @@
                 "terminal"
             ],
             "support": {
-                "source": "https://github.com/symfony/console/tree/v8.0.8"
+                "source": "https://github.com/symfony/console/tree/v8.0.9"
             },
             "funding": [
                 {
@@ -7777,7 +7777,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-03-30T15:14:47+00:00"
+            "time": "2026-04-29T15:02:55+00:00"
         },
         {
             "name": "symfony/polyfill-ctype",

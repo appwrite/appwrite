@@ -34,7 +34,7 @@ class XList extends Action
                 namespace: 'console',
                 group: 'console',
                 name: 'listOAuth2Providers',
-                description: '/docs/references/console/list-oauth2-providers.md',
+                description: 'List all OAuth2 providers supported by the Appwrite server, along with the parameters required to configure each provider. The response excludes mock providers but includes sandbox providers.',
                 auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
@@ -54,9 +54,9 @@ class XList extends Action
         $actions = OAuth2Base::getProviderActions();
 
         $providers = [];
-        foreach ($actions as $providerId => $updateClass) {
-            $config = $providersConfig[$providerId] ?? null;
-            if ($config === null) {
+        foreach ($providersConfig as $providerId => $config) {
+            $updateClass = $actions[$providerId] ?? null;
+            if ($updateClass === null) {
                 continue;
             }
             if (!($config['enabled'] ?? false)) {

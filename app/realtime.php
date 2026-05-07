@@ -45,7 +45,10 @@ use Utopia\WebSocket\Adapter;
 use Utopia\WebSocket\Server;
 
 require_once __DIR__ . '/init.php';
-require_once __DIR__ . '/init/span.php';
+
+if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
+    require_once __DIR__ . '/init/span.php';
+}
 
 /** @var Registry $register */
 $register = $GLOBALS['register'] ?? throw new \RuntimeException('Registry not initialized');
@@ -127,8 +130,14 @@ if (!function_exists('getProjectDB')) {
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
         if (\in_array($dsn->getHost(), $sharedTables)) {
+            $collections = Config::getParam('collections', []);
+            $projectCollections = $collections['projects'] ?? [];
+            $projectsGlobalCollections = array_keys($projectCollections);
+            $projectsGlobalCollections[] = 'audit';
+
             $database
                 ->setSharedTables(true)
+                ->setGlobalCollections($projectsGlobalCollections)
                 ->setTenant($project->getSequence())
                 ->setNamespace($dsn->getParam('namespace'));
         } else {
@@ -566,6 +575,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
                         $roles = $user->getRoles($database->getAuthorization());
                         $authorization = $realtime->connections[$connection]['authorization'] ?? null;
+                        $previousUserId = $realtime->connections[$connection]['userId'] ?? '';
 
                         $meta = $realtime->getSubscriptionMetadata($connection);
 
@@ -573,13 +583,19 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
                         foreach ($meta as $subscriptionId => $subscription) {
                             $queries = Query::parseQueries($subscription['queries'] ?? []);
+                            $channels = Realtime::rebindAccountChannels(
+                                $subscription['channels'] ?? [],
+                                $previousUserId,
+                                $userId
+                            );
                             $realtime->subscribe(
                                 $projectId,
                                 $connection,
                                 $subscriptionId,
                                 $roles,
-                                $subscription['channels'] ?? [],
-                                $queries
+                                $channels,
+                                $queries,
+                                $userId
                             );
                         }
 
@@ -1087,6 +1103,11 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
 
                 $authorization = $realtime->connections[$connection]['authorization'] ?? null;
                 $projectId = $realtime->connections[$connection]['projectId'] ?? null;
+                // Capture the pre-auth userId so we can rebind any account channels
+                // that were stored under it (e.g. guest who subscribed to `account`
+                // and now authenticates). unsubscribe() below clears the connection
+                // entry, so we must read it first.
+                $previousUserId = $realtime->connections[$connection]['userId'] ?? '';
 
                 $subscriptionsBefore = \count($realtime->getSubscriptionMetadata($connection));
                 $meta = $realtime->getSubscriptionMetadata($connection);
@@ -1096,13 +1117,18 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                 if (!empty($projectId)) {
                     foreach ($meta as $subscriptionId => $subscription) {
                         $queries = Query::parseQueries($subscription['queries'] ?? []);
+                        $channels = Realtime::rebindAccountChannels(
+                            $subscription['channels'] ?? [],
+                            $previousUserId,
+                            $user->getId()
+                        );
 
                         $realtime->subscribe(
                             $projectId,
                             $connection,
                             $subscriptionId,
                             $roles,
-                            $subscription['channels'] ?? [],
+                            $channels,
                             $queries,
                             $user->getId()
                         );

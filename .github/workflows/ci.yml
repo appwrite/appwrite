@@ -7,6 +7,7 @@ concurrency:
 env:
   COMPOSE_FILE: docker-compose.yml
   IMAGE: appwrite-dev
+  REGISTRY_IMAGE: ghcr.io/${{ github.repository }}/appwrite-dev
   K6_VERSION: '0.53.0'
 
 on:
@@ -18,6 +19,10 @@ on:
         required: false
         type: string
         default: ''
+
+permissions:
+  contents: read
+  packages: write
 
 jobs:
   dependencies:
@@ -258,31 +263,29 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Login to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      - name: Build Appwrite
+      - name: Build and push Appwrite
         uses: docker/build-push-action@v6
         with:
           context: .
-          push: false
-          tags: ${{ env.IMAGE }}
-          load: true
+          push: true
+          tags: ${{ env.REGISTRY_IMAGE }}:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          outputs: type=docker,dest=/tmp/${{ env.IMAGE }}.tar
           target: development
           build-args: |
             DEBUG=false
             TESTING=true
             VERSION=dev
-
-      - name: Upload Docker Image
-        uses: actions/upload-artifact@v7
-        with:
-          name: ${{ env.IMAGE }}
-          path: /tmp/${{ env.IMAGE }}.tar
-          retention-days: 1
 
   unit:
     name: Tests / Unit
@@ -291,15 +294,10 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+      packages: read
     steps:
       - name: checkout
         uses: actions/checkout@v6
-
-      - name: Download Docker Image
-        uses: actions/download-artifact@v7
-        with:
-          name: ${{ env.IMAGE }}
-          path: /tmp
 
       - name: Login to Docker Hub
         uses: docker/login-action@v4
@@ -307,10 +305,21 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Login to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull Docker Image
+        run: |
+          docker pull ${{ env.REGISTRY_IMAGE }}:${{ github.sha }}
+          docker tag ${{ env.REGISTRY_IMAGE }}:${{ github.sha }} ${{ env.IMAGE }}
+
       - name: Load and Start Appwrite
         timeout-minutes: 5
         run: |
-          docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose pull --quiet --ignore-buildable
           docker compose up -d --quiet-pull --wait
 
@@ -338,15 +347,10 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+      packages: read
     steps:
       - name: checkout
         uses: actions/checkout@v6
-
-      - name: Download Docker Image
-        uses: actions/download-artifact@v7
-        with:
-          name: ${{ env.IMAGE }}
-          path: /tmp
 
       - name: Login to Docker Hub
         uses: docker/login-action@v4
@@ -354,10 +358,21 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Login to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull Docker Image
+        run: |
+          docker pull ${{ env.REGISTRY_IMAGE }}:${{ github.sha }}
+          docker tag ${{ env.REGISTRY_IMAGE }}:${{ github.sha }} ${{ env.IMAGE }}
+
       - name: Load and Start Appwrite
         timeout-minutes: 5
         run: |
-          docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose pull --quiet --ignore-buildable
           docker compose up -d --quiet-pull --wait
 
@@ -396,6 +411,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+      packages: read
     strategy:
       fail-fast: false
       matrix:
@@ -450,16 +466,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Download Docker Image
-        uses: actions/download-artifact@v7
-        with:
-          name: ${{ env.IMAGE }}
-          path: /tmp
-
       - name: Set environment
         run: |
           echo "_APP_OPTIONS_ROUTER_PROTECTION=enabled" >> $GITHUB_ENV
-          
+
           if [ "${{ matrix.database }}" = "MariaDB" ]; then
             echo "COMPOSE_PROFILES=mariadb" >> $GITHUB_ENV
             echo "_APP_DB_ADAPTER=mariadb" >> $GITHUB_ENV
@@ -483,6 +493,18 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Login to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull Docker Image
+        run: |
+          docker pull ${{ env.REGISTRY_IMAGE }}:${{ github.sha }}
+          docker tag ${{ env.REGISTRY_IMAGE }}:${{ github.sha }} ${{ env.IMAGE }}
+
       - name: Load and Start Appwrite
         timeout-minutes: 5
         env:
@@ -491,7 +513,6 @@ jobs:
           _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'documentsdb_db_main' || '' }}
           _APP_DATABASE_VECTORSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'vectorsdb_db_main' || '' }}
         run: |
-          docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose pull --quiet --ignore-buildable
           docker compose up -d --quiet-pull --wait
 
@@ -545,6 +566,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+      packages: read
     strategy:
       fail-fast: false
       matrix:
@@ -555,17 +577,23 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Download Docker Image
-        uses: actions/download-artifact@v7
-        with:
-          name: ${{ env.IMAGE }}
-          path: /tmp
-
       - name: Login to Docker Hub
         uses: docker/login-action@v4
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Login to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull Docker Image
+        run: |
+          docker pull ${{ env.REGISTRY_IMAGE }}:${{ github.sha }}
+          docker tag ${{ env.REGISTRY_IMAGE }}:${{ github.sha }} ${{ env.IMAGE }}
 
       - name: Load and Start Appwrite
         timeout-minutes: 5
@@ -575,7 +603,6 @@ jobs:
           _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'documentsdb_db_main' || '' }}
           _APP_DATABASE_VECTORSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'vectorsdb_db_main' || '' }}
         run: |
-          docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose pull --quiet --ignore-buildable
           docker compose up -d --quiet-pull --wait
 
@@ -606,6 +633,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+      packages: read
     strategy:
       fail-fast: false
       matrix:
@@ -614,17 +642,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Download Docker Image
-        uses: actions/download-artifact@v7
-        with:
-          name: ${{ env.IMAGE }}
-          path: /tmp
-
       - name: Login to Docker Hub
         uses: docker/login-action@v4
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Login to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull Docker Image
+        run: |
+          docker pull ${{ env.REGISTRY_IMAGE }}:${{ github.sha }}
+          docker tag ${{ env.REGISTRY_IMAGE }}:${{ github.sha }} ${{ env.IMAGE }}
 
       - name: Load and Start Appwrite
         timeout-minutes: 5
@@ -633,7 +667,6 @@ jobs:
           _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'documentsdb_db_main' || '' }}
           _APP_DATABASE_VECTORSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'vectorsdb_db_main' || '' }}
         run: |
-          docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose pull --quiet --ignore-buildable
           docker compose up -d --quiet-pull --wait
 
@@ -675,17 +708,12 @@ jobs:
       contents: read
       issues: write
       pull-requests: write
+      packages: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
           fetch-depth: 1
-
-      - name: Download Docker Image
-        uses: actions/download-artifact@v7
-        with:
-          name: ${{ env.IMAGE }}
-          path: /tmp
 
       - name: Login to Docker Hub
         uses: docker/login-action@v4
@@ -693,10 +721,18 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Load Appwrite image
+      - name: Login to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull Appwrite image
         run: |
-          docker load --input /tmp/${{ env.IMAGE }}.tar
-          docker tag ${{ env.IMAGE }} ${{ env.IMAGE }}:after
+          docker pull ${{ env.REGISTRY_IMAGE }}:${{ github.sha }}
+          docker tag ${{ env.REGISTRY_IMAGE }}:${{ github.sha }} ${{ env.IMAGE }}
+          docker tag ${{ env.REGISTRY_IMAGE }}:${{ github.sha }} ${{ env.IMAGE }}:after
 
       - name: Setup k6
         uses: grafana/setup-k6-action@ffe7d7290dfa715e48c2ccc924d068444c94bde2

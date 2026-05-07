@@ -37,6 +37,13 @@ class FusionAuth extends OAuth2
         return 'fusionauth';
     }
 
+    public function verifyCredentials(): void
+    {
+        if (empty($this->getFusionAuthDomain())) {
+            throw new \Exception('FusionAuth endpoint is required.');
+        }
+    }
+
     /**
      * @return string
      */

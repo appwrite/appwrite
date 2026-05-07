@@ -168,7 +168,7 @@ class Screenshots extends Action
                         $config = $configs[$key];
 
                         $config['headers'] = \array_merge($config['headers'], [
-                            'x-appwrite-key' => API_KEY_DYNAMIC . '_' . $apiKey
+                            'x-appwrite-key' => API_KEY_EPHEMERAL . '_' . $apiKey
                         ]);
                         $config['sleep'] = 3000;
 

@@ -111,8 +111,8 @@ class Update extends Base
             ))
             ->param(static::getClientIdParamName(), null, new Nullable(new Text(256, 0)), static::getClientIdDescription(), optional: true)
             ->param(static::getClientSecretParamName(), null, new Nullable(new Text(512, 0)), static::getClientSecretDescription(), optional: true)
-            ->param('endpoint', '', new Text(256, 1), 'Domain of Keycloak instance. For example: keycloak.example.com', optional: false)
-            ->param('realmName', '', new Text(256, 1), 'Keycloak realm name. For example: appwrite-realm', optional: false)
+            ->param('endpoint', null, new Nullable(new Text(256, 0)), 'Domain of Keycloak instance. For example: keycloak.example.com', optional: true)
+            ->param('realmName', null, new Nullable(new Text(256, 0)), 'Keycloak realm name. For example: appwrite-realm', optional: true)
             ->param('enabled', null, new Nullable(new Boolean()), 'OAuth2 sign-in method status. Set to true to enable new session creation. Setting to true will trigger end-to-end credentials validation, and will throw if the credentials are invalid.', true)
             ->inject('response')
             ->inject('dbForPlatform')
@@ -147,8 +147,8 @@ class Update extends Base
     public function handle(
         ?string $clientId,
         ?string $clientSecret,
-        string $endpoint,
-        string $realmName,
+        ?string $endpoint,
+        ?string $realmName,
         ?bool $enabled,
         Response $response,
         Database $dbForPlatform,
@@ -161,7 +161,7 @@ class Update extends Base
 
         // The secret is stored as JSON `{"clientSecret": "...", "keycloakDomain": "...", "keycloakRealm": "..."}`
         // to match the shape Keycloak's OAuth2 adapter expects (getKeycloakDomain(), getKeycloakRealm()).
-        // The `endpoint` and `realmName` params are required on every call, so they're always written.
+        // The `endpoint` and `realmName` params are optional; if omitted, existing stored values are preserved.
         // `clientSecret` is optional; if omitted, the existing stored secret is preserved.
         $storedRaw = $project->getAttribute('oAuthProviders', [])[$providerId . 'Secret'] ?? '';
         $existing = [];
@@ -170,8 +170,8 @@ class Update extends Base
         }
         $encodedSecret = \json_encode([
             'clientSecret' => $clientSecret ?? ($existing['clientSecret'] ?? ''),
-            'keycloakDomain' => $endpoint,
-            'keycloakRealm' => $realmName,
+            'keycloakDomain' => $endpoint ?? ($existing['keycloakDomain'] ?? ''),
+            'keycloakRealm' => $realmName ?? ($existing['keycloakRealm'] ?? ''),
         ]);
 
         $project = $this->persistCredentials($project, $dbForPlatform, $authorization, $clientId, $encodedSecret, $enabled);
