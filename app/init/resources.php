@@ -187,7 +187,7 @@ $container->set('getLogsDB', function (Group $pools, Cache $cache, Authorization
 
 $container->set('telemetry', fn () => new NoTelemetry());
 
-$container->set('breakerForCache', fn (Telemetry $telemetry): CircuitBreaker => CircuitBreakerFactory::create($telemetry));
+$container->set('breakerForCache', fn (Telemetry $telemetry): CircuitBreaker => CircuitBreakerFactory::create($telemetry), ['telemetry']);
 
 $container->set('cache', function (Group $pools, CircuitBreaker $breaker, Telemetry $telemetry) {
     $list = Config::getParam('pools-cache', []);
