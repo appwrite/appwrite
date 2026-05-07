@@ -10,6 +10,7 @@ use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Utopia\Response\Model\Execution;
+use Executor\Exception\Timeout as ExecutorTimeout;
 use Executor\Executor;
 use Utopia\Bus\Bus;
 use Utopia\Config\Config;
@@ -565,24 +566,28 @@ class Functions extends Action
                 Span::add('trigger', $trigger);
                 Span::current()?->finish();
             }
-            $executionResponse = $executor->createExecution(
-                projectId: $project->getId(),
-                deploymentId: $deploymentId,
-                body: \strlen($body) > 0 ? $body : null,
-                variables: $vars,
-                timeout: $function->getAttribute('timeout', 0),
-                image: $runtime['image'],
-                source: $source,
-                entrypoint: $deployment->getAttribute('entrypoint', ''),
-                version: $version,
-                path: $path,
-                method: $method,
-                headers: $headers,
-                runtimeEntrypoint: $command,
-                cpus: $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT,
-                memory: $spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT,
-                logging: $function->getAttribute('logging', true),
-            );
+            try {
+                $executionResponse = $executor->createExecution(
+                    projectId: $project->getId(),
+                    deploymentId: $deploymentId,
+                    body: \strlen($body) > 0 ? $body : null,
+                    variables: $vars,
+                    timeout: $function->getAttribute('timeout', 0),
+                    image: $runtime['image'],
+                    source: $source,
+                    entrypoint: $deployment->getAttribute('entrypoint', ''),
+                    version: $version,
+                    path: $path,
+                    method: $method,
+                    headers: $headers,
+                    runtimeEntrypoint: $command,
+                    cpus: $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT,
+                    memory: $spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT,
+                    logging: $function->getAttribute('logging', true),
+                );
+            } catch (ExecutorTimeout $th) {
+                throw new AppwriteException(AppwriteException::FUNCTION_ASYNCHRONOUS_TIMEOUT, previous: $th);
+            }
 
             $status = $executionResponse['statusCode'] >= 500 ? 'failed' : 'completed';
 

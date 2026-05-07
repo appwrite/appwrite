@@ -6813,6 +6813,7 @@ class ProjectsConsoleClientTest extends Scope
                     'x-appwrite-mode' => 'admin',
                     'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
                 ], [
+                    'variableId' => $variableId,
                     'key' => 'APP_TEST_' . $variableId,
                     'value' => 'TESTINGVALUE',
                     'secret' => false
@@ -6832,6 +6833,7 @@ class ProjectsConsoleClientTest extends Scope
                     'x-appwrite-mode' => 'admin',
                     'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
                 ], [
+                    'variableId' => $variableId,
                     'key' => 'APP_TEST_' . $variableId,
                     'value' => 'TESTINGVALUE',
                     'secret' => false

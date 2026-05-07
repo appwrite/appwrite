@@ -830,11 +830,11 @@ Http::patch('/v1/account/sessions/:sessionId')
         $refreshToken = $session->getAttribute('providerRefreshToken', '');
         $oAuthProviders = Config::getParam('oAuthProviders') ?? [];
         $className = $oAuthProviders[$provider]['class'] ?? null;
-        if (!empty($provider) && ($className === null || !\class_exists($className))) {
+        if (!empty($refreshToken) && ($className === null || !\class_exists($className))) {
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
-        if (!empty($provider) && \class_exists($className)) {
+        if ($className !== null && \class_exists($className)) {
             $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
             $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
 

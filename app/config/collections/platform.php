@@ -404,6 +404,13 @@ $platformCollections = [
                 'lengths' => [],
                 'orders' => [],
             ],
+            [
+                '$id' => ID::custom('_key_teamInternalId'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['teamInternalId'],
+                'lengths' => [Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_ASC],
+            ],
         ],
     ],
 
@@ -632,6 +639,13 @@ $platformCollections = [
                 '$id' => ID::custom('_key_project'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['projectInternalId'],
+                'lengths' => [Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => ID::custom('_key_project_id'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['projectId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
@@ -1007,7 +1021,14 @@ $platformCollections = [
                 'attributes' => ['projectInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
-            ]
+            ],
+            [
+                '$id' => ID::custom('_key_project_id'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['projectId'],
+                'lengths' => [Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_ASC],
+            ],
         ],
     ],
 
