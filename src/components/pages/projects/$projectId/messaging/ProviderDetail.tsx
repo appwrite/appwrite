@@ -23,6 +23,7 @@ import { MessagingProviderIcon } from '@/components/global/shared/MessagingProvi
 
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
+import { patchMessagingProvider } from '@/lib/messaging/patch-messaging-provider'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 
 export function ProviderDetailView() {
@@ -58,17 +59,18 @@ export function ProviderDetailView() {
         throw new Error('Project ID and Provider ID are required')
       }
       const projectSdk = sdk.forProject(projectId)
-      await projectSdk.messaging.updateProvider({
+      if (!provider) throw new Error('Provider is required')
+      await patchMessagingProvider(projectSdk.messaging, provider, {
         providerId,
         enabled,
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async (_data, enabledValue) => {
+      await queryClient.refetchQueries({
         queryKey: ['provider', 'project', projectId, providerId],
       })
       toast.success('Provider status updated successfully')
-      setEnabled(!enabled)
+      setEnabled(enabledValue)
     },
     onError: (error: Error) => {
       toast.error(getErrorMessage(error) || 'Failed to update provider status')
@@ -82,7 +84,8 @@ export function ProviderDetailView() {
         throw new Error('Project ID and Provider ID are required')
       }
       const projectSdk = sdk.forProject(projectId)
-      await projectSdk.messaging.updateProvider({
+      if (!provider) throw new Error('Provider is required')
+      await patchMessagingProvider(projectSdk.messaging, provider, {
         providerId,
         name,
       })
@@ -119,48 +122,50 @@ export function ProviderDetailView() {
         throw new Error('Project ID and Provider ID are required')
       }
       const projectSdk = sdk.forProject(projectId)
+      if (!provider) throw new Error('Provider is required')
 
-      // Map provider-specific parameters based on provider type
-      const params: Record<string, unknown> & { providerId: string } = {
-        providerId,
-      }
+      let credentials: Record<string, unknown> | undefined
+      let options: Record<string, unknown> | undefined
 
-      if (provider?.type === 'sms') {
-        // SMS Providers (Twilio, Msg91, Telesign, Textmagic, Vonage)
-        params.credentials = settings.credentials || {}
-        params.options = settings.options || {}
-      } else if (provider?.type === 'email') {
-        // Email Providers (Mailgun, Sendgrid, Resend, SMTP)
-        params.credentials = settings.credentials || {}
-        params.options = {
+      if (provider.type === 'sms') {
+        credentials = settings.credentials || {}
+        options = settings.options || {}
+      } else if (provider.type === 'email') {
+        credentials = settings.credentials || {}
+        options = {
           fromEmail: settings.fromEmail,
           fromName: settings.fromName,
           replyToEmail: settings.replyToEmail,
           replyToName: settings.replyToName,
         }
-      } else if (provider?.type === 'push') {
-        // Push Providers (FCM, APNS)
+      } else if (provider.type === 'push') {
         if (provider.provider === 'fcm') {
-          // FCM uses serviceAccountJSON
           const serviceAccountJSON = settings.serviceAccountJSON
-          params.credentials = {
+          credentials = {
             serviceAccountJSON:
               typeof serviceAccountJSON === 'string'
                 ? serviceAccountJSON
                 : JSON.stringify(serviceAccountJSON),
           }
         } else if (provider.provider === 'apns') {
-          // APNS uses authKey, authKeyId, teamId, bundleId
-          params.credentials = {
+          credentials = {
             authKey: settings.authKey,
             authKeyId: settings.authKeyId,
             teamId: settings.teamId,
             bundleId: settings.bundleId,
           }
+        } else {
+          throw new Error(`Unsupported push provider: ${provider.provider}`)
         }
+      } else {
+        throw new Error(`Unsupported provider type: ${provider.type}`)
       }
 
-      await projectSdk.messaging.updateProvider(params)
+      await patchMessagingProvider(projectSdk.messaging, provider, {
+        providerId,
+        credentials,
+        options,
+      })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({

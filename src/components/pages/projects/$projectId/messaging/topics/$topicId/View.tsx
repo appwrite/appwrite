@@ -58,7 +58,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { MessagingActivityLogTable } from '../../_components/MessagingActivityLogTable'
+import { MessagingLogsTable } from '../../_components/MessagingLogsTable'
 
 export type TopicSubscribersInitialData = {
   subscribers: Models.Subscriber[]
@@ -564,7 +564,7 @@ export function View({
                                       setSubscriberLogFor(subscriber)
                                     }
                                   >
-                                    Activity log
+                                    Logs
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
                                     disabled={!canManageSubscribers}
@@ -636,7 +636,7 @@ export function View({
       >
         <DialogContent className="sm:max-w-2xl p-0 max-h-[90dvh] flex flex-col">
           <DialogHeader className="px-6 pt-6 text-left">
-            <DialogTitle>Subscriber activity</DialogTitle>
+            <DialogTitle>Subscriber logs</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Audit log events for subscriber{' '}
               {subscriberLogFor ? (
@@ -649,11 +649,11 @@ export function View({
           <div className="px-6 pb-4 pt-0 flex-1 min-h-0 overflow-y-auto space-y-4">
             {subscriberLogFullLoading ? (
               <p className="text-[13px] text-muted-foreground py-6 text-center">
-                Loading activity…
+                Loading logs…
               </p>
             ) : (
               <>
-                <MessagingActivityLogTable
+                <MessagingLogsTable
                   logs={subscriberLogRows}
                   emptyLabel="No log entries for this subscriber."
                 />

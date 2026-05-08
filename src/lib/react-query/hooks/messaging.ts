@@ -86,11 +86,8 @@ export async function fetchMessageTargets(
   }
 
   const projectSdk = sdk.forProject(projectId)
-  const queries = [
-    Query.orderDesc('$createdAt'),
-    Query.limit(limit),
-    Query.offset(page * limit),
-  ]
+  // API only allows limit and offset for message targets (not orderAsc/orderDesc).
+  const queries = [Query.limit(limit), Query.offset(page * limit)]
 
   const response = await projectSdk.messaging.listTargets({
     messageId,
@@ -861,11 +858,8 @@ export async function fetchMessageLogs(
   limit: number = DEFAULT_PAGE_SIZE,
 ): Promise<Models.LogList> {
   const projectSdk = sdk.forProject(projectId)
-  const queries = [
-    Query.orderDesc('$createdAt'),
-    Query.limit(limit),
-    Query.offset(page * limit),
-  ]
+  // API only allows limit and offset for message logs (not orderAsc/orderDesc).
+  const queries = [Query.limit(limit), Query.offset(page * limit)]
   return projectSdk.messaging.listMessageLogs({ messageId, queries })
 }
 
@@ -896,11 +890,8 @@ export async function fetchTopicLogs(
   limit: number = DEFAULT_PAGE_SIZE,
 ): Promise<Models.LogList> {
   const projectSdk = sdk.forProject(projectId)
-  const queries = [
-    Query.orderDesc('$createdAt'),
-    Query.limit(limit),
-    Query.offset(page * limit),
-  ]
+  // API only allows limit and offset for topic logs (not orderAsc/orderDesc).
+  const queries = [Query.limit(limit), Query.offset(page * limit)]
   return projectSdk.messaging.listTopicLogs({ topicId, queries })
 }
 

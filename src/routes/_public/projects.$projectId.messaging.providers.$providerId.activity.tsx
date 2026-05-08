@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 
-/** Legacy path: activity log now lives under Settings. */
+/** Legacy path: provider logs now live under Settings. */
 export const Route = createFileRoute(
   '/_public/projects/$projectId/messaging/providers/$providerId/activity',
 )({

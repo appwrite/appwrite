@@ -11,15 +11,15 @@ import {
   TableRow,
 } from '@/components/ui/table'
 
-export type MessagingActivityLogTableProps = {
+export type MessagingLogsTableProps = {
   logs: Models.Log[]
   emptyLabel?: string
 }
 
-export function MessagingActivityLogTable({
+export function MessagingLogsTable({
   logs,
   emptyLabel = 'No log entries.',
-}: MessagingActivityLogTableProps) {
+}: MessagingLogsTableProps) {
   if (!logs.length) {
     return (
       <EmptyState

@@ -108,7 +108,7 @@ import {
 } from '../_components/MessageDeliveryDialogs'
 import { MessagingTargetsModal } from '../_components/MessagingTargetsModal'
 import { MessagingRecipientUsersModal } from '../_components/MessagingRecipientUsersModal'
-import { MessagingActivityLogTable } from '../_components/MessagingActivityLogTable'
+import { MessagingLogsTable } from '../_components/MessagingLogsTable'
 import { EmailAttachmentRow } from '../_components/EmailAttachmentRow'
 import {
   Select,
@@ -117,6 +117,101 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+
+type MessageComposeCardFooterProps = {
+  messageStatus: Models.Message['status']
+  hasContentChanges: boolean
+  updatePending: boolean
+  onSchedule: () => void
+  onUpdateDraft: () => void
+  onSend: () => void
+  onCancelSchedule: () => void
+  onReschedule: () => void
+  onOpenLogs: () => void
+}
+
+function MessageComposeCardFooter({
+  messageStatus,
+  hasContentChanges,
+  updatePending,
+  onSchedule,
+  onUpdateDraft,
+  onSend,
+  onCancelSchedule,
+  onReschedule,
+  onOpenLogs,
+}: MessageComposeCardFooterProps) {
+  const isDraft = messageStatus === 'draft'
+  const isScheduled = messageStatus === 'scheduled'
+  const logsEnabled = messageStatus !== 'draft'
+
+  return (
+    <div className="px-6 py-4 border-t border-border bg-muted/30">
+      <div className="flex w-full flex-wrap items-center justify-between gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-9 shrink-0 text-[13px]"
+          disabled={!logsEnabled}
+          onClick={onOpenLogs}
+        >
+          Logs
+        </Button>
+        <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
+          {isDraft ? (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9 text-[13px]"
+                onClick={onSchedule}
+              >
+                Schedule
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="h-9 text-[13px]"
+                disabled={!hasContentChanges || updatePending}
+                onClick={onUpdateDraft}
+              >
+                Update draft
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="h-9 shrink-0 text-[13px]"
+                onClick={onSend}
+              >
+                Send message
+              </Button>
+            </>
+          ) : isScheduled ? (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9 text-[13px]"
+                onClick={onCancelSchedule}
+              >
+                Cancel scheduling
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="h-9 text-[13px]"
+                onClick={onReschedule}
+              >
+                <Calendar className="mr-1.5 h-4 w-4" />
+                Reschedule
+              </Button>
+            </>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export function View({
   initialMessage,
@@ -365,7 +460,7 @@ export function View({
 
   const [topicsModalOpen, setTopicsModalOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [errorDetailsDialogOpen, setErrorDetailsDialogOpen] = useState(false)
+  const [messageLogsDialogOpen, setMessageLogsDialogOpen] = useState(false)
 
   // Update email message mutation
   const updateEmailMutation = useMutation({
@@ -394,7 +489,7 @@ export function View({
         ['message', 'project', projectId, messageId],
         updatedMessage,
       )
-      await queryClient.invalidateQueries({
+      await queryClient.refetchQueries({
         queryKey: ['messages', 'project', projectId],
       })
       await queryClient.refetchQueries({
@@ -423,8 +518,11 @@ export function View({
       })
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({
+      await queryClient.refetchQueries({
         queryKey: ['message', 'project', projectId, messageId],
+      })
+      await queryClient.refetchQueries({
+        queryKey: ['messages', 'project', projectId],
       })
       await queryClient.refetchQueries({
         queryKey: ['message-targets', 'project', projectId, messageId],
@@ -491,8 +589,11 @@ export function View({
       })
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({
+      await queryClient.refetchQueries({
         queryKey: ['message', 'project', projectId, messageId],
+      })
+      await queryClient.refetchQueries({
+        queryKey: ['messages', 'project', projectId],
       })
       await queryClient.refetchQueries({
         queryKey: ['message-targets', 'project', projectId, messageId],
@@ -954,7 +1055,9 @@ export function View({
         }
         tabs={messageDetailTabs}
         activeTab={messageDetailTabs ? messageDetailActiveTab : undefined}
-        titleRightContent={getMessageStatusBadge()}
+        titleRightContent={
+          !hasComposeSettingsTabs ? getMessageStatusBadge() : undefined
+        }
         fullWidthBorder
       />
 
@@ -964,9 +1067,12 @@ export function View({
           {message.providerType === 'email' && showMessageMain && (
             <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
               <div className="px-6 py-4">
-                <h3 className="text-[15px] font-semibold text-foreground">
-                  Content
-                </h3>
+                <div className="flex items-center justify-between gap-4">
+                  <h3 className="text-[15px] font-semibold text-foreground">
+                    Content
+                  </h3>
+                  {getMessageStatusBadge()}
+                </div>
               </div>
               <div className="border-t border-border" />
               <div className="px-6 py-4 @container">
@@ -1197,88 +1303,29 @@ export function View({
                   </div>
                 </div>
               </div>
-              {(message.status === 'draft' ||
-                message.status === 'scheduled' ||
-                message.status === 'failed') && (
-                <div className="px-6 py-4 border-t border-border bg-muted/30">
-                  {message.status === 'draft' && (
-                    <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-9 text-[13px]"
-                          onClick={() => setScheduleDialogOpen(true)}
-                        >
-                          Schedule
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          className="h-9 text-[13px]"
-                          disabled={
-                            !hasEmailChanges || updateEmailMutation.isPending
-                          }
-                          onClick={handleUpdateMessage}
-                        >
-                          Update draft
-                        </Button>
-                      </div>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        className="h-9 w-full text-[13px] sm:w-auto sm:shrink-0"
-                        onClick={() => setSendDialogOpen(true)}
-                      >
-                        Send message
-                      </Button>
-                    </div>
-                  )}
-                  {message.status === 'scheduled' && (
-                    <div className="flex flex-col-reverse gap-2 sm:flex-row sm:flex-wrap sm:gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-9 text-[13px]"
-                        onClick={() => setCancelScheduleOpen(true)}
-                      >
-                        Cancel scheduling
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        className="h-9 text-[13px]"
-                        onClick={() => setScheduleDialogOpen(true)}
-                      >
-                        <Calendar className="mr-1.5 h-4 w-4" />
-                        Reschedule
-                      </Button>
-                    </div>
-                  )}
-                  {message.status === 'failed' && (
-                    <div className="flex flex-wrap gap-2">
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        className="h-9 text-[13px]"
-                        onClick={() => setErrorDetailsDialogOpen(true)}
-                      >
-                        <AlertCircle className="mr-1.5 h-4 w-4" />
-                        View logs
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              )}
+              <MessageComposeCardFooter
+                messageStatus={message.status}
+                hasContentChanges={hasEmailChanges}
+                updatePending={updateEmailMutation.isPending}
+                onSchedule={() => setScheduleDialogOpen(true)}
+                onUpdateDraft={handleUpdateMessage}
+                onSend={() => setSendDialogOpen(true)}
+                onCancelSchedule={() => setCancelScheduleOpen(true)}
+                onReschedule={() => setScheduleDialogOpen(true)}
+                onOpenLogs={() => setMessageLogsDialogOpen(true)}
+              />
             </div>
           )}
 
           {message.providerType === 'sms' && showMessageMain && (
             <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
               <div className="px-6 py-4">
-                <h3 className="text-[15px] font-semibold text-foreground">
-                  Content
-                </h3>
+                <div className="flex items-center justify-between gap-4">
+                  <h3 className="text-[15px] font-semibold text-foreground">
+                    Content
+                  </h3>
+                  {getMessageStatusBadge()}
+                </div>
               </div>
               <div className="border-t border-border" />
               <div className="px-6 py-4 @container">
@@ -1311,88 +1358,29 @@ export function View({
                   </div>
                 </div>
               </div>
-              {(message.status === 'draft' ||
-                message.status === 'scheduled' ||
-                message.status === 'failed') && (
-                <div className="px-6 py-4 border-t border-border bg-muted/30">
-                  {message.status === 'draft' && (
-                    <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-9 text-[13px]"
-                          onClick={() => setScheduleDialogOpen(true)}
-                        >
-                          Schedule
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          className="h-9 text-[13px]"
-                          disabled={
-                            !hasSMSChanges || updateSMSMutation.isPending
-                          }
-                          onClick={handleUpdateMessage}
-                        >
-                          Update draft
-                        </Button>
-                      </div>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        className="h-9 w-full text-[13px] sm:w-auto sm:shrink-0"
-                        onClick={() => setSendDialogOpen(true)}
-                      >
-                        Send message
-                      </Button>
-                    </div>
-                  )}
-                  {message.status === 'scheduled' && (
-                    <div className="flex flex-col-reverse gap-2 sm:flex-row sm:flex-wrap sm:gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-9 text-[13px]"
-                        onClick={() => setCancelScheduleOpen(true)}
-                      >
-                        Cancel scheduling
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        className="h-9 text-[13px]"
-                        onClick={() => setScheduleDialogOpen(true)}
-                      >
-                        <Calendar className="mr-1.5 h-4 w-4" />
-                        Reschedule
-                      </Button>
-                    </div>
-                  )}
-                  {message.status === 'failed' && (
-                    <div className="flex flex-wrap gap-2">
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        className="h-9 text-[13px]"
-                        onClick={() => setErrorDetailsDialogOpen(true)}
-                      >
-                        <AlertCircle className="mr-1.5 h-4 w-4" />
-                        View logs
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              )}
+              <MessageComposeCardFooter
+                messageStatus={message.status}
+                hasContentChanges={hasSMSChanges}
+                updatePending={updateSMSMutation.isPending}
+                onSchedule={() => setScheduleDialogOpen(true)}
+                onUpdateDraft={handleUpdateMessage}
+                onSend={() => setSendDialogOpen(true)}
+                onCancelSchedule={() => setCancelScheduleOpen(true)}
+                onReschedule={() => setScheduleDialogOpen(true)}
+                onOpenLogs={() => setMessageLogsDialogOpen(true)}
+              />
             </div>
           )}
 
           {message.providerType === 'push' && showMessageMain && (
             <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
               <div className="px-6 py-4">
-                <h3 className="text-[15px] font-semibold text-foreground">
-                  Content
-                </h3>
+                <div className="flex items-center justify-between gap-4">
+                  <h3 className="text-[15px] font-semibold text-foreground">
+                    Content
+                  </h3>
+                  {getMessageStatusBadge()}
+                </div>
               </div>
               <div className="border-t border-border" />
               <div className="px-6 py-4 @container">
@@ -1703,79 +1691,17 @@ export function View({
                   </div>
                 </div>
               </div>
-              {(message.status === 'draft' ||
-                message.status === 'scheduled' ||
-                message.status === 'failed') && (
-                <div className="px-6 py-4 border-t border-border bg-muted/30">
-                  {message.status === 'draft' && (
-                    <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-9 text-[13px]"
-                          onClick={() => setScheduleDialogOpen(true)}
-                        >
-                          Schedule
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          className="h-9 text-[13px]"
-                          disabled={
-                            !hasPushChanges || updatePushMutation.isPending
-                          }
-                          onClick={handleUpdateMessage}
-                        >
-                          Update draft
-                        </Button>
-                      </div>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        className="h-9 w-full text-[13px] sm:w-auto sm:shrink-0"
-                        onClick={() => setSendDialogOpen(true)}
-                      >
-                        Send message
-                      </Button>
-                    </div>
-                  )}
-                  {message.status === 'scheduled' && (
-                    <div className="flex flex-col-reverse gap-2 sm:flex-row sm:flex-wrap sm:gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-9 text-[13px]"
-                        onClick={() => setCancelScheduleOpen(true)}
-                      >
-                        Cancel scheduling
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        className="h-9 text-[13px]"
-                        onClick={() => setScheduleDialogOpen(true)}
-                      >
-                        <Calendar className="mr-1.5 h-4 w-4" />
-                        Reschedule
-                      </Button>
-                    </div>
-                  )}
-                  {message.status === 'failed' && (
-                    <div className="flex flex-wrap gap-2">
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        className="h-9 text-[13px]"
-                        onClick={() => setErrorDetailsDialogOpen(true)}
-                      >
-                        <AlertCircle className="mr-1.5 h-4 w-4" />
-                        View logs
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              )}
+              <MessageComposeCardFooter
+                messageStatus={message.status}
+                hasContentChanges={hasPushChanges}
+                updatePending={updatePushMutation.isPending}
+                onSchedule={() => setScheduleDialogOpen(true)}
+                onUpdateDraft={handleUpdateMessage}
+                onSend={() => setSendDialogOpen(true)}
+                onCancelSchedule={() => setCancelScheduleOpen(true)}
+                onReschedule={() => setScheduleDialogOpen(true)}
+                onOpenLogs={() => setMessageLogsDialogOpen(true)}
+              />
             </div>
           )}
 
@@ -1917,13 +1843,13 @@ export function View({
             )}
           </div>
 
-          {isDraft && (
-            <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-              <div className="px-6 py-4">
-                <div className="flex items-center justify-between gap-4">
-                  <h3 className="text-[15px] font-semibold text-foreground">
-                    Users
-                  </h3>
+          <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+            <div className="px-6 py-4">
+              <div className="flex items-center justify-between gap-4">
+                <h3 className="text-[15px] font-semibold text-foreground">
+                  Users
+                </h3>
+                {isDraft && (
                   <Button
                     variant="ghost"
                     size="sm"
@@ -1933,41 +1859,45 @@ export function View({
                     <Plus className="mr-1.5 h-3.5 w-3.5" />
                     Add
                   </Button>
-                </div>
+                )}
               </div>
-              <div className="border-t border-border" />
-              <div className="px-6 py-4 @container">
-                <div className="flex flex-col gap-6 @[600px]:flex-row">
-                  <div className="@[600px]:w-64 shrink-0">
-                    <p className="text-[13px] text-muted-foreground">
-                      Add project users to deliver to every matching channel target
-                      on their account (email, SMS, or push), alongside any topics you
-                      selected.
-                    </p>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    {selectedUserIds.size > 0 ? (
-                      <div className="rounded-lg border border-border bg-card overflow-hidden">
-                        <Table>
-                          <TableHeader>
-                            <TableRow className="hover:bg-transparent border-b border-border">
-                              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                User
-                              </TableHead>
+            </div>
+            <div className="border-t border-border" />
+            <div className="px-6 py-4 @container">
+              <div className="flex flex-col gap-6 @[600px]:flex-row">
+                <div className="@[600px]:w-64 shrink-0">
+                  <p className="text-[13px] text-muted-foreground">
+                    Add project users to deliver to every matching channel target on
+                    their account (email, SMS, or push), alongside any topics you
+                    selected.
+                  </p>
+                </div>
+                <div className="flex-1 min-w-0">
+                  {selectedUserIds.size > 0 ? (
+                    <div className="rounded-lg border border-border bg-card overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="hover:bg-transparent border-b border-border">
+                            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                              User
+                            </TableHead>
+                            {isDraft && (
                               <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[80px]" />
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {[...selectedUserIds].map((uid) => {
-                              const u = usersById[uid]
-                              return (
-                                <TableRow key={uid} className="border-b border-border/50">
-                                  <TableCell className="px-4 py-3">
-                                    <p className="text-[13px] font-medium text-foreground">
-                                      {u?.name || u?.email || uid}
-                                    </p>
-                                    <CopyableId id={uid} size="xs" />
-                                  </TableCell>
+                            )}
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {[...selectedUserIds].map((uid) => {
+                            const u = usersById[uid]
+                            return (
+                              <TableRow key={uid} className="border-b border-border/50">
+                                <TableCell className="px-4 py-3">
+                                  <p className="text-[13px] font-medium text-foreground">
+                                    {u?.name || u?.email || uid}
+                                  </p>
+                                  <CopyableId id={uid} size="xs" />
+                                </TableCell>
+                                {isDraft && (
                                   <TableCell className="px-4 py-3 text-right">
                                     <Button
                                       variant="ghost"
@@ -1982,24 +1912,34 @@ export function View({
                                       <X className="h-4 w-4" />
                                     </Button>
                                   </TableCell>
-                                </TableRow>
-                              )
-                            })}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    ) : (
-                      <EmptyState
-                        icon={Users}
-                        title="No users"
-                        description="Choose users to target every matching channel target for each user."
-                        variant="card"
-                        iconSize="md"
-                      />
-                    )}
-                  </div>
+                                )}
+                              </TableRow>
+                            )
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  ) : isDraft ? (
+                    <EmptyState
+                      icon={Users}
+                      title="No users yet"
+                      description="Choose users using Add to target every matching channel target for each user."
+                      variant="card"
+                      iconSize="md"
+                    />
+                  ) : (
+                    <EmptyState
+                      icon={Users}
+                      title="No users"
+                      description="This message has no selected users."
+                      variant="card"
+                      iconSize="md"
+                    />
+                  )}
                 </div>
               </div>
+            </div>
+            {isDraft && (
               <div className="flex justify-end px-6 py-4 border-t border-border bg-muted/30">
                 <Button
                   size="sm"
@@ -2015,8 +1955,8 @@ export function View({
                   Update
                 </Button>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Update Targets Card */}
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
@@ -2183,12 +2123,17 @@ export function View({
           {showMessageSettings && (
             <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
               <div className="px-6 py-4">
-                <h3 className="text-[15px] font-semibold text-foreground">
-                  Details
-                </h3>
-                <p className="text-[13px] text-muted-foreground mt-2">
-                  Message ID and delivery timestamps.
-                </p>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-[15px] font-semibold text-foreground">
+                      Details
+                    </h3>
+                    <p className="text-[13px] text-muted-foreground mt-2">
+                      Message ID and delivery timestamps.
+                    </p>
+                  </div>
+                  <div className="shrink-0 pt-0.5">{getMessageStatusBadge()}</div>
+                </div>
               </div>
               <div className="border-t border-border" />
               <div className="px-6 py-4">
@@ -2450,52 +2395,52 @@ export function View({
           </DialogContent>
         </Dialog>
 
-        {message.status === 'failed' && (
-          <Dialog
-            open={errorDetailsDialogOpen}
-            onOpenChange={setErrorDetailsDialogOpen}
-          >
-            <DialogContent className="sm:max-w-2xl p-0 max-h-[90dvh] flex flex-col">
-              <DialogHeader className="px-6 pt-6 text-left">
-                <DialogTitle>Message delivery details</DialogTitle>
-                <DialogDescription className="text-[13px] mt-2">
-                  Delivery errors from the API response and recent message
-                  activity from audit logs.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="border-t border-border" />
-              <div className="px-6 pb-4 pt-0 flex-1 min-h-0 overflow-y-auto space-y-6">
-                {message.deliveryErrors && message.deliveryErrors.length > 0 ? (
-                  <div>
-                    <h4 className="text-[13px] font-semibold text-foreground mb-2">
-                      Delivery errors
-                    </h4>
-                    <pre className="max-h-[220px] overflow-auto rounded-md border border-border bg-muted/30 p-4 text-[12px]">
-                      {JSON.stringify(message.deliveryErrors, null, 2)}
-                    </pre>
-                  </div>
-                ) : null}
+        <Dialog
+          open={messageLogsDialogOpen}
+          onOpenChange={setMessageLogsDialogOpen}
+        >
+          <DialogContent className="sm:max-w-2xl p-0 max-h-[90dvh] flex flex-col">
+            <DialogHeader className="px-6 pt-6 text-left">
+              <DialogTitle>Message logs</DialogTitle>
+              <DialogDescription className="text-[13px] mt-2">
+                Audit log entries for this message.
+                {message.status === 'failed'
+                  ? ' When delivery fails, API errors are included below when available.'
+                  : ''}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="border-t border-border" />
+            <div className="px-6 pb-4 pt-0 flex-1 min-h-0 overflow-y-auto space-y-6">
+              {message.deliveryErrors && message.deliveryErrors.length > 0 ? (
                 <div>
                   <h4 className="text-[13px] font-semibold text-foreground mb-2">
-                    Activity log
+                    Delivery errors
                   </h4>
-                  <MessagingActivityLogTable
-                    logs={messageLogsData?.logs ?? []}
-                    emptyLabel="No log entries returned for this message."
-                  />
+                  <pre className="max-h-[220px] overflow-auto rounded-md border border-border bg-muted/30 p-4 text-[12px]">
+                    {JSON.stringify(message.deliveryErrors, null, 2)}
+                  </pre>
                 </div>
+              ) : null}
+              <div>
+                <h4 className="text-[13px] font-semibold text-foreground mb-2">
+                  Log entries
+                </h4>
+                <MessagingLogsTable
+                  logs={messageLogsData?.logs ?? []}
+                  emptyLabel="No log entries returned for this message."
+                />
               </div>
-              <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                <Button
-                  variant="outline"
-                  onClick={() => setErrorDetailsDialogOpen(false)}
-                >
-                  Close
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-        )}
+            </div>
+            <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setMessageLogsDialogOpen(false)}
+              >
+                Close
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   )

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from '@tanstack/react-router'
 import { ArrowLeft, Trash2 } from 'lucide-react'
 import { useProvider, useProject } from '@/lib/react-query/hooks'
@@ -23,8 +23,28 @@ import { MessagingProviderIcon } from '@/components/global/shared/MessagingProvi
 
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
+import { patchMessagingProvider } from '@/lib/messaging/patch-messaging-provider'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { Models } from '@appwrite.io/console'
+
+function formatJsonConfig(value: unknown) {
+  try {
+    return JSON.stringify(value ?? {}, null, 2)
+  } catch {
+    return '{}'
+  }
+}
+
+function jsonStableEqual(a: string, b: string) {
+  try {
+    return (
+      JSON.stringify(JSON.parse(a || '{}')) ===
+      JSON.stringify(JSON.parse(b || '{}'))
+    )
+  } catch {
+    return false
+  }
+}
 
 export function View({
   initialProvider,
@@ -92,13 +112,169 @@ export function View({
   const [name, setName] = useState('')
   const [enabled, setEnabled] = useState(false)
 
-  // Initialize form when provider loads
-  useMemo(() => {
-    if (provider) {
-      setName(provider.name || '')
-      setEnabled(provider.enabled || false)
+  const [fromEmail, setFromEmail] = useState('')
+  const [fromName, setFromName] = useState('')
+  const [replyToEmail, setReplyToEmail] = useState('')
+  const [replyToName, setReplyToName] = useState('')
+
+  const [smsCredentialsJson, setSmsCredentialsJson] = useState('{}')
+  const [smsOptionsJson, setSmsOptionsJson] = useState('{}')
+
+  const [fcmServiceAccountJson, setFcmServiceAccountJson] = useState('')
+  const [apnsAuthKey, setApnsAuthKey] = useState('')
+  const [apnsAuthKeyId, setApnsAuthKeyId] = useState('')
+  const [apnsTeamId, setApnsTeamId] = useState('')
+  const [apnsBundleId, setApnsBundleId] = useState('')
+
+  // Sync local form state when provider loads or refetches
+  useEffect(() => {
+    if (!provider) return
+    setName(provider.name || '')
+    setEnabled(provider.enabled || false)
+
+    if (provider.type === 'email') {
+      setFromEmail(provider.options?.fromEmail || '')
+      setFromName(provider.options?.fromName || '')
+      setReplyToEmail(provider.options?.replyToEmail || '')
+      setReplyToName(provider.options?.replyToName || '')
+    } else if (provider.type === 'sms') {
+      setSmsCredentialsJson(formatJsonConfig(provider.credentials))
+      setSmsOptionsJson(formatJsonConfig(provider.options))
+    } else if (provider.type === 'push') {
+      if (provider.provider === 'fcm') {
+        const raw = provider.credentials?.serviceAccountJSON
+        setFcmServiceAccountJson(
+          typeof raw === 'string' ? raw : formatJsonConfig(raw ?? {}),
+        )
+      } else if (provider.provider === 'apns') {
+        setApnsAuthKey(
+          typeof provider.credentials?.authKey === 'string'
+            ? provider.credentials.authKey
+            : '',
+        )
+        setApnsAuthKeyId(
+          typeof provider.credentials?.authKeyId === 'string'
+            ? provider.credentials.authKeyId
+            : '',
+        )
+        setApnsTeamId(
+          typeof provider.credentials?.teamId === 'string'
+            ? provider.credentials.teamId
+            : '',
+        )
+        setApnsBundleId(
+          typeof provider.credentials?.bundleId === 'string'
+            ? provider.credentials.bundleId
+            : '',
+        )
+      }
     }
   }, [provider])
+
+  const hasConfigurationChanges = useMemo(() => {
+    if (!provider) return false
+    if (provider.type === 'email') {
+      const o = provider.options
+      return (
+        fromEmail.trim() !== (o?.fromEmail || '').trim() ||
+        fromName.trim() !== (o?.fromName || '').trim() ||
+        replyToEmail.trim() !== (o?.replyToEmail || '').trim() ||
+        replyToName.trim() !== (o?.replyToName || '').trim()
+      )
+    }
+    if (provider.type === 'sms') {
+      return (
+        !jsonStableEqual(
+          smsCredentialsJson,
+          formatJsonConfig(provider.credentials),
+        ) ||
+        !jsonStableEqual(smsOptionsJson, formatJsonConfig(provider.options))
+      )
+    }
+    if (provider.type === 'push' && provider.provider === 'fcm') {
+      const raw = provider.credentials?.serviceAccountJSON
+      const baseline =
+        typeof raw === 'string' ? raw : formatJsonConfig(raw ?? {})
+      return !jsonStableEqual(fcmServiceAccountJson, baseline)
+    }
+    if (provider.type === 'push' && provider.provider === 'apns') {
+      const c = provider.credentials
+      return (
+        apnsAuthKey !== (typeof c?.authKey === 'string' ? c.authKey : '') ||
+        apnsAuthKeyId !== (typeof c?.authKeyId === 'string' ? c.authKeyId : '') ||
+        apnsTeamId !== (typeof c?.teamId === 'string' ? c.teamId : '') ||
+        apnsBundleId !== (typeof c?.bundleId === 'string' ? c.bundleId : '')
+      )
+    }
+    return false
+  }, [
+    provider,
+    fromEmail,
+    fromName,
+    replyToEmail,
+    replyToName,
+    smsCredentialsJson,
+    smsOptionsJson,
+    fcmServiceAccountJson,
+    apnsAuthKey,
+    apnsAuthKeyId,
+    apnsTeamId,
+    apnsBundleId,
+  ])
+
+  const handleSaveConfiguration = () => {
+    if (!provider || !projectId || !providerId) return
+
+    if (provider.type === 'email') {
+      updateSettingsMutation.mutate({
+        credentials: (provider.credentials ?? {}) as Record<string, unknown>,
+        fromEmail: fromEmail.trim(),
+        fromName: fromName.trim(),
+        replyToEmail: replyToEmail.trim(),
+        replyToName: replyToName.trim(),
+      })
+      return
+    }
+
+    if (provider.type === 'sms') {
+      let credentials: Record<string, unknown>
+      let options: Record<string, unknown>
+      try {
+        credentials = JSON.parse(smsCredentialsJson || '{}') as Record<
+          string,
+          unknown
+        >
+        options = JSON.parse(smsOptionsJson || '{}') as Record<string, unknown>
+      } catch {
+        toast.error('Credentials and options must be valid JSON')
+        return
+      }
+      updateSettingsMutation.mutate({ credentials, options })
+      return
+    }
+
+    if (provider.type === 'push' && provider.provider === 'fcm') {
+      try {
+        JSON.parse(fcmServiceAccountJson || '{}')
+      } catch {
+        toast.error('Service account JSON must be valid JSON')
+        return
+      }
+      updateSettingsMutation.mutate({
+        serviceAccountJSON: fcmServiceAccountJson.trim(),
+      })
+      return
+    }
+
+    if (provider.type === 'push' && provider.provider === 'apns') {
+      updateSettingsMutation.mutate({
+        authKey: apnsAuthKey.trim(),
+        authKeyId: apnsAuthKeyId.trim(),
+        teamId: apnsTeamId.trim(),
+        bundleId: apnsBundleId.trim(),
+      })
+    }
+  }
 
   // Update status mutation
   const updateStatusMutation = useMutation({
@@ -107,17 +283,20 @@ export function View({
         throw new Error('Project ID and Provider ID are required')
       }
       const projectSdk = sdk.forProject(projectId)
-      await projectSdk.messaging.updateProvider({
+      if (!provider) throw new Error('Provider is required')
+      await patchMessagingProvider(projectSdk.messaging, provider, {
         providerId,
         enabled,
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
         queryKey: ['provider', 'project', projectId, providerId],
       })
+      await queryClient.refetchQueries({
+        queryKey: ['providers', 'project', projectId],
+      })
       toast.success('Provider status updated successfully')
-      setEnabled(!enabled)
     },
     onError: (error: Error) => {
       toast.error(getErrorMessage(error) || 'Failed to update provider status')
@@ -131,14 +310,18 @@ export function View({
         throw new Error('Project ID and Provider ID are required')
       }
       const projectSdk = sdk.forProject(projectId)
-      await projectSdk.messaging.updateProvider({
+      if (!provider) throw new Error('Provider is required')
+      await patchMessagingProvider(projectSdk.messaging, provider, {
         providerId,
         name,
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
         queryKey: ['provider', 'project', projectId, providerId],
+      })
+      await queryClient.refetchQueries({
+        queryKey: ['providers', 'project', projectId],
       })
       toast.success('Provider name updated successfully')
     },
@@ -168,51 +351,57 @@ export function View({
         throw new Error('Project ID and Provider ID are required')
       }
       const projectSdk = sdk.forProject(projectId)
+      if (!provider) throw new Error('Provider is required')
 
-      const params: Record<string, unknown> & { providerId: string } = {
-        providerId,
-      }
+      let credentials: Record<string, unknown> | undefined
+      let options: Record<string, unknown> | undefined
 
-      if (provider?.type === 'sms') {
-        // SMS Providers (Twilio, Msg91, Telesign, Textmagic, Vonage)
-        params.credentials = settings.credentials || {}
-        params.options = settings.options || {}
-      } else if (provider?.type === 'email') {
-        // Email Providers (Mailgun, Sendgrid, Resend, SMTP)
-        params.credentials = settings.credentials || {}
-        params.options = {
+      if (provider.type === 'sms') {
+        credentials = settings.credentials || {}
+        options = settings.options || {}
+      } else if (provider.type === 'email') {
+        credentials = settings.credentials || {}
+        options = {
           fromEmail: settings.fromEmail,
           fromName: settings.fromName,
           replyToEmail: settings.replyToEmail,
           replyToName: settings.replyToName,
         }
-      } else if (provider?.type === 'push') {
-        // Push Providers (FCM, APNS)
+      } else if (provider.type === 'push') {
         if (provider.provider === 'fcm') {
-          // FCM uses serviceAccountJSON
           const serviceAccountJSON = settings.serviceAccountJSON
-          params.credentials = {
+          credentials = {
             serviceAccountJSON:
               typeof serviceAccountJSON === 'string'
                 ? serviceAccountJSON
                 : JSON.stringify(serviceAccountJSON),
           }
         } else if (provider.provider === 'apns') {
-          // APNS uses authKey, authKeyId, teamId, bundleId
-          params.credentials = {
+          credentials = {
             authKey: settings.authKey,
             authKeyId: settings.authKeyId,
             teamId: settings.teamId,
             bundleId: settings.bundleId,
           }
+        } else {
+          throw new Error(`Unsupported push provider: ${provider.provider}`)
         }
+      } else {
+        throw new Error(`Unsupported provider type: ${provider.type}`)
       }
 
-      await projectSdk.messaging.updateProvider(params)
+      await patchMessagingProvider(projectSdk.messaging, provider, {
+        providerId,
+        credentials,
+        options,
+      })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
         queryKey: ['provider', 'project', projectId, providerId],
+      })
+      await queryClient.refetchQueries({
+        queryKey: ['providers', 'project', projectId],
       })
       toast.success('Provider settings updated successfully')
     },
@@ -278,42 +467,6 @@ export function View({
       </div>
     )
   }
-
-  // Extract provider settings from credentials and options
-  const getProviderSettings = () => {
-    const settings: Record<string, unknown> = {}
-
-    if (provider.type === 'sms') {
-      // SMS providers
-      settings.credentials = provider.credentials || {}
-      settings.options = provider.options || {}
-    } else if (provider.type === 'email') {
-      // Email providers
-      settings.credentials = provider.credentials || {}
-      settings.fromEmail = provider.options?.fromEmail || ''
-      settings.fromName = provider.options?.fromName || ''
-      settings.replyToEmail = provider.options?.replyToEmail || ''
-      settings.replyToName = provider.options?.replyToName || ''
-    } else if (provider.type === 'push') {
-      // Push providers
-      if (provider.provider === 'fcm') {
-        const serviceAccountJSON = provider.credentials?.serviceAccountJSON
-        settings.serviceAccountJSON =
-          typeof serviceAccountJSON === 'string'
-            ? serviceAccountJSON
-            : JSON.stringify(serviceAccountJSON || {})
-      } else if (provider.provider === 'apns') {
-        settings.authKey = provider.credentials?.authKey || ''
-        settings.authKeyId = provider.credentials?.authKeyId || ''
-        settings.teamId = provider.credentials?.teamId || ''
-        settings.bundleId = provider.credentials?.bundleId || ''
-      }
-    }
-
-    return settings
-  }
-
-  const providerSettings = getProviderSettings()
 
   return (
     <div className="flex flex-col">
@@ -445,7 +598,8 @@ export function View({
                       </Label>
                       <Input
                         id="from-email"
-                        defaultValue={providerSettings.fromEmail}
+                        value={fromEmail}
+                        onChange={(e) => setFromEmail(e.target.value)}
                         className="mt-1.5 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                         placeholder="sender@example.com"
                       />
@@ -459,7 +613,8 @@ export function View({
                       </Label>
                       <Input
                         id="from-name"
-                        defaultValue={providerSettings.fromName}
+                        value={fromName}
+                        onChange={(e) => setFromName(e.target.value)}
                         className="mt-1.5 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                         placeholder="Sender Name"
                       />
@@ -473,7 +628,8 @@ export function View({
                       </Label>
                       <Input
                         id="reply-to-email"
-                        defaultValue={providerSettings.replyToEmail}
+                        value={replyToEmail}
+                        onChange={(e) => setReplyToEmail(e.target.value)}
                         className="mt-1.5 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                         placeholder="reply@example.com"
                       />
@@ -487,9 +643,50 @@ export function View({
                       </Label>
                       <Input
                         id="reply-to-name"
-                        defaultValue={providerSettings.replyToName}
+                        value={replyToName}
+                        onChange={(e) => setReplyToName(e.target.value)}
                         className="mt-1.5 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                         placeholder="Reply Name"
+                      />
+                    </div>
+                  </>
+                )}
+                {provider.type === 'sms' && (
+                  <>
+                    <div>
+                      <Label
+                        htmlFor="sms-credentials-json"
+                        className="text-[13px] font-medium text-foreground"
+                      >
+                        Credentials (JSON)
+                      </Label>
+                      <p className="text-[12px] text-muted-foreground mt-1">
+                        API keys and provider-specific fields from the console API.
+                      </p>
+                      <Textarea
+                        id="sms-credentials-json"
+                        value={smsCredentialsJson}
+                        onChange={(e) => setSmsCredentialsJson(e.target.value)}
+                        className="mt-1.5 min-h-[140px] font-mono text-xs border-border bg-background text-foreground focus:border-border focus:ring-0"
+                        spellCheck={false}
+                      />
+                    </div>
+                    <div>
+                      <Label
+                        htmlFor="sms-options-json"
+                        className="text-[13px] font-medium text-foreground"
+                      >
+                        Options (JSON)
+                      </Label>
+                      <p className="text-[12px] text-muted-foreground mt-1">
+                        Optional provider options object.
+                      </p>
+                      <Textarea
+                        id="sms-options-json"
+                        value={smsOptionsJson}
+                        onChange={(e) => setSmsOptionsJson(e.target.value)}
+                        className="mt-1.5 min-h-[100px] font-mono text-xs border-border bg-background text-foreground focus:border-border focus:ring-0"
+                        spellCheck={false}
                       />
                     </div>
                   </>
@@ -504,10 +701,12 @@ export function View({
                     </Label>
                     <Textarea
                       id="service-account-json"
-                      defaultValue={providerSettings.serviceAccountJSON}
+                      value={fcmServiceAccountJson}
+                      onChange={(e) => setFcmServiceAccountJson(e.target.value)}
                       className="mt-1.5 font-mono text-xs border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                       rows={10}
                       placeholder='{"type": "service_account", ...}'
+                      spellCheck={false}
                     />
                   </div>
                 )}
@@ -522,7 +721,8 @@ export function View({
                       </Label>
                       <Input
                         id="auth-key"
-                        defaultValue={providerSettings.authKey}
+                        value={apnsAuthKey}
+                        onChange={(e) => setApnsAuthKey(e.target.value)}
                         className="mt-1.5 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                         placeholder="Auth key"
                       />
@@ -536,7 +736,8 @@ export function View({
                       </Label>
                       <Input
                         id="auth-key-id"
-                        defaultValue={providerSettings.authKeyId}
+                        value={apnsAuthKeyId}
+                        onChange={(e) => setApnsAuthKeyId(e.target.value)}
                         className="mt-1.5 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                         placeholder="Auth key ID"
                       />
@@ -550,7 +751,8 @@ export function View({
                       </Label>
                       <Input
                         id="team-id"
-                        defaultValue={providerSettings.teamId}
+                        value={apnsTeamId}
+                        onChange={(e) => setApnsTeamId(e.target.value)}
                         className="mt-1.5 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                         placeholder="Team ID"
                       />
@@ -564,7 +766,8 @@ export function View({
                       </Label>
                       <Input
                         id="bundle-id"
-                        defaultValue={providerSettings.bundleId}
+                        value={apnsBundleId}
+                        onChange={(e) => setApnsBundleId(e.target.value)}
                         className="mt-1.5 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                         placeholder="Bundle ID"
                       />
@@ -573,15 +776,14 @@ export function View({
                 )}
               </div>
             </div>
-            <div className="px-6 py-4 border-t border-border bg-muted/30">
+            <div className="px-6 py-4 border-t border-border bg-muted/30 flex justify-end">
               <Button
                 size="sm"
                 className="h-9 text-[13px]"
-                onClick={() => {
-                  // TODO: Collect form values and call updateSettingsMutation
-                  toast.info('Settings update functionality coming soon')
-                }}
-                disabled={updateSettingsMutation.isPending}
+                onClick={handleSaveConfiguration}
+                disabled={
+                  !hasConfigurationChanges || updateSettingsMutation.isPending
+                }
               >
                 Update
               </Button>

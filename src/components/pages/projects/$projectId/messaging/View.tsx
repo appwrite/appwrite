@@ -966,9 +966,8 @@ export function View() {
                                   {provider.enabled ? (
                                     <Badge
                                       variant="success"
-                                      className="gap-1 text-[10px] shrink-0"
+                                      className="text-[10px] shrink-0"
                                     >
-                                      <span className="h-1.5 w-1.5 rounded-full bg-current" />
                                       Enabled
                                     </Badge>
                                   ) : (

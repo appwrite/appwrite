@@ -78,10 +78,10 @@ export function MessageSendDialog({
       })
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({
+      await queryClient.refetchQueries({
         queryKey: ['message', 'project', projectId, message.$id],
       })
-      await queryClient.invalidateQueries({
+      await queryClient.refetchQueries({
         queryKey: ['messages', 'project', projectId],
       })
       toast.success(
@@ -197,10 +197,10 @@ export function MessageScheduleDialog({
       })
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({
+      await queryClient.refetchQueries({
         queryKey: ['message', 'project', projectId, message.$id],
       })
-      await queryClient.invalidateQueries({
+      await queryClient.refetchQueries({
         queryKey: ['messages', 'project', projectId],
       })
       toast.success(
@@ -308,10 +308,10 @@ export function MessageCancelScheduleDialog({
       })
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({
+      await queryClient.refetchQueries({
         queryKey: ['message', 'project', projectId, message.$id],
       })
-      await queryClient.invalidateQueries({
+      await queryClient.refetchQueries({
         queryKey: ['messages', 'project', projectId],
       })
       toast.success('The scheduling has been cancelled.')
