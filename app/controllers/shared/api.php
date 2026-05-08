@@ -640,6 +640,7 @@ Http::init()
                 new Filesystem($cachePath, true)
             );
             $timestamp = 60 * 60 * 24 * 180; // Temporarily increase the TTL to 180 day to ensure files in the cache are still fetched.
+            /* @type resource|false $data */
             $data = $cache->load($key, $timestamp);
 
             if (! empty($data) && ! $cacheLog->isEmpty()) {
