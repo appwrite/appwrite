@@ -11,6 +11,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Presences as PresencesQueries;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
@@ -64,7 +65,6 @@ class XList extends PlatformAction
     public function action(array $queries, bool $includeTotal, int $ttl, Response $response, Database $dbForProject): void
     {
         try {
-            // TODO: make sure to add one more query here if not given -> send only not-expired presence -> presence will be cleared by the maintainance workers
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
@@ -164,6 +164,17 @@ class XList extends PlatformAction
         } catch (RelationshipException $e) {
             throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage(), previous: $e);
         }
+
+        // Post-filter expired presences in PHP rather than as a query so the cache key stays
+        // stable across requests (DateTime::now() in a query would bust the list cache every call).
+        // Null expiresAt is kept: realtime upserts leave it unset because the presence's lifetime
+        // is bound to the websocket connection. The maintenance worker prunes expired rows; until
+        // it runs, $total may be slightly inflated relative to the returned page.
+        $now = DateTime::now();
+        $documents = \array_values(\array_filter($documents, function (Document $document) use ($now): bool {
+            $expiresAt = $document->getAttribute('expiresAt');
+            return $expiresAt === null || $expiresAt > $now;
+        }));
 
         $response->dynamic(new Document([
             'presences' => $documents,

@@ -23,7 +23,7 @@ trait PresenceBase
 
         self::$presenceApiKeyCache[$projectId] = $this->getNewKey([
             'presences.read',
-            'presences.read',
+            'presences.write',
         ]);
 
         return self::$presenceApiKeyCache[$projectId];

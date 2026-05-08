@@ -27,7 +27,7 @@ class PresenceExpiryTest extends Scope
 
         self::$presenceApiKeyCache[$projectId] = $this->getNewKey([
             'presences.read',
-            'presences.read',
+            'presences.write',
         ]);
 
         return self::$presenceApiKeyCache[$projectId];

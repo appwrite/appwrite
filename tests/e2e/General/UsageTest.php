@@ -232,7 +232,7 @@ class UsageTest extends Scope
     {
         $presenceKey = $this->getNewKey([
             'presences.read',
-            'presences.read',
+            'presences.write',
         ]);
         $projectId = $this->getProject()['$id'];
 

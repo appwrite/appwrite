@@ -54,7 +54,7 @@ class PresenceRealtimeClientTest extends Scope
         // Realtime tests validate HTTP reads of presences; those endpoints require `presences.read`.
         self::$presenceApiKeyCache[$projectId] = $this->getNewKey([
             'presences.read',
-            'presences.read',
+            'presences.write',
         ]);
 
         return self::$presenceApiKeyCache[$projectId];
