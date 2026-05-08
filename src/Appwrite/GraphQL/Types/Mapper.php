@@ -451,9 +451,11 @@ class Mapper
                 'email' => static::model("{$prefix}Email"),
                 'url' => static::model("{$prefix}Url"),
                 'ip' => static::model("{$prefix}Ip"),
+                APP_DATABASE_ATTRIBUTE_ENUM => static::model("{$prefix}Enum"),
                 default => static::model("{$prefix}String"),
             },
-            'enum' => static::model("{$prefix}String"), // TODO: Add enum type (breaking change if added)
+            // Keep supporting legacy responses where type is "enum".
+            'enum' => static::model("{$prefix}Enum"),
             'integer' => static::model("{$prefix}Integer"),
             'double' => static::model("{$prefix}Float"),
             'boolean' => static::model("{$prefix}Boolean"),

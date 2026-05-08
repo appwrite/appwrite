@@ -28,4 +28,30 @@ class BuilderTest extends TestCase
         $this->assertInstanceOf(NamedType::class, $type);
         $this->assertEquals('Table', $type->name());
     }
+
+    /**
+     * @throws \ReflectionException
+     */
+    public function testEnumAttributeResolvesToEnumModel(): void
+    {
+        $method = new \ReflectionMethod(Mapper::class, 'getColumnImplementation');
+
+        $type = $method->invokeArgs(null, [['type' => 'string', 'format' => APP_DATABASE_ATTRIBUTE_ENUM], false]);
+
+        $this->assertInstanceOf(NamedType::class, $type);
+        $this->assertEquals('AttributeEnum', $type->name());
+    }
+
+    /**
+     * @throws \ReflectionException
+     */
+    public function testEnumColumnResolvesToEnumModel(): void
+    {
+        $method = new \ReflectionMethod(Mapper::class, 'getColumnImplementation');
+
+        $type = $method->invokeArgs(null, [['type' => 'string', 'format' => APP_DATABASE_ATTRIBUTE_ENUM], true]);
+
+        $this->assertInstanceOf(NamedType::class, $type);
+        $this->assertEquals('ColumnEnum', $type->name());
+    }
 }
