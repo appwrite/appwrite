@@ -69,7 +69,9 @@ trait Deployment
                 $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
 
                 if ($project->isEmpty()) {
-                    throw new Exception(Exception::PROJECT_NOT_FOUND, 'Repository references non-existent project');
+                    Console::warning("Skipping stale repository {$repositoryId}: referenced project no longer exists.");
+                    $authorization->skip(fn () => $dbForPlatform->deleteDocument('repositories', $repositoryId));
+                    continue;
                 }
 
                 $this->beforeCreateGitDeployment($project, $repository, $dbForPlatform, $authorization);
@@ -541,6 +543,13 @@ trait Deployment
                 //TODO: Add event?
             } catch (\Throwable $e) {
                 Span::add("{$logBase}.error", $e->getMessage());
+
+                if ($e instanceof Exception && $e->getType() === Exception::PROVIDER_REPOSITORY_NOT_FOUND) {
+                    Console::warning("Skipping stale repository {$repositoryId}: provider repository no longer exists.");
+                    $authorization->skip(fn () => $dbForPlatform->deleteDocument('repositories', $repositoryId));
+                    continue;
+                }
+
                 $errors[] = $e;
             }
         }
@@ -548,14 +557,7 @@ trait Deployment
         $queueForBuilds->reset(); // prevent shutdown hook from triggering again
 
         if (!empty($errors)) {
-            $errors = array_values(array_filter(
-                $errors,
-                fn (\Throwable $e) => $e instanceof Exception && $e->getCode() >= 400 && $e->getCode() < 500
-            ));
-
-            if (!empty($errors)) {
-                throw $errors[0];
-            }
+            throw $errors[0];
         }
     }
 
