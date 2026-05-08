@@ -348,6 +348,10 @@ class Exception extends \Exception
     public const string MIGRATION_IN_PROGRESS = 'migration_in_progress';
     public const string MIGRATION_PROVIDER_ERROR = 'migration_provider_error';
     public const string MIGRATION_DATABASE_TYPE_UNSUPPORTED = 'migration_database_type_unsupported';
+    public const string MIGRATION_SOURCE_PROJECT_ID_REQUIRED = 'migration_source_project_id_required';
+    public const string MIGRATION_SOURCE_PROJECT_NOT_FOUND = 'migration_source_project_not_found';
+    public const string MIGRATION_SOURCE_TYPE_INVALID = 'migration_source_type_invalid';
+    public const string MIGRATION_DESTINATION_TYPE_INVALID = 'migration_destination_type_invalid';
 
     /** Realtime */
     public const string REALTIME_MESSAGE_FORMAT_INVALID = 'realtime_message_format_invalid';

@@ -2,12 +2,14 @@
 
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Audit as AuditPublisher;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Publisher\Certificate as CertificatePublisher;
 use Appwrite\Event\Publisher\Execution as ExecutionPublisher;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
 use Appwrite\Event\Publisher\Screenshot as ScreenshotPublisher;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
+use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Appwrite\Utopia\Database\Documents\User;
 use Executor\Executor;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
@@ -112,6 +114,10 @@ $container->set('publisherForStatsResources', fn (Publisher $publisher) => new S
     $publisher,
     new Queue(System::getEnv('_APP_STATS_RESOURCES_QUEUE_NAME', Event::STATS_RESOURCES_QUEUE_NAME))
 ), ['publisher']);
+$container->set('publisherForBuilds', fn (Publisher $publisher) => new BuildPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_BUILDS_QUEUE_NAME', Event::BUILDS_QUEUE_NAME))
+), ['publisher']);
 
 /**
  * Platform configuration
@@ -197,6 +203,10 @@ $container->set('cache', function (Group $pools, Telemetry $telemetry) {
 
     return $cache;
 }, ['pools', 'telemetry']);
+
+$container->set('cacheControlForStorage', fn () => function (StorageCacheControl $config): string {
+    return \sprintf('private, max-age=%d', $config->maxAge);
+});
 
 $container->set('redis', function () {
     $host = System::getEnv('_APP_REDIS_HOST', 'localhost');

@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Health\Http\Health\Queue\Failed;
 
-use Appwrite\Event\Build;
 use Appwrite\Event\Database;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
@@ -10,6 +9,7 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Publisher\Audit;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
 use Appwrite\Event\Publisher\Screenshot;
@@ -83,7 +83,7 @@ class Get extends Base
             ->inject('publisherForUsage')
             ->inject('queueForWebhooks')
             ->inject('publisherForCertificates')
-            ->inject('queueForBuilds')
+            ->inject('publisherForBuilds')
             ->inject('queueForMessaging')
             ->inject('publisherForMigrations')
             ->inject('publisherForScreenshots')
@@ -103,7 +103,7 @@ class Get extends Base
         UsagePublisher $publisherForUsage,
         Webhook $queueForWebhooks,
         Certificate $publisherForCertificates,
-        Build $queueForBuilds,
+        BuildPublisher $publisherForBuilds,
         Messaging $queueForMessaging,
         MigrationPublisher $publisherForMigrations,
         Screenshot $publisherForScreenshots,
@@ -120,7 +120,7 @@ class Get extends Base
             System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', Event::STATS_USAGE_QUEUE_NAME) => $publisherForUsage,
             System::getEnv('_APP_WEBHOOK_QUEUE_NAME', Event::WEBHOOK_QUEUE_NAME) => $queueForWebhooks,
             System::getEnv('_APP_CERTIFICATES_QUEUE_NAME', Event::CERTIFICATES_QUEUE_NAME) => $publisherForCertificates,
-            System::getEnv('_APP_BUILDS_QUEUE_NAME', Event::BUILDS_QUEUE_NAME) => $queueForBuilds,
+            System::getEnv('_APP_BUILDS_QUEUE_NAME', Event::BUILDS_QUEUE_NAME) => $publisherForBuilds,
             System::getEnv('_APP_SCREENSHOTS_QUEUE_NAME', Event::SCREENSHOTS_QUEUE_NAME) => $publisherForScreenshots,
             System::getEnv('_APP_MESSAGING_QUEUE_NAME', Event::MESSAGING_QUEUE_NAME) => $queueForMessaging,
             System::getEnv('_APP_MIGRATIONS_QUEUE_NAME', Event::MIGRATIONS_QUEUE_NAME) => $publisherForMigrations,

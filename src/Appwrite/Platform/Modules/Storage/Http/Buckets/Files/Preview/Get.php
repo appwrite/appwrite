@@ -4,6 +4,8 @@ namespace Appwrite\Platform\Modules\Storage\Http\Buckets\Files\Preview;
 
 use Appwrite\Extend\Exception;
 use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\Platform\Modules\Storage\Config\CacheControl;
+use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -94,6 +96,7 @@ class Get extends Action
             ->inject('project')
             ->inject('authorization')
             ->inject('user')
+            ->inject('cacheControlForStorage')
             ->callback($this->action(...));
     }
 
@@ -120,7 +123,8 @@ class Get extends Action
         Device $deviceForLocal,
         Document $project,
         Authorization $authorization,
-        User $user
+        User $user,
+        callable $cacheControlForStorage
     ) {
 
         if (!\extension_loaded('imagick')) {
@@ -294,8 +298,20 @@ class Get extends Action
             }
         }
 
+        $maxAge = 2592000; // 30 days
+        $cacheControl = $cacheControlForStorage(new StorageCacheControl(
+            source: CacheControl::SOURCE_ACTION,
+            user: $user,
+            maxAge: $maxAge,
+            project: $project,
+            bucket: $bucket,
+            file: $file,
+            resourceToken: $resourceToken,
+            fileSecurity: $fileSecurity,
+        ));
+
         $response
-            ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
+            ->addHeader('Cache-Control', $cacheControl)
             ->setContentType($contentType)
             ->file($data);
 

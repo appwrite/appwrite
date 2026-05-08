@@ -763,7 +763,7 @@ abstract class Format
                     case 'getPolicy':
                         switch ($param) {
                             case 'policyId':
-                                return 'ProjectPolicyId';
+                                return 'ProjectPolicy';
                         }
                         break;
                     case 'getOAuth2Provider':

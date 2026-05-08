@@ -197,13 +197,13 @@ class Migrations extends Action
         $projectDB = null;
         $useAppwriteApiSource = false;
         if ($source === SourceAppwrite::getName() && empty($credentials['projectId'])) {
-            throw new \Exception('Source projectId is required for Appwrite migrations');
+            throw new Exception(Exception::MIGRATION_SOURCE_PROJECT_ID_REQUIRED);
         }
 
         if (! empty($credentials['projectId'])) {
             $this->sourceProject = $this->dbForPlatform->getDocument('projects', $credentials['projectId']);
             if ($this->sourceProject->isEmpty()) {
-                throw new \Exception('Source project not found for provided projectId');
+                throw new Exception(Exception::MIGRATION_SOURCE_PROJECT_NOT_FOUND);
             }
 
             $sourceRegion = $this->sourceProject->getAttribute('region', 'default');
@@ -266,7 +266,7 @@ class Migrations extends Action
                 $this->deviceForMigrations,
                 $this->dbForProject,
             ),
-            default => throw new \Exception('Invalid source type'),
+            default => throw new Exception(Exception::MIGRATION_SOURCE_TYPE_INVALID),
         };
 
         $resources = $migration->getAttribute('resources', []);
@@ -312,7 +312,7 @@ class Migrations extends Action
                 $options['filename'],
                 $options['columns'] ?? [],
             ),
-            default => throw new \Exception('Invalid destination type'),
+            default => throw new Exception(Exception::MIGRATION_DESTINATION_TYPE_INVALID),
         };
     }
 
@@ -438,6 +438,7 @@ class Migrations extends Action
 
         $transfer = $source = $destination = null;
         $aggregatedResources = [];
+        $caughtError = null;
 
         $host = System::getEnv('_APP_MIGRATION_HOST');
         if (empty($host)) {
@@ -531,7 +532,6 @@ class Migrations extends Action
             if (!empty($sourceErrors) || ! empty($destinationErrors)) {
                 $migration->setAttribute('status', 'failed');
                 $migration->setAttribute('stage', 'finished');
-                $migration->setAttribute('errors', $this->sanitizeErrors($sourceErrors, $destinationErrors));
                 return;
             }
 
@@ -546,34 +546,68 @@ class Migrations extends Action
             $migration->setAttribute('status', 'failed');
             $migration->setAttribute('stage', 'finished');
 
-            call_user_func($this->logError, $th, 'appwrite-worker', 'appwrite-queue-' . self::getName(), [
-                'migrationId' => $migration->getId(),
-                'source' => $migration->getAttribute('source') ?? '',
-                'destination' => $migration->getAttribute('destination') ?? '',
-            ]);
+            $caughtError = $th;
 
+            // Mirror general.php's HTTP-error pattern: typed AppwriteException uses its
+            // registry-driven isPublishable() flag; library-thrown Migration\Exception is
+            // always user-facing; anything else is unknown and surfaced to Sentry.
+            if ($th instanceof Exception) {
+                $publish = $th->isPublishable();
+            } elseif ($th instanceof MigrationException) {
+                $publish = false;
+            } else {
+                $publish = true;
+            }
+
+            if ($publish) {
+                call_user_func($this->logError, $th, 'appwrite-worker', 'appwrite-queue-' . self::getName(), [
+                    'migrationId' => $migration->getId(),
+                    'source' => $migration->getAttribute('source') ?? '',
+                    'destination' => $migration->getAttribute('destination') ?? '',
+                ]);
+            }
         } finally {
             try {
+                $sourceErrors = $source?->getErrors() ?? [];
+                $destinationErrors = $destination?->getErrors() ?? [];
+
+                if ($caughtError !== null) {
+                    if ($caughtError instanceof MigrationException) {
+                        // library-thrown, message constructed by us
+                        $bubbled = $caughtError;
+                    } elseif ($caughtError instanceof Exception) {
+                        // typed AppwriteException — message comes from the curated registry
+                        $bubbled = new MigrationException(
+                            resourceName: '',
+                            resourceGroup: '',
+                            message: $caughtError->getMessage(),
+                            code: $caughtError->getCode(),
+                            previous: $caughtError,
+                        );
+                    } else {
+                        // unknown throwable — raw message may embed internal hostnames,
+                        // DSNs, tokens, etc. Replace with a generic user-facing string;
+                        // the original is preserved on `previous:` for Sentry.
+                        $bubbled = new MigrationException(
+                            resourceName: '',
+                            resourceGroup: '',
+                            message: 'Migration failed due to an unexpected error.',
+                            code: $caughtError->getCode() ?: 500,
+                            previous: $caughtError,
+                        );
+                    }
+                    $destinationErrors[] = $bubbled;
+                }
+
+                $migration->setAttribute('errors', $this->sanitizeErrors(
+                    $sourceErrors,
+                    $destinationErrors,
+                ));
+
                 $this->updateMigrationDocument($migration, $project, $queueForRealtime);
 
                 if ($migration->getAttribute('status', '') === 'failed') {
                     Console::error('Migration(' . $migration->getSequence() . ':' . $migration->getId() . ') failed, Project(' . $this->project->getSequence() . ':' . $this->project->getId() . ')');
-
-                    $sourceErrors = $source?->getErrors() ?? [];
-                    $destinationErrors = $destination?->getErrors() ?? [];
-
-                    foreach ([...$sourceErrors, ...$destinationErrors] as $error) {
-                        /** @var MigrationException $error */
-                        if ($error->getCode() === 0 || $error->getCode() >= 500) {
-                            ($this->logError)($error, 'appwrite-worker', 'appwrite-queue-' . self::getName(), [
-                                'migrationId' => $migration->getId(),
-                                'source' => $migration->getAttribute('source') ?? '',
-                                'destination' => $migration->getAttribute('destination') ?? '',
-                                'resourceName' => $error->getResourceName(),
-                                'resourceGroup' => $error->getResourceGroup(),
-                            ]);
-                        }
-                    }
 
                     $source?->error();
                     $destination?->error();
