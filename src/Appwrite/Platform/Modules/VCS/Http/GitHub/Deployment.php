@@ -544,12 +544,19 @@ trait Deployment
                 //TODO: Add event?
             } catch (\Throwable $e) {
                 Span::add("{$logBase}.error", $e->getMessage());
-                $errors[] = $e->getMessage();
+                $errors[] = $e;
             }
         }
 
         if (!empty($errors)) {
-            throw new Exception(Exception::GENERAL_UNKNOWN, \implode("\n", $errors));
+            $errors = array_values(array_filter(
+                $errors,
+                fn (\Throwable $e) => $e instanceof Exception && $e->getCode() >= 400 && $e->getCode() < 500
+            ));
+
+            if (!empty($errors)) {
+                throw $errors[0];
+            }
         }
     }
 
