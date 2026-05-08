@@ -54,4 +54,30 @@ class BuilderTest extends TestCase
         $this->assertInstanceOf(NamedType::class, $type);
         $this->assertEquals('ColumnEnum', $type->name());
     }
+
+    /**
+     * @throws \ReflectionException
+     */
+    public function testLegacyEnumTypeResolvesToEnumAttribute(): void
+    {
+        $method = new \ReflectionMethod(Mapper::class, 'getColumnImplementation');
+
+        $type = $method->invokeArgs(null, [['type' => 'enum'], false]);
+
+        $this->assertInstanceOf(NamedType::class, $type);
+        $this->assertEquals('AttributeEnum', $type->name());
+    }
+
+    /**
+     * @throws \ReflectionException
+     */
+    public function testLegacyEnumTypeResolvesToEnumColumn(): void
+    {
+        $method = new \ReflectionMethod(Mapper::class, 'getColumnImplementation');
+
+        $type = $method->invokeArgs(null, [['type' => 'enum'], true]);
+
+        $this->assertInstanceOf(NamedType::class, $type);
+        $this->assertEquals('ColumnEnum', $type->name());
+    }
 }
