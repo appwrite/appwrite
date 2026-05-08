@@ -635,8 +635,9 @@ Http::init()
             $key = $request->cacheIdentifier();
             Span::add('storage.cache.key', $key);
             $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
+            $cachePath = APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId();
             $cache = new Cache(
-                new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
+                new Filesystem($cachePath, true)
             );
             $timestamp = 60 * 60 * 24 * 180; // Temporarily increase the TTL to 180 day to ensure files in the cache are still fetched.
             $data = $cache->load($key, $timestamp);
@@ -718,7 +719,7 @@ Http::init()
                         'accessedAt' => DateTime::now(),
                     ])));
                     // Refresh the filesystem file's mtime so TTL-based expiry in cache->load() stays valid
-                    $cache->save($key, $data);
+                    \touch($cachePath . DIRECTORY_SEPARATOR . $key);
                 }
 
                 $response
@@ -728,7 +729,18 @@ Http::init()
                 $storageCacheOperationsCounter->add(1, ['result' => 'hit']);
                 if (! $isImageTransformation || ! $isDisabled) {
                     Span::add('storage.cache.hit', true);
-                    $response->send($data);
+                    try {
+                        while (! \feof($data)) {
+                            $chunk = \fread($data, MAX_OUTPUT_CHUNK_SIZE);
+                            if ($chunk === false) {
+                                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to read cached response stream');
+                            }
+
+                            $response->chunk($chunk, \feof($data));
+                        }
+                    } finally {
+                        \fclose($data);
+                    }
                 }
             } else {
                 $storageCacheOperationsCounter->add(1, ['result' => 'miss']);
