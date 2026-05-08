@@ -96,6 +96,8 @@ class Presence extends Any
     {
         $document->removeAttribute('$collection');
         $document->removeAttribute('$tenant');
+        $document->removeAttribute('hostname');
+        $document->removeAttribute('perms_md5');
 
         if (!$document->isEmpty()) {
             $document->setAttribute('$sequence', (string) $document->getAttribute('$sequence', ''));

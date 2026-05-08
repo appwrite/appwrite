@@ -93,6 +93,13 @@ class XList extends PlatformAction
         $groupedQueries = Query::groupByType($queries);
         $filterQueries = $groupedQueries['filters'];
 
+        // should be excluded from the user provided query as user query would be used for caching only
+        // otherwise cache will always miss due to the datetime now
+        $expiryFilter = Query::or([
+            Query::isNull('expiresAt'),
+            Query::greaterThan('expiresAt', DateTime::now()),
+        ]);
+
         try {
             if ((int)$ttl > 0) {
                 $presenceState = new PresenceState();
@@ -115,7 +122,7 @@ class XList extends PlatformAction
                     }, $cachedDocuments);
                     $documentsCacheHit = true;
                 } else {
-                    $documents = $dbForProject->find('presenceLogs', $queries);
+                    $documents = $dbForProject->find('presenceLogs', [...$queries, $expiryFilter]);
                     $documentsArray = \array_map(function ($doc) {
                         return $doc->getArrayCopy();
                     }, $documents);
@@ -139,7 +146,7 @@ class XList extends PlatformAction
                     if ($cachedTotal !== null && $cachedTotal !== false) {
                         $total = (int) $cachedTotal;
                     } else {
-                        $total = $dbForProject->count('presenceLogs', $filterQueries, APP_LIMIT_COUNT);
+                        $total = $dbForProject->count('presenceLogs', [...$filterQueries, $expiryFilter], APP_LIMIT_COUNT);
                         $presenceState->saveListCacheField(
                             $dbForProject,
                             $roles,
@@ -154,8 +161,8 @@ class XList extends PlatformAction
 
                 $response->addHeader('X-Appwrite-Cache', $documentsCacheHit ? 'hit' : 'miss');
             } else {
-                $documents = $dbForProject->find('presenceLogs', $queries);
-                $total = $includeTotal ? $dbForProject->count('presenceLogs', $filterQueries, APP_LIMIT_COUNT) : 0;
+                $documents = $dbForProject->find('presenceLogs', [...$queries, $expiryFilter]);
+                $total = $includeTotal ? $dbForProject->count('presenceLogs', [...$filterQueries, $expiryFilter], APP_LIMIT_COUNT) : 0;
             }
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
@@ -164,17 +171,6 @@ class XList extends PlatformAction
         } catch (RelationshipException $e) {
             throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage(), previous: $e);
         }
-
-        // Post-filter expired presences in PHP rather than as a query so the cache key stays
-        // stable across requests (DateTime::now() in a query would bust the list cache every call).
-        // Null expiresAt is kept: realtime upserts leave it unset because the presence's lifetime
-        // is bound to the websocket connection. The maintenance worker prunes expired rows; until
-        // it runs, $total may be slightly inflated relative to the returned page.
-        $now = DateTime::now();
-        $documents = \array_values(\array_filter($documents, function (Document $document) use ($now): bool {
-            $expiresAt = $document->getAttribute('expiresAt');
-            return $expiresAt === null || $expiresAt > $now;
-        }));
 
         $response->dynamic(new Document([
             'presences' => $documents,
