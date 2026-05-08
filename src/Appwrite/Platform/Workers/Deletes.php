@@ -6,7 +6,10 @@ use Appwrite\Certificates\Adapter as CertificatesAdapter;
 use Appwrite\Deletes\Identities;
 use Appwrite\Deletes\Targets;
 use Appwrite\Event\Delete as DeleteEvent;
+use Appwrite\Event\Message\Usage;
+use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Extend\Exception;
+use Appwrite\Usage\Context as UsageContext;
 use Executor\Executor;
 use Throwable;
 use Utopia\Abuse\Adapters\TimeLimit\Database as AbuseDatabase;
@@ -68,6 +71,7 @@ class Deletes extends Action
             ->inject('log')
             ->inject('queueForDeletes')
             ->inject('getAudit')
+            ->inject('publisherForUsage')
             ->callback($this->action(...));
     }
 
@@ -95,6 +99,7 @@ class Deletes extends Action
         Log $log,
         DeleteEvent $queueForDeletes,
         callable $getAudit,
+        UsagePublisher $publisherForUsage,
     ): void {
         $payload = $message->getPayload();
 
@@ -214,7 +219,7 @@ class Deletes extends Action
                 $this->deleteUsageStats($project, $getProjectDB, $getLogsDB, $hourlyUsageRetentionDatetime);
                 $this->deleteExpiredSessions($project, $getProjectDB);
                 $this->deleteExpiredTransactions($project, $getProjectDB);
-                $this->deleteExpiredPresences($project, $getProjectDB);
+                $this->deleteExpiredPresences($project, $getProjectDB, $publisherForUsage);
                 $this->deleteOldDeployments($queueForDeletes, $project, $getProjectDB);
                 break;
             default:
@@ -1707,7 +1712,7 @@ class Deletes extends Action
         });
     }
 
-    private function deleteExpiredPresences(Document $project, callable $getProjectDB): void
+    private function deleteExpiredPresences(Document $project, callable $getProjectDB, UsagePublisher $publisherForUsage): void
     {
         $dbForProject = $getProjectDB($project);
 
@@ -1720,7 +1725,7 @@ class Deletes extends Action
         $now = DateTime::format(new \DateTime());
         $oldestAllowed = DateTime::format((new \DateTime())->sub(\DateInterval::createFromDateString('30 days')));
 
-        $dbForProject->deleteDocuments('presenceLogs', [
+        $deleted = $dbForProject->deleteDocuments('presenceLogs', [
             Query::or([
                 Query::and([
                     Query::isNotNull('expiresAt'),
@@ -1731,5 +1736,13 @@ class Deletes extends Action
         ], onError: function (Throwable $th) {
             // Swallow errors to avoid breaking the cleanup process
         });
+
+        if ($deleted > 0) {
+            $usage = (new UsageContext())->addMetric(METRIC_USERS_PRESENCE, -$deleted);
+            $publisherForUsage->enqueue(new Usage(
+                project: $project,
+                metrics: $usage->getMetrics(),
+            ));
+        }
     }
 }

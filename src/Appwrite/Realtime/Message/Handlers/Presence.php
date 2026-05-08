@@ -40,7 +40,7 @@ class Presence extends Action
 
     /**
      * @param array<int, string>|null $permissions
-     * @param Closure(int, string): void $triggerPresenceUsage
+     * @param Closure(int, Document): void $triggerPresenceUsage
      * @param Closure(?Document, User, string, Document): void $triggerPresenceEvent
      * @return array<string, mixed>
      */
@@ -78,6 +78,9 @@ class Presence extends Action
             'userId' => $user->getId(),
             'source' => 'realtime',
             'status' => $status,
+            // Pod identity, used by the realtime worker's startup sweep to clean up rows
+            // orphaned by a previous incarnation of this hostname (i.e. pod crash before onClose ran).
+            'hostname' => \gethostname() ?: null,
         ];
         if ($metadata !== null) {
             $presenceData['metadata'] = $metadata;
@@ -92,16 +95,16 @@ class Presence extends Action
             $presenceId,
             (string) $user->getSequence(),
             function () use ($project, $triggerPresenceUsage): void {
-                $triggerPresenceUsage(1, $project->getId());
+                $triggerPresenceUsage(1, $project);
             },
         );
 
         $presence->removeAttribute('hostname');
 
-        $realtime->connections[$connectionId]['presences'] = \array_merge(
-            $realtime->connections[$connectionId]['presences'] ?? [],
-            [$presence->getId()],
-        );
+        // Stash the Document keyed by ID so onClose can build delete-event payloads without
+        // re-reading the row from the DB. hostname is already stripped above so it won't leak
+        // into the realtime payload sent to subscribers.
+        $realtime->connections[$connectionId]['presences'][$presence->getId()] = $presence;
 
         $triggerPresenceEvent($project, $user, 'presences.[presenceId].upsert', $presence);
 
