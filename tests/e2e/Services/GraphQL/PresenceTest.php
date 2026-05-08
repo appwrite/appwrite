@@ -16,7 +16,7 @@ class PresenceTest extends Scope
     public function testUpsertPresenceSourceIsGraphql(): void
     {
         $projectId = $this->getProject()['$id'];
-        $apiKey = $this->getNewKey(['presences.read']);
+        $apiKey = $this->getNewKey(['presences.write']);
         $user = $this->getUser(true);
 
         $payload = [
