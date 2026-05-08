@@ -50,7 +50,7 @@ $admins = [
     'users.read',
     'users.write',
     'presences.read',
-    'presences.read',
+    'presences.write',
     'databases.read',
     'databases.write',
     'collections.read',
