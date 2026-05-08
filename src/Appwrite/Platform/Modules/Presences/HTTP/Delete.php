@@ -69,9 +69,9 @@ class Delete extends PlatformAction
         try {
             $dbForProject->deleteDocument('presenceLogs', $presenceId);
         } catch (ConflictException) {
-            throw new Exception(Exception::DOCUMENT_DELETE_RESTRICTED);
-        } catch (RestrictedException) {
             throw new Exception(Exception::DOCUMENT_UPDATE_CONFLICT);
+        } catch (RestrictedException) {
+            throw new Exception(Exception::DOCUMENT_DELETE_RESTRICTED);
         }
 
         (new PresenceState())->purgeListCache($dbForProject);
