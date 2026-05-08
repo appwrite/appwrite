@@ -290,24 +290,14 @@ if (!function_exists('triggerStats')) {
 }
 
 if (!function_exists('triggerPresenceUsage')) {
-    function triggerPresenceUsage(int $value, string $projectId): void
+    function triggerPresenceUsage(int $value, Document $project): void
     {
-        if (empty($projectId)) {
+        if ($project->isEmpty()) {
             return;
         }
 
         try {
             global $publisherForUsage;
-
-            $consoleDB = getConsoleDB();
-            /** @var Document $project */
-            $project = $consoleDB->getAuthorization()->skip(
-                fn () => $consoleDB->getDocument('projects', $projectId)
-            );
-
-            if ($project->isEmpty()) {
-                return;
-            }
 
             $usage = new Context();
             $usage->addMetric(METRIC_USERS_PRESENCE, $value);
@@ -317,7 +307,7 @@ if (!function_exists('triggerPresenceUsage')) {
                 metrics: $usage->getMetrics(),
             ));
         } catch (Throwable $th) {
-            logError($th, 'realtimeStats', tags: ['projectId' => $projectId]);
+            logError($th, 'realtimeStats', tags: ['projectId' => $project->getId()]);
         }
     }
 }
@@ -599,6 +589,34 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
         advisory: ['ExplicitBucketBoundaries' => $realtimeDelayBuckets],
     ));
     $register->get('telemetry.workerCounter')->add(1);
+
+    // Orphan sweep on pod restart -> no connections in in-memory realtime connections object.
+    // So db must be in sync and only one coroutine shall trigger this
+    if ($workerId === 0) {
+        go(function (): void {
+            $hostname = \gethostname();
+            if ($hostname === false || $hostname === '') {
+                return;
+            }
+
+            try {
+                $consoleDB = getConsoleDB();
+                $consoleDB->getAuthorization()->skip(fn () => $consoleDB->foreach('projects', function (Document $project) use ($hostname): void {
+                    try {
+                        $dbForProject = getProjectDB($project);
+                        $dbForProject->deleteDocuments('presenceLogs', [
+                            Query::equal('hostname', [$hostname]),
+                            Query::equal('source', ['realtime']),
+                        ]);
+                    } catch (Throwable $th) {
+                        Console::error("Realtime startup orphan sweep failed for project {$project->getId()}: {$th->getMessage()}");
+                    }
+                }));
+            } catch (Throwable $th) {
+                Console::error('Realtime startup orphan sweep error: ' . $th->getMessage());
+            }
+        });
+    }
 
     $attempts = 0;
     $start = time();
@@ -1321,35 +1339,38 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register) {
             }
 
             $projectId = $realtime->connections[$connection]['projectId'];
-            $presenceIds = $realtime->connections[$connection]['presences'] ?? [];
+            /** @var array<string, Document> $presencesById */
+            $presencesById = $realtime->connections[$connection]['presences'] ?? [];
 
             if (
-                !empty($presenceIds)
+                !empty($presencesById)
                 && $projectId !== 'console'
             ) {
-                /** @var string[] $presenceIds */
-                $presenceIds = \array_values(\array_unique($presenceIds));
+                go(function () use ($presencesById, $projectId): void {
+                    // Fresh span: the parent realtime.close span finishes before this coroutine
+                    Span::init('realtime.close.presenceCleanup');
+                    Span::add('realtime.projectId', $projectId);
+                    Span::add('realtime.presenceCount', \count($presencesById));
 
-                if (!empty($presenceIds)) {
-                    $consoleDB = getConsoleDB();
-                    $project = $consoleDB->getAuthorization()->skip(fn () => $consoleDB->getDocument('projects', $projectId));
+                    try {
+                        $consoleDB = getConsoleDB();
+                        $project = $consoleDB->getAuthorization()->skip(fn () => $consoleDB->getDocument('projects', $projectId));
 
-                    if (!$project->isEmpty()) {
+                        if ($project->isEmpty()) {
+                            return;
+                        }
+
+                        $presenceIds = \array_keys($presencesById);
+                        $presences = \array_values($presencesById);
                         $dbForProject = getProjectDB($project);
-                        $presences = $dbForProject->find('presenceLogs', [
-                            Query::equal('$id', $presenceIds),
-                        ]);
+
                         try {
                             $dbForProject->deleteDocuments('presenceLogs', [Query::equal('$id', $presenceIds)]);
-                        } catch (Throwable $th) {
+                        } catch (Throwable) {
                             // swallow errors to avoid breaking disconnect cleanup
                         }
 
-                        $deletedPresences = \count($presences);
-
-                        if ($deletedPresences > 0) {
-                            triggerPresenceUsage(-$deletedPresences, $project->getId());
-                        }
+                        triggerPresenceUsage(-\count($presences), $project);
 
                         foreach ($presences as $presence) {
                             try {
@@ -1358,8 +1379,15 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register) {
                                 // Swallow errors to avoid breaking disconnect cleanup
                             }
                         }
+                    } catch (Throwable $th) {
+                        Span::error($th);
+                        logError($th, 'realtimeOnClosePresenceCleanup', tags: [
+                            'projectId' => $projectId,
+                        ]);
+                    } finally {
+                        Span::current()?->finish();
                     }
-                }
+                });
             }
 
             triggerStats([

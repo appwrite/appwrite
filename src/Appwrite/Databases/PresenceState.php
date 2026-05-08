@@ -69,8 +69,8 @@ class PresenceState
 
         try {
             if ($dbForProject->getAdapter()->getSupportForUpsertOnUniqueIndex()) {
-                $presenceCreated = $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userInternalId', [$userInternalId])])->isEmpty();
                 $presence = $dbForProject->upsertDocument(self::COLLECTION_ID, $presenceDocument);
+                $presenceCreated = $presence->getCreatedAt() === $presence->getUpdatedAt();
             } else {
                 $presence = $this->transactionalUpsertForUser(
                     $dbForProject,
