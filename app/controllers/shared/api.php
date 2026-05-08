@@ -718,8 +718,6 @@ Http::init()
                     $authorization->skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), new Document([
                         'accessedAt' => DateTime::now(),
                     ])));
-                    // Refresh the filesystem file's mtime so TTL-based expiry in cache->load() stays valid
-                    \touch($cachePath . DIRECTORY_SEPARATOR . $key);
                 }
 
                 $response
