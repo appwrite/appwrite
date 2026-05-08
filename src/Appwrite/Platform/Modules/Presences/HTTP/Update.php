@@ -41,7 +41,7 @@ class Update extends PlatformAction
             ->setHttpPath('/v1/presences/:presenceId')
             ->desc('Update presence')
             ->groups(['api', 'presences'])
-            ->label('scope', 'presences.read')
+            ->label('scope', 'presences.write')
             ->label('event', 'presences.[presenceId].update')
             ->label('audits.event', 'presence.update')
             ->label('audits.resource', 'presence/{response.$id}')

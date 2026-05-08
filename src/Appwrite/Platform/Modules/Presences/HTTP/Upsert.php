@@ -43,7 +43,7 @@ class Upsert extends PlatformAction
             ->setHttpPath('/v1/presences/:presenceId')
             ->desc('Upsert presence')
             ->groups(['api', 'presences'])
-            ->label('scope', 'presences.read')
+            ->label('scope', 'presences.write')
             ->label('event', 'presences.[presenceId].upsert')
             ->label('audits.event', 'presence.upsert')
             ->label('audits.resource', 'presence/{response.$id}')

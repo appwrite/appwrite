@@ -13,7 +13,7 @@ $member = [
     'teams.read',
     'teams.write',
     'presences.read',
-    'presences.read',
+    'presences.write',
     'documents.read',
     'documents.write',
     'rows.read',

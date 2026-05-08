@@ -32,7 +32,7 @@ class Delete extends PlatformAction
             ->setHttpPath('/v1/presences/:presenceId')
             ->desc('Delete presence')
             ->groups(['api', 'presences'])
-            ->label('scope', 'presences.read')
+            ->label('scope', 'presences.write')
             ->label('event', 'presences.[presenceId].delete')
             ->label('audits.event', 'presence.delete')
             ->label('audits.resource', 'presence/{request.presenceId}')
