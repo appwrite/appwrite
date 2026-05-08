@@ -637,7 +637,7 @@ Http::init()
             $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
             $cachePath = APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId();
             $cache = new Cache(
-                new Filesystem($cachePath, true)
+                new Filesystem($cachePath, streaming: true)
             );
             $timestamp = 60 * 60 * 24 * 180; // Temporarily increase the TTL to 180 day to ensure files in the cache are still fetched.
             /** @var resource|false $data */
