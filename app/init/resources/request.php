@@ -4,7 +4,6 @@ use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Key;
 use Appwrite\Databases\TransactionState;
-use Appwrite\Event\Build;
 use Appwrite\Event\Context\Audit as AuditContext;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
@@ -122,9 +121,6 @@ return function (Container $container): void {
     }, ['publisher']);
     $container->set('queueForMails', function (Publisher $publisher) {
         return new Mail($publisher);
-    }, ['publisher']);
-    $container->set('queueForBuilds', function (Publisher $publisher) {
-        return new Build($publisher);
     }, ['publisher']);
     $container->set('queueForDatabase', function (Publisher $publisher) {
         return new EventDatabase($publisher);

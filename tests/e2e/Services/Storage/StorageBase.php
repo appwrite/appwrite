@@ -957,6 +957,68 @@ trait StorageBase
         $this->assertNotEquals($imageBefore->getImageBlob(), $imageAfter->getImageBlob());
     }
 
+    public function testFilePreviewCacheControlOnCacheHit(): void
+    {
+        $data = $this->setupBucketFile();
+        $bucketId = $data['bucketId'];
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $file['headers']['status-code']);
+        $this->assertNotEmpty($file['body']['$id']);
+
+        $fileId = $file['body']['$id'];
+        $params = [
+            'width' => 123,
+            'height' => 45,
+            'output' => 'png',
+            'quality' => 80,
+        ];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $preview = $this->client->call(
+            Client::METHOD_GET,
+            '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview',
+            $headers,
+            $params
+        );
+
+        $this->assertEquals(200, $preview['headers']['status-code']);
+        $this->assertEquals('image/png', $preview['headers']['content-type']);
+        $this->assertEquals('private, max-age=2592000', $preview['headers']['cache-control']);
+        $this->assertEquals('miss', $preview['headers']['x-appwrite-cache']);
+        $this->assertNotEmpty($preview['body']);
+
+        $cachedPreview = [];
+        $this->assertEventually(function () use (&$cachedPreview, $bucketId, $fileId, $headers, $params) {
+            $cachedPreview = $this->client->call(
+                Client::METHOD_GET,
+                '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview',
+                $headers,
+                $params
+            );
+
+            $this->assertEquals('hit', $cachedPreview['headers']['x-appwrite-cache']);
+        });
+
+        $this->assertEquals(200, $cachedPreview['headers']['status-code']);
+        $this->assertEquals('image/png', $cachedPreview['headers']['content-type']);
+        $this->assertStringStartsWith('private, max-age=', $cachedPreview['headers']['cache-control']);
+        $this->assertEquals($preview['body'], $cachedPreview['body']);
+    }
+
     public function testFilePreviewZstdCompression(): void
     {
         $data = $this->setupZstdCompressionBucket();

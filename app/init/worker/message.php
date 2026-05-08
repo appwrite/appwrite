@@ -1,6 +1,5 @@
 <?php
 
-use Appwrite\Event\Build;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
@@ -340,10 +339,6 @@ return function (Container $container): void {
 
     $container->set('queueForMails', function (Publisher $publisher) {
         return new Mail($publisher);
-    }, ['publisher']);
-
-    $container->set('queueForBuilds', function (Publisher $publisher) {
-        return new Build($publisher);
     }, ['publisher']);
 
     $container->set('queueForDeletes', function (Publisher $publisher) {

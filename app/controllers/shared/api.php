@@ -3,7 +3,6 @@
 use Appwrite\Auth\Key;
 use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Bus\Events\RequestCompleted;
-use Appwrite\Event\Build;
 use Appwrite\Event\Context\Audit as AuditContext;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
@@ -20,6 +19,8 @@ use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\EventProcessor;
+use Appwrite\Platform\Modules\Storage\Config\CacheControl;
+use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Appwrite\SDK\Method;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
@@ -489,7 +490,6 @@ Http::init()
     ->inject('auditContext')
     ->inject('queueForDeletes')
     ->inject('queueForDatabase')
-    ->inject('queueForBuilds')
     ->inject('usage')
     ->inject('queueForFunctions')
     ->inject('queueForMails')
@@ -503,7 +503,8 @@ Http::init()
     ->inject('telemetry')
     ->inject('platform')
     ->inject('authorization')
-    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, Messaging $queueForMessaging, AuditContext $auditContext, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Context $usage, Func $queueForFunctions, Mail $queueForMails, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry, array $platform, Authorization $authorization) {
+    ->inject('cacheControlForStorage')
+    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, Messaging $queueForMessaging, AuditContext $auditContext, Delete $queueForDeletes, EventDatabase $queueForDatabase, Context $usage, Func $queueForFunctions, Mail $queueForMails, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry, array $platform, Authorization $authorization, callable $cacheControlForStorage) {
 
         $response->setUser($user);
         $request->setUser($user);
@@ -618,12 +619,10 @@ Http::init()
         $queueForDatabase->setProject($project);
         $queueForMessaging->setProject($project);
         $queueForFunctions->setProject($project);
-        $queueForBuilds->setProject($project);
         $queueForMails->setProject($project);
 
         /* Auto-set platforms */
         $queueForFunctions->setPlatform($platform);
-        $queueForBuilds->setPlatform($platform);
         $queueForMails->setPlatform($platform);
 
         $useCache = $route->getLabel('cache', false);
@@ -643,6 +642,7 @@ Http::init()
             $data = $cache->load($key, $timestamp);
 
             if (! empty($data) && ! $cacheLog->isEmpty()) {
+                $cacheControl = \sprintf('private, max-age=%d', $timestamp);
                 $parts = explode('/', $cacheLog->getAttribute('resourceType', ''));
                 $type = $parts[0];
 
@@ -695,6 +695,21 @@ Http::init()
                             ])));
                         }
                     }
+
+                    if ($isImageTransformation) {
+                        $cacheControl = $cacheControlForStorage(new StorageCacheControl(
+                            source: CacheControl::SOURCE_CACHE,
+                            user: $user,
+                            maxAge: $timestamp,
+                            project: $project,
+                            bucket: $bucket,
+                            file: $file,
+                            resourceToken: $resourceToken,
+                            fileSecurity: $fileSecurity,
+                            cacheLog: $cacheLog,
+                            route: $route,
+                        ));
+                    }
                 }
 
                 $accessedAt = $cacheLog->getAttribute('accessedAt', '');
@@ -707,7 +722,7 @@ Http::init()
                 }
 
                 $response
-                    ->addHeader('Cache-Control', sprintf('private, max-age=%d', $timestamp))
+                    ->addHeader('Cache-Control', $cacheControl)
                     ->addHeader('X-Appwrite-Cache', 'hit')
                     ->setContentType($cacheLog->getAttribute('mimeType'));
                 $storageCacheOperationsCounter->add(1, ['result' => 'hit']);
@@ -800,7 +815,6 @@ Http::shutdown()
     ->inject('publisherForUsage')
     ->inject('queueForDeletes')
     ->inject('queueForDatabase')
-    ->inject('queueForBuilds')
     ->inject('queueForMessaging')
     ->inject('queueForFunctions')
     ->inject('queueForWebhooks')
@@ -812,7 +826,7 @@ Http::shutdown()
     ->inject('bus')
     ->inject('apiKey')
     ->inject('mode')
-    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Audit $publisherForAudits, Context $usage, UsagePublisher $publisherForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor, Bus $bus, ?Key $apiKey, string $mode) use ($parseLabel) {
+    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Audit $publisherForAudits, Context $usage, UsagePublisher $publisherForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor, Bus $bus, ?Key $apiKey, string $mode) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
@@ -959,10 +973,6 @@ Http::shutdown()
 
         if (! empty($queueForDatabase->getType())) {
             $queueForDatabase->trigger();
-        }
-
-        if (! empty($queueForBuilds->getType())) {
-            $queueForBuilds->trigger();
         }
 
         if (! empty($queueForMessaging->getType())) {
