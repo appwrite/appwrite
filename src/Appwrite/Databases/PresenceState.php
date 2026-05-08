@@ -69,13 +69,13 @@ class PresenceState
 
         try {
             if ($dbForProject->getAdapter()->getSupportForUpsertOnUniqueIndex()) {
+                // $id will not be updated if new id provided. id is always stable
                 $presence = $dbForProject->upsertDocument(self::COLLECTION_ID, $presenceDocument);
                 $presenceCreated = $presence->getCreatedAt() === $presence->getUpdatedAt();
             } else {
                 $presence = $this->transactionalUpsertForUser(
                     $dbForProject,
                     $presenceDocument,
-                    $presenceId,
                     $userInternalId,
                     $presenceCreated
                 );
@@ -100,11 +100,10 @@ class PresenceState
     private function transactionalUpsertForUser(
         Database $dbForProject,
         Document $presenceDocument,
-        string $presenceId,
         mixed $userInternalId,
         ?bool &$presenceCreated = null
     ): Document {
-        return $dbForProject->withTransaction(function () use ($dbForProject, $presenceDocument, $presenceId, $userInternalId, &$presenceCreated) {
+        return $dbForProject->withTransaction(function () use ($dbForProject, $presenceDocument, $userInternalId, &$presenceCreated) {
             $existingPresence = $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userInternalId', [$userInternalId])]);
 
             if ($existingPresence->isEmpty()) {
@@ -119,11 +118,11 @@ class PresenceState
                 throw new Exception(Exception::DOCUMENT_NOT_FOUND, params: [$existingPresence->getId()]);
             }
 
-            if ($presenceId !== 'unique()' && $currentPresence->getId() !== $presenceId) {
-                $presenceDocument->setAttribute('$id', $presenceId);
-                $dbForProject->deleteDocument(self::COLLECTION_ID, $currentPresence->getId());
-                return $dbForProject->createDocument(self::COLLECTION_ID, $presenceDocument);
-            }
+            // Mirror the native upsertDocument path: the unique key is userInternalId, so an
+            // existing row's $id is preserved even if the caller asked for a different one.
+            // Only the other fields land. Realign the input doc's $id to the existing row so
+            // updateDocument doesn't trip its own $id-consistency check.
+            $presenceDocument->setAttribute('$id', $currentPresence->getId());
 
             return $dbForProject->updateDocument(self::COLLECTION_ID, $currentPresence->getId(), $presenceDocument);
         });
