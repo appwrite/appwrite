@@ -724,7 +724,7 @@ Http::init()
                     if ($cachedPayload === false) {
                         throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to read cached response stream');
                     }
-                    // Overwrite the file every APP_CACHE_UPDATE seconds to update the file modified time that is used in the TTL checks in cache->load()
+                    // Refresh the filesystem file's mtime so TTL-based expiry in cache->load() stays valid
                     $cache->save($key, $cachedPayload);
                 }
 
