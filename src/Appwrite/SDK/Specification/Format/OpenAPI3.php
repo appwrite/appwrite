@@ -524,6 +524,7 @@ class OpenAPI3 extends Format
                     case \Appwrite\Utopia\Database\Validator\Queries\Identities::class:
                     case \Appwrite\Utopia\Database\Validator\Queries\Indexes::class:
                     case \Appwrite\Utopia\Database\Validator\Queries\Installations::class:
+                    case \Appwrite\Utopia\Database\Validator\Queries\Branches::class:
                     case \Appwrite\Utopia\Database\Validator\Queries\Memberships::class:
                     case \Appwrite\Utopia\Database\Validator\Queries\Messages::class:
                     case \Appwrite\Utopia\Database\Validator\Queries\Migrations::class:

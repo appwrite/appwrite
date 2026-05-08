@@ -511,6 +511,7 @@ class Swagger2 extends Format
                     case \Utopia\Database\Validator\Queries::class:
                     case \Utopia\Database\Validator\Queries\Document::class:
                     case \Utopia\Database\Validator\Queries\Documents::class:
+                    case \Appwrite\Utopia\Database\Validator\Queries\Branches::class:
                     case \Appwrite\Utopia\Database\Validator\Queries\Columns::class:
                     case \Appwrite\Utopia\Database\Validator\Queries\Tables::class:
                         $node['type'] = 'array';
