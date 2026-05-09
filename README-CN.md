@@ -12,7 +12,7 @@
 [![X](https://img.shields.io/badge/follow-000000?style=flat-square&logo=x&logoColor=white)](https://x.com/appwrite)
 [![Appwrite Cloud](https://img.shields.io/badge/Cloud-F02E65?style=flat-square&logo=icloud&logoColor=white)](https://cloud.appwrite.io)
 
-English | [简体中文](README-CN.md)
+[English](README.md) | 简体中文
 
 Appwrite 是一个基于 Docker 的端到端开发者平台，其容器化的微服务库可应用于网页端，移动端，原生应用，以及后端。它既包含后端服务器，也提供了用于部署静态和服务器端渲染前端的完全集成托管解决方案。Appwrite 通过视觉化界面简化了从零开始构建现代应用的复杂性和重复性，让您能够更快地构建安全的全栈应用。
 
