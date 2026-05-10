@@ -1679,7 +1679,8 @@ App::patch('/v1/users/:userId/prefs')
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('prefs', $prefs));
 
         $queueForEvents
-            ->setParam('userId', $user->getId());
+            ->setParam('userId', $user->getId())
+            ->setPayload($response->output($user, Response::MODEL_USER));
 
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
