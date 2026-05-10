@@ -4541,16 +4541,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.10.1",
+            "version": "1.10.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "759d6d61b327313cbeeeb4ea0c3e2459164b4827"
+                "reference": "211d01b90ccab9729029151c6c61f543bd755c2e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/759d6d61b327313cbeeeb4ea0c3e2459164b4827",
-                "reference": "759d6d61b327313cbeeeb4ea0c3e2459164b4827",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/211d01b90ccab9729029151c6c61f543bd755c2e",
+                "reference": "211d01b90ccab9729029151c6c61f543bd755c2e",
                 "shasum": ""
             },
             "require": {
@@ -4576,25 +4576,7 @@
                     "Utopia\\Migration\\": "src/Migration"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Utopia\\Tests\\": "tests/Migration"
-                }
-            },
-            "scripts": {
-                "test": [
-                    "./vendor/bin/phpunit"
-                ],
-                "lint": [
-                    "./vendor/bin/pint --test"
-                ],
-                "format": [
-                    "./vendor/bin/pint"
-                ],
-                "check": [
-                    "./vendor/bin/phpstan analyse --level 3 src tests --memory-limit 2G"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -4607,10 +4589,10 @@
                 "utopia"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/migration/tree/1.10.1",
-                "issues": "https://github.com/utopia-php/migration/issues"
+                "issues": "https://github.com/utopia-php/migration/issues",
+                "source": "https://github.com/utopia-php/migration/tree/1.10.2"
             },
-            "time": "2026-05-07T07:23:57+00:00"
+            "time": "2026-05-08T06:25:47+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -5494,16 +5476,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.27.5",
+            "version": "1.28.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "9faa38b48d422f3da764a719712905c83b3922cb"
+                "reference": "e363fffd220172c5f1a5032038fa3fdafeeb2dfb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/9faa38b48d422f3da764a719712905c83b3922cb",
-                "reference": "9faa38b48d422f3da764a719712905c83b3922cb",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/e363fffd220172c5f1a5032038fa3fdafeeb2dfb",
+                "reference": "e363fffd220172c5f1a5032038fa3fdafeeb2dfb",
                 "shasum": ""
             },
             "require": {
@@ -5539,9 +5521,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.27.5"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.28.0"
             },
-            "time": "2026-05-05T12:09:40+00:00"
+            "time": "2026-05-08T03:37:44+00:00"
         },
         {
             "name": "brianium/paratest",
