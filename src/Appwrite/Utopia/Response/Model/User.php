@@ -132,12 +132,47 @@ class User extends Model
                 'default' => [],
                 'array' => true,
                 'example' => [],
-            ])
+])
             ->addRule('accessedAt', [
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Most recent access date in ISO 8601 format. This attribute is only updated again after ' . APP_USER_ACCESS / 60 / 60 . ' hours.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+            ->addRule('emailCanonical', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Canonical email address. Used for case-insensitive email lookups.',
+                'default' => null,
+                'required' => false,
+                'example' => 'john@appwrite.io',
+            ])
+            ->addRule('emailIsCanonical', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether the email domain supports canonical email addresses.',
+                'default' => null,
+                'required' => false,
+                'example' => false,
+            ])
+            ->addRule('emailIsCorporate', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether the email is from a corporate domain.',
+                'default' => null,
+                'required' => false,
+                'example' => false,
+            ])
+            ->addRule('emailIsDisposable', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether the email is from a disposable email provider.',
+                'default' => null,
+                'required' => false,
+                'example' => false,
+            ])
+            ->addRule('emailIsFree', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether the email is from a free email provider.',
+                'default' => null,
+                'required' => false,
+                'example' => false,
             ])
         ;
     }
