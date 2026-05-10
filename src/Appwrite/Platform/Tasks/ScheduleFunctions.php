@@ -18,6 +18,7 @@ use Utopia\Span\Span;
  */
 class ScheduleFunctions extends ScheduleBase
 {
+    private ?float $lastEnqueueUpdate = null;
     public const UPDATE_TIMER = 10; // seconds
     public const ENQUEUE_TIMER = 60; // seconds
 
@@ -41,12 +42,8 @@ class ScheduleFunctions extends ScheduleBase
         $timerStart = \microtime(true);
         $time = DateTime::now();
 
-        // TODO: Track the last enqueue timestamp to subtract ENQUEUE_TIMER drift from
-        // the time frame. Previously this used $this->lastEnqueueUpdate as a property
-        // but enabling the assignment broke scheduling, so the diff stays 0.
-        $enqueueDiff = 0;
+        $enqueueDiff = $this->lastEnqueueUpdate === null ? 0 : max(0, ($timerStart - $this->lastEnqueueUpdate) - static::ENQUEUE_TIMER);
         $timeFrame = DateTime::addSeconds(new \DateTime(), static::ENQUEUE_TIMER - $enqueueDiff);
-
         Console::log("Enqueue tick: started at: $time (with diff $enqueueDiff)");
 
         $total = 0;
@@ -125,6 +122,7 @@ class ScheduleFunctions extends ScheduleBase
             });
         }
 
+        $this->lastEnqueueUpdate = $timerStart;
         $timerEnd = \microtime(true);
 
         Console::log("Enqueue tick: {$total} executions were enqueued in " . ($timerEnd - $timerStart) . " seconds");
