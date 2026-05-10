@@ -566,9 +566,10 @@ Http::delete('/v1/account')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        if ($project->getId() === 'console') {
+if ($project->getId() === 'console') {
             // Allow deletion with active memberships - ownership will be transferred gracefully
             // Previously blocked here with USER_DELETION_PROHIBITED, now handled by the delete worker
+            // Note: Only delete if user is not sole owner of any organization
         }
 
         $dbForProject->deleteDocument('users', $user->getId());

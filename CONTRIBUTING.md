@@ -111,7 +111,7 @@ $ git push origin [name_of_your_new_branch]
 
 ## Setup From Source
 
-To set up a working **development environment**, just fork the project git repository and install the backend and frontend dependencies using the proper package manager and create run the docker-compose stack.
+To set up a working **development environment**, just fork the project git repository and install the backend and frontend dependencies using the proper package manager and run the docker-compose stack.
 
 > If you just want to install Appwrite for day-to-day use and not as a contributor, you can reference the [installation guide](https://github.com/appwrite/appwrite#installation), the [getting started guide](https://appwrite.io/docs/quick-starts), or the main [README](README.md) file.
 
@@ -173,12 +173,12 @@ Learn more at our [Technology Stack](#technology-stack) section.
 - [MVVM](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93viewmodel) - Appwrite console architecture
 
 ##### Container Namespace Conventions
-To keep our services easy to understand within Docker we follow a naming convention for all our containers depending on it's intended use.
+To keep our services easy to understand within Docker we follow a naming convention for all our containers depending on its intended use.
 
 `appwrite-worker-X` - Workers (`src/Appwrite/Platform/Workers/*`)
 `appwrite-task-X` - Tasks (`src/Appwrite/Platform/Tasks/*`)
 
-Other containes should be named the same as their service, for example `redis` should just be called `redis`.
+Other containers should be named the same as their service, for example `redis` should just be called `redis`.
 
 ##### Security
 
@@ -189,7 +189,7 @@ Other containes should be named the same as their service, for example `redis` s
 
 ## Modules
 
-As Appwrite grows, we noticed approach of having all service endpoints in `app/controllers/api/[service].php` is not maintainable. Not only it creates massive files, it also doesnt contain all product's features such as workers or tasks. While there might still be some occurances of those controller files, we avoid it in all new development, and gradually migrate existing controllers to **HTTP modules**.
+As Appwrite grows, we noticed approach of having all service endpoints in `app/controllers/api/[service].php` is not maintainable. Not only it creates massive files, it also doesn't contain all product's features such as workers or tasks. While there might still be some occurrences of those controller files, we avoid it in all new development, and gradually migrate existing controllers to **HTTP modules**.
 
 ### HTTP Endpoints
 
