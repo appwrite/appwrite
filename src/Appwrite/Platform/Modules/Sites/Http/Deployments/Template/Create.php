@@ -2,8 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Deployments\Template;
 
-use Appwrite\Event\Build;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Build as BuildMessage;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
@@ -17,9 +18,9 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
+use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Swoole\Request;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
@@ -64,7 +65,7 @@ class Create extends Base
                     )
                 ],
             ))
-            ->param('siteId', '', new UID(), 'Site ID.')
+            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
             ->param('repository', '', new Text(128, 0), 'Repository name of the template.')
             ->param('owner', '', new Text(128, 0), 'The name of the owner of the template.')
             ->param('rootDirectory', '', new Text(128, 0), 'Path to site code in the template repo.')
@@ -77,9 +78,10 @@ class Create extends Base
             ->inject('dbForPlatform')
             ->inject('project')
             ->inject('queueForEvents')
-            ->inject('queueForBuilds')
+            ->inject('publisherForBuilds')
             ->inject('gitHub')
             ->inject('authorization')
+            ->inject('platform')
             ->callback($this->action(...));
     }
 
@@ -97,9 +99,10 @@ class Create extends Base
         Database $dbForPlatform,
         Document $project,
         Event $queueForEvents,
-        Build $queueForBuilds,
+        BuildPublisher $publisherForBuilds,
         GitHub $github,
-        Authorization $authorization
+        Authorization $authorization,
+        array $platform
     ) {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -128,11 +131,12 @@ class Create extends Base
                 installation: $installation,
                 dbForProject: $dbForProject,
                 dbForPlatform: $dbForPlatform,
-                queueForBuilds: $queueForBuilds,
+                publisherForBuilds: $publisherForBuilds,
                 template: $template,
                 github: $github,
                 activate: $activate,
                 authorization: $authorization,
+                platform: $platform
             );
 
             $queueForEvents
@@ -166,6 +170,7 @@ class Create extends Base
             'resourceInternalId' => $site->getSequence(),
             'resourceType' => 'sites',
             'buildCommands' => \implode(' && ', $commands),
+            'startCommand' => $site->getAttribute('startCommand', ''),
             'buildOutput' => $site->getAttribute('outputDirectory', ''),
             'providerRepositoryName' => $repository,
             'providerRepositoryOwner' => $owner,
@@ -183,9 +188,14 @@ class Create extends Base
             ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
             ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
             ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-        $dbForProject->updateDocument('sites', $site->getId(), $site);
+        $dbForProject->updateDocument('sites', $site->getId(), new Document([
+            'latestDeploymentId' => $site->getAttribute('latestDeploymentId'),
+            'latestDeploymentInternalId' => $site->getAttribute('latestDeploymentInternalId'),
+            'latestDeploymentCreatedAt' => $site->getAttribute('latestDeploymentCreatedAt'),
+            'latestDeploymentStatus' => $site->getAttribute('latestDeploymentStatus'),
+        ]));
 
-        $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+        $sitesDomain = $platform['sitesDomain'];
         $domain = ID::unique() . "." . $sitesDomain;
 
         // TODO: (@Meldiron) Remove after 1.7.x migration
@@ -214,11 +224,14 @@ class Create extends Base
 
         $this->updateEmptyManualRule($project, $site, $deployment, $dbForPlatform, $authorization);
 
-        $queueForBuilds
-            ->setType(BUILD_TYPE_DEPLOYMENT)
-            ->setResource($site)
-            ->setDeployment($deployment)
-            ->setTemplate($template);
+        $publisherForBuilds->enqueue(new BuildMessage(
+            project: $project,
+            resource: $site,
+            deployment: $deployment,
+            type: BUILD_TYPE_DEPLOYMENT,
+            template: $template,
+            platform: $platform,
+        ));
 
         $queueForEvents
             ->setParam('siteId', $site->getId())

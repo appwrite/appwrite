@@ -63,6 +63,9 @@ class Table extends Model
             ->addRule('columns', [
                 'type' => [
                     Response::MODEL_COLUMN_BOOLEAN,
+                    // BigInt must come before Integer: response model dispatch is "first match wins",
+                    // and Integer matches all int types (including bigint), while BigInt is more specific (size=8).
+                    Response::MODEL_COLUMN_BIGINT,
                     Response::MODEL_COLUMN_INTEGER,
                     Response::MODEL_COLUMN_FLOAT,
                     Response::MODEL_COLUMN_EMAIL,
@@ -74,6 +77,10 @@ class Table extends Model
                     Response::MODEL_COLUMN_POINT,
                     Response::MODEL_COLUMN_LINE,
                     Response::MODEL_COLUMN_POLYGON,
+                    Response::MODEL_COLUMN_VARCHAR,
+                    Response::MODEL_COLUMN_TEXT,
+                    Response::MODEL_COLUMN_MEDIUMTEXT,
+                    Response::MODEL_COLUMN_LONGTEXT,
                     Response::MODEL_COLUMN_STRING, // needs to be last, since its condition would dominate any other string attribute
                 ],
                 'description' => 'Table columns.',
@@ -87,6 +94,18 @@ class Table extends Model
                 'default' => [],
                 'example' => new \stdClass(),
                 'array' => true
+            ])
+            ->addRule('bytesMax', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Maximum row size in bytes. Returns 0 when no limit applies.',
+                'default' => 0,
+                'example' => 65535,
+            ])
+            ->addRule('bytesUsed', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Currently used row size in bytes based on defined columns.',
+                'default' => 0,
+                'example' => 1500,
             ])
         ;
     }

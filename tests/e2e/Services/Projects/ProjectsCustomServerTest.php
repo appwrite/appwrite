@@ -10,6 +10,7 @@ use Utopia\System\System;
 
 class ProjectsCustomServerTest extends Scope
 {
+    use ProjectsBase;
     use ProjectCustom;
     use SideServer;
 
@@ -50,7 +51,7 @@ class ProjectsCustomServerTest extends Scope
 
         $this->assertEquals(204, $response['headers']['status-code']);
 
-        $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+        $functionsDomain = \explode(',', System::getEnv('_APP_DOMAIN_FUNCTIONS', ''))[0];
 
         $response = $this->client->call(Client::METHOD_POST, '/proxy/rules/api', $headers, [
             'domain' => $functionsDomain,
@@ -59,7 +60,7 @@ class ProjectsCustomServerTest extends Scope
         $this->assertEquals(400, $response['headers']['status-code']);
 
 
-        $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+        $sitesDomain = \explode(',', System::getEnv('_APP_DOMAIN_SITES', ''))[0];
 
         $response = $this->client->call(Client::METHOD_POST, '/proxy/rules/api', $headers, [
             'domain' => $sitesDomain,

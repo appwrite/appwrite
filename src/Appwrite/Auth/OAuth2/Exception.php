@@ -10,7 +10,7 @@ class Exception extends AppwriteException
     protected string $error = '';
     protected string $errorDescription = '';
 
-    public function __construct(string $response = '', int $code = 0, \Throwable $previous = null)
+    public function __construct(string $response = '', int $code = 0, ?\Throwable $previous = null)
     {
         $this->response = $response;
         $this->message = $response;

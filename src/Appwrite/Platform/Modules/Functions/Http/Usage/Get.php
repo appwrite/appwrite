@@ -51,7 +51,7 @@ class Get extends Base
                     )
                 ]
             ))
-            ->param('functionId', '', new UID(), 'Function ID.')
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
             ->param('range', '30d', new WhiteList(['24h', '30d', '90d']), 'Date range.', true)
             ->inject('response')
             ->inject('dbForProject')
@@ -112,6 +112,7 @@ class Get extends Base
         $format = match ($days['period']) {
             '1h' => 'Y-m-d\TH:00:00.000P',
             '1d' => 'Y-m-d\T00:00:00.000P',
+            default => throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unsupported period "' . $days['period'] . '".'),
         };
 
         foreach ($metrics as $metric) {

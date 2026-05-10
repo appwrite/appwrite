@@ -49,8 +49,8 @@ class Get extends Base
                     ],
                 )
             )
-            ->param('functionId', '', new UID(), 'Function unique ID.', false)
-            ->param('variableId', '', new UID(), 'Variable unique ID.', false)
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function unique ID.', false, ['dbForProject'])
+            ->param('variableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Variable unique ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->callback($this->action(...));
@@ -66,15 +66,10 @@ class Get extends Base
 
         $variable = $dbForProject->getDocument('variables', $variableId);
         if (
-            $variable === false ||
             $variable->isEmpty() ||
             $variable->getAttribute('resourceInternalId') !== $function->getSequence() ||
             $variable->getAttribute('resourceType') !== 'function'
         ) {
-            throw new Exception(Exception::VARIABLE_NOT_FOUND);
-        }
-
-        if ($variable === false || $variable->isEmpty()) {
             throw new Exception(Exception::VARIABLE_NOT_FOUND);
         }
 

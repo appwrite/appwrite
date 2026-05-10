@@ -11,9 +11,6 @@ class Service
      */
     protected $service = [];
 
-    /**
-     * @var string $path
-     */
     public function __construct(array $service)
     {
         $this->service = $service;
@@ -24,7 +21,7 @@ class Service
         array_walk($ports, function (&$value, $key) {
             $split = explode(':', $value);
             $this->service['ports'][
-                (isset($split[0])) ? $split[0] : ''
+                $split[0]
             ] = (isset($split[1])) ? $split[1] : '';
         });
 

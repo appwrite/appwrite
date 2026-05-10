@@ -5,8 +5,8 @@ namespace Appwrite\Migration\Version;
 use Appwrite\Migration\Migration;
 use Exception;
 use Throwable;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict;
@@ -139,12 +139,27 @@ class V23 extends Migration
                     } catch (\Throwable $th) {
                         Console::warning("Failed to  migration error attribute size in collection {$id}: {$th->getMessage()}");
                     }
-
+                    break;
                 case 'buckets':
                     try {
                         $this->createAttributeFromCollection($this->dbForProject, $id, 'transformations');
                     } catch (Throwable $th) {
                         Console::warning("'transformations' from {$id}: {$th->getMessage()}");
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+                case 'users':
+                    $attributes = [
+                        'emailCanonical',
+                        'emailIsFree',
+                        'emailIsDisposable',
+                        'emailIsCorporate',
+                        'emailIsCanonical',
+                    ];
+                    try {
+                        $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
+                    } catch (\Throwable $th) {
+                        Console::warning('Failed to create attributes "' . \implode(', ', $attributes) . "\" in collection {$id}: {$th->getMessage()}");
                     }
                     $this->dbForProject->purgeCachedCollection($id);
                     break;

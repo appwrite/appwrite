@@ -2,9 +2,9 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Appwrite\Event\StatsResources as EventStatsResources;
+use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Platform\Action;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Query;
@@ -43,11 +43,11 @@ class StatsResources extends Action
             ->desc('Schedules projects for usage count')
             ->inject('dbForPlatform')
             ->inject('logError')
-            ->inject('queueForStatsResources')
+            ->inject('publisherForStatsResources')
             ->callback($this->action(...));
     }
 
-    public function action(Database $dbForPlatform, callable $logError, EventStatsResources $queue): void
+    public function action(Database $dbForPlatform, callable $logError, StatsResourcesPublisher $publisherForStatsResources): void
     {
         $this->logError = $logError;
         $this->dbForPlatform = $dbForPlatform;
@@ -60,7 +60,7 @@ class StatsResources extends Action
 
         $interval = (int) System::getEnv('_APP_STATS_RESOURCES_INTERVAL', '3600');
 
-        Console::loop(function () use ($queue, $dbForPlatform) {
+        Console::loop(function () use ($publisherForStatsResources) {
 
             $last24Hours = (new \DateTime())->sub(\DateInterval::createFromDateString('24 hours'));
             /**
@@ -69,10 +69,10 @@ class StatsResources extends Action
             $this->foreachDocument($this->dbForPlatform, 'projects', [
                 Query::greaterThanEqual('accessedAt', DateTime::format($last24Hours)),
                 Query::equal('region', [System::getEnv('_APP_REGION', 'default')])
-            ], function ($project) use ($queue) {
-                $queue
-                    ->setProject($project)
-                    ->trigger();
+            ], function ($project) use ($publisherForStatsResources) {
+                $publisherForStatsResources->enqueue(new \Appwrite\Event\Message\StatsResources(
+                    project: $project,
+                ));
                 Console::success('project: ' . $project->getId() . '(' . $project->getSequence() . ')' . ' queued');
             });
         }, $interval);

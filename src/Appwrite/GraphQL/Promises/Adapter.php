@@ -81,8 +81,8 @@ abstract class Adapter implements PromiseAdapter
     /**
      * Create a new promise that resolves when all passed in promises resolve.
      *
-     * @param array $promisesOrValues
+     * @param iterable $promisesOrValues
      * @return GQLPromise
      */
-    abstract public function all(array $promisesOrValues): GQLPromise;
+    abstract public function all(iterable $promisesOrValues): GQLPromise;
 }

@@ -2,8 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments;
 
-use Appwrite\Event\Build;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Build as BuildMessage;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -19,6 +20,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
+use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
@@ -26,7 +28,6 @@ use Utopia\Storage\Validator\File;
 use Utopia\Storage\Validator\FileExt;
 use Utopia\Storage\Validator\FileSize;
 use Utopia\Storage\Validator\Upload;
-use Utopia\Swoole\Request;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
@@ -75,7 +76,7 @@ class Create extends Action
                 type: MethodType::UPLOAD,
                 packaging: true,
             ))
-            ->param('functionId', '', new UID(), 'Function ID.')
+            ->param('functionId', '', fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Function ID.', false, ['dbForProject'])
             ->param('entrypoint', null, new Nullable(new Text(1028)), 'Entrypoint File.', true)
             ->param('commands', null, new Nullable(new Text(8192, 0)), 'Build Commands.', true)
             ->param('code', [], new File(), 'Gzip file with your code package. When used with the Appwrite CLI, pass the path to your code directory, and the CLI will automatically package your code. Use a path that is within the current directory.', skipValidation: true)
@@ -87,9 +88,10 @@ class Create extends Action
             ->inject('project')
             ->inject('deviceForFunctions')
             ->inject('deviceForLocal')
-            ->inject('queueForBuilds')
+            ->inject('publisherForBuilds')
             ->inject('plan')
             ->inject('authorization')
+            ->inject('platform')
             ->callback($this->action(...));
     }
 
@@ -106,9 +108,10 @@ class Create extends Action
         Document $project,
         Device $deviceForFunctions,
         Device $deviceForLocal,
-        Build $queueForBuilds,
+        BuildPublisher $publisherForBuilds,
         array $plan,
-        Authorization $authorization
+        Authorization $authorization,
+        array $platform
     ) {
         $activate = \strval($activate) === 'true' || \strval($activate) === '1';
 
@@ -175,15 +178,8 @@ class Create extends Action
                 throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
             }
 
-            // TODO remove the condition that checks `$end === $fileSize` in next breaking version
-            if ($end === $fileSize - 1 || $end === $fileSize) {
-                //if it's a last chunks the chunk size might differ, so we set the $chunks and $chunk to notify it's last chunk
-                $chunks = $chunk = -1;
-            } else {
-                // Calculate total number of chunks based on the chunk size i.e ($rangeEnd - $rangeStart)
-                $chunks = (int) ceil($fileSize / ($end + 1 - $start));
-                $chunk = (int) ($start / ($end + 1 - $start)) + 1;
-            }
+            $chunks = (int) ceil($fileSize / APP_LIMIT_UPLOAD_CHUNK_SIZE);
+            $chunk = (int) ($start / APP_LIMIT_UPLOAD_CHUNK_SIZE) + 1;
         }
 
         if (!$fileSizeValidator->isValid($fileSize) && $functionSizeLimit !== 0) { // Check if file size is exceeding allowed limit
@@ -202,9 +198,14 @@ class Create extends Action
         $metadata = ['content_type' => $deviceForLocal->getFileMimeType($fileTmpName)];
         if (!$deployment->isEmpty()) {
             $chunks = $deployment->getAttribute('sourceChunksTotal', 1);
+            $uploaded = $deployment->getAttribute('sourceChunksUploaded', 0);
             $metadata = $deployment->getAttribute('sourceMetadata', []);
-            if ($chunk === -1) {
-                $chunk = $chunks;
+
+            if ($uploaded === $chunks) {
+                $response
+                    ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+                    ->dynamic($deployment, Response::MODEL_DEPLOYMENT);
+                return;
             }
         }
 
@@ -227,7 +228,9 @@ class Create extends Action
 
                 foreach ($activeDeployments as $activeDeployment) {
                     $activeDeployment->setAttribute('activate', false);
-                    $dbForProject->updateDocument('deployments', $activeDeployment->getId(), $activeDeployment);
+                    $dbForProject->updateDocument('deployments', $activeDeployment->getId(), new Document([
+                        'activate' => false,
+                    ]));
                 }
             }
 
@@ -246,29 +249,39 @@ class Create extends Action
                     'resourceType' => 'functions',
                     'entrypoint' => $entrypoint,
                     'buildCommands' => $commands,
+                    'startCommand' => $function->getAttribute('startCommand', ''),
                     'sourcePath' => $path,
                     'sourceSize' => $fileSize,
                     'totalSize' => $fileSize,
+                    'sourceChunksTotal' => $chunks,
+                    'sourceChunksUploaded' => $chunksUploaded,
                     'activate' => $activate,
                     'sourceMetadata' => $metadata,
                     'type' => $type
                 ]));
 
-                $function = $function
-                    ->setAttribute('latestDeploymentId', $deployment->getId())
-                    ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
-                    ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
-                    ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-                $dbForProject->updateDocument('functions', $function->getId(), $function);
+                $function = $dbForProject->updateDocument('functions', $function->getId(), new Document([
+                    'latestDeploymentId' => $deployment->getId(),
+                    'latestDeploymentInternalId' => $deployment->getSequence(),
+                    'latestDeploymentCreatedAt' => $deployment->getCreatedAt(),
+                    'latestDeploymentStatus' => $deployment->getAttribute('status', ''),
+                ]));
             } else {
-                $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('sourceSize', $fileSize)->setAttribute('sourceMetadata', $metadata));
+                $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document([
+                    'sourceSize' => $fileSize,
+                    'sourceChunksUploaded' => $chunksUploaded,
+                    'sourceMetadata' => $metadata,
+                ]));
             }
 
             // Start the build
-            $queueForBuilds
-                ->setType(BUILD_TYPE_DEPLOYMENT)
-                ->setResource($function)
-                ->setDeployment($deployment);
+            $publisherForBuilds->enqueue(new BuildMessage(
+                project: $project,
+                resource: $function,
+                deployment: $deployment,
+                type: BUILD_TYPE_DEPLOYMENT,
+                platform: $platform,
+            ));
         } else {
             if ($deployment->isEmpty()) {
                 $deployment = $dbForProject->createDocument('deployments', new Document([
@@ -283,6 +296,7 @@ class Create extends Action
                     'resourceType' => 'functions',
                     'entrypoint' => $entrypoint,
                     'buildCommands' => $commands,
+                    'startCommand' => $function->getAttribute('startCommand', ''),
                     'sourcePath' => $path,
                     'sourceSize' => $fileSize,
                     'totalSize' => $fileSize,
@@ -293,14 +307,17 @@ class Create extends Action
                     'type' => $type
                 ]));
 
-                $function = $function
-                    ->setAttribute('latestDeploymentId', $deployment->getId())
-                    ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
-                    ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
-                    ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-                $dbForProject->updateDocument('functions', $function->getId(), $function);
+                $function = $dbForProject->updateDocument('functions', $function->getId(), new Document([
+                    'latestDeploymentId' => $deployment->getId(),
+                    'latestDeploymentInternalId' => $deployment->getSequence(),
+                    'latestDeploymentCreatedAt' => $deployment->getCreatedAt(),
+                    'latestDeploymentStatus' => $deployment->getAttribute('status', ''),
+                ]));
             } else {
-                $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('sourceChunksUploaded', $chunksUploaded)->setAttribute('sourceMetadata', $metadata));
+                $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document([
+                    'sourceChunksUploaded' => $chunksUploaded,
+                    'sourceMetadata' => $metadata,
+                ]));
             }
         }
 

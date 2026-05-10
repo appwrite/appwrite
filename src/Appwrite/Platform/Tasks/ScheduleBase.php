@@ -3,7 +3,7 @@
 namespace Appwrite\Platform\Tasks;
 
 use Swoole\Timer;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -59,8 +59,11 @@ abstract class ScheduleBase extends Action
         if (!$project->isEmpty() && $project->getId() !== 'console') {
             $accessedAt = $project->getAttribute('accessedAt', 0);
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
-                $project->setAttribute('accessedAt', DateTime::now());
-                $dbForPlatform->updateDocument('projects', $project->getId(), $project);
+                $now = DateTime::now();
+                $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                    'accessedAt' => $now
+                ]));
+                $project->setAttribute('accessedAt', $now);
             }
         }
     }
@@ -70,7 +73,7 @@ abstract class ScheduleBase extends Action
      * 2. Create timer that sync all changes from 'schedules' collection to local copy. Only reading changes thanks to 'resourceUpdatedAt' attribute
      * 3. Create timer that prepares coroutines for soon-to-execute schedules. When it's ready, coroutine sleeps until exact time before sending request to worker.
      */
-    public function action(BrokerPool $publisher, BrokerPool $publisherMigrations, BrokerPool $publisherFunctions, BrokerPool $publisherMessaging, callable $isResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): void
+    public function action(BrokerPool $publisher, BrokerPool $publisherMigrations, BrokerPool $publisherFunctions, BrokerPool $publisherMessaging, callable $isResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): never
     {
         Console::title(\ucfirst(static::getSupportedResource()) . ' scheduler V1');
         Console::success(APP_NAME . ' ' . \ucfirst(static::getSupportedResource()) . ' scheduler v1 has started');

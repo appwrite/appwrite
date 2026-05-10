@@ -419,6 +419,17 @@ return [
                 'array' => false,
                 'filters' => [],
             ],
+            [
+                '$id' => ID::custom('impersonator'),
+                'type' => Database::VAR_BOOLEAN,
+                'signed' => true,
+                'size' => 0,
+                'format' => '',
+                'filters' => [],
+                'required' => false,
+                'default' => false,
+                'array' => false,
+            ],
         ],
         'indexes' => [
             [
@@ -488,6 +499,13 @@ return [
                 '$id' => '_key_accessedAt',
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['accessedAt'],
+                'lengths' => [],
+                'orders' => [],
+            ],
+            [
+                '$id' => ID::custom('impersonator'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => [ID::custom('impersonator')],
                 'lengths' => [],
                 'orders' => [],
             ],
@@ -1288,6 +1306,17 @@ return [
                 'array' => false,
                 'filters' => ['json'],
             ],
+            [
+                '$id' => ID::custom('labels'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 128,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => true,
+                'filters' => [],
+            ],
         ],
         'indexes' => [
             [
@@ -1494,6 +1523,13 @@ return [
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
+            [
+                '$id' => ID::custom('_key_team_confirm'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['teamInternalId', 'confirm'],
+                'lengths' => [],
+                'orders' => [],
+            ],
         ],
     ],
 
@@ -1606,13 +1642,6 @@ return [
             ],
         ],
         'indexes' => [
-            [
-                '$id' => ID::custom('_fulltext_name'),
-                'type' => Database::INDEX_FULLTEXT,
-                'attributes' => ['name'],
-                'lengths' => [],
-                'orders' => [],
-            ],
             [
                 '$id' => ID::custom('_key_search'),
                 'type' => Database::INDEX_FULLTEXT,
@@ -1839,13 +1868,6 @@ return [
                 '$id' => ID::custom('_key_provider'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['provider'],
-                'lengths' => [],
-                'orders' => [Database::ORDER_ASC],
-            ],
-            [
-                '$id' => ID::custom('_key_name'),
-                'type' => Database::INDEX_FULLTEXT,
-                'attributes' => ['name'],
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
@@ -2116,14 +2138,8 @@ return [
                 'filters' => ['topicSearch'],
             ],
         ],
+
         'indexes' => [
-            [
-                '$id' => ID::custom('_key_name'),
-                'type' => Database::INDEX_FULLTEXT,
-                'attributes' => ['name'],
-                'lengths' => [],
-                'orders' => [],
-            ],
             [
                 '$id' => ID::custom('_key_search'),
                 'type' => Database::INDEX_FULLTEXT,
