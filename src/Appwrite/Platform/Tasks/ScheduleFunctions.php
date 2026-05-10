@@ -49,7 +49,7 @@ class ScheduleFunctions extends ScheduleBase
         $elapsed = $this->lastEnqueueUpdate === null ? 0.0 : $timerStart - $this->lastEnqueueUpdate;
         $enqueueDiff = max(0.0, $elapsed - static::ENQUEUE_TIMER);
         $this->lastEnqueueUpdate = $timerStart;
-        $timeFrame = DateTime::addSeconds(new \DateTime(), static::ENQUEUE_TIMER + (int)$enqueueDiff);
+        $timeFrame = DateTime::addSeconds(new \DateTime(), static::ENQUEUE_TIMER + (int)ceil($enqueueDiff));
 
         Console::log("Enqueue tick: started at: $time (with diff $enqueueDiff)");
 
