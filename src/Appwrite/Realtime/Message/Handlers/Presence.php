@@ -67,8 +67,7 @@ class Presence extends Action
             throw new Exception(Exception::USER_UNAUTHORIZED, 'User must be authorized');
         }
 
-        /** @var User $user */
-        $user = $database->getDocument('users', $userId);
+        $user = new User($database->getDocument('users', $userId)->getArrayCopy());
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND, params: [$userId]);
         }

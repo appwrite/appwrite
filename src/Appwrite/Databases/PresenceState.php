@@ -111,17 +111,12 @@ class PresenceState
                 return $dbForProject->createDocument(self::COLLECTION_ID, $presenceDocument);
             }
 
-            // Lock current state to avoid races while resolving upsert by userInternalId.
             $currentPresence = $dbForProject->getDocument(self::COLLECTION_ID, $existingPresence->getId(), forUpdate: true);
 
             if ($currentPresence->isEmpty()) {
                 throw new Exception(Exception::DOCUMENT_NOT_FOUND, params: [$existingPresence->getId()]);
             }
 
-            // Mirror the native upsertDocument path: the unique key is userInternalId, so an
-            // existing row's $id is preserved even if the caller asked for a different one.
-            // Only the other fields land. Realign the input doc's $id to the existing row so
-            // updateDocument doesn't trip its own $id-consistency check.
             $presenceDocument->setAttribute('$id', $currentPresence->getId());
 
             return $dbForProject->updateDocument(self::COLLECTION_ID, $currentPresence->getId(), $presenceDocument);
