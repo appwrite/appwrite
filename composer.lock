@@ -3614,16 +3614,16 @@
         },
         {
             "name": "utopia-php/cache",
-            "version": "1.0.2",
+            "version": "1.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cache.git",
-                "reference": "d36f9050c39c02e09a7763389c9e71258e74af1f"
+                "reference": "ef52a04e8bfa314c621e3d3326ffcf50db3dfdfa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cache/zipball/d36f9050c39c02e09a7763389c9e71258e74af1f",
-                "reference": "d36f9050c39c02e09a7763389c9e71258e74af1f",
+                "url": "https://api.github.com/repos/utopia-php/cache/zipball/ef52a04e8bfa314c621e3d3326ffcf50db3dfdfa",
+                "reference": "ef52a04e8bfa314c621e3d3326ffcf50db3dfdfa",
                 "shasum": ""
             },
             "require": {
@@ -3660,9 +3660,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cache/issues",
-                "source": "https://github.com/utopia-php/cache/tree/1.0.2"
+                "source": "https://github.com/utopia-php/cache/tree/1.0.3"
             },
-            "time": "2026-05-08T11:40:20+00:00"
+            "time": "2026-05-11T11:02:13+00:00"
         },
         {
             "name": "utopia-php/cli",

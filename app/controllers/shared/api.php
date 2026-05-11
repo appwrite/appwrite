@@ -714,18 +714,13 @@ Http::init()
                     }
                 }
 
-                $cachedPayload = null;
                 $accessedAt = $cacheLog->getAttribute('accessedAt', '');
                 if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_CACHE_UPDATE)) > $accessedAt) {
                     $authorization->skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), new Document([
                         'accessedAt' => DateTime::now(),
                     ])));
-                    $cachedPayload = \stream_get_contents($data);
-                    if ($cachedPayload === false) {
-                        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to read cached response stream');
-                    }
                     // Refresh the filesystem file's mtime so TTL-based expiry in cache->load() stays valid
-                    $cache->save($key, $cachedPayload);
+                    $cache->touch($key);
                 }
 
                 $response
@@ -735,12 +730,6 @@ Http::init()
                 $storageCacheOperationsCounter->add(1, ['result' => 'hit']);
                 if (! $isImageTransformation || ! $isDisabled) {
                     Span::add('storage.cache.hit', true);
-                    if ($cachedPayload !== null) {
-                        \fclose($data);
-                        $response->send($cachedPayload);
-                        return;
-                    }
-
                     try {
                         while (! \feof($data)) {
                             $chunk = \fread($data, MAX_OUTPUT_CHUNK_SIZE);
