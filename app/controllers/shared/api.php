@@ -732,7 +732,7 @@ Http::init()
                     if (! $isImageTransformation || ! $isDisabled) {
                         Span::add('storage.cache.hit', true);
                         $stat = \fstat($data);
-                        if ($stat === false || ! isset($stat['size'])) {
+                        if ($stat === false) {
                             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to read cached response stream metadata');
                         }
 
