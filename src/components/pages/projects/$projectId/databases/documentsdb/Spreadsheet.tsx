@@ -236,10 +236,9 @@ const getIndexTypeColor = (type: string) => {
 // Reusable table styles for spreadsheet views
 const stickyTheadClass = 'sticky top-0 z-20 bg-background'
 const headerCellBorderClass =
-  'border-r border-gray-200 dark:border-border shadow-[inset_0_1px_0_0_#d1d5db,inset_0_-1px_0_0_#d1d5db] dark:shadow-[inset_0_1px_0_0_rgb(255_255_255_/_0.1),inset_0_-1px_0_0_rgb(255_255_255_/_0.1)]'
-const bodyCellBorderClass =
-  'border-b border-r border-gray-200 dark:border-border'
-const lastCellBorderClass = 'border-b border-gray-200 dark:border-border'
+  'border-r border-border shadow-[inset_0_1px_0_0_var(--border),inset_0_-1px_0_0_var(--border)]'
+const bodyCellBorderClass = 'border-b border-r border-border'
+const lastCellBorderClass = 'border-b border-border'
 
 const DOCUMENTS_TABLE_PANE_WIDTH_STORAGE_KEY =
   'console.documentsTablePaneWidthPx'
@@ -4039,8 +4038,7 @@ export function RowsSpreadsheet({
                   'sticky left-0 z-40 w-10 bg-background px-2 py-2 text-center',
                   useInlineDocumentPane &&
                     'min-w-[40px] max-w-[40px] shrink-0 box-border',
-                  'shadow-[inset_0_1px_0_0_#d1d5db,inset_0_-1px_0_0_#d1d5db,inset_-1px_0_0_0_#d1d5db]',
-                  'dark:shadow-[inset_0_1px_0_0_rgb(255_255_255_/_0.1),inset_0_-1px_0_0_rgb(255_255_255_/_0.1),inset_-1px_0_0_0_rgb(255_255_255_/_0.1)]',
+                  'shadow-[inset_0_1px_0_0_var(--border),inset_0_-1px_0_0_var(--border),inset_-1px_0_0_0_var(--border)]',
                 )}
                 style={
                   useInlineDocumentPane
@@ -4186,8 +4184,7 @@ export function RowsSpreadsheet({
                 className={cn(
                   'relative sticky right-0 z-30 bg-background p-0',
                   useInlineDocumentPane && 'shrink-0 box-border',
-                  'shadow-[inset_0_1px_0_0_#d1d5db,inset_0_-1px_0_0_#d1d5db,inset_1px_0_0_0_#d1d5db]',
-                  'dark:shadow-[inset_0_1px_0_0_rgb(255_255_255_/_0.1),inset_0_-1px_0_0_rgb(255_255_255_/_0.1),inset_1px_0_0_0_rgb(255_255_255_/_0.1)]',
+                  'shadow-[inset_0_1px_0_0_var(--border),inset_0_-1px_0_0_var(--border),inset_1px_0_0_0_var(--border)]',
                 )}
                 style={{
                   width: ROWS_TABLE_EDGE_COL_PX,
@@ -4262,10 +4259,10 @@ export function RowsSpreadsheet({
                 >
                   <td
                     className={cn(
-                      'sticky left-0 w-10 border-b border-gray-200 dark:border-border px-2 py-1.5 text-center',
+                      'sticky left-0 w-10 border-b border-border px-2 py-1.5 text-center',
                       useInlineDocumentPane &&
                         'min-w-[40px] max-w-[40px] shrink-0 box-border',
-                      'shadow-[inset_-1px_0_0_0_#d1d5db] dark:shadow-[inset_-1px_0_0_0_rgb(255_255_255_/_0.1)]',
+                      'shadow-[inset_-1px_0_0_0_var(--border)]',
                       !isInlinePreviewRow
                         ? 'bg-background'
                         : 'bg-muted/25 group-hover:bg-muted/35',
@@ -4400,9 +4397,9 @@ export function RowsSpreadsheet({
                   </td>
                   <td
                     className={cn(
-                      'sticky right-0 border-b border-gray-200 dark:border-border p-0',
+                      'sticky right-0 border-b border-border p-0',
                       useInlineDocumentPane && 'shrink-0 box-border',
-                      'shadow-[inset_1px_0_0_0_#d1d5db] dark:shadow-[inset_1px_0_0_0_rgb(255_255_255_/_0.1)]',
+                      'shadow-[inset_1px_0_0_0_var(--border)]',
                       !isInlinePreviewRow
                         ? 'bg-background'
                         : 'bg-muted/25 group-hover:bg-muted/35',
