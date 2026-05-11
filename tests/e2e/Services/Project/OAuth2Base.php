@@ -2565,6 +2565,159 @@ trait OAuth2Base
     }
 
     // =========================================================================
+    // Update Google (clientId + clientSecret + optional prompt)
+    // =========================================================================
+
+    /**
+     * Default prompt MUST run before any other Google test that sets a custom
+     * prompt value. The global resetProjectOAuth2() only clears Amazon state,
+     * so Google state leaks across tests in the same class. Running this first
+     * guarantees the stored JSON blob has no pre-existing "prompt" key.
+     */
+    public function testUpdateOAuth2GoogleDefaultPrompt(): void
+    {
+        // When prompt is omitted and nothing is stored, the default is ['consent'].
+        $response = $this->updateOAuth2('google', [
+            'clientId' => 'google-default-client',
+            'clientSecret' => 'google-default-secret',
+            'enabled' => false,
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(['consent'], $response['body']['prompt']);
+
+        // Cleanup
+        $this->updateOAuth2('google', [
+            'clientId' => '',
+            'clientSecret' => '',
+            'enabled' => false,
+        ]);
+    }
+
+    public function testUpdateOAuth2Google(): void
+    {
+        $response = $this->updateOAuth2('google', [
+            'clientId' => '120000000095-92ifjb00000000000000000000g7ijfb.apps.googleusercontent.com',
+            'clientSecret' => 'GOCSPX-2k8gsR0000000000000000VNahJj',
+            'prompt' => ['select_account'],
+            'enabled' => false,
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame('google', $response['body']['$id']);
+        $this->assertSame('120000000095-92ifjb00000000000000000000g7ijfb.apps.googleusercontent.com', $response['body']['clientId']);
+        $this->assertSame(['select_account'], $response['body']['prompt']);
+
+        // Cleanup
+        $this->updateOAuth2('google', [
+            'clientId' => '',
+            'clientSecret' => '',
+            'enabled' => false,
+        ]);
+    }
+
+    public function testUpdateOAuth2GooglePartialPreservesPrompt(): void
+    {
+        // Seed clientSecret + prompt.
+        $this->updateOAuth2('google', [
+            'clientId' => 'google-seed-client',
+            'clientSecret' => 'google-seed-secret',
+            'prompt' => ['consent', 'select_account'],
+            'enabled' => false,
+        ]);
+
+        // Update only clientId.
+        $response = $this->updateOAuth2('google', [
+            'clientId' => 'google-rotated-client',
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame('google-rotated-client', $response['body']['clientId']);
+        $this->assertSame(['consent', 'select_account'], $response['body']['prompt']);
+
+        // Cleanup
+        $this->updateOAuth2('google', [
+            'clientId' => '',
+            'clientSecret' => '',
+            'enabled' => false,
+        ]);
+    }
+
+    public function testUpdateOAuth2GooglePromptNoneAloneRejected(): void
+    {
+        $response = $this->updateOAuth2('google', [
+            'clientId' => 'whatever',
+            'clientSecret' => 'whatever',
+            'prompt' => ['none', 'consent'],
+            'enabled' => false,
+        ]);
+
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
+    }
+
+    public function testUpdateOAuth2GooglePromptEmptyArrayRejected(): void
+    {
+        $response = $this->updateOAuth2('google', [
+            'clientId' => 'whatever',
+            'clientSecret' => 'whatever',
+            'prompt' => [],
+            'enabled' => false,
+        ]);
+
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
+    }
+
+    public function testUpdateOAuth2GooglePromptNoneAloneAccepted(): void
+    {
+        $response = $this->updateOAuth2('google', [
+            'clientId' => '120000000095-92ifjb00000000000000000000g7ijfb.apps.googleusercontent.com',
+            'clientSecret' => 'GOCSPX-2k8gsR0000000000000000VNahJj',
+            'prompt' => ['none'],
+            'enabled' => false,
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(['none'], $response['body']['prompt']);
+
+        // Cleanup
+        $this->updateOAuth2('google', [
+            'clientId' => '',
+            'clientSecret' => '',
+            'enabled' => false,
+        ]);
+    }
+
+    public function testUpdateOAuth2GoogleEnableAndReadBack(): void
+    {
+        $update = $this->updateOAuth2('google', [
+            'clientId' => 'google-enable-client',
+            'clientSecret' => 'google-enable-secret',
+            'prompt' => ['select_account'],
+            'enabled' => true,
+        ]);
+
+        $this->assertSame(200, $update['headers']['status-code']);
+        $this->assertTrue($update['body']['enabled']);
+
+        // GET must hide clientSecret while keeping clientId and prompt.
+        $get = $this->getOAuth2Provider('google');
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertTrue($get['body']['enabled']);
+        $this->assertSame('google-enable-client', $get['body']['clientId']);
+        $this->assertSame(['select_account'], $get['body']['prompt']);
+        $this->assertSame('', $get['body']['clientSecret']);
+
+        // Cleanup
+        $this->updateOAuth2('google', [
+            'clientId' => '',
+            'clientSecret' => '',
+            'enabled' => false,
+        ]);
+    }
+
+    // =========================================================================
     // Smoke test: every plain (clientId + clientSecret) provider
     //
     // Ensures each provider's Update endpoint is wired up correctly: routing,
