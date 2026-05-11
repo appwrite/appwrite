@@ -643,103 +643,133 @@ Http::init()
             /** @var resource|false $data */
             $data = $cache->load($key, $timestamp);
 
-            if (! empty($data) && ! $cacheLog->isEmpty()) {
-                $cacheControl = \sprintf('private, max-age=%d', $timestamp);
-                $parts = explode('/', $cacheLog->getAttribute('resourceType', ''));
-                $type = $parts[0];
+            if (! empty($data)) {
+                try {
+                    if (! $cacheLog->isEmpty()) {
+                        $cacheControl = \sprintf('private, max-age=%d', $timestamp);
+                        $parts = explode('/', $cacheLog->getAttribute('resourceType', ''));
+                        $type = $parts[0];
 
-                if ($type === 'bucket' && (! $isImageTransformation || ! $isDisabled)) {
-                    $bucketId = $parts[1] ?? null;
-                    $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+                        if ($type === 'bucket' && (! $isImageTransformation || ! $isDisabled)) {
+                            $bucketId = $parts[1] ?? null;
+                            $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-                    $isToken = ! $resourceToken->isEmpty() && $resourceToken->getAttribute('bucketInternalId') === $bucket->getSequence();
-                    $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
+                            $isToken = ! $resourceToken->isEmpty() && $resourceToken->getAttribute('bucketInternalId') === $bucket->getSequence();
+                            $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
-                    if ($bucket->isEmpty() || (! $bucket->getAttribute('enabled') && ! $isAppUser && ! $isPrivilegedUser)) {
-                        throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
-                    }
-
-                    if (! $bucket->getAttribute('transformations', true) && ! $isAppUser && ! $isPrivilegedUser) {
-                        throw new Exception(Exception::STORAGE_BUCKET_TRANSFORMATIONS_DISABLED);
-                    }
-
-                    $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-                    $valid = $authorization->isValid(new Input(Database::PERMISSION_READ, $bucket->getRead()));
-                    if (! $fileSecurity && ! $valid && ! $isToken) {
-                        throw new Exception(Exception::USER_UNAUTHORIZED);
-                    }
-
-                    $parts = explode('/', $cacheLog->getAttribute('resource'));
-                    $fileId = $parts[1] ?? null;
-
-                    if ($fileSecurity && ! $valid && ! $isToken) {
-                        $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
-                    } else {
-                        $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
-                    }
-
-                    if (! $resourceToken->isEmpty() && $resourceToken->getAttribute('fileInternalId') !== $file->getSequence()) {
-                        throw new Exception(Exception::USER_UNAUTHORIZED);
-                    }
-
-                    if ($file->isEmpty()) {
-                        throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
-                    }
-                    Span::add('storage.bucket.id', $bucketId);
-                    Span::add('storage.file.id', $fileId);
-                    // Do not update transformedAt if it's a console user
-                    if (! $user->isPrivileged($authorization->getRoles())) {
-                        $transformedAt = $file->getAttribute('transformedAt', '');
-                        if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $transformedAt) {
-                            $file->setAttribute('transformedAt', DateTime::now());
-                            $authorization->skip(fn () => $dbForProject->updateDocument('bucket_' . $file->getAttribute('bucketInternalId'), $file->getId(), new Document([
-                                'transformedAt' => $file->getAttribute('transformedAt')
-                            ])));
-                        }
-                    }
-
-                    if ($isImageTransformation) {
-                        $cacheControl = $cacheControlForStorage(new StorageCacheControl(
-                            source: CacheControl::SOURCE_CACHE,
-                            user: $user,
-                            maxAge: $timestamp,
-                            project: $project,
-                            bucket: $bucket,
-                            file: $file,
-                            resourceToken: $resourceToken,
-                            fileSecurity: $fileSecurity,
-                            cacheLog: $cacheLog,
-                            route: $route,
-                        ));
-                    }
-                }
-
-                $accessedAt = $cacheLog->getAttribute('accessedAt', '');
-                if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_CACHE_UPDATE)) > $accessedAt) {
-                    $authorization->skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), new Document([
-                        'accessedAt' => DateTime::now(),
-                    ])));
-                    // Refresh the filesystem file's mtime so TTL-based expiry in cache->load() stays valid
-                    $cache->touch($key);
-                }
-
-                $response
-                    ->addHeader('Cache-Control', $cacheControl)
-                    ->addHeader('X-Appwrite-Cache', 'hit')
-                    ->setContentType($cacheLog->getAttribute('mimeType'));
-                $storageCacheOperationsCounter->add(1, ['result' => 'hit']);
-                if (! $isImageTransformation || ! $isDisabled) {
-                    Span::add('storage.cache.hit', true);
-                    try {
-                        while (! \feof($data)) {
-                            $chunk = \fread($data, MAX_OUTPUT_CHUNK_SIZE);
-                            if ($chunk === false) {
-                                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to read cached response stream');
+                            if ($bucket->isEmpty() || (! $bucket->getAttribute('enabled') && ! $isAppUser && ! $isPrivilegedUser)) {
+                                throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
                             }
 
-                            $response->chunk($chunk, \feof($data));
+                            if (! $bucket->getAttribute('transformations', true) && ! $isAppUser && ! $isPrivilegedUser) {
+                                throw new Exception(Exception::STORAGE_BUCKET_TRANSFORMATIONS_DISABLED);
+                            }
+
+                            $fileSecurity = $bucket->getAttribute('fileSecurity', false);
+                            $valid = $authorization->isValid(new Input(Database::PERMISSION_READ, $bucket->getRead()));
+                            if (! $fileSecurity && ! $valid && ! $isToken) {
+                                throw new Exception(Exception::USER_UNAUTHORIZED);
+                            }
+
+                            $parts = explode('/', $cacheLog->getAttribute('resource'));
+                            $fileId = $parts[1] ?? null;
+
+                            if ($fileSecurity && ! $valid && ! $isToken) {
+                                $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
+                            } else {
+                                $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
+                            }
+
+                            if (! $resourceToken->isEmpty() && $resourceToken->getAttribute('fileInternalId') !== $file->getSequence()) {
+                                throw new Exception(Exception::USER_UNAUTHORIZED);
+                            }
+
+                            if ($file->isEmpty()) {
+                                throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
+                            }
+                            Span::add('storage.bucket.id', $bucketId);
+                            Span::add('storage.file.id', $fileId);
+                            // Do not update transformedAt if it's a console user
+                            if (! $user->isPrivileged($authorization->getRoles())) {
+                                $transformedAt = $file->getAttribute('transformedAt', '');
+                                if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $transformedAt) {
+                                    $file->setAttribute('transformedAt', DateTime::now());
+                                    $authorization->skip(fn () => $dbForProject->updateDocument('bucket_' . $file->getAttribute('bucketInternalId'), $file->getId(), new Document([
+                                        'transformedAt' => $file->getAttribute('transformedAt')
+                                    ])));
+                                }
+                            }
+
+                            if ($isImageTransformation) {
+                                $cacheControl = $cacheControlForStorage(new StorageCacheControl(
+                                    source: CacheControl::SOURCE_CACHE,
+                                    user: $user,
+                                    maxAge: $timestamp,
+                                    project: $project,
+                                    bucket: $bucket,
+                                    file: $file,
+                                    resourceToken: $resourceToken,
+                                    fileSecurity: $fileSecurity,
+                                    cacheLog: $cacheLog,
+                                    route: $route,
+                                ));
+                            }
                         }
-                    } finally {
+
+                        $accessedAt = $cacheLog->getAttribute('accessedAt', '');
+                        if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_CACHE_UPDATE)) > $accessedAt) {
+                            $authorization->skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), new Document([
+                                'accessedAt' => DateTime::now(),
+                            ])));
+                            // Refresh the filesystem file's mtime so TTL-based expiry in cache->load() stays valid
+                            $cache->touch($key);
+                        }
+
+                        if ($isImageTransformation && $isDisabled) {
+                            $storageCacheOperationsCounter->add(1, ['result' => 'miss']);
+                            Span::add('storage.cache.hit', false);
+                            $response
+                                ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+                                ->addHeader('Pragma', 'no-cache')
+                                ->addHeader('Expires', '0')
+                                ->addHeader('X-Appwrite-Cache', 'miss');
+                        } else {
+                            $response
+                                ->addHeader('Cache-Control', $cacheControl)
+                                ->addHeader('X-Appwrite-Cache', 'hit')
+                                ->setContentType($cacheLog->getAttribute('mimeType'));
+                            $storageCacheOperationsCounter->add(1, ['result' => 'hit']);
+                            Span::add('storage.cache.hit', true);
+
+                            $stat = \fstat($data);
+                            if ($stat === false || ! isset($stat['size'])) {
+                                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to read cached response stream metadata');
+                            }
+
+                            $remaining = (int) $stat['size'];
+                            while ($remaining > 0) {
+                                $chunk = \fread($data, \min(MAX_OUTPUT_CHUNK_SIZE, $remaining));
+                                if ($chunk === false || $chunk === '') {
+                                    throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to read cached response stream');
+                                }
+
+                                $remaining -= \strlen($chunk);
+                                $response->chunk($chunk, $remaining === 0);
+                            }
+
+                            return;
+                        }
+                    } else {
+                        $storageCacheOperationsCounter->add(1, ['result' => 'miss']);
+                        Span::add('storage.cache.hit', false);
+                        $response
+                            ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+                            ->addHeader('Pragma', 'no-cache')
+                            ->addHeader('Expires', '0')
+                            ->addHeader('X-Appwrite-Cache', 'miss');
+                    }
+                } finally {
+                    if (\is_resource($data)) {
                         \fclose($data);
                     }
                 }
