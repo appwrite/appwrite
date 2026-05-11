@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\E2E\Services\Presence;
+namespace Tests\E2E\Services\Presences;
 
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
