@@ -254,6 +254,8 @@ class Create extends Action
             }
         }
 
+        $metadata['encryption'] = $bucket->getAttribute('encryption', true) && $fileSize <= APP_STORAGE_READ_BUFFER;
+
         $chunksUploaded = $deviceForFiles->upload($fileTmpName, $path, $chunk, $chunks, $metadata);
 
         if (empty($chunksUploaded)) {

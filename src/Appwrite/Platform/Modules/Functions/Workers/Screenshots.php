@@ -245,7 +245,10 @@ class Screenshots extends Action
                     'openSSLTag' => null,
                     'openSSLIV' => null,
                     'search' => implode(' ', [$fileId, $fileName]),
-                    'metadata' => ['content_type' => $mimeType],
+                    'metadata' => [
+                        'content_type' => $mimeType,
+                        'encryption' => false,
+                    ],
                 ]);
 
                 $dbForPlatform->createDocument('bucket_' . $bucket->getSequence(), $file);
