@@ -72,7 +72,7 @@ class Google extends OAuth2
                 'https://oauth2.googleapis.com/token?' . \http_build_query([
                     'code' => $code,
                     'client_id' => $this->appID,
-                    'client_secret' => $this->appSecret,
+                    'client_secret' => $this->getClientSecret(),
                     'redirect_uri' => $this->callback,
                     'scope' => null,
                     'grant_type' => 'authorization_code'
@@ -95,7 +95,7 @@ class Google extends OAuth2
             'https://oauth2.googleapis.com/token?' . \http_build_query([
                 'refresh_token' => $refreshToken,
                 'client_id' => $this->appID,
-                'client_secret' => $this->appSecret,
+                'client_secret' => $this->getClientSecret(),
                 'grant_type' => 'refresh_token'
             ])
         ), true);
@@ -176,5 +176,38 @@ class Google extends OAuth2
         }
 
         return $this->user;
+    }
+
+    /**
+     * Extracts the Client Secret from the JSON stored in appSecret
+     *
+     * @return string
+     */
+    protected function getClientSecret(): string
+    {
+        $secret = $this->getAppSecret();
+
+        return $secret['clientSecret'] ?? $this->appSecret;
+    }
+
+    /**
+     * Decode the JSON stored in appSecret.
+     * Falls back to treating the raw string as the client secret for backwards compatibility.
+     *
+     * @return array
+     */
+    protected function getAppSecret(): array
+    {
+        try {
+            $secret = \json_decode($this->appSecret, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\Throwable $th) {
+            return ['clientSecret' => $this->appSecret];
+        }
+
+        if (!\is_array($secret)) {
+            return ['clientSecret' => $this->appSecret];
+        }
+
+        return $secret;
     }
 }
