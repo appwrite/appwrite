@@ -559,17 +559,18 @@ Http::init()
             }
 
             $abuse = new Abuse($timeLimit);
-            $remaining = $timeLimit->remaining();
-
             $limit = $timeLimit->limit();
             $time = $timeLimit->time() + $route->getLabel('abuse-time', 3600);
 
-            if ($limit && ($remaining < $closestLimit || is_null($closestLimit))) {
-                $closestLimit = $remaining;
-                $response
-                    ->addHeader('X-RateLimit-Limit', $limit)
-                    ->addHeader('X-RateLimit-Remaining', $remaining)
-                    ->addHeader('X-RateLimit-Reset', $time);
+            if ($limit) {
+                $remaining = $timeLimit->remaining();
+                if ($remaining < $closestLimit || is_null($closestLimit)) {
+                    $closestLimit = $remaining;
+                    $response
+                        ->addHeader('X-RateLimit-Limit', $limit)
+                        ->addHeader('X-RateLimit-Remaining', $remaining)
+                        ->addHeader('X-RateLimit-Reset', $time);
+                }
             }
 
             $enabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
