@@ -1261,12 +1261,31 @@ function getInstallInstructions(
   }
 }
 
+export type ConnectProjectTab =
+  | 'app'
+  | 'cli'
+  | 'mcp'
+  | 'skills'
+  | 'terraform'
+  | 's3'
+
+const CONNECT_PROJECT_TAB_IDS = [
+  'app',
+  'cli',
+  'mcp',
+  'skills',
+  'terraform',
+  's3',
+] as const satisfies readonly ConnectProjectTab[]
+
 interface ConnectProjectProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   projectId: string
   /** Optional initial SDK to preselect (e.g. 'web', 'flutter') */
   initialSdk?: string
+  /** Which top-level Connect tab to show when the dialog opens */
+  initialConnectTab?: ConnectProjectTab
 }
 
 export function ConnectProject({
@@ -1274,6 +1293,7 @@ export function ConnectProject({
   onOpenChange,
   projectId,
   initialSdk = 'web',
+  initialConnectTab = 'app',
 }: ConnectProjectProps) {
   const navigate = useNavigate()
   const [sdkId, setSdkId] = useState(() => {
@@ -1334,9 +1354,12 @@ export function ConnectProject({
       ),
     [sdkId, frameworkId, usingId, runtime, endpoint, projectId],
   )
-  const [connectTab, setConnectTab] = useState<
-    'app' | 'cli' | 'mcp' | 'skills' | 'terraform'
-  >('app')
+  const [connectTab, setConnectTab] = useState<ConnectProjectTab>('app')
+  useEffect(() => {
+    if (!open) return
+    setConnectTab(initialConnectTab)
+  }, [open, initialConnectTab])
+
   const [cliInstallOs, setCliInstallOs] = useState<
     'macos' | 'windows' | 'linux'
   >(() => {
@@ -1397,17 +1420,14 @@ export function ConnectProject({
         </DialogHeader>
         <Tabs
           value={connectTab}
-          onValueChange={(v) =>
-            setConnectTab(v as 'app' | 'cli' | 'mcp' | 'skills' | 'terraform')
-          }
+          onValueChange={(v) => setConnectTab(v as ConnectProjectTab)}
           className="min-h-0 flex-1 flex flex-col overflow-hidden"
         >
           <div
             className="shrink-0 flex gap-0 overflow-x-auto border-b border-border px-6"
             role="tablist"
           >
-            {(['app', 'cli', 'mcp', 'skills', 'terraform'] as const).map(
-              (tabId) => {
+            {CONNECT_PROJECT_TAB_IDS.map((tabId) => {
               const isActive = connectTab === tabId
               const label =
                 tabId === 'app'
@@ -1418,7 +1438,9 @@ export function ConnectProject({
                       ? 'MCP'
                       : tabId === 'skills'
                         ? 'Skills'
-                        : 'Terraform'
+                        : tabId === 'terraform'
+                          ? 'Terraform'
+                          : 'S3'
               return (
                 <button
                   key={tabId}
@@ -2006,6 +2028,22 @@ export function ConnectProject({
               projectId={projectId ?? ''}
               onViewApiKeys={handleViewApiKeys}
             />
+          </TabsContent>
+          <TabsContent
+            value="s3"
+            className="min-h-0 flex-1 overflow-y-auto px-6 pb-4 pt-0 data-[state=inactive]:hidden"
+          >
+            <div className="space-y-3 pt-4">
+              <p className="text-[13px] leading-relaxed text-muted-foreground">
+                Use a project-scoped HTTPS endpoint with SigV4-compatible signing
+                to attach Storage to rclone, IaC, or custom pipelines. Copyable
+                endpoint, access key, and secret will appear here when the
+                integration is ready.
+              </p>
+              <p className="text-[13px] leading-relaxed text-muted-foreground">
+                Work in progress - nothing to copy yet.
+              </p>
+            </div>
           </TabsContent>
         </Tabs>
         <div className="shrink-0 px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
