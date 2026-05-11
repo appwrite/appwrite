@@ -442,7 +442,7 @@ jobs:
           Messaging,
           Migrations,
           Project,
-          Presence
+          Presences
         ]
         include:
           - service: Databases
