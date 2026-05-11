@@ -604,12 +604,16 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 $consoleDB->getAuthorization()->skip(fn () => $consoleDB->foreach('projects', function (Document $project) use ($hostname): void {
                     try {
                         $dbForProject = getProjectDB($project);
-                        $dbForProject->deleteDocuments('presenceLogs', [
+                        $deletionCount = $dbForProject->deleteDocuments('presenceLogs', [
                             Query::equal('hostname', [$hostname]),
                             Query::equal('source', ['realtime']),
                         ]);
+                        triggerPresenceUsage($deletionCount, $project);
                     } catch (Throwable $th) {
                         Console::error("Realtime startup orphan sweep failed for project {$project->getId()}: {$th->getMessage()}");
+                        logError($th, 'realtimeOrphanPresenceCleanup', tags: [
+                            'projectId' => $project->getId(),
+                        ]);
                     }
                 }));
             } catch (Throwable $th) {
@@ -1365,12 +1369,15 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register) {
                         $dbForProject = getProjectDB($project);
 
                         try {
-                            $dbForProject->deleteDocuments('presenceLogs', [Query::equal('$id', $presenceIds)]);
-                        } catch (Throwable) {
-                            // swallow errors to avoid breaking disconnect cleanup
+                            $deletionCount = $dbForProject->deleteDocuments('presenceLogs', [Query::equal('$id', $presenceIds)]);
+                            triggerPresenceUsage($deletionCount, $project);
+                        } catch (Throwable $th) {
+                            Span::error($th);
+                            logError($th, 'realtimeOnClosePresenceDeletion', tags: [
+                                'projectId' => $projectId,
+                                'presences' => \count($presences)
+                            ]);
                         }
-
-                        triggerPresenceUsage(-\count($presences), $project);
 
                         foreach ($presences as $presence) {
                             try {
