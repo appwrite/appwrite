@@ -78,6 +78,11 @@ class CircuitBreaker implements Adapter
         }
     }
 
+    public function isOpen(): bool
+    {
+        return $this->breaker->isOpen();
+    }
+
     public function setMaxRetries(int $maxRetries): self
     {
         $this->adapter->setMaxRetries($maxRetries);

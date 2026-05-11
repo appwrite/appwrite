@@ -3,6 +3,7 @@
 use Appwrite\Auth\Key;
 use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Bus\Events\RequestCompleted;
+use Appwrite\Cache\Adapter\CircuitBreaker as CircuitBreakerCache;
 use Appwrite\Event\Context\Audit as AuditContext;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
@@ -503,8 +504,9 @@ Http::init()
     ->inject('telemetry')
     ->inject('platform')
     ->inject('authorization')
+    ->inject('cacheCircuitBreakers')
     ->inject('cacheControlForStorage')
-    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, Messaging $queueForMessaging, AuditContext $auditContext, Delete $queueForDeletes, EventDatabase $queueForDatabase, Context $usage, Func $queueForFunctions, Mail $queueForMails, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry, array $platform, Authorization $authorization, callable $cacheControlForStorage) {
+    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, Messaging $queueForMessaging, AuditContext $auditContext, Delete $queueForDeletes, EventDatabase $queueForDatabase, Context $usage, Func $queueForFunctions, Mail $queueForMails, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry, array $platform, Authorization $authorization, array $cacheCircuitBreakers, callable $cacheControlForStorage) {
 
         $response->setUser($user);
         $request->setUser($user);
@@ -525,63 +527,76 @@ Http::init()
         * Abuse Check
         */
 
-        $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
-        $timeLimitArray = [];
-
-        $abuseKeyLabel = (! is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
-
-        foreach ($abuseKeyLabel as $abuseKey) {
-            $start = $request->getContentRangeStart();
-            $end = $request->getContentRangeEnd();
-            $timeLimit = $timelimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600));
-            $timeLimit
-                ->setParam('{projectId}', $project->getId())
-                ->setParam('{userId}', $user->getId())
-                ->setParam('{userAgent}', $request->getUserAgent(''))
-                ->setParam('{ip}', $request->getIP())
-                ->setParam('{url}', $request->getHostname() . $route->getPath())
-                ->setParam('{method}', $request->getMethod())
-                ->setParam('{chunkId}', (int) ($start / ($end + 1 - $start)));
-            $timeLimitArray[] = $timeLimit;
-        }
-
-        $closestLimit = null;
-
         $roles = $authorization->getRoles();
         $isPrivilegedUser = $user->isPrivileged($roles);
         $isAppUser = $user->isApp($roles);
+        $enabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
+        $shouldCheckAbuse = $enabled
+            && ! $isAppUser
+            && ! $isPrivilegedUser
+            && $devKey->isEmpty();
 
-        foreach ($timeLimitArray as $timeLimit) {
-            foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
-                if (! empty($value)) {
-                    $timeLimit->setParam('{param-' . $key . '}', (\is_array($value)) ? \json_encode($value) : $value);
+        $isDatabaseRoute = str_starts_with($path, '/v1/databases')
+            || str_starts_with($path, '/v1/tablesdb')
+            || str_starts_with($path, '/v1/documentsdb')
+            || str_starts_with($path, '/v1/vectorsdb');
+        $cacheCircuitOpen = $shouldCheckAbuse
+            && $isDatabaseRoute
+            && \count(\array_filter(
+                $cacheCircuitBreakers,
+                fn (CircuitBreakerCache $breaker): bool => $breaker->isOpen()
+            )) > 0;
+
+        if (! $cacheCircuitOpen) {
+            $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
+            $timeLimitArray = [];
+
+            $abuseKeyLabel = (! is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
+
+            foreach ($abuseKeyLabel as $abuseKey) {
+                $start = $request->getContentRangeStart();
+                $end = $request->getContentRangeEnd();
+                $timeLimit = $timelimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600));
+                $timeLimit
+                    ->setParam('{projectId}', $project->getId())
+                    ->setParam('{userId}', $user->getId())
+                    ->setParam('{userAgent}', $request->getUserAgent(''))
+                    ->setParam('{ip}', $request->getIP())
+                    ->setParam('{url}', $request->getHostname() . $route->getPath())
+                    ->setParam('{method}', $request->getMethod())
+                    ->setParam('{chunkId}', (int) ($start / ($end + 1 - $start)));
+                $timeLimitArray[] = $timeLimit;
+            }
+
+            $closestLimit = null;
+
+            foreach ($timeLimitArray as $timeLimit) {
+                foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
+                    if (! empty($value)) {
+                        $timeLimit->setParam('{param-' . $key . '}', (\is_array($value)) ? \json_encode($value) : $value);
+                    }
                 }
-            }
 
-            $abuse = new Abuse($timeLimit);
-            $remaining = $timeLimit->remaining();
+                $abuse = new Abuse($timeLimit);
+                $remaining = $timeLimit->remaining();
 
-            $limit = $timeLimit->limit();
-            $time = $timeLimit->time() + $route->getLabel('abuse-time', 3600);
+                $limit = $timeLimit->limit();
+                $time = $timeLimit->time() + $route->getLabel('abuse-time', 3600);
 
-            if ($limit && ($remaining < $closestLimit || is_null($closestLimit))) {
-                $closestLimit = $remaining;
-                $response
-                    ->addHeader('X-RateLimit-Limit', $limit)
-                    ->addHeader('X-RateLimit-Remaining', $remaining)
-                    ->addHeader('X-RateLimit-Reset', $time);
-            }
+                if ($limit && ($remaining < $closestLimit || is_null($closestLimit))) {
+                    $closestLimit = $remaining;
+                    $response
+                        ->addHeader('X-RateLimit-Limit', $limit)
+                        ->addHeader('X-RateLimit-Remaining', $remaining)
+                        ->addHeader('X-RateLimit-Reset', $time);
+                }
 
-            $enabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
-
-            if (
-                $enabled                // Abuse is enabled
-                && ! $isAppUser          // User is not API key
-                && ! $isPrivilegedUser   // User is not an admin
-                && $devKey->isEmpty()  // request doesn't not contain development key
-                && $abuse->check()      // Route is rate-limited
-            ) {
-                throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED);
+                if (
+                    $shouldCheckAbuse      // Abuse is enabled and the user is rate-limited
+                    && $abuse->check()      // Route is rate-limited
+                ) {
+                    throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED);
+                }
             }
         }
 

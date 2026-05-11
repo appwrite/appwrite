@@ -192,7 +192,7 @@ $container->set('getLogsDB', function (Group $pools, Cache $cache, Authorization
 
 $container->set('telemetry', fn () => new NoTelemetry());
 
-$container->set('cache', function (Group $pools, Telemetry $telemetry) {
+$container->set('cacheCircuitBreakers', function (Group $pools, Telemetry $telemetry) {
     $list = Config::getParam('pools-cache', []);
     $adapters = [];
 
@@ -203,11 +203,15 @@ $container->set('cache', function (Group $pools, Telemetry $telemetry) {
         );
     }
 
-    $cache = new Cache(new Sharding($adapters));
+    return $adapters;
+}, ['pools', 'telemetry']);
+
+$container->set('cache', function (array $cacheCircuitBreakers, Telemetry $telemetry) {
+    $cache = new Cache(new Sharding($cacheCircuitBreakers));
     $cache->setTelemetry($telemetry);
 
     return $cache;
-}, ['pools', 'telemetry']);
+}, ['cacheCircuitBreakers', 'telemetry']);
 
 $container->set('cacheControlForStorage', fn () => function (StorageCacheControl $config): string {
     return \sprintf('private, max-age=%d', $config->maxAge);
