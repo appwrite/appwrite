@@ -623,6 +623,11 @@ return [
         'description' => 'Synchronous function execution timed out. Use asynchronous execution instead, or ensure the execution duration doesn\'t exceed 30 seconds.',
         'code' => 408,
     ],
+    Exception::FUNCTION_ASYNCHRONOUS_TIMEOUT => [
+        'name' => Exception::FUNCTION_ASYNCHRONOUS_TIMEOUT,
+        'description' => 'Asynchronous function execution timed out. Ensure the execution duration doesn\'t exceed the configured function timeout.',
+        'code' => 408,
+    ],
     Exception::FUNCTION_TEMPLATE_NOT_FOUND => [
         'name' => Exception::FUNCTION_TEMPLATE_NOT_FOUND,
         'description' => 'Function Template with the requested ID could not be found.',
@@ -686,6 +691,11 @@ return [
         'name' => Exception::BUILD_FAILED,
         'description' => 'Build with the requested ID failed. Please check the logs for more information.',
         'code' => 400,
+    ],
+    Exception::BUILD_TIMEOUT => [
+        'name' => Exception::BUILD_TIMEOUT,
+        'description' => 'Build timed out. Increase the build timeout via the `_APP_COMPUTE_BUILD_TIMEOUT` environment variable, or simplify the build to complete within the limit.',
+        'code' => 408,
     ],
 
     /** Deployments */
@@ -1234,6 +1244,26 @@ return [
     Exception::MIGRATION_DATABASE_TYPE_UNSUPPORTED => [
         'name' => Exception::MIGRATION_DATABASE_TYPE_UNSUPPORTED,
         'description' => 'The specified database type is not supported for CSV import or export operations.',
+        'code' => 400,
+    ],
+    Exception::MIGRATION_SOURCE_PROJECT_ID_REQUIRED => [
+        'name' => Exception::MIGRATION_SOURCE_PROJECT_ID_REQUIRED,
+        'description' => 'A source projectId is required for Appwrite migrations. Provide it in the migration credentials.',
+        'code' => 400,
+    ],
+    Exception::MIGRATION_SOURCE_PROJECT_NOT_FOUND => [
+        'name' => Exception::MIGRATION_SOURCE_PROJECT_NOT_FOUND,
+        'description' => 'The source project for the provided projectId was not found. Verify the projectId and the API key has access to it.',
+        'code' => 404,
+    ],
+    Exception::MIGRATION_SOURCE_TYPE_INVALID => [
+        'name' => Exception::MIGRATION_SOURCE_TYPE_INVALID,
+        'description' => 'The migration source type is invalid. Use one of the supported source types.',
+        'code' => 400,
+    ],
+    Exception::MIGRATION_DESTINATION_TYPE_INVALID => [
+        'name' => Exception::MIGRATION_DESTINATION_TYPE_INVALID,
+        'description' => 'The migration destination type is invalid. Use one of the supported destination types.',
         'code' => 400,
     ],
 

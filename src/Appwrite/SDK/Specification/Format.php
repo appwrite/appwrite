@@ -68,6 +68,17 @@ abstract class Format
                 'mock-unverified'
             ],
         ],
+        [
+            'namespace' => 'project',
+            'methods' => [
+                'getOAuth2Provider'
+            ],
+            'parameter' => 'providerId',
+            'excludeKeys' => [
+                'mock',
+                'mock-unverified'
+            ],
+        ],
     ];
 
     /**
@@ -743,6 +754,24 @@ abstract class Format
                 break;
             case 'project':
                 switch ($method) {
+                    case 'updateAuthMethod':
+                        switch ($param) {
+                            case 'methodId':
+                                return 'AuthMethod';
+                        }
+                        break;
+                    case 'getPolicy':
+                        switch ($param) {
+                            case 'policyId':
+                                return 'ProjectPolicy';
+                        }
+                        break;
+                    case 'getOAuth2Provider':
+                        switch ($param) {
+                            case 'providerId':
+                                return 'OAuthProvider';
+                        }
+                        break;
                     case 'getEmailTemplate':
                     case 'updateEmailTemplate':
                         switch ($param) {

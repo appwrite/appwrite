@@ -2,8 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Deployments\Template;
 
-use Appwrite\Event\Build;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Build as BuildMessage;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
@@ -77,7 +78,7 @@ class Create extends Base
             ->inject('dbForPlatform')
             ->inject('project')
             ->inject('queueForEvents')
-            ->inject('queueForBuilds')
+            ->inject('publisherForBuilds')
             ->inject('gitHub')
             ->inject('authorization')
             ->inject('platform')
@@ -98,7 +99,7 @@ class Create extends Base
         Database $dbForPlatform,
         Document $project,
         Event $queueForEvents,
-        Build $queueForBuilds,
+        BuildPublisher $publisherForBuilds,
         GitHub $github,
         Authorization $authorization,
         array $platform
@@ -130,7 +131,7 @@ class Create extends Base
                 installation: $installation,
                 dbForProject: $dbForProject,
                 dbForPlatform: $dbForPlatform,
-                queueForBuilds: $queueForBuilds,
+                publisherForBuilds: $publisherForBuilds,
                 template: $template,
                 github: $github,
                 activate: $activate,
@@ -223,11 +224,14 @@ class Create extends Base
 
         $this->updateEmptyManualRule($project, $site, $deployment, $dbForPlatform, $authorization);
 
-        $queueForBuilds
-            ->setType(BUILD_TYPE_DEPLOYMENT)
-            ->setResource($site)
-            ->setDeployment($deployment)
-            ->setTemplate($template);
+        $publisherForBuilds->enqueue(new BuildMessage(
+            project: $project,
+            resource: $site,
+            deployment: $deployment,
+            type: BUILD_TYPE_DEPLOYMENT,
+            template: $template,
+            platform: $platform,
+        ));
 
         $queueForEvents
             ->setParam('siteId', $site->getId())

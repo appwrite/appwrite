@@ -178,6 +178,7 @@ class Exception extends \Exception
     public const string FUNCTION_RUNTIME_UNSUPPORTED = 'function_runtime_unsupported';
     public const string FUNCTION_ENTRYPOINT_MISSING = 'function_entrypoint_missing';
     public const string FUNCTION_SYNCHRONOUS_TIMEOUT = 'function_synchronous_timeout';
+    public const string FUNCTION_ASYNCHRONOUS_TIMEOUT = 'function_asynchronous_timeout';
     public const string FUNCTION_TEMPLATE_NOT_FOUND = 'function_template_not_found';
     public const string FUNCTION_RUNTIME_NOT_DETECTED = 'function_runtime_not_detected';
     public const string FUNCTION_EXECUTE_PERMISSION_MISSING = 'function_execute_permission_missing';
@@ -192,6 +193,7 @@ class Exception extends \Exception
     public const string BUILD_ALREADY_COMPLETED = 'build_already_completed';
     public const string BUILD_CANCELED = 'build_canceled';
     public const string BUILD_FAILED = 'build_failed';
+    public const string BUILD_TIMEOUT = 'build_timeout';
 
     /** Execution */
     public const string EXECUTION_NOT_FOUND = 'execution_not_found';
@@ -346,6 +348,10 @@ class Exception extends \Exception
     public const string MIGRATION_IN_PROGRESS = 'migration_in_progress';
     public const string MIGRATION_PROVIDER_ERROR = 'migration_provider_error';
     public const string MIGRATION_DATABASE_TYPE_UNSUPPORTED = 'migration_database_type_unsupported';
+    public const string MIGRATION_SOURCE_PROJECT_ID_REQUIRED = 'migration_source_project_id_required';
+    public const string MIGRATION_SOURCE_PROJECT_NOT_FOUND = 'migration_source_project_not_found';
+    public const string MIGRATION_SOURCE_TYPE_INVALID = 'migration_source_type_invalid';
+    public const string MIGRATION_DESTINATION_TYPE_INVALID = 'migration_destination_type_invalid';
 
     /** Realtime */
     public const string REALTIME_MESSAGE_FORMAT_INVALID = 'realtime_message_format_invalid';

@@ -41,6 +41,7 @@ use Appwrite\Utopia\Response\Filters\V23 as ResponseV23;
 use Appwrite\Utopia\Response\Filters\V24 as ResponseV24;
 use Appwrite\Utopia\Response\Filters\V25 as ResponseV25;
 use Appwrite\Utopia\View;
+use Executor\Exception\Timeout as ExecutorTimeout;
 use Executor\Executor;
 use MaxMind\Db\Reader;
 use Swoole\Http\Request as SwooleRequest;
@@ -581,26 +582,30 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 'site' => '',
             };
 
-            $executionResponse = $executor->createExecution(
-                projectId: $project->getId(),
-                deploymentId: $deployment->getId(),
-                body: \strlen($body) > 0 ? $body : null,
-                variables: $vars,
-                timeout: $resource->getAttribute('timeout', 30),
-                image: $runtime['image'],
-                source: $source,
-                entrypoint: $entrypoint,
-                version: $version,
-                path: $path,
-                method: $method,
-                headers: $headers,
-                runtimeEntrypoint: $runtimeEntrypoint,
-                cpus: $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT,
-                memory: $spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT,
-                logging: $resource->getAttribute('logging', true),
-                requestTimeout: 30,
-                responseFormat: Executor::RESPONSE_FORMAT_ARRAY_HEADERS
-            );
+            try {
+                $executionResponse = $executor->createExecution(
+                    projectId: $project->getId(),
+                    deploymentId: $deployment->getId(),
+                    body: \strlen($body) > 0 ? $body : null,
+                    variables: $vars,
+                    timeout: $resource->getAttribute('timeout', 30),
+                    image: $runtime['image'],
+                    source: $source,
+                    entrypoint: $entrypoint,
+                    version: $version,
+                    path: $path,
+                    method: $method,
+                    headers: $headers,
+                    runtimeEntrypoint: $runtimeEntrypoint,
+                    cpus: $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT,
+                    memory: $spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT,
+                    logging: $resource->getAttribute('logging', true),
+                    requestTimeout: 30,
+                    responseFormat: Executor::RESPONSE_FORMAT_ARRAY_HEADERS
+                );
+            } catch (ExecutorTimeout $th) {
+                throw new AppwriteException(AppwriteException::FUNCTION_SYNCHRONOUS_TIMEOUT, previous: $th);
+            }
 
             $headerOverrides = [];
 
