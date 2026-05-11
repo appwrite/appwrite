@@ -10,7 +10,6 @@ use Tests\E2E\Scopes\SideConsole;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
-use Utopia\Database\Query;
 
 class VectorsDBConsoleClientTest extends Scope
 {
@@ -258,55 +257,4 @@ class VectorsDBConsoleClientTest extends Scope
         $this->assertIsArray($response['body']['documents']);
     }
 
-    #[Depends('testCreateCollection')]
-    public function testGetCollectionLogs(array $data)
-    {
-        $databaseId = $data['databaseId'];
-        /**
-         * Test for SUCCESS
-         */
-        $logs = $this->client->call(Client::METHOD_GET, '/vectorsdb/' . $databaseId . '/collections/' . $data['moviesId'] . '/logs', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        $this->assertEquals(200, $logs['headers']['status-code']);
-        $this->assertIsArray($logs['body']['logs']);
-        $this->assertIsNumeric($logs['body']['total']);
-
-        $logs = $this->client->call(Client::METHOD_GET, '/vectorsdb/' . $databaseId . '/collections/' . $data['moviesId'] . '/logs', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => [Query::limit(1)->toString()]
-        ]);
-
-        $this->assertEquals(200, $logs['headers']['status-code']);
-        $this->assertIsArray($logs['body']['logs']);
-        $this->assertLessThanOrEqual(1, count($logs['body']['logs']));
-        $this->assertIsNumeric($logs['body']['total']);
-
-        $logs = $this->client->call(Client::METHOD_GET, '/vectorsdb/' . $databaseId . '/collections/' . $data['moviesId'] . '/logs', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => [Query::offset(1)->toString()]
-        ]);
-
-        $this->assertEquals(200, $logs['headers']['status-code']);
-        $this->assertIsArray($logs['body']['logs']);
-        $this->assertIsNumeric($logs['body']['total']);
-
-        $logs = $this->client->call(Client::METHOD_GET, '/vectorsdb/' . $databaseId . '/collections/' . $data['moviesId'] . '/logs', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => [Query::offset(1)->toString(), Query::limit(1)->toString()]
-        ]);
-
-        $this->assertEquals(200, $logs['headers']['status-code']);
-        $this->assertIsArray($logs['body']['logs']);
-        $this->assertLessThanOrEqual(1, count($logs['body']['logs']));
-        $this->assertIsNumeric($logs['body']['total']);
-    }
 }

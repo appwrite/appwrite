@@ -293,6 +293,7 @@ class Migrations extends Action
                 $this->getDatabasesDB,
                 Config::getParam('collections', [])['databases']['collections'],
                 OnDuplicate::tryFrom($options['onDuplicate'] ?? '') ?? OnDuplicate::Fail,
+                $this->resolveDestinationDatabaseDsn(...),
             ),
             DestinationCSV::getName() => new DestinationCSV(
                 $this->deviceForFiles,
@@ -313,6 +314,19 @@ class Migrations extends Action
                 $options['columns'] ?? [],
             ),
             default => throw new Exception(Exception::MIGRATION_DESTINATION_TYPE_INVALID),
+        };
+    }
+
+    /**
+     * Legacy / tablesdb databases route to the destination project's DSN (same as a fresh
+     * Databases create), while documentsdb / vectorsdb keep the source DSN — the dedicated-DB
+     * backfill that would re-point them is not run during migrations.
+     */
+    private function resolveDestinationDatabaseDsn(ResourceDatabase $resource): string
+    {
+        return match ($resource->getType()) {
+            DATABASE_TYPE_DOCUMENTSDB, DATABASE_TYPE_VECTORSDB => (string) $resource->getDatabase(),
+            default => (string) $this->project->getAttribute('database', ''),
         };
     }
 
