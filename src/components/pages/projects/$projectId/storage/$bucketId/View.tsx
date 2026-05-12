@@ -78,6 +78,8 @@ import { FileInspectorPanel } from '../_components/FileInspectorPanel'
 import {
   readStoredStorageFilesTablePaneWidthPx,
   STORAGE_FILES_PREVIEW_PANE_MIN_PX,
+  STORAGE_FILES_TABLE_PREVIEW_SPLIT_MIN_VIEWPORT_PX,
+  STORAGE_FILES_STACKED_PREVIEW_MAX_H_CLASS,
   STORAGE_FILES_TABLE_EDGE_COL_PX,
   STORAGE_FILES_TABLE_PANE_MIN_PX,
   STORAGE_FILES_TABLE_PANE_WIDTH_STORAGE_KEY,
@@ -89,7 +91,7 @@ import {
   STORAGE_SPREADSHEET_HEADER_STICKY_CHECKBOX_SPLIT_TOP,
   STORAGE_SPREADSHEET_STICKY_THEAD_CLASS,
 } from '../_components/files-documents-layout'
-import { useIsMobile } from '@/hooks/use-mobile'
+import { useMediaMinWidth } from '@/hooks/use-media-min-width'
 
 export function View() {
   const { projectId, bucketId } = useParams({
@@ -733,9 +735,12 @@ export function View() {
     })
   }
 
-  const isMobileViewport = useIsMobile()
+  const wideEnoughForTablePreviewSplit = useMediaMinWidth(
+    STORAGE_FILES_TABLE_PREVIEW_SPLIT_MIN_VIEWPORT_PX,
+  )
   const useInlineFilePreviewPane = true
-  const isFilesStackedLayout = useInlineFilePreviewPane && isMobileViewport
+  const isFilesStackedLayout =
+    useInlineFilePreviewPane && !wideEnoughForTablePreviewSplit
   const [fileTablePaneWidthPx, setFileTablePaneWidthPx] = useState(
     readStoredStorageFilesTablePaneWidthPx,
   )
@@ -980,10 +985,10 @@ export function View() {
                       'flex min-h-0 min-w-0 flex-col',
                       useInlineFilePreviewPane
                         ? cn(
-                            'shrink-0 border-border bg-background',
+                            'border-border bg-background',
                             isFilesStackedLayout
-                              ? 'max-h-[min(42dvh,320px)] w-full border-b border-border'
-                              : 'border-r border-border',
+                              ? 'flex-1 min-h-0 w-full border-b border-border'
+                              : 'shrink-0 border-r border-border',
                           )
                         : 'min-w-0 flex-1',
                     )}
@@ -1033,8 +1038,8 @@ export function View() {
                         <col
                           style={
                             useInlineFilePreviewPane && !isFilesStackedLayout
-                              ? { width: 100, minWidth: 100 }
-                              : { width: '100px' }
+                              ? { width: 120, minWidth: 120 }
+                              : { width: '120px' }
                           }
                         />
                         <col
@@ -1155,12 +1160,12 @@ export function View() {
                           </th>
                           <th
                             className={cn(
-                              'w-[100px] px-3 py-0 align-middle',
+                              'w-[120px] min-w-[120px] shrink-0 px-3 py-0 align-middle',
                               STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS,
                               STORAGE_SPREADSHEET_HEADER_CELL_BORDER_SPLIT_TOP,
                             )}
                           >
-                            <div className="flex h-full items-center gap-2">
+                            <div className="flex h-full items-center gap-2 whitespace-nowrap">
                               <span className="text-[12px] font-medium text-foreground">
                                 size
                               </span>
@@ -1390,11 +1395,11 @@ export function View() {
                                 </td>
                                 <td
                                   className={cn(
-                                    'px-3 py-1.5 text-right',
+                                    'w-[120px] min-w-[120px] shrink-0 whitespace-nowrap px-3 py-1.5 text-right tabular-nums',
                                     STORAGE_SPREADSHEET_BODY_CELL_BORDER,
                                   )}
                                 >
-                                  <span className="font-mono text-[12px] text-muted-foreground">
+                                  <span className="inline-block font-mono text-[12px] text-muted-foreground">
                                     {formatBytes(file.sizeOriginal)}
                                   </span>
                                 </td>
@@ -1454,10 +1459,13 @@ export function View() {
                   </div>
                   <div
                     className={cn(
-                      'flex min-h-0 min-w-0 flex-1 flex-col bg-muted/10',
+                      'flex min-h-0 min-w-0 flex-col bg-muted/10',
                       isFilesStackedLayout
-                        ? 'min-h-[min(46dvh,360px)]'
-                        : 'border-l border-border',
+                        ? cn(
+                            'flex-none overflow-y-auto overscroll-contain',
+                            STORAGE_FILES_STACKED_PREVIEW_MAX_H_CLASS,
+                          )
+                        : 'flex-1 border-l border-border',
                     )}
                     style={
                       !isFilesStackedLayout

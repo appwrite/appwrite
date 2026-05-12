@@ -10,6 +10,21 @@ export const STORAGE_FILES_TABLE_PANE_MIN_PX = 260
 export const STORAGE_FILES_TABLE_PANE_MAX_PX = 4000
 export const STORAGE_FILES_PREVIEW_PANE_MIN_PX = 650
 
+/**
+ * Minimum viewport width for the files table + inline preview **side-by-side**
+ * layout. Below this width the layout stacks (table, then preview) so columns
+ * and the inspector stay usable; aligns roughly with preview min width plus a
+ * workable table pane.
+ */
+export const STORAGE_FILES_TABLE_PREVIEW_SPLIT_MIN_VIEWPORT_PX = 1200
+
+/**
+ * Stacked layout (narrow viewport): max height for the file inspector so the
+ * files table + pagination can use `flex-1` and take most of the vertical space.
+ */
+export const STORAGE_FILES_STACKED_PREVIEW_MAX_H_CLASS =
+  'max-h-[min(40dvh,600px)]'
+
 /** Checkbox column width in `table-fixed` mode (matches documents rows grid). */
 export const STORAGE_FILES_TABLE_EDGE_COL_PX = 40
 
