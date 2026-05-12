@@ -608,7 +608,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                             Query::equal('hostname', [$hostname]),
                             Query::equal('source', ['realtime']),
                         ]);
-                        triggerPresenceUsage($deletionCount, $project);
+                        triggerPresenceUsage(-$deletionCount, $project);
                     } catch (Throwable $th) {
                         Console::error("Realtime startup orphan sweep failed for project {$project->getId()}: {$th->getMessage()}");
                         logError($th, 'realtimeOrphanPresenceCleanup', tags: [
@@ -1370,7 +1370,7 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register) {
 
                         try {
                             $deletionCount = $dbForProject->deleteDocuments('presenceLogs', [Query::equal('$id', $presenceIds)]);
-                            triggerPresenceUsage($deletionCount, $project);
+                            triggerPresenceUsage(-$deletionCount, $project);
                         } catch (Throwable $th) {
                             Span::error($th);
                             logError($th, 'realtimeOnClosePresenceDeletion', tags: [

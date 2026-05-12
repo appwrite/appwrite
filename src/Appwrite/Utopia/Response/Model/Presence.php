@@ -87,7 +87,6 @@ class Presence extends Any
                 'default' => null,
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ]);
-        // `hostname` is intentionally not exposed.
         // User-defined extras flow through Any's generic mapping, surfaced under
         // the "metadata" key declared via setAdditionalPropertiesKey() above.
     }
