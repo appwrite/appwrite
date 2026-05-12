@@ -202,6 +202,10 @@ class Create extends Action
             $metadata = $deployment->getAttribute('sourceMetadata', []);
 
             if ($uploaded === $chunks) {
+                $queueForEvents
+                    ->setParam('functionId', $function->getId())
+                    ->setParam('deploymentId', $deployment->getId());
+
                 $response
                     ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
                     ->dynamic($deployment, Response::MODEL_DEPLOYMENT);
