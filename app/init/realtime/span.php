@@ -10,6 +10,10 @@ use Utopia\System\System;
  * Export Realtime error spans to a dedicated Sentry project, configured via
  * `_APP_LOGGING_CONFIG_REALTIME` (falls back to `_APP_LOGGING_CONFIG`). Registered only for the
  * Realtime server so the HTTP / worker / CLI servers keep reporting to the default Sentry project.
+ *
+ * Paired with the `realtimeLogger` registry in app/init/registers.php: it skips building the Sentry
+ * logger for the same `sentry` DSN condition, so each Realtime error is reported once — here as a
+ * span, or there via utopia/logger for non-Sentry providers. Keep the two conditions in sync.
  */
 $loggingConfig = System::getEnv('_APP_LOGGING_CONFIG_REALTIME', '') ?: System::getEnv('_APP_LOGGING_CONFIG', '');
 if (empty($loggingConfig)) {
