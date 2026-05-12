@@ -3,9 +3,10 @@
 namespace Appwrite\Platform\Modules\Functions\Http\Functions;
 
 use Appwrite\Event\Event;
-use Appwrite\Event\Func;
 use Appwrite\Event\Message\Build as BuildMessage;
+use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Validator\FunctionEvent;
 use Appwrite\Event\Webhook;
@@ -119,7 +120,7 @@ class Create extends Base
             ->inject('publisherForBuilds')
             ->inject('queueForRealtime')
             ->inject('queueForWebhooks')
-            ->inject('queueForFunctions')
+            ->inject('publisherForFunctions')
             ->inject('dbForPlatform')
             ->inject('request')
             ->inject('gitHub')
@@ -161,7 +162,7 @@ class Create extends Base
         BuildPublisher $publisherForBuilds,
         Realtime $queueForRealtime,
         Webhook $queueForWebhooks,
-        Func $queueForFunctions,
+        FunctionPublisher $publisherForFunctions,
         Database $dbForPlatform,
         Request $request,
         GitHub $github,
@@ -423,9 +424,15 @@ class Create extends Base
                     ->trigger();
 
                 /** Trigger Functions */
-                $queueForFunctions
-                    ->from($ruleCreate)
-                    ->trigger();
+                $publisherForFunctions->enqueue(FunctionMessage::fromEvent(
+                    event: $ruleCreate->getEvent(),
+                    params: $ruleCreate->getParams(),
+                    project: $ruleCreate->getProject(),
+                    user: $ruleCreate->getUser(),
+                    userId: $ruleCreate->getUserId(),
+                    payload: $ruleCreate->getPayload(),
+                    platform: $ruleCreate->getPlatform(),
+                ));
 
                 /** Trigger Realtime Events */
                 $queueForRealtime

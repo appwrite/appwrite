@@ -59,7 +59,7 @@ class Delete extends IndexDelete
             ->param('key', '', new Key(), 'Index Key.')
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForDatabase')
+            ->inject('publisherForDatabase')
             ->inject('queueForEvents')
             ->inject('authorization')
             ->callback($this->action(...));

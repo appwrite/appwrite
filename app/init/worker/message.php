@@ -1,9 +1,6 @@
 <?php
 
-use Appwrite\Event\Database as EventDatabase;
-use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
-use Appwrite\Event\Func;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Usage\Context;
@@ -327,24 +324,12 @@ return function (Container $container): void {
         return DateTime::addSeconds(new \DateTime(), -1 * (int) System::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600)); // 14 days
     }, []);
 
-    $container->set('queueForDatabase', function (Publisher $publisher) {
-        return new EventDatabase($publisher);
-    }, ['publisher']);
-
-    $container->set('queueForDeletes', function (Publisher $publisher) {
-        return new Delete($publisher);
-    }, ['publisher']);
-
     $container->set('queueForEvents', function (Publisher $publisher) {
         return new Event($publisher);
     }, ['publisher']);
 
     $container->set('queueForWebhooks', function (Publisher $publisher) {
         return new Webhook($publisher);
-    }, ['publisher']);
-
-    $container->set('queueForFunctions', function (Publisher $publisher) {
-        return new Func($publisher);
     }, ['publisher']);
 
     $container->set('queueForRealtime', function () {

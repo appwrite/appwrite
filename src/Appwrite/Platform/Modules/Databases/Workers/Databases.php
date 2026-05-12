@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Workers;
 
+use Appwrite\Event\Message\Database as DatabaseMessage;
 use Appwrite\Event\Realtime;
 use Exception;
 use Utopia\Console;
@@ -60,10 +61,11 @@ class Databases extends Action
             throw new Exception('Missing payload');
         }
 
-        $type = $payload['type'];
-        $document = new Document($payload['row'] ?? $payload['document'] ?? []);
-        $collection = new Document($payload['table'] ?? $payload['collection'] ?? []);
-        $database = new Document($payload['database'] ?? []);
+        $databaseMessage = DatabaseMessage::fromArray($payload);
+        $type = $databaseMessage->type;
+        $document = $databaseMessage->row ?? $databaseMessage->document ?? new Document();
+        $collection = $databaseMessage->table ?? $databaseMessage->collection ?? new Document();
+        $database = $databaseMessage->database ?? new Document();
         /**
          * @var Database $dbForDatabases
          */

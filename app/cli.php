@@ -2,9 +2,7 @@
 
 require_once __DIR__ . '/init.php';
 
-use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
-use Appwrite\Event\Func;
 use Appwrite\Event\Publisher\Certificate as CertificatePublisher;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
@@ -281,12 +279,6 @@ $container->set('publisherForStatsResources', fn (Publisher $publisher) => new S
     $publisher,
     new Queue(System::getEnv('_APP_STATS_RESOURCES_QUEUE_NAME', Event::STATS_RESOURCES_QUEUE_NAME))
 ), ['publisher']);
-$container->set('queueForFunctions', function (Publisher $publisher) {
-    return new Func($publisher);
-}, ['publisher']);
-$container->set('queueForDeletes', function (Publisher $publisher) {
-    return new Delete($publisher);
-}, ['publisher']);
 $container->set('logError', function (Registry $register) {
     return function (Throwable $error, string $namespace, string $action) use ($register) {
         Console::error('[Error] Timestamp: ' . date('c', time()));

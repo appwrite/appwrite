@@ -4,13 +4,12 @@ use Appwrite\Auth\Key;
 use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Bus\Events\RequestCompleted;
 use Appwrite\Event\Context\Audit as AuditContext;
-use Appwrite\Event\Database as EventDatabase;
-use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
-use Appwrite\Event\Func;
 use Appwrite\Event\Message\Audit as AuditMessage;
+use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Message\Usage as UsageMessage;
 use Appwrite\Event\Publisher\Audit;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
@@ -485,10 +484,7 @@ Http::init()
     ->inject('user')
     ->inject('queueForEvents')
     ->inject('auditContext')
-    ->inject('queueForDeletes')
-    ->inject('queueForDatabase')
     ->inject('usage')
-    ->inject('queueForFunctions')
     ->inject('dbForProject')
     ->inject('timelimit')
     ->inject('resourceToken')
@@ -500,7 +496,7 @@ Http::init()
     ->inject('platform')
     ->inject('authorization')
     ->inject('cacheControlForStorage')
-    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Delete $queueForDeletes, EventDatabase $queueForDatabase, Context $usage, Func $queueForFunctions, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry, array $platform, Authorization $authorization, callable $cacheControlForStorage) {
+    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Context $usage, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry, array $platform, Authorization $authorization, callable $cacheControlForStorage) {
 
         $response->setUser($user);
         $request->setUser($user);
@@ -609,14 +605,6 @@ Http::init()
             }
             $auditContext->user = $userClone;
         }
-
-        /* Auto-set projects */
-        $queueForDeletes->setProject($project);
-        $queueForDatabase->setProject($project);
-        $queueForFunctions->setProject($project);
-
-        /* Auto-set platforms */
-        $queueForFunctions->setPlatform($platform);
 
         $useCache = $route->getLabel('cache', false);
         $storageCacheOperationsCounter = $telemetry->createCounter('storage.cache.operations.load');
@@ -806,9 +794,7 @@ Http::shutdown()
     ->inject('publisherForAudits')
     ->inject('usage')
     ->inject('publisherForUsage')
-    ->inject('queueForDeletes')
-    ->inject('queueForDatabase')
-    ->inject('queueForFunctions')
+    ->inject('publisherForFunctions')
     ->inject('queueForWebhooks')
     ->inject('queueForRealtime')
     ->inject('dbForProject')
@@ -818,7 +804,8 @@ Http::shutdown()
     ->inject('bus')
     ->inject('apiKey')
     ->inject('mode')
-    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Audit $publisherForAudits, Context $usage, UsagePublisher $publisherForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor, Bus $bus, ?Key $apiKey, string $mode) use ($parseLabel) {
+    ->inject('platform')
+    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Audit $publisherForAudits, Context $usage, UsagePublisher $publisherForUsage, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor, Bus $bus, ?Key $apiKey, string $mode, array $platform) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
@@ -847,9 +834,14 @@ Http::shutdown()
             if (! empty($functionsEvents)) {
                 foreach ($generatedEvents as $event) {
                     if (isset($functionsEvents[$event])) {
-                        $queueForFunctions
-                            ->from($queueForEvents)
-                            ->trigger();
+                        $publisherForFunctions->enqueue(FunctionMessage::fromEvent(
+                            event: $queueForEvents->getEvent(),
+                            params: $queueForEvents->getParams(),
+                            project: $project,
+                            user: $user,
+                            payload: $queueForEvents->getPayload(),
+                            platform: $platform,
+                        ));
                         break;
                     }
                 }
@@ -957,14 +949,6 @@ Http::shutdown()
             }
 
             $publisherForAudits->enqueue(AuditMessage::fromContext($auditContext));
-        }
-
-        if (! empty($queueForDeletes->getType())) {
-            $queueForDeletes->trigger();
-        }
-
-        if (! empty($queueForDatabase->getType())) {
-            $queueForDatabase->trigger();
         }
 
         // Cache label

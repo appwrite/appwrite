@@ -4,8 +4,9 @@ namespace Appwrite\Platform\Modules\Functions\Workers;
 
 use Ahc\Jwt\JWT;
 use Appwrite\Event\Event;
-use Appwrite\Event\Func;
+use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Message\Usage as UsageMessage;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Screenshot;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
@@ -63,7 +64,7 @@ class Builds extends Action
             ->inject('queueForEvents')
             ->inject('publisherForScreenshots')
             ->inject('queueForWebhooks')
-            ->inject('queueForFunctions')
+            ->inject('publisherForFunctions')
             ->inject('queueForRealtime')
             ->inject('usage')
             ->inject('publisherForUsage')
@@ -89,7 +90,7 @@ class Builds extends Action
         Event $queueForEvents,
         Screenshot $publisherForScreenshots,
         Webhook $queueForWebhooks,
-        Func $queueForFunctions,
+        FunctionPublisher $publisherForFunctions,
         Realtime $queueForRealtime,
         Context $usage,
         UsagePublisher $publisherForUsage,
@@ -131,7 +132,7 @@ class Builds extends Action
                     $deviceForFiles,
                     $publisherForScreenshots,
                     $queueForWebhooks,
-                    $queueForFunctions,
+                    $publisherForFunctions,
                     $queueForRealtime,
                     $queueForEvents,
                     $usage,
@@ -167,7 +168,7 @@ class Builds extends Action
         Device $deviceForFiles,
         Screenshot $publisherForScreenshots,
         Webhook $queueForWebhooks,
-        Func $queueForFunctions,
+        FunctionPublisher $publisherForFunctions,
         Realtime $queueForRealtime,
         Event $queueForEvents,
         Context $usage,
@@ -570,9 +571,15 @@ class Builds extends Action
                 ->trigger();
 
             /** Trigger Functions */
-            $queueForFunctions
-                ->from($deploymentUpdate)
-                ->trigger();
+            $publisherForFunctions->enqueue(FunctionMessage::fromEvent(
+                event: $deploymentUpdate->getEvent(),
+                params: $deploymentUpdate->getParams(),
+                project: $deploymentUpdate->getProject(),
+                user: $deploymentUpdate->getUser(),
+                userId: $deploymentUpdate->getUserId(),
+                payload: $deploymentUpdate->getPayload(),
+                platform: $deploymentUpdate->getPlatform(),
+            ));
 
             /** Trigger Realtime Event */
             $queueForRealtime

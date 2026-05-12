@@ -5,7 +5,8 @@ namespace Appwrite\Platform\Workers;
 use Ahc\Jwt\JWT;
 use Appwrite\Bus\Events\ExecutionCompleted;
 use Appwrite\Event\Event;
-use Appwrite\Event\Func;
+use Appwrite\Event\Message\Func as FunctionMessage;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception as AppwriteException;
@@ -46,7 +47,7 @@ class Functions extends Action
             ->inject('message')
             ->inject('dbForProject')
             ->inject('queueForWebhooks')
-            ->inject('queueForFunctions')
+            ->inject('publisherForFunctions')
             ->inject('queueForRealtime')
             ->inject('queueForEvents')
             ->inject('bus')
@@ -61,7 +62,7 @@ class Functions extends Action
         Message $message,
         Database $dbForProject,
         Webhook $queueForWebhooks,
-        Func $queueForFunctions,
+        FunctionPublisher $publisherForFunctions,
         Realtime $queueForRealtime,
         Event $queueForEvents,
         Bus $bus,
@@ -78,20 +79,21 @@ class Functions extends Action
             );
         }
 
-        $type = $payload['type'] ?? '';
+        $functionMessage = FunctionMessage::fromArray($payload);
+        $type = $functionMessage->type;
 
-        $events = $payload['events'] ?? [];
-        $data = $payload['body'] ?? '';
-        $eventData = $payload['payload'] ?? '';
-        $platform = $payload['platform'] ?? Config::getParam('platform', []);
-        $function = new Document($payload['function'] ?? []);
-        $functionId = $payload['functionId'] ?? '';
-        $user = new Document($payload['user'] ?? []);
-        $userId = $payload['userId'] ?? '';
-        $method = $payload['method'] ?? 'POST';
-        $headers = $payload['headers'] ?? [];
-        $path = $payload['path'] ?? '/';
-        $jwt = $payload['jwt'] ?? '';
+        $events = $functionMessage->events;
+        $data = $functionMessage->body;
+        $eventData = $functionMessage->payload;
+        $platform = !empty($functionMessage->platform) ? $functionMessage->platform : Config::getParam('platform', []);
+        $function = $functionMessage->function ?? new Document();
+        $functionId = $functionMessage->functionId ?? '';
+        $user = $functionMessage->user ?? new Document();
+        $userId = $functionMessage->userId ?? '';
+        $method = $functionMessage->method ?: 'POST';
+        $headers = $functionMessage->headers;
+        $path = $functionMessage->path ?: '/';
+        $jwt = $functionMessage->jwt;
 
         if ($user->isEmpty() && !empty($userId)) {
             $user = $dbForProject->getDocument('users', $userId);
@@ -172,7 +174,7 @@ class Functions extends Action
                         log: $log,
                         dbForProject: $dbForProject,
                         queueForWebhooks: $queueForWebhooks,
-                        queueForFunctions: $queueForFunctions,
+                        publisherForFunctions: $publisherForFunctions,
                         queueForRealtime: $queueForRealtime,
                         queueForEvents: $queueForEvents,
                         bus: $bus,
@@ -216,7 +218,7 @@ class Functions extends Action
                     log: $log,
                     dbForProject: $dbForProject,
                     queueForWebhooks: $queueForWebhooks,
-                    queueForFunctions: $queueForFunctions,
+                    publisherForFunctions: $publisherForFunctions,
                     queueForRealtime: $queueForRealtime,
                     queueForEvents: $queueForEvents,
                     bus: $bus,
@@ -242,7 +244,7 @@ class Functions extends Action
                     log: $log,
                     dbForProject: $dbForProject,
                     queueForWebhooks: $queueForWebhooks,
-                    queueForFunctions: $queueForFunctions,
+                    publisherForFunctions: $publisherForFunctions,
                     queueForRealtime: $queueForRealtime,
                     queueForEvents: $queueForEvents,
                     bus: $bus,
@@ -345,7 +347,7 @@ class Functions extends Action
     /**
      * @param Log $log
      * @param Database $dbForProject
-     * @param Func $queueForFunctions
+     * @param FunctionPublisher $publisherForFunctions
      * @param Realtime $queueForRealtime
      * @param Event $queueForEvents
      * @param Document $project
@@ -367,7 +369,7 @@ class Functions extends Action
         Log $log,
         Database $dbForProject,
         Webhook $queueForWebhooks,
-        Func $queueForFunctions,
+        FunctionPublisher $publisherForFunctions,
         Realtime $queueForRealtime,
         Event $queueForEvents,
         Bus $bus,
@@ -680,9 +682,15 @@ class Functions extends Action
             ->trigger();
 
         /** Trigger Functions */
-        $queueForFunctions
-            ->from($queueForEvents)
-            ->trigger();
+        $publisherForFunctions->enqueue(FunctionMessage::fromEvent(
+            event: $queueForEvents->getEvent(),
+            params: $queueForEvents->getParams(),
+            project: $queueForEvents->getProject(),
+            user: $queueForEvents->getUser(),
+            userId: $queueForEvents->getUserId(),
+            payload: $queueForEvents->getPayload(),
+            platform: $queueForEvents->getPlatform(),
+        ));
 
         /** Trigger Realtime Events */
         $queueForRealtime
