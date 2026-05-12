@@ -249,6 +249,9 @@ class Response extends SwooleResponse
     // Project
     public const MODEL_PROJECT = 'project';
     public const MODEL_PROJECT_LIST = 'projectList';
+    public const MODEL_PROJECT_AUTH_METHOD = 'projectAuthMethod';
+    public const MODEL_PROJECT_SERVICE = 'projectService';
+    public const MODEL_PROJECT_PROTOCOL = 'projectProtocol';
     public const MODEL_WEBHOOK = 'webhook';
     public const MODEL_WEBHOOK_LIST = 'webhookList';
     public const MODEL_KEY = 'key';
@@ -435,9 +438,10 @@ class Response extends SwooleResponse
         return isset(self::$models[$key]);
     }
 
-    public function applyFilters(array $data, string $model): array
+    public function applyFilters(array $data, string $model, Document $raw): array
     {
         foreach ($this->filters as $filter) {
+            $filter->setRawContent($raw);
             $data = $filter->parse($data, $model);
         }
 
@@ -457,7 +461,7 @@ class Response extends SwooleResponse
     public function dynamic(Document $document, string $model): void
     {
         $output = $this->output(clone $document, $model);
-        $output = $this->applyFilters($output, $model);
+        $output = $this->applyFilters($output, $model, raw: clone $document);
 
         switch ($this->getContentType()) {
             case self::CONTENT_TYPE_JSON:

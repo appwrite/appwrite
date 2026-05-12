@@ -988,13 +988,13 @@ class OpenAPI3 extends Format
                 if ($rule['type'] === 'enum' && !empty($rule['enum'])) {
                     if ($rule['array']) {
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['items']['enum'] = \array_values($rule['enum']);
-                        $enumName = $this->getResponseEnumName($model->getType(), $name);
+                        $enumName = $this->getResponseEnumName($model->getType(), $name, $rule['enumSDKName'] ?? null);
                         if ($enumName) {
                             $output['components']['schemas'][$model->getType()]['properties'][$name]['items']['x-enum-name'] = $enumName;
                         }
                     } else {
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['enum'] = \array_values($rule['enum']);
-                        $enumName = $this->getResponseEnumName($model->getType(), $name);
+                        $enumName = $this->getResponseEnumName($model->getType(), $name, $rule['enumSDKName'] ?? null);
                         if ($enumName) {
                             $output['components']['schemas'][$model->getType()]['properties'][$name]['x-enum-name'] = $enumName;
                         }

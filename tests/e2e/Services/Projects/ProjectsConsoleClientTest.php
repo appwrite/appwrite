@@ -46,6 +46,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4'
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Project Test',
@@ -68,6 +69,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Project Test',
@@ -89,6 +91,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => '',
@@ -101,6 +104,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Project Test',
@@ -127,6 +131,7 @@ class ProjectsConsoleClientTest extends Scope
         $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'MultiDB Project',
@@ -210,6 +215,7 @@ class ProjectsConsoleClientTest extends Scope
         $getProject = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()));
 
         $this->assertEquals(404, $getProject['headers']['status-code']);
@@ -234,6 +240,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => $projectId,
             'name' => 'Original Project',
@@ -249,6 +256,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => $projectId,
             'name' => 'Project Duplicate',
@@ -298,6 +306,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Team 1 Project',
@@ -318,6 +327,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/team', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'teamId' => $team2,
         ]);
@@ -341,6 +351,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -353,6 +364,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders(), [
             'search' => $id
         ]));
@@ -364,6 +376,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders(), [
             'search' => 'Project Test'
         ]));
@@ -390,6 +403,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Project Test 2',
@@ -408,6 +422,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'queries' => [
                 Query::equal('teamId', [$team['body']['$id']])->toString(),
@@ -422,6 +437,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'queries' => [
                 Query::limit(1)->toString(),
@@ -435,6 +451,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'queries' => [
                 Query::offset(1)->toString(),
@@ -447,6 +464,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'queries' => [
                 Query::equal('name', ['Project Test 2'])->toString(),
@@ -461,6 +479,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'queries' => [
                 Query::orderDesc()->toString(),
@@ -474,6 +493,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -483,6 +503,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'queries' => [
                 Query::cursorAfter(new Document(['$id' => $response['body']['projects'][0]['$id']]))->toString(),
@@ -498,6 +519,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'queries' => [
                 Query::cursorAfter(new Document(['$id' => 'unknown']))->toString(),
@@ -524,6 +546,7 @@ class ProjectsConsoleClientTest extends Scope
         $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Query Select Test Project',
@@ -540,6 +563,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'queries' => [
                 Query::select(['$id', 'name'])->toString(),
@@ -569,6 +593,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4'
         ], $this->getHeaders()), [
             'queries' => [
                 Query::select(['$id', 'name', 'teamId', 'description', '$createdAt', '$updatedAt'])->toString(),
@@ -600,6 +625,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'queries' => [
                 Query::select(['$id', 'name', 'teamId'])->toString(),
@@ -631,6 +657,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'queries' => [
                 Query::select(['$id', 'name'])->toString(),
@@ -661,6 +688,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'queries' => [
                 Query::select(['$id', 'name', 'platforms'])->toString(),
@@ -690,6 +718,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'queries' => [
                 Query::select(['$id', 'name', 'webhooks', 'keys'])->toString(),
@@ -719,6 +748,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'queries' => [
                 Query::select(['*'])->toString(),
@@ -749,6 +779,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'queries' => [
                 Query::select(['$id', 'invalidAttribute'])->toString(),
@@ -783,6 +814,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Project Test',
@@ -1027,6 +1059,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -1041,17 +1074,17 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertNotEmpty($response['body']['$updatedAt']);
         $this->assertNotFalse(\strtotime($response['body']['$updatedAt']));
 
-        $this->assertEquals('My description', $response['body']['description']);
+        // $this->assertEquals('My description', $response['body']['description']); // No longer supported
         $this->assertEquals($team['body']['$id'], $response['body']['teamId']);
         $this->assertEquals('active', $response['body']['status']);
-        $this->assertEquals('https://google.com/logo.png', $response['body']['logo']);
-        $this->assertEquals('https://myapp.com/', $response['body']['url']);
-        $this->assertEquals('Legal company', $response['body']['legalName']);
-        $this->assertEquals('Slovakia', $response['body']['legalCountry']);
-        $this->assertEquals('Custom state', $response['body']['legalState']);
-        $this->assertEquals('Košice', $response['body']['legalCity']);
-        $this->assertEquals('Main street 32', $response['body']['legalAddress']);
-        $this->assertEquals('TAXID_123456', $response['body']['legalTaxId']);
+        // $this->assertEquals('https://google.com/logo.png', $response['body']['logo']); // No longer supported
+        // $this->assertEquals('https://myapp.com/', $response['body']['url']); // No longer supported
+        // $this->assertEquals('Legal company', $response['body']['legalName']); // No longer supported
+        // $this->assertEquals('Slovakia', $response['body']['legalCountry']); // No longer supported
+        // $this->assertEquals('Custom state', $response['body']['legalState']); // No longer supported
+        // $this->assertEquals('Košice', $response['body']['legalCity']); // No longer supported
+        // $this->assertEquals('Main street 32', $response['body']['legalAddress']); // No longer supported
+        // $this->assertEquals('TAXID_123456', $response['body']['legalTaxId']); // No longer supported
         $this->assertEquals(135, $response['body']['authDuration']);
         $this->assertEquals(54, $response['body']['authLimit']);
         $this->assertEquals(7, $response['body']['authSessionsLimit']);
@@ -1411,6 +1444,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -1482,6 +1516,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/empty', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()));
 
         $this->assertEquals(404, $response['headers']['status-code']);
@@ -1490,9 +1525,10 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/'.$projectId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()));
 
-        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(404, $response['headers']['status-code']);
     }
 
     public function testGetProjectUsage(): void
@@ -1520,6 +1556,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Project Test',
@@ -1536,6 +1573,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Project Test 2',
@@ -1556,6 +1594,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => '',
@@ -1580,6 +1619,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/smtp', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'enabled' => true,
             'senderEmail' => 'mailer@appwrite.io',
@@ -1605,6 +1645,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -1624,6 +1665,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/smtp', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'enabled' => true,
             'senderEmail' => 'fail@appwrite.io',
@@ -1663,6 +1705,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Project Test',
@@ -1851,6 +1894,7 @@ class ProjectsConsoleClientTest extends Scope
         $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Session Alert Locale Fallback Test',
@@ -1864,6 +1908,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/smtp', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'enabled' => true,
             'senderEmail' => 'mailer@appwrite.io',
@@ -1932,6 +1977,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()));
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertTrue($response['body']['authSessionAlerts']);
@@ -2054,6 +2100,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -2166,6 +2213,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -2189,6 +2237,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Session Invalidation Test Project',
@@ -2203,6 +2252,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -2220,6 +2270,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -2237,6 +2288,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -2261,6 +2313,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Project Test',
@@ -2280,6 +2333,7 @@ class ProjectsConsoleClientTest extends Scope
             $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/oauth2', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-response-format' => '1.9.4',
             ], $this->getHeaders()), [
                 'provider' => $key,
                 'appId' => 'AppId-' . ucfirst($key),
@@ -2293,6 +2347,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -2320,6 +2375,7 @@ class ProjectsConsoleClientTest extends Scope
             $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/oauth2', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-response-format' => '1.9.4',
             ], $this->getHeaders()), [
                 'provider' => $key,
                 'enabled' => $i === 0 ? false : true // On first provider, test enabled=false
@@ -2334,6 +2390,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -2363,6 +2420,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/oauth2', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'provider' => 'unknown',
             'appId' => 'AppId',
@@ -2390,6 +2448,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Project Test',
@@ -2445,6 +2504,7 @@ class ProjectsConsoleClientTest extends Scope
             $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-response-format' => '1.9.4',
             ], $this->getHeaders()));
 
             $this->assertEquals(200, $response['headers']['status-code']);
@@ -2855,6 +2915,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), []);
 
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -2864,6 +2925,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'numbers' => [
                 'phone' => '+1655513432',
@@ -2877,6 +2939,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'numbers' => [
                 [
@@ -2892,6 +2955,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'numbers' => [
                 [
@@ -2907,6 +2971,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'numbers' => [
                 [
@@ -2922,6 +2987,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'numbers' => [
                 [
@@ -2937,6 +3003,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'numbers' => [
                 [
@@ -2952,6 +3019,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'numbers' => [
                 [
@@ -2979,6 +3047,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'numbers' => $numbers
         ]);
@@ -2992,6 +3061,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'numbers' => []
         ]);
@@ -3000,6 +3070,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/mock-numbers', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'numbers' => [
                 [
@@ -3323,6 +3394,7 @@ class ProjectsConsoleClientTest extends Scope
         $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]), [
             'projectId' => ID::unique(),
@@ -3358,6 +3430,7 @@ class ProjectsConsoleClientTest extends Scope
             $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-response-format' => '1.9.4',
                 'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             ]));
 
@@ -3387,6 +3460,7 @@ class ProjectsConsoleClientTest extends Scope
             $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-response-format' => '1.9.4',
                 'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             ]));
 
@@ -3412,6 +3486,7 @@ class ProjectsConsoleClientTest extends Scope
         $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]), [
             'projectId' => ID::unique(),
@@ -3442,6 +3517,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]));
 
@@ -3464,6 +3540,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]));
 
@@ -3487,6 +3564,7 @@ class ProjectsConsoleClientTest extends Scope
         $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]), [
             'projectId' => ID::unique(),
@@ -3527,6 +3605,7 @@ class ProjectsConsoleClientTest extends Scope
             $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-response-format' => '1.9.4',
                 'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             ]));
 
@@ -3603,6 +3682,7 @@ class ProjectsConsoleClientTest extends Scope
             $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-response-format' => '1.9.4',
                 'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             ]));
 
@@ -3679,6 +3759,7 @@ class ProjectsConsoleClientTest extends Scope
             $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-response-format' => '1.9.4',
                 'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             ]));
 
@@ -4437,6 +4518,7 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Project Test 2',
@@ -5485,6 +5567,7 @@ class ProjectsConsoleClientTest extends Scope
         $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Amazing Project',
@@ -5510,6 +5593,7 @@ class ProjectsConsoleClientTest extends Scope
         $project = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $project['headers']['status-code']);
@@ -5533,6 +5617,7 @@ class ProjectsConsoleClientTest extends Scope
         $project = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()));
 
         $this->assertEquals(404, $project['headers']['status-code']);
@@ -5556,6 +5641,7 @@ class ProjectsConsoleClientTest extends Scope
         $project1 = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Amazing Project 1',
@@ -5566,6 +5652,7 @@ class ProjectsConsoleClientTest extends Scope
         $project2 = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Amazing Project 2',
@@ -6908,6 +6995,7 @@ class ProjectsConsoleClientTest extends Scope
         $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Test project - Labels 1',
@@ -6952,6 +7040,7 @@ class ProjectsConsoleClientTest extends Scope
         $projects = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'queries' => [
                 Query::contains('labels', ['nonvip'])->toString(),
@@ -6964,6 +7053,7 @@ class ProjectsConsoleClientTest extends Scope
         $projects = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'queries' => [
                 Query::contains('labels', ['vip'])->toString(),
@@ -6975,6 +7065,7 @@ class ProjectsConsoleClientTest extends Scope
         $projects = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'queries' => [
                 Query::contains('labels', ['imagine'])->toString(),
@@ -6987,6 +7078,7 @@ class ProjectsConsoleClientTest extends Scope
         $projects = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'queries' => [
                 Query::contains('labels', ['nonvip', 'imagine'])->toString(),
@@ -7000,6 +7092,7 @@ class ProjectsConsoleClientTest extends Scope
         $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Test project - Labels 2',
@@ -7028,6 +7121,7 @@ class ProjectsConsoleClientTest extends Scope
         $projects = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'queries' => [
                 Query::contains('labels', ['imagine'])->toString(),
@@ -7042,6 +7136,7 @@ class ProjectsConsoleClientTest extends Scope
         $projects = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'queries' => [
                 Query::contains('labels', ['vip'])->toString(),
@@ -7055,6 +7150,7 @@ class ProjectsConsoleClientTest extends Scope
         $projects = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'queries' => [
                 Query::contains('labels', ['vip'])->toString(),
@@ -7069,6 +7165,7 @@ class ProjectsConsoleClientTest extends Scope
         $projects = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
             'queries' => [
                 Query::contains('labels', ['vip', 'imagine'])->toString(),
@@ -7174,6 +7271,7 @@ class ProjectsConsoleClientTest extends Scope
                 'origin' => 'http://localhost',
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-response-format' => '1.9.4',
                 'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
             ]);
 
@@ -7270,6 +7368,7 @@ class ProjectsConsoleClientTest extends Scope
                     'origin' => 'http://localhost',
                     'content-type' => 'application/json',
                     'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-response-format' => '1.9.4',
                     'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
                 ], [
                     'name' => $newProjectName,
@@ -7286,6 +7385,7 @@ class ProjectsConsoleClientTest extends Scope
                     'origin' => 'http://localhost',
                     'content-type' => 'application/json',
                     'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-response-format' => '1.9.4',
                     'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
                 ], [
                     'name' => $newProjectName,
