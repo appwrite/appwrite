@@ -115,8 +115,15 @@ $register->set('realtimeLogger', function () {
 
     $loggingProvider = new DSN($providerConfig);
     $providerName = $loggingProvider->getScheme();
+
+    // Realtime errors for the Sentry provider are exported as spans to a dedicated Sentry
+    // project — see the Sentry span exporter registered in app/realtime.php. Keep this
+    // logger-based path only for the remaining providers (logOwl, Raygun, AppSignal).
+    if ($providerName === 'sentry') {
+        return;
+    }
+
     $providerConfig = match ($providerName) {
-        'sentry' => ['key' => $loggingProvider->getPassword(), 'projectId' => $loggingProvider->getUser() ?? '', 'host' => 'https://' . $loggingProvider->getHost()],
         'logowl' => ['ticket' => $loggingProvider->getUser() ?? '', 'host' => $loggingProvider->getHost()],
         default => ['key' => $loggingProvider->getHost()],
     };
@@ -131,7 +138,6 @@ $register->set('realtimeLogger', function () {
 
     try {
         $adapter = match ($providerName) {
-            'sentry' => new Sentry($providerConfig['projectId'], $providerConfig['key'], $providerConfig['host']),
             'logowl' => new LogOwl($providerConfig['ticket'], $providerConfig['host']),
             'raygun' => new Raygun($providerConfig['key']),
             'appsignal' => new AppSignal($providerConfig['key']),

@@ -38,6 +38,7 @@ use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
+use Utopia\Span\Exporter;
 use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
@@ -48,6 +49,35 @@ require_once __DIR__ . '/init.php';
 
 if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
     require_once __DIR__ . '/init/span.php';
+}
+
+/**
+ * Export realtime error spans to a dedicated Sentry project, configured via
+ * `_APP_LOGGING_CONFIG_REALTIME` (falls back to `_APP_LOGGING_CONFIG`). This lives here rather
+ * than in app/init/span.php because that file is shared by the HTTP / worker / CLI servers, which
+ * must keep reporting to the default Sentry project. Only spans carrying an error are exported —
+ * `logError()` below records the error onto the active (or a short-lived) span, so this replaces
+ * the legacy utopia/logger Sentry path for realtime (see the `realtimeLogger` registry).
+ */
+$realtimeLoggingConfig = System::getEnv('_APP_LOGGING_CONFIG_REALTIME', '') ?: System::getEnv('_APP_LOGGING_CONFIG', '');
+if (!empty($realtimeLoggingConfig)) {
+    try {
+        $realtimeLoggingDsn = new DSN($realtimeLoggingConfig);
+        if ($realtimeLoggingDsn->getScheme() === 'sentry') {
+            $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
+            Span::addExporter(
+                new Exporter\Sentry(
+                    dsn: 'https://' . ($realtimeLoggingDsn->getPassword() ?? '') . '@' . $realtimeLoggingDsn->getHost() . '/' . ($realtimeLoggingDsn->getUser() ?? ''),
+                    environment: $isProduction ? 'production' : 'staging',
+                    release: System::getEnv('_APP_VERSION', 'UNKNOWN'),
+                    serverName: System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()),
+                ),
+                sampler: static fn (Span $span): bool => $span->getError() !== null,
+            );
+        }
+    } catch (Throwable $error) {
+        Console::warning('Failed to register realtime Sentry span exporter: ' . $error->getMessage());
+    }
 }
 
 /** @var Registry $register */
@@ -290,43 +320,75 @@ if (!function_exists('logError')) {
     {
         global $register;
 
-        $logger = $register->get('realtimeLogger');
-
-        if ($logger && !$error instanceof Exception) {
-            $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
-
-            $log = new Log();
-            $log->setNamespace("realtime");
-            $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
-            $log->setVersion($version);
-            $log->setType(Log::TYPE_ERROR);
-            $log->setMessage($error->getMessage());
-
-            $log->addTag('code', $error->getCode());
-            $log->addTag('verboseType', get_class($error));
-            $log->addTag('projectId', $project?->getId() ?: 'n/a');
-            $log->addTag('userId', $user?->getId() ?: 'n/a');
-
+        if (!$error instanceof Exception) {
+            // Record the error onto the active span (the realtime.open / realtime.message /
+            // realtime.close handlers each open one); if logError() runs outside a span — e.g. the
+            // pub/sub subscriber, onStart bootstrap, or the Swoole server error handler — open a
+            // short-lived span so the error is still exported. When _APP_LOGGING_CONFIG_REALTIME
+            // (or _APP_LOGGING_CONFIG) is a Sentry DSN, the exporter registered at the top of this
+            // file ships these error spans to the dedicated realtime Sentry project.
+            $activeSpan = Span::current();
+            $span = $activeSpan ?? Span::init('realtime.error');
+            $span->set('realtime.action', $action);
+            $span->set('error.code', $error->getCode());
+            if ($project !== null && !$project->isEmpty()) {
+                $span->set('realtime.projectId', $project->getId());
+            }
+            if ($user !== null && !$user->isEmpty()) {
+                $span->set('realtime.userId', $user->getId());
+            }
+            if ($authorization !== null) {
+                $span->set('realtime.roles', \implode(',', $authorization->getRoles()));
+            }
             foreach ($tags as $key => $value) {
-                $log->addTag($key, $value ?: 'n/a');
+                if (\is_scalar($value) || $value === null) {
+                    $span->set('realtime.' . $key, $value);
+                }
+            }
+            $span->setError($error);
+            if ($activeSpan === null) {
+                $span->finish();
             }
 
-            $log->addExtra('file', $error->getFile());
-            $log->addExtra('line', $error->getLine());
-            $log->addExtra('trace', $error->getTraceAsString());
-            $log->addExtra('detailedTrace', $error->getTrace());
-            $log->addExtra('roles', $authorization?->getRoles() ?? []);
+            // Legacy utopia/logger path, kept for non-Sentry providers (logOwl, Raygun,
+            // AppSignal); the realtimeLogger registry returns null when the provider is Sentry.
+            $logger = $register->get('realtimeLogger');
+            if ($logger) {
+                $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
-            $log->setAction($action);
+                $log = new Log();
+                $log->setNamespace("realtime");
+                $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
+                $log->setVersion($version);
+                $log->setType(Log::TYPE_ERROR);
+                $log->setMessage($error->getMessage());
 
-            $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
-            $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
+                $log->addTag('code', $error->getCode());
+                $log->addTag('verboseType', get_class($error));
+                $log->addTag('projectId', $project?->getId() ?: 'n/a');
+                $log->addTag('userId', $user?->getId() ?: 'n/a');
 
-            try {
-                $responseCode = $logger->addLog($log);
-                Console::info('Error log pushed with status code: ' . $responseCode);
-            } catch (Throwable $th) {
-                Console::error('Error pushing log: ' . $th->getMessage());
+                foreach ($tags as $key => $value) {
+                    $log->addTag($key, $value ?: 'n/a');
+                }
+
+                $log->addExtra('file', $error->getFile());
+                $log->addExtra('line', $error->getLine());
+                $log->addExtra('trace', $error->getTraceAsString());
+                $log->addExtra('detailedTrace', $error->getTrace());
+                $log->addExtra('roles', $authorization?->getRoles() ?? []);
+
+                $log->setAction($action);
+
+                $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
+                $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
+
+                try {
+                    $responseCode = $logger->addLog($log);
+                    Console::info('Error log pushed with status code: ' . $responseCode);
+                } catch (Throwable $th) {
+                    Console::error('Error pushing log: ' . $th->getMessage());
+                }
             }
         }
 
