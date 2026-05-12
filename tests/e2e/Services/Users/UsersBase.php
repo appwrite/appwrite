@@ -477,6 +477,84 @@ trait UsersBase
         self::$cachedUser[$projectId] = ['userId' => $body['$id']];
     }
 
+    public function testCreateUserNullName(): void
+    {
+        $endpoints = [
+            ['path' => '/users', 'payload' => [
+                'userId' => ID::unique(),
+                'email' => 'plaintext-null-name@appwrite.io',
+                'password' => 'password',
+                'name' => null,
+            ]],
+            ['path' => '/users/bcrypt', 'payload' => [
+                'userId' => ID::unique(),
+                'email' => 'bcrypt-null-name@appwrite.io',
+                'password' => '$2a$15$xX/myGbFU.ZSKHSi6EHdBOySTdYm8QxBLXmOPHrYMwV0mHRBBSBOq',
+                'name' => null,
+            ]],
+            ['path' => '/users/md5', 'payload' => [
+                'userId' => ID::unique(),
+                'email' => 'md5-null-name@appwrite.io',
+                'password' => '144fa7eaa4904e8ee120651997f70dcc',
+                'name' => null,
+            ]],
+            ['path' => '/users/argon2', 'payload' => [
+                'userId' => ID::unique(),
+                'email' => 'argon2-null-name@appwrite.io',
+                'password' => '$argon2i$v=19$m=20,t=3,p=2$YXBwd3JpdGU$A/54i238ed09ZR4NwlACU5XnkjNBZU9QeOEuhjLiexI',
+                'name' => null,
+            ]],
+            ['path' => '/users/sha', 'payload' => [
+                'userId' => ID::unique(),
+                'email' => 'sha-null-name@appwrite.io',
+                'password' => '4243da0a694e8a2f727c8060fe0507c8fa01ca68146c76d2c190805b638c20c6bf6ba04e21f11ae138785d0bff63c416e6f87badbffad37f6dee50094cc38c70',
+                'passwordVersion' => 'sha512',
+                'name' => null,
+            ]],
+            ['path' => '/users/phpass', 'payload' => [
+                'userId' => ID::unique(),
+                'email' => 'phpass-null-name@appwrite.io',
+                'password' => '$P$Br387rwferoKN7uwHZqNMu98q3U8RO.',
+                'name' => null,
+            ]],
+            ['path' => '/users/scrypt', 'payload' => [
+                'userId' => ID::unique(),
+                'email' => 'scrypt-null-name@appwrite.io',
+                'password' => '3fdef49701bc4cfaacd551fe017283513284b4731e6945c263246ef948d3cf63b5d269c31fd697246085111a428245e24a4ddc6b64c687bc60a8910dbafc1d5b',
+                'passwordSalt' => 'appwrite',
+                'passwordCpu' => 16384,
+                'passwordMemory' => 13,
+                'passwordParallel' => 2,
+                'passwordLength' => 64,
+                'name' => null,
+            ]],
+            ['path' => '/users/scrypt-modified', 'payload' => [
+                'userId' => ID::unique(),
+                'email' => 'scrypt-modified-null-name@appwrite.io',
+                'password' => 'UlM7JiXRcQhzAGlaonpSqNSLIz475WMddOgLjej5De9vxTy48K6WtqlEzrRFeK4t0COfMhWCb8wuMHgxOFCHFQ==',
+                'passwordSalt' => 'UxLMreBr6tYyjQ==',
+                'passwordSaltSeparator' => 'Bw==',
+                'passwordSignerKey' => 'XyEKE9RcTDeLEsL/RjwPDBv/RqDl8fb3gpYEOQaPihbxf1ZAtSOHCjuAAa7Q3oHpCYhXSN9tizHgVOwn6krflQ==',
+                'name' => null,
+            ]],
+        ];
+
+        foreach ($endpoints as $endpoint) {
+            $response = $this->client->call(Client::METHOD_POST, $endpoint['path'], array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), $endpoint['payload']);
+
+            $this->assertEquals(201, $response['headers']['status-code'], 'Failed creating user via ' . $endpoint['path'] . ' with null name');
+            $this->assertSame('', $response['body']['name']);
+
+            $this->client->call(Client::METHOD_DELETE, '/users/' . $response['body']['$id'], array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+        }
+    }
+
     /**
      * Tries to login into all accounts created with hashed password. Ensures hash veifying logic.
      */
