@@ -69,16 +69,16 @@
         },
         {
             "name": "appwrite/appwrite",
-            "version": "23.1.0",
+            "version": "23.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-for-php.git",
-                "reference": "2f275921f10ceb7cff99f2d463f7328b296234fa"
+                "reference": "fd7c0f0bf5ddf334533534b20ed967cfb400f6ea"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/2f275921f10ceb7cff99f2d463f7328b296234fa",
-                "reference": "2f275921f10ceb7cff99f2d463f7328b296234fa",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/fd7c0f0bf5ddf334533534b20ed967cfb400f6ea",
+                "reference": "fd7c0f0bf5ddf334533534b20ed967cfb400f6ea",
                 "shasum": ""
             },
             "require": {
@@ -104,10 +104,10 @@
             "support": {
                 "email": "team@appwrite.io",
                 "issues": "https://github.com/appwrite/sdk-for-php/issues",
-                "source": "https://github.com/appwrite/sdk-for-php/tree/23.1.0",
+                "source": "https://github.com/appwrite/sdk-for-php/tree/23.1.1",
                 "url": "https://appwrite.io/support"
             },
-            "time": "2026-05-08T13:44:58+00:00"
+            "time": "2026-05-12T11:03:36+00:00"
         },
         {
             "name": "appwrite/php-clamav",
