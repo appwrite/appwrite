@@ -162,8 +162,6 @@ class Upsert extends PlatformAction
             'status' => $status,
             'source' => $isGraphQL ? 'graphql' : 'rest',
             'expiresAt' => $expiresAt ?? DateTime::addSeconds(new \DateTime(), 15 * 60),
-            // TODO: finding a way to find hostname
-            // 'hostname' => $hostname,
             'metadata' => $metadata,
         ];
 
