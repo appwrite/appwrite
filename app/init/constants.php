@@ -412,10 +412,6 @@ const METRIC_REALTIME_CONNECTIONS_MESSAGES_SENT = 'realtime.messages.sent';
 const METRIC_REALTIME_INBOUND = 'realtime.inbound';
 const METRIC_REALTIME_OUTBOUND = 'realtime.outbound';
 
-// Presence API metrics
-const METRIC_PRESENCE_UPSERTED = 'presences.upserted';
-const METRIC_PRESENCE_DELETED = 'presence.deleted';
-
 // Resource types
 const RESOURCE_TYPE_PROJECTS = 'projects';
 const RESOURCE_TYPE_FUNCTIONS = 'functions';

@@ -76,7 +76,6 @@ class Delete extends PlatformAction
 
         (new PresenceState())->purgeListCache($dbForProject);
 
-        $usage->addMetric(METRIC_PRESENCE_DELETED, 1);
         $usage->addMetric(METRIC_USERS_PRESENCE, -1);
 
         $queueForEvents
