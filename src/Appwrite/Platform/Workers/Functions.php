@@ -193,7 +193,7 @@ class Functions extends Action
                         user: $user,
                         jwt: null,
                         event: $events[0],
-                        eventData: \is_string($eventData) ? $eventData : \json_encode($eventData),
+                        eventData: \json_encode($eventData) ?: null,
                         executionId: null,
                     );
                     Console::success('Triggered function: ' . $events[0]);
