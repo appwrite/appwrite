@@ -50,7 +50,7 @@ if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
     require_once __DIR__ . '/init/span.php';
 }
 
-// Register the Realtime-only Sentry span exporter (errors -> dedicated project); see the file.
+// Routes Realtime errors to a dedicated Sentry project (see the file).
 require_once __DIR__ . '/init/realtime/span.php';
 
 /** @var Registry $register */
@@ -289,12 +289,8 @@ $server = new Server($adapter);
 
 if (!function_exists('recordRealtimeErrorSpan')) {
     /**
-     * Attach a Realtime error to a span so it is exported to the Realtime Sentry project.
-     *
-     * Uses the active span when there is one — the realtime.open / realtime.message / realtime.close
-     * handlers each open one — otherwise opens a short-lived `realtime.error` span so errors from
-     * call sites with no active span (the pub/sub subscriber, the onStart bootstrap, the Swoole
-     * server error handler) are still reported. See app/init/realtime/span.php for the exporter.
+     * Attach a Realtime error to a span for export to the dedicated Sentry project — the
+     * active span if one exists, otherwise a short-lived `realtime.error` span.
      */
     function recordRealtimeErrorSpan(Throwable $error, string $action, array $tags, ?Document $project, ?Document $user, ?Authorization $authorization): void
     {
@@ -330,11 +326,8 @@ if (!function_exists('recordRealtimeErrorSpan')) {
 
 if (!function_exists('pushRealtimeErrorLog')) {
     /**
-     * Push a Realtime error to the configured utopia/logger provider.
-     *
-     * Kept for non-Sentry providers (logOwl, Raygun, AppSignal) only — the `realtimeLogger` registry
-     * returns null when the provider is Sentry, since those errors are exported as spans (see
-     * recordRealtimeErrorSpan()). Drop this once Realtime no longer supports a non-Sentry provider.
+     * Push a Realtime error to the utopia/logger provider — non-Sentry providers only
+     * (logOwl, Raygun, AppSignal); Sentry errors go through recordRealtimeErrorSpan().
      */
     function pushRealtimeErrorLog(Throwable $error, string $action, array $tags, ?Document $project, ?Document $user, ?Authorization $authorization): void
     {
