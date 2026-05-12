@@ -465,6 +465,15 @@ abstract class Action extends UtopiaAction
             $dbForProject->purgeCachedCollection('database_' . $db->getSequence() . '_collection_' . $relatedCollection->getSequence());
         }
 
+        $queueForEvents
+            ->setContext('database', $db)
+            ->setParam('databaseId', $databaseId)
+            ->setParam('collectionId', $collection->getId())
+            ->setParam('tableId', $collection->getId())
+            ->setParam('attributeId', $attribute->getId())
+            ->setParam('columnId', $attribute->getId())
+            ->setContext($this->getCollectionsEventsContext(), $collection);
+
         $publisherForDatabase->enqueue(new DatabaseMessage(
             project: $queueForEvents->getProject(),
             user: $queueForEvents->getUser(),
@@ -476,15 +485,6 @@ abstract class Action extends UtopiaAction
             row: $this->isCollectionsAPI() ? null : $attribute,
             events: Event::generateEvents($queueForEvents->getEvent(), $queueForEvents->getParams()),
         ));
-
-        $queueForEvents
-            ->setContext('database', $db)
-            ->setParam('databaseId', $databaseId)
-            ->setParam('collectionId', $collection->getId())
-            ->setParam('tableId', $collection->getId())
-            ->setParam('attributeId', $attribute->getId())
-            ->setParam('columnId', $attribute->getId())
-            ->setContext($this->getCollectionsEventsContext(), $collection);
 
         $response->setStatusCode(SwooleResponse::STATUS_CODE_CREATED);
 

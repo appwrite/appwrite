@@ -104,6 +104,15 @@ class Delete extends Action
 
         $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $collectionId);
 
+        $queueForEvents
+            ->setContext('database', $db)
+            ->setParam('databaseId', $databaseId)
+            ->setParam('indexId', $index->getId())
+            ->setParam('tableId', $collection->getId())
+            ->setParam('collectionId', $collection->getId())
+            ->setContext($this->getCollectionsEventsContext(), $collection)
+            ->setPayload($response->output($index, $this->getResponseModel()));
+
         $publisherForDatabase->enqueue(new DatabaseMessage(
             project: $queueForEvents->getProject(),
             user: $queueForEvents->getUser(),
@@ -115,15 +124,6 @@ class Delete extends Action
             row: $this->isCollectionsAPI() ? null : $index,
             events: Event::generateEvents($queueForEvents->getEvent(), $queueForEvents->getParams()),
         ));
-
-        $queueForEvents
-            ->setContext('database', $db)
-            ->setParam('databaseId', $databaseId)
-            ->setParam('indexId', $index->getId())
-            ->setParam('tableId', $collection->getId())
-            ->setParam('collectionId', $collection->getId())
-            ->setContext($this->getCollectionsEventsContext(), $collection)
-            ->setPayload($response->output($index, $this->getResponseModel()));
 
         $response->noContent();
     }

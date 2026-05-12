@@ -79,6 +79,10 @@ class Delete extends Action
         $dbForProject->purgeCachedDocument('databases', $database->getId());
         $dbForProject->purgeCachedCollection('databases_' . $database->getSequence());
 
+        $queueForEvents
+            ->setParam('databaseId', $database->getId())
+            ->setPayload($response->output($database, UtopiaResponse::MODEL_DATABASE));
+
         $publisherForDatabase->enqueue(new DatabaseMessage(
             project: $queueForEvents->getProject(),
             user: $queueForEvents->getUser(),
@@ -86,10 +90,6 @@ class Delete extends Action
             database: $database,
             events: Event::generateEvents($queueForEvents->getEvent(), $queueForEvents->getParams()),
         ));
-
-        $queueForEvents
-            ->setParam('databaseId', $database->getId())
-            ->setPayload($response->output($database, UtopiaResponse::MODEL_DATABASE));
 
         $response->noContent();
     }

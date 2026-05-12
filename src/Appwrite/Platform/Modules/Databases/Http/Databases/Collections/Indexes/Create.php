@@ -229,6 +229,14 @@ class Create extends Action
 
         $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $collectionId);
 
+        $queueForEvents
+            ->setContext('database', $db)
+            ->setParam('databaseId', $databaseId)
+            ->setParam('indexId', $index->getId())
+            ->setParam('collectionId', $collection->getId())
+            ->setParam('tableId', $collection->getId())
+            ->setContext($this->getCollectionsEventsContext(), $collection);
+
         $publisherForDatabase->enqueue(new DatabaseMessage(
             project: $queueForEvents->getProject(),
             user: $queueForEvents->getUser(),
@@ -240,14 +248,6 @@ class Create extends Action
             row: $this->isCollectionsAPI() ? null : $index,
             events: Event::generateEvents($queueForEvents->getEvent(), $queueForEvents->getParams()),
         ));
-
-        $queueForEvents
-            ->setContext('database', $db)
-            ->setParam('databaseId', $databaseId)
-            ->setParam('indexId', $index->getId())
-            ->setParam('collectionId', $collection->getId())
-            ->setParam('tableId', $collection->getId())
-            ->setContext($this->getCollectionsEventsContext(), $collection);
 
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_ACCEPTED)
