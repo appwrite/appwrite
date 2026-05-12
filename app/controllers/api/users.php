@@ -731,6 +731,13 @@ Http::get('/v1/users')
             $cursor->setValue($cursorDocument);
         }
 
+        $skipFilters = ['subQueryAuthenticators', 'subQuerySessions', 'subQueryTokens', 'subQueryChallenges', 'subQueryMemberships'];
+
+        $selects = Query::getByType($queries, [Query::TYPE_SELECT]);
+        if (empty($selects)) {
+            $skipFilters[] = 'subQueryTargets';
+        }
+
         $users = [];
         $total = 0;
 
@@ -743,7 +750,28 @@ Http::get('/v1/users')
             } catch (QueryException $e) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
             }
-        }, ['subQueryAuthenticators', 'subQuerySessions', 'subQueryTokens', 'subQueryChallenges', 'subQueryMemberships']);
+        }, $skipFilters);
+
+        if (empty($selects) && !empty($users)) {
+            $sequences = [];
+            foreach ($users as $user) {
+                $sequences[] = $user->getSequence();
+            }
+
+            $targets = $dbForProject->find('targets', [
+                Query::equal('userInternalId', $sequences),
+                Query::limit(PHP_INT_MAX),
+            ]);
+
+            $targetsByUser = [];
+            foreach ($targets as $target) {
+                $targetsByUser[$target->getAttribute('userInternalId')][] = $target;
+            }
+
+            foreach ($users as $user) {
+                $user->setAttribute('targets', $targetsByUser[$user->getSequence()] ?? []);
+            }
+        }
 
         $response->dynamic(new Document([
             'users' => $users,
