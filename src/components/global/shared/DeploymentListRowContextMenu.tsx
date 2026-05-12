@@ -123,8 +123,6 @@ export function DeploymentListRowContextMenu({
   const inProgress = isDeploymentInProgress(deployment.status)
   const canDownloadBuild = isDeploymentCompleted(deployment.status)
   const canActivate = !isActive && deployment.status === 'ready'
-  const showRedeploy =
-    variant === 'site' ? true : !isActive
   const canDeleteFromMenu = !isActive && !inProgress
 
   const invalidateAfterFunctionMutation = async () => {
@@ -323,41 +321,39 @@ export function DeploymentListRowContextMenu({
               Activate
             </ContextMenuItem>
           )}
-          {showRedeploy && (
-            <ContextMenuItem
-              onSelect={async () => {
-                try {
-                  const projectSdk = sdk.forProject(projectId)
-                  if (variant === 'function') {
-                    await projectSdk.functions.createDuplicateDeployment({
-                      functionId: resourceId,
-                      deploymentId: deployment.$id,
-                    })
-                    queryClient.invalidateQueries({
-                      queryKey: [
-                        'deployments',
-                        'project',
-                        projectId,
-                        resourceId,
-                      ],
-                    })
-                  } else {
-                    await projectSdk.sites.createDuplicateDeployment({
-                      siteId: resourceId,
-                      deploymentId: deployment.$id,
-                    })
-                    invalidateAfterSiteMutation()
-                  }
-                  toast.success('Deployment rebuild started')
-                } catch {
-                  toast.error('Failed to redeploy')
+          <ContextMenuItem
+            onSelect={async () => {
+              try {
+                const projectSdk = sdk.forProject(projectId)
+                if (variant === 'function') {
+                  await projectSdk.functions.createDuplicateDeployment({
+                    functionId: resourceId,
+                    deploymentId: deployment.$id,
+                  })
+                  queryClient.invalidateQueries({
+                    queryKey: [
+                      'deployments',
+                      'project',
+                      projectId,
+                      resourceId,
+                    ],
+                  })
+                } else {
+                  await projectSdk.sites.createDuplicateDeployment({
+                    siteId: resourceId,
+                    deploymentId: deployment.$id,
+                  })
+                  invalidateAfterSiteMutation()
                 }
-              }}
-            >
-              <ContextMenuIcon icon={RefreshCw} />
-              Redeploy
-            </ContextMenuItem>
-          )}
+                toast.success('Deployment rebuild started')
+              } catch {
+                toast.error('Failed to redeploy')
+              }
+            }}
+          >
+            <ContextMenuIcon icon={RefreshCw} />
+            Redeploy
+          </ContextMenuItem>
           {inProgress && (
             <ContextMenuItem
               onSelect={() => onRequestCancelBuild(deployment.$id)}

@@ -1738,6 +1738,7 @@ export function View() {
                                   size="sm"
                                   className="h-8 w-8 p-0"
                                   onClick={(e) => e.stopPropagation()}
+                                  onPointerDown={(e) => e.stopPropagation()}
                                 >
                                   <MoreHorizontal className="h-4 w-4" />
                                   <span className="sr-only">Open menu</span>

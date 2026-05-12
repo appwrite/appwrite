@@ -1542,7 +1542,7 @@ export function SiteDeploymentsView() {
                                   size="sm"
                                   className="h-8 w-8 p-0"
                                   onClick={(e) => e.stopPropagation()}
-                                  disabled={isActive}
+                                  onPointerDown={(e) => e.stopPropagation()}
                                 >
                                   <MoreHorizontal className="h-4 w-4" />
                                   <span className="sr-only">Open menu</span>
@@ -1553,77 +1553,85 @@ export function SiteDeploymentsView() {
                                 className="z-[200]"
                               >
                                 {!isActive && (
-                                  <>
-                                    <DropdownMenuItem
-                                      onClick={async (e) => {
-                                        e.stopPropagation()
-                                        try {
-                                          const projectSdk = sdk.forProject(
-                                            projectId!,
-                                          )
-                                          await projectSdk.sites.updateSiteDeployment(
-                                            {
-                                              siteId: siteId!,
-                                              deploymentId: deploymentData.$id,
-                                            },
-                                          )
-                                          queryClient.invalidateQueries({
-                                            queryKey: [
-                                              ...Dependencies.DEPLOYMENTS,
-                                            ],
-                                          })
-                                          queryClient.invalidateQueries({
-                                            queryKey: [
-                                              'site',
-                                              'project',
-                                              projectId,
-                                              siteId,
-                                            ],
-                                          })
-                                          toast.success(
-                                            'Deployment activated successfully',
-                                          )
-                                        } catch {
-                                          toast.error(
-                                            'Failed to activate deployment',
-                                          )
-                                        }
-                                      }}
-                                    >
-                                      <Play className="mr-2 h-4 w-4" />
-                                      Activate
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      onClick={async (e) => {
-                                        e.stopPropagation()
-                                        try {
-                                          const projectSdk = sdk.forProject(
-                                            projectId!,
-                                          )
-                                          await projectSdk.sites.createDuplicateDeployment(
-                                            {
-                                              siteId: siteId!,
-                                              deploymentId: deploymentData.$id,
-                                            },
-                                          )
-                                          queryClient.invalidateQueries({
-                                            queryKey: [
-                                              ...Dependencies.DEPLOYMENTS,
-                                            ],
-                                          })
-                                          toast.success(
-                                            'Deployment rebuild started',
-                                          )
-                                        } catch {
-                                          toast.error('Failed to redeploy')
-                                        }
-                                      }}
-                                    >
-                                      <RefreshCw className="mr-2 h-4 w-4" />
-                                      Redeploy
-                                    </DropdownMenuItem>
-                                  </>
+                                  <DropdownMenuItem
+                                    disabled={
+                                      deploymentData.status !== 'ready'
+                                    }
+                                    title={
+                                      deploymentData.status !== 'ready'
+                                        ? 'Build must be ready before activating'
+                                        : undefined
+                                    }
+                                    onClick={async (e) => {
+                                      e.stopPropagation()
+                                      if (deploymentData.status !== 'ready')
+                                        return
+                                      try {
+                                        const projectSdk = sdk.forProject(
+                                          projectId!,
+                                        )
+                                        await projectSdk.sites.updateSiteDeployment(
+                                          {
+                                            siteId: siteId!,
+                                            deploymentId: deploymentData.$id,
+                                          },
+                                        )
+                                        queryClient.invalidateQueries({
+                                          queryKey: [
+                                            ...Dependencies.DEPLOYMENTS,
+                                          ],
+                                        })
+                                        queryClient.invalidateQueries({
+                                          queryKey: [
+                                            'site',
+                                            'project',
+                                            projectId,
+                                            siteId,
+                                          ],
+                                        })
+                                        toast.success(
+                                          'Deployment activated successfully',
+                                        )
+                                      } catch {
+                                        toast.error(
+                                          'Failed to activate deployment',
+                                        )
+                                      }
+                                    }}
+                                  >
+                                    <Play className="mr-2 h-4 w-4" />
+                                    Activate
+                                  </DropdownMenuItem>
                                 )}
+                                <DropdownMenuItem
+                                  onClick={async (e) => {
+                                    e.stopPropagation()
+                                    try {
+                                      const projectSdk = sdk.forProject(
+                                        projectId!,
+                                      )
+                                      await projectSdk.sites.createDuplicateDeployment(
+                                        {
+                                          siteId: siteId!,
+                                          deploymentId: deploymentData.$id,
+                                        },
+                                      )
+                                      queryClient.invalidateQueries({
+                                        queryKey: [
+                                          ...Dependencies.DEPLOYMENTS,
+                                        ],
+                                      })
+                                      toast.success(
+                                        'Deployment rebuild started',
+                                      )
+                                    } catch {
+                                      toast.error('Failed to redeploy')
+                                    }
+                                  }}
+                                >
+                                  <RefreshCw className="mr-2 h-4 w-4" />
+                                  Redeploy
+                                </DropdownMenuItem>
                                 {!isActive && (
                                   <DropdownMenuItem
                                     onClick={async (e) => {

@@ -1620,10 +1620,7 @@ export function View() {
                                   size="sm"
                                   className="h-8 w-8 p-0"
                                   onClick={(e) => e.stopPropagation()}
-                                  disabled={
-                                    isActive &&
-                                    !isDeploymentInProgress(deployment.status)
-                                  }
+                                  onPointerDown={(e) => e.stopPropagation()}
                                 >
                                   <MoreHorizontal className="h-4 w-4" />
                                   <span className="sr-only">Open menu</span>
@@ -1634,91 +1631,89 @@ export function View() {
                                 className="z-[200]"
                               >
                                 {!isActive && (
-                                  <>
-                                    <DropdownMenuItem
-                                      disabled={deployment.status !== 'ready'}
-                                      title={
-                                        deployment.status !== 'ready'
-                                          ? 'Build must be ready before activating'
-                                          : undefined
+                                  <DropdownMenuItem
+                                    disabled={deployment.status !== 'ready'}
+                                    title={
+                                      deployment.status !== 'ready'
+                                        ? 'Build must be ready before activating'
+                                        : undefined
+                                    }
+                                    onClick={async (e) => {
+                                      e.stopPropagation()
+                                      if (deployment.status !== 'ready')
+                                        return
+                                      try {
+                                        const projectSdk = sdk.forProject(
+                                          projectId!,
+                                        )
+                                        await projectSdk.functions.updateFunctionDeployment(
+                                          {
+                                            functionId: functionId!,
+                                            deploymentId: deployment.$id,
+                                          },
+                                        )
+                                        queryClient.invalidateQueries({
+                                          queryKey: [
+                                            'deployments',
+                                            'project',
+                                            projectId,
+                                            functionId,
+                                          ],
+                                        })
+                                        queryClient.invalidateQueries({
+                                          queryKey: [
+                                            'function',
+                                            'project',
+                                            projectId,
+                                            functionId,
+                                          ],
+                                        })
+                                        toast.success(
+                                          'Deployment activated successfully',
+                                        )
+                                      } catch {
+                                        toast.error(
+                                          'Failed to activate deployment',
+                                        )
                                       }
-                                      onClick={async (e) => {
-                                        e.stopPropagation()
-                                        if (deployment.status !== 'ready')
-                                          return
-                                        try {
-                                          const projectSdk = sdk.forProject(
-                                            projectId!,
-                                          )
-                                          await projectSdk.functions.updateFunctionDeployment(
-                                            {
-                                              functionId: functionId!,
-                                              deploymentId: deployment.$id,
-                                            },
-                                          )
-                                          queryClient.invalidateQueries({
-                                            queryKey: [
-                                              'deployments',
-                                              'project',
-                                              projectId,
-                                              functionId,
-                                            ],
-                                          })
-                                          queryClient.invalidateQueries({
-                                            queryKey: [
-                                              'function',
-                                              'project',
-                                              projectId,
-                                              functionId,
-                                            ],
-                                          })
-                                          toast.success(
-                                            'Deployment activated successfully',
-                                          )
-                                        } catch {
-                                          toast.error(
-                                            'Failed to activate deployment',
-                                          )
-                                        }
-                                      }}
-                                    >
-                                      <Play className="mr-2 h-4 w-4" />
-                                      Activate
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      onClick={async (e) => {
-                                        e.stopPropagation()
-                                        try {
-                                          const projectSdk = sdk.forProject(
-                                            projectId!,
-                                          )
-                                          await projectSdk.functions.createDuplicateDeployment(
-                                            {
-                                              functionId: functionId!,
-                                              deploymentId: deployment.$id,
-                                            },
-                                          )
-                                          queryClient.invalidateQueries({
-                                            queryKey: [
-                                              'deployments',
-                                              'project',
-                                              projectId,
-                                              functionId,
-                                            ],
-                                          })
-                                          toast.success(
-                                            'Deployment rebuild started',
-                                          )
-                                        } catch {
-                                          toast.error('Failed to redeploy')
-                                        }
-                                      }}
-                                    >
-                                      <RefreshCw className="mr-2 h-4 w-4" />
-                                      Redeploy
-                                    </DropdownMenuItem>
-                                  </>
+                                    }}
+                                  >
+                                    <Play className="mr-2 h-4 w-4" />
+                                    Activate
+                                  </DropdownMenuItem>
                                 )}
+                                <DropdownMenuItem
+                                  onClick={async (e) => {
+                                    e.stopPropagation()
+                                    try {
+                                      const projectSdk = sdk.forProject(
+                                        projectId!,
+                                      )
+                                      await projectSdk.functions.createDuplicateDeployment(
+                                        {
+                                          functionId: functionId!,
+                                          deploymentId: deployment.$id,
+                                        },
+                                      )
+                                      queryClient.invalidateQueries({
+                                        queryKey: [
+                                          'deployments',
+                                          'project',
+                                          projectId,
+                                          functionId,
+                                        ],
+                                      })
+                                      toast.success(
+                                        'Deployment rebuild started',
+                                      )
+                                    } catch {
+                                      toast.error('Failed to redeploy')
+                                    }
+                                  }}
+                                >
+                                  <RefreshCw className="mr-2 h-4 w-4" />
+                                  Redeploy
+                                </DropdownMenuItem>
                                 {!isActive &&
                                   !isDeploymentInProgress(
                                     deployment.status,
