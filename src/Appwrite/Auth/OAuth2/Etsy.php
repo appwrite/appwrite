@@ -39,16 +39,24 @@ class Etsy extends OAuth2
      */
     private string $pkce = '';
 
-    /**
+/**
      * @return string
      */
     private function getPKCE(): string
     {
         if (empty($this->pkce)) {
-            $this->pkce = \bin2hex(\random_bytes(rand(43, 128)));
+            $this->pkce = \bin2hex(\random_bytes(64));
         }
 
         return $this->pkce;
+    }
+
+    /**
+     * @return string
+     */
+    private function getCodeChallenge(): string
+    {
+        return \rtrim(\strtr(\base64_encode(\hash('sha256', $this->getPKCE(), true)), '+/', '-_'), '=');
     }
 
     /**
@@ -70,7 +78,7 @@ class Etsy extends OAuth2
             'response_type' => 'code',
             'state' => \json_encode($this->state),
             'scope' => $this->scopes,
-            'code_challenge' => $this->getPKCE(),
+            'code_challenge' => $this->getCodeChallenge(),
             'code_challenge_method' => 'S256',
         ]);
     }
