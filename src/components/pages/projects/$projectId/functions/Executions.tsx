@@ -52,8 +52,10 @@ export function View() {
     () => queryParamToMap(search.query ?? null),
     [search.query],
   )
-  const filterQueries =
-    filterMap.size > 0 ? Array.from(filterMap.values()) : undefined
+  const filterQueries = useMemo(
+    () => (filterMap.size > 0 ? Array.from(filterMap.values()) : undefined),
+    [filterMap],
+  )
 
   const [displayedPage, setDisplayedPage] = useState(urlPage - 1)
   const [requestedPage, setRequestedPage] = useState(urlPage - 1)
@@ -123,17 +125,20 @@ export function View() {
       ? lastExecutionsRef.current
       : displayedExecutions
 
+  const refetchRef = useRef(refetch)
+  refetchRef.current = refetch
+
   // Register refetch function with the context for the layout's refresh button
   useEffect(() => {
     if (refreshContext) {
       refreshContext.registerRefreshHandler(async () => {
-        await refetch()
+        await refetchRef.current()
       }, 'Executions')
       return () => {
         refreshContext.unregisterRefreshHandler()
       }
     }
-  }, [refreshContext, refetch])
+  }, [refreshContext])
 
   const handlePageChange = (page: number) => {
     // Update URL with new page (1-indexed)

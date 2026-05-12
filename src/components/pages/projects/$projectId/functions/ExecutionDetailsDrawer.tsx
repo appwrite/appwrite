@@ -121,7 +121,9 @@ export function ExecutionDetailsDrawer({
     return parseQueryParams(execution.requestPath)
   }, [execution?.requestPath])
 
-  // Determine initial response tab
+  // Determine initial response tab when switching executions (avoid [execution] —
+  // parent often passes a new object reference each render and would retrigger this
+  // effect repeatedly, contributing to nested update limits).
   useEffect(() => {
     if (!execution) return
     if (execution.errors) {
@@ -140,19 +142,18 @@ export function ExecutionDetailsDrawer({
     setLogsSearch('')
     setErrorsSearch('')
     setBodySearch('')
-  }, [execution])
+  }, [execution?.$id])
+
+  const requestHeaderCount = execution?.requestHeaders?.length ?? 0
 
   // Set initial request tab
   useEffect(() => {
     if (queryParams.length > 0) {
       setRequestTab('parameters')
-    } else if (
-      execution?.requestHeaders &&
-      execution.requestHeaders.length > 0
-    ) {
+    } else if (requestHeaderCount > 0) {
       setRequestTab('headers')
     }
-  }, [queryParams.length, execution?.requestHeaders])
+  }, [queryParams.length, execution?.$id, requestHeaderCount])
 
   // Live timer for processing/waiting executions
   useEffect(() => {
@@ -173,7 +174,7 @@ export function ExecutionDetailsDrawer({
     const interval = setInterval(updateTimer, 1000)
 
     return () => clearInterval(interval)
-  }, [execution])
+  }, [execution?.$id, execution?.$createdAt, execution?.status])
 
   if (!execution) return null
 

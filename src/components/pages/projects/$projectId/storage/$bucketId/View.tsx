@@ -2,6 +2,7 @@ import {
   useState,
   useMemo,
   useEffect,
+  useLayoutEffect,
   useCallback,
   useRef,
   type PointerEvent as ReactPointerEvent,
@@ -798,7 +799,7 @@ export function View() {
     }
   }, [isFilesSplitResizing])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (isFilesStackedLayout) return
     const el = filesSplitContainerRef.current
     if (!el) return

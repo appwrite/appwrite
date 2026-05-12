@@ -7,20 +7,25 @@ export const STORAGE_FILES_TABLE_PANE_WIDTH_STORAGE_KEY =
   'console.storageFilesTablePaneWidthPx'
 
 export const STORAGE_FILES_TABLE_PANE_MIN_PX = 260
+export const STORAGE_FILES_TABLE_PANE_MAX_PX = 4000
 export const STORAGE_FILES_PREVIEW_PANE_MIN_PX = 650
 
 /** Checkbox column width in `table-fixed` mode (matches documents rows grid). */
 export const STORAGE_FILES_TABLE_EDGE_COL_PX = 40
 
+/**
+ * Reads persisted table (left) pane width. When unset, returns the max width so
+ * the first layout clamp yields a narrow preview pane (preview `min-width`).
+ */
 export function readStoredStorageFilesTablePaneWidthPx(): number {
-  if (typeof window === 'undefined') return 440
+  if (typeof window === 'undefined') return STORAGE_FILES_TABLE_PANE_MAX_PX
   const raw = localStorage.getItem(STORAGE_FILES_TABLE_PANE_WIDTH_STORAGE_KEY)
   const n = raw ? parseInt(raw, 10) : NaN
   return Number.isFinite(n) &&
     n >= STORAGE_FILES_TABLE_PANE_MIN_PX &&
-    n <= 4000
+    n <= STORAGE_FILES_TABLE_PANE_MAX_PX
     ? n
-    : 440
+    : STORAGE_FILES_TABLE_PANE_MAX_PX
 }
 
 export const STORAGE_SPREADSHEET_STICKY_THEAD_CLASS =
