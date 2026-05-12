@@ -415,18 +415,21 @@ export function BucketDetailView() {
                         <TableBody>
                           {files.map((file) => {
                             const pending = isFilePending(file)
-                            const fileLinkParams = {
+                            const bucketParams = {
                               projectId: projectId!,
                               bucketId: bucketId!,
-                              fileId: file.$id,
                             }
+                            const fileSearch = (prev: Record<string, unknown>) => ({
+                              ...prev,
+                              file: file.$id,
+                            })
                             return (
                               <TableRow
                                 key={file.$id}
                                 className={cn(
                                   pending
                                     ? ''
-                                    : 'cursor-pointer transition-colors border-b border-border/50',
+                                    : 'cursor-pointer transition-colors border-b border-border',
                                   !pending && 'hover:bg-muted/30',
                                   selectedFiles.has(file.$id) && 'bg-muted',
                                 )}
@@ -442,8 +445,9 @@ export function BucketDetailView() {
                                     return
                                   }
                                   navigate({
-                                    to: '/projects/$projectId/storage/$bucketId/files/$fileId',
-                                    params: fileLinkParams,
+                                    to: '/projects/$projectId/storage/$bucketId',
+                                    params: bucketParams,
+                                    search: fileSearch,
                                   })
                                 }}
                               >
@@ -473,8 +477,9 @@ export function BucketDetailView() {
                                     />
                                   ) : (
                                     <Link
-                                      to="/projects/$projectId/storage/$bucketId/files/$fileId"
-                                      params={fileLinkParams}
+                                      to="/projects/$projectId/storage/$bucketId"
+                                      params={bucketParams}
+                                      search={fileSearch}
                                       className="block"
                                     >
                                       <StorageFilePreviewThumb
@@ -509,8 +514,9 @@ export function BucketDetailView() {
                                     </div>
                                   ) : (
                                     <Link
-                                      to="/projects/$projectId/storage/$bucketId/files/$fileId"
-                                      params={fileLinkParams}
+                                      to="/projects/$projectId/storage/$bucketId"
+                                      params={bucketParams}
+                                      search={fileSearch}
                                       className="block group"
                                     >
                                       <div className="flex items-center gap-3 min-w-0">
@@ -536,8 +542,9 @@ export function BucketDetailView() {
                                     </span>
                                   ) : (
                                     <Link
-                                      to="/projects/$projectId/storage/$bucketId/files/$fileId"
-                                      params={fileLinkParams}
+                                      to="/projects/$projectId/storage/$bucketId"
+                                      params={bucketParams}
+                                      search={fileSearch}
                                       className="block"
                                     >
                                       <span className="text-[12px] text-muted-foreground font-mono">
@@ -553,8 +560,9 @@ export function BucketDetailView() {
                                     </span>
                                   ) : (
                                     <Link
-                                      to="/projects/$projectId/storage/$bucketId/files/$fileId"
-                                      params={fileLinkParams}
+                                      to="/projects/$projectId/storage/$bucketId"
+                                      params={bucketParams}
+                                      search={fileSearch}
                                       className="block text-right"
                                     >
                                       <span className="text-[12px] text-muted-foreground font-mono">
@@ -571,8 +579,9 @@ export function BucketDetailView() {
                                     />
                                   ) : (
                                     <Link
-                                      to="/projects/$projectId/storage/$bucketId/files/$fileId"
-                                      params={fileLinkParams}
+                                      to="/projects/$projectId/storage/$bucketId"
+                                      params={bucketParams}
+                                      search={fileSearch}
                                       className="block text-right"
                                     >
                                       <DateTooltip
@@ -624,12 +633,15 @@ export function BucketDetailView() {
                             onClick={() => {
                               if (!pending) {
                                 navigate({
-                                  to: '/projects/$projectId/storage/$bucketId/files/$fileId',
+                                  to: '/projects/$projectId/storage/$bucketId',
                                   params: {
                                     projectId: projectId!,
                                     bucketId: bucketId!,
-                                    fileId: file.$id,
                                   },
+                                  search: (prev: Record<string, unknown>) => ({
+                                    ...prev,
+                                    file: file.$id,
+                                  }),
                                 })
                               }
                             }}

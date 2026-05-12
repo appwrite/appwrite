@@ -82,16 +82,23 @@ export function FileContextMenu({
   })
 
   const navigateToTab = (tab: string) => {
-    const base = `/projects/${projectId}/storage/${bucketId}/files/${file.id}`
-    const path = tab === 'overview' ? base : `${base}/${tab}`
     navigate({
-      to: path as '/projects/$projectId/storage/$bucketId/files/$fileId',
-      params: { projectId, bucketId, fileId: file.id },
+      to: '/projects/$projectId/storage/$bucketId',
+      params: { projectId, bucketId },
+      search: (prev: Record<string, unknown>) => {
+        const next: Record<string, unknown> = { ...prev, file: file.id }
+        if (tab === 'security') {
+          next.filePanel = 'security'
+        } else {
+          delete next.filePanel
+        }
+        return next
+      },
     })
   }
 
   const fileHref = buildConsoleUrl(
-    `/projects/${projectId}/storage/${bucketId}/files/${file.id}`,
+    `/projects/${projectId}/storage/${bucketId}?file=${encodeURIComponent(file.id)}`,
   )
 
   const handleDeleteClick = () => {

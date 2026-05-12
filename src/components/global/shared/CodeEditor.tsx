@@ -85,6 +85,14 @@ export type CodeEditorLanguage =
   | 'typescript'
   | 'python'
   | 'json'
+  | 'dart'
+  | 'kotlin'
+  | 'swift'
+  | 'php'
+  | 'ruby'
+  | 'csharp'
+  | 'go'
+  | 'java'
   | 'plaintext'
 
 export interface CodeEditorRef {
@@ -228,6 +236,7 @@ export const CodeEditor = forwardRef<CodeEditorRef, CodeEditorProps>(
           key={`monaco-${monacoMountKey}`}
           height={typeof height === 'number' ? `${height}px` : height}
           defaultLanguage={language}
+          language={language}
           path={modelPath}
           value={value}
           onChange={handleChange}

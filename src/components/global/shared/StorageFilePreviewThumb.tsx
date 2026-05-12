@@ -29,6 +29,34 @@ export function getStorageFileIcon(
   return File
 }
 
+/**
+ * MIME types safe to load in an img element via getFilePreview (raster / common web formats).
+ * Excludes SVG (policy), HEIC/HEIF (often no browser decode), and other image types that commonly fail in img.
+ */
+export function isStoragePreviewSupportedMimeType(
+  mimeType: string | undefined | null,
+): boolean {
+  if (!mimeType) return false
+  const t = mimeType.toLowerCase().split(';')[0].trim()
+  const supported = new Set([
+    'image/jpeg',
+    'image/jpg',
+    'image/pjpeg',
+    'image/png',
+    'image/apng',
+    'image/gif',
+    'image/webp',
+    'image/bmp',
+    'image/x-ms-bmp',
+    'image/avif',
+    'image/x-icon',
+    'image/vnd.microsoft.icon',
+    'image/tiff',
+    'image/x-tiff',
+  ])
+  return supported.has(t)
+}
+
 function withStoragePreviewAdminMode(previewUrl: string): string {
   return (
     previewUrl +
@@ -70,7 +98,7 @@ export function StorageFilePreviewThumb({
   const iconClass = STORAGE_FILE_PREVIEW_ICON_CLASS
 
   const canUseImagePreview =
-    !!mimeType?.startsWith('image/') &&
+    isStoragePreviewSupportedMimeType(mimeType) &&
     !!projectId &&
     !!bucketId &&
     !!fileId

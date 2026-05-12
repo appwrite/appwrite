@@ -9,7 +9,11 @@ import { useMemo } from 'react'
 import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
-import { DEFAULT_STALE_TIME, DEFAULT_PAGE_SIZE } from './constants'
+import {
+  DEFAULT_STALE_TIME,
+  DEFAULT_PAGE_SIZE,
+  FILE_TOKENS_DEFAULT_PAGE_SIZE,
+} from './constants'
 
 // ============================================================================
 // QUERY FUNCTIONS
@@ -249,6 +253,62 @@ export function bucketFilesQueryOptions(
 }
 
 /**
+ * Query options for a single file (storage inspector / detail).
+ * Use in route loaders and `useFile` so navigation prefetches match the hook cache.
+ */
+export function fileQueryOptions(
+  projectId: string | null | undefined,
+  bucketId: string | null | undefined,
+  fileId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['file', 'project', projectId, 'bucket', bucketId, fileId],
+    queryFn: () => fetchFile(projectId!, bucketId!, fileId!),
+    enabled: !!projectId && !!bucketId && !!fileId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && bucketId && fileId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
+ * Query options for paginated file tokens.
+ * Default limit must match `FILE_TOKENS_DEFAULT_PAGE_SIZE` and FileSecurity UI.
+ */
+export function fileTokensQueryOptions(
+  projectId: string | null | undefined,
+  bucketId: string | null | undefined,
+  fileId: string | null | undefined,
+  page: number = 0,
+  limit: number = FILE_TOKENS_DEFAULT_PAGE_SIZE,
+) {
+  return queryOptions({
+    queryKey: [
+      'file-tokens',
+      'project',
+      projectId,
+      'bucket',
+      bucketId,
+      fileId,
+      page,
+      limit,
+    ],
+    queryFn: () =>
+      fetchFileTokens(projectId!, bucketId!, fileId!, page, limit),
+    enabled: !!projectId && !!bucketId && !!fileId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && bucketId && fileId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
  * Query options for fetching paginated buckets for a project
  *
  * This can be used in both route loaders and hooks to ensure consistent query configuration.
@@ -413,12 +473,7 @@ export function useFile(
   bucketId: string | null | undefined,
   fileId: string | null | undefined,
 ) {
-  return useQuery({
-    queryKey: ['file', 'project', projectId, 'bucket', bucketId, fileId],
-    queryFn: () => fetchFile(projectId!, bucketId!, fileId!),
-    enabled: !!projectId && !!bucketId && !!fileId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  return useQuery(fileQueryOptions(projectId, bucketId, fileId))
 }
 
 /**
@@ -429,21 +484,9 @@ export function useFileTokens(
   bucketId: string | null | undefined,
   fileId: string | null | undefined,
   page: number = 0,
-  limit: number = DEFAULT_PAGE_SIZE,
+  limit: number = FILE_TOKENS_DEFAULT_PAGE_SIZE,
 ) {
-  return useQuery({
-    queryKey: [
-      'file-tokens',
-      'project',
-      projectId,
-      'bucket',
-      bucketId,
-      fileId,
-      page,
-      limit,
-    ],
-    queryFn: () => fetchFileTokens(projectId!, bucketId!, fileId!, page, limit),
-    enabled: !!projectId && !!bucketId && !!fileId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  return useQuery(
+    fileTokensQueryOptions(projectId, bucketId, fileId, page, limit),
+  )
 }

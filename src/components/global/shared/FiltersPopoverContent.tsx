@@ -8,10 +8,8 @@ import {
   ArrowDown,
   ArrowUp,
   ChevronDown,
-  GripVertical,
   Loader2,
   Plus,
-  Trash2,
   X,
 } from 'lucide-react'
 import {
@@ -55,6 +53,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { SavedFilterPresetRow } from '@/components/global/shared/SavedFilterPresetRow'
 function toDatetimeLocal(iso: string): string {
   if (!iso?.trim()) return ''
   const d = new Date(iso)
@@ -195,8 +194,6 @@ export function FiltersPopoverContent({
   const [savingId, setSavingId] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [dragOverKey, setDragOverKey] = useState<string | null>(null)
-  const [editingFilterKey, setEditingFilterKey] = useState<string | null>(null)
-  const [editingName, setEditingName] = useState('')
 
   const firstColumnId = columns[0]?.id ?? ''
   const firstCol = columns[0]
@@ -1349,162 +1346,8 @@ export function FiltersPopoverContent({
   const rowDropKey = (level: 'user' | 'team', index: number) =>
     `${level}-${index}`
 
-  const editKeyFor = (level: 'user' | 'team', id: string) => `${level}-${id}`
-
-  const handleStartEdit = (
-    level: 'user' | 'team',
-    item: { id: string; name: string },
-  ) => {
-    setEditingFilterKey(editKeyFor(level, item.id))
-    setEditingName(item.name)
-  }
-
-  const handleSaveEdit = (
-    level: 'user' | 'team',
-    item: { id: string; name: string },
-  ) => {
-    const name = editingName.trim()
-    if (name && name !== item.name) {
-      updateSavedFilterName(item.id, level, name)
-    }
-    setEditingFilterKey(null)
-  }
-
   const canEditTeamFilter = (l: 'user' | 'team') =>
     l === 'user' || canSaveTeamFiltersResult
-
-  const renderSavedFilterItem = (
-    item: { id: string; name: string; query: string; sort?: string },
-    level: 'user' | 'team',
-    index: number,
-  ) => {
-    const key = rowDropKey(level, index)
-    const isDragOver = dragOverKey === key
-    const isEditing = editingFilterKey === editKeyFor(level, item.id)
-    const canEdit = canEditTeamFilter(level)
-    return (
-      <div
-        key={`${level}-${item.id}`}
-        draggable={canEdit && !isEditing}
-        onDragStart={
-          canEdit && !isEditing
-            ? (e) => handleSavedFilterDragStart(e, level, index)
-            : undefined
-        }
-        onDragOver={(e) => {
-          if (!canEdit || isEditing) return
-          e.preventDefault()
-          e.dataTransfer.dropEffect = 'move'
-          setDragOverKey(key)
-        }}
-        onDragLeave={() => setDragOverKey(null)}
-        onDrop={(e) => {
-          e.preventDefault()
-          if (canEdit) handleSavedFilterDrop(e, level, index)
-        }}
-        className={cn(
-          'group flex items-center gap-2 rounded-lg border border-border px-2 py-1.5 bg-muted/20 transition-colors',
-          isEditing ? 'cursor-default' : canEdit && 'cursor-grab active:cursor-grabbing',
-          isDragOver && canEdit && !isEditing && 'border-primary bg-primary/10',
-        )}
-        aria-label={
-          isEditing
-            ? undefined
-            : canEdit
-              ? `${item.name}, drag to reorder`
-              : item.name
-        }
-      >
-        {canEdit ? (
-          <GripVertical
-            className={cn(
-              'h-3.5 w-3.5 shrink-0 text-muted-foreground transition-opacity',
-              isEditing
-                ? 'opacity-0'
-                : 'opacity-0 group-hover:opacity-100',
-            )}
-          />
-        ) : (
-          <span className="h-3.5 w-3.5 shrink-0" aria-hidden />
-        )}
-        {isEditing ? (
-          <Input
-            autoFocus
-            value={editingName}
-            onChange={(e) => setEditingName(e.target.value)}
-            onBlur={() => handleSaveEdit(level, item)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault()
-                handleSaveEdit(level, item)
-              }
-              if (e.key === 'Escape') {
-                setEditingFilterKey(null)
-                setEditingName('')
-              }
-            }}
-            className="h-7 flex-1 min-w-0 text-[13px]"
-            maxLength={64}
-            onClick={(e) => e.stopPropagation()}
-          />
-        ) : canEdit ? (
-          <Tooltip delayDuration={0}>
-            <TooltipTrigger asChild>
-              <span
-                className="flex-1 min-w-0 truncate text-[13px] text-foreground cursor-pointer"
-                onDoubleClick={(e) => {
-                  e.stopPropagation()
-                  handleStartEdit(level, item)
-                }}
-              >
-                {item.name}
-              </span>
-            </TooltipTrigger>
-            <TooltipContent side="top" sideOffset={4}>
-              Double-click to rename
-            </TooltipContent>
-          </Tooltip>
-        ) : (
-          <span className="flex-1 min-w-0 truncate text-[13px] text-foreground">
-            {item.name}
-          </span>
-        )}
-        <Button
-          type="button"
-          variant="secondary"
-          size="sm"
-          className="h-7 text-[12px] shrink-0"
-          onClick={(e) => {
-            e.stopPropagation()
-            onApplyQuery!(item.query || undefined, item.sort)
-          }}
-        >
-          Apply
-        </Button>
-        {canEdit && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation()
-              setDeletingId(item.id)
-              deleteSavedFilter(item.id, level).finally(() =>
-                setDeletingId(null),
-              )
-            }}
-            disabled={deletingId !== null}
-            className="cursor-pointer shrink-0 rounded p-1 text-muted-foreground hover:bg-muted hover:text-destructive transition-colors disabled:opacity-50"
-            aria-label="Delete saved filter"
-          >
-            {deletingId === item.id ? (
-              <Loader2 className="h-3 w-3 animate-spin" />
-            ) : (
-              <Trash2 className="h-3 w-3" />
-            )}
-          </button>
-        )}
-      </div>
-    )
-  }
 
   const savedTabContent = hasSavedFiltersFeature && (
     <div>
@@ -1519,9 +1362,39 @@ export function FiltersPopoverContent({
                       My filters
                     </p>
                     <div className="space-y-1">
-                      {userSavedFilters.map((item, index) =>
-                        renderSavedFilterItem(item, 'user', index),
-                      )}
+                      {userSavedFilters.map((item, index) => (
+                        <SavedFilterPresetRow
+                          key={`user-${item.id}`}
+                          item={item}
+                          canEdit={canEditTeamFilter('user')}
+                          dragOverKey={dragOverKey}
+                          rowDropKey={rowDropKey('user', index)}
+                          onDragStart={(e) =>
+                            handleSavedFilterDragStart(e, 'user', index)
+                          }
+                          onDragOver={(e) => {
+                            e.preventDefault()
+                            e.dataTransfer.dropEffect = 'move'
+                            setDragOverKey(rowDropKey('user', index))
+                          }}
+                          onDragLeave={() => setDragOverKey(null)}
+                          onDrop={(e) => handleSavedFilterDrop(e, 'user', index)}
+                          onApply={() =>
+                            onApplyQuery!(item.query || undefined, item.sort)
+                          }
+                          onDelete={() => {
+                            setDeletingId(item.id)
+                            void deleteSavedFilter(item.id, 'user').finally(
+                              () => setDeletingId(null),
+                            )
+                          }}
+                          deleteBusy={deletingId === item.id}
+                          deleteDisabled={deletingId !== null}
+                          onRenameCommit={(name) =>
+                            updateSavedFilterName(item.id, 'user', name)
+                          }
+                        />
+                      ))}
                     </div>
                   </div>
                 )}
@@ -1531,18 +1404,78 @@ export function FiltersPopoverContent({
                       Team filters
                     </p>
                     <div className="space-y-1">
-                      {teamSavedFilters.map((item, index) =>
-                        renderSavedFilterItem(item, 'team', index),
-                      )}
+                      {teamSavedFilters.map((item, index) => (
+                        <SavedFilterPresetRow
+                          key={`team-${item.id}`}
+                          item={item}
+                          canEdit={canEditTeamFilter('team')}
+                          dragOverKey={dragOverKey}
+                          rowDropKey={rowDropKey('team', index)}
+                          onDragStart={(e) =>
+                            handleSavedFilterDragStart(e, 'team', index)
+                          }
+                          onDragOver={(e) => {
+                            e.preventDefault()
+                            e.dataTransfer.dropEffect = 'move'
+                            setDragOverKey(rowDropKey('team', index))
+                          }}
+                          onDragLeave={() => setDragOverKey(null)}
+                          onDrop={(e) => handleSavedFilterDrop(e, 'team', index)}
+                          onApply={() =>
+                            onApplyQuery!(item.query || undefined, item.sort)
+                          }
+                          onDelete={() => {
+                            setDeletingId(item.id)
+                            void deleteSavedFilter(item.id, 'team').finally(
+                              () => setDeletingId(null),
+                            )
+                          }}
+                          deleteBusy={deletingId === item.id}
+                          deleteDisabled={deletingId !== null}
+                          onRenameCommit={(name) =>
+                            updateSavedFilterName(item.id, 'team', name)
+                          }
+                        />
+                      ))}
                     </div>
                   </div>
                 )}
               </>
             ) : (
               <div className="space-y-1">
-                {savedFilters.map((item, index) =>
-                  renderSavedFilterItem(item, 'user', index),
-                )}
+                {savedFilters.map((item, index) => (
+                  <SavedFilterPresetRow
+                    key={`user-${item.id}`}
+                    item={item}
+                    canEdit={canEditTeamFilter('user')}
+                    dragOverKey={dragOverKey}
+                    rowDropKey={rowDropKey('user', index)}
+                    onDragStart={(e) =>
+                      handleSavedFilterDragStart(e, 'user', index)
+                    }
+                    onDragOver={(e) => {
+                      e.preventDefault()
+                      e.dataTransfer.dropEffect = 'move'
+                      setDragOverKey(rowDropKey('user', index))
+                    }}
+                    onDragLeave={() => setDragOverKey(null)}
+                    onDrop={(e) => handleSavedFilterDrop(e, 'user', index)}
+                    onApply={() =>
+                      onApplyQuery!(item.query || undefined, item.sort)
+                    }
+                    onDelete={() => {
+                      setDeletingId(item.id)
+                      void deleteSavedFilter(item.id, 'user').finally(() =>
+                        setDeletingId(null),
+                      )
+                    }}
+                    deleteBusy={deletingId === item.id}
+                    deleteDisabled={deletingId !== null}
+                    onRenameCommit={(name) =>
+                      updateSavedFilterName(item.id, 'user', name)
+                    }
+                  />
+                ))}
               </div>
             )}
           </div>

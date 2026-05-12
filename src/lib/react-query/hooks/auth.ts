@@ -17,10 +17,15 @@ import { sdk } from '@/lib/appwrite/sdk'
 import {
   buildDatabasesSidebarWidthPrefs,
   buildSavedFiltersPrefs,
+  buildSavedImageTransformPresetsPrefs,
   DATABASES_SIDEBAR_WIDTH_DEFAULT_PERCENT,
   parseDatabasesSidebarWidthPercent,
   parseSavedFilters,
+  parseSavedImageTransformPresets,
   MAX_SAVED_FILTER_NAME_LENGTH,
+  MAX_SAVED_IMAGE_TRANSFORM_PRESET_JSON_CHARS,
+  MAX_SAVED_IMAGE_TRANSFORM_PRESET_NAME_LENGTH,
+  MAX_SAVED_IMAGE_TRANSFORM_PRESETS,
   clearRecentImpersonationSessionList,
   mergeRecentImpersonationIntoAccountPrefs,
   mergeRecentImpersonationLists,
@@ -28,7 +33,10 @@ import {
   readRecentImpersonationSessionList,
   type UserPrefs,
 } from '@/lib/user-prefs-keys'
-import type { SavedFilter } from '@/lib/user-prefs-keys'
+import type {
+  SavedFilter,
+  SavedImageTransformPreset,
+} from '@/lib/user-prefs-keys'
 import { DEFAULT_STALE_TIME } from './constants'
 import { useConsoleTeam, useUpdateConsoleTeamPrefs } from './teams'
 
@@ -1036,6 +1044,268 @@ export function useSavedFilters(
     updateSavedFilterName,
     isAdding: addUserMutation.isPending || addTeamMutation.isPending,
     isDeleting: deleteUserMutation.isPending || deleteTeamMutation.isPending,
+    hasTeamLevel: !!teamId,
+  }
+}
+
+export type ImageTransformSavedPresetLevel = 'user' | 'team'
+
+/**
+ * Saved image-transform presets (account + team prefs, key `console.imageTransformPresets`).
+ * Team list uses the same key on the organization team document.
+ */
+export function useImageTransformSavedPresets(
+  account: { prefs?: Record<string, unknown> } | undefined,
+  teamId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+  const { data: team } = useConsoleTeam(teamId)
+  const updateTeamPrefs = useUpdateConsoleTeamPrefs(teamId)
+
+  const userPresets: SavedImageTransformPreset[] = account?.prefs
+    ? parseSavedImageTransformPresets(account.prefs)
+    : []
+
+  const teamPresets: SavedImageTransformPreset[] =
+    team?.prefs && teamId
+      ? parseSavedImageTransformPresets(team.prefs as Record<string, unknown>)
+      : []
+
+  const addUserMutation = useMutation({
+    mutationFn: async ({ name, json }: { name: string; json: string }) => {
+      const currentAccount = getConsoleAccountFromCache(queryClient)
+      if (!currentAccount) throw new Error('Account not available')
+      if (json.length > MAX_SAVED_IMAGE_TRANSFORM_PRESET_JSON_CHARS) {
+        throw new Error('Preset data is too large')
+      }
+      const current = parseSavedImageTransformPresets(currentAccount.prefs)
+      const trimmedName = name.trim().slice(0, MAX_SAVED_IMAGE_TRANSFORM_PRESET_NAME_LENGTH)
+      if (!trimmedName) throw new Error('Name is required')
+      if (current.length >= MAX_SAVED_IMAGE_TRANSFORM_PRESETS) {
+        throw new Error(`Maximum ${MAX_SAVED_IMAGE_TRANSFORM_PRESETS} presets`)
+      }
+      const next: SavedImageTransformPreset[] = [
+        {
+          id: crypto.randomUUID(),
+          name: trimmedName,
+          json,
+        },
+        ...current,
+      ]
+      return await updateAccountPrefs({
+        ...currentAccount.prefs,
+        ...buildSavedImageTransformPresetsPrefs(next),
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    },
+  })
+
+  const addTeamMutation = useMutation({
+    mutationFn: async ({ name, json }: { name: string; json: string }) => {
+      const currentTeam = queryClient.getQueryData<{
+        prefs?: Record<string, unknown>
+      }>(['team', 'console', teamId])
+      if (!currentTeam || !teamId) throw new Error('Team not available')
+      if (json.length > MAX_SAVED_IMAGE_TRANSFORM_PRESET_JSON_CHARS) {
+        throw new Error('Preset data is too large')
+      }
+      const current = parseSavedImageTransformPresets(
+        currentTeam.prefs as Record<string, unknown>,
+      )
+      const trimmedName = name.trim().slice(0, MAX_SAVED_IMAGE_TRANSFORM_PRESET_NAME_LENGTH)
+      if (!trimmedName) throw new Error('Name is required')
+      if (current.length >= MAX_SAVED_IMAGE_TRANSFORM_PRESETS) {
+        throw new Error(`Maximum ${MAX_SAVED_IMAGE_TRANSFORM_PRESETS} presets`)
+      }
+      const next: SavedImageTransformPreset[] = [
+        { id: crypto.randomUUID(), name: trimmedName, json },
+        ...current,
+      ]
+      await updateTeamPrefs.mutateAsync({
+        ...(currentTeam.prefs as Record<string, unknown>),
+        ...buildSavedImageTransformPresetsPrefs(next),
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['team', 'console', teamId] })
+    },
+  })
+
+  const deleteUserMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const currentAccount = getConsoleAccountFromCache(queryClient)
+      if (!currentAccount) throw new Error('Account not available')
+      const current = parseSavedImageTransformPresets(currentAccount.prefs)
+      const next = current.filter((p) => p.id !== id)
+      return await updateAccountPrefs({
+        ...currentAccount.prefs,
+        ...buildSavedImageTransformPresetsPrefs(next),
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    },
+  })
+
+  const deleteTeamMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const currentTeam = queryClient.getQueryData<{
+        prefs?: Record<string, unknown>
+      }>(['team', 'console', teamId])
+      if (!currentTeam || !teamId) throw new Error('Team not available')
+      const current = parseSavedImageTransformPresets(
+        currentTeam.prefs as Record<string, unknown>,
+      )
+      const next = current.filter((p) => p.id !== id)
+      await updateTeamPrefs.mutateAsync({
+        ...(currentTeam.prefs as Record<string, unknown>),
+        ...buildSavedImageTransformPresetsPrefs(next),
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['team', 'console', teamId] })
+    },
+  })
+
+  const reorderUserMutation = useMutation({
+    mutationFn: async (ordered: SavedImageTransformPreset[]) => {
+      const currentAccount = getConsoleAccountFromCache(queryClient)
+      if (!currentAccount) throw new Error('Account not available')
+      return await updateAccountPrefs({
+        ...currentAccount.prefs,
+        ...buildSavedImageTransformPresetsPrefs(ordered),
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    },
+  })
+
+  const reorderTeamMutation = useMutation({
+    mutationFn: async (ordered: SavedImageTransformPreset[]) => {
+      const currentTeam = queryClient.getQueryData<{
+        prefs?: Record<string, unknown>
+      }>(['team', 'console', teamId])
+      if (!currentTeam || !teamId) throw new Error('Team not available')
+      await updateTeamPrefs.mutateAsync({
+        ...(currentTeam.prefs as Record<string, unknown>),
+        ...buildSavedImageTransformPresetsPrefs(ordered),
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['team', 'console', teamId] })
+    },
+  })
+
+  const updateUserPresetNameMutation = useMutation({
+    mutationFn: async ({ id, name }: { id: string; name: string }) => {
+      const currentAccount = getConsoleAccountFromCache(queryClient)
+      if (!currentAccount) throw new Error('Account not available')
+      const current = parseSavedImageTransformPresets(currentAccount.prefs)
+      const trimmedName = name
+        .trim()
+        .slice(0, MAX_SAVED_IMAGE_TRANSFORM_PRESET_NAME_LENGTH)
+      if (!trimmedName) throw new Error('Name is required')
+      const next = current.map((p) =>
+        p.id === id ? { ...p, name: trimmedName } : p,
+      )
+      return await updateAccountPrefs({
+        ...currentAccount.prefs,
+        ...buildSavedImageTransformPresetsPrefs(next),
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    },
+  })
+
+  const updateTeamPresetNameMutation = useMutation({
+    mutationFn: async ({ id, name }: { id: string; name: string }) => {
+      const currentTeam = queryClient.getQueryData<{
+        prefs?: Record<string, unknown>
+      }>(['team', 'console', teamId])
+      if (!currentTeam || !teamId) throw new Error('Team not available')
+      const current = parseSavedImageTransformPresets(
+        currentTeam.prefs as Record<string, unknown>,
+      )
+      const trimmedName = name
+        .trim()
+        .slice(0, MAX_SAVED_IMAGE_TRANSFORM_PRESET_NAME_LENGTH)
+      if (!trimmedName) throw new Error('Name is required')
+      const next = current.map((p) =>
+        p.id === id ? { ...p, name: trimmedName } : p,
+      )
+      await updateTeamPrefs.mutateAsync({
+        ...(currentTeam.prefs as Record<string, unknown>),
+        ...buildSavedImageTransformPresetsPrefs(next),
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['team', 'console', teamId] })
+    },
+  })
+
+  const addPreset = useCallback(
+    async (args: { name: string; json: string; level: ImageTransformSavedPresetLevel }) => {
+      if (args.level === 'team' && teamId) {
+        return addTeamMutation.mutateAsync({
+          name: args.name,
+          json: args.json,
+        })
+      }
+      return addUserMutation.mutateAsync({ name: args.name, json: args.json })
+    },
+    [addTeamMutation, addUserMutation, teamId],
+  )
+
+  const deletePreset = useCallback(
+    async (id: string, level: ImageTransformSavedPresetLevel) => {
+      if (level === 'team' && teamId) return deleteTeamMutation.mutateAsync(id)
+      return deleteUserMutation.mutateAsync(id)
+    },
+    [deleteTeamMutation, deleteUserMutation, teamId],
+  )
+
+  const reorderPresets = useCallback(
+    async (
+      ordered: SavedImageTransformPreset[],
+      level: ImageTransformSavedPresetLevel,
+    ) => {
+      if (level === 'team' && teamId) {
+        return reorderTeamMutation.mutateAsync(ordered)
+      }
+      return reorderUserMutation.mutateAsync(ordered)
+    },
+    [reorderTeamMutation, reorderUserMutation, teamId],
+  )
+
+  const updatePresetName = useCallback(
+    async (
+      id: string,
+      level: ImageTransformSavedPresetLevel,
+      name: string,
+    ) => {
+      if (level === 'team' && teamId) {
+        return updateTeamPresetNameMutation.mutateAsync({ id, name })
+      }
+      return updateUserPresetNameMutation.mutateAsync({ id, name })
+    },
+    [teamId, updateTeamPresetNameMutation, updateUserPresetNameMutation],
+  )
+
+  return {
+    userPresets,
+    teamPresets,
+    addPreset,
+    deletePreset,
+    reorderPresets,
+    updatePresetName,
+    isAdding: addUserMutation.isPending || addTeamMutation.isPending,
+    isDeleting: deleteUserMutation.isPending || deleteTeamMutation.isPending,
+    isReordering:
+      reorderUserMutation.isPending || reorderTeamMutation.isPending,
     hasTeamLevel: !!teamId,
   }
 }

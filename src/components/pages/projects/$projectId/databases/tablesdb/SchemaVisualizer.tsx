@@ -60,6 +60,8 @@ import {
 } from '@/lib/utils/database-schema-export'
 import { useQuery } from '@tanstack/react-query'
 import { isHtmlDarkChrome } from '@/lib/html-theme'
+import { useViewportPanZoom } from '@/lib/hooks/useViewportPanZoom'
+import { SchemaBlueprintMat } from '@/components/global/shared/SchemaBlueprintMat'
 
 interface SchemaVisualizerProps {
   databaseId: string
@@ -88,10 +90,6 @@ const NODE_WIDTH = 300
 const NODE_HEADER_HEIGHT = 40
 const COLUMN_HEIGHT = 28
 const NODE_PADDING = 12
-const MIN_ZOOM = 0.2
-const MAX_ZOOM = 2
-const ZOOM_STEP = 0.05 // 5% increments for smoother zooming
-const WHEEL_ZOOM_STEP = 0.02 // 2% increments for mouse wheel for even smoother control
 const MAX_VISIBLE_COLUMNS = 20
 const MIN_SPACING = 240 // Base spacing between nodes
 const MIN_NODE_GAP = 15 // Minimum gap between nodes
@@ -107,12 +105,22 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
     databaseId,
   )
 
-  const canvasRef = useRef<HTMLDivElement>(null)
   const minimapRef = useRef<HTMLDivElement>(null)
-  const [zoom, setZoom] = useState(1)
-  const [pan, setPan] = useState({ x: 0, y: 0 })
-  const [isDragging, setIsDragging] = useState(false)
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+  const {
+    canvasRef,
+    zoom,
+    pan,
+    setZoom,
+    setPan,
+    isDragging,
+    zoomInDisabled,
+    zoomOutDisabled,
+    bindCanvas,
+    zoomIn,
+    zoomOut,
+    resetView,
+    zoomPercentage,
+  } = useViewportPanZoom()
   const [selectedTable, setSelectedTable] = useState<string | null>(null)
   const [expandedColumns, setExpandedColumns] = useState<Set<string>>(new Set())
   const [columnDialogOpen, setColumnDialogOpen] = useState(false)
@@ -484,72 +492,6 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       }
     }
   }, [nodes, isLoading, hasAutoFocused])
-
-  // Handle mouse wheel for zoom
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-
-    const handleWheel = (e: WheelEvent) => {
-      e.preventDefault()
-
-      const delta = e.deltaY > 0 ? -WHEEL_ZOOM_STEP : WHEEL_ZOOM_STEP
-      const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoom + delta))
-
-      // Zoom towards mouse position
-      const rect = canvas.getBoundingClientRect()
-      const mouseX = e.clientX - rect.left
-      const mouseY = e.clientY - rect.top
-
-      const zoomPointX = (mouseX - pan.x) / zoom
-      const zoomPointY = (mouseY - pan.y) / zoom
-
-      setZoom(newZoom)
-      setPan({
-        x: mouseX - zoomPointX * newZoom,
-        y: mouseY - zoomPointY * newZoom,
-      })
-    }
-
-    canvas.addEventListener('wheel', handleWheel, { passive: false })
-    return () => canvas.removeEventListener('wheel', handleWheel)
-  }, [zoom, pan])
-
-  // Handle panning
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (e.button !== 0) return // Only left mouse button
-    setIsDragging(true)
-    setDragStart({
-      x: e.clientX - pan.x,
-      y: e.clientY - pan.y,
-    })
-  }
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging) return
-    setPan({
-      x: e.clientX - dragStart.x,
-      y: e.clientY - dragStart.y,
-    })
-  }
-
-  const handleMouseUp = () => {
-    setIsDragging(false)
-  }
-
-  // Zoom controls
-  const handleZoomIn = () => {
-    setZoom((prev) => Math.min(MAX_ZOOM, prev + ZOOM_STEP))
-  }
-
-  const handleZoomOut = () => {
-    setZoom((prev) => Math.max(MIN_ZOOM, prev - ZOOM_STEP))
-  }
-
-  const handleResetZoom = () => {
-    setZoom(1)
-    setPan({ x: 0, y: 0 })
-  }
 
   // Toggle column expansion
   const toggleColumns = (tableId: string) => {
@@ -1400,8 +1342,6 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
     )
   }
 
-  const zoomPercentage = Math.round(zoom * 100)
-
   return (
     <div
       className="relative h-full w-full overflow-hidden"
@@ -1533,8 +1473,8 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
           variant="outline"
           size="sm"
           className="h-8 w-8 p-0 bg-card/95 backdrop-blur-sm"
-          onClick={handleZoomIn}
-          disabled={zoom >= MAX_ZOOM}
+          onClick={zoomIn}
+          disabled={zoomInDisabled}
         >
           <ZoomIn className="h-4 w-4" />
         </Button>
@@ -1547,8 +1487,8 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
           variant="outline"
           size="sm"
           className="h-8 w-8 p-0 bg-card/95 backdrop-blur-sm"
-          onClick={handleZoomOut}
-          disabled={zoom <= MIN_ZOOM}
+          onClick={zoomOut}
+          disabled={zoomOutDisabled}
         >
           <ZoomOut className="h-4 w-4" />
         </Button>
@@ -1556,7 +1496,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
           variant="outline"
           size="sm"
           className="h-8 w-8 p-0 bg-card/95 backdrop-blur-sm"
-          onClick={handleResetZoom}
+          onClick={resetView}
         >
           <Maximize2 className="h-4 w-4" />
         </Button>
@@ -1569,10 +1509,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
           'h-full w-full cursor-grab overflow-hidden select-none',
           isDragging && 'cursor-grabbing',
         )}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
+        {...bindCanvas}
       >
         <div
           className="relative h-full w-full"
@@ -1582,33 +1519,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
           }}
         >
           {/* Blueprint dot pattern */}
-          <svg
-            className="absolute pointer-events-none"
-            style={{
-              left: '-5000px',
-              top: '-5000px',
-              width: '10000px',
-              height: '10000px',
-              zIndex: 0,
-            }}
-          >
-            <defs>
-              <pattern
-                id="dots"
-                width="40"
-                height="40"
-                patternUnits="userSpaceOnUse"
-              >
-                <circle
-                  cx="0"
-                  cy="0"
-                  r="2.5"
-                  className="fill-foreground/20 dark:fill-foreground/30"
-                />
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#dots)" />
-          </svg>
+          <SchemaBlueprintMat />
           {/* Relationship lines - rendered as SVG overlay */}
           <svg
             className="absolute pointer-events-none z-10"

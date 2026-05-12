@@ -1,7 +1,23 @@
-import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
+import {
+  useState,
+  useMemo,
+  useEffect,
+  useCallback,
+  useRef,
+  type PointerEvent as ReactPointerEvent,
+} from 'react'
 import { useLocation, Link, useSearch } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
-import { File, List, LayoutGrid, ArrowLeft, AlertCircle } from 'lucide-react'
+import {
+  AlertCircle,
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  Calendar,
+  File as FileIcon,
+  FileText,
+  Fingerprint,
+} from 'lucide-react'
 import { formatBytes } from '@/lib/utils/mock-data'
 import {
   useBucket,
@@ -19,14 +35,6 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 import {
   Dialog,
   DialogContent,
@@ -48,7 +56,7 @@ import { BucketSecurity } from '../_components/BucketSecurity'
 import { useUploadQueue } from '@/lib/upload-queue/use-upload-queue'
 import type { Models } from '@appwrite.io/console'
 import { FileContextMenu } from '../_components/FileContextMenu'
-import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { ROWS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import {
   getSearch,
   getPage,
@@ -65,7 +73,22 @@ import {
 } from '@/lib/table-filters'
 import type { CompactFilterKey } from '@/lib/table-filters'
 import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
-import { StorageFilePreviewThumb } from '@/components/global/shared/StorageFilePreviewThumb'
+import { FileInspectorPanel } from '../_components/FileInspectorPanel'
+import {
+  readStoredStorageFilesTablePaneWidthPx,
+  STORAGE_FILES_PREVIEW_PANE_MIN_PX,
+  STORAGE_FILES_TABLE_EDGE_COL_PX,
+  STORAGE_FILES_TABLE_PANE_MIN_PX,
+  STORAGE_FILES_TABLE_PANE_WIDTH_STORAGE_KEY,
+  STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS,
+  STORAGE_SPREADSHEET_BODY_CELL_BORDER,
+  STORAGE_SPREADSHEET_BODY_CELL_BORDER_LAST,
+  STORAGE_SPREADSHEET_HEADER_CELL_BORDER_SPLIT_TOP,
+  STORAGE_SPREADSHEET_HEADER_CELL_BORDER_SPLIT_TOP_LAST,
+  STORAGE_SPREADSHEET_HEADER_STICKY_CHECKBOX_SPLIT_TOP,
+  STORAGE_SPREADSHEET_STICKY_THEAD_CLASS,
+} from '../_components/files-documents-layout'
+import { useIsMobile } from '@/hooks/use-mobile'
 
 export function View() {
   const { projectId, bucketId } = useParams({
@@ -80,6 +103,8 @@ export function View() {
     page?: number
     limit?: number
     sort?: string
+    file?: string
+    filePanel?: 'overview' | 'security'
   }
   const { project } = useProject(projectId)
   const { features } = useConsoleProfile()
@@ -142,7 +167,7 @@ export function View() {
     const limit =
       Number.isInteger(limitFromSearch) && (limitFromSearch ?? 0) >= 1
         ? limitFromSearch!
-        : getLimit(url, GRID_DEFAULT_PAGE_SIZE)
+        : getLimit(url, ROWS_DEFAULT_PAGE_SIZE)
     return {
       search: getSearch(url) ?? search.search,
       page,
@@ -165,7 +190,7 @@ export function View() {
   ])
 
   const urlPage = filesListParams?.page ?? 1
-  const urlLimit = filesListParams?.limit ?? GRID_DEFAULT_PAGE_SIZE
+  const urlLimit = filesListParams?.limit ?? ROWS_DEFAULT_PAGE_SIZE
   const urlSearch = filesListParams?.search
   const urlSortBy = filesListParams?.sortBy ?? FILES_DEFAULT_SORT_BY
   const urlSortOrder = filesListParams?.sortOrder ?? FILES_DEFAULT_SORT_ORDER
@@ -173,10 +198,14 @@ export function View() {
   const filterQueries =
     filterMap.size > 0 ? Array.from(filterMap.values()) : undefined
 
+  const inspectorFileId =
+    typeof search?.file === 'string' && search.file.trim().length > 0
+      ? search.file
+      : undefined
+
   const queryClient = useQueryClient()
   const [searchInput, setSearchInput] = useState('')
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
   const [displayedPage, setDisplayedPage] = useState(1)
   const [displayedSearch, setDisplayedSearch] = useState<string | undefined>(
     undefined,
@@ -264,11 +293,10 @@ export function View() {
       if (trimmed === (urlSearch ?? '')) return
       if (trimmed.length > 0 && trimmed.length < MIN_SEARCH_LENGTH) return
       navigate({
-        to: '/projects/$projectId/storage/$bucketId/',
+        to: '/projects/$projectId/storage/$bucketId',
         params: { projectId: projectId!, bucketId: bucketId! },
-        search: (prev: Record<string, unknown>) => ({
-          ...prev,
-          ...buildListSearchParams({
+        search: (prev: Record<string, unknown>) => {
+          const built = buildListSearchParams({
             search: trimmed || undefined,
             query: filterQueryString || undefined,
             page: 1,
@@ -278,8 +306,13 @@ export function View() {
               urlSortOrder !== FILES_DEFAULT_SORT_ORDER
                 ? encodeSort(urlSortBy, urlSortOrder)
                 : undefined,
-          }),
-        }),
+          })
+          const next = { ...prev, ...built }
+          delete next.file
+          if (!trimmed) delete next.search
+          if (!filterQueryString) delete next.query
+          return next
+        },
         replace: true,
       })
     }, 300)
@@ -361,17 +394,27 @@ export function View() {
     displayedFilterQueryString,
   ])
 
-  const files = (displayedFilesData?.files || []) as Models.File[]
-  const filesTotal = displayedFilesData?.total ?? requestedFilesData?.total ?? 0
+  const files = (
+    (displayedFilesData as { files?: Models.File[] } | undefined)?.files ??
+    (requestedFilesData as { files?: Models.File[] } | undefined)?.files ??
+    []
+  ) as Models.File[]
+  const filesTotal =
+    displayedFilesData?.total ?? requestedFilesData?.total ?? 0
   const showFilesLoading =
-    displayedFilesLoading && (displayedFilesData?.files?.length ?? 0) === 0
+    displayedFilesLoading &&
+    ((displayedFilesData as { files?: Models.File[] } | undefined)?.files
+      ?.length ??
+      (requestedFilesData as { files?: Models.File[] } | undefined)?.files
+        ?.length ??
+      0) === 0
 
   const tabs: Tab[] = useMemo(() => {
     const base: Tab[] = [
       {
         id: 'files',
         label: 'Files',
-        to: '/projects/$projectId/storage/$bucketId/',
+        to: '/projects/$projectId/storage/$bucketId',
         params: {
           projectId: projectId as string,
           bucketId: bucketId as string,
@@ -455,11 +498,10 @@ export function View() {
 
   const handleFilesSortChange = (sortBy: string, sortOrder: 'asc' | 'desc') => {
     navigate({
-      to: '/projects/$projectId/storage/$bucketId/',
+      to: '/projects/$projectId/storage/$bucketId',
       params: { projectId: projectId!, bucketId: bucketId! },
-      search: (prev: Record<string, unknown>) => ({
-        ...prev,
-        ...buildListSearchParams({
+      search: (prev: Record<string, unknown>) => {
+        const built = buildListSearchParams({
           search: urlSearch,
           query: filterQueryString || undefined,
           page: 1,
@@ -469,8 +511,13 @@ export function View() {
             sortOrder !== FILES_DEFAULT_SORT_ORDER
               ? encodeSort(sortBy, sortOrder)
               : undefined,
-        }),
-      }),
+        })
+        const next = { ...prev, ...built }
+        if (!(urlSearch ?? '').trim()) delete next.search
+        if (!filterQueryString) delete next.query
+        delete next.file
+        return next
+      },
       replace: true,
     })
   }
@@ -484,11 +531,10 @@ export function View() {
     if (replaceKey) newMap.delete(replaceKey)
     newMap.set(compactKey, queryStr)
     navigate({
-      to: '/projects/$projectId/storage/$bucketId/',
+      to: '/projects/$projectId/storage/$bucketId',
       params: { projectId: projectId!, bucketId: bucketId! },
-      search: (prev: Record<string, unknown>) => ({
-        ...prev,
-        ...buildListSearchParams({
+      search: (prev: Record<string, unknown>) => {
+        const built = buildListSearchParams({
           search: urlSearch,
           query: mapToQueryParam(newMap),
           page: 1,
@@ -498,8 +544,12 @@ export function View() {
             urlSortOrder !== FILES_DEFAULT_SORT_ORDER
               ? encodeSort(urlSortBy, urlSortOrder)
               : undefined,
-        }),
-      }),
+        })
+        const next = { ...prev, ...built }
+        if (!(urlSearch ?? '').trim()) delete next.search
+        delete next.file
+        return next
+      },
       replace: true,
     })
   }
@@ -508,24 +558,24 @@ export function View() {
     const newMap = new Map(filterMap)
     newMap.delete(key)
     navigate({
-      to: '/projects/$projectId/storage/$bucketId/',
+      to: '/projects/$projectId/storage/$bucketId',
       params: { projectId: projectId!, bucketId: bucketId! },
       search: (prev: Record<string, unknown>) => {
-        const next = {
-          ...prev,
-          ...buildListSearchParams({
-            search: urlSearch,
-            query: newMap.size > 0 ? mapToQueryParam(newMap) : undefined,
-            page: 1,
-            limit: urlLimit,
-            sort:
-              urlSortBy !== FILES_DEFAULT_SORT_BY ||
-              urlSortOrder !== FILES_DEFAULT_SORT_ORDER
-                ? encodeSort(urlSortBy, urlSortOrder)
-                : undefined,
-          }),
-        }
+        const built = buildListSearchParams({
+          search: urlSearch,
+          query: newMap.size > 0 ? mapToQueryParam(newMap) : undefined,
+          page: 1,
+          limit: urlLimit,
+          sort:
+            urlSortBy !== FILES_DEFAULT_SORT_BY ||
+            urlSortOrder !== FILES_DEFAULT_SORT_ORDER
+              ? encodeSort(urlSortBy, urlSortOrder)
+              : undefined,
+        })
+        const next = { ...prev, ...built }
+        if (!(urlSearch ?? '').trim()) delete next.search
         if (newMap.size === 0) delete next.query
+        delete next.file
         return next
       },
       replace: true,
@@ -534,11 +584,10 @@ export function View() {
 
   const clearAllFilters = () => {
     navigate({
-      to: '/projects/$projectId/storage/$bucketId/',
+      to: '/projects/$projectId/storage/$bucketId',
       params: { projectId: projectId!, bucketId: bucketId! },
-      search: (prev: Record<string, unknown>) => ({
-        ...prev,
-        ...buildListSearchParams({
+      search: (prev: Record<string, unknown>) => {
+        const built = buildListSearchParams({
           search: urlSearch,
           page: 1,
           limit: urlLimit,
@@ -547,8 +596,12 @@ export function View() {
             urlSortOrder !== FILES_DEFAULT_SORT_ORDER
               ? encodeSort(urlSortBy, urlSortOrder)
               : undefined,
-        }),
-      }),
+        })
+        const next = { ...prev, ...built }
+        delete next.query
+        delete next.file
+        return next
+      },
       replace: true,
     })
     setFiltersOpen(false)
@@ -578,6 +631,16 @@ export function View() {
       )
       setSelectedFiles(new Set())
       setDeleteDialogOpen(false)
+      navigate({
+        to: '/projects/$projectId/storage/$bucketId',
+        params: { projectId: projectId!, bucketId: bucketId! },
+        search: (prev: Record<string, unknown>) => {
+          const next = { ...prev } as Record<string, unknown>
+          delete next.file
+          return next
+        },
+        replace: true,
+      })
     },
     onError: (error: Error) => {
       toast.error(getErrorMessage(error) || 'Failed to delete files')
@@ -616,7 +679,7 @@ export function View() {
   const handlePageChange = (page: number) => {
     setSelectedFiles(new Set())
     navigate({
-      to: '/projects/$projectId/storage/$bucketId/',
+      to: '/projects/$projectId/storage/$bucketId',
       params: { projectId: projectId!, bucketId: bucketId! },
       search: (prev: Record<string, unknown>) => {
         const next = { ...prev } as Record<string, unknown>
@@ -625,81 +688,145 @@ export function View() {
         next.page = page
         next.limit = urlLimit
         if (!next.search) delete next.search
+        if (!filterQueryString) delete next.query
         if (page === 1) delete next.page
-        if (next.limit === GRID_DEFAULT_PAGE_SIZE) delete next.limit
+        if (next.limit === ROWS_DEFAULT_PAGE_SIZE) delete next.limit
+        delete next.file
         return next
       },
       replace: true,
     })
   }
 
+  const handleFileColumnSort = (column: string) => {
+    const nextOrder =
+      urlSortBy === column
+        ? urlSortOrder === 'asc'
+          ? 'desc'
+          : 'asc'
+        : 'asc'
+    handleFilesSortChange(column, nextOrder)
+  }
+
   const handlePageSizeChange = (newPageSize: number) => {
     setSelectedFiles(new Set())
     navigate({
-      to: '/projects/$projectId/storage/$bucketId/',
+      to: '/projects/$projectId/storage/$bucketId',
       params: { projectId: projectId!, bucketId: bucketId! },
       search: (prev: Record<string, unknown>) => {
         const next = { ...prev } as Record<string, unknown>
         next.search = urlSearch ?? undefined
         next.query = filterQueryString || undefined
         delete next.page
-        next.limit = newPageSize
+        if (newPageSize === ROWS_DEFAULT_PAGE_SIZE) {
+          delete next.limit
+        } else {
+          next.limit = newPageSize
+        }
         if (!next.search) delete next.search
+        if (!filterQueryString) delete next.query
+        delete next.file
         return next
       },
       replace: true,
     })
   }
 
-  const handleBack = () => {
-    navigate({
-      to: '/projects/$projectId/storage',
-      params: { projectId: projectId as string },
-    })
-  }
+  const isMobileViewport = useIsMobile()
+  const useInlineFilePreviewPane = true
+  const isFilesStackedLayout = useInlineFilePreviewPane && isMobileViewport
+  const [fileTablePaneWidthPx, setFileTablePaneWidthPx] = useState(
+    readStoredStorageFilesTablePaneWidthPx,
+  )
+  const [isFilesSplitResizing, setIsFilesSplitResizing] = useState(false)
+  const filesSplitContainerRef = useRef<HTMLDivElement>(null)
+  const fileTablePaneWidthRef = useRef(fileTablePaneWidthPx)
+  fileTablePaneWidthRef.current = fileTablePaneWidthPx
 
-  const ViewToggle = () => (
-    <div className="flex items-center gap-1 rounded-md border border-border bg-muted/30 p-0.5">
-      <Button
-        variant="ghost"
-        size="sm"
-        className={cn(
-          'h-7 w-7 p-0',
-          viewMode === 'list' ? 'bg-background' : 'hover:bg-transparent',
-        )}
-        onClick={() => setViewMode('list')}
-      >
-        <List className="h-4 w-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        className={cn(
-          'h-7 w-7 p-0',
-          viewMode === 'grid' ? 'bg-background' : 'hover:bg-transparent',
-        )}
-        onClick={() => setViewMode('grid')}
-      >
-        <LayoutGrid className="h-4 w-4" />
-      </Button>
-    </div>
+  const handleFilesSplitPointerDown = useCallback(
+    (e: ReactPointerEvent<HTMLButtonElement>) => {
+      e.preventDefault()
+      setIsFilesSplitResizing(true)
+      const btn = e.currentTarget
+      btn.setPointerCapture(e.pointerId)
+      const startX = e.clientX
+      const startW = fileTablePaneWidthRef.current
+      const splitEl = filesSplitContainerRef.current
+      const onMove = (ev: globalThis.PointerEvent) => {
+        if (!splitEl) return
+        const maxTable = Math.max(
+          STORAGE_FILES_TABLE_PANE_MIN_PX,
+          splitEl.clientWidth - STORAGE_FILES_PREVIEW_PANE_MIN_PX,
+        )
+        const delta = ev.clientX - startX
+        const next = Math.min(
+          maxTable,
+          Math.max(STORAGE_FILES_TABLE_PANE_MIN_PX, startW + delta),
+        )
+        setFileTablePaneWidthPx(next)
+        fileTablePaneWidthRef.current = next
+      }
+      const onUp = () => {
+        setIsFilesSplitResizing(false)
+        try {
+          btn.releasePointerCapture(e.pointerId)
+        } catch {
+          /* already released */
+        }
+        window.removeEventListener('pointermove', onMove)
+        window.removeEventListener('pointerup', onUp)
+        window.removeEventListener('pointercancel', onUp)
+        localStorage.setItem(
+          STORAGE_FILES_TABLE_PANE_WIDTH_STORAGE_KEY,
+          String(fileTablePaneWidthRef.current),
+        )
+      }
+      window.addEventListener('pointermove', onMove)
+      window.addEventListener('pointerup', onUp)
+      window.addEventListener('pointercancel', onUp)
+    },
+    [],
   )
 
+  useEffect(() => {
+    if (!isFilesSplitResizing) return
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+    return () => {
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+    }
+  }, [isFilesSplitResizing])
+
+  useEffect(() => {
+    if (isFilesStackedLayout) return
+    const el = filesSplitContainerRef.current
+    if (!el) return
+    const clamp = () => {
+      const maxTable = Math.max(
+        STORAGE_FILES_TABLE_PANE_MIN_PX,
+        el.clientWidth - STORAGE_FILES_PREVIEW_PANE_MIN_PX,
+      )
+      setFileTablePaneWidthPx((w) => Math.min(w, maxTable))
+    }
+    const ro = new ResizeObserver(clamp)
+    ro.observe(el)
+    clamp()
+    return () => ro.disconnect()
+  }, [isFilesStackedLayout])
+
   return (
-    <div className="flex flex-col">
+    <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
       <ServiceHeader
         title={
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 w-7 p-0"
-              onClick={handleBack}
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <span>{bucket?.name || 'Bucket'}</span>
-          </div>
+          bucket ? (
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="truncate">{bucket.name}</span>
+              <CopyableId id={bucket.$id} size="xs" className="shrink-0" />
+            </div>
+          ) : (
+            'Bucket'
+          )
         }
         tabs={tabs}
         activeTab={activeTab}
@@ -729,18 +856,21 @@ export function View() {
               filterScope="storage.files"
               onApplyQuery={(queryParam, sortParam) => {
                 navigate({
-                  to: '/projects/$projectId/storage/$bucketId/',
+                  to: '/projects/$projectId/storage/$bucketId',
                   params: { projectId: projectId!, bucketId: bucketId! },
-                  search: (prev: Record<string, unknown>) => ({
-                    ...prev,
-                    ...buildListSearchParams({
+                  search: (prev: Record<string, unknown>) => {
+                    const built = buildListSearchParams({
                       search: urlSearch,
                       query: queryParam ?? undefined,
                       page: 1,
                       limit: urlLimit,
                       sort: sortParam ?? undefined,
-                    }),
-                  }),
+                    })
+                    const next = { ...prev, ...built }
+                    if (!queryParam?.trim()) delete next.query
+                    delete next.file
+                    return next
+                  },
                   replace: true,
                 })
               }}
@@ -753,7 +883,7 @@ export function View() {
               )}
               onReset={() => {
                 navigate({
-                  to: '/projects/$projectId/storage/$bucketId/',
+                  to: '/projects/$projectId/storage/$bucketId',
                   params: { projectId: projectId!, bucketId: bucketId! },
                   search: { page: 1, limit: urlLimit },
                   replace: true,
@@ -764,7 +894,7 @@ export function View() {
           ) : undefined
         }
         fullWidthBorder
-        rightContent={activeTab === 'files' ? <ViewToggle /> : undefined}
+        fullWidth
         contentAfterBorder={
           bucket && !bucket.enabled ? (
             <div className="border-b border-border bg-amber-500/5">
@@ -798,24 +928,151 @@ export function View() {
         }
       />
 
-      <div className="mx-auto w-full max-w-7xl flex-1">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         {activeTab === 'files' && (
-          <div className="px-4 pb-4 sm:px-6">
-            <>
-              {showFilesLoading ? (
-                <div className="rounded-lg border border-border bg-card py-12 text-center">
-                  <p className="text-[13px] text-muted-foreground">
-                    Loading files...
-                  </p>
-                </div>
-              ) : viewMode === 'list' ? (
-                files.length > 0 ? (
-                  <>
-                    <div className="rounded-lg border border-border bg-card overflow-hidden">
-                      <Table>
-                        <TableHeader>
-                          <TableRow className="hover:bg-transparent border-b border-border">
-                            <TableHead className="w-[40px] px-4">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            {showFilesLoading ? (
+              <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-6 py-12">
+                <p className="text-[13px] text-muted-foreground">Loading files…</p>
+              </div>
+            ) : files.length === 0 ? (
+              <div className="flex min-h-0 flex-1 flex-col items-center justify-center border-t border-border px-6 py-12">
+                <EmptyState
+                  icon={FileText}
+                  title={
+                    urlSearch?.trim() || filterMap.size > 0
+                      ? 'No files match your filters'
+                      : 'No files yet'
+                  }
+                  description={
+                    urlSearch?.trim() || filterMap.size > 0
+                      ? 'Try adjusting or clearing filters.'
+                      : 'Use Create file in the header to upload your first file.'
+                  }
+                  isEmpty={!urlSearch?.trim() && filterMap.size === 0}
+                  hasFilters={!!urlSearch?.trim() || filterMap.size > 0}
+                  variant="centered"
+                  iconSize="md"
+                />
+              </div>
+            ) : (
+              <>
+                <div
+                  ref={filesSplitContainerRef}
+                  className={cn(
+                    'flex min-h-0 flex-1 overflow-hidden border-t border-border',
+                    useInlineFilePreviewPane
+                      ? isFilesStackedLayout
+                        ? 'flex-col'
+                        : 'flex-row'
+                      : 'flex-row',
+                    useInlineFilePreviewPane && 'relative',
+                  )}
+                >
+                  <div
+                    style={
+                      useInlineFilePreviewPane && !isFilesStackedLayout
+                        ? { width: fileTablePaneWidthPx }
+                        : undefined
+                    }
+                    className={cn(
+                      'flex min-h-0 min-w-0 flex-col',
+                      useInlineFilePreviewPane
+                        ? cn(
+                            'shrink-0 border-border bg-background',
+                            isFilesStackedLayout
+                              ? 'max-h-[min(42dvh,320px)] w-full border-b border-border'
+                              : 'border-r border-border',
+                          )
+                        : 'min-w-0 flex-1',
+                    )}
+                  >
+                    <div className="min-h-0 flex-1 overflow-auto overscroll-contain">
+                    <table
+                      className={cn(
+                        'w-full border-collapse',
+                        useInlineFilePreviewPane &&
+                          !isFilesStackedLayout &&
+                          'table-fixed',
+                      )}
+                    >
+                      <colgroup>
+                        <col
+                          style={
+                            useInlineFilePreviewPane && !isFilesStackedLayout
+                              ? {
+                                  width: STORAGE_FILES_TABLE_EDGE_COL_PX,
+                                  minWidth: STORAGE_FILES_TABLE_EDGE_COL_PX,
+                                  maxWidth: STORAGE_FILES_TABLE_EDGE_COL_PX,
+                                }
+                              : { width: 40 }
+                          }
+                        />
+                        <col
+                          style={
+                            useInlineFilePreviewPane && !isFilesStackedLayout
+                              ? { minWidth: 180 }
+                              : { width: '180px' }
+                          }
+                        />
+                        <col
+                          style={
+                            useInlineFilePreviewPane && !isFilesStackedLayout
+                              ? { minWidth: 160 }
+                              : { minWidth: '160px' }
+                          }
+                        />
+                        <col
+                          style={
+                            useInlineFilePreviewPane && !isFilesStackedLayout
+                              ? { minWidth: 140 }
+                              : { minWidth: '140px' }
+                          }
+                        />
+                        <col
+                          style={
+                            useInlineFilePreviewPane && !isFilesStackedLayout
+                              ? { width: 100, minWidth: 100 }
+                              : { width: '100px' }
+                          }
+                        />
+                        <col
+                          style={
+                            useInlineFilePreviewPane && !isFilesStackedLayout
+                              ? { width: 180, minWidth: 180 }
+                              : { width: '180px' }
+                          }
+                        />
+                        <col
+                          style={
+                            useInlineFilePreviewPane && !isFilesStackedLayout
+                              ? { width: 180, minWidth: 180 }
+                              : { width: '180px' }
+                          }
+                        />
+                      </colgroup>
+                      <thead className={STORAGE_SPREADSHEET_STICKY_THEAD_CLASS}>
+                        <tr className={STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS}>
+                          <th
+                            className={cn(
+                              'sticky left-0 z-40 bg-background px-2 py-0 align-middle text-center',
+                              STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS,
+                              useInlineFilePreviewPane &&
+                                !isFilesStackedLayout &&
+                                'min-w-[40px] max-w-[40px] shrink-0 box-border',
+                              STORAGE_SPREADSHEET_HEADER_STICKY_CHECKBOX_SPLIT_TOP,
+                            )}
+                            style={
+                              useInlineFilePreviewPane && !isFilesStackedLayout
+                                ? {
+                                    width: STORAGE_FILES_TABLE_EDGE_COL_PX,
+                                    minWidth: STORAGE_FILES_TABLE_EDGE_COL_PX,
+                                    maxWidth: STORAGE_FILES_TABLE_EDGE_COL_PX,
+                                  }
+                                : undefined
+                            }
+                          >
+                            <div className="flex h-full items-center justify-center">
                               <Checkbox
                                 checked={
                                   files.filter((f) => !isFilePending(f))
@@ -826,451 +1083,527 @@ export function View() {
                                 }
                                 onCheckedChange={toggleAllFiles}
                               />
-                            </TableHead>
-                            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[60px]">
-                              Preview
-                            </TableHead>
-                            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                              File
-                            </TableHead>
-                            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                              Type
-                            </TableHead>
-                            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
-                              Size
-                            </TableHead>
-                            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
-                              Created
-                            </TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {files.map((file) => {
-                            const pending = isFilePending(file)
-                            const fileLinkParams = {
-                              projectId: projectId!,
-                              bucketId: bucketId!,
-                              fileId: file.$id,
-                            }
-                            return (
-                              <FileContextMenu
-                                key={file.$id}
-                                projectId={projectId!}
-                                bucketId={bucketId!}
-                                file={{
-                                  id: file.$id,
-                                  name: file.name,
-                                  pending,
+                            </div>
+                          </th>
+                          <th
+                            className={cn(
+                              'w-[180px] px-3 py-0 align-middle',
+                              STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS,
+                              STORAGE_SPREADSHEET_HEADER_CELL_BORDER_SPLIT_TOP,
+                            )}
+                          >
+                            <div className="flex h-full items-center gap-2">
+                              <Fingerprint className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                              <span className="text-[12px] font-medium text-foreground">
+                                $id
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleFileColumnSort('$id')}
+                                className="ml-auto cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                              >
+                                {urlSortBy === '$id' ? (
+                                  urlSortOrder === 'asc' ? (
+                                    <ArrowUp className="h-3 w-3 shrink-0 text-foreground" />
+                                  ) : (
+                                    <ArrowDown className="h-3 w-3 shrink-0 text-foreground" />
+                                  )
+                                ) : (
+                                  <ArrowUpDown className="h-3 w-3 shrink-0 text-muted-foreground" />
+                                )}
+                              </button>
+                            </div>
+                          </th>
+                          <th
+                            className={cn(
+                              'min-w-[160px] px-3 py-0 align-middle',
+                              STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS,
+                              STORAGE_SPREADSHEET_HEADER_CELL_BORDER_SPLIT_TOP,
+                            )}
+                          >
+                            <div className="flex h-full items-center gap-2">
+                              <FileIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                              <span className="text-[12px] font-medium text-foreground">
+                                name
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleFileColumnSort('name')}
+                                className="ml-auto cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                              >
+                                {urlSortBy === 'name' ? (
+                                  urlSortOrder === 'asc' ? (
+                                    <ArrowUp className="h-3 w-3 shrink-0 text-chart-brand" />
+                                  ) : (
+                                    <ArrowDown className="h-3 w-3 shrink-0 text-chart-brand" />
+                                  )
+                                ) : (
+                                  <ArrowUpDown className="h-3 w-3 shrink-0 text-muted-foreground" />
+                                )}
+                              </button>
+                            </div>
+                          </th>
+                          <th
+                            className={cn(
+                              'min-w-[140px] px-3 py-0 align-middle text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground',
+                              STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS,
+                              STORAGE_SPREADSHEET_HEADER_CELL_BORDER_SPLIT_TOP,
+                            )}
+                          >
+                            MIME type
+                          </th>
+                          <th
+                            className={cn(
+                              'w-[100px] px-3 py-0 align-middle',
+                              STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS,
+                              STORAGE_SPREADSHEET_HEADER_CELL_BORDER_SPLIT_TOP,
+                            )}
+                          >
+                            <div className="flex h-full items-center gap-2">
+                              <span className="text-[12px] font-medium text-foreground">
+                                size
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleFileColumnSort('sizeOriginal')
+                                }
+                                className="ml-auto cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                              >
+                                {urlSortBy === 'sizeOriginal' ? (
+                                  urlSortOrder === 'asc' ? (
+                                    <ArrowUp className="h-3 w-3 shrink-0 text-chart-brand" />
+                                  ) : (
+                                    <ArrowDown className="h-3 w-3 shrink-0 text-chart-brand" />
+                                  )
+                                ) : (
+                                  <ArrowUpDown className="h-3 w-3 shrink-0 text-muted-foreground" />
+                                )}
+                              </button>
+                            </div>
+                          </th>
+                          <th
+                            className={cn(
+                              'w-[180px] px-3 py-0 align-middle',
+                              STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS,
+                              STORAGE_SPREADSHEET_HEADER_CELL_BORDER_SPLIT_TOP,
+                            )}
+                          >
+                            <div className="flex h-full items-center gap-2">
+                              <Calendar className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                              <span className="text-[12px] font-medium text-foreground">
+                                $createdAt
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleFileColumnSort('$createdAt')}
+                                className="ml-auto cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                              >
+                                {urlSortBy === '$createdAt' ? (
+                                  urlSortOrder === 'asc' ? (
+                                    <ArrowUp className="h-3 w-3 shrink-0 text-chart-brand" />
+                                  ) : (
+                                    <ArrowDown className="h-3 w-3 shrink-0 text-chart-brand" />
+                                  )
+                                ) : (
+                                  <ArrowUpDown className="h-3 w-3 shrink-0 text-muted-foreground" />
+                                )}
+                              </button>
+                            </div>
+                          </th>
+                          <th
+                            className={cn(
+                              'w-[180px] px-3 py-0 align-middle',
+                              STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS,
+                              STORAGE_SPREADSHEET_HEADER_CELL_BORDER_SPLIT_TOP_LAST,
+                            )}
+                          >
+                            <div className="flex h-full items-center gap-2">
+                              <Calendar className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                              <span className="text-[12px] font-medium text-foreground">
+                                $updatedAt
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleFileColumnSort('$updatedAt')}
+                                className="ml-auto cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                              >
+                                {urlSortBy === '$updatedAt' ? (
+                                  urlSortOrder === 'asc' ? (
+                                    <ArrowUp className="h-3 w-3 shrink-0 text-chart-brand" />
+                                  ) : (
+                                    <ArrowDown className="h-3 w-3 shrink-0 text-chart-brand" />
+                                  )
+                                ) : (
+                                  <ArrowUpDown className="h-3 w-3 shrink-0 text-muted-foreground" />
+                                )}
+                              </button>
+                            </div>
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {files.map((file) => {
+                          const pending = isFilePending(file)
+                          const isPreviewRow =
+                            !pending && inspectorFileId === file.$id
+                          return (
+                            <FileContextMenu
+                              key={file.$id}
+                              projectId={projectId!}
+                              bucketId={bucketId!}
+                              file={{
+                                id: file.$id,
+                                name: file.name,
+                                pending,
+                              }}
+                            >
+                              <tr
+                                className={cn(
+                                  'group transition-colors',
+                                  pending
+                                    ? 'cursor-default opacity-70 hover:bg-transparent'
+                                    : 'cursor-pointer',
+                                  pending
+                                    ? null
+                                    : isPreviewRow
+                                      ? 'bg-muted/25 ring-1 ring-inset ring-border/20 hover:bg-muted/35'
+                                      : selectedFiles.has(file.$id)
+                                        ? 'bg-muted'
+                                        : 'hover:bg-muted/50',
+                                )}
+                                onClick={(e) => {
+                                  if (pending) return
+                                  const target = e.target as HTMLElement
+                                  if (
+                                    target.closest('button') ||
+                                    target.closest('[role="checkbox"]')
+                                  ) {
+                                    return
+                                  }
+                                  const isActive =
+                                    inspectorFileId === file.$id
+                                  navigate({
+                                    to: '/projects/$projectId/storage/$bucketId',
+                                    params: {
+                                      projectId: projectId!,
+                                      bucketId: bucketId!,
+                                    },
+                                    search: (
+                                      prev: Record<string, unknown>,
+                                    ) => {
+                                      const next = {
+                                        ...prev,
+                                      } as Record<string, unknown>
+                                      if (isActive) delete next.file
+                                      else next.file = file.$id
+                                      return next
+                                    },
+                                    replace: true,
+                                  })
                                 }}
                               >
-                                <TableRow
+                                <td
                                   className={cn(
-                                    pending
-                                      ? ''
-                                      : 'cursor-pointer transition-colors border-b border-border/50',
-                                    !pending && 'hover:bg-muted/30',
-                                    selectedFiles.has(file.$id) &&
-                                      'bg-sky-100 dark:bg-sky-950',
+                                    'sticky left-0 w-10 border-b border-border px-2 py-1.5 text-center',
+                                    useInlineFilePreviewPane &&
+                                      !isFilesStackedLayout &&
+                                      'min-w-[40px] max-w-[40px] shrink-0 box-border',
+                                    'shadow-[inset_-1px_0_0_0_var(--border)]',
+                                    !isPreviewRow
+                                      ? 'bg-background'
+                                      : 'bg-muted/25 group-hover:bg-muted/35',
+                                    !isPreviewRow &&
+                                      selectedFiles.has(file.$id) &&
+                                      'bg-muted',
                                   )}
-                                  onClick={(e) => {
-                                    if (pending) return
-                                    // Don't navigate if clicking on checkbox, link, or their containers
-                                    const target = e.target as HTMLElement
-                                    if (
-                                      target.closest('button') ||
-                                      target.closest('[role="checkbox"]') ||
-                                      target.closest('a')
-                                    ) {
-                                      return
-                                    }
-                                    navigate({
-                                      to: '/projects/$projectId/storage/$bucketId/files/$fileId',
-                                      params: fileLinkParams,
-                                    })
-                                  }}
+                                  style={
+                                    useInlineFilePreviewPane &&
+                                    !isFilesStackedLayout
+                                      ? {
+                                          width: STORAGE_FILES_TABLE_EDGE_COL_PX,
+                                          minWidth:
+                                            STORAGE_FILES_TABLE_EDGE_COL_PX,
+                                          maxWidth:
+                                            STORAGE_FILES_TABLE_EDGE_COL_PX,
+                                        }
+                                      : undefined
+                                  }
+                                  onClick={(e) => e.stopPropagation()}
                                 >
-                                  <TableCell
-                                    onClick={(e) => e.stopPropagation()}
-                                    className="px-4 py-3"
-                                  >
-                                    {!pending && (
+                                  {!pending ? (
+                                    <div className="flex justify-center">
                                       <Checkbox
                                         checked={selectedFiles.has(file.$id)}
                                         onCheckedChange={() =>
                                           toggleFile(file.$id)
                                         }
+                                        onClick={(e) => e.stopPropagation()}
                                       />
-                                    )}
-                                  </TableCell>
-                                  <TableCell className="px-4 py-3">
-                                    {pending ? (
-                                      <StorageFilePreviewThumb
-                                        projectId={projectId!}
-                                        bucketId={bucketId!}
-                                        fileId={file.$id}
-                                        mimeType={file.mimeType}
-                                        name={file.name}
-                                        variant="table"
-                                        pending={pending}
-                                      />
-                                    ) : (
-                                      <Link
-                                        to="/projects/$projectId/storage/$bucketId/files/$fileId"
-                                        params={fileLinkParams}
-                                        className="block"
-                                      >
-                                        <StorageFilePreviewThumb
-                                          projectId={projectId!}
-                                          bucketId={bucketId!}
-                                          fileId={file.$id}
-                                          mimeType={file.mimeType}
-                                          name={file.name}
-                                          variant="table"
-                                          pending={pending}
-                                        />
-                                      </Link>
-                                    )}
-                                  </TableCell>
-                                  <TableCell className="px-4 py-3">
-                                    {pending ? (
-                                      <div className="flex items-center gap-3 min-w-0">
-                                        <div className="flex-1 min-w-0">
-                                          <p className="truncate text-[13px] font-medium text-foreground">
-                                            {file.name}
-                                          </p>
-                                          <div className="mt-0.5">
-                                            <CopyableId
-                                              id={file.$id}
-                                              size="xs"
-                                            />
-                                          </div>
-                                        </div>
-                                        <Badge
-                                          variant="secondary"
-                                          className="text-[11px] font-medium border px-2 py-0.5 shrink-0"
-                                        >
-                                          Pending
-                                        </Badge>
-                                      </div>
-                                    ) : (
-                                      <Link
-                                        to="/projects/$projectId/storage/$bucketId/files/$fileId"
-                                        params={fileLinkParams}
-                                        className="block group"
-                                      >
-                                        <div className="flex items-center gap-3 min-w-0">
-                                          <div className="flex-1 min-w-0">
-                                            <p className="truncate text-[13px] font-medium text-foreground group-hover:text-primary transition-colors">
-                                              {file.name}
-                                            </p>
-                                            <div className="mt-0.5">
-                                              <CopyableId
-                                                id={file.$id}
-                                                size="xs"
-                                              />
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </Link>
-                                    )}
-                                  </TableCell>
-                                  <TableCell className="px-4 py-3">
-                                    {pending ? (
-                                      <span className="text-[12px] text-muted-foreground font-mono">
-                                        {file.mimeType || '-'}
-                                      </span>
-                                    ) : (
-                                      <Link
-                                        to="/projects/$projectId/storage/$bucketId/files/$fileId"
-                                        params={fileLinkParams}
-                                        className="block"
-                                      >
-                                        <span className="text-[12px] text-muted-foreground font-mono">
-                                          {file.mimeType || '-'}
-                                        </span>
-                                      </Link>
-                                    )}
-                                  </TableCell>
-                                  <TableCell className="px-4 py-3">
-                                    {pending ? (
-                                      <span className="text-[12px] text-muted-foreground font-mono text-right block">
-                                        {formatBytes(file.sizeOriginal)}
-                                      </span>
-                                    ) : (
-                                      <Link
-                                        to="/projects/$projectId/storage/$bucketId/files/$fileId"
-                                        params={fileLinkParams}
-                                        className="block text-right"
-                                      >
-                                        <span className="text-[12px] text-muted-foreground font-mono">
-                                          {formatBytes(file.sizeOriginal)}
-                                        </span>
-                                      </Link>
-                                    )}
-                                  </TableCell>
-                                  <TableCell className="px-4 py-3">
-                                    {pending ? (
-                                      <DateTooltip
-                                        date={new Date(file.$createdAt)}
-                                        className="text-[12px] text-muted-foreground font-mono text-right block"
-                                      />
-                                    ) : (
-                                      <Link
-                                        to="/projects/$projectId/storage/$bucketId/files/$fileId"
-                                        params={fileLinkParams}
-                                        className="block text-right"
-                                      >
-                                        <DateTooltip
-                                          date={new Date(file.$createdAt)}
-                                          className="text-[12px] text-muted-foreground font-mono"
-                                        />
-                                      </Link>
-                                    )}
-                                  </TableCell>
-                                </TableRow>
-                              </FileContextMenu>
-                            )
-                          })}
-                        </TableBody>
-                      </Table>
-                    </div>
-                    <Pagination
-                      currentPage={displayedPage}
-                      totalItems={filesTotal}
-                      pageSize={urlLimit}
-                      pageSizeOptions={[12, 18, 36, 72]}
-                      onPageChange={handlePageChange}
-                      onPageSizeChange={handlePageSizeChange}
-                      itemLabel="files"
-                    />
-                  </>
-                ) : (
-                  <EmptyState
-                    icon={File}
-                    title={
-                      urlSearch || filterMap.size > 0
-                        ? undefined
-                        : 'No files found'
-                    }
-                    description={
-                      urlSearch || filterMap.size > 0
-                        ? undefined
-                        : 'Upload your first file to this bucket'
-                    }
-                    isEmpty={!urlSearch && filterMap.size === 0}
-                    hasFilters={!!urlSearch || filterMap.size > 0}
-                    variant="card"
-                  />
-                )
-              ) : (
-                <div>
-                  {files.length > 0 ? (
-                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                      {files.map((file) => {
-                        const pending = isFilePending(file)
-                        return (
-                          <FileContextMenu
-                            key={file.$id}
-                            projectId={projectId!}
-                            bucketId={bucketId!}
-                            file={{ id: file.$id, name: file.name, pending }}
-                          >
-                            <div
-                              className={cn(
-                                'group cursor-pointer overflow-hidden rounded-lg border border-border bg-card transition-all hover:border-primary/30',
-                                pending && 'opacity-75',
-                              )}
-                              onClick={() => {
-                                if (!pending) {
-                                  navigate({
-                                    to: '/projects/$projectId/storage/$bucketId/files/$fileId',
-                                    params: {
-                                      projectId: projectId!,
-                                      bucketId: bucketId!,
-                                      fileId: file.$id,
-                                    },
-                                  })
-                                }
-                              }}
-                            >
-                              <StorageFilePreviewThumb
-                                projectId={projectId!}
-                                bucketId={bucketId!}
-                                fileId={file.$id}
-                                mimeType={file.mimeType}
-                                name={file.name}
-                                variant="grid"
-                                pending={pending}
-                              />
-                              {/* File info */}
-                              <div className="p-3">
-                                <div className="flex items-start justify-between gap-2">
-                                  <div className="min-w-0 flex-1">
-                                    <p className="truncate text-[13px] font-medium text-foreground">
+                                    </div>
+                                  ) : null}
+                                </td>
+                                <td
+                                  className={cn(
+                                    'w-[180px] px-3 py-1.5',
+                                    STORAGE_SPREADSHEET_BODY_CELL_BORDER,
+                                  )}
+                                >
+                                  {!pending ? (
+                                    <CopyableId id={file.$id} size="xs" />
+                                  ) : (
+                                    <span className="text-[12px] text-muted-foreground">
+                                      —
+                                    </span>
+                                  )}
+                                </td>
+                                <td
+                                  className={cn(
+                                    'max-w-0 px-3 py-1.5',
+                                    STORAGE_SPREADSHEET_BODY_CELL_BORDER,
+                                  )}
+                                >
+                                  <div className="flex min-w-0 items-center gap-2">
+                                    <span className="min-w-0 flex-1 truncate text-[12px] font-medium text-foreground">
                                       {file.name}
-                                    </p>
-                                    <p className="text-[12px] text-muted-foreground">
-                                      {file.mimeType}
-                                    </p>
-                                  </div>
-                                </div>
-                                <div className="mt-2 flex items-center gap-3 text-[12px] text-muted-foreground">
-                                  <span>{formatBytes(file.sizeOriginal)}</span>
-                                  {pending && (
-                                    <>
-                                      <span>•</span>
+                                    </span>
+                                    {pending ? (
                                       <Badge
                                         variant="secondary"
-                                        className="text-[10px]"
+                                        className="shrink-0 text-[10px] font-medium"
                                       >
                                         Pending
                                       </Badge>
-                                    </>
+                                    ) : null}
+                                  </div>
+                                </td>
+                                <td
+                                  className={cn(
+                                    'px-3 py-1.5',
+                                    STORAGE_SPREADSHEET_BODY_CELL_BORDER,
                                   )}
-                                </div>
-                              </div>
-                            </div>
-                          </FileContextMenu>
-                        )
-                      })}
+                                >
+                                  <span className="block truncate font-mono text-[12px] text-muted-foreground">
+                                    {file.mimeType || '—'}
+                                  </span>
+                                </td>
+                                <td
+                                  className={cn(
+                                    'px-3 py-1.5 text-right',
+                                    STORAGE_SPREADSHEET_BODY_CELL_BORDER,
+                                  )}
+                                >
+                                  <span className="font-mono text-[12px] text-muted-foreground">
+                                    {formatBytes(file.sizeOriginal)}
+                                  </span>
+                                </td>
+                                <td
+                                  className={cn(
+                                    'w-[180px] px-3 py-1.5',
+                                    STORAGE_SPREADSHEET_BODY_CELL_BORDER,
+                                  )}
+                                >
+                                  {file.$createdAt ? (
+                                    <DateTooltip
+                                      date={new Date(file.$createdAt)}
+                                      className="text-[12px] text-muted-foreground"
+                                    />
+                                  ) : (
+                                    <span className="text-[12px] text-foreground/60">
+                                      N/A
+                                    </span>
+                                  )}
+                                </td>
+                                <td
+                                  className={cn(
+                                    'w-[180px] px-3 py-1.5',
+                                    STORAGE_SPREADSHEET_BODY_CELL_BORDER_LAST,
+                                  )}
+                                >
+                                  {file.$updatedAt ? (
+                                    <DateTooltip
+                                      date={new Date(file.$updatedAt)}
+                                      className="text-[12px] text-muted-foreground"
+                                    />
+                                  ) : (
+                                    <span className="text-[12px] text-foreground/60">
+                                      N/A
+                                    </span>
+                                  )}
+                                </td>
+                              </tr>
+                            </FileContextMenu>
+                          )
+                        })}
+                      </tbody>
+                    </table>
                     </div>
-                  ) : (
-                    <div>
-                      <EmptyState
-                        icon={File}
-                        title={
-                          urlSearch || filterMap.size > 0
-                            ? undefined
-                            : 'No files found'
-                        }
-                        description={
-                          urlSearch || filterMap.size > 0
-                            ? undefined
-                            : 'Upload your first file to this bucket'
-                        }
-                        isEmpty={!urlSearch && filterMap.size === 0}
-                        hasFilters={!!urlSearch || filterMap.size > 0}
-                        variant="card"
+                    <div className="shrink-0 border-t border-border bg-background px-3 py-2">
+                      <Pagination
+                        currentPage={displayedPage}
+                        totalItems={filesTotal}
+                        pageSize={urlLimit}
+                        pageSizeOptions={[10, 25, 50, 100]}
+                        onPageChange={handlePageChange}
+                        onPageSizeChange={handlePageSizeChange}
+                        itemLabel="files"
+                        className="mt-0 min-h-0 border-0 py-0"
                       />
-                      {(urlSearch || filterMap.size > 0) && (
-                        <div className="mt-4 text-center">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setSearchInput('')
-                              navigate({
-                                to: '/projects/$projectId/storage/$bucketId/',
-                                params: {
-                                  projectId: projectId!,
-                                  bucketId: bucketId!,
-                                },
-                                search: (prev: Record<string, unknown>) => {
-                                  const next = { ...prev } as Record<
-                                    string,
-                                    unknown
-                                  >
-                                  next.limit = urlLimit
-                                  delete next.search
-                                  delete next.query
-                                  delete next.page
-                                  return next
-                                },
-                                replace: true,
-                              })
-                            }}
-                          >
-                            Clear search and filters
-                          </Button>
-                        </div>
-                      )}
                     </div>
-                  )}
-                  {files.length > 0 && (
-                    <Pagination
-                      currentPage={displayedPage}
-                      totalItems={filesTotal}
-                      pageSize={urlLimit}
-                      pageSizeOptions={[12, 18, 36, 72]}
-                      onPageChange={handlePageChange}
-                      onPageSizeChange={handlePageSizeChange}
-                      itemLabel="files"
+                  </div>
+                  <div
+                    className={cn(
+                      'flex min-h-0 min-w-0 flex-1 flex-col bg-muted/10',
+                      isFilesStackedLayout
+                        ? 'min-h-[min(46dvh,360px)]'
+                        : 'border-l border-border',
+                    )}
+                    style={
+                      !isFilesStackedLayout
+                        ? { minWidth: STORAGE_FILES_PREVIEW_PANE_MIN_PX }
+                        : undefined
+                    }
+                  >
+                    <FileInspectorPanel
+                      projectId={projectId!}
+                      bucketId={bucketId!}
+                      fileId={inspectorFileId}
+                      panelTab={
+                        search?.filePanel === 'overview' ||
+                        search?.filePanel === 'security'
+                          ? search.filePanel
+                          : undefined
+                      }
                     />
-                  )}
+                  </div>
+                  {useInlineFilePreviewPane && !isFilesStackedLayout ? (
+                    <button
+                      type="button"
+                      aria-label="Resize file table and preview"
+                      aria-orientation="vertical"
+                      role="separator"
+                      tabIndex={0}
+                      style={{ left: fileTablePaneWidthPx }}
+                      onKeyDown={(e) => {
+                        const splitEl = filesSplitContainerRef.current
+                        if (!splitEl) return
+                        const maxTable = Math.max(
+                          STORAGE_FILES_TABLE_PANE_MIN_PX,
+                          splitEl.clientWidth -
+                            STORAGE_FILES_PREVIEW_PANE_MIN_PX,
+                        )
+                        const step = 24
+                        if (e.key === 'ArrowLeft') {
+                          e.preventDefault()
+                          setFileTablePaneWidthPx((w) => {
+                            const next = Math.max(
+                              STORAGE_FILES_TABLE_PANE_MIN_PX,
+                              w - step,
+                            )
+                            fileTablePaneWidthRef.current = next
+                            localStorage.setItem(
+                              STORAGE_FILES_TABLE_PANE_WIDTH_STORAGE_KEY,
+                              String(next),
+                            )
+                            return next
+                          })
+                        } else if (e.key === 'ArrowRight') {
+                          e.preventDefault()
+                          setFileTablePaneWidthPx((w) => {
+                            const next = Math.min(maxTable, w + step)
+                            fileTablePaneWidthRef.current = next
+                            localStorage.setItem(
+                              STORAGE_FILES_TABLE_PANE_WIDTH_STORAGE_KEY,
+                              String(next),
+                            )
+                            return next
+                          })
+                        }
+                      }}
+                      className={cn(
+                        'absolute top-0 bottom-0 z-30 w-1.5 -translate-x-1/2 cursor-col-resize border-0 bg-transparent p-0 outline-none transition-colors hover:bg-primary/20 dark:hover:bg-sidebar-accent/60',
+                        isFilesSplitResizing &&
+                          'bg-primary/30 dark:bg-sidebar-accent/70',
+                        'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
+                      )}
+                      onPointerDown={handleFilesSplitPointerDown}
+                    />
+                  ) : null}
                 </div>
-              )}
 
-              {/* Bulk Delete Action Bar - shown for both list and grid when files selected */}
-              {selectedFiles.size > 0 && (
-                <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
-                  <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
-                    <Badge variant="secondary" className="h-6 px-2.5">
-                      {selectedFiles.size} file
-                      {selectedFiles.size > 1 ? 's' : ''} selected
-                    </Badge>
-                    <div className="flex items-center gap-2">
+                {selectedFiles.size > 0 && (
+                  <div className="fixed bottom-4 left-1/2 z-50 w-[min(100%,calc(100vw-2rem))] max-w-md -translate-x-1/2 px-2 sm:px-0 sm:w-auto sm:max-w-none">
+                    <div className="mx-auto flex min-w-0 items-center justify-between gap-2 rounded-lg border border-border bg-background px-4 py-3 sm:min-w-[400px] sm:gap-3 sm:px-6">
+                      <Badge variant="secondary" className="h-6 px-2.5">
+                        {selectedFiles.size} file
+                        {selectedFiles.size > 1 ? 's' : ''} selected
+                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setSelectedFiles(new Set())}
+                          className="h-8 text-xs"
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={handleBulkDelete}
+                          disabled={bulkDeleteMutation.isPending}
+                          className="h-8 gap-2"
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <Dialog
+                  open={deleteDialogOpen}
+                  onOpenChange={setDeleteDialogOpen}
+                >
+                  <DialogContent className="sm:max-w-md p-0">
+                    <DialogHeader className="px-6 pt-6 text-left">
+                      <DialogTitle>Delete Files</DialogTitle>
+                      <DialogDescription className="mt-2 text-[13px]">
+                        Are you sure you want to delete {selectedFiles.size} file
+                        {selectedFiles.size > 1 ? 's' : ''}? This action cannot be
+                        undone.
+                      </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="flex flex-col-reverse gap-2 border-t border-border bg-muted/30 px-6 py-4 sm:flex-row sm:justify-end">
                       <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setSelectedFiles(new Set())}
-                        className="h-8 text-xs"
+                        variant="outline"
+                        onClick={() => setDeleteDialogOpen(false)}
+                        disabled={bulkDeleteMutation.isPending}
                       >
                         Cancel
                       </Button>
                       <Button
                         variant="destructive"
-                        size="sm"
-                        onClick={handleBulkDelete}
+                        onClick={confirmBulkDelete}
                         disabled={bulkDeleteMutation.isPending}
-                        className="h-8 gap-2"
                       >
                         Delete
                       </Button>
                     </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Bulk Delete Confirmation Dialog */}
-              <Dialog
-                open={deleteDialogOpen}
-                onOpenChange={setDeleteDialogOpen}
-              >
-                <DialogContent className="sm:max-w-md p-0">
-                  <DialogHeader className="px-6 pt-6 text-left">
-                    <DialogTitle>Delete Files</DialogTitle>
-                    <DialogDescription className="text-[13px] mt-2">
-                      Are you sure you want to delete {selectedFiles.size} file
-                      {selectedFiles.size > 1 ? 's' : ''}? This action cannot be
-                      undone.
-                    </DialogDescription>
-                  </DialogHeader>
-
-                  <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                    <Button
-                      variant="outline"
-                      onClick={() => setDeleteDialogOpen(false)}
-                      disabled={bulkDeleteMutation.isPending}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      onClick={confirmBulkDelete}
-                      disabled={bulkDeleteMutation.isPending}
-                    >
-                      Delete
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </>
+                  </DialogContent>
+                </Dialog>
+              </>
+            )}
           </div>
         )}
 
-        {activeTab === 'security' && <BucketSecurity />}
-
-        {activeTab === 'settings' && <BucketSettings />}
+        {(activeTab === 'security' || activeTab === 'settings') && (
+          <div className="flex w-full flex-1 min-h-0 flex-col overflow-y-auto">
+            {activeTab === 'security' && <BucketSecurity />}
+            {activeTab === 'settings' && <BucketSettings />}
+          </div>
+        )}
       </div>
 
       <UploadFile

@@ -61,6 +61,11 @@ interface WizardLayoutProps {
    * Use e.g. `pl-6` only when the right edge should be flush with the viewport.
    */
   fullscreenContentXClassName?: string
+  /**
+   * When true, skips auto-focusing the first focusable field on mount.
+   * Use for wizards where another region (e.g. a canvas) should receive initial focus.
+   */
+  skipInitialFieldFocus?: boolean
 }
 
 /**
@@ -113,14 +118,16 @@ export function WizardLayout({
   contentWrapperClassName,
   fullscreenInnerClassName,
   fullscreenContentXClassName,
+  skipInitialFieldFocus = false,
 }: WizardLayoutProps) {
   // Use smart navigation hook for consistent back behavior
   // Navigation priority: fallbackPath (if provided) > browser history > root
   const smartGoBack = useSmartNavigation({ fallbackPath })
   const contentRef = useRef<HTMLDivElement>(null)
 
-  // Focus the first input when the wizard opens
+  // Focus the first input when the wizard opens (unless skipped for canvas-first wizards)
   useEffect(() => {
+    if (skipInitialFieldFocus) return
     const timer = requestAnimationFrame(() => {
       const el = contentRef.current?.querySelector<
         HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -130,7 +137,7 @@ export function WizardLayout({
       el?.focus()
     })
     return () => cancelAnimationFrame(timer)
-  }, [])
+  }, [skipInitialFieldFocus])
 
   /**
    * Handle wizard close: use custom onClose or smart navigation
@@ -202,15 +209,21 @@ export function WizardLayout({
     : 'flex h-full flex-col'
 
   const headerClasses = fullscreen
-    ? 'shrink-0 border-b border-border/30 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80'
-    : 'border-b border-border/30 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80'
+    ? cn(
+        'shrink-0 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80',
+        !headerBottom && 'border-b border-border',
+      )
+    : cn(
+        'bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80',
+        !headerBottom && 'border-b border-border/30',
+      )
 
   const contentWrapperClasses = fullscreen
     ? cn('flex-1 min-h-0 overflow-y-auto', contentWrapperClassName)
     : 'mx-auto w-full max-w-7xl flex-1 overflow-y-auto px-4 pb-4 sm:px-6 sm:pb-6'
 
   const footerClasses = fullscreen
-    ? 'shrink-0 border-t border-border/30 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80'
+    ? 'shrink-0 border-t border-border bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80'
     : 'border-t border-border/30 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 px-4 py-4 sm:px-6'
 
   const wizardContent = (
@@ -222,6 +235,8 @@ export function WizardLayout({
           <div
             className={cn(
               'h-14 flex items-center shrink-0',
+              headerBottom &&
+                (fullscreen ? 'border-b border-border' : 'border-b border-border/30'),
               fullscreen ? 'px-6' : 'px-4 @[1000px]:px-6',
             )}
           >
@@ -282,7 +297,16 @@ export function WizardLayout({
           </div>
         </div>
         {/* Full-bleed below title row; background can span 100% of wizard width */}
-        {headerBottom && <div className="w-full">{headerBottom}</div>}
+        {headerBottom && (
+          <div
+            className={cn(
+              'w-full border-b shadow-none',
+              fullscreen ? 'border-border' : 'border-border/30',
+            )}
+          >
+            {headerBottom}
+          </div>
+        )}
       </div>
 
       {/* Main Content */}

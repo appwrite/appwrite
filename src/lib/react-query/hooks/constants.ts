@@ -43,6 +43,13 @@ export const CREATE_FUNCTION_WIZARD_BROWSE_LIMIT = 48
 export const ROWS_DEFAULT_PAGE_SIZE = 25
 
 /**
+ * Storage file inspector: first page of file tokens (permissions tab).
+ * Must match `FileSecurity` default page size, `fileTokensQueryOptions`, and the bucket
+ * files route loader prefetch so the inspector mounts without a loading flash.
+ */
+export const FILE_TOKENS_DEFAULT_PAGE_SIZE = 25
+
+/**
  * Table workspace: first-page tables list (header, TableSelector, rows loaders,
  * Export / Import tab). Same limit as database child route `TABLES_PER_PAGE` prefetch.
  * Must match `useProjectTables` in per-product table workspaces and export-import route loader.

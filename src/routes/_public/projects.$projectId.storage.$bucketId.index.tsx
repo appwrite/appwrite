@@ -1,8 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { z } from 'zod'
 import { View } from '@/components/pages/projects/$projectId/storage/$bucketId/View'
 import {
   fetchBucket,
   bucketFilesQueryOptions,
+  fileQueryOptions,
+  fileTokensQueryOptions,
   FILES_DEFAULT_SORT_BY,
   FILES_DEFAULT_SORT_ORDER,
 } from '@/lib/react-query/hooks'
@@ -16,9 +19,14 @@ import {
   queryParamToMap,
 } from '@/lib/table-filters'
 import { pageTitle } from '@/lib/utils/page-title'
-import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { ROWS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 
 const DEFAULT_PAGE = 1
+
+const bucketFilesSearchSchema = listSearchSchema.extend({
+  file: z.string().optional().catch(undefined),
+  filePanel: z.enum(['overview', 'security']).optional().catch(undefined),
+})
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/storage/$bucketId/',
@@ -30,7 +38,7 @@ export const Route = createFileRoute(
       },
     ],
   }),
-  validateSearch: listSearchSchema,
+  validateSearch: bucketFilesSearchSchema,
   loader: async ({ params, context, location }) => {
     if (typeof window === 'undefined') return
 
@@ -39,9 +47,13 @@ export const Route = createFileRoute(
     if (!projectId || !bucketId) return
 
     const url = new URL(location.pathname + location.search, 'http://localhost')
+    const fileRaw = url.searchParams.get('file')
+    const fileId =
+      fileRaw && fileRaw.trim().length > 0 ? fileRaw.trim() : undefined
+
     const search = getSearch(url)
     const page = getPage(url, DEFAULT_PAGE)
-    const limit = getLimit(url, GRID_DEFAULT_PAGE_SIZE)
+    const limit = getLimit(url, ROWS_DEFAULT_PAGE_SIZE)
     const queryParam = getQueryParam(url)
     const filterMap = queryParamToMap(queryParam)
     const filterQueries =
@@ -69,6 +81,16 @@ export const Route = createFileRoute(
           sortOrder,
         ),
       ),
+      ...(fileId
+        ? [
+            queryClient.ensureQueryData(
+              fileQueryOptions(projectId, bucketId, fileId),
+            ),
+            queryClient.ensureQueryData(
+              fileTokensQueryOptions(projectId, bucketId, fileId, 0),
+            ),
+          ]
+        : []),
     ])
     return { bucket }
   },

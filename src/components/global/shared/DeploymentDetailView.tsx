@@ -1590,7 +1590,7 @@ export function DeploymentDetailView({
       headerBottom={
         <>
           {/* Metadata - Part of Header */}
-          <div className="border-y border-border bg-muted/20">
+          <div className="bg-muted/20">
             <div className="px-4 sm:px-6 py-3 sm:py-4">
               <div className="flex items-center gap-3 sm:gap-6 flex-wrap">
                 {/* Deployed */}

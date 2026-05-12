@@ -27,7 +27,7 @@ export function WizardProgress({ stage }: { stage: WizardStage }) {
     stage === 'platform' ? 0 : stage === 'details' ? 1 : 2
 
   return (
-    <div className="w-full border-t border-border/30 bg-muted/20">
+    <div className="w-full bg-muted/20">
       <div className="mx-auto w-full max-w-7xl px-6 py-3.5">
         <div className="flex w-full flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
           {STEPS.map((s, i) => {

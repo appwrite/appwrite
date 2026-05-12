@@ -79,10 +79,22 @@ export function BucketContextMenu({
   })
 
   const navigateToTab = (tab: string) => {
-    const base = `/projects/${projectId}/storage/${bucket.id}`
-    const path = tab === 'files' ? `${base}/` : `${base}/${tab}`
+    if (tab === 'files') {
+      navigate({
+        to: '/projects/$projectId/storage/$bucketId',
+        params: { projectId, bucketId: bucket.id },
+      })
+      return
+    }
+    if (tab === 'security') {
+      navigate({
+        to: '/projects/$projectId/storage/$bucketId/security',
+        params: { projectId, bucketId: bucket.id },
+      })
+      return
+    }
     navigate({
-      to: path as '/projects/$projectId/storage/$bucketId/',
+      to: '/projects/$projectId/storage/$bucketId/settings',
       params: { projectId, bucketId: bucket.id },
     })
   }

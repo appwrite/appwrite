@@ -96,12 +96,12 @@ export function UploadProgress({
                     upload.bucketId &&
                     upload.fileId && (
                       <Link
-                        to="/projects/$projectId/storage/$bucketId/files/$fileId"
+                        to="/projects/$projectId/storage/$bucketId"
                         params={{
                           projectId: upload.projectId,
                           bucketId: upload.bucketId,
-                          fileId: upload.fileId,
                         }}
+                        search={{ file: upload.fileId }}
                         className="inline-flex items-center gap-1 text-[12px] font-medium text-primary hover:underline"
                       >
                         View file

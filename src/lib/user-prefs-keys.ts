@@ -85,6 +85,72 @@ export function buildSavedFiltersPrefs(
 }
 
 // ---------------------------------------------------------------------------
+// Storage: image transform wizard — saved presets (account + team prefs)
+// ---------------------------------------------------------------------------
+
+/** Full key: `console.imageTransformPresets` — JSON SavedImageTransformPreset[] */
+export const USER_PREFS_KEY_IMAGE_TRANSFORM_PRESETS =
+  'console.imageTransformPresets'
+
+export const MAX_SAVED_IMAGE_TRANSFORM_PRESETS = 20
+export const MAX_SAVED_IMAGE_TRANSFORM_PRESET_NAME_LENGTH = 64
+/** Guardrail for prefs payload size */
+export const MAX_SAVED_IMAGE_TRANSFORM_PRESET_JSON_CHARS = 24000
+
+export interface SavedImageTransformPreset {
+  id: string
+  name: string
+  /** JSON string of transform fields (subset allowed; merged like Parameters JSON). */
+  json: string
+}
+
+export function parseSavedImageTransformPresets(
+  prefs: UserPrefs | null | undefined,
+): SavedImageTransformPreset[] {
+  if (!prefs || typeof prefs[USER_PREFS_KEY_IMAGE_TRANSFORM_PRESETS] !== 'string') {
+    return []
+  }
+  try {
+    const raw = JSON.parse(prefs[USER_PREFS_KEY_IMAGE_TRANSFORM_PRESETS] as string)
+    if (!Array.isArray(raw)) return []
+    return raw
+      .filter(
+        (item): item is SavedImageTransformPreset =>
+          item != null &&
+          typeof item === 'object' &&
+          typeof (item as SavedImageTransformPreset).id === 'string' &&
+          typeof (item as SavedImageTransformPreset).name === 'string' &&
+          typeof (item as SavedImageTransformPreset).json === 'string',
+      )
+      .map((item) => {
+        const p = item as SavedImageTransformPreset
+        const json =
+          typeof p.json === 'string'
+            ? p.json.slice(0, MAX_SAVED_IMAGE_TRANSFORM_PRESET_JSON_CHARS)
+            : ''
+        return {
+          id: p.id,
+          name: String(p.name).slice(0, MAX_SAVED_IMAGE_TRANSFORM_PRESET_NAME_LENGTH),
+          json,
+        }
+      })
+      .slice(0, MAX_SAVED_IMAGE_TRANSFORM_PRESETS)
+  } catch {
+    return []
+  }
+}
+
+export function buildSavedImageTransformPresetsPrefs(
+  list: SavedImageTransformPreset[],
+): UserPrefs {
+  return {
+    [USER_PREFS_KEY_IMAGE_TRANSFORM_PRESETS]: JSON.stringify(
+      list.slice(0, MAX_SAVED_IMAGE_TRANSFORM_PRESETS),
+    ),
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Databases: tables sidebar width (single shared setting across all databases)
 // ---------------------------------------------------------------------------
 
