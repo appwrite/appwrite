@@ -160,7 +160,7 @@ class Create extends Action
         $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
 
         if (!$fileExt->isValid($file['name'])) { // Check if file type is allowed
-            throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED);
+            throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, 'Only gzip compressed files (.tar.gz) are accepted for site deployments.');
         }
 
         $contentRange = $request->getHeader('content-range');
@@ -356,15 +356,18 @@ class Create extends Action
                     ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
                     ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
                 $dbForProject->updateDocument('sites', $site->getId(), new Document([
-                    'latestDeploymentId' => $site->getAttribute('latestDeploymentId'),
-                    'latestDeploymentInternalId' => $site->getAttribute('latestDeploymentInternalId'),
-                    'latestDeploymentCreatedAt' => $site->getAttribute('latestDeploymentCreatedAt'),
-                    'latestDeploymentStatus' => $site->getAttribute('latestDeploymentStatus'),
+                    'latestDeploymentId' => $deployment->getId(),
+                    'latestDeploymentInternalId' => $deployment->getSequence(),
+                    'latestDeploymentCreatedAt' => $deployment->getCreatedAt(),
+                    'latestDeploymentStatus' => $deployment->getAttribute('status', ''),
                 ]));
 
                 $sitesDomain = $platform['sitesDomain'];
                 $domain = ID::unique() . "." . $sitesDomain;
-                $ruleId = md5($domain);
+
+                // TODO: (@Meldiron) Remove after 1.7.x migration
+                $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
+                $ruleId = $isMd5 ? md5($domain) : ID::unique();
                 $authorization->skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
