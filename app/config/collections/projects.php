@@ -2815,7 +2815,6 @@ return [
                 'array' => false,
                 'filters' => [],
             ],
-            // TODO: the current pod? Shall we make it the region? instead of the hostname? So that when its restarted it can delete all the presence?
             [
                 '$id' => ID::custom('hostname'),
                 'type' => Database::VAR_STRING,

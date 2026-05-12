@@ -69,9 +69,14 @@ class PresenceState
 
         try {
             if ($dbForProject->getAdapter()->getSupportForUpsertOnUniqueIndex()) {
-                // $id will not be updated if new id provided. id is always stable
+                // in v2 use permsmd5 in the queries as well to find the doc
+                $existingPresence = $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userInternalId', [$userInternalId])]);
+                if ($existingPresence->isEmpty()) {
+                    $presenceCreated = true;
+                } else {
+                    $presenceDocument->setAttribute('$id', $existingPresence->getId());
+                }
                 $presence = $dbForProject->upsertDocument(self::COLLECTION_ID, $presenceDocument);
-                $presenceCreated = $presence->getCreatedAt() === $presence->getUpdatedAt();
             } else {
                 $presence = $this->transactionalUpsertForUser(
                     $dbForProject,

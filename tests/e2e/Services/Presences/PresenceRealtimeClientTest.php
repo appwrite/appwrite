@@ -342,7 +342,9 @@ class PresenceRealtimeClientTest extends Scope
                 $secondMetadata,
                 $this->getPresencePermissions(Role::any())
             );
-            $this->collectPresenceOutcome($publisher, $secondPresenceId, 'busy', $secondMetadata, $user['$id']);
+            // The server keeps one row per user keyed by userInternalId and anchors $id to the
+            // first claim, so the second upsert's response/event come back under $firstPresenceId.
+            $this->collectPresenceOutcome($publisher, $firstPresenceId, 'busy', $secondMetadata, $user['$id']);
 
             $list = $this->client->call(
                 Client::METHOD_GET,
@@ -543,12 +545,15 @@ class PresenceRealtimeClientTest extends Scope
                 $metadataOwner,
                 $this->getPresencePermissions(Role::user($user1['$id']))
             );
-            $this->collectPresenceOutcome($publisher, $presenceIdOwner, 'busy', $metadataOwner, $user1['$id']);
-            $this->receivePresenceEvent($listener1, $presenceIdOwner, 'upsert', 'busy', $metadataOwner, $user1['$id']);
+            // Same user, so the server reuses the original record's $id ($presenceIdAny);
+            // only permissions/status/metadata change — which is what permission routing should filter on.
+            $this->collectPresenceOutcome($publisher, $presenceIdAny, 'busy', $metadataOwner, $user1['$id']);
+            $this->receivePresenceEvent($listener1, $presenceIdAny, 'upsert', 'busy', $metadataOwner, $user1['$id']);
             $this->assertQuietFor(
                 $listener2,
                 fn (array $frame): bool => ($frame['type'] ?? null) === 'event'
-                    && ($frame['data']['payload']['$id'] ?? null) === $presenceIdOwner
+                    && ($frame['data']['payload']['$id'] ?? null) === $presenceIdAny
+                    && ($frame['data']['payload']['metadata']['visibility'] ?? null) === 'owner'
             );
         } finally {
             $publisher->close();
