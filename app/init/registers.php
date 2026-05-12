@@ -47,9 +47,8 @@ if (!Http::isProduction()) {
 }
 
 /**
- * Build a utopia/logger Logger from a logging DSN (`sentry://`, `logowl://`, `raygun://`,
- * `appsignal://`), or null when the config is empty/invalid. `$legacyProviderName` supplies the
- * provider name for the pre-1.5.x `;`-delimited config format (see the fallback below).
+ * Build a utopia/logger Logger from a logging DSN, or null when the config is empty/invalid.
+ * `$legacyProviderName` supplies the provider name for the pre-1.5.x `;`-delimited config format.
  */
 $createLogger = static function (string $providerConfig, string $legacyProviderName = ''): ?Logger {
     if (empty($providerConfig)) {
@@ -112,21 +111,19 @@ $register->set('logger', static fn () => $createLogger(
 ));
 
 $register->set('realtimeLogger', static function () use ($createLogger): ?Logger {
-    // Realtime falls back to the default logging config. When the provider is Sentry, Realtime errors
-    // are exported as spans to a dedicated project instead — app/init/realtime/span.php registers that
-    // exporter for the same `sentry` condition, so the Sentry logger is intentionally not built here.
-    // Keep the two in sync: building both would report every Realtime error to Sentry twice.
     $providerConfig = System::getEnv('_APP_LOGGING_CONFIG_REALTIME', '') ?: System::getEnv('_APP_LOGGING_CONFIG', '');
     if (empty($providerConfig)) {
         return null;
     }
 
+    // Sentry Realtime errors are exported as spans by app/init/realtime/span.php (same condition),
+    // not via utopia/logger — building both would report each error to Sentry twice.
     try {
         if ((new DSN($providerConfig))->getScheme() === 'sentry') {
             return null;
         }
     } catch (Throwable) {
-        // Not a DSN (legacy ;-delimited config) — let $createLogger handle it below.
+        // Legacy ;-delimited config, not a DSN; $createLogger handles it.
     }
 
     return $createLogger($providerConfig);

@@ -50,7 +50,6 @@ if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
     require_once __DIR__ . '/init/span.php';
 }
 
-// Routes Realtime errors to a dedicated Sentry project (see the file).
 require_once __DIR__ . '/init/realtime/span.php';
 
 /** @var Registry $register */
@@ -288,10 +287,7 @@ $adapter
 $server = new Server($adapter);
 
 if (!function_exists('recordRealtimeErrorSpan')) {
-    /**
-     * Attach a Realtime error to a span for export to the dedicated Sentry project — the
-     * active span if one exists, otherwise a short-lived `realtime.error` span.
-     */
+    /** Record a Realtime error onto the active span, or a short-lived `realtime.error` span if there is none. */
     function recordRealtimeErrorSpan(Throwable $error, string $action, array $tags, ?Document $project, ?Document $user, ?Authorization $authorization): void
     {
         $span = Span::current();
@@ -325,10 +321,7 @@ if (!function_exists('recordRealtimeErrorSpan')) {
 }
 
 if (!function_exists('pushRealtimeErrorLog')) {
-    /**
-     * Push a Realtime error to the utopia/logger provider — non-Sentry providers only
-     * (logOwl, Raygun, AppSignal); Sentry errors go through recordRealtimeErrorSpan().
-     */
+    /** Push a Realtime error to the utopia/logger provider — non-Sentry providers only; Sentry goes via recordRealtimeErrorSpan(). */
     function pushRealtimeErrorLog(Throwable $error, string $action, array $tags, ?Document $project, ?Document $user, ?Authorization $authorization): void
     {
         global $register;
