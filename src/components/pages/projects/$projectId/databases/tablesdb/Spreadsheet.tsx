@@ -35,11 +35,13 @@ import {
 import {
   useState,
   useEffect,
+  useLayoutEffect,
   useRef,
   useCallback,
   useMemo,
   type ReactNode,
 } from 'react'
+import { flushSync } from 'react-dom'
 import {
   DndContext,
   type DragEndEvent,
@@ -91,6 +93,7 @@ import { RowContextMenu } from '../_components/RowContextMenu'
 
 
 
+import { useAuth } from '@/components/global/auth/RequireAuth'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useIsMobile } from '@/hooks/use-mobile'
 import type { Models } from '@appwrite.io/console'
@@ -137,7 +140,12 @@ import {
   queryParamToMap,
 } from '@/lib/table-filters'
 import type { CompactFilterKey } from '@/lib/table-filters'
-import { useAuth } from '@/components/global/auth/RequireAuth'
+import {
+  deleteDatabaseTableRowColumnWidthsFromPrefs,
+  getDatabaseTableRowColumnWidthsFromPrefs,
+  mergeDatabaseTableRowColumnWidthsTableIntoPrefs,
+  type UserPrefs,
+} from '@/lib/user-prefs-keys'
 import {
   Tooltip,
   TooltipContent,
@@ -257,6 +265,21 @@ const DOCUMENTS_TABLE_PANE_MIN_PX = 260
 const DOCUMENTS_PREVIEW_PANE_MIN_PX = 280
 /** Checkbox + row-actions column width; documents list uses `table-fixed` so edges stay this size. */
 const ROWS_TABLE_EDGE_COL_PX = 40
+/** Default width for user-defined row columns (system columns use fixed layout). */
+const ROWS_DATA_COLUMN_DEFAULT_WIDTH_PX = 150
+const ROWS_DATA_COLUMN_MIN_WIDTH_PX = 72
+const ROWS_DATA_COLUMN_MAX_WIDTH_PX = 640
+/**
+ * Same affordance as database `TableViewResizableLayout` / functions editor
+ * `ResizableHandle`: hairline (`after`) + wider `before` strip on hover/drag.
+ * `w-2` hit area so the spine stays thin but remains easy to grab.
+ */
+const DATA_COLUMN_RESIZE_RAIL_HANDLE_CLASS = cn(
+  'group absolute top-0 bottom-0 z-[41] w-2 -translate-x-1/2 cursor-col-resize touch-none border-0 bg-transparent p-0 outline-none',
+  'after:pointer-events-none after:absolute after:inset-y-0 after:left-1/2 after:w-[0.5px] after:-translate-x-1/2 after:bg-border',
+  'before:pointer-events-none before:absolute before:inset-y-0 before:left-1/2 before:z-10 before:w-2 before:-translate-x-1/2 before:bg-border before:opacity-0 before:transition-opacity',
+  'hover:before:opacity-100',
+)
 
 function readStoredDocumentsTablePaneWidthPx(): number {
   if (typeof window === 'undefined') return 440
@@ -2889,6 +2912,8 @@ export function RowsSpreadsheet({
   const openCreateColumnFnRef = useRef<(() => void) | null>(null)
 
   const queryClient = useQueryClient()
+  const { account } = useAuth()
+  const organizationId = account?.prefs?.organization as string | undefined
   const navigate = useNavigate()
   const location = useLocation()
   const routeSearch = useSearch({ strict: false }) as
@@ -3202,6 +3227,260 @@ export function RowsSpreadsheet({
       : rows[0]
         ? Object.keys(rows[0].data)
         : []
+
+  const columnsRef = useRef(columns)
+  columnsRef.current = columns
+
+  const [rowColumnWidths, setRowColumnWidths] = useState<Record<string, number>>(
+    {},
+  )
+  const [resizingDataColumnKey, setResizingDataColumnKey] = useState<
+    string | null
+  >(null)
+  const rowColumnWidthsRef = useRef<Record<string, number>>({})
+  if (resizingDataColumnKey == null) {
+    rowColumnWidthsRef.current = rowColumnWidths
+  }
+  const rowsTableScrollRef = useRef<HTMLDivElement | null>(null)
+  const rowsTableLayerRef = useRef<HTMLDivElement | null>(null)
+  const dataColumnHeaderThRefs = useRef<Map<string, HTMLTableCellElement>>(
+    new Map(),
+  )
+  const dataColumnColRefs = useRef<Map<string, HTMLTableColElement>>(new Map())
+  const dataColumnRailRefs = useRef<Map<string, HTMLButtonElement>>(new Map())
+  const rowColumnWidthsLoadKeyRef = useRef<string | null>(null)
+
+  const getDataColumnWidthPx = useCallback(
+    (colKey: string) => {
+      const w = rowColumnWidths[colKey]
+      if (typeof w === 'number' && Number.isFinite(w)) {
+        return Math.min(
+          ROWS_DATA_COLUMN_MAX_WIDTH_PX,
+          Math.max(ROWS_DATA_COLUMN_MIN_WIDTH_PX, w),
+        )
+      }
+      return ROWS_DATA_COLUMN_DEFAULT_WIDTH_PX
+    },
+    [rowColumnWidths],
+  )
+
+  const repositionDataColumnRailsOnly = useCallback(() => {
+    const layer = rowsTableLayerRef.current
+    if (!layer) return
+    const layerRect = layer.getBoundingClientRect()
+    const cols = (columnsRef.current as string[]).filter(
+      (c) => typeof c === 'string' && c.length > 0 && !c.startsWith('$'),
+    )
+    for (const col of cols) {
+      const th = dataColumnHeaderThRefs.current.get(col)
+      const rail = dataColumnRailRefs.current.get(col)
+      if (!th || !rail) continue
+      rail.style.left = `${th.getBoundingClientRect().right - layerRect.left}px`
+    }
+  }, [])
+
+  const applyDraggedDataColumnWidthPx = useCallback(
+    (columnKey: string, widthPx: number) => {
+      const next = Math.min(
+        ROWS_DATA_COLUMN_MAX_WIDTH_PX,
+        Math.max(ROWS_DATA_COLUMN_MIN_WIDTH_PX, Math.round(widthPx)),
+      )
+      rowColumnWidthsRef.current = {
+        ...rowColumnWidthsRef.current,
+        [columnKey]: next,
+      }
+      const colEl = dataColumnColRefs.current.get(columnKey)
+      if (colEl) {
+        colEl.style.width = `${next}px`
+        colEl.style.minWidth = `${next}px`
+      }
+      const thEl = dataColumnHeaderThRefs.current.get(columnKey)
+      if (thEl) {
+        thEl.style.width = `${next}px`
+        thEl.style.minWidth = `${ROWS_DATA_COLUMN_MIN_WIDTH_PX}px`
+      }
+      repositionDataColumnRailsOnly()
+    },
+    [repositionDataColumnRailsOnly],
+  )
+
+  useEffect(() => {
+    if (!databaseId || !tableId) {
+      rowColumnWidthsLoadKeyRef.current = null
+      setRowColumnWidths({})
+      return
+    }
+    const loadKey = `${databaseId}:${tableId}`
+    const keyChanged = rowColumnWidthsLoadKeyRef.current !== loadKey
+    rowColumnWidthsLoadKeyRef.current = loadKey
+    let cancelled = false
+    if (keyChanged) {
+      setRowColumnWidths({})
+    }
+    void (async () => {
+      try {
+        const acct = await sdk.forConsole.account.get()
+        if (cancelled) return
+        const raw = getDatabaseTableRowColumnWidthsFromPrefs(
+          acct.prefs as UserPrefs | undefined,
+          databaseId,
+          tableId,
+        )
+        const next: Record<string, number> = {}
+        for (const [k, v] of Object.entries(raw)) {
+          if (!k || k.startsWith('$')) continue
+          const n = typeof v === 'number' ? v : Number(v)
+          if (!Number.isFinite(n)) continue
+          next[k] = Math.min(
+            ROWS_DATA_COLUMN_MAX_WIDTH_PX,
+            Math.max(ROWS_DATA_COLUMN_MIN_WIDTH_PX, n),
+          )
+        }
+        setRowColumnWidths(next)
+      } catch {
+        if (!cancelled) setRowColumnWidths({})
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [tableId, databaseId, account?.$id])
+
+  const persistRowColumnWidths = useCallback(
+    async (
+      widths: Record<string, number>,
+      allowedKeys: readonly string[],
+    ) => {
+      if (!databaseId) return
+      const allowed = new Set(
+        allowedKeys.filter((k) => k && typeof k === 'string' && !k.startsWith('$')),
+      )
+      const pruned: Record<string, number> = {}
+      for (const k of allowed) {
+        const w = widths[k]
+        if (typeof w === 'number' && Number.isFinite(w)) {
+          pruned[k] = Math.min(
+            ROWS_DATA_COLUMN_MAX_WIDTH_PX,
+            Math.max(ROWS_DATA_COLUMN_MIN_WIDTH_PX, w),
+          )
+        }
+      }
+      try {
+        const acct = await sdk.forConsole.account.get()
+        const prefs = mergeDatabaseTableRowColumnWidthsTableIntoPrefs(
+          (acct.prefs || {}) as UserPrefs,
+          databaseId,
+          tableId,
+          pruned,
+        )
+        await sdk.forConsole.account.updatePrefs({ prefs })
+        queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+      } catch {
+        /* preference save is best-effort */
+      }
+    },
+    [databaseId, tableId, queryClient],
+  )
+
+  const handleDataColumnResizePointerDown = useCallback(
+    (columnKey: string) => (e: React.PointerEvent<HTMLButtonElement>) => {
+      if (!columnKey || columnKey.startsWith('$')) return
+      e.preventDefault()
+      e.stopPropagation()
+      const btn = e.currentTarget
+      btn.setPointerCapture(e.pointerId)
+      const startX = e.clientX
+      const initialWidth = getDataColumnWidthPx(columnKey)
+      flushSync(() => {
+        setResizingDataColumnKey(columnKey)
+      })
+      applyDraggedDataColumnWidthPx(columnKey, initialWidth)
+      const onMove = (ev: PointerEvent) => {
+        const delta = ev.clientX - startX
+        applyDraggedDataColumnWidthPx(columnKey, initialWidth + delta)
+      }
+      const onUp = () => {
+        try {
+          btn.releasePointerCapture(e.pointerId)
+        } catch {
+          /* already released */
+        }
+        window.removeEventListener('pointermove', onMove)
+        window.removeEventListener('pointerup', onUp)
+        window.removeEventListener('pointercancel', onUp)
+        flushSync(() => {
+          setResizingDataColumnKey(null)
+          setRowColumnWidths({ ...rowColumnWidthsRef.current })
+        })
+        void persistRowColumnWidths(
+          rowColumnWidthsRef.current,
+          columnsRef.current as string[],
+        )
+      }
+      window.addEventListener('pointermove', onMove)
+      window.addEventListener('pointerup', onUp)
+      window.addEventListener('pointercancel', onUp)
+    },
+    [
+      applyDraggedDataColumnWidthPx,
+      getDataColumnWidthPx,
+      persistRowColumnWidths,
+    ],
+  )
+
+  useEffect(() => {
+    if (!resizingDataColumnKey) return
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+    return () => {
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+    }
+  }, [resizingDataColumnKey])
+
+  const columnResizeLayoutKey = (columns as string[])
+    .map((c) => String(c))
+    .join('\u0001')
+
+  useLayoutEffect(() => {
+    const scroll = rowsTableScrollRef.current
+    const layer = rowsTableLayerRef.current
+    if (!scroll || !layer) {
+      return
+    }
+
+    const resizableCols = (columns as string[]).filter(
+      (c) => typeof c === 'string' && c.length > 0 && !c.startsWith('$'),
+    )
+    if (resizableCols.length === 0) {
+      return
+    }
+
+    const measure = () => {
+      repositionDataColumnRailsOnly()
+    }
+
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(scroll)
+    ro.observe(layer)
+    scroll.addEventListener('scroll', measure, { passive: true })
+    window.addEventListener('resize', measure)
+    return () => {
+      ro.disconnect()
+      scroll.removeEventListener('scroll', measure)
+      window.removeEventListener('resize', measure)
+    }
+    // columnResizeLayoutKey tracks column set; rowColumnWidths / scroll / resize drive layout.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- columns array identity changes every render
+  }, [
+    columnResizeLayoutKey,
+    rowColumnWidths,
+    hideSequenceColumn,
+    useInlineDocumentPane,
+    apiColumns.length,
+    repositionDataColumnRailsOnly,
+  ])
 
   const toggleRow = (id: string) => {
     const newSelected = new Set(selectedRows)
@@ -4110,6 +4389,7 @@ export function RowsSpreadsheet({
         )}
       >
         <div
+          ref={rowsTableScrollRef}
           style={
             useInlineDocumentPane && !isDocumentsStackedLayout
               ? { width: documentTablePaneWidthPx }
@@ -4149,10 +4429,14 @@ export function RowsSpreadsheet({
               />
             </div>
           ) : (
+          <div
+            ref={rowsTableLayerRef}
+            className="relative inline-block min-w-full align-top"
+          >
           <table
             className={cn(
               'w-full border-collapse',
-              useInlineDocumentPane && 'table-fixed',
+              (useInlineDocumentPane || columns.length > 0) && 'table-fixed',
             )}
           >
           <colgroup>
@@ -4177,9 +4461,30 @@ export function RowsSpreadsheet({
                   : { width: '180px' }
               }
             />
-            {columns.map((col: string, index: number) => (
-              <col key={`col-${col}-${index}`} style={{ minWidth: '150px' }} />
-            ))}
+            {columns.map((col: string, index: number) => {
+              const w =
+                typeof col === 'string' && !col.startsWith('$')
+                  ? getDataColumnWidthPx(col)
+                  : ROWS_DATA_COLUMN_DEFAULT_WIDTH_PX
+              const isDragResize =
+                typeof col === 'string' &&
+                !col.startsWith('$') &&
+                resizingDataColumnKey === col
+              return (
+                <col
+                  key={`col-${col}-${index}`}
+                  ref={(node) => {
+                    if (typeof col === 'string' && !col.startsWith('$')) {
+                      if (node) dataColumnColRefs.current.set(col, node)
+                      else dataColumnColRefs.current.delete(col)
+                    }
+                  }}
+                  style={
+                    isDragResize ? undefined : { width: w, minWidth: w }
+                  }
+                />
+              )
+            })}
             <col style={{ width: '180px' }} />
             <col style={{ width: '180px' }} />
             <col
@@ -4265,23 +4570,39 @@ export function RowsSpreadsheet({
                 })
                 const columnType = columnInfo?.type || 'string'
                 const ColumnIcon = getColumnIcon(columnType)
+                const isDragResize =
+                  typeof col === 'string' &&
+                  !col.startsWith('$') &&
+                  resizingDataColumnKey === col
                 return (
                   <th
                     key={col}
-                    className={cn(
-                      'min-w-[150px] px-3 py-2',
-                      headerCellBorderClass,
-                    )}
+                    ref={(node) => {
+                      if (node) {
+                        dataColumnHeaderThRefs.current.set(col, node)
+                      } else {
+                        dataColumnHeaderThRefs.current.delete(col)
+                      }
+                    }}
+                    className={cn('px-3 py-2', headerCellBorderClass)}
+                    style={
+                      isDragResize
+                        ? undefined
+                        : {
+                            width: getDataColumnWidthPx(col),
+                            minWidth: ROWS_DATA_COLUMN_MIN_WIDTH_PX,
+                          }
+                    }
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex min-w-0 items-center gap-2 pr-1.5">
                       <ColumnIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                      <span className="text-[12px] font-medium text-foreground">
+                      <span className="min-w-0 truncate text-[12px] font-medium text-foreground">
                         {col}
                       </span>
                       <button
                         type="button"
                         onClick={() => handleSortColumn(col)}
-                        className="ml-auto cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        className="ml-auto shrink-0 cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                       >
                         {sortBy === col ? (
                           sortOrder === 'asc' ? (
@@ -4508,7 +4829,7 @@ export function RowsSpreadsheet({
                         return (
                           <span
                             className={cn(
-                              'block max-w-[220px] truncate whitespace-nowrap text-[12px]',
+                              'block min-w-0 max-w-full truncate whitespace-nowrap text-[12px]',
                               isNull ? 'text-foreground/60' : 'text-foreground',
                             )}
                             title={full}
@@ -4639,6 +4960,34 @@ export function RowsSpreadsheet({
             })}
           </tbody>
         </table>
+            {(columns as string[])
+              .filter(
+                (c): c is string =>
+                  typeof c === 'string' && c.length > 0 && !c.startsWith('$'),
+              )
+              .map((col) => {
+                return (
+                  <button
+                    key={`col-resize-rail-${col}`}
+                    ref={(node) => {
+                      if (node) dataColumnRailRefs.current.set(col, node)
+                      else dataColumnRailRefs.current.delete(col)
+                    }}
+                    type="button"
+                    aria-label={`Resize ${col} column width`}
+                    aria-orientation="vertical"
+                    role="separator"
+                    tabIndex={0}
+                    onPointerDown={handleDataColumnResizePointerDown(col)}
+                    className={cn(
+                      DATA_COLUMN_RESIZE_RAIL_HANDLE_CLASS,
+                      resizingDataColumnKey === col && 'before:opacity-100',
+                      'focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
+                    )}
+                  />
+                )
+              })}
+          </div>
           )}
         </div>
         {useInlineDocumentPane ? (
@@ -7669,7 +8018,23 @@ export function TableSettings({
       return await deleteProjectTable(projectId, databaseId, tableId)
     },
     onSuccess: async () => {
-      // Delete table preferences
+      try {
+        const acct = await sdk.forConsole.account.get()
+        await sdk.forConsole.account.updatePrefs({
+          prefs: deleteDatabaseTableRowColumnWidthsFromPrefs(
+            (acct.prefs || {}) as UserPrefs,
+            databaseId,
+            tableId,
+          ),
+        })
+        await queryClient.invalidateQueries({
+          queryKey: ['account', 'console'],
+        })
+      } catch {
+        // Silently handle preference deletion error
+      }
+
+      // Delete table preferences (team)
       if (organizationId) {
         try {
           const team = await sdk.forConsole.teams.get({

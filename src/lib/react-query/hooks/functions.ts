@@ -90,6 +90,45 @@ export async function fetchProjectFunction(
   return await projectSdk.functions.get({ functionId })
 }
 
+// Object form of functions.update() params (SDK has overloads; avoid string | object union)
+type FunctionUpdateParams = Extract<
+  Parameters<ReturnType<typeof sdk.forProject>['functions']['update']>[0],
+  object
+>
+
+/**
+ * Build full function update params from current function and partial updates.
+ * Use this for any functions.update() call so omitted fields are preserved
+ * (API treats omitted optional params as "clear").
+ */
+export function buildFunctionUpdateParams(
+  func: Models.Function,
+  updates: Partial<Models.Function>,
+): FunctionUpdateParams {
+  return {
+    functionId: func.$id,
+    name: func.name,
+    runtime: func.runtime as unknown,
+    execute: func.execute || undefined,
+    events: func.events || undefined,
+    schedule: func.schedule || undefined,
+    timeout: func.timeout || undefined,
+    enabled: func.enabled ?? undefined,
+    logging: func.logging ?? undefined,
+    entrypoint: func.entrypoint || undefined,
+    commands: func.commands || undefined,
+    scopes: func.scopes || undefined,
+    installationId: func.installationId,
+    providerRepositoryId: func.providerRepositoryId,
+    providerBranch: func.providerBranch,
+    providerSilentMode: func.providerSilentMode,
+    providerRootDirectory: func.providerRootDirectory,
+    buildSpecification: func.buildSpecification,
+    runtimeSpecification: func.runtimeSpecification,
+    ...updates,
+  } as unknown as FunctionUpdateParams
+}
+
 /**
  * Query function to fetch function deployments
  */

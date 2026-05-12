@@ -26,6 +26,7 @@ import {
   useVcsInstallations,
   useProject,
   buildSiteUpdateParams,
+  buildFunctionUpdateParams,
 } from '@/lib/react-query/hooks'
 import { BranchSelector } from '@/components/global/shared/BranchSelector'
 import { RepositoryPicker } from '@/components/global/shared/RepositoryPicker'
@@ -121,23 +122,13 @@ export function CreateGitDeploymentModal({
 
       if (!hasLinkedRepo && resourceType === 'function') {
         const func = resource as Models.Function
-        await projectSdk.functions.update({
-          functionId: resourceId,
-          name: func.name,
-          runtime: func.runtime,
-          execute: func.execute || undefined,
-          events: func.events || undefined,
-          schedule: func.schedule || undefined,
-          timeout: func.timeout || undefined,
-          enabled: func.enabled ?? undefined,
-          logging: func.logging ?? undefined,
-          entrypoint: func.entrypoint || undefined,
-          commands: func.commands || undefined,
-          scopes: func.scopes || undefined,
-          installationId,
-          providerRepositoryId,
-          providerBranch: ref,
-        })
+        await projectSdk.functions.update(
+          buildFunctionUpdateParams(func, {
+            installationId,
+            providerRepositoryId,
+            providerBranch: ref,
+          }),
+        )
       }
       if (!hasLinkedRepo && resourceType === 'site') {
         const site = resource as Models.Site

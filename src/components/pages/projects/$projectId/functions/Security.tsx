@@ -1,7 +1,10 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
-import { useProjectFunction } from '@/lib/react-query/hooks'
+import {
+  useProjectFunction,
+  buildFunctionUpdateParams,
+} from '@/lib/react-query/hooks'
 import { sdk } from '@/lib/appwrite/sdk'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
@@ -36,21 +39,9 @@ export function View() {
       if (!projectId || !functionId || !func)
         throw new Error('Project ID, Function ID, and Function are required')
       const projectSdk = sdk.forProject(projectId)
-      return await projectSdk.functions.update({
-        functionId,
-        name: func.name,
-        runtime: func.runtime as unknown,
-        execute: func.execute || undefined,
-        events: func.events || undefined,
-        schedule: func.schedule || undefined,
-        timeout: func.timeout || undefined,
-        enabled: func.enabled ?? undefined,
-        logging: func.logging ?? undefined,
-        entrypoint: func.entrypoint || undefined,
-        commands: func.commands || undefined,
-        scopes: func.scopes || undefined,
-        ...updates,
-      })
+      return await projectSdk.functions.update(
+        buildFunctionUpdateParams(func, updates),
+      )
     },
     onSuccess: () => {
       toast.success('Function updated successfully')

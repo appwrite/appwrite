@@ -93,6 +93,7 @@ import {
   deleteFunctionDeployment,
   cancelFunctionDeployment,
   DEFAULT_PAGE_SIZE,
+  buildFunctionUpdateParams,
 } from '@/lib/react-query/hooks'
 import { DOMAINS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import {
@@ -460,11 +461,11 @@ export function View() {
       if (!specificationSlug)
         throw new Error('A specification must be selected')
       const projectSdk = sdk.forProject(projectId)
-      return await projectSdk.functions.update({
-        functionId,
-        name: func.name,
-        runtimeSpecification: specificationSlug,
-      })
+      return await projectSdk.functions.update(
+        buildFunctionUpdateParams(func, {
+          runtimeSpecification: specificationSlug,
+        }),
+      )
     },
     onSuccess: () => {
       toast.success('Runtime limits updated successfully')

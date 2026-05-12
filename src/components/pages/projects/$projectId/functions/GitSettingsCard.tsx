@@ -19,6 +19,7 @@ import {
   useRepository,
   useVcsInstallations,
   useProject,
+  buildFunctionUpdateParams,
 } from '@/lib/react-query/hooks'
 import { GitBranch, Lock, ExternalLink, Loader2, X } from 'lucide-react'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -101,27 +102,28 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
     }
   }, [installationsData, selectedInstallationId])
 
+  // Keep form in sync when server function changes (e.g. after connect or refetch)
+  useEffect(() => {
+    setSelectedBranch(func.providerBranch || '')
+    setSelectedDir(func.providerRootDirectory || '')
+    setSilentMode(func.providerSilentMode ?? false)
+  }, [
+    func.providerBranch,
+    func.providerRootDirectory,
+    func.providerSilentMode,
+    func.installationId,
+    func.providerRepositoryId,
+  ])
+
   // Update function mutation
   const updateFunctionMutation = useMutation({
     mutationFn: async (updates: Partial<Models.Function>) => {
       if (!projectId || !func.$id)
         throw new Error('Project ID and Function ID are required')
       const projectSdk = sdk.forProject(projectId)
-      return await projectSdk.functions.update({
-        functionId: func.$id,
-        name: func.name,
-        runtime: func.runtime,
-        execute: func.execute || undefined,
-        events: func.events || undefined,
-        schedule: func.schedule || undefined,
-        timeout: func.timeout || undefined,
-        enabled: func.enabled ?? undefined,
-        logging: func.logging ?? undefined,
-        entrypoint: func.entrypoint || undefined,
-        commands: func.commands || undefined,
-        scopes: func.scopes || undefined,
-        ...updates,
-      })
+      return await projectSdk.functions.update(
+        buildFunctionUpdateParams(func, updates),
+      )
     },
     onSuccess: () => {
       toast.success('Function updated successfully')
@@ -167,23 +169,13 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
         throw new Error('Installation and Repository are required')
       }
       const projectSdk = sdk.forProject(projectId)
-      return await projectSdk.functions.update({
-        functionId: func.$id,
-        name: func.name,
-        runtime: func.runtime,
-        execute: func.execute || undefined,
-        events: func.events || undefined,
-        schedule: func.schedule || undefined,
-        timeout: func.timeout || undefined,
-        enabled: func.enabled ?? undefined,
-        logging: func.logging ?? undefined,
-        entrypoint: func.entrypoint || undefined,
-        commands: func.commands || undefined,
-        scopes: func.scopes || undefined,
-        installationId: selectedInstallationId,
-        providerRepositoryId: selectedRepositoryId,
-        providerBranch: 'main',
-      })
+      return await projectSdk.functions.update(
+        buildFunctionUpdateParams(func, {
+          installationId: selectedInstallationId,
+          providerRepositoryId: selectedRepositoryId,
+          providerBranch: 'main',
+        }),
+      )
     },
     onSuccess: () => {
       toast.success('Repository connected successfully')
@@ -204,25 +196,15 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
       if (!projectId || !func.$id)
         throw new Error('Project ID and Function ID are required')
       const projectSdk = sdk.forProject(projectId)
-      return await projectSdk.functions.update({
-        functionId: func.$id,
-        name: func.name,
-        runtime: func.runtime,
-        execute: func.execute || undefined,
-        events: func.events || undefined,
-        schedule: func.schedule || undefined,
-        timeout: func.timeout || undefined,
-        enabled: func.enabled ?? undefined,
-        logging: func.logging ?? undefined,
-        entrypoint: func.entrypoint || undefined,
-        commands: func.commands || undefined,
-        scopes: func.scopes || undefined,
-        installationId: '',
-        providerRepositoryId: '',
-        providerBranch: '',
-        providerSilentMode: true,
-        providerRootDirectory: '',
-      })
+      return await projectSdk.functions.update(
+        buildFunctionUpdateParams(func, {
+          installationId: '',
+          providerRepositoryId: '',
+          providerBranch: '',
+          providerSilentMode: true,
+          providerRootDirectory: '',
+        }),
+      )
     },
     onSuccess: () => {
       toast.success('Repository disconnected successfully')

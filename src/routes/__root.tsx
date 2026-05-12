@@ -60,9 +60,30 @@ const scripts: React.DetailedHTMLProps<
   HTMLScriptElement
 >[] = []
 
+/**
+ * `type="module"` script URLs must not be path-relative: the browser resolves them
+ * against the current pathname, so e.g. `analytics.js` on `/projects/.../messaging`
+ * becomes `/projects/.../analytics.js` (SPA HTML) → "text/html is not a valid
+ * JavaScript MIME type". Anchor path-only values to `import.meta.env.BASE_URL`.
+ */
+function normalizeInstrumentationModuleSrc(raw: string): string {
+  const src = raw.trim()
+  if (!src) return src
+  if (/^(?:https?:)?\/\//.test(src)) return src
+  if (src.startsWith('/')) return src
+  const base = (import.meta.env.BASE_URL || '/').replace(/\/?$/, '/')
+  try {
+    return new URL(src, `http://tsr.local${base}`).pathname
+  } catch {
+    return `${base}${src.replace(/^\//, '')}`
+  }
+}
+
 if (import.meta.env.VITE_INSTRUMENTATION_SCRIPT_SRC) {
   scripts.push({
-    src: import.meta.env.VITE_INSTRUMENTATION_SCRIPT_SRC,
+    src: normalizeInstrumentationModuleSrc(
+      import.meta.env.VITE_INSTRUMENTATION_SCRIPT_SRC,
+    ),
     type: 'module',
   })
 }

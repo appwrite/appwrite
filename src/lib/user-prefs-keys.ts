@@ -204,6 +204,264 @@ export function buildDatabasesSidebarWidthPrefs(percent: number): UserPrefs {
 }
 
 // ---------------------------------------------------------------------------
+// Databases: tables DB row grid column widths (per database + table, account)
+// ---------------------------------------------------------------------------
+
+/**
+ * Full key: `console.databaseTables.rowColumnWidths`
+ *
+ * Value: JSON string. Preferred shape:
+ * `{ databases: Record<databaseId, Record<tableKey, Record<columnKey, number>>> }`
+ * where `tableKey` is `tableId`, or `tableId#columns` / `tableId#indexes` for other grids.
+ * Column keys are non-system attributes; values are widths in px.
+ *
+ * Legacy (still read for migration): flat `Record<tableId, Record<columnKey, number>>`
+ * with no `databases` key. New writes use the `databases` wrapper only.
+ */
+export const USER_PREFS_KEY_DATABASE_TABLE_ROW_COLUMN_WIDTHS =
+  'console.databaseTables.rowColumnWidths'
+
+type RowColumnWidthsByTable = Record<string, Record<string, number>>
+
+function parseInnerRowColumnWidthMap(cols: unknown): Record<string, number> {
+  const inner: Record<string, number> = {}
+  if (typeof cols !== 'object' || cols === null || Array.isArray(cols)) {
+    return inner
+  }
+  for (const [ck, w] of Object.entries(cols as Record<string, unknown>)) {
+    if (!ck || ck.startsWith('$')) continue
+    const n = typeof w === 'number' ? w : Number(w)
+    if (!Number.isFinite(n)) continue
+    inner[ck] = n
+  }
+  return inner
+}
+
+function parseRowColumnWidthsByDatabase(
+  raw: unknown,
+): Record<string, RowColumnWidthsByTable> {
+  const out: Record<string, RowColumnWidthsByTable> = {}
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return out
+  for (const [dbId, tables] of Object.entries(raw as Record<string, unknown>)) {
+    if (!dbId) continue
+    if (typeof tables !== 'object' || tables === null || Array.isArray(tables)) {
+      continue
+    }
+    const bucket: RowColumnWidthsByTable = {}
+    for (const [tableKey, colMap] of Object.entries(
+      tables as Record<string, unknown>,
+    )) {
+      if (!tableKey) continue
+      bucket[tableKey] = parseInnerRowColumnWidthMap(colMap)
+    }
+    out[dbId] = bucket
+  }
+  return out
+}
+
+function isLegacyFlatTableColumnMap(v: unknown): boolean {
+  if (typeof v !== 'object' || v === null || Array.isArray(v)) return false
+  const vals = Object.values(v as Record<string, unknown>)
+  if (vals.length === 0) return false
+  return vals.every((x) => typeof x === 'number')
+}
+
+function parseRowColumnWidthsStorage(prefs: UserPrefs | null | undefined): {
+  databases: Record<string, RowColumnWidthsByTable>
+  legacyFlatByTable: RowColumnWidthsByTable
+} {
+  const raw = prefs?.[USER_PREFS_KEY_DATABASE_TABLE_ROW_COLUMN_WIDTHS]
+  if (raw == null) {
+    return { databases: {}, legacyFlatByTable: {} }
+  }
+
+  let parsed: unknown
+  if (typeof raw === 'string') {
+    const s = raw.trim()
+    if (s.length === 0) return { databases: {}, legacyFlatByTable: {} }
+    try {
+      parsed = JSON.parse(s) as unknown
+    } catch {
+      return { databases: {}, legacyFlatByTable: {} }
+    }
+  } else if (typeof raw === 'object' && !Array.isArray(raw)) {
+    parsed = raw
+  } else {
+    return { databases: {}, legacyFlatByTable: {} }
+  }
+
+  try {
+    if (
+      parsed === null ||
+      typeof parsed !== 'object' ||
+      Array.isArray(parsed)
+    ) {
+      return { databases: {}, legacyFlatByTable: {} }
+    }
+    const root = parsed as Record<string, unknown>
+    const hasDatabasesWrapper =
+      'databases' in root &&
+      typeof root.databases === 'object' &&
+      root.databases !== null &&
+      !Array.isArray(root.databases)
+
+    if (!hasDatabasesWrapper) {
+      const legacyOnly: RowColumnWidthsByTable = {}
+      for (const [tid, cols] of Object.entries(root)) {
+        if (!tid) continue
+        if (
+          typeof cols !== 'object' ||
+          cols === null ||
+          Array.isArray(cols)
+        ) {
+          continue
+        }
+        legacyOnly[tid] = parseInnerRowColumnWidthMap(cols)
+      }
+      return { databases: {}, legacyFlatByTable: legacyOnly }
+    }
+
+    const databases = parseRowColumnWidthsByDatabase(root.databases)
+    const legacyFlatByTable: RowColumnWidthsByTable = {}
+    for (const [k, v] of Object.entries(root)) {
+      if (k === 'databases') continue
+      if (!isLegacyFlatTableColumnMap(v)) continue
+      legacyFlatByTable[k] = parseInnerRowColumnWidthMap(v)
+    }
+    return { databases, legacyFlatByTable }
+  } catch {
+    return { databases: {}, legacyFlatByTable: {} }
+  }
+}
+
+function serializeDatabaseTableRowColumnWidths(
+  databases: Record<string, RowColumnWidthsByTable>,
+  legacyFlatByTable: RowColumnWidthsByTable,
+): string | null {
+  const dbIds = Object.keys(databases).filter(
+    (id) => Object.keys(databases[id] ?? {}).length > 0,
+  )
+  const legacyIds = Object.keys(legacyFlatByTable).filter(
+    (id) => Object.keys(legacyFlatByTable[id] ?? {}).length > 0,
+  )
+  if (dbIds.length === 0 && legacyIds.length === 0) return null
+
+  if (dbIds.length === 0) {
+    const flat: Record<string, unknown> = {}
+    for (const id of legacyIds) flat[id] = legacyFlatByTable[id]
+    return JSON.stringify(flat)
+  }
+
+  const payload: Record<string, unknown> = { databases: {} as Record<string, unknown> }
+  for (const id of dbIds) {
+    ;(payload.databases as Record<string, unknown>)[id] = databases[id]
+  }
+  for (const id of legacyIds) {
+    payload[id] = legacyFlatByTable[id]
+  }
+  return JSON.stringify(payload)
+}
+
+/** Widths for one table’s row grid (data columns), from account prefs. */
+export function getDatabaseTableRowColumnWidthsFromPrefs(
+  prefs: UserPrefs | null | undefined,
+  databaseId: string,
+  tableId: string,
+): Record<string, number> {
+  const { databases, legacyFlatByTable } = parseRowColumnWidthsStorage(prefs)
+  const bucket = databases[databaseId]
+  if (bucket && Object.prototype.hasOwnProperty.call(bucket, tableId)) {
+    return parseInnerRowColumnWidthMap(bucket[tableId])
+  }
+  const leg = legacyFlatByTable[tableId]
+  return leg ? parseInnerRowColumnWidthMap(leg) : {}
+}
+
+/**
+ * @deprecated Prefer `getDatabaseTableRowColumnWidthsFromPrefs(prefs, databaseId, tableId)`.
+ * Flattened map for backwards compatibility: legacy top-level table keys plus every
+ * `databases[*][tableKey]` entry. If the same `tableKey` appears in multiple databases,
+ * the last one iterated wins.
+ */
+export function parseDatabaseTableRowColumnWidthsMap(
+  prefs: UserPrefs | null | undefined,
+): Record<string, Record<string, number>> {
+  const { databases, legacyFlatByTable } = parseRowColumnWidthsStorage(prefs)
+  const out: Record<string, Record<string, number>> = { ...legacyFlatByTable }
+  for (const bucket of Object.values(databases)) {
+    for (const [tableKey, cols] of Object.entries(bucket)) {
+      out[tableKey] = { ...cols }
+    }
+  }
+  return out
+}
+
+export function mergeDatabaseTableRowColumnWidthsTableIntoPrefs(
+  prefs: UserPrefs,
+  databaseId: string,
+  tableId: string,
+  widths: Record<string, number>,
+): UserPrefs {
+  const { databases, legacyFlatByTable } = parseRowColumnWidthsStorage(prefs)
+  const nextLegacy = { ...legacyFlatByTable }
+  delete nextLegacy[tableId]
+  delete nextLegacy[`${tableId}#columns`]
+  delete nextLegacy[`${tableId}#indexes`]
+
+  const nextDatabases = {
+    ...databases,
+    [databaseId]: {
+      ...(databases[databaseId] || {}),
+      [tableId]: widths,
+    },
+  }
+
+  const encoded = serializeDatabaseTableRowColumnWidths(
+    nextDatabases,
+    nextLegacy,
+  )
+  const next = { ...prefs }
+  if (!encoded) {
+    delete next[USER_PREFS_KEY_DATABASE_TABLE_ROW_COLUMN_WIDTHS]
+    return next
+  }
+  next[USER_PREFS_KEY_DATABASE_TABLE_ROW_COLUMN_WIDTHS] = encoded
+  return next
+}
+
+export function deleteDatabaseTableRowColumnWidthsFromPrefs(
+  prefs: UserPrefs,
+  databaseId: string,
+  tableId: string,
+): UserPrefs {
+  const { databases, legacyFlatByTable } = parseRowColumnWidthsStorage(prefs)
+  const nextLegacy = { ...legacyFlatByTable }
+  delete nextLegacy[tableId]
+  delete nextLegacy[`${tableId}#columns`]
+  delete nextLegacy[`${tableId}#indexes`]
+
+  const nextDatabases = { ...databases }
+  const bucket = { ...(nextDatabases[databaseId] || {}) }
+  delete bucket[tableId]
+  delete bucket[`${tableId}#columns`]
+  delete bucket[`${tableId}#indexes`]
+  if (Object.keys(bucket).length === 0) delete nextDatabases[databaseId]
+  else nextDatabases[databaseId] = bucket
+
+  const encoded = serializeDatabaseTableRowColumnWidths(
+    nextDatabases,
+    nextLegacy,
+  )
+  const next = { ...prefs }
+  if (!encoded) {
+    delete next[USER_PREFS_KEY_DATABASE_TABLE_ROW_COLUMN_WIDTHS]
+    return next
+  }
+  next[USER_PREFS_KEY_DATABASE_TABLE_ROW_COLUMN_WIDTHS] = encoded
+  return next
+}
+
+// ---------------------------------------------------------------------------
 // Console operator impersonation - recent targets (quick access in picker)
 // ---------------------------------------------------------------------------
 
