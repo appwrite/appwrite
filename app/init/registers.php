@@ -110,25 +110,6 @@ $register->set('logger', static fn () => $createLogger(
     System::getEnv('_APP_LOGGING_PROVIDER', ''),
 ));
 
-$register->set('realtimeLogger', static function () use ($createLogger): ?Logger {
-    $providerConfig = System::getEnv('_APP_LOGGING_CONFIG_REALTIME', '') ?: System::getEnv('_APP_LOGGING_CONFIG', '');
-    if (empty($providerConfig)) {
-        return null;
-    }
-
-    // Sentry Realtime errors are exported as spans by app/init/realtime/span.php (same condition),
-    // not via utopia/logger — building both would report each error to Sentry twice.
-    try {
-        if ((new DSN($providerConfig))->getScheme() === 'sentry') {
-            return null;
-        }
-    } catch (Throwable) {
-        // Legacy ;-delimited config, not a DSN; $createLogger handles it.
-    }
-
-    return $createLogger($providerConfig);
-});
-
 $register->set('pools', function () {
     $group = new Group();
 

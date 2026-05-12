@@ -297,7 +297,7 @@ return [
             ],
             [
                 'name' => '_APP_LOGGING_CONFIG_REALTIME',
-                'description' => 'Optional separate logging DSN for the Realtime server, so its errors can be routed to a dedicated project. Same DSN format as `_APP_LOGGING_CONFIG`; falls back to `_APP_LOGGING_CONFIG` when empty. When the provider is Sentry (`sentry://PROJECT_ID:SENTRY_API_KEY@SENTRY_HOST/`), Realtime errors are exported as spans to that Sentry project.',
+                'description' => 'Optional separate logging DSN for the Realtime server so its errors go to a dedicated Sentry project. Same DSN format as `_APP_LOGGING_CONFIG`; falls back to `_APP_LOGGING_CONFIG` when empty. Realtime errors are exported as spans, so only the Sentry provider (`sentry://PROJECT_ID:SENTRY_API_KEY@SENTRY_HOST/`) takes effect here — other providers configured via `_APP_LOGGING_CONFIG` apply to the HTTP server and workers only.',
                 'introduction' => '1.8.1',
                 'default' => '',
                 'required' => false,

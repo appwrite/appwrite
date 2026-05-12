@@ -9,8 +9,7 @@ use Utopia\System\System;
 /**
  * Export Realtime error spans to a dedicated Sentry project (`_APP_LOGGING_CONFIG_REALTIME`, falling
  * back to `_APP_LOGGING_CONFIG`) — only here, not in app/init/span.php, so the HTTP/worker/CLI
- * servers keep reporting to the default project. The `realtimeLogger` registry skips the Sentry
- * logger for the same condition so each Realtime error is reported once; keep the two in sync.
+ * servers keep reporting to the default project. Only error-bearing spans are sampled.
  */
 $loggingConfig = System::getEnv('_APP_LOGGING_CONFIG_REALTIME', '') ?: System::getEnv('_APP_LOGGING_CONFIG', '');
 if (empty($loggingConfig)) {

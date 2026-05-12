@@ -35,7 +35,6 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\DSN\DSN;
-use Utopia\Logger\Log;
 use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
 use Utopia\Span\Span;
@@ -320,58 +319,12 @@ if (!function_exists('recordRealtimeErrorSpan')) {
     }
 }
 
-if (!function_exists('pushRealtimeErrorLog')) {
-    /** Push a Realtime error to the utopia/logger provider — non-Sentry providers only; Sentry goes via recordRealtimeErrorSpan(). */
-    function pushRealtimeErrorLog(Throwable $error, string $action, array $tags, ?Document $project, ?Document $user, ?Authorization $authorization): void
-    {
-        global $register;
-
-        $logger = $register->get('realtimeLogger');
-        if (!$logger) {
-            return;
-        }
-
-        $log = new Log();
-        $log->setNamespace('realtime');
-        $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
-        $log->setVersion(System::getEnv('_APP_VERSION', 'UNKNOWN'));
-        $log->setType(Log::TYPE_ERROR);
-        $log->setMessage($error->getMessage());
-        $log->setAction($action);
-
-        $log->addTag('code', $error->getCode());
-        $log->addTag('verboseType', get_class($error));
-        $log->addTag('projectId', $project?->getId() ?: 'n/a');
-        $log->addTag('userId', $user?->getId() ?: 'n/a');
-        foreach ($tags as $key => $value) {
-            $log->addTag($key, $value ?: 'n/a');
-        }
-
-        $log->addExtra('file', $error->getFile());
-        $log->addExtra('line', $error->getLine());
-        $log->addExtra('trace', $error->getTraceAsString());
-        $log->addExtra('detailedTrace', $error->getTrace());
-        $log->addExtra('roles', $authorization?->getRoles() ?? []);
-
-        $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
-        $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
-
-        try {
-            $responseCode = $logger->addLog($log);
-            Console::info('Error log pushed with status code: ' . $responseCode);
-        } catch (Throwable $th) {
-            Console::error('Error pushing log: ' . $th->getMessage());
-        }
-    }
-}
-
 // Allows overriding
 if (!function_exists('logError')) {
     function logError(Throwable $error, string $action, array $tags = [], ?Document $project = null, ?Document $user = null, ?Authorization $authorization = null): void
     {
         if (!$error instanceof Exception) {
             recordRealtimeErrorSpan($error, $action, $tags, $project, $user, $authorization);
-            pushRealtimeErrorLog($error, $action, $tags, $project, $user, $authorization);
         }
 
         Console::error('[Error] Type: ' . get_class($error));
