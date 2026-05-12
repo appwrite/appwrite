@@ -171,8 +171,8 @@ trait ProxyBase
 
         $siteId = $this->setupSite()['siteId'];
 
-        $ruleId = $this->setupRedirectRule($domain, 'https://jsonplaceholder.typicode.com/todos/1', 301, 'site', $siteId);
-        $this->assertNotEmpty($ruleId);
+        $redirectRuleId = $this->setupRedirectRule($domain, 'https://jsonplaceholder.typicode.com/todos/1', 301, 'site', $siteId);
+        $this->assertNotEmpty($redirectRuleId);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/todos/1');
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -187,8 +187,8 @@ trait ProxyBase
         $this->assertEquals('https://jsonplaceholder.typicode.com/todos/1', $response['headers']['location']);
 
         $domain = \uniqid() . '-redirect-307.custom.localhost';
-        $ruleId = $this->setupRedirectRule($domain, 'https://jsonplaceholder.typicode.com/todos/1', 307, 'site', $siteId);
-        $this->assertNotEmpty($ruleId);
+        $temporaryRedirectRuleId = $this->setupRedirectRule($domain, 'https://jsonplaceholder.typicode.com/todos/1', 307, 'site', $siteId);
+        $this->assertNotEmpty($temporaryRedirectRuleId);
 
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://appwrite.test');
@@ -209,8 +209,9 @@ trait ProxyBase
         $this->assertEquals(200, $rules['headers']['status-code']);
         $this->assertEquals(2, $rules['body']['total']);
 
+        $this->cleanupRule($redirectRuleId);
+        $this->cleanupRule($temporaryRedirectRuleId);
         $this->cleanupSite($siteId);
-        $this->cleanupRule($ruleId);
     }
 
     public function testCreateFunctionRule(): void

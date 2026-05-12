@@ -101,7 +101,7 @@ class User extends Document
      *
      * @return bool
      */
-    public function isPrivileged(array $roles): bool
+    public static function isPrivileged(array $roles): bool
     {
         if (
             in_array(self::ROLE_OWNER, $roles) ||
@@ -121,7 +121,7 @@ class User extends Document
      *
      * @return bool
      */
-    public function isApp(array $roles): bool
+    public static function isApp(array $roles): bool
     {
         if (in_array(self::ROLE_APPS, $roles)) {
             return true;

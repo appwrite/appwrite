@@ -36,9 +36,8 @@ Http::init()
     ->inject('request')
     ->inject('project')
     ->inject('geodb')
-    ->inject('user')
     ->inject('authorization')
-    ->action(function (Http $utopia, Request $request, Document $project, Reader $geodb, User $user, Authorization $authorization) {
+    ->action(function (Http $utopia, Request $request, Document $project, Reader $geodb, Authorization $authorization) {
         $denylist = System::getEnv('_APP_CONSOLE_COUNTRIES_DENYLIST', '');
         if (!empty($denylist && $project->getId() === 'console')) {
             $countries = explode(',', $denylist);
@@ -51,8 +50,8 @@ Http::init()
 
         $route = $utopia->match($request);
 
-        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
-        $isAppUser = $user->isApp($authorization->getRoles());
+        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
+        $isAppUser = User::isApp($authorization->getRoles());
 
         if ($isAppUser || $isPrivilegedUser) { // Skip limits for app and console devs
             return;
