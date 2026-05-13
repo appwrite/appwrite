@@ -204,7 +204,7 @@ trait AvatarsBase
             $response = $this->client->call(Client::METHOD_GET, '/avatars/image', [
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], [
-                'url' => 'https://appwrite.io/images/open-graph/website.avif',
+                'url' => 'https://avatars.githubusercontent.com/u/25003669?v=4&size=200',
             ]);
 
             $this->assertEquals(200, $response['headers']['status-code']);
@@ -216,7 +216,7 @@ trait AvatarsBase
             $response = $this->client->call(Client::METHOD_GET, '/avatars/image', [
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], [
-                'url' => 'https://appwrite.io/images/open-graph/website.avif',
+                'url' => 'https://avatars.githubusercontent.com/u/25003669?v=4&size=200',
                 'width' => 200,
                 'height' => 200,
             ]);
@@ -230,7 +230,7 @@ trait AvatarsBase
             $response = $this->client->call(Client::METHOD_GET, '/avatars/image', [
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], [
-                'url' => 'https://appwrite.io/images/open-graph/website.avif',
+                'url' => 'https://avatars.githubusercontent.com/u/25003669?v=4&size=200',
                 'width' => 300,
                 'height' => 300,
                 'quality' => 30,
@@ -258,7 +258,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/image', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io/images/open-graph/website.avif',
+            'url' => 'https://avatars.githubusercontent.com/u/25003669?v=4&size=200',
             'width' => 2001,
             'height' => 300,
             'quality' => 30,
