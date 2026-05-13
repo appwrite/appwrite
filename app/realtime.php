@@ -908,8 +908,8 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
     $success = false;
 
     Span::init('realtime.open');
-    Span::add('realtime.connectionId', $connection);
-    Span::add('realtime.inboundBytes', $rawSize);
+    Span::add('realtime.connection.id', $connection);
+    Span::add('realtime.inbound_bytes', $rawSize);
     if (!empty($request->getOrigin())) {
         Span::add('realtime.origin', $request->getOrigin());
     }
@@ -1116,16 +1116,16 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         Span::error($th);
     } finally {
         Span::add('realtime.success', $success);
-        Span::add('realtime.responseCode', $responseCode);
-        Span::add('realtime.subscriptionMode', $subscriptionMode);
-        Span::add('realtime.channelCount', $channelCount);
-        Span::add('realtime.subscriptionCount', $subscriptionCount);
-        Span::add('realtime.outboundBytes', $outboundBytes);
+        Span::add('realtime.response_code', $responseCode);
+        Span::add('realtime.subscription_mode', $subscriptionMode);
+        Span::add('realtime.channel_count', $channelCount);
+        Span::add('realtime.subscription_count', $subscriptionCount);
+        Span::add('realtime.outbound_bytes', $outboundBytes);
         if (!empty($project?->getId())) {
-            Span::add('realtime.projectId', $project->getId());
+            Span::add('project.id', $project->getId());
         }
         if (!empty($logUser?->getId())) {
-            Span::add('realtime.userId', $logUser->getId());
+            Span::add('user.id', $logUser->getId());
         }
         Span::current()?->finish();
     }
@@ -1142,16 +1142,9 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
     $success = false;
 
     Span::init('realtime.message');
-    Span::add('realtime.connectionId', $connection);
-    Span::add('realtime.inboundBytes', $rawSize);
-    Span::add('realtime.containerId', $containerId);
-    // Defaults so an exception thrown mid-handler still leaves these attrs on the span.
-    // Handlers (Subscribe/Unsubscribe/Authentication) override with real values via Span::add
-    // when their work succeeds.
-    Span::add('realtime.subscriptionDelta', 0);
-    Span::add('realtime.subscriptionsRequested', 0);
-    Span::add('realtime.subscriptionsRemoved', 0);
-    Span::add('realtime.subscribe.subscriptionsCount', 0);
+    Span::add('realtime.connection.id', $connection);
+    Span::add('realtime.inbound_bytes', $rawSize);
+    Span::add('realtime.container.id', $containerId);
 
     try {
         $response = new Response(new SwooleResponse());
@@ -1295,11 +1288,15 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
         Span::error($th);
     } finally {
         Span::add('realtime.success', $success);
-        Span::add('realtime.responseCode', $responseCode);
-        Span::add('realtime.outboundBytes', $outboundBytes);
-        Span::add('realtime.projectId', $project?->getId() ?? $projectId);
-        Span::add('realtime.userId', $realtime->connections[$connection]['userId'] ?? null);
-        Span::add('realtime.messageType', $messageType);
+        Span::add('realtime.response_code', $responseCode);
+        Span::add('realtime.subscription_delta', $subscriptionDelta);
+        Span::add('realtime.subscriptions_requested', $subscriptionsRequested);
+        Span::add('realtime.subscriptions_removed', $subscriptionsRemoved);
+        Span::add('realtime.subscribe.subscriptions_count', $subscriptionsRequested);
+        Span::add('realtime.outbound_bytes', $outboundBytes);
+        Span::add('project.id', $project?->getId() ?? $projectId);
+        Span::add('user.id', $realtime->connections[$connection]['userId'] ?? null);
+        Span::add('realtime.message_type', $messageType);
         Span::current()?->finish();
     }
 });
@@ -1311,7 +1308,7 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register) {
     $success = false;
 
     Span::init('realtime.close');
-    Span::add('realtime.connectionId', $connection);
+    Span::add('realtime.connection.id', $connection);
 
     if (array_key_exists($connection, $realtime->connections)) {
         $projectId = $realtime->connections[$connection]['projectId'] ?? null;
@@ -1419,12 +1416,12 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register) {
 
         Span::add('realtime.success', $success);
         if (!empty($projectId)) {
-            Span::add('realtime.projectId', $projectId);
+            Span::add('project.id', $projectId);
         }
         if (!empty($userId)) {
-            Span::add('realtime.userId', $userId);
+            Span::add('user.id', $userId);
         }
-        Span::add('realtime.subscriptionsBeforeClose', $subscriptionsBeforeClose);
+        Span::add('realtime.subscriptions_before_close', $subscriptionsBeforeClose);
         Span::current()?->finish();
     }
 

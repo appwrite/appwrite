@@ -106,27 +106,20 @@ class Messaging extends Action
 
         Span::add('message.type', $type);
 
-        try {
-            switch ($type) {
-                case MESSAGE_SEND_TYPE_INTERNAL:
-                    $message = new Document($payload['message'] ?? []);
-                    $recipients = $payload['recipients'] ?? [];
+        switch ($type) {
+            case MESSAGE_SEND_TYPE_INTERNAL:
+                $message = new Document($payload['message'] ?? []);
+                $recipients = $payload['recipients'] ?? [];
 
-                    $this->sendInternalSMSMessage($message, $project, $recipients, $log);
-                    break;
-                case MESSAGE_SEND_TYPE_EXTERNAL:
-                    $message = $dbForProject->getDocument('messages', $payload['messageId']);
+                $this->sendInternalSMSMessage($message, $project, $recipients, $log);
+                break;
+            case MESSAGE_SEND_TYPE_EXTERNAL:
+                $message = $dbForProject->getDocument('messages', $payload['messageId']);
 
-                    $this->sendExternalMessage($dbForProject, $message, $deviceForFiles, $project, $publisherForUsage);
-                    break;
-                default:
-                    throw new \Exception('Unknown message type: ' . $type);
-            }
-        } catch (\Throwable $e) {
-            Span::error($e);
-            throw $e;
-        } finally {
-            Span::current()?->finish();
+                $this->sendExternalMessage($dbForProject, $message, $deviceForFiles, $project, $publisherForUsage);
+                break;
+            default:
+                throw new \Exception('Unknown message type: ' . $type);
         }
     }
 

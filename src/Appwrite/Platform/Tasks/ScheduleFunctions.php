@@ -8,7 +8,6 @@ use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Span\Span;
-use Utopia\System\System;
 
 /**
  * ScheduleFunctions
@@ -107,22 +106,18 @@ class ScheduleFunctions extends ScheduleBase
                         ->setPath('/')
                         ->setProject($schedule['project']);
 
-                    $projectDoc = $schedule['project'];
-                    $functionDoc = $schedule['resource'];
-                    $traceProjectId = System::getEnv('_APP_TRACE_PROJECT_ID', '');
-                    $traceFunctionId = System::getEnv('_APP_TRACE_FUNCTION_ID', '');
-                    if ($traceProjectId !== '' && $traceFunctionId !== '' && $projectDoc->getId() === $traceProjectId && $functionDoc->getId() === $traceFunctionId) {
-                        Span::init('execution.trace.v1_functions_enqueue');
-                        Span::add('datetime', gmdate('c'));
-                        Span::add('projectId', $projectDoc->getId());
-                        Span::add('functionId', $functionDoc->getId());
-                        Span::add('scheduleId', $schedule['$id'] ?? '');
+                    Span::init('schedule.functions.enqueue');
+                    try {
+                        Span::add('project.id', $schedule['project']->getId());
+                        Span::add('function.id', $schedule['resource']->getId());
+                        Span::add('schedule.id', $schedule['$id'] ?? '');
+
+                        $queueForFunctions->trigger();
+
+                        $this->recordEnqueueDelay($delayConfig['nextDate']);
+                    } finally {
                         Span::current()?->finish();
                     }
-
-                    $queueForFunctions->trigger();
-
-                    $this->recordEnqueueDelay($delayConfig['nextDate']);
                 }
             });
         }

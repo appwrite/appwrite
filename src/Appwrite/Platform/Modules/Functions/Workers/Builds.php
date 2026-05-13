@@ -186,11 +186,11 @@ class Builds extends Action
         array $platform,
         int $timeout
     ): void {
-        Span::add('projectId', $project->getId());
-        Span::add('resourceId', $resource->getId());
-        Span::add('resourceType', $resource->getCollection());
-        Span::add('deploymentId', $deployment->getId());
-        Span::add('timeout', $timeout);
+        Span::add('project.id', $project->getId());
+        Span::add('resource.id', $resource->getId());
+        Span::add('resource.type', $resource->getCollection());
+        Span::add('deployment.id', $deployment->getId());
+        Span::add('build.timeout', $timeout);
 
         Console::info('Deployment action started');
 
@@ -232,12 +232,12 @@ class Builds extends Action
 
         $version = $this->getVersion($resource);
         $runtime = $this->getRuntime($resource, $version);
-        Span::add('runtime', $resource->getAttribute($resource->getCollection() === 'sites' ? 'buildRuntime' : 'runtime', ''));
-        Span::add('version', $version);
+        Span::add('build.runtime', $resource->getAttribute($resource->getCollection() === 'sites' ? 'buildRuntime' : 'runtime', ''));
+        Span::add('build.version', $version);
 
         $spec = Config::getParam('specifications')[$resource->getAttribute('buildSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
-        Span::add('cpus', (float) ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT));
-        Span::add('memory', (int) ($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT));
+        Span::add('build.cpus', (float) ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT));
+        Span::add('build.memory', (int) ($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT));
 
         // Realtime preparation
         $event = "{$resource->getCollection()}.[{$resourceKey}].deployments.[deploymentId].update";
