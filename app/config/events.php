@@ -426,5 +426,33 @@ return [
         'update' => [
             '$description' => 'This event triggers when a proxy rule is updated.',
         ]
-    ]
+    ],
+    'reports' => [
+        '$model' => Response::MODEL_REPORT,
+        '$resource' => true,
+        '$description' => 'This event triggers on any report event.',
+        'create' => [
+            '$description' => 'This event triggers when a report is created.',
+        ],
+        'update' => [
+            '$description' => 'This event triggers when a report is updated.',
+        ],
+        'delete' => [
+            '$description' => 'This event triggers when a report is deleted.',
+        ],
+        'insights' => [
+            '$model' => Response::MODEL_INSIGHT,
+            '$resource' => true,
+            '$description' => 'This event triggers on any insight event.',
+            'create' => [
+                '$description' => 'This event triggers when an insight is created.',
+            ],
+            'update' => [
+                '$description' => 'This event triggers when an insight is updated.',
+            ],
+            'delete' => [
+                '$description' => 'This event triggers when an insight is deleted.',
+            ],
+        ],
+    ],
 ];

@@ -493,7 +493,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     ->setGitRepo($language['gitUrl'])
                     ->setGitRepoName($language['gitRepoName'])
                     ->setGitUserName($language['gitUserName'])
-                    ->setLogo($cover)
+                    ->setCoverImage($cover)
                     ->setURL('https://appwrite.io')
                     ->setShareText('Appwrite is a backend as a service for building web or mobile apps')
                     ->setShareURL('http://appwrite.io')

@@ -1,5 +1,11 @@
 <?php
 
+use Appwrite\Platform\Modules\Advisor\Enums\InsightCTAMethod;
+use Appwrite\Platform\Modules\Advisor\Enums\InsightCTAService;
+use Appwrite\Platform\Modules\Advisor\Enums\InsightSeverity;
+use Appwrite\Platform\Modules\Advisor\Enums\InsightStatus;
+use Appwrite\Platform\Modules\Advisor\Enums\InsightType;
+use Appwrite\Platform\Modules\Advisor\Enums\ReportType;
 use Appwrite\Platform\Modules\Compute\Specification;
 use Utopia\System\System;
 
@@ -44,7 +50,7 @@ const APP_PROJECT_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_RESOURCE_TOKEN_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_FILE_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 4325;
+const APP_CACHE_BUSTER = 4326;
 const APP_VERSION_STABLE = '1.9.5';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
@@ -222,6 +228,7 @@ const DELETE_TYPE_EXPIRED_TARGETS = 'invalid_targets';
 const DELETE_TYPE_SESSION_TARGETS = 'session_targets';
 const DELETE_TYPE_CSV_EXPORTS = 'csv_exports';
 const DELETE_TYPE_MAINTENANCE = 'maintenance';
+const DELETE_TYPE_REPORT = 'report';
 
 // Rule statuses
 const RULE_STATUS_CREATED = 'created'; // This is also the status when domain DNS verification fails.
@@ -424,6 +431,55 @@ const RESOURCE_TYPE_MESSAGES = 'messages';
 const RESOURCE_TYPE_EXECUTIONS = 'executions';
 const RESOURCE_TYPE_VCS = 'vcs';
 const RESOURCE_TYPE_EMBEDDINGS_TEXT = 'embeddingsText';
+const RESOURCE_TYPE_INSIGHTS = 'insights';
+const RESOURCE_TYPE_REPORTS = 'reports';
+
+// Insight types — engine-specific so the CTA action can reference the right public API.
+const ADVISOR_INSIGHT_TYPES = [
+    InsightType::DATABASE_INDEX->value, // legacy databases.createIndex
+    InsightType::TABLES_DB_INDEX->value, // tablesDB.createIndex
+    InsightType::DOCUMENTS_DB_INDEX->value, // documentsDB.createIndex
+    InsightType::VECTORS_DB_INDEX->value, // vectorsDB.createIndex
+    InsightType::DATABASE_PERFORMANCE->value,
+    InsightType::SITE_PERFORMANCE->value,
+    InsightType::SITE_ACCESSIBILITY->value,
+    InsightType::SITE_SEO->value,
+    InsightType::FUNCTION_PERFORMANCE->value,
+];
+
+// Public API services (SDK namespaces) that an insight CTA's `service` can reference.
+// Analyzers must pick the one matching the engine the resource lives in.
+const ADVISOR_CTA_SERVICES = [
+    InsightCTAService::DATABASES->value, // legacy
+    InsightCTAService::TABLES_DB->value,
+    InsightCTAService::DOCUMENTS_DB->value,
+    InsightCTAService::VECTORS_DB->value,
+];
+
+// Public API method names that an insight CTA's `method` can reference for index suggestions.
+const ADVISOR_CTA_METHODS = [
+    InsightCTAMethod::CREATE_INDEX->value,
+];
+
+// Insight severities
+const ADVISOR_SEVERITIES = [
+    InsightSeverity::INFO->value,
+    InsightSeverity::WARNING->value,
+    InsightSeverity::CRITICAL->value,
+];
+
+// Insight statuses
+const ADVISOR_STATUSES = [
+    InsightStatus::ACTIVE->value,
+    InsightStatus::DISMISSED->value,
+];
+
+// Report types
+const ADVISOR_REPORT_TYPES = [
+    ReportType::LIGHTHOUSE->value,
+    ReportType::AUDIT->value,
+    ReportType::DATABASE_ANALYZER->value,
+];
 
 // Resource types for Tokens
 const TOKENS_RESOURCE_TYPE_FILES = 'files';

@@ -1248,7 +1248,7 @@ return function (Container $context): void {
     $context->set('getDatabasesDB', function (Group $pools, Cache $cache, Document $project, Request $request, UsageContext $usage, Authorization $authorization) {
 
         return function (Document $database) use ($pools, $cache, $project, $request, $usage, $authorization): Database {
-            $databaseDSN = $database->getAttribute('database', $project->getAttribute('database', ''));
+            $databaseDSN = $database->getAttribute('database') ?: $project->getAttribute('database', '');
             $databaseType = $database->getAttribute('type', '');
 
             try {
