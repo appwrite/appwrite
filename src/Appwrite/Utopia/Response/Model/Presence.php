@@ -55,12 +55,6 @@ class Presence extends Any
                 'example' => ['read("any")'],
                 'array' => true,
             ])
-            ->addRule('userInternalId', [
-                'type' => self::TYPE_STRING,
-                'description' => 'User internal ID.',
-                'default' => '',
-                'example' => '1',
-            ])
             ->addRule('userId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'User ID.',
@@ -97,6 +91,7 @@ class Presence extends Any
         $document->removeAttribute('$tenant');
         $document->removeAttribute('hostname');
         $document->removeAttribute('perms_md5');
+        $document->removeAttribute('userInternalId');
 
         if (!$document->isEmpty()) {
             $document->setAttribute('$sequence', (string) $document->getAttribute('$sequence', ''));
