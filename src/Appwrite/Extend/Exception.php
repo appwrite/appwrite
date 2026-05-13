@@ -204,6 +204,7 @@ class Exception extends \Exception
 
     /** Presence */
     public const string PRESENCE_NOT_FOUND = 'presence_not_found';
+    public const string PRESENCE_ALREADY_EXISTS = 'presence_already_exists';
 
     /** Databases */
     public const string DATABASE_NOT_FOUND = 'database_not_found';

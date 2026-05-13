@@ -92,9 +92,9 @@ class PresenceState
 
             return $presence;
         } catch (DuplicateException $e) {
-            throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS, params: [$presenceId], previous: $e);
+            throw new Exception(Exception::PRESENCE_ALREADY_EXISTS, params: [$presenceId], previous: $e);
         } catch (NotFoundException $e) {
-            throw new Exception(Exception::DOCUMENT_NOT_FOUND, params: [$presenceId], previous: $e);
+            throw new Exception(Exception::PRESENCE_NOT_FOUND, params: [$presenceId], previous: $e);
         } catch (StructureException $e) {
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage(), previous: $e);
         } catch (ConflictException $e) {
