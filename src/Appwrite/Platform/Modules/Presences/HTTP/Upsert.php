@@ -24,7 +24,6 @@ use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\JSON;
-use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 
 class Upsert extends PlatformAction
@@ -93,14 +92,14 @@ class Upsert extends PlatformAction
                 ),
             ])
             ->param('presenceId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Presence unique ID.', false, ['dbForProject'])
-            ->param('userId', null, new Nullable(new UID()), 'User ID.', true)
+            ->param('userId', null, new UID(), 'User ID.', true)
             ->param('status', '', new Text(Database::LENGTH_KEY), 'Presence status.', false)
-            ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE])), 'An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
-            ->param('expiresAt', null, new Nullable(new DatetimeValidator(
+            ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
+            ->param('expiresAt', null, new DatetimeValidator(
                 new \DateTime(),
                 (new \DateTime())->modify('+30 days'),
                 requireDateInFuture: true
-            )), 'Presence expiry datetime.', true)
+            ), 'Presence expiry datetime.', true)
             ->param('metadata', [], new JSON(), 'Presence metadata object.', true)
             ->inject('response')
             ->inject('request')
