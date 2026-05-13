@@ -129,6 +129,7 @@ class XList extends Action
         }
 
         $dbStart = \microtime(true);
+        $documentsCacheHit = false;
 
         try {
             $hasSelects = ! empty(Query::groupByType($queries)['selections']);
@@ -148,7 +149,6 @@ class XList extends Action
                 $roles = $dbForProject->getAuthorization()->getRoles();
                 $documentsField = $this->getListCacheField($collection, $roles, $queries, self::LIST_CACHE_FIELD_DOCUMENTS);
 
-                $documentsCacheHit = false;
                 try {
                     $cachedDocuments = $dbForProject->getCache()->load($cacheKey, $ttl, $documentsField);
                 } catch (\Throwable) {
@@ -229,6 +229,16 @@ class XList extends Action
         $usage
             ->addMetric($this->getDatabasesOperationReadMetric(), max($operations, 1))
             ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), $this->getDatabasesIdOperationReadMetric()), $operations);
+
+        if ($documentsCacheHit) {
+            $cachedMetric = $this->getDatabasesOperationReadCachedMetric();
+            $cachedIdMetric = $this->getDatabasesIdOperationReadCachedMetric();
+            if ($cachedMetric !== null && $cachedIdMetric !== null) {
+                $usage
+                    ->addMetric($cachedMetric, max($operations, 1))
+                    ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), $cachedIdMetric), $operations);
+            }
+        }
 
         $response->dynamic(new Document([
             'total' => $total,
