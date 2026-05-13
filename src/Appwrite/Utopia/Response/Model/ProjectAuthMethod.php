@@ -17,6 +17,7 @@ class ProjectAuthMethod extends Model
                 'default' => '',
                 'example' => 'email-password',
                 'enum' => \array_keys(Config::getParam('auth', [])),
+                'enumSDKName' => 'ProjectAuthMethodId',
             ])
             ->addRule('enabled', [
                 'type' => self::TYPE_BOOLEAN,

@@ -1283,7 +1283,7 @@ Http::error()
         if (!$publish && $project->getId() !== 'console') {
             $errorUser = new DBUser();
             try {
-                $resolvedUser = $utopia->getResource('user');
+                $resolvedUser = $utopia->context()->get('user');
                 if ($resolvedUser instanceof DBUser) {
                     $errorUser = $resolvedUser;
                 }
@@ -1302,7 +1302,7 @@ Http::error()
         if ($logger && $publish) {
             try {
                 /** @var Utopia\Database\Document $user */
-                $user = $utopia->getResource('user');
+                $user = $utopia->context()->get('user');
             } catch (\Throwable) {
                 // All good, user is optional information for logger
             }
@@ -1503,7 +1503,7 @@ Http::error()
         // the cors resource (which depends on rule -> DB) would cascade.
         // Uses override:true to avoid duplicate headers if init() already set them.
         try {
-            $cors = $utopia->getResource('cors');
+            $cors = $utopia->context()->get('cors');
             foreach ($cors->headers($request->getOrigin()) as $name => $value) {
                 $response
                     ->removeHeader($name)

@@ -17,6 +17,7 @@ class ProjectService extends Model
             'default' => '',
             'example' => 'sites',
             'enum' => \array_keys(\array_filter(Config::getParam('services', []), fn ($element) => $element['optional'])),
+            'enumSDKName' => 'ProjectServiceId',
         ])
         ->addRule('enabled', [
             'type' => self::TYPE_BOOLEAN,

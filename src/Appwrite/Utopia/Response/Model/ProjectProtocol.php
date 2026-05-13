@@ -17,6 +17,7 @@ class ProjectProtocol extends Model
             'default' => '',
             'example' => 'graphql',
             'enum' => \array_keys(Config::getParam('protocols', [])),
+            'enumSDKName' => 'ProjectProtocolId',
         ])
         ->addRule('enabled', [
             'type' => self::TYPE_BOOLEAN,
