@@ -4,10 +4,9 @@ import {
   databaseQueryOptions,
   tablesQueryOptions,
 } from '@/lib/react-query/hooks'
+import { ROWS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { pageTitle } from '@/lib/utils/page-title'
 import { dbNavLink, type DatabaseRouteKind } from '@/lib/database-routes'
-
-const TABLES_PER_PAGE = 100
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/browser',
@@ -26,12 +25,18 @@ export const Route = createFileRoute(
       databaseQueryOptions(projectId, databaseId),
     )
     const tablesData = await queryClient.ensureQueryData(
-      tablesQueryOptions(projectId, databaseId, 0, TABLES_PER_PAGE, undefined),
+      tablesQueryOptions(
+        projectId,
+        databaseId,
+        0,
+        ROWS_DEFAULT_PAGE_SIZE,
+        undefined,
+        'asc',
+        '$createdAt',
+      ),
     )
-    const sorted = [...(tablesData.tables || [])].sort((a, b) =>
-      (a.name?.toLowerCase() || '').localeCompare(b.name?.toLowerCase() || ''),
-    )
-    const resourceId = sorted[0]?.$id ?? '-'
+    const resourceId =
+      (tablesData.tables?.[0] as { $id?: string } | undefined)?.$id ?? '-'
     const nav = dbNavLink(dbKind as DatabaseRouteKind)
 
     throw redirect({

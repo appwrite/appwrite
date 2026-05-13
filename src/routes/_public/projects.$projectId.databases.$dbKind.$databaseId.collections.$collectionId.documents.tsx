@@ -79,13 +79,20 @@ export const Route = createFileRoute(
 
     // If collectionId is '-', fetch first table and redirect to it if one exists
     if (collectionId === '-') {
-      const tablesData = await tablesPromise
-      const sortedTables = [...(tablesData.tables || [])].sort((a, b) => {
-        const nameA = a.name?.toLowerCase() || ''
-        const nameB = b.name?.toLowerCase() || ''
-        return nameA.localeCompare(nameB)
-      })
-      const firstTable = sortedTables[0]
+      const tablesData = await queryClient.ensureQueryData(
+        tablesQueryOptions(
+          projectId,
+          databaseId,
+          0,
+          ROWS_DEFAULT_PAGE_SIZE,
+          undefined,
+          'asc',
+          '$createdAt',
+        ),
+      )
+      const firstTable = (tablesData.tables || [])[0] as
+        | { $id?: string }
+        | undefined
 
       if (firstTable?.$id) {
         throw redirect({

@@ -455,12 +455,9 @@ export function Workspace({
             undefined,
           ),
         )
-        const sortedTables = [...(tablesData.tables || [])].sort((a, b) =>
-          (a.name?.toLowerCase() || '').localeCompare(
-            b.name?.toLowerCase() || '',
-          ),
-        )
-        const firstTable = sortedTables[0]
+        const firstTable = (tablesData.tables || [])[0] as
+          | { $id?: string }
+          | undefined
         const nextKind = databaseRouteKindFromApiType(
           (database as { databaseType?: ApiDatabaseType }).databaseType,
         )
@@ -853,23 +850,21 @@ export function Workspace({
                   const nextDbKind = databaseRouteKindFromApiType(
                     (newDb as { databaseType?: ApiDatabaseType }).databaseType,
                   )
+                  // Same query/order as sidebar first page (useProjectTables)
                   const tablesData = await queryClient.ensureQueryData(
                     tablesQueryOptions(
                       projectId,
                       newDatabaseId,
                       0,
-                      TABLE_WORKSPACE_TABLES_LIST_LIMIT,
+                      ROWS_DEFAULT_PAGE_SIZE,
                       undefined,
+                      'asc',
+                      '$createdAt',
                     ),
                   )
-                  const sorted = [...(tablesData.tables || [])].sort(
-                    (a: { name?: string }, b: { name?: string }) => {
-                      const nameA = a.name?.toLowerCase() || ''
-                      const nameB = b.name?.toLowerCase() || ''
-                      return nameA.localeCompare(nameB)
-                    },
-                  )
-                  const firstTable = sorted[0] as { $id?: string } | undefined
+                  const firstTable = (tablesData.tables || [])[0] as
+                    | { $id?: string }
+                    | undefined
                   navigate({
                     ...dbNavLink(nextDbKind).dataGrid({
                       projectId,
@@ -1494,18 +1489,13 @@ export function Workspace({
                           projectId,
                           newDatabaseId,
                           0,
-                          TABLE_WORKSPACE_TABLES_LIST_LIMIT,
+                          ROWS_DEFAULT_PAGE_SIZE,
                           undefined,
+                          'asc',
+                          '$createdAt',
                         ),
                       )
-                      const sorted = [...(tablesData.tables || [])].sort(
-                        (a: { name?: string }, b: { name?: string }) => {
-                          const nameA = a.name?.toLowerCase() || ''
-                          const nameB = b.name?.toLowerCase() || ''
-                          return nameA.localeCompare(nameB)
-                        },
-                      )
-                      const firstTable = sorted[0] as
+                      const firstTable = (tablesData.tables || [])[0] as
                         | { $id?: string }
                         | undefined
                       navigate({
