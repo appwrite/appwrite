@@ -1437,7 +1437,7 @@ return function (Container $context): void {
         return new Agent($adapter);
     }, ['register']);
 
-    $container->set('geoRecord', function ($request, callable $getGeoForIp) {
+    $context->set('geoRecord', function ($request, callable $getGeoForIp) {
         $ip = $request->getIp();
 
         if (!filter_var($ip, FILTER_VALIDATE_IP)) {
@@ -1448,7 +1448,7 @@ return function (Container $context): void {
         return $getGeoForIp($ip);
     }, ['request', 'getGeoForIp']);
 
-    $container->set('getGeoForIp', function (Locale $locale) {
+    $context->set('getGeoForIp', function (Locale $locale) {
         $cache = [];
 
         return function (string $ip) use ($locale, &$cache): GeoRecord {
