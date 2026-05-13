@@ -760,7 +760,7 @@ Http::get('/v1/users')
 
             $targets = $dbForProject->find('targets', [
                 Query::equal('userInternalId', $sequences),
-                Query::limit(PHP_INT_MAX),
+                Query::limit(\count($sequences) * APP_LIMIT_SUBQUERY),
             ]);
 
             $targetsByUser = [];
