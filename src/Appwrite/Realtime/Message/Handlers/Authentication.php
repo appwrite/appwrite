@@ -106,7 +106,7 @@ class Authentication extends Action
                 ->add($subscriptionDelta, $register->get('telemetry.workerAttributes'));
         }
 
-        Span::add('realtime.subscriptionDelta', $subscriptionDelta);
+        Span::add('realtime.subscription_delta', $subscriptionDelta);
 
         return [
             'type' => 'response',

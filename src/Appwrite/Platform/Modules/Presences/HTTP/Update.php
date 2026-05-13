@@ -2,10 +2,10 @@
 
 namespace Appwrite\Platform\Modules\Presences\HTTP;
 
-use Appwrite\Presences\State as PresenceState;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action as PlatformAction;
+use Appwrite\Presences\State as PresenceState;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Parameter;
@@ -166,7 +166,7 @@ class Update extends PlatformAction
         if ($permissions !== null) {
             $presenceState->setPermissions($updates, $permissions, $user, $authorization);
         } elseif ($userId !== null && $userId !== $presence->getAttribute('userId')) {
-            $presenceState->setOwnerPermissions($updates, $userId);
+            $presenceState->setPermissions($updates, null, $user, $authorization, ownerOverride: $userId);
         }
 
         if (empty($updateData) && $permissions === null) {

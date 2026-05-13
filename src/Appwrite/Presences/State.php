@@ -21,11 +21,14 @@ class State
     public const LIST_CACHE_FIELD_PRESENCES = 'presences';
     public const LIST_CACHE_FIELD_TOTAL = 'total';
     public const COLLECTION_ID = 'presenceLogs';
-    public function setPermissions(Document $document, ?array $permissions, User $user, Authorization $authorization): Document
-    {
-        $isAPIKey = $user->isApp($authorization->getRoles());
-        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
+    public function setPermissions(
+        Document $document,
+        ?array $permissions,
+        User $user,
+        Authorization $authorization,
+        ?string $ownerOverride = null,
+    ): Document {
         $allowedPermissions = [
             Database::PERMISSION_READ,
             Database::PERMISSION_UPDATE,
@@ -33,19 +36,29 @@ class State
             Database::PERMISSION_WRITE,
         ];
 
-        $permissions = Permission::aggregate($permissions, $allowedPermissions);
-
-        if (\is_null($permissions)) {
+        if ($ownerOverride !== null) {
             $permissions = [];
-            if (!empty($user->getId()) && !$isPrivilegedUser) {
-                foreach ($allowedPermissions as $permission) {
-                    $permissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
+            foreach ($allowedPermissions as $permission) {
+                $permissions[] = (new Permission($permission, 'user', $ownerOverride))->toString();
+            }
+        } else {
+            $isAPIKey = $user->isApp($authorization->getRoles());
+            $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
+
+            $permissions = Permission::aggregate($permissions, $allowedPermissions);
+
+            if (\is_null($permissions)) {
+                $permissions = [];
+                if (!empty($user->getId()) && !$isPrivilegedUser) {
+                    foreach ($allowedPermissions as $permission) {
+                        $permissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
+                    }
                 }
             }
-        }
 
-        if (!$isAPIKey && !$isPrivilegedUser) {
-            $this->checkPermissions($permissions, $authorization);
+            if (!$isAPIKey && !$isPrivilegedUser) {
+                $this->checkPermissions($permissions, $authorization);
+            }
         }
 
         sort($permissions, SORT_STRING);
@@ -71,7 +84,6 @@ class State
 
         try {
             if ($dbForProject->getAdapter()->getSupportForUpsertOnUniqueIndex()) {
-                // in v2 use permsmd5 in the queries as well to find the doc
                 $existingPresence = $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userInternalId', [$userInternalId])]);
                 if ($existingPresence->isEmpty()) {
                     $presenceCreated = true;
@@ -80,12 +92,24 @@ class State
                 }
                 $presence = $dbForProject->upsertDocument(self::COLLECTION_ID, $presenceDocument);
             } else {
-                $presence = $this->transactionalUpsertForUser(
-                    $dbForProject,
-                    $presenceDocument,
-                    $userInternalId,
-                    $presenceCreated
-                );
+                $presence = $dbForProject->withTransaction(function () use ($dbForProject, $presenceDocument, $userInternalId, &$presenceCreated) {
+                    $existingPresence = $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userInternalId', [$userInternalId])]);
+
+                    if ($existingPresence->isEmpty()) {
+                        $presenceCreated = true;
+                        return $dbForProject->createDocument(self::COLLECTION_ID, $presenceDocument);
+                    }
+
+                    $currentPresence = $dbForProject->getDocument(self::COLLECTION_ID, $existingPresence->getId(), forUpdate: true);
+
+                    if ($currentPresence->isEmpty()) {
+                        throw new Exception(Exception::DOCUMENT_NOT_FOUND, params: [$existingPresence->getId()]);
+                    }
+
+                    $presenceDocument->setAttribute('$id', $currentPresence->getId());
+
+                    return $dbForProject->updateDocument(self::COLLECTION_ID, $currentPresence->getId(), $presenceDocument);
+                });
             }
 
             if ($presenceCreated && $onPresenceCreated !== null) {
@@ -102,53 +126,6 @@ class State
         } catch (ConflictException $e) {
             throw new Exception(Exception::DOCUMENT_UPDATE_CONFLICT, $e->getMessage(), previous: $e);
         }
-    }
-
-    private function transactionalUpsertForUser(
-        Database $dbForProject,
-        Document $presenceDocument,
-        mixed $userInternalId,
-        ?bool &$presenceCreated = null
-    ): Document {
-        return $dbForProject->withTransaction(function () use ($dbForProject, $presenceDocument, $userInternalId, &$presenceCreated) {
-            $existingPresence = $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userInternalId', [$userInternalId])]);
-
-            if ($existingPresence->isEmpty()) {
-                $presenceCreated = true;
-                return $dbForProject->createDocument(self::COLLECTION_ID, $presenceDocument);
-            }
-
-            $currentPresence = $dbForProject->getDocument(self::COLLECTION_ID, $existingPresence->getId(), forUpdate: true);
-
-            if ($currentPresence->isEmpty()) {
-                throw new Exception(Exception::DOCUMENT_NOT_FOUND, params: [$existingPresence->getId()]);
-            }
-
-            $presenceDocument->setAttribute('$id', $currentPresence->getId());
-
-            return $dbForProject->updateDocument(self::COLLECTION_ID, $currentPresence->getId(), $presenceDocument);
-        });
-    }
-
-    public function setOwnerPermissions(Document $document, string $userId): Document
-    {
-        $allowedPermissions = [
-            Database::PERMISSION_READ,
-            Database::PERMISSION_UPDATE,
-            Database::PERMISSION_DELETE,
-            Database::PERMISSION_WRITE,
-        ];
-
-        $ownerPermissions = [];
-        foreach ($allowedPermissions as $permission) {
-            $ownerPermissions[] = (new Permission($permission, 'user', $userId))->toString();
-        }
-
-        sort($ownerPermissions, SORT_STRING);
-        $document->setAttribute('$permissions', $ownerPermissions);
-        $document->setAttribute('permissionsHash', \md5(\json_encode($ownerPermissions)));
-
-        return $document;
     }
 
     private function checkPermissions(array $permissions, Authorization $authorization): void

@@ -2,9 +2,9 @@
 
 namespace Appwrite\Realtime\Message\Handlers;
 
-use Appwrite\Presences\State as PresenceState;
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Realtime;
+use Appwrite\Presences\State as PresenceState;
 use Appwrite\Realtime\Message\Dispatcher;
 use Appwrite\Utopia\Database\Documents\User;
 use Closure;

@@ -58,9 +58,9 @@ class Unsubscribe extends Action
                 ->add($subscriptionDelta, $register->get('telemetry.workerAttributes'));
         }
 
-        Span::add('realtime.subscriptionDelta', $subscriptionDelta);
-        Span::add('realtime.subscriptionsRequested', $subscriptionsRequested);
-        Span::add('realtime.subscriptionsRemoved', $subscriptionsRemoved);
+        Span::add('realtime.subscription_delta', $subscriptionDelta);
+        Span::add('realtime.subscriptions_requested', $subscriptionsRequested);
+        Span::add('realtime.subscriptions_removed', $subscriptionsRemoved);
 
         return [
             'type' => 'response',

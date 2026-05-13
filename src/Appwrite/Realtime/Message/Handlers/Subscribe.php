@@ -89,9 +89,9 @@ class Subscribe extends Action
                 ->add($subscriptionDelta, $register->get('telemetry.workerAttributes'));
         }
 
-        Span::add('realtime.subscriptionDelta', $subscriptionDelta);
-        Span::add('realtime.subscriptionsRequested', $subscriptionsRequested);
-        Span::add('realtime.subscribe.subscriptionsCount', $subscriptionsRequested);
+        Span::add('realtime.subscription_delta', $subscriptionDelta);
+        Span::add('realtime.subscriptions_requested', $subscriptionsRequested);
+        Span::add('realtime.subscribe.subscriptions_count', $subscriptionsRequested);
 
         return [
             'type' => 'response',

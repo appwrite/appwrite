@@ -1,6 +1,5 @@
 <?php
 
-use Appwrite\Presences\State as PresenceState;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Event\Message\Usage as UsageMessage;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
@@ -9,6 +8,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Network\Validator\Origin;
+use Appwrite\Presences\State as PresenceState;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Realtime\Message\Dispatcher as MessageDispatcher;
 use Appwrite\Realtime\Message\Handlers\Authentication as AuthenticationHandler;
@@ -1289,10 +1289,6 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
     } finally {
         Span::add('realtime.success', $success);
         Span::add('realtime.response_code', $responseCode);
-        Span::add('realtime.subscription_delta', $subscriptionDelta);
-        Span::add('realtime.subscriptions_requested', $subscriptionsRequested);
-        Span::add('realtime.subscriptions_removed', $subscriptionsRemoved);
-        Span::add('realtime.subscribe.subscriptions_count', $subscriptionsRequested);
         Span::add('realtime.outbound_bytes', $outboundBytes);
         Span::add('project.id', $project?->getId() ?? $projectId);
         Span::add('user.id', $realtime->connections[$connection]['userId'] ?? null);
