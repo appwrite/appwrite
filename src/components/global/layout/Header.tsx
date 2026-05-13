@@ -211,7 +211,7 @@ export function ConsoleHeader({
                 params={linkOrgId ? { orgId: linkOrgId } : undefined}
                 aria-label="Appwrite"
                 className={cn(
-                  'group inline-flex size-10 shrink-0 items-center justify-center rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
+                  'group inline-flex size-10 shrink-0 items-center justify-center rounded-lg transition-transform duration-150 ease-out active:scale-[0.94] active:bg-muted/40 motion-reduce:active:scale-100 motion-reduce:active:bg-transparent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
                   childClassName,
                 )}
               >

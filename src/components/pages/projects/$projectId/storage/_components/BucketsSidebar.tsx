@@ -19,7 +19,6 @@ import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import { ID } from '@appwrite.io/console'
 import { cn } from '@/lib/utils'
-import { resolveOrganizationPlanDisplayLabel } from '@/lib/utils/plan-filter'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   bucketsQueryOptions,
@@ -50,7 +49,6 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import type { Models } from '@appwrite.io/console'
-import { PlanLimitWarning } from '../../shared/PlanLimitWarning'
 import { BucketContextMenu } from './BucketContextMenu'
 import { CreateBucket } from './CreateBucket'
 import { S3ConnectionCard } from './S3ConnectionCard'
@@ -172,19 +170,6 @@ export function BucketsSidebar() {
           </span>
         </div>
       </div>
-
-      {project ? (
-        <PlanLimitWarning
-          currentCount={totalBucketsCount}
-          limit={bucketsLimit}
-          planName={resolveOrganizationPlanDisplayLabel({
-            planName: organizationPlan?.name ?? null,
-            planId: organizationPlan?.$id,
-          })}
-          resourceName="buckets"
-          orgId={project.teamId}
-        />
-      ) : null}
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <div className="shrink-0 space-y-2 border-b border-border px-2 py-2">

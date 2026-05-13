@@ -19,8 +19,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import { Separator } from '@/components/ui/separator'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { canSaveTeamFilters } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { SavedImageTransformPresetRow } from '@/components/global/shared/SavedImageTransformPresetRow'
@@ -33,7 +32,6 @@ import { useProject } from '@/lib/react-query/hooks/projects'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   applyImageTransformPreset,
-  defaultImageTransformState,
   IMAGE_TRANSFORM_PRESETS,
   mergeJsonIntoTransformState,
   transformStateToJsonCompact,
@@ -51,6 +49,50 @@ function reorderList<T>(list: T[], fromIndex: number, toIndex: number): T[] {
 type PendingApply =
   | { kind: 'builtin'; id: string }
   | { kind: 'saved'; json: string; label: string }
+
+type PresetBrowseTab = 'builtin' | 'user' | 'team'
+
+function tabCountBadge(count: number) {
+  if (count <= 0) return null
+  return (
+    <span className="flex size-4 min-w-4 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-medium tabular-nums text-muted-foreground">
+      {count}
+    </span>
+  )
+}
+
+/** Same row chrome as {@link SavedImageTransformPresetRow} when read-only: spacer, label, Apply. */
+function BuiltinTransformPresetRow({
+  label,
+  onApply,
+}: {
+  label: string
+  onApply: () => void
+}) {
+  return (
+    <div
+      className="group flex items-center gap-2 rounded-lg border border-border bg-muted/20 px-2 py-1.5 transition-colors"
+      aria-label={label}
+    >
+      <span className="h-3.5 w-3.5 shrink-0" aria-hidden />
+      <span className="min-w-0 flex-1 truncate text-[13px] text-foreground">
+        {label}
+      </span>
+      <Button
+        type="button"
+        variant="secondary"
+        size="sm"
+        className="h-7 shrink-0 text-[12px]"
+        onClick={(e) => {
+          e.stopPropagation()
+          onApply()
+        }}
+      >
+        Apply
+      </Button>
+    </div>
+  )
+}
 
 export type TransformImagePresetsPopoverProps = {
   preferAvif: boolean
@@ -90,6 +132,7 @@ export function TransformImagePresetsPopover({
   )
 
   const [open, setOpen] = useState(false)
+  const [browseTab, setBrowseTab] = useState<PresetBrowseTab>('builtin')
   const [alertOpen, setAlertOpen] = useState(false)
   const [dragOverKey, setDragOverKey] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -119,12 +162,12 @@ export function TransformImagePresetsPopover({
     if (p.kind === 'builtin') {
       const preset = IMAGE_TRANSFORM_PRESETS.find((x) => x.id === p.id)
       if (!preset) return
-      setState((s) => applyImageTransformPreset(s, preset))
+      setState(() => applyImageTransformPreset(preset, preferAvif))
       toast.message(`Applied preset: ${preset.label}`)
       return
     }
     setState((base) => {
-      const r = mergeJsonIntoTransformState(base, p.json)
+      const r = mergeJsonIntoTransformState(p.json, preferAvif)
       if (!r.ok) {
         queueMicrotask(() => toast.error(r.error))
         return base
@@ -132,14 +175,11 @@ export function TransformImagePresetsPopover({
       queueMicrotask(() => toast.message(`Applied preset: ${p.label}`))
       return r.state
     })
-  }, [pending, recordUndoPoint, setState])
+  }, [pending, preferAvif, recordUndoPoint, setState])
 
   const handleSaveCurrent = useCallback(async () => {
     const json = transformStateToJsonCompact(state)
-    const probe = mergeJsonIntoTransformState(
-      defaultImageTransformState({ preferAvif }),
-      json,
-    )
+    const probe = mergeJsonIntoTransformState(json, preferAvif)
     if (!probe.ok) {
       toast.error(probe.error)
       return
@@ -290,134 +330,164 @@ export function TransformImagePresetsPopover({
         >
           <div className="shrink-0 border-b border-border px-4 py-3">
             <p className="text-[13px] font-semibold text-foreground">Presets</p>
-            <p className="mt-1 text-[12px] text-muted-foreground">
-              Quick sizes for common layouts, plus your saved and team presets.
-              Applying always asks for confirmation.
-            </p>
           </div>
-          <div className="min-h-0 max-h-[min(52dvh,380px)] overflow-y-auto overflow-x-hidden overscroll-contain">
-            <div className="space-y-3 px-4 py-3 pr-3">
-              <div>
-                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Quick sizes
-                </p>
-                <div className="flex flex-wrap gap-1.5">
+          <Tabs
+            value={browseTab}
+            onValueChange={(v) => setBrowseTab(v as PresetBrowseTab)}
+            className="flex min-h-0 flex-1 flex-col gap-0 overflow-hidden"
+          >
+            <div className="shrink-0 px-4 pb-3 pt-2">
+              <TabsList className="grid h-9 w-full grid-cols-3 gap-0.5 p-[3px]">
+                <TabsTrigger
+                  value="builtin"
+                  className="gap-1 px-1.5 text-[11px] sm:text-[12px]"
+                >
+                  <span className="truncate">Built-in</span>
+                  {tabCountBadge(IMAGE_TRANSFORM_PRESETS.length)}
+                </TabsTrigger>
+                <TabsTrigger
+                  value="user"
+                  className="gap-1 px-1.5 text-[11px] sm:text-[12px]"
+                >
+                  <span className="truncate">Mine</span>
+                  {tabCountBadge(userPresets.length)}
+                </TabsTrigger>
+                <TabsTrigger
+                  value="team"
+                  className="gap-1 px-1.5 text-[11px] sm:text-[12px]"
+                >
+                  <span className="truncate">Team</span>
+                  {tabCountBadge(teamPresets.length)}
+                </TabsTrigger>
+              </TabsList>
+            </div>
+            <div className="min-h-0 max-h-[min(52dvh,380px)] flex-1 overflow-y-auto overflow-x-hidden overscroll-contain">
+              <TabsContent
+                value="builtin"
+                className="m-0 px-4 py-3 pr-3 pt-0 outline-none"
+              >
+                <div className="space-y-1">
                   {IMAGE_TRANSFORM_PRESETS.map((preset) => (
-                    <Button
+                    <BuiltinTransformPresetRow
                       key={preset.id}
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      className="h-auto min-h-8 max-w-full whitespace-normal px-2.5 py-1.5 text-left text-[12px] leading-snug"
-                      onClick={() =>
+                      label={preset.label}
+                      onApply={() =>
                         requestApply({ kind: 'builtin', id: preset.id })
                       }
-                    >
-                      {preset.label}
-                    </Button>
+                    />
                   ))}
                 </div>
-              </div>
-
-              {userPresets.length > 0 ? (
-                <>
-                  <Separator />
-                  <div>
-                    <p className="mb-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                      My presets
-                    </p>
-                    <div className="space-y-1">
-                      {userPresets.map((item, index) => (
-                        <SavedImageTransformPresetRow
-                          key={`user-${item.id}`}
-                          item={item}
-                          canEdit={
-                            canEditPresetLevel('user') && !isReordering
-                          }
-                          dragOverKey={dragOverKey}
-                          rowDropKey={rowDropKey('user', index)}
-                          onDragStart={(ev) =>
-                            handlePresetDragStart(ev, 'user', index)
-                          }
-                          onDragOver={(ev) => {
-                            ev.preventDefault()
-                            ev.dataTransfer.dropEffect = 'move'
-                            setDragOverKey(rowDropKey('user', index))
-                          }}
-                          onDragLeave={() => setDragOverKey(null)}
-                          onDrop={(ev) => handlePresetDrop(ev, 'user', index)}
-                          onApply={() =>
-                            requestApply({
-                              kind: 'saved',
-                              json: item.json,
-                              label: item.name,
-                            })
-                          }
-                          onDelete={() => void handleDelete(item.id, 'user')}
-                          deleteBusy={deletingId === item.id}
-                          deleteDisabled={deletingId !== null}
-                          onRenameCommit={(name) =>
-                            updatePresetName(item.id, 'user', name).catch(
-                              (err) => toast.error(getErrorMessage(err)),
-                            )
-                          }
-                        />
-                      ))}
-                    </div>
+              </TabsContent>
+              <TabsContent
+                value="user"
+                className="m-0 px-4 py-3 pr-3 pt-0 outline-none"
+              >
+                {userPresets.length > 0 ? (
+                  <div className="space-y-1">
+                    {userPresets.map((item, index) => (
+                      <SavedImageTransformPresetRow
+                        key={`user-${item.id}`}
+                        item={item}
+                        canEdit={canEditPresetLevel('user') && !isReordering}
+                        dragOverKey={dragOverKey}
+                        rowDropKey={rowDropKey('user', index)}
+                        onDragStart={(ev) =>
+                          handlePresetDragStart(ev, 'user', index)
+                        }
+                        onDragOver={(ev) => {
+                          ev.preventDefault()
+                          ev.dataTransfer.dropEffect = 'move'
+                          setDragOverKey(rowDropKey('user', index))
+                        }}
+                        onDragLeave={() => setDragOverKey(null)}
+                        onDrop={(ev) => handlePresetDrop(ev, 'user', index)}
+                        onApply={() =>
+                          requestApply({
+                            kind: 'saved',
+                            json: item.json,
+                            label: item.name,
+                          })
+                        }
+                        onDelete={() => void handleDelete(item.id, 'user')}
+                        deleteBusy={deletingId === item.id}
+                        deleteDisabled={deletingId !== null}
+                        onRenameCommit={(name) =>
+                          updatePresetName(item.id, 'user', name).catch(
+                            (err) => toast.error(getErrorMessage(err)),
+                          )
+                        }
+                      />
+                    ))}
                   </div>
-                </>
-              ) : null}
-
-              {teamPresets.length > 0 ? (
-                <>
-                  <Separator />
-                  <div>
-                    <p className="mb-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                      Team presets
-                    </p>
-                    <div className="space-y-1">
-                      {teamPresets.map((item, index) => (
-                        <SavedImageTransformPresetRow
-                          key={`team-${item.id}`}
-                          item={item}
-                          canEdit={
-                            canEditPresetLevel('team') && !isReordering
-                          }
-                          dragOverKey={dragOverKey}
-                          rowDropKey={rowDropKey('team', index)}
-                          onDragStart={(ev) =>
-                            handlePresetDragStart(ev, 'team', index)
-                          }
-                          onDragOver={(ev) => {
-                            ev.preventDefault()
-                            ev.dataTransfer.dropEffect = 'move'
-                            setDragOverKey(rowDropKey('team', index))
-                          }}
-                          onDragLeave={() => setDragOverKey(null)}
-                          onDrop={(ev) => handlePresetDrop(ev, 'team', index)}
-                          onApply={() =>
-                            requestApply({
-                              kind: 'saved',
-                              json: item.json,
-                              label: item.name,
-                            })
-                          }
-                          onDelete={() => void handleDelete(item.id, 'team')}
-                          deleteBusy={deletingId === item.id}
-                          deleteDisabled={deletingId !== null}
-                          onRenameCommit={(name) =>
-                            updatePresetName(item.id, 'team', name).catch(
-                              (err) => toast.error(getErrorMessage(err)),
-                            )
-                          }
-                        />
-                      ))}
-                    </div>
+                ) : (
+                  <p className="text-[12px] leading-relaxed text-muted-foreground">
+                    You have not saved any presets yet. Use{' '}
+                    <span className="font-medium text-foreground">
+                      Save preset
+                    </span>{' '}
+                    below to store your current transform parameters.
+                  </p>
+                )}
+              </TabsContent>
+              <TabsContent
+                value="team"
+                className="m-0 px-4 py-3 pr-3 pt-0 outline-none"
+              >
+                {!hasTeamLevel ? (
+                  <p className="text-[12px] leading-relaxed text-muted-foreground">
+                    Team presets are available when the project belongs to an
+                    organization.
+                  </p>
+                ) : teamPresets.length > 0 ? (
+                  <div className="space-y-1">
+                    {teamPresets.map((item, index) => (
+                      <SavedImageTransformPresetRow
+                        key={`team-${item.id}`}
+                        item={item}
+                        canEdit={canEditPresetLevel('team') && !isReordering}
+                        dragOverKey={dragOverKey}
+                        rowDropKey={rowDropKey('team', index)}
+                        onDragStart={(ev) =>
+                          handlePresetDragStart(ev, 'team', index)
+                        }
+                        onDragOver={(ev) => {
+                          ev.preventDefault()
+                          ev.dataTransfer.dropEffect = 'move'
+                          setDragOverKey(rowDropKey('team', index))
+                        }}
+                        onDragLeave={() => setDragOverKey(null)}
+                        onDrop={(ev) => handlePresetDrop(ev, 'team', index)}
+                        onApply={() =>
+                          requestApply({
+                            kind: 'saved',
+                            json: item.json,
+                            label: item.name,
+                          })
+                        }
+                        onDelete={() => void handleDelete(item.id, 'team')}
+                        deleteBusy={deletingId === item.id}
+                        deleteDisabled={deletingId !== null}
+                        onRenameCommit={(name) =>
+                          updatePresetName(item.id, 'team', name).catch(
+                            (err) => toast.error(getErrorMessage(err)),
+                          )
+                        }
+                      />
+                    ))}
                   </div>
-                </>
-              ) : null}
+                ) : (
+                  <p className="text-[12px] leading-relaxed text-muted-foreground">
+                    No team presets yet. Owners and developers can add presets
+                    for everyone in the organization using{' '}
+                    <span className="font-medium text-foreground">
+                      For team
+                    </span>{' '}
+                    below.
+                  </p>
+                )}
+              </TabsContent>
             </div>
-          </div>
+          </Tabs>
 
           <div className="shrink-0 border-t border-border bg-muted/20 px-4 py-3">
             <Label

@@ -24,6 +24,9 @@ interface UploadFileProps {
   }) => void
   bucket?: Models.Bucket
   isLoading?: boolean
+  /** When the dialog opens with files (e.g. workspace drag-and-drop), they are applied once then cleared via `onPrefillConsumed`. */
+  prefillFiles?: File[] | null
+  onPrefillConsumed?: () => void
 }
 
 export function UploadFile({
@@ -32,6 +35,8 @@ export function UploadFile({
   onUpload,
   bucket,
   isLoading = false,
+  prefillFiles = null,
+  onPrefillConsumed,
 }: UploadFileProps) {
   const [fileId, setFileId] = useState<string | undefined>(undefined)
   const [files, setFiles] = useState<File[]>([])
@@ -122,6 +127,13 @@ export function UploadFile({
     }
   }
 
+  useEffect(() => {
+    if (!open || !prefillFiles?.length) return
+    handleFileSelect(prefillFiles)
+    onPrefillConsumed?.()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- apply external file list once per open + prefill payload
+  }, [open, prefillFiles])
+
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files ?? [])
     if (selectedFiles.length > 0) {
@@ -176,7 +188,7 @@ export function UploadFile({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md p-0 max-h-[85dvh] overflow-hidden">
+      <DialogContent className="min-w-0 sm:max-w-md p-0 max-h-[85dvh] overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-4 text-left">
           <DialogTitle>
             {files.length > 1 ? 'Create files' : 'Create file'}
@@ -187,10 +199,10 @@ export function UploadFile({
         </DialogHeader>
         <div className="border-t border-border" />
 
-        <form onSubmit={handleSubmit}>
-          <div className="px-6 pb-4 pt-0 space-y-4 max-h-[60dvh] overflow-y-auto">
+        <form onSubmit={handleSubmit} className="min-w-0">
+          <div className="min-w-0 space-y-4 overflow-x-hidden overflow-y-auto px-6 pb-4 pt-0 max-h-[60dvh]">
             {/* File Upload */}
-            <div className="space-y-2">
+            <div className="min-w-0 space-y-2">
               <Label htmlFor="file-upload">
                 Files <span className="text-destructive">*</span>
               </Label>
@@ -200,7 +212,7 @@ export function UploadFile({
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
                 className={cn(
-                  'border-2 border-dashed rounded-lg p-6 text-center transition-colors',
+                  'min-w-0 overflow-hidden border-2 border-dashed rounded-lg p-6 text-center transition-colors',
                   isDragging
                     ? 'border-primary bg-primary/5'
                     : 'border-border bg-muted/30',
@@ -218,10 +230,15 @@ export function UploadFile({
                 />
                 <label
                   htmlFor="file-upload"
-                  className="cursor-pointer flex flex-col items-center gap-2"
+                  className="flex w-full min-w-0 cursor-pointer flex-col items-center gap-2 px-1"
                 >
-                  <Upload className="h-8 w-8 text-muted-foreground" />
-                  <span className="text-[13px] text-foreground">
+                  <Upload className="h-8 w-8 shrink-0 text-muted-foreground" />
+                  <span
+                    className="block w-full min-w-0 max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-center text-[13px] text-foreground"
+                    title={
+                      files.length === 1 ? files[0].name : undefined
+                    }
+                  >
                     {files.length === 0
                       ? 'Click to upload or drag and drop'
                       : files.length === 1
@@ -242,21 +259,26 @@ export function UploadFile({
                 </label>
               </div>
               {files.length > 0 && (
-                <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                <div className="min-w-0 space-y-2 max-h-40 overflow-x-hidden overflow-y-auto pr-1">
                   {files.map((selectedFile, index) => (
                     <div
                       key={`${selectedFile.name}-${selectedFile.size}-${index}`}
-                      className="flex items-center gap-2 rounded-md border border-border bg-muted/30 p-2"
+                      className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 rounded-md border border-border bg-muted/30 px-2.5 py-2"
                     >
-                      <span className="flex-1 truncate text-[12px] text-foreground">
-                        {selectedFile.name} ({formatFileSize(selectedFile.size)}
-                        )
+                      <span
+                        className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-left text-[12px] font-medium leading-snug text-foreground"
+                        title={selectedFile.name}
+                      >
+                        {selectedFile.name}
+                      </span>
+                      <span className="shrink-0 whitespace-nowrap text-right text-[12px] text-muted-foreground tabular-nums">
+                        {formatFileSize(selectedFile.size)}
                       </span>
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="h-6 w-6 p-0"
+                        className="h-7 w-7 shrink-0 p-0"
                         onClick={() => {
                           setFiles((prev) =>
                             prev.filter((_, fileIndex) => fileIndex !== index),
@@ -312,7 +334,7 @@ export function UploadFile({
               </div>
             )}
             {files.length > 1 && (
-              <p className="text-[12px] text-muted-foreground">
+              <p className="border-t border-border pt-3 text-[12px] leading-relaxed text-muted-foreground">
                 File IDs will be auto-generated for bulk uploads.
               </p>
             )}

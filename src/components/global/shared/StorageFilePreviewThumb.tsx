@@ -57,6 +57,25 @@ export function isStoragePreviewSupportedMimeType(
   return supported.has(t)
 }
 
+/** MIME types suitable for inline playback in a `<video>` element (original file via `getFileView`). */
+export function isStorageVideoPreviewSupportedMimeType(
+  mimeType: string | undefined | null,
+): boolean {
+  if (!mimeType) return false
+  const t = mimeType.toLowerCase().split(';')[0].trim()
+  const supported = new Set([
+    'video/mp4',
+    'video/webm',
+    'video/ogg',
+    'video/quicktime',
+    'video/x-m4v',
+    'video/mpeg',
+    'video/3gpp',
+    'video/3gpp2',
+  ])
+  return supported.has(t)
+}
+
 function withStoragePreviewAdminMode(previewUrl: string): string {
   return (
     previewUrl +

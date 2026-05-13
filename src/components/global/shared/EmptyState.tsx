@@ -39,9 +39,9 @@ export interface EmptyStateProps {
    */
   variant?: 'default' | 'card' | 'centered'
   /**
-   * Icon size variant
+   * Icon size variant (`xl` = larger hero-style empty state)
    */
-  iconSize?: 'sm' | 'md' | 'lg'
+  iconSize?: 'sm' | 'md' | 'lg' | 'xl'
 }
 
 /**
@@ -68,6 +68,7 @@ export function EmptyState({
     sm: 'h-5 w-5',
     md: 'h-6 w-6',
     lg: 'h-8 w-8',
+    xl: 'h-10 w-10',
   }
 
   // Default icon container size
@@ -75,7 +76,10 @@ export function EmptyState({
     sm: 'h-12 w-12',
     md: 'h-12 w-12',
     lg: 'h-14 w-14',
+    xl: 'h-20 w-20',
   }
+
+  const isHeroEmpty = iconSize === 'xl'
 
   // If children are provided, render them with the container
   if (children) {
@@ -96,7 +100,8 @@ export function EmptyState({
       return (
         <div
           className={cn(
-            'flex h-full items-center justify-center py-16',
+            'flex h-full items-center justify-center',
+            isHeroEmpty ? 'py-20' : 'py-16',
             className,
           )}
         >
@@ -133,7 +138,8 @@ export function EmptyState({
       {Icon && (
         <div
           className={cn(
-            'mx-auto mb-4 flex items-center justify-center rounded-full bg-muted',
+            'mx-auto flex items-center justify-center rounded-full bg-muted',
+            isHeroEmpty ? 'mb-5' : 'mb-4',
             iconContainerSize[iconSize],
             variant === 'centered' && 'ring-1 ring-border',
           )}
@@ -143,10 +149,26 @@ export function EmptyState({
           />
         </div>
       )}
-      <p className="mb-1 text-[14px] font-medium text-foreground">
+      <p
+        className={cn(
+          'mb-1 text-foreground',
+          isHeroEmpty
+            ? 'text-[15px] font-semibold tracking-tight'
+            : 'text-[14px] font-medium',
+        )}
+      >
         {defaultTitle}
       </p>
-      <p className="text-[13px] text-muted-foreground">{defaultDescription}</p>
+      <p
+        className={cn(
+          'text-muted-foreground',
+          isHeroEmpty
+            ? 'max-w-md text-[14px] leading-relaxed'
+            : 'text-[13px]',
+        )}
+      >
+        {defaultDescription}
+      </p>
       {action ? (
         <div className="mt-6 flex w-full flex-wrap justify-center gap-2">
           {action}
@@ -172,7 +194,8 @@ export function EmptyState({
     return (
       <div
         className={cn(
-          'flex h-full items-center justify-center py-16',
+          'flex h-full items-center justify-center',
+          isHeroEmpty ? 'py-20' : 'py-16',
           className,
         )}
       >

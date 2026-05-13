@@ -40,7 +40,7 @@ export function PlanLimitWarning({
 
   return (
     <div className="border-b border-border bg-amber-500/5">
-      <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6">
+      <div className="w-full px-4 py-3 sm:px-6">
         <Alert variant="default" className="border-amber-500/30 bg-transparent">
           <AlertCircle className="h-4 w-4 text-amber-500" />
           <div className="flex flex-1 items-start justify-between gap-4">

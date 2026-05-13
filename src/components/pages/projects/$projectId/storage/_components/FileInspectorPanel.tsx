@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState, useEffect, useCallback, type CSSProperties, type SyntheticEvent } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { ImageFormat } from '@appwrite.io/console'
 import {
@@ -35,6 +35,7 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import {
   getStorageFileIcon,
   isStoragePreviewSupportedMimeType,
+  isStorageVideoPreviewSupportedMimeType,
 } from '@/components/global/shared/StorageFilePreviewThumb'
 import { formatBytes } from '@/lib/utils/mock-data'
 import { STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS } from './files-documents-layout'
@@ -58,6 +59,10 @@ import {
 } from '@/components/ui/tooltip'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
+/** Layout box for inspector preview; `object-contain` preserves aspect ratio */
+const INSPECTOR_PREVIEW_MAX_WIDTH_CSS = 'min(100%, 28rem)'
+const INSPECTOR_PREVIEW_MAX_HEIGHT_CSS = 'min(50dvh, 32rem)'
+
 export type FileInspectorPanelProps = {
   projectId: string
   bucketId: string
@@ -68,6 +73,12 @@ export type FileInspectorPanelProps = {
 }
 
 type InspectorTab = 'overview' | 'security'
+
+/** Preview width for API: ~inspector column × DPR, capped for bandwidth. */
+function getInspectorPreviewRequestWidthPx(): number {
+  if (typeof window === 'undefined') return 960
+  return Math.min(1600, Math.max(720, Math.round(540 * window.devicePixelRatio)))
+}
 
 /**
  * Right-hand inspector for Storage files workspace: overview, security (incl.
@@ -82,45 +93,143 @@ export function FileInspectorPanel({
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const avifSupported = useAvifSupport()
-  const { data: file, isLoading } = useFile(projectId, bucketId, fileId)
+  const { data: file, isLoading, isError } = useFile(projectId, bucketId, fileId)
   const { data: bucket } = useBucket(projectId, bucketId)
   const { project } = useProject(projectId)
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
   const showSecurityTab = canShowBucketSecuritySettings(access, features)
 
+  const [videoPlaybackError, setVideoPlaybackError] = useState(false)
+
   const [imageLoaded, setImageLoaded] = useState(false)
+  const [previewIntrinsicPx, setPreviewIntrinsicPx] = useState<{
+    w: number
+    h: number
+    /** Device pixel ratio when the bitmap decoded — caps CSS px so ~1 bitmap px maps to ~1 device px on retina. */
+    dpr: number
+  } | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [transformWizardOpen, setTransformWizardOpen] = useState(false)
+
+  const inspectorPreviewWidthPx = useMemo(
+    () => getInspectorPreviewRequestWidthPx(),
+    [],
+  )
 
   const inspectorTab: InspectorTab = useMemo(() => {
     if (!showSecurityTab) return 'overview'
     return panelTab === 'security' ? 'security' : 'overview'
   }, [showSecurityTab, panelTab])
 
-  useEffect(() => {
-    setImageLoaded(false)
-  }, [fileId])
+  const inspectorPreviewRequestWidthPx = useMemo(() => {
+    const base = inspectorPreviewWidthPx
+    const bytes = file?.sizeOriginal ?? 0
+    // Very small files are almost never large bitmaps; avoid huge preview requests that upscale on the server.
+    if (bytes > 0 && bytes < 12 * 1024) {
+      return Math.min(base, 320)
+    }
+    if (bytes > 0 && bytes < 96 * 1024) {
+      return Math.min(base, 640)
+    }
+    return base
+  }, [inspectorPreviewWidthPx, file?.sizeOriginal])
 
   const previewUrl = useMemo(() => {
-    if (!file || !fileId || !projectId || !bucketId) return null
+    if (!file || !projectId || !bucketId) return null
     if (!isStoragePreviewSupportedMimeType(file.mimeType)) return null
     const raw = sdk.forProject(projectId).storage.getFilePreview({
       bucketId,
-      fileId,
-      width: 480,
+      fileId: file.$id,
+      width: inspectorPreviewRequestWidthPx,
       output: avifSupported ? ImageFormat.Avif : undefined,
     })
     return raw + (raw.includes('?') ? '&' : '?') + 'mode=admin'
-  }, [file, fileId, projectId, bucketId, avifSupported])
+  }, [file, projectId, bucketId, avifSupported, inspectorPreviewRequestWidthPx])
+
+  const videoSourceUrl = useMemo(() => {
+    if (!file || !projectId || !bucketId) return null
+    if (!isStorageVideoPreviewSupportedMimeType(file.mimeType)) return null
+    return buildAdminFileViewUrl(projectId, bucketId, file.$id)
+  }, [file, projectId, bucketId])
+
+  useEffect(() => {
+    setImageLoaded(false)
+    setPreviewIntrinsicPx(null)
+    setVideoPlaybackError(false)
+  }, [previewUrl, videoSourceUrl])
+
+  const onVideoLoadedMetadata = useCallback(
+    (e: SyntheticEvent<HTMLVideoElement>) => {
+      const v = e.currentTarget
+      const reveal = () => setImageLoaded(true)
+      const d = v.duration
+      if (!Number.isFinite(d) || d <= 0) return
+
+      const t = Math.min(0.05, Math.max(d / 1000, 1e-5), d * 0.99)
+      let revealed = false
+      const safeReveal = () => {
+        if (revealed) return
+        revealed = true
+        reveal()
+      }
+
+      let seekFallbackId: ReturnType<typeof setTimeout> | undefined
+      const onSeeked = () => {
+        v.removeEventListener('seeked', onSeeked)
+        if (seekFallbackId !== undefined) window.clearTimeout(seekFallbackId)
+        safeReveal()
+      }
+
+      v.addEventListener('seeked', onSeeked, { once: true })
+      seekFallbackId = window.setTimeout(() => {
+        v.removeEventListener('seeked', onSeeked)
+        safeReveal()
+      }, 1500)
+
+      try {
+        v.currentTime = t
+      } catch {
+        if (seekFallbackId !== undefined) window.clearTimeout(seekFallbackId)
+        safeReveal()
+      }
+    },
+    [],
+  )
+
+  const onVideoLoadedData = useCallback(
+    (e: SyntheticEvent<HTMLVideoElement>) => {
+      const v = e.currentTarget
+      if (!Number.isFinite(v.duration) || v.duration <= 0) {
+        setImageLoaded(true)
+      }
+    },
+    [],
+  )
+
+  const inspectorPreviewImageMaxStyle = useMemo(():
+    | CSSProperties
+    | undefined => {
+    if (!previewIntrinsicPx) return undefined
+    const r = Math.max(1, previewIntrinsicPx.dpr)
+    const cssMaxW = previewIntrinsicPx.w / r
+    const cssMaxH = previewIntrinsicPx.h / r
+    return {
+      maxWidth: `min(${INSPECTOR_PREVIEW_MAX_WIDTH_CSS}, ${cssMaxW}px)`,
+      maxHeight: `min(${INSPECTOR_PREVIEW_MAX_HEIGHT_CSS}, ${cssMaxH}px)`,
+    }
+  }, [previewIntrinsicPx])
 
   const deleteFileMutation = useMutation({
-    mutationFn: async () => {
-      if (!projectId || !bucketId || !fileId) {
+    mutationFn: async (targetFileId: string) => {
+      if (!projectId || !bucketId || !targetFileId) {
         throw new Error('Project ID, Bucket ID, and File ID are required')
       }
       const projectSdk = sdk.forProject(projectId)
-      return await projectSdk.storage.deleteFile({ bucketId, fileId })
+      return await projectSdk.storage.deleteFile({
+        bucketId,
+        fileId: targetFileId,
+      })
     },
     onSuccess: async () => {
       await queryClient.refetchQueries({ queryKey: Dependencies.FILES })
@@ -143,26 +252,33 @@ export function FileInspectorPanel({
   })
 
   const handleDownload = () => {
-    if (!projectId || !bucketId || !fileId) return
+    if (!projectId || !bucketId || !file) return
     const projectSdk = sdk.forProject(projectId)
-    const url = projectSdk.storage.getFileDownload({ bucketId, fileId })
+    const url = projectSdk.storage.getFileDownload({
+      bucketId,
+      fileId: file.$id,
+    })
     const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
     window.open(urlWithMode, '_blank')
   }
 
   const handlePreview = () => {
-    if (!projectId || !bucketId || !fileId) return
+    if (!projectId || !bucketId || !file) return
     const projectSdk = sdk.forProject(projectId)
-    const url = projectSdk.storage.getFilePreview({ bucketId, fileId })
-    const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
+    const raw = file.mimeType?.toLowerCase().startsWith('video/')
+      ? projectSdk.storage.getFileView({ bucketId, fileId: file.$id })
+      : projectSdk.storage.getFilePreview({ bucketId, fileId: file.$id })
+    const urlWithMode = raw + (raw.includes('?') ? '&' : '?') + 'mode=admin'
     window.open(urlWithMode, '_blank')
   }
 
   const handleCopyFileViewUrl = () => {
-    if (!projectId || !bucketId || !fileId) return
+    if (!projectId || !bucketId) return
+    const idForClipboard = file?.$id ?? fileId
+    if (!idForClipboard) return
     void copyToClipboard(
       'File view URL',
-      buildAdminFileViewUrl(projectId, bucketId, fileId),
+      buildAdminFileViewUrl(projectId, bucketId, idForClipboard),
     )
   }
 
@@ -196,7 +312,50 @@ export function FileInspectorPanel({
     )
   }
 
-  if (isLoading || !file) {
+  if (!file) {
+    if (isLoading) {
+      return (
+        <TooltipProvider delayDuration={0}>
+          <aside className="flex h-full min-h-0 w-full min-w-0 flex-col bg-muted/10">
+            <div
+              className={cn(
+                'flex shrink-0 items-center justify-between gap-2 border-b border-border px-3',
+                STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS,
+              )}
+            >
+              <div className="flex items-center gap-2">
+                <PanelRight className="h-4 w-4 text-muted-foreground" />
+                <span className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  File
+                </span>
+              </div>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={handleCopyFileViewUrl}
+                    aria-label="Copy file view URL"
+                  >
+                    <Link2 className="h-3.5 w-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="text-xs">
+                  Copy view URL
+                </TooltipContent>
+              </Tooltip>
+            </div>
+            <div className="flex flex-1 items-center justify-center px-4">
+              <p className="text-[12px] text-muted-foreground">
+                Loading file…
+              </p>
+            </div>
+          </aside>
+        </TooltipProvider>
+      )
+    }
     return (
       <TooltipProvider delayDuration={0}>
         <aside className="flex h-full min-h-0 w-full min-w-0 flex-col bg-muted/10">
@@ -232,7 +391,7 @@ export function FileInspectorPanel({
           </div>
           <div className="flex flex-1 items-center justify-center px-4">
             <p className="text-[12px] text-muted-foreground">
-              {isLoading ? 'Loading file…' : 'File not found'}
+              {isError ? 'Could not load file' : 'File not found'}
             </p>
           </div>
         </aside>
@@ -262,42 +421,86 @@ export function FileInspectorPanel({
         </Badge>
       ) : null}
 
-      {!isPending && previewUrl ? (
-        <div className="space-y-2">
-          <div className="overflow-hidden rounded-lg border border-border bg-background">
-            <div className="aspect-video w-full bg-muted/40">
-              <img
-                src={previewUrl}
-                alt={file.name}
-                onLoad={() => setImageLoaded(true)}
-                className={cn(
-                  'h-full w-full object-contain transition-opacity duration-300',
-                  imageLoaded ? 'opacity-100' : 'opacity-0',
-                )}
-              />
+      {!isPending && videoSourceUrl ? (
+        <div className="overflow-hidden rounded-lg border border-border/50 bg-black">
+          <div className="flex w-full justify-center bg-black p-1.5 sm:p-2">
+            <div
+              className={cn(
+                'relative flex aspect-video w-[min(100%,28rem,calc(min(50dvh,32rem)*16/9))] max-w-full shrink-0 items-center justify-center overflow-hidden rounded-md bg-black',
+              )}
+            >
+              {videoPlaybackError ? (
+                <div className="flex h-full min-h-0 w-full flex-col items-center justify-center gap-2 px-4 py-6 text-center">
+                  <PreviewPlaceholderIcon className="h-10 w-10 shrink-0 text-muted-foreground/70" />
+                  <p className="max-w-[240px] text-[12px] leading-snug text-muted-foreground">
+                    This video could not be played inline. Try Open preview or
+                    Download.
+                  </p>
+                </div>
+              ) : (
+                <video
+                  key={videoSourceUrl}
+                  className={cn(
+                    'h-full w-full max-w-full object-contain outline-none',
+                    'shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]',
+                    'transition-opacity duration-300',
+                    imageLoaded ? 'opacity-100' : 'opacity-0',
+                  )}
+                  controls
+                  playsInline
+                  preload="auto"
+                  src={videoSourceUrl}
+                  aria-label={`Video preview: ${file.name}`}
+                  onLoadedMetadata={onVideoLoadedMetadata}
+                  onLoadedData={onVideoLoadedData}
+                  onError={() => setVideoPlaybackError(true)}
+                />
+              )}
             </div>
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-9 w-full gap-1.5 text-[13px]"
-            onClick={() => setTransformWizardOpen(true)}
-          >
-            <Wand2 className="h-3.5 w-3.5 shrink-0" />
-            Transform image
-          </Button>
         </div>
-      ) : !isPending ? (
-        <div className="aspect-video w-full overflow-hidden rounded-lg border border-dashed border-border bg-muted/25">
-          <div className="flex h-full min-h-[120px] flex-col items-center justify-center gap-2 px-4 text-center">
-            <PreviewPlaceholderIcon className="h-11 w-11 shrink-0 text-muted-foreground/80" />
-            <p className="max-w-[240px] text-[12px] leading-snug text-muted-foreground">
-              {file.mimeType?.toLowerCase().startsWith('image/') &&
-              !isStoragePreviewSupportedMimeType(file.mimeType)
-                ? 'View this image in your browser with Open preview, or save a copy with Download.'
-                : 'View this file in your browser with Open preview, or save a copy with Download.'}
-            </p>
+      ) : null}
+
+      {!isPending && previewUrl ? (
+        <div className="overflow-hidden rounded-lg border border-border bg-muted/20">
+          <div className="relative flex min-h-[120px] w-full items-center justify-center p-2 sm:p-3">
+            <img
+              src={previewUrl}
+              alt={file.name}
+              decoding="async"
+              onLoad={(e) => {
+                const el = e.currentTarget
+                const dpr =
+                  typeof window !== 'undefined'
+                    ? Math.max(1, window.devicePixelRatio || 1)
+                    : 1
+                if (el.naturalWidth > 0 && el.naturalHeight > 0) {
+                  setPreviewIntrinsicPx({
+                    w: el.naturalWidth,
+                    h: el.naturalHeight,
+                    dpr,
+                  })
+                }
+                setImageLoaded(true)
+              }}
+              className={cn(
+                'w-auto max-w-[min(100%,28rem)] object-contain [image-rendering:auto]',
+                !previewIntrinsicPx && 'max-h-[min(50dvh,32rem)]',
+                'transition-opacity duration-300',
+                imageLoaded ? 'opacity-100' : 'opacity-0',
+              )}
+              style={inspectorPreviewImageMaxStyle}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="absolute bottom-2 left-2 z-10 h-8 gap-1.5 bg-background/90 text-[13px] opacity-60 shadow-sm backdrop-blur-sm transition-opacity hover:opacity-100 sm:bottom-3 sm:left-3"
+              onClick={() => setTransformWizardOpen(true)}
+            >
+              <Wand2 className="h-3.5 w-3.5 shrink-0" />
+              Transform
+            </Button>
           </div>
         </div>
       ) : null}
@@ -438,7 +641,7 @@ export function FileInspectorPanel({
                   size="sm"
                   className="h-9 text-[13px]"
                   disabled={deleteFileMutation.isPending}
-                  onClick={() => deleteFileMutation.mutate()}
+                  onClick={() => deleteFileMutation.mutate(file.$id)}
                 >
                   Delete
                 </Button>
@@ -475,7 +678,7 @@ export function FileInspectorPanel({
         </Alert>
       ) : null}
       <FileSecurity
-        key={fileId}
+        key={file.$id}
         projectId={projectId}
         bucketId={bucketId}
         fileId={file.$id}

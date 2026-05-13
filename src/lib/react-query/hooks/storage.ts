@@ -270,6 +270,7 @@ export function fileQueryOptions(
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
+    placeholderData: keepPreviousData,
     gcTime: projectId && bucketId && fileId ? 5 * 60 * 1000 : 0,
   })
 }

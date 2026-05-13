@@ -153,7 +153,7 @@ export type ImageTransformPreset = {
   patch: Partial<ImageTransformState>
 }
 
-/** One-click output sizes for the transform wizard (merged into current state). */
+/** One-click output sizes for the transform wizard (patch applied on top of defaults). */
 export const IMAGE_TRANSFORM_PRESETS: readonly ImageTransformPreset[] = [
   {
     id: 'avatar-128',
@@ -187,11 +187,18 @@ export const IMAGE_TRANSFORM_PRESETS: readonly ImageTransformPreset[] = [
   },
 ]
 
+/**
+ * Applies a built-in preset: fields not listed in the patch reset to
+ * {@link defaultImageTransformState} (same as saved JSON presets).
+ */
 export function applyImageTransformPreset(
-  base: ImageTransformState,
   preset: ImageTransformPreset,
+  preferAvif: boolean,
 ): ImageTransformState {
-  return { ...base, ...preset.patch }
+  return {
+    ...defaultImageTransformState({ preferAvif }),
+    ...preset.patch,
+  }
 }
 
 export function resetImageTransformSizeSection(
@@ -282,9 +289,14 @@ export function imageTransformStatesEqual(
   )
 }
 
+/**
+ * Parses saved preset JSON and returns full transform state: starts from
+ * {@link defaultImageTransformState}, then applies only keys present in the JSON
+ * (omitted keys stay at defaults).
+ */
 export function mergeJsonIntoTransformState(
-  base: ImageTransformState,
   raw: string,
+  preferAvif: boolean,
 ):
   | { ok: true; state: ImageTransformState }
   | { ok: false; error: string } {
@@ -307,7 +319,9 @@ export function mergeJsonIntoTransformState(
     }
   }
   const p = r.data
-  const next: ImageTransformState = { ...base }
+  const next: ImageTransformState = {
+    ...defaultImageTransformState({ preferAvif }),
+  }
   if (p.width !== undefined) {
     next.width =
       p.width === null ? null : Math.min(4000, Math.max(64, Math.round(p.width)))

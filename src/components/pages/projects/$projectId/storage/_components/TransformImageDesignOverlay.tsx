@@ -826,12 +826,7 @@ export function TransformImageDesignOverlay({
         </div>
         {showHandles && (
           <div
-            className={cn(
-              'pointer-events-none absolute left-0 top-0 transition-opacity duration-150',
-              dragging
-                ? 'opacity-100'
-                : 'opacity-0 group-hover/frame:opacity-100',
-            )}
+            className="pointer-events-none absolute left-0 top-0 opacity-100 transition-opacity duration-150"
             style={{ width: displayW, height: displayH }}
           >
           <div
@@ -845,7 +840,7 @@ export function TransformImageDesignOverlay({
             }}
           />
           <div
-            className="pointer-events-none absolute inset-0 z-[5] cursor-default group-hover/frame:pointer-events-auto"
+            className="pointer-events-auto absolute inset-0 z-[5] cursor-default"
             aria-hidden
           />
           {(
@@ -939,12 +934,7 @@ export function TransformImageDesignOverlay({
         </div>
       </div>
       <div
-        className={cn(
-          'pointer-events-none absolute inset-x-0 bottom-1 z-[5] flex translate-y-3 justify-center px-2 transition-opacity duration-150',
-          dragging
-            ? 'opacity-100'
-            : 'opacity-0 group-hover/preview-size:opacity-100',
-        )}
+        className="pointer-events-none absolute inset-x-0 bottom-1 z-[5] flex translate-y-3 justify-center px-2 opacity-100 transition-opacity duration-150"
       >
         <span className="rounded-md border border-border bg-card/90 px-2 py-1 text-[11px] font-medium tabular-nums text-foreground shadow-sm backdrop-blur-sm">
           <span className="text-muted-foreground">

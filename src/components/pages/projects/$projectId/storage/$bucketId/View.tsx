@@ -5,6 +5,7 @@ import {
   useLayoutEffect,
   useCallback,
   useRef,
+  type DragEvent,
   type PointerEvent as ReactPointerEvent,
 } from 'react'
 import { useLocation, Link, useSearch } from '@tanstack/react-router'
@@ -18,6 +19,7 @@ import {
   File as FileIcon,
   FileText,
   Fingerprint,
+  Upload,
 } from 'lucide-react'
 import { formatBytes } from '@/lib/utils/mock-data'
 import {
@@ -26,6 +28,7 @@ import {
   Dependencies,
   FILES_DEFAULT_SORT_BY,
   FILES_DEFAULT_SORT_ORDER,
+  fileQueryOptions,
 } from '@/lib/react-query/hooks'
 import { ServiceHeader, type Tab } from '../../shared/ServiceHeader'
 import { CopyableId } from '@/components/global/shared/CopyableId'
@@ -92,6 +95,11 @@ import {
   STORAGE_SPREADSHEET_STICKY_THEAD_CLASS,
 } from '../_components/files-documents-layout'
 import { useMediaMinWidth } from '@/hooks/use-media-min-width'
+
+function dataTransferHasFileList(dataTransfer: DataTransfer | null): boolean {
+  if (!dataTransfer?.types?.length) return false
+  return Array.from(dataTransfer.types).includes('Files')
+}
 
 export function View() {
   const { projectId, bucketId } = useParams({
@@ -207,6 +215,16 @@ export function View() {
       : undefined
 
   const queryClient = useQueryClient()
+
+  const prefetchInspectorFileData = useCallback(
+    (targetFileId: string) => {
+      if (!projectId || !bucketId || !targetFileId) return
+      void queryClient.prefetchQuery(
+        fileQueryOptions(projectId, bucketId, targetFileId),
+      )
+    },
+    [projectId, bucketId, queryClient],
+  )
   const [searchInput, setSearchInput] = useState('')
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [displayedPage, setDisplayedPage] = useState(1)
@@ -226,6 +244,12 @@ export function View() {
   }, [displayedFilterQueryString])
   const hasInitedDisplayedRef = useRef(false)
   const [uploadFileDialogOpen, setUploadFileDialogOpen] = useState(false)
+  const [uploadPrefillFiles, setUploadPrefillFiles] = useState<File[] | null>(
+    null,
+  )
+  const clearUploadPrefill = useCallback(() => setUploadPrefillFiles(null), [])
+  const [filesSectionFileDragActive, setFilesSectionFileDragActive] =
+    useState(false)
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set())
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
@@ -484,6 +508,51 @@ export function View() {
       toast.error(getErrorMessage(error))
     }
   }
+
+  const handleFilesShellDragOverCapture = (e: DragEvent) => {
+    if (!dataTransferHasFileList(e.dataTransfer)) return
+    e.preventDefault()
+    e.stopPropagation()
+    e.dataTransfer.dropEffect = 'copy'
+  }
+
+  const handleFilesShellDragEnter = (e: DragEvent) => {
+    if (!dataTransferHasFileList(e.dataTransfer)) return
+    e.preventDefault()
+    const root = e.currentTarget as HTMLElement
+    const related = e.relatedTarget
+    if (related instanceof Node && root.contains(related)) return
+    setFilesSectionFileDragActive(true)
+  }
+
+  const handleFilesShellDragLeave = (e: DragEvent) => {
+    if (!dataTransferHasFileList(e.dataTransfer)) return
+    const root = e.currentTarget as HTMLElement
+    const related = e.relatedTarget
+    if (related instanceof Node && root.contains(related)) return
+    setFilesSectionFileDragActive(false)
+  }
+
+  const handleFilesShellDropCapture = (e: DragEvent) => {
+    if (!dataTransferHasFileList(e.dataTransfer)) return
+    e.preventDefault()
+    e.stopPropagation()
+    setFilesSectionFileDragActive(false)
+    const dropped = Array.from(e.dataTransfer.files ?? [])
+    if (dropped.length === 0) return
+    setUploadPrefillFiles(dropped)
+    setUploadFileDialogOpen(true)
+  }
+
+  useEffect(() => {
+    if (activeTab !== 'files') {
+      setFilesSectionFileDragActive(false)
+      return
+    }
+    const endDrag = () => setFilesSectionFileDragActive(false)
+    window.addEventListener('dragend', endDrag)
+    return () => window.removeEventListener('dragend', endDrag)
+  }, [activeTab])
 
   const isFilePending = (file: Models.File) => {
     return file.chunksTotal > 0 && file.chunksUploaded < file.chunksTotal
@@ -904,7 +973,7 @@ export function View() {
         contentAfterBorder={
           bucket && !bucket.enabled ? (
             <div className="border-b border-border bg-amber-500/5">
-              <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6">
+              <div className="w-full px-4 py-3 sm:px-6">
                 <Alert
                   variant="default"
                   className="border-amber-500/30 bg-transparent"
@@ -936,30 +1005,62 @@ export function View() {
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         {activeTab === 'files' && (
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div
+            className={cn(
+              'relative flex min-h-0 flex-1 flex-col overflow-hidden transition-colors duration-200 ease-out',
+              filesSectionFileDragActive && 'bg-muted/25',
+            )}
+            onDragEnter={handleFilesShellDragEnter}
+            onDragLeave={handleFilesShellDragLeave}
+            onDragOverCapture={handleFilesShellDragOverCapture}
+            onDropCapture={handleFilesShellDropCapture}
+          >
+            {filesSectionFileDragActive ? (
+              <div
+                className="shrink-0 border-b border-border bg-card/80 backdrop-blur-sm animate-in fade-in slide-in-from-top-2 duration-200 motion-reduce:animate-none"
+                role="status"
+              >
+                <div className="flex items-start gap-3 px-4 py-3 sm:px-6">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-muted/50 text-muted-foreground">
+                    <Upload className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0 flex-1 pt-0.5">
+                    <p className="text-[13px] font-medium leading-snug text-foreground">
+                      Drop files to upload
+                    </p>
+                    <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
+                      Review and upload in the dialog that opens next.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : null}
             {showFilesLoading ? (
               <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-6 py-12">
                 <p className="text-[13px] text-muted-foreground">Loading files…</p>
               </div>
             ) : files.length === 0 ? (
-              <div className="flex min-h-0 flex-1 flex-col items-center justify-center border-t border-border px-6 py-12">
-                <EmptyState
-                  icon={FileText}
-                  title={
-                    urlSearch?.trim() || filterMap.size > 0
-                      ? 'No files match your filters'
-                      : 'No files yet'
-                  }
-                  description={
-                    urlSearch?.trim() || filterMap.size > 0
-                      ? 'Try adjusting or clearing filters.'
-                      : 'Use Create file in the header to upload your first file.'
-                  }
-                  isEmpty={!urlSearch?.trim() && filterMap.size === 0}
-                  hasFilters={!!urlSearch?.trim() || filterMap.size > 0}
-                  variant="centered"
-                  iconSize="md"
-                />
+              <div className="relative flex min-h-0 min-w-0 flex-1 flex-col border-t border-border bg-muted/20">
+                <div className="absolute inset-0 flex flex-col items-center justify-center overflow-y-auto p-6 sm:p-10">
+                  <EmptyState
+                    icon={FileText}
+                    title={
+                      urlSearch?.trim() || filterMap.size > 0
+                        ? 'No files match your filters'
+                        : 'No files yet'
+                    }
+                    description={
+                      urlSearch?.trim() || filterMap.size > 0
+                        ? 'Try adjusting or clearing filters. You can also drop files anywhere here to upload new ones.'
+                        : 'Drag and drop files anywhere in this view, or use Create file in the header to upload your first file.'
+                    }
+                    isEmpty={!urlSearch?.trim() && filterMap.size === 0}
+                    hasFilters={!!urlSearch?.trim() || filterMap.size > 0}
+                    variant="default"
+                    iconSize="xl"
+                    className="w-full max-w-lg"
+                  />
+                </div>
               </div>
             ) : (
               <>
@@ -1278,6 +1379,10 @@ export function View() {
                                         ? 'bg-muted'
                                         : 'hover:bg-muted/50',
                                 )}
+                                onMouseEnter={() => {
+                                  if (pending) return
+                                  prefetchInspectorFileData(file.$id)
+                                }}
                                 onClick={(e) => {
                                   if (pending) return
                                   const target = e.target as HTMLElement
@@ -1621,6 +1726,8 @@ export function View() {
         onUpload={handleFileUpload}
         bucket={bucket}
         isLoading={false}
+        prefillFiles={uploadPrefillFiles}
+        onPrefillConsumed={clearUploadPrefill}
       />
     </div>
   )

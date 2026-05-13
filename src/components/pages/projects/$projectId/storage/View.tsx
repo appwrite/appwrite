@@ -77,30 +77,42 @@ export function View() {
     },
   })
 
+  const showPlanLimitLine =
+    total === 0 && bucketsLimit > 0 && project?.teamId
+
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="flex flex-1 flex-col items-center justify-center px-6 py-12">
-        <EmptyState
-          icon={HardDrive}
-          title={total === 0 ? 'Create your first bucket' : 'Select a bucket'}
-          description={
-            total === 0
-              ? 'Buckets isolate files, permissions, and delivery rules. Create one from the sidebar to start uploading.'
-              : 'Choose a bucket in the left sidebar to browse files, security, and settings. This layout mirrors the database console workspace.'
-          }
-          isEmpty
-          variant="card"
-          className="max-w-md"
-        />
-        {total === 0 && bucketsLimit > 0 && project?.teamId ? (
-          <p className="mt-4 max-w-md text-center text-[12px] text-muted-foreground">
-            Plan limit: {total} of {bucketsLimit} buckets ·{' '}
-            {resolveOrganizationPlanDisplayLabel({
-              planName: organizationPlan?.name ?? null,
-              planId: organizationPlan?.$id,
-            })}
-          </p>
-        ) : null}
+      <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col justify-center px-4 py-8 sm:px-6 sm:py-12">
+        <EmptyState variant="card" isEmpty className="w-full">
+          <div className="flex flex-col items-center text-center">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+              <HardDrive className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <h3 className="mb-2 text-[15px] font-medium text-foreground">
+              {total === 0 ? 'Create your first bucket' : 'Select a bucket'}
+            </h3>
+            <p
+              className={
+                showPlanLimitLine
+                  ? 'mb-2 max-w-sm text-[13px] text-muted-foreground'
+                  : 'mb-6 max-w-sm text-[13px] text-muted-foreground'
+              }
+            >
+              {total === 0
+                ? 'Buckets isolate files, permissions, and delivery rules. Create one from the sidebar to start uploading.'
+                : 'Choose a bucket in the left sidebar to browse files, security, and settings. This layout mirrors the database console workspace.'}
+            </p>
+            {showPlanLimitLine ? (
+              <p className="mb-6 max-w-sm text-[12px] text-muted-foreground">
+                Plan limit: {total} of {bucketsLimit} buckets ·{' '}
+                {resolveOrganizationPlanDisplayLabel({
+                  planName: organizationPlan?.name ?? null,
+                  planId: organizationPlan?.$id,
+                })}
+              </p>
+            ) : null}
+          </div>
+        </EmptyState>
       </div>
 
       <CreateBucket
