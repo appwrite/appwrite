@@ -280,9 +280,7 @@ return [
             [
                 '$id' => ID::custom('_key_db_collection'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['databaseInternalId', 'collectionInternalId'],
-                'lengths' => [Database::LENGTH_KEY, Database::LENGTH_KEY],
-                'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
+                'attributes' => ['databaseInternalId', 'collectionInternalId']
             ],
         ],
     ],
@@ -2887,16 +2885,12 @@ return [
             [
                 '$id' => ID::custom('_key_source_status'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['source', 'status'],
-                'lengths' => [Database::LENGTH_KEY],
-                'orders' => [Database::ORDER_ASC]
+                'attributes' => ['source', 'status']
             ],
             [
                 '$id' => ID::custom('_key_permissionsHash'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['permissionsHash'],
-                'lengths' => [32],
-                'orders' => [Database::ORDER_ASC]
+                'attributes' => ['permissionsHash']
             ]
         ]
     ]
