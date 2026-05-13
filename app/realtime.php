@@ -1347,16 +1347,14 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register) {
                         $presences = \array_values($presencesById);
                         $dbForProject = getProjectDB($project);
 
-                        // Resolve the disconnecting user so event payloads carry proper actor context.
                         $user = new User([]);
                         if (!empty($userId)) {
                             try {
-                                /** @var User $fetched */
                                 $fetched = $dbForProject->getAuthorization()->skip(
                                     fn () => $dbForProject->getDocument('users', $userId)
                                 );
                                 if (!$fetched->isEmpty()) {
-                                    $user = $fetched;
+                                    $user = new User($fetched->getArrayCopy());
                                 }
                             } catch (Throwable) {
                                 // Fall back to empty User if lookup fails.
