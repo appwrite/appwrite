@@ -22,7 +22,7 @@ class Dispatcher
      */
     private array $handlers = [];
 
-    public function register(Action $handler): self
+    public function addHandler(Action $handler): self
     {
         $labels = $handler->getLabels();
         $type = $labels[self::LABEL_MESSAGE_TYPE]

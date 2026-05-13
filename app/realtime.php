@@ -64,29 +64,6 @@ if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
 /** @var Registry $register */
 $register = $GLOBALS['register'] ?? throw new \RuntimeException('Registry not initialized');
 
-/** @var Group $pools */
-$pools = $register->get('pools');
-$statsUsageConnection = System::getEnv('_APP_CONNECTIONS_QUEUE_STATS_USAGE', '');
-$publisherPoolName = 'publisher';
-
-if (!empty($statsUsageConnection)) {
-    try {
-        $pools->get('publisher_' . $statsUsageConnection);
-        $publisherPoolName = 'publisher_' . $statsUsageConnection;
-    } catch (Throwable) {
-        // Fallback to default publisher pool when custom one is unavailable.
-    }
-}
-
-$broker = new BrokerPool(publisher: $pools->get($publisherPoolName));
-$publisherForUsage = new UsagePublisher(
-    $broker,
-    new Queue(System::getEnv(
-        '_APP_STATS_USAGE_QUEUE_NAME',
-        \Appwrite\Event\Event::STATS_USAGE_QUEUE_NAME
-    ))
-);
-
 $registerConnectionResources ??= require __DIR__ . '/init/realtime/connection.php';
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
@@ -282,35 +259,6 @@ if (!function_exists('getTelemetry')) {
     }
 }
 
-if (!function_exists('triggerStats')) {
-    function triggerStats(array $event, string $projectId): void
-    {
-    }
-}
-
-if (!function_exists('triggerPresenceUsage')) {
-    function triggerPresenceUsage(int $value, Document $project): void
-    {
-        if ($project->isEmpty()) {
-            return;
-        }
-
-        try {
-            global $publisherForUsage;
-
-            $usage = new Context();
-            $usage->addMetric(METRIC_USERS_PRESENCE, $value);
-
-            $publisherForUsage->enqueue(new UsageMessage(
-                project: $project,
-                metrics: $usage->getMetrics(),
-            ));
-        } catch (Throwable $th) {
-            logError($th, 'realtimeStats', tags: ['projectId' => $project->getId()]);
-        }
-    }
-}
-
 if (!function_exists('getQueueForEventsForProject')) {
     function getQueueForEventsForProject(Document $project, User $user): QueueEvent
     {
@@ -342,6 +290,37 @@ if (!function_exists('getQueueForRealtime')) {
         }
 
         return $ctx['queueForRealtime']->reset();
+    }
+}
+
+if (!function_exists('triggerStats')) {
+    function triggerStats(array $event, string $projectId): void
+    {
+    }
+}
+
+if (!function_exists('triggerPresenceUsage')) {
+    function triggerPresenceUsage(int $value, Document $project): void
+    {
+        if ($project->isEmpty()) {
+            return;
+        }
+
+        try {
+            global $container;
+            /** @var UsagePublisher $publisherForUsage */
+            $publisherForUsage = $container->get('publisherForUsage');
+
+            $usage = new Context();
+            $usage->addMetric(METRIC_USERS_PRESENCE, $value);
+
+            $publisherForUsage->enqueue(new UsageMessage(
+                project: $project,
+                metrics: $usage->getMetrics(),
+            ));
+        } catch (Throwable $th) {
+            logError($th, 'realtimeStats', tags: ['projectId' => $project->getId()]);
+        }
     }
 }
 
@@ -379,19 +358,45 @@ if (!function_exists('triggerPresenceEvent')) {
 
 global $container;
 
-$container->set('pools', function ($register) {
-    return $register->get('pools');
-}, ['register']);
+if (!$container->has('pools')) {
+    $container->set('pools', function ($register) {
+        return $register->get('pools');
+    }, ['register']);
+}
+
+if (!$container->has('publisherForUsage')) {
+    $container->set('publisherForUsage', function (Group $pools): UsagePublisher {
+        $statsUsageConnection = System::getEnv('_APP_CONNECTIONS_QUEUE_STATS_USAGE', '');
+        $publisherPoolName = 'publisher';
+
+        if (!empty($statsUsageConnection)) {
+            try {
+                $pools->get('publisher_' . $statsUsageConnection);
+                $publisherPoolName = 'publisher_' . $statsUsageConnection;
+            } catch (Throwable) {
+                // Fallback to default publisher pool when custom one is unavailable.
+            }
+        }
+
+        return new UsagePublisher(
+            new BrokerPool(publisher: $pools->get($publisherPoolName)),
+            new Queue(System::getEnv(
+                '_APP_STATS_USAGE_QUEUE_NAME',
+                QueueEvent::STATS_USAGE_QUEUE_NAME
+            ))
+        );
+    }, ['pools']);
+}
 
 $realtime = getRealtime();
 $presenceState = new PresenceState();
 
 $messageDispatcher = (new MessageDispatcher())
-    ->register(new PingHandler())
-    ->register(new AuthenticationHandler())
-    ->register(new SubscribeHandler())
-    ->register(new UnsubscribeHandler())
-    ->register(new PresenceHandler());
+    ->addHandler(new PingHandler())
+    ->addHandler(new AuthenticationHandler())
+    ->addHandler(new SubscribeHandler())
+    ->addHandler(new UnsubscribeHandler())
+    ->addHandler(new PresenceHandler());
 
 /**
  * Table for statistics across all workers.
@@ -1331,15 +1336,15 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register) {
                 !empty($presencesById)
                 && $projectId !== 'console'
             ) {
-                go(function () use ($presencesById, $projectId): void {
+                go(function () use ($presencesById, $projectId, $userId): void {
                     // Fresh span: the parent realtime.close span finishes before this coroutine
                     Span::init('realtime.close.presenceCleanup');
                     Span::add('realtime.projectId', $projectId);
                     Span::add('realtime.presenceCount', \count($presencesById));
 
                     try {
-                        $consoleDB = getConsoleDB();
-                        $project = $consoleDB->getAuthorization()->skip(fn () => $consoleDB->getDocument('projects', $projectId));
+                        $dbForPlatform = getConsoleDB();
+                        $project = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
 
                         if ($project->isEmpty()) {
                             return;
@@ -1348,6 +1353,22 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register) {
                         $presenceIds = \array_keys($presencesById);
                         $presences = \array_values($presencesById);
                         $dbForProject = getProjectDB($project);
+
+                        // Resolve the disconnecting user so event payloads carry proper actor context.
+                        $user = new User([]);
+                        if (!empty($userId)) {
+                            try {
+                                /** @var User $fetched */
+                                $fetched = $dbForProject->getAuthorization()->skip(
+                                    fn () => $dbForProject->getDocument('users', $userId)
+                                );
+                                if (!$fetched->isEmpty()) {
+                                    $user = $fetched;
+                                }
+                            } catch (Throwable) {
+                                // Fall back to empty User if lookup fails.
+                            }
+                        }
 
                         try {
                             $deletionCount = $dbForProject->deleteDocuments('presenceLogs', [Query::equal('$id', $presenceIds)]);
@@ -1362,7 +1383,7 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register) {
 
                         foreach ($presences as $presence) {
                             try {
-                                triggerPresenceEvent($project, new User([]), 'presences.[presenceId].delete', $presence);
+                                triggerPresenceEvent($project, $user, 'presences.[presenceId].delete', $presence);
                             } catch (Throwable) {
                                 // Swallow errors to avoid breaking disconnect cleanup
                             }

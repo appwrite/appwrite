@@ -45,12 +45,12 @@ class PresenceState
         }
 
         if (!$isAPIKey && !$isPrivilegedUser) {
-            $this->assertPermissionsAgainstAuthorization($permissions, $authorization);
+            $this->checkPermissions($permissions, $authorization);
         }
 
         sort($permissions, SORT_STRING);
         $document->setAttribute('$permissions', $permissions);
-        $document->setAttribute('perms_md5', \md5(\json_encode($permissions)));
+        $document->setAttribute('permissionsHash', \md5(\json_encode($permissions)));
 
         return $document;
     }
@@ -146,12 +146,12 @@ class PresenceState
 
         sort($ownerPermissions, SORT_STRING);
         $document->setAttribute('$permissions', $ownerPermissions);
-        $document->setAttribute('perms_md5', \md5(\json_encode($ownerPermissions)));
+        $document->setAttribute('permissionsHash', \md5(\json_encode($ownerPermissions)));
 
         return $document;
     }
 
-    private function assertPermissionsAgainstAuthorization(array $permissions, Authorization $authorization): void
+    private function checkPermissions(array $permissions, Authorization $authorization): void
     {
         foreach (Database::PERMISSIONS as $type) {
             foreach ($permissions as $permission) {
@@ -185,7 +185,7 @@ class PresenceState
         );
     }
 
-    private function getListCacheField(array $roles, array $queries, string $type): string
+    private function getListCacheFieldKey(array $roles, array $queries, string $type): string
     {
         $serialized = \array_map(
             static fn ($query) => $query instanceof Query ? $query->toArray() : $query,
@@ -200,14 +200,14 @@ class PresenceState
         );
     }
 
-    public function loadListCacheField(
+    public function getListCacheField(
         Database $dbForProject,
         array $roles,
         array $queries,
         string $type,
         int $ttl
     ): mixed {
-        $cacheField = $this->getListCacheField($roles, $queries, $type);
+        $cacheField = $this->getListCacheFieldKey($roles, $queries, $type);
 
         try {
             return $dbForProject->getCache()->load($this->getListCacheKey($dbForProject), $ttl, $cacheField);
@@ -216,14 +216,14 @@ class PresenceState
         }
     }
 
-    public function saveListCacheField(
+    public function setListCacheField(
         Database $dbForProject,
         array $roles,
         array $queries,
         string $type,
         mixed $value
     ): void {
-        $cacheField = $this->getListCacheField($roles, $queries, $type);
+        $cacheField = $this->getListCacheFieldKey($roles, $queries, $type);
 
         try {
             $dbForProject->getCache()->save($this->getListCacheKey($dbForProject), $value, $cacheField);

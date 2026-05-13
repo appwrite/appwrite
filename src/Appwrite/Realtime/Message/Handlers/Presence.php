@@ -101,7 +101,7 @@ class Presence extends Action
         $presence->removeAttribute('$collection');
         $presence->removeAttribute('$tenant');
         $presence->removeAttribute('hostname');
-        $presence->removeAttribute('perms_md5');
+        $presence->removeAttribute('permissionsHash');
         $presence->removeAttribute('userInternalId');
 
         $realtime->connections[$connectionId]['presences'][$presence->getId()] = $presence;

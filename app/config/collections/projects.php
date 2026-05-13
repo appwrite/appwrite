@@ -2828,7 +2828,7 @@ return [
             ],
             [
                 '$id' => ID::custom('metadata'),
-                'type' => Database::VAR_STRING,
+                'type' => Database::VAR_TEXT,
                 'format' => '',
                 'size' => 65535,
                 'signed' => true,
@@ -2838,7 +2838,7 @@ return [
                 'filters' => ['json'],
             ],
             [
-                '$id' => ID::custom('perms_md5'),
+                '$id' => ID::custom('permissionsHash'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 32,
@@ -2888,13 +2888,13 @@ return [
                 '$id' => ID::custom('_key_source_status'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['source', 'status'],
-                'lengths' => [Database::LENGTH_KEY, Database::LENGTH_KEY],
-                'orders' => [Database::ORDER_ASC, Database::ORDER_ASC]
+                'lengths' => [Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_ASC]
             ],
             [
-                '$id' => ID::custom('_key_perms_md5'),
+                '$id' => ID::custom('_key_permissionsHash'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['perms_md5'],
+                'attributes' => ['permissionsHash'],
                 'lengths' => [32],
                 'orders' => [Database::ORDER_ASC]
             ]

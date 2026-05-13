@@ -106,7 +106,7 @@ class XList extends PlatformAction
                 $roles = $dbForProject->getAuthorization()->getRoles();
 
                 $documentsCacheHit = false;
-                $cachedDocuments = $presenceState->loadListCacheField(
+                $cachedDocuments = $presenceState->getListCacheField(
                     $dbForProject,
                     $roles,
                     $queries,
@@ -126,7 +126,7 @@ class XList extends PlatformAction
                     $documentsArray = \array_map(function ($doc) {
                         return $doc->getArrayCopy();
                     }, $documents);
-                    $presenceState->saveListCacheField(
+                    $presenceState->setListCacheField(
                         $dbForProject,
                         $roles,
                         $queries,
@@ -136,7 +136,7 @@ class XList extends PlatformAction
                 }
 
                 if ($includeTotal) {
-                    $cachedTotal = $presenceState->loadListCacheField(
+                    $cachedTotal = $presenceState->getListCacheField(
                         $dbForProject,
                         $roles,
                         $filterQueries,
@@ -147,7 +147,7 @@ class XList extends PlatformAction
                         $total = (int) $cachedTotal;
                     } else {
                         $total = $dbForProject->count('presenceLogs', [...$filterQueries, $expiryFilter], APP_LIMIT_COUNT);
-                        $presenceState->saveListCacheField(
+                        $presenceState->setListCacheField(
                             $dbForProject,
                             $roles,
                             $filterQueries,

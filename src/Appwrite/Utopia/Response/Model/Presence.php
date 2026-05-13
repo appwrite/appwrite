@@ -29,13 +29,6 @@ class Presence extends Any
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
-            ->addRule('$sequence', [
-                'type' => self::TYPE_ID,
-                'description' => 'Presence sequence ID.',
-                'default' => '',
-                'example' => '1',
-                'readOnly' => true,
-            ])
             ->addRule('$createdAt', [
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Presence creation date in ISO 8601 format.',
@@ -90,12 +83,8 @@ class Presence extends Any
         $document->removeAttribute('$collection');
         $document->removeAttribute('$tenant');
         $document->removeAttribute('hostname');
-        $document->removeAttribute('perms_md5');
+        $document->removeAttribute('permissionsHash');
         $document->removeAttribute('userInternalId');
-
-        if (!$document->isEmpty()) {
-            $document->setAttribute('$sequence', (string) $document->getAttribute('$sequence', ''));
-        }
 
         foreach ($document->getAttributes() as $attribute) {
             if (\is_array($attribute)) {
