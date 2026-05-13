@@ -37,3 +37,14 @@ try {
 } catch (Throwable $error) {
     Console::warning('Failed to register Realtime Sentry span exporter: ' . $error->getMessage());
 }
+
+// Print spans to stdout for local visibility on editions where app/init/span.php — which already
+// installs a Pretty exporter — isn't loaded (it's gated on `_APP_EDITION === 'self-hosted'`).
+if (System::getEnv('_APP_EDITION', 'self-hosted') !== 'self-hosted') {
+    Span::addExporter(new Exporter\Pretty(), function (Span $span): bool {
+        if (\str_starts_with($span->getAction(), 'listener.')) {
+            return $span->getError() !== null;
+        }
+        return true;
+    });
+}

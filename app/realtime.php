@@ -35,6 +35,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\DSN\DSN;
+use Utopia\Logger\Log;
 use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
 use Utopia\Span\Span;
@@ -285,46 +286,73 @@ $adapter
 
 $server = new Server($adapter);
 
-if (!function_exists('recordRealtimeErrorSpan')) {
-    /** Record a Realtime error onto the active span, or a short-lived `realtime.error` span if there is none. */
-    function recordRealtimeErrorSpan(Throwable $error, string $action, array $tags, ?Document $project, ?Document $user, ?Authorization $authorization): void
-    {
-        $span = Span::current();
-        $ownsSpan = $span === null;
-        if ($ownsSpan) {
-            $span = Span::init('realtime.error');
-        }
-
-        $span->set('realtime.action', $action);
-        $span->set('error.code', $error->getCode());
-        if ($project !== null && !$project->isEmpty()) {
-            $span->set('realtime.projectId', $project->getId());
-        }
-        if ($user !== null && !$user->isEmpty()) {
-            $span->set('realtime.userId', $user->getId());
-        }
-        if ($authorization !== null) {
-            $span->set('realtime.roles', \implode(',', $authorization->getRoles()));
-        }
-        foreach ($tags as $key => $value) {
-            if (\is_scalar($value) || $value === null) {
-                $span->set('realtime.' . $key, $value);
-            }
-        }
-        $span->setError($error);
-
-        if ($ownsSpan) {
-            $span->finish();
-        }
-    }
-}
-
 // Allows overriding
 if (!function_exists('logError')) {
     function logError(Throwable $error, string $action, array $tags = [], ?Document $project = null, ?Document $user = null, ?Authorization $authorization = null): void
     {
         if (!$error instanceof Exception) {
-            recordRealtimeErrorSpan($error, $action, $tags, $project, $user, $authorization);
+            $span = Span::current();
+            if ($span !== null) {
+                // Per-action error: attach to the active realtime.open / realtime.message / realtime.close
+                // span. The Sentry span exporter in app/init/realtime/span.php ships it with the
+                // operation's full context (attributes, duration, trace_id).
+                $span->set('realtime.action', $action);
+                $span->set('error.code', $error->getCode());
+                if ($project !== null && !$project->isEmpty()) {
+                    $span->set('realtime.projectId', $project->getId());
+                }
+                if ($user !== null && !$user->isEmpty()) {
+                    $span->set('realtime.userId', $user->getId());
+                }
+                if ($authorization !== null) {
+                    $span->set('realtime.roles', \implode(',', $authorization->getRoles()));
+                }
+                foreach ($tags as $key => $value) {
+                    if (\is_scalar($value) || $value === null) {
+                        $span->set('realtime.' . $key, $value);
+                    }
+                }
+                $span->setError($error);
+            } else {
+                // Ad-hoc error (pub/sub subscriber, onStart, the Swoole server error handler,
+                // updateWorkerDocument): not tied to a per-action span. Push to the realtimeLogger
+                // (Sentry / logOwl / Raygun / AppSignal — same dedicated Realtime project).
+                global $register;
+                $logger = $register->get('realtimeLogger');
+                if ($logger) {
+                    $log = new Log();
+                    $log->setNamespace('realtime');
+                    $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
+                    $log->setVersion(System::getEnv('_APP_VERSION', 'UNKNOWN'));
+                    $log->setType(Log::TYPE_ERROR);
+                    $log->setMessage($error->getMessage());
+                    $log->setAction($action);
+
+                    $log->addTag('code', $error->getCode());
+                    $log->addTag('verboseType', get_class($error));
+                    $log->addTag('projectId', $project?->getId() ?: 'n/a');
+                    $log->addTag('userId', $user?->getId() ?: 'n/a');
+                    foreach ($tags as $key => $value) {
+                        $log->addTag($key, $value ?: 'n/a');
+                    }
+
+                    $log->addExtra('file', $error->getFile());
+                    $log->addExtra('line', $error->getLine());
+                    $log->addExtra('trace', $error->getTraceAsString());
+                    $log->addExtra('detailedTrace', $error->getTrace());
+                    $log->addExtra('roles', $authorization?->getRoles() ?? []);
+
+                    $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
+                    $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
+
+                    try {
+                        $responseCode = $logger->addLog($log);
+                        Console::info('Error log pushed with status code: ' . $responseCode);
+                    } catch (Throwable $th) {
+                        Console::error('Error pushing log: ' . $th->getMessage());
+                    }
+                }
+            }
         }
 
         Console::error('[Error] Type: ' . get_class($error));

@@ -46,21 +46,20 @@ if (!Http::isProduction()) {
     PublicDomain::allow(['request-catcher-webhook']);
 }
 
-/**
- * Build a utopia/logger Logger from a logging DSN, or null when the config is empty/invalid.
- * `$legacyProviderName` supplies the provider name for the pre-1.5.x `;`-delimited config format.
- */
-$createLogger = static function (string $providerConfig, string $legacyProviderName = ''): ?Logger {
+$register->set('logger', function () {
+    // Register error logger
+    $providerName = System::getEnv('_APP_LOGGING_PROVIDER', '');
+    $providerConfig = System::getEnv('_APP_LOGGING_CONFIG', '');
+
     if (empty($providerConfig)) {
-        return null;
+        return;
     }
 
-    $providerName = $legacyProviderName;
     try {
         $loggingProvider = new DSN($providerConfig);
 
         $providerName = $loggingProvider->getScheme();
-        $config = match ($providerName) {
+        $providerConfig = match ($providerName) {
             'sentry' => ['key' => $loggingProvider->getPassword(), 'projectId' => $loggingProvider->getUser() ?? '', 'host' => 'https://' . $loggingProvider->getHost()],
             'logowl' => ['ticket' => $loggingProvider->getUser() ?? '', 'host' => $loggingProvider->getHost()],
             default => ['key' => $loggingProvider->getHost()],
@@ -70,7 +69,7 @@ $createLogger = static function (string $providerConfig, string $legacyProviderN
         Console::warning('Using deprecated logging configuration. Please update your configuration to use DSN format.' . $th->getMessage());
         $configChunks = \explode(';', $providerConfig);
 
-        $config = match ($providerName) {
+        $providerConfig = match ($providerName) {
             'sentry' => ['key' => $configChunks[0], 'projectId' => $configChunks[1] ?? '', 'host' => ''],
             'logowl' => ['ticket' => $configChunks[0], 'host' => ''],
             default => ['key' => $providerConfig],
@@ -78,7 +77,7 @@ $createLogger = static function (string $providerConfig, string $legacyProviderN
     }
 
     if (empty($providerName)) {
-        return null;
+        return;
     }
 
     if (!Logger::hasProvider($providerName)) {
@@ -87,10 +86,10 @@ $createLogger = static function (string $providerConfig, string $legacyProviderN
 
     try {
         $adapter = match ($providerName) {
-            'sentry' => new Sentry($config['projectId'], $config['key'], $config['host']),
-            'logowl' => new LogOwl($config['ticket'], $config['host']),
-            'raygun' => new Raygun($config['key']),
-            'appsignal' => new AppSignal($config['key']),
+            'sentry' => new Sentry($providerConfig['projectId'], $providerConfig['key'], $providerConfig['host']),
+            'logowl' => new LogOwl($providerConfig['ticket'], $providerConfig['host']),
+            'raygun' => new Raygun($providerConfig['key']),
+            'appsignal' => new AppSignal($providerConfig['key']),
             default => null
         };
     } catch (Throwable $th) {
@@ -99,16 +98,59 @@ $createLogger = static function (string $providerConfig, string $legacyProviderN
 
     if ($adapter === null) {
         Console::error('Logging provider not supported. Logging is disabled');
-        return null;
+        return;
     }
 
     return new Logger($adapter);
-};
+});
 
-$register->set('logger', static fn () => $createLogger(
-    System::getEnv('_APP_LOGGING_CONFIG', ''),
-    System::getEnv('_APP_LOGGING_PROVIDER', ''),
-));
+$register->set('realtimeLogger', function () {
+    // Realtime falls back to the default logging config when _APP_LOGGING_CONFIG_REALTIME isn't
+    // set. Used by app/realtime.php logError() for ad-hoc errors (pub/sub subscriber, onStart,
+    // worker stats, the Swoole server error handler) — i.e., the call sites that have no active
+    // span. Per-action errors (inside realtime.open / realtime.message / realtime.close) attach to
+    // the active span instead and ship via the Sentry span exporter (app/init/realtime/span.php).
+    $providerConfig = System::getEnv('_APP_LOGGING_CONFIG_REALTIME', '') ?: System::getEnv('_APP_LOGGING_CONFIG', '');
+
+    if (empty($providerConfig)) {
+        return;
+    }
+
+    $loggingProvider = new DSN($providerConfig);
+    $providerName = $loggingProvider->getScheme();
+    $providerConfig = match ($providerName) {
+        'sentry' => ['key' => $loggingProvider->getPassword(), 'projectId' => $loggingProvider->getUser() ?? '', 'host' => 'https://' . $loggingProvider->getHost()],
+        'logowl' => ['ticket' => $loggingProvider->getUser() ?? '', 'host' => $loggingProvider->getHost()],
+        default => ['key' => $loggingProvider->getHost()],
+    };
+
+    if (empty($providerName)) {
+        return;
+    }
+
+    if (!Logger::hasProvider($providerName)) {
+        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Logging provider not supported. Logging is disabled');
+    }
+
+    try {
+        $adapter = match ($providerName) {
+            'sentry' => new Sentry($providerConfig['projectId'], $providerConfig['key'], $providerConfig['host']),
+            'logowl' => new LogOwl($providerConfig['ticket'], $providerConfig['host']),
+            'raygun' => new Raygun($providerConfig['key']),
+            'appsignal' => new AppSignal($providerConfig['key']),
+            default => null
+        };
+    } catch (Throwable $th) {
+        $adapter = null;
+    }
+
+    if ($adapter === null) {
+        Console::error('Logging provider not supported. Logging is disabled');
+        return;
+    }
+
+    return new Logger($adapter);
+});
 
 $register->set('pools', function () {
     $group = new Group();
