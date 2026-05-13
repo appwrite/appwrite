@@ -39,7 +39,6 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
@@ -357,37 +356,6 @@ if (!function_exists('triggerPresenceEvent')) {
                 'event' => $eventName,
             ]);
         }
-    }
-}
-
-if (!function_exists('setPermission')) {
-    function setPermission(Document $document, ?array $permissions, Authorization $authorization): void
-    {
-        $allowedPermissions = [
-            Database::PERMISSION_READ,
-            Database::PERMISSION_UPDATE,
-            Database::PERMISSION_DELETE,
-            Database::PERMISSION_WRITE,
-        ];
-        $permissions = Permission::aggregate($permissions, $allowedPermissions);
-        foreach (Database::PERMISSIONS as $type) {
-            foreach ($permissions as $permission) {
-                $permission = Permission::parse($permission);
-                if ($permission->getPermission() != $type) {
-                    continue;
-                }
-                $role = (new Role(
-                    $permission->getRole(),
-                    $permission->getIdentifier(),
-                    $permission->getDimension()
-                ))->toString();
-                if (!$authorization->hasRole($role)) {
-                    throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', $authorization->getRoles()) . ')');
-                }
-            }
-        }
-        sort($permissions, SORT_STRING);
-        $document->setAttribute('$permissions', $permissions);
     }
 }
 
