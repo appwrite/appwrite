@@ -43,15 +43,20 @@ import {
   Check,
   AlertCircle,
   MoreHorizontal,
+  Link2,
 } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useProject } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
 
-// Helper function to mask secret (matches API keys pattern)
+// Helper function to mask secret (compact hint of prefix / suffix)
 function maskSecret(secret: string): string {
-  return secret.slice(0, 7) + '•'.repeat(24) + secret.slice(-4)
+  if (!secret) return '•••••'
+  if (secret.length <= 8) {
+    return `${secret[0]}${'•'.repeat(4)}${secret[secret.length - 1]}`
+  }
+  return `${secret.slice(0, 4)}${'•'.repeat(8)}${secret.slice(-3)}`
 }
 
 type FileTokenExpiryOption =
@@ -115,6 +120,11 @@ export type FileSecurityProps = {
   fileId?: string
   /** `panel` uses tighter padding for the bucket files inspector. */
   variant?: 'page' | 'panel'
+  /**
+   * When set, only render that block (inspector tabs). Default `all` shows
+   * permissions and tokens like the standalone file security page.
+   */
+  panelSection?: 'all' | 'permissions' | 'tokens'
 }
 
 export function FileSecurity({
@@ -122,6 +132,7 @@ export function FileSecurity({
   bucketId: bucketIdProp,
   fileId: fileIdProp,
   variant = 'page',
+  panelSection = 'all',
 }: FileSecurityProps = {}) {
   const params = useParams({ strict: false }) as {
     projectId?: string
@@ -131,6 +142,8 @@ export function FileSecurity({
   const projectId = projectIdProp ?? params.projectId
   const bucketId = bucketIdProp ?? params.bucketId
   const fileId = fileIdProp ?? params.fileId
+  /** Inspector single-tab layout: no bordered cards, padding from parent */
+  const cardlessPanel = variant === 'panel' && panelSection !== 'all'
   const queryClient = useQueryClient()
 
   // State for permissions
@@ -347,356 +360,439 @@ export function FileSecurity({
 
   if (!file) {
     return (
-      <div className="rounded-lg border border-border bg-card py-12 text-center">
+      <div
+        className={cn(
+          'py-12 text-center',
+          !cardlessPanel && 'rounded-lg border border-border bg-card',
+        )}
+      >
         <p className="text-[13px] text-muted-foreground">File not found</p>
       </div>
     )
   }
 
-  const cardPad = variant === 'panel' ? 'px-4 py-3' : 'px-6 py-4'
-  const tokenRowPad = variant === 'panel' ? 'px-3 py-2.5' : 'px-4 py-3'
+  const cardPad = variant === 'panel' ? 'px-3 py-2' : 'px-6 py-4'
+  const tokenRowPad = cardlessPanel
+    ? 'px-3 py-3.5'
+    : variant === 'panel'
+      ? 'px-3 py-3'
+      : 'px-4 py-3.5'
+  const panelTone = variant === 'panel' || cardlessPanel
+
+  const showPermissions = panelSection === 'all' || panelSection === 'permissions'
+  const showTokens = panelSection === 'all' || panelSection === 'tokens'
+
+  function renderPermissionsDescription(opts?: { afterHeading?: boolean }) {
+    const afterHeading = opts?.afterHeading ?? false
+    return (
+      <p
+        className={cn(
+          'text-muted-foreground',
+          variant === 'panel' || cardlessPanel ? 'text-[12px] leading-snug' : 'text-[13px]',
+          afterHeading && (variant === 'panel' || cardlessPanel ? 'mt-1' : 'mt-2'),
+        )}
+      >
+        Choose who can access this file.{' '}
+        <a
+          href="https://appwrite.io/docs/permissions"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary hover:underline"
+        >
+          Learn more
+        </a>
+        .
+      </p>
+    )
+  }
+
+  const permissionsIntroWithTitle = (
+    <>
+      <h3
+        className={cn(
+          'font-semibold text-foreground',
+          variant === 'panel' || cardlessPanel ? 'text-[14px]' : 'text-[15px]',
+        )}
+      >
+        Permissions
+      </h3>
+      {renderPermissionsDescription({ afterHeading: true })}
+    </>
+  )
+
+  function renderTokensDescription(opts?: { afterHeading?: boolean }) {
+    const afterHeading = opts?.afterHeading ?? false
+    return (
+      <p
+        className={cn(
+          'text-muted-foreground',
+          variant === 'panel' || cardlessPanel ? 'text-[12px] leading-snug' : 'text-[13px]',
+          afterHeading && 'mt-2',
+        )}
+      >
+        File tokens allow you to share files publicly with anyone without
+        configuring bucket or file permissions. They work around browser
+        restrictions on third-party cookies and can be set to expire on a
+        specific date or work indefinitely.{' '}
+        <a
+          href="https://appwrite.io/docs/products/storage/file-tokens"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary hover:underline"
+        >
+          Learn more
+        </a>
+        .
+      </p>
+    )
+  }
+
+  const tokensIntroCardless = (
+    <div className="space-y-3">
+      {renderTokensDescription()}
+      <Button
+        size="sm"
+        className="h-8 w-fit text-[12px]"
+        onClick={() => setCreateTokenDialogOpen(true)}
+      >
+        <Plus className="h-3.5 w-3.5 mr-1.5" />
+        Create token
+      </Button>
+    </div>
+  )
+
+  const tokensIntroWithTitle = (
+    <div
+      className={cn(
+        'flex gap-3',
+        variant === 'page'
+          ? 'flex-row items-center justify-between'
+          : 'flex-col items-stretch sm:flex-row sm:items-start sm:justify-between',
+      )}
+    >
+      <div className={cn(variant === 'panel' && 'min-w-0 flex-1')}>
+        <h3
+          className={cn(
+            'font-semibold text-foreground',
+            variant === 'panel' || cardlessPanel ? 'text-[14px]' : 'text-[15px]',
+          )}
+        >
+          Tokens
+        </h3>
+        {renderTokensDescription({ afterHeading: true })}
+      </div>
+      <Button
+        size="sm"
+        className={
+          variant === 'panel' || cardlessPanel ? 'h-8 shrink-0 text-[12px]' : 'h-9 text-[13px]'
+        }
+        onClick={() => setCreateTokenDialogOpen(true)}
+      >
+        <Plus className="h-3.5 w-3.5 mr-1.5" />
+        Create token
+      </Button>
+    </div>
+  )
+
+  const permissionsEditorBlock = (
+    <PermissionsEditor
+      permissions={filePermissions}
+      onPermissionsChange={setFilePermissions}
+      withCreate={false}
+      projectId={projectId}
+      compact={variant === 'panel'}
+    />
+  )
+
+  const updatePermissionsButton = (
+    <Button
+      size="sm"
+      className={
+        variant === 'panel' || cardlessPanel ? 'h-8 text-[12px]' : 'h-9 text-[13px]'
+      }
+      disabled={
+        arraysEqual(filePermissions, file.$permissions || []) ||
+        updateFilePermissionsMutation.isPending
+      }
+      onClick={handleFilePermissionsUpdate}
+    >
+      Update
+    </Button>
+  )
+
+  function renderTokenRow(token: Models.ResourceToken) {
+    const now = new Date()
+    const expireDate = token.expire ? new Date(token.expire) : null
+    const isExpired = expireDate && expireDate < now
+    const isExpiringSoon =
+      expireDate &&
+      !isExpired &&
+      expireDate.getTime() - now.getTime() <= 7 * 24 * 60 * 60 * 1000
+
+    return (
+      <div
+        key={token.$id}
+        className={cn(
+          'flex flex-col gap-3 transition-colors hover:bg-muted/30',
+          tokenRowPad,
+        )}
+      >
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="min-w-0 flex-1">
+            {token.secret ? (
+              <div className="flex min-w-0 items-center gap-1.5">
+                <code className="max-w-[min(100%,220px)] truncate rounded bg-muted px-2 py-0.5 font-mono text-[12px] text-muted-foreground sm:max-w-md">
+                  {maskSecret(token.secret)}
+                </code>
+                <button
+                  type="button"
+                  onClick={() => setViewingTokenId(token.$id)}
+                  className="shrink-0 rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  title="View token"
+                >
+                  <Eye className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    copyToClipboard(token.secret, `token-secret-${token.$id}`)
+                  }
+                  className="shrink-0 rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  title="Copy secret"
+                >
+                  {copiedField === `token-secret-${token.$id}` ? (
+                    <Check className="h-3.5 w-3.5 text-emerald-500" />
+                  ) : (
+                    <Copy className="h-3.5 w-3.5" />
+                  )}
+                </button>
+              </div>
+            ) : null}
+          </div>
+          <div className="flex shrink-0 items-center gap-0.5">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground"
+                  aria-label="Copy URL"
+                  onClick={() => handleOpenCopyDialog(token)}
+                >
+                  <Link2 className="h-3.5 w-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Copy URL</TooltipContent>
+            </Tooltip>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground"
+                  aria-label="More"
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={() =>
+                    copyToClipboard(token.$id, `token-id-${token.$id}`)
+                  }
+                >
+                  {copiedField === `token-id-${token.$id}` ? (
+                    <>
+                      <Check className="h-3.5 w-3.5 mr-1.5 text-emerald-500" />
+                      Copied
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-3.5 w-3.5 mr-1.5" />
+                      Copy ID
+                    </>
+                  )}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    setTokenToDelete(token.$id)
+                    setDeleteTokenDialogOpen(true)
+                  }}
+                >
+                  <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+
+        <div className="min-w-0">
+          <div
+            className={cn(
+              'flex flex-wrap items-baseline gap-x-2 gap-y-1.5 py-1.5 leading-relaxed text-muted-foreground sm:gap-x-2.5',
+              panelTone ? 'text-[11px]' : 'text-[12px]',
+            )}
+          >
+            <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap">
+              <span>Created</span>
+              <DateTooltip
+                date={token.$createdAt}
+                className={cn(
+                  'text-muted-foreground',
+                  panelTone ? 'text-[11px]' : 'text-[12px]',
+                )}
+              />
+            </span>
+            <span
+              aria-hidden
+              className="shrink-0 text-muted-foreground/40"
+            >
+              ·
+            </span>
+            <span className="inline-flex shrink-0 flex-nowrap items-center gap-1 whitespace-nowrap">
+              <span>Expires</span>
+              {token.expire ? (
+                <>
+                  <DateTooltip
+                    date={token.expire}
+                    className={cn(
+                      'text-muted-foreground',
+                      panelTone ? 'text-[11px]' : 'text-[12px]',
+                    )}
+                  />
+                  {isExpired ? (
+                    <Badge variant="error" className="text-[10px] shrink-0">
+                      Expired
+                    </Badge>
+                  ) : isExpiringSoon ? (
+                    <Badge variant="warning" className="text-[10px] shrink-0">
+                      Expires soon
+                    </Badge>
+                  ) : null}
+                </>
+              ) : (
+                <span className="text-foreground">Never</span>
+              )}
+            </span>
+            <span
+              aria-hidden
+              className="shrink-0 text-muted-foreground/40"
+            >
+              ·
+            </span>
+            <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap">
+              <span>Accessed</span>
+              {token.accessedAt ? (
+                <DateTooltip
+                  date={token.accessedAt}
+                  className={cn(
+                    'text-muted-foreground',
+                    panelTone ? 'text-[11px]' : 'text-[12px]',
+                  )}
+                />
+              ) : (
+                <span className="text-foreground">Never</span>
+              )}
+            </span>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const tokensListSection = (
+    <>
+      {tokensLoading ? (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+        </div>
+      ) : tokens.length > 0 ? (
+        <>
+          {cardlessPanel ? (
+            <div className="divide-y divide-border">{tokens.map(renderTokenRow)}</div>
+          ) : (
+            <div className="overflow-hidden rounded-lg border border-border">
+              <div className="divide-y divide-border">{tokens.map(renderTokenRow)}</div>
+            </div>
+          )}
+          {tokensTotal > 0 ? (
+            <div className={cardlessPanel ? 'mt-4' : 'mt-2'}>
+              <Pagination
+                currentPage={tokensPage}
+                totalItems={tokensTotal}
+                pageSize={tokensPageSize}
+                pageSizeOptions={[10, 25, 50, 100]}
+                onPageChange={setTokensPage}
+                onPageSizeChange={(size) => {
+                  setTokensPageSize(size)
+                  setTokensPage(1)
+                }}
+                itemLabel="tokens"
+                className="py-0"
+              />
+            </div>
+          ) : null}
+        </>
+      ) : (
+        <div
+          className={cn(
+            'py-8 text-center',
+            !cardlessPanel && 'rounded-lg border border-border bg-card',
+          )}
+        >
+          <p className="text-[13px] text-muted-foreground">
+            No tokens found. Create a token to share this file publicly.
+          </p>
+        </div>
+      )}
+    </>
+  )
 
   return (
     <div className={cn('w-full', variant === 'page' && 'px-4 py-4 sm:px-6')}>
-      <div className={cn(variant === 'panel' ? 'space-y-4' : 'space-y-6')}>
+      <div
+        className={cn(
+          cardlessPanel ? 'space-y-4' : variant === 'panel' ? 'space-y-3' : 'space-y-6',
+        )}
+      >
         {/* Permissions */}
-        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-          <div className={cardPad}>
-            <h3 className="text-[15px] font-semibold text-foreground">
-              Permissions
-            </h3>
-            <p className="text-[13px] text-muted-foreground mt-2">
-              Choose who can access this file.{' '}
-              <a
-                href="https://appwrite.io/docs/permissions"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:underline"
-              >
-                Learn more
-              </a>
-              .
-            </p>
-          </div>
-          <div className="border-t border-border" />
-          <div className={cardPad}>
-            <PermissionsEditor
-              permissions={filePermissions}
-              onPermissionsChange={setFilePermissions}
-              withCreate={false}
-              projectId={projectId}
-            />
-          </div>
-          <div className={cn(cardPad, 'border-t border-border bg-muted/30')}>
-            <Button
-              size="sm"
-              className="h-9 text-[13px]"
-              disabled={
-                arraysEqual(filePermissions, file.$permissions || []) ||
-                updateFilePermissionsMutation.isPending
-              }
-              onClick={handleFilePermissionsUpdate}
-            >
-              Update
-            </Button>
-          </div>
-        </div>
+        {showPermissions ? (
+          cardlessPanel ? (
+            <div className="space-y-4">
+              <div>{renderPermissionsDescription()}</div>
+              <div className="border-t border-border pt-4">{permissionsEditorBlock}</div>
+              <div className="border-t border-border pt-4">{updatePermissionsButton}</div>
+            </div>
+          ) : (
+            <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+              <div className={cardPad}>{permissionsIntroWithTitle}</div>
+              <div className="border-t border-border" />
+              <div className={cardPad}>{permissionsEditorBlock}</div>
+              <div className={cn(cardPad, 'border-t border-border bg-muted/30')}>
+                {updatePermissionsButton}
+              </div>
+            </div>
+          )
+        ) : null}
 
         {/* Tokens */}
-        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-          <div className={cardPad}>
-            <div
-              className={cn(
-                'flex gap-3',
-                variant === 'panel'
-                  ? 'flex-col items-start'
-                  : 'flex-row items-center justify-between',
-              )}
-            >
-              <div
-                className={cn(variant === 'panel' && 'w-full min-w-0')}
-              >
-                <h3 className="text-[15px] font-semibold text-foreground">
-                  Tokens
-                </h3>
-                <p
-                  className={cn(
-                    'text-muted-foreground mt-2',
-                    variant === 'panel'
-                      ? 'text-[12px] leading-snug line-clamp-4'
-                      : 'text-[13px]',
-                  )}
-                >
-                  File tokens allow you to share files publicly with anyone
-                  without configuring bucket or file permissions. They work
-                  around browser restrictions on third-party cookies and can be
-                  set to expire on a specific date or work indefinitely.{' '}
-                  <a
-                    href="https://appwrite.io/docs/products/storage/file-tokens"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline"
-                  >
-                    Learn more
-                  </a>
-                  .
-                </p>
-              </div>
-              <Button
-                size="sm"
-                className="h-9 text-[13px]"
-                onClick={() => setCreateTokenDialogOpen(true)}
-              >
-                <Plus className="h-3.5 w-3.5 mr-1.5" />
-                Create token
-              </Button>
+        {showTokens ? (
+          cardlessPanel ? (
+            <div className="space-y-4">
+              {tokensIntroCardless}
+              <div className="border-t border-border pt-4">{tokensListSection}</div>
             </div>
-          </div>
-          <div className="border-t border-border" />
-          <div className={cardPad}>
-            {tokensLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-              </div>
-            ) : tokens.length > 0 ? (
-              <>
-                <div className="overflow-hidden rounded-lg border border-border">
-                  <div className="divide-y divide-border">
-                    {tokens.map((token: Models.ResourceToken) => {
-                    const now = new Date()
-                    const expireDate = token.expire
-                      ? new Date(token.expire)
-                      : null
-                    const isExpired = expireDate && expireDate < now
-                    const isExpiringSoon =
-                      expireDate &&
-                      !isExpired &&
-                      expireDate.getTime() - now.getTime() <=
-                        7 * 24 * 60 * 60 * 1000 // 7 days
-
-                    return (
-                      <div
-                        key={token.$id}
-                        className={cn(
-                          'flex items-center gap-2 sm:gap-3 transition-colors hover:bg-muted/30',
-                          tokenRowPad,
-                        )}
-                      >
-                        <div className="min-w-0 flex-1 space-y-1">
-                          {token.secret ? (
-                            <div className="flex min-w-0 items-center gap-1.5">
-                              <code className="max-w-[min(100%,220px)] truncate rounded bg-muted px-2 py-0.5 font-mono text-[12px] text-muted-foreground sm:max-w-md">
-                                {maskSecret(token.secret)}
-                              </code>
-                              <button
-                                type="button"
-                                onClick={() => setViewingTokenId(token.$id)}
-                                className="shrink-0 rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                                title="View token"
-                              >
-                                <Eye className="h-3.5 w-3.5" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  copyToClipboard(
-                                    token.secret,
-                                    `token-secret-${token.$id}`,
-                                  )
-                                }
-                                className="shrink-0 rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                                title="Copy secret"
-                              >
-                                {copiedField ===
-                                `token-secret-${token.$id}` ? (
-                                  <Check className="h-3.5 w-3.5 text-emerald-500" />
-                                ) : (
-                                  <Copy className="h-3.5 w-3.5" />
-                                )}
-                              </button>
-                            </div>
-                          ) : null}
-
-                          <div className="min-w-0 overflow-x-auto">
-                            <div
-                              className={cn(
-                                'flex w-max max-w-none flex-nowrap items-center gap-x-2 text-muted-foreground sm:gap-x-2.5',
-                                variant === 'panel'
-                                  ? 'text-[11px]'
-                                  : 'text-[12px]',
-                              )}
-                            >
-                              <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap">
-                                <span>Created</span>
-                                <DateTooltip
-                                  date={token.$createdAt}
-                                  className={cn(
-                                    'text-muted-foreground',
-                                    variant === 'panel'
-                                      ? 'text-[11px]'
-                                      : 'text-[12px]',
-                                  )}
-                                />
-                              </span>
-                              <span
-                                aria-hidden
-                                className="shrink-0 text-muted-foreground/40"
-                              >
-                                ·
-                              </span>
-                              <span className="inline-flex shrink-0 flex-nowrap items-center gap-1 whitespace-nowrap">
-                                <span>Expires</span>
-                                {token.expire ? (
-                                  <>
-                                    <DateTooltip
-                                      date={token.expire}
-                                      className={cn(
-                                        'text-muted-foreground',
-                                        variant === 'panel'
-                                          ? 'text-[11px]'
-                                          : 'text-[12px]',
-                                      )}
-                                    />
-                                    {isExpired ? (
-                                      <Badge
-                                        variant="error"
-                                        className="text-[10px] shrink-0"
-                                      >
-                                        Expired
-                                      </Badge>
-                                    ) : isExpiringSoon ? (
-                                      <Badge
-                                        variant="warning"
-                                        className="text-[10px] shrink-0"
-                                      >
-                                        Expires soon
-                                      </Badge>
-                                    ) : null}
-                                  </>
-                                ) : (
-                                  <span className="text-foreground">Never</span>
-                                )}
-                              </span>
-                              <span
-                                aria-hidden
-                                className="shrink-0 text-muted-foreground/40"
-                              >
-                                ·
-                              </span>
-                              <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap">
-                                <span>Accessed</span>
-                                {token.accessedAt ? (
-                                  <DateTooltip
-                                    date={token.accessedAt}
-                                    className={cn(
-                                      'text-muted-foreground',
-                                      variant === 'panel'
-                                        ? 'text-[11px]'
-                                        : 'text-[12px]',
-                                    )}
-                                  />
-                                ) : (
-                                  <span className="text-foreground">Never</span>
-                                )}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex shrink-0 items-center gap-0.5">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-muted-foreground"
-                                aria-label="Copy URL"
-                                onClick={() => handleOpenCopyDialog(token)}
-                              >
-                                <Copy className="h-3.5 w-3.5" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Copy URL</TooltipContent>
-                          </Tooltip>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-muted-foreground"
-                                aria-label="More"
-                              >
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  copyToClipboard(
-                                    token.$id,
-                                    `token-id-${token.$id}`,
-                                  )
-                                }
-                              >
-                                {copiedField === `token-id-${token.$id}` ? (
-                                  <>
-                                    <Check className="h-3.5 w-3.5 mr-1.5 text-emerald-500" />
-                                    Copied
-                                  </>
-                                ) : (
-                                  <>
-                                    <Copy className="h-3.5 w-3.5 mr-1.5" />
-                                    Copy ID
-                                  </>
-                                )}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="text-destructive"
-                                onClick={() => {
-                                  setTokenToDelete(token.$id)
-                                  setDeleteTokenDialogOpen(true)
-                                }}
-                              >
-                                <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </div>
-                    )
-                  })}
-                  </div>
-                </div>
-                {tokensTotal > 0 && (
-                  <div className="mt-2">
-                    <Pagination
-                      currentPage={tokensPage}
-                      totalItems={tokensTotal}
-                      pageSize={tokensPageSize}
-                      pageSizeOptions={[10, 25, 50, 100]}
-                      onPageChange={setTokensPage}
-                      onPageSizeChange={(size) => {
-                        setTokensPageSize(size)
-                        setTokensPage(1)
-                      }}
-                      itemLabel="tokens"
-                      className="py-0"
-                    />
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="rounded-lg border border-border bg-card py-8 text-center">
-                <p className="text-[13px] text-muted-foreground">
-                  No tokens found. Create a token to share this file publicly.
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
+          ) : (
+            <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+              <div className={cardPad}>{tokensIntroWithTitle}</div>
+              <div className="border-t border-border" />
+              <div className={cardPad}>{tokensListSection}</div>
+            </div>
+          )
+        ) : null}
       </div>
 
       {/* Create Token Dialog */}

@@ -68,11 +68,11 @@ export type FileInspectorPanelProps = {
   bucketId: string
   /** Selected file from `?file=` or row selection */
   fileId: string | undefined
-  /** URL `filePanel` — keeps deep links and context menu in sync with the inspector */
-  panelTab?: 'overview' | 'security'
+  /** URL `filePanel` — `security` is kept for older links and opens Permissions */
+  panelTab?: 'overview' | 'permissions' | 'tokens' | 'security'
 }
 
-type InspectorTab = 'overview' | 'security'
+type InspectorTab = 'overview' | 'permissions' | 'tokens'
 
 /** Preview width for API: ~inspector column × DPR, capped for bandwidth. */
 function getInspectorPreviewRequestWidthPx(): number {
@@ -81,8 +81,8 @@ function getInspectorPreviewRequestWidthPx(): number {
 }
 
 /**
- * Right-hand inspector for Storage files workspace: overview, security (incl.
- * tokens), download/preview/delete — intended to replace the standalone file page.
+ * Right-hand inspector for Storage files workspace: overview, permissions,
+ * file tokens, download/preview/delete — intended to replace the standalone file page.
  */
 export function FileInspectorPanel({
   projectId,
@@ -119,7 +119,9 @@ export function FileInspectorPanel({
 
   const inspectorTab: InspectorTab = useMemo(() => {
     if (!showSecurityTab) return 'overview'
-    return panelTab === 'security' ? 'security' : 'overview'
+    if (panelTab === 'permissions' || panelTab === 'tokens') return panelTab
+    if (panelTab === 'security') return 'permissions'
+    return 'overview'
   }, [showSecurityTab, panelTab])
 
   const inspectorPreviewRequestWidthPx = useMemo(() => {
@@ -413,8 +415,12 @@ export function FileInspectorPanel({
 
   const PreviewPlaceholderIcon = getStorageFileIcon(file.mimeType)
 
+  /** Match tab strip: `TabsList` wrapper uses the same horizontal + vertical padding */
+  const inspectorTabContentClass =
+    'space-y-4 px-3 pb-3 pt-3 sm:px-6 sm:pb-4 sm:pt-4'
+
   const overviewBody = (
-    <div className="space-y-4 p-4">
+    <div className={inspectorTabContentClass}>
       {isPending ? (
         <Badge variant="warning" className="text-[10px] shrink-0">
           Pending upload
@@ -653,8 +659,8 @@ export function FileInspectorPanel({
     </div>
   )
 
-  const securityBody = (
-    <div className="min-h-0 space-y-4 p-4">
+  const permissionsTabBody = (
+    <div className={cn('min-h-0', inspectorTabContentClass)}>
       {bucket && !bucket.fileSecurity ? (
         <Alert variant="default" className="border-amber-500/30 bg-amber-500/5">
           <AlertCircle className="h-4 w-4 text-amber-500" />
@@ -683,6 +689,20 @@ export function FileInspectorPanel({
         bucketId={bucketId}
         fileId={file.$id}
         variant="panel"
+        panelSection="permissions"
+      />
+    </div>
+  )
+
+  const tokensTabBody = (
+    <div className={cn('min-h-0', inspectorTabContentClass)}>
+      <FileSecurity
+        key={file.$id}
+        projectId={projectId}
+        bucketId={bucketId}
+        fileId={file.$id}
+        variant="panel"
+        panelSection="tokens"
       />
     </div>
   )
@@ -699,8 +719,8 @@ export function FileInspectorPanel({
         >
           <div className="flex min-w-0 flex-1 items-center gap-2">
             <PanelRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <span className="truncate text-left text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-              File
+            <span className="truncate text-left text-[13px] font-semibold text-foreground">
+              {file.name}
             </span>
           </div>
           <div className="flex shrink-0 items-center gap-0.5">
@@ -773,10 +793,10 @@ export function FileInspectorPanel({
                 params: { projectId, bucketId },
                 search: (prev: Record<string, unknown>) => {
                   const out: Record<string, unknown> = { ...prev, file: fileId }
-                  if (next === 'security') {
-                    out.filePanel = 'security'
-                  } else {
+                  if (next === 'overview') {
                     delete out.filePanel
+                  } else {
+                    out.filePanel = next
                   }
                   return out
                 },
@@ -786,12 +806,15 @@ export function FileInspectorPanel({
             className="flex min-h-0 flex-1 flex-col gap-0 overflow-hidden"
           >
             <div className="shrink-0 border-b border-border px-3 pb-3 pt-3 sm:px-6 sm:pb-4 sm:pt-4">
-              <TabsList className="grid h-9 w-full grid-cols-2">
-                <TabsTrigger value="overview" className="text-[13px]">
+              <TabsList className="grid h-9 w-full grid-cols-3">
+                <TabsTrigger value="overview" className="text-[12px] sm:text-[13px]">
                   Overview
                 </TabsTrigger>
-                <TabsTrigger value="security" className="text-[13px]">
-                  Security
+                <TabsTrigger value="permissions" className="text-[12px] sm:text-[13px]">
+                  Permissions
+                </TabsTrigger>
+                <TabsTrigger value="tokens" className="text-[12px] sm:text-[13px]">
+                  Tokens
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -803,10 +826,16 @@ export function FileInspectorPanel({
                 {overviewBody}
               </TabsContent>
               <TabsContent
-                value="security"
+                value="permissions"
                 className="m-0 mt-0 h-full outline-none data-[state=inactive]:hidden"
               >
-                {securityBody}
+                {permissionsTabBody}
+              </TabsContent>
+              <TabsContent
+                value="tokens"
+                className="m-0 mt-0 h-full outline-none data-[state=inactive]:hidden"
+              >
+                {tokensTabBody}
               </TabsContent>
             </div>
           </Tabs>

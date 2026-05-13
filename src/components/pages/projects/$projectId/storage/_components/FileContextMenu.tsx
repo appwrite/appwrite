@@ -8,6 +8,7 @@ import {
   FileJson,
   LayoutList,
   Shield,
+  KeyRound,
 } from 'lucide-react'
 import {
   ContextMenu,
@@ -81,16 +82,16 @@ export function FileContextMenu({
     },
   })
 
-  const navigateToTab = (tab: string) => {
+  const navigateToTab = (tab: 'overview' | 'permissions' | 'tokens') => {
     navigate({
       to: '/projects/$projectId/storage/$bucketId',
       params: { projectId, bucketId },
       search: (prev: Record<string, unknown>) => {
         const next: Record<string, unknown> = { ...prev, file: file.id }
-        if (tab === 'security') {
-          next.filePanel = 'security'
-        } else {
+        if (tab === 'overview') {
           delete next.filePanel
+        } else {
+          next.filePanel = tab
         }
         return next
       },
@@ -116,9 +117,13 @@ export function FileContextMenu({
             <ContextMenuIcon icon={LayoutList} />
             Overview
           </ContextMenuItem>
-          <ContextMenuItem onSelect={() => navigateToTab('security')}>
+          <ContextMenuItem onSelect={() => navigateToTab('permissions')}>
             <ContextMenuIcon icon={Shield} />
-            Security
+            Permissions
+          </ContextMenuItem>
+          <ContextMenuItem onSelect={() => navigateToTab('tokens')}>
+            <ContextMenuIcon icon={KeyRound} />
+            Tokens
           </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuSub>

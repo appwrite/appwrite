@@ -25,7 +25,10 @@ const DEFAULT_PAGE = 1
 
 const bucketFilesSearchSchema = listSearchSchema.extend({
   file: z.string().optional().catch(undefined),
-  filePanel: z.enum(['overview', 'security']).optional().catch(undefined),
+  filePanel: z
+    .enum(['overview', 'permissions', 'tokens', 'security'])
+    .optional()
+    .catch(undefined),
 })
 
 export const Route = createFileRoute(

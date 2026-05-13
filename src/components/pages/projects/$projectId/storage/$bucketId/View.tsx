@@ -115,7 +115,7 @@ export function View() {
     limit?: number
     sort?: string
     file?: string
-    filePanel?: 'overview' | 'security'
+    filePanel?: 'overview' | 'permissions' | 'tokens' | 'security'
   }
   const { project } = useProject(projectId)
   const { features } = useConsoleProfile()
@@ -1584,6 +1584,8 @@ export function View() {
                       fileId={inspectorFileId}
                       panelTab={
                         search?.filePanel === 'overview' ||
+                        search?.filePanel === 'permissions' ||
+                        search?.filePanel === 'tokens' ||
                         search?.filePanel === 'security'
                           ? search.filePanel
                           : undefined

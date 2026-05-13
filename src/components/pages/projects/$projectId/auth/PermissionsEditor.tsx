@@ -43,6 +43,8 @@ export interface PermissionsEditorProps {
   /** When true, only parse/display "execute" permission (e.g. for functions) */
   executeOnly?: boolean
   projectId?: string
+  /** Tighter table padding and column mins (e.g. storage file inspector pane). */
+  compact?: boolean
 }
 
 interface PermissionActions {
@@ -881,9 +883,36 @@ export function PermissionsEditor({
   withCreate = false,
   executeOnly = false,
   projectId: projectIdProp,
+  compact = false,
 }: PermissionsEditorProps) {
   const params = useParams({ strict: false })
   const projectId = projectIdProp || (params.projectId as string | undefined)
+
+  const d = compact
+    ? {
+        pad: 'px-2 py-1.5',
+        head: 'text-[11px] font-semibold text-muted-foreground uppercase tracking-wider',
+        roleMin: 'min-w-[120px]',
+        actMin: 'min-w-[48px]',
+        rmCol: 'w-[36px]',
+        rmBtn: 'size-7',
+        rmIcon: 'size-3.5',
+        stack: 'space-y-2',
+        emptyY: 'py-6',
+        emptyGap: 'gap-2',
+      }
+    : {
+        pad: 'px-4 py-3',
+        head: 'text-[12px] font-semibold text-muted-foreground uppercase tracking-wider',
+        roleMin: 'min-w-[220px]',
+        actMin: 'min-w-[64px]',
+        rmCol: 'w-[40px]',
+        rmBtn: 'size-8',
+        rmIcon: 'size-4',
+        stack: 'space-y-4',
+        emptyY: 'py-12',
+        emptyGap: 'gap-4',
+      }
 
   // Internal state
   const [permissionsMap, setPermissionsMap] = useState<
@@ -1138,7 +1167,13 @@ export function PermissionsEditor({
   // Empty state
   if (roles.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center gap-4 py-12">
+      <div
+        className={cn(
+          'flex flex-col items-center justify-center',
+          d.emptyGap,
+          d.emptyY,
+        )}
+      >
         <AddRoleDropdown
           onAddSpecialRole={handleAddRole}
           onOpenUserModal={() => setUserModalOpen(true)}
@@ -1150,7 +1185,12 @@ export function PermissionsEditor({
           hasUsers={hasUsers}
           emptyState
         />
-        <p className="text-sm text-muted-foreground">
+        <p
+          className={cn(
+            'text-muted-foreground',
+            compact ? 'text-[12px]' : 'text-sm',
+          )}
+        >
           {executeOnly
             ? 'Add roles to choose who can execute'
             : 'Add a role to get started'}
@@ -1191,22 +1231,25 @@ export function PermissionsEditor({
       (role) => permissionsMap.get(role)?.execute,
     )
     return (
-      <div className="space-y-4">
+      <div className={d.stack}>
         <div className="flex flex-wrap gap-2">
           {rolesWithExecute.map((role) => (
             <div
               key={role}
-              className="flex items-center gap-2 rounded-lg border border-border bg-muted/30 pl-3 pr-1 py-2 min-w-0"
+              className={cn(
+                'flex items-center gap-2 rounded-lg border border-border bg-muted/30 pr-1 min-w-0',
+                compact ? 'pl-2 py-1.5' : 'pl-3 py-2',
+              )}
             >
               <RoleDisplay role={role} projectId={projectId} />
               <Button
                 variant="ghost"
                 size="icon"
-                className="size-8 shrink-0"
+                className={cn(compact ? 'size-7' : 'size-8', 'shrink-0')}
                 onClick={() => handleRemoveRole(role)}
                 aria-label={`Remove ${role} from execute list`}
               >
-                <X className="size-4" />
+                <X className={compact ? 'size-3.5' : 'size-4'} />
               </Button>
             </div>
           ))}
@@ -1251,29 +1294,41 @@ export function PermissionsEditor({
 
   // Table state (CRUD permissions)
   return (
-    <div className="space-y-4">
+    <div className={d.stack}>
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent border-b border-border">
-              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider min-w-[220px]">
+              <TableHead
+                className={cn(d.pad, d.head, d.roleMin)}
+              >
                 Role
               </TableHead>
               {withCreate && (
-                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center min-w-[64px]">
+                <TableHead
+                  className={cn(d.pad, d.head, 'text-center', d.actMin)}
+                >
                   Create
                 </TableHead>
               )}
-              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center min-w-[64px]">
+              <TableHead
+                className={cn(d.pad, d.head, 'text-center', d.actMin)}
+              >
                 Read
               </TableHead>
-              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center min-w-[64px]">
+              <TableHead
+                className={cn(d.pad, d.head, 'text-center', d.actMin)}
+              >
                 Update
               </TableHead>
-              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center min-w-[64px]">
+              <TableHead
+                className={cn(d.pad, d.head, 'text-center', d.actMin)}
+              >
                 Delete
               </TableHead>
-              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[40px]"></TableHead>
+              <TableHead
+                className={cn(d.pad, d.head, d.rmCol)}
+              ></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -1281,11 +1336,11 @@ export function PermissionsEditor({
               const actions = permissionsMap.get(role)!
               return (
                 <TableRow key={role}>
-                  <TableCell className="px-4 py-3 min-w-[220px]">
+                  <TableCell className={cn(d.pad, d.roleMin)}>
                     <RoleDisplay role={role} projectId={projectId} />
                   </TableCell>
                   {withCreate && (
-                    <TableCell className="px-4 py-3 min-w-[64px] text-center">
+                    <TableCell className={cn(d.pad, d.actMin, 'text-center')}>
                       <Checkbox
                         checked={actions.create}
                         onCheckedChange={(checked) =>
@@ -1299,7 +1354,7 @@ export function PermissionsEditor({
                       />
                     </TableCell>
                   )}
-                  <TableCell className="px-4 py-3 min-w-[64px] text-center">
+                  <TableCell className={cn(d.pad, d.actMin, 'text-center')}>
                     <Checkbox
                       checked={actions.read}
                       onCheckedChange={(checked) =>
@@ -1308,7 +1363,7 @@ export function PermissionsEditor({
                       aria-label={`Read permission for ${role}`}
                     />
                   </TableCell>
-                  <TableCell className="px-4 py-3 min-w-[64px] text-center">
+                  <TableCell className={cn(d.pad, d.actMin, 'text-center')}>
                     <Checkbox
                       checked={actions.update}
                       onCheckedChange={(checked) =>
@@ -1317,7 +1372,7 @@ export function PermissionsEditor({
                       aria-label={`Update permission for ${role}`}
                     />
                   </TableCell>
-                  <TableCell className="px-4 py-3 min-w-[64px] text-center">
+                  <TableCell className={cn(d.pad, d.actMin, 'text-center')}>
                     <Checkbox
                       checked={actions.delete}
                       onCheckedChange={(checked) =>
@@ -1326,15 +1381,15 @@ export function PermissionsEditor({
                       aria-label={`Delete permission for ${role}`}
                     />
                   </TableCell>
-                  <TableCell className="px-4 py-3 w-[40px]">
+                  <TableCell className={cn(d.pad, d.rmCol)}>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="size-8"
+                      className={d.rmBtn}
                       onClick={() => handleRemoveRole(role)}
                       aria-label={`Remove ${role} permissions`}
                     >
-                      <X className="size-4" />
+                      <X className={d.rmIcon} />
                     </Button>
                   </TableCell>
                 </TableRow>

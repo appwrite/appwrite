@@ -8,7 +8,7 @@ export const STORAGE_FILES_TABLE_PANE_WIDTH_STORAGE_KEY =
 
 export const STORAGE_FILES_TABLE_PANE_MIN_PX = 260
 export const STORAGE_FILES_TABLE_PANE_MAX_PX = 4000
-export const STORAGE_FILES_PREVIEW_PANE_MIN_PX = 650
+export const STORAGE_FILES_PREVIEW_PANE_MIN_PX = 480
 
 /**
  * Minimum viewport width for the files table + inline preview **side-by-side**
@@ -16,7 +16,7 @@ export const STORAGE_FILES_PREVIEW_PANE_MIN_PX = 650
  * and the inspector stay usable; aligns roughly with preview min width plus a
  * workable table pane.
  */
-export const STORAGE_FILES_TABLE_PREVIEW_SPLIT_MIN_VIEWPORT_PX = 1200
+export const STORAGE_FILES_TABLE_PREVIEW_SPLIT_MIN_VIEWPORT_PX = 1024
 
 /**
  * Stacked layout (narrow viewport): max height for the file inspector so the
