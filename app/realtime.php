@@ -314,13 +314,34 @@ if (!function_exists('triggerPresenceUsage')) {
 if (!function_exists('getQueueForEventsForProject')) {
     function getQueueForEventsForProject(Document $project, User $user): QueueEvent
     {
-        global $container;
-        $queueForEvents = $container->get('queueForEvents');
+        $ctx = Coroutine::getContext();
 
-        $queueForEvents->setProject($project);
-        $queueForEvents->setUser($user);
+        if (!isset($ctx['queueForEvents'])) {
+            global $register;
+            /** @var Group $pools */
+            $pools = $register->get('pools');
+            $ctx['queueForEvents'] = new QueueEvent(new BrokerPool(
+                publisher: $pools->get('publisher')
+            ));
+        }
 
-        return $queueForEvents;
+        return $ctx['queueForEvents']
+            ->reset()
+            ->setProject($project)
+            ->setUser($user);
+    }
+}
+
+if (!function_exists('getQueueForRealtime')) {
+    function getQueueForRealtime(): QueueRealtime
+    {
+        $ctx = Coroutine::getContext();
+
+        if (!isset($ctx['queueForRealtime'])) {
+            $ctx['queueForRealtime'] = new QueueRealtime();
+        }
+
+        return $ctx['queueForRealtime']->reset();
     }
 }
 
@@ -336,16 +357,13 @@ if (!function_exists('triggerPresenceEvent')) {
         }
 
         try {
-            global $container;
             $queueForEvents = getQueueForEventsForProject($project, $user);
             $queueForEvents
                 ->setEvent($eventName)
                 ->setParam('presenceId', $presence->getId())
                 ->setPayload($presence->getArrayCopy());
 
-            /** @var QueueRealtime $queueForRealtime */
-            $queueForRealtime = $container->get('queueForRealtime');
-            $queueForRealtime
+            getQueueForRealtime()
                 ->setProject($project)
                 ->setUser($user)
                 ->from($queueForEvents)
@@ -364,20 +382,6 @@ global $container;
 $container->set('pools', function ($register) {
     return $register->get('pools');
 }, ['register']);
-
-if (!$container->has('queueForEvents')) {
-    $container->set('queueForEvents', function ($pools) {
-        return new QueueEvent(new BrokerPool(
-            publisher: $pools->get('publisher')
-        ));
-    }, ['pools']);
-}
-
-if (!$container->has('queueForRealtime')) {
-    $container->set('queueForRealtime', function () {
-        return new QueueRealtime();
-    }, []);
-}
 
 $realtime = getRealtime();
 $presenceState = new PresenceState();
@@ -1215,8 +1219,7 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
 
         // Child of the global container: per-message values like $connection and $project
         // live on this scope so concurrent message coroutines don't clobber each other,
-        // while globally-registered services (pools, queueForRealtime, ...) remain reachable
-        // via the parent.
+        // while globally-registered services (pools, ...) remain reachable via the parent.
         $messageContainer = new Container($container);
         $messageContainer->set('connectionId', fn () => $connection);
         $messageContainer->set('server', fn () => $server);
