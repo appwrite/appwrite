@@ -205,6 +205,74 @@ class Realtime extends MessagingAdapter
     }
 
     /**
+     * Dedup delete presence triggers.
+     * Scenario: when client is connected to realtime and a delete call is made throught rest.
+     * If not dedupe then two delete events will get triggered. So remove the presenceIds
+     *
+     * @param string $projectId
+     * @param string $presenceId
+     * @return int Number of connections whose presences map was updated.
+     */
+    public function removePresenceFromConnections(string $projectId, string $presenceId): int
+    {
+        if ($projectId === '' || $presenceId === '') {
+            return 0;
+        }
+
+        $removed = 0;
+        foreach ($this->connections as $connectionId => $connection) {
+            if (($connection['projectId'] ?? null) !== $projectId) {
+                continue;
+            }
+            if (!isset($connection['presences'][$presenceId])) {
+                continue;
+            }
+            unset($this->connections[$connectionId]['presences'][$presenceId]);
+            $removed++;
+        }
+
+        return $removed;
+    }
+
+    /**
+     * Returns the presence ID carried by a `presences.{id}.delete` event payload,
+     * or null when the event is not a presence delete.
+     *
+     * @param array $event Decoded pubsub payload produced by self::send().
+     * @return string|null
+     */
+    public static function extractDeletedPresenceId(array $event): ?string
+    {
+        $events = $event['data']['events'] ?? [];
+        if (!\is_array($events)) {
+            return null;
+        }
+
+        $isPresenceDelete = false;
+        foreach ($events as $eventName) {
+            if (
+                \is_string($eventName)
+                && \str_starts_with($eventName, 'presences.')
+                && \str_ends_with($eventName, '.delete')
+            ) {
+                $isPresenceDelete = true;
+                break;
+            }
+        }
+
+        if (!$isPresenceDelete) {
+            return null;
+        }
+
+        $presenceId = $event['data']['payload']['$id'] ?? null;
+        if (!\is_string($presenceId) || $presenceId === '') {
+            return null;
+        }
+
+        return $presenceId;
+    }
+
+    /**
      * Removes all subscriptions for a connection.
      *
      * @param mixed $connection

@@ -98,11 +98,11 @@ class Presence extends Action
             },
         );
 
+        $presence->removeAttribute('$collection');
+        $presence->removeAttribute('$tenant');
         $presence->removeAttribute('hostname');
+        $presence->removeAttribute('perms_md5');
 
-        // Stash the Document keyed by ID so onClose can build delete-event payloads without
-        // re-reading the row from the DB. hostname is already stripped above so it won't leak
-        // into the realtime payload sent to subscribers.
         $realtime->connections[$connectionId]['presences'][$presence->getId()] = $presence;
 
         $triggerPresenceEvent($project, $user, 'presences.[presenceId].upsert', $presence);

@@ -773,6 +773,16 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     }
                 }
 
+                // Strip deleted presences from in-memory connection state so onClose doesn't
+                // re-fire delete events for rows already removed via HTTP DELETE.
+                $deletedPresenceId = Realtime::extractDeletedPresenceId($event);
+                if ($deletedPresenceId !== null) {
+                    $realtime->removePresenceFromConnections(
+                        (string) ($event['project'] ?? ''),
+                        $deletedPresenceId,
+                    );
+                }
+
                 $receivers = $realtime->getSubscribers($event);
 
                 if (System::getEnv('_APP_ENV', 'production') === 'development' && !empty($receivers)) {

@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Presences;
 
+use Appwrite\Tests\Async\Exceptions\Critical;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -585,6 +586,96 @@ class PresenceRealtimeClientTest extends Scope
             $publisher->close();
 
             $this->receivePresenceEvent($listener, $presenceId, 'delete', 'online', $metadata, $user['$id'], timeoutMs: 3000);
+        } finally {
+            $listener->close();
+        }
+    }
+
+    public function testHttpDeleteThenCloseDoesNotDuplicateDeleteEvent(): void
+    {
+        [$project, $user, $headers] = $this->bootstrapIsolatedProject();
+        $presenceId = ID::unique();
+        $metadata = ['testRunId' => ID::unique(), 'source' => 'http-delete-then-close'];
+
+        $publisher = $this->connectRealtimeAndSubscribe($project, $headers, ['presences', 'presences.' . $presenceId], timeout: 1);
+        $listener = $this->connectRealtimeAndSubscribe($project, $headers, ['presences', 'presences.' . $presenceId], timeout: 1);
+
+        try {
+            // Publish a presence over WebSocket so the realtime worker tracks it in
+            // its in-memory connection map under the publisher connection.
+            $this->sendPresenceMessage(
+                $publisher,
+                $presenceId,
+                'online',
+                $metadata,
+                $this->getPresencePermissions(Role::any())
+            );
+            $this->collectPresenceOutcome($publisher, $presenceId, 'online', $metadata, $user['$id']);
+            $this->receivePresenceEvent($listener, $presenceId, 'upsert', 'online', $metadata, $user['$id']);
+
+            // HTTP DELETE removes the row from the DB and emits the delete event via pubsub.
+            // The realtime worker is expected to strip the presence from the publisher's
+            // in-memory connection state when it processes the pubsub message.
+            $delete = $this->client->call(
+                Client::METHOD_DELETE,
+                '/presences/' . $presenceId,
+                $this->getServerHeaders($project)
+            );
+            $this->assertSame(204, $delete['headers']['status-code']);
+
+            // Synchronization point: wait for the listener to receive the legitimate
+            // delete event before closing the publisher. Redis pubsub broadcasts to
+            // every realtime worker simultaneously, so the listener's worker observing
+            // the event implies the publisher's worker has also processed it (and run
+            // the in-memory cleanup) by the time onClose fires.
+            $deleteEvents = [];
+            $deleteEvents[] = $this->receivePresenceEvent($listener, $presenceId, 'delete', 'online', $metadata, $user['$id']);
+
+            $publisher->close();
+
+            // Watch for any additional presences.{id}.delete frame. A second one would
+            // be the regression: onClose re-firing the event for a presence already
+            // removed via HTTP DELETE.
+            $deadline = \microtime(true) + 2.0;
+
+            $this->assertEventually(
+                function () use ($listener, $presenceId, $deadline, &$deleteEvents): void {
+                    try {
+                        $raw = $listener->receive();
+                        $frame = \json_decode($raw, true);
+                        if (
+                            \is_array($frame)
+                            && ($frame['type'] ?? null) === 'event'
+                            && ($frame['data']['payload']['$id'] ?? null) === $presenceId
+                            && \in_array('presences.' . $presenceId . '.delete', $frame['data']['events'] ?? [], true)
+                        ) {
+                            $deleteEvents[] = $frame;
+                            if (\count($deleteEvents) > 1) {
+                                throw new Critical(
+                                    'Duplicate presence delete event after HTTP DELETE + WebSocket close: '
+                                    . \json_encode($frame)
+                                );
+                            }
+                        }
+                    } catch (TimeoutException) {
+                        // No frame this poll; fall through to deadline check.
+                    }
+
+                    if (\microtime(true) < $deadline) {
+                        // Throw a non-Critical exception so assertEventually retries.
+                        throw new \RuntimeException('still watching for duplicate delete event');
+                    }
+                },
+                timeoutMs: 3000,
+                waitMs: 0
+            );
+
+            $this->assertCount(
+                1,
+                $deleteEvents,
+                'Expected exactly one presences.' . $presenceId . '.delete event; got ' . \count($deleteEvents)
+            );
+            $this->assertPresenceRealtimeEvent($deleteEvents[0], $presenceId, 'delete', 'online', $metadata, $user['$id']);
         } finally {
             $listener->close();
         }
