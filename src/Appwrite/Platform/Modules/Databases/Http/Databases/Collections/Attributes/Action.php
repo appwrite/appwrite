@@ -683,7 +683,8 @@ abstract class Action extends UtopiaAction
             $attribute = $dbForProject->updateDocument('attributes', $db->getSequence() . '_' . $collection->getSequence() . '_' . $key, $attribute);
         }
 
-        $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $collection->getId());
+$dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $collection->getId());
+        $dbForProject->purgeCachedCollection('database_' . $db->getSequence() . '_collection_' . $collection->getSequence());
 
         $queueForEvents
             ->setContext('database', $db)
