@@ -5,6 +5,8 @@ use Appwrite\Event\Publisher\Audit as AuditPublisher;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Publisher\Certificate as CertificatePublisher;
 use Appwrite\Event\Publisher\Execution as ExecutionPublisher;
+use Appwrite\Event\Publisher\Mail as MailPublisher;
+use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
 use Appwrite\Event\Publisher\Screenshot as ScreenshotPublisher;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
@@ -117,6 +119,14 @@ $container->set('publisherForStatsResources', fn (Publisher $publisher) => new S
 $container->set('publisherForBuilds', fn (Publisher $publisher) => new BuildPublisher(
     $publisher,
     new Queue(System::getEnv('_APP_BUILDS_QUEUE_NAME', Event::BUILDS_QUEUE_NAME))
+), ['publisher']);
+$container->set('publisherForMails', fn (Publisher $publisher) => new MailPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_MAILS_QUEUE_NAME', Event::MAILS_QUEUE_NAME))
+), ['publisher']);
+$container->set('publisherForMessaging', fn (Publisher $publisher) => new MessagingPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_MESSAGING_QUEUE_NAME', Event::MESSAGING_QUEUE_NAME))
 ), ['publisher']);
 
 /**

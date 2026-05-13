@@ -287,7 +287,29 @@ class Update extends Base
         }
 
         // Inform scheduler if function is still active
-        $schedule = $dbForPlatform->getDocument('schedules', $function->getAttribute('scheduleId'));
+        $schedule = $authorization->skip(fn () => $dbForPlatform->getDocument('schedules', $function->getAttribute('scheduleId')));
+
+        // Re-create schedule if missing
+        if ($schedule->isEmpty()) {
+            $schedule = $authorization->skip(
+                fn () => $dbForPlatform->createDocument('schedules', new Document([
+                    'region' => $project->getAttribute('region'),
+                    'resourceType' => SCHEDULE_RESOURCE_TYPE_FUNCTION,
+                    'resourceId' => $function->getId(),
+                    'resourceInternalId' => $function->getSequence(),
+                    'resourceUpdatedAt' => DateTime::now(),
+                    'projectId' => $project->getId(),
+                    'schedule'  => $function->getAttribute('schedule'),
+                    'active' => false,
+                ]))
+            );
+
+            $function = $dbForProject->updateDocument('functions', $function->getId(), new Document([
+                'scheduleId' => $schedule->getId(),
+                'scheduleInternalId' => $schedule->getSequence(),
+            ]));
+        }
+
         $schedule
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))

@@ -5,7 +5,8 @@ use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
-use Appwrite\Event\Messaging;
+use Appwrite\Event\Message\Messaging as MessagingMessage;
+use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Status as MessageStatus;
 use Appwrite\Permission;
@@ -3164,9 +3165,9 @@ Http::post('/v1/messaging/messages/email')
     ->inject('dbForProject')
     ->inject('dbForPlatform')
     ->inject('project')
-    ->inject('queueForMessaging')
+    ->inject('publisherForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $subject, string $content, ?array $topics, ?array $users, ?array $targets, ?array $cc, ?array $bcc, ?array $attachments, bool $draft, bool $html, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $subject, string $content, ?array $topics, ?array $users, ?array $targets, ?array $cc, ?array $bcc, ?array $attachments, bool $draft, bool $html, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response) {
         $messageId = $messageId == 'unique()'
             ? ID::unique()
             : $messageId;
@@ -3251,9 +3252,11 @@ Http::post('/v1/messaging/messages/email')
 
         switch ($status) {
             case MessageStatus::PROCESSING:
-                $queueForMessaging
-                    ->setType(MESSAGE_SEND_TYPE_EXTERNAL)
-                    ->setMessageId($message->getId());
+                $publisherForMessaging->enqueue(new MessagingMessage(
+                    type: MESSAGE_SEND_TYPE_EXTERNAL,
+                    project: $project,
+                    messageId: $message->getId(),
+                ));
                 break;
             case MessageStatus::SCHEDULED:
                 $schedule = $dbForPlatform->createDocument('schedules', new Document([
@@ -3339,9 +3342,9 @@ Http::post('/v1/messaging/messages/sms')
     ->inject('dbForProject')
     ->inject('dbForPlatform')
     ->inject('project')
-    ->inject('queueForMessaging')
+    ->inject('publisherForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $content, ?array $topics, ?array $users, ?array $targets, bool $draft, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $content, ?array $topics, ?array $users, ?array $targets, bool $draft, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response) {
         $messageId = $messageId == 'unique()'
             ? ID::unique()
             : $messageId;
@@ -3395,9 +3398,11 @@ Http::post('/v1/messaging/messages/sms')
 
         switch ($status) {
             case MessageStatus::PROCESSING:
-                $queueForMessaging
-                    ->setType(MESSAGE_SEND_TYPE_EXTERNAL)
-                    ->setMessageId($message->getId());
+                $publisherForMessaging->enqueue(new MessagingMessage(
+                    type: MESSAGE_SEND_TYPE_EXTERNAL,
+                    project: $project,
+                    messageId: $message->getId(),
+                ));
                 break;
             case MessageStatus::SCHEDULED:
                 $schedule = $dbForPlatform->createDocument('schedules', new Document([
@@ -3475,10 +3480,10 @@ Http::post('/v1/messaging/messages/push')
     ->inject('dbForProject')
     ->inject('dbForPlatform')
     ->inject('project')
-    ->inject('queueForMessaging')
+    ->inject('publisherForMessaging')
     ->inject('response')
     ->inject('platform')
-    ->action(function (string $messageId, string $title, string $body, ?array $topics, ?array $users, ?array $targets, ?array $data, string $action, string $image, string $icon, string $sound, string $color, string $tag, int $badge, bool $draft, ?string $scheduledAt, bool $contentAvailable, bool $critical, string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response, array $platform) {
+    ->action(function (string $messageId, string $title, string $body, ?array $topics, ?array $users, ?array $targets, ?array $data, string $action, string $image, string $icon, string $sound, string $color, string $tag, int $badge, bool $draft, ?string $scheduledAt, bool $contentAvailable, bool $critical, string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response, array $platform) {
         $messageId = $messageId == 'unique()'
             ? ID::unique()
             : $messageId;
@@ -3615,9 +3620,11 @@ Http::post('/v1/messaging/messages/push')
 
         switch ($status) {
             case MessageStatus::PROCESSING:
-                $queueForMessaging
-                    ->setType(MESSAGE_SEND_TYPE_EXTERNAL)
-                    ->setMessageId($message->getId());
+                $publisherForMessaging->enqueue(new MessagingMessage(
+                    type: MESSAGE_SEND_TYPE_EXTERNAL,
+                    project: $project,
+                    messageId: $message->getId(),
+                ));
                 break;
             case MessageStatus::SCHEDULED:
                 $schedule = $dbForPlatform->createDocument('schedules', new Document([
@@ -3953,9 +3960,9 @@ Http::patch('/v1/messaging/messages/email/:messageId')
     ->inject('dbForProject')
     ->inject('dbForPlatform')
     ->inject('project')
-    ->inject('queueForMessaging')
+    ->inject('publisherForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $subject, ?string $content, ?bool $draft, ?bool $html, ?array $cc, ?array $bcc, ?string $scheduledAt, ?array $attachments, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $subject, ?string $content, ?bool $draft, ?bool $html, ?array $cc, ?array $bcc, ?string $scheduledAt, ?array $attachments, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -4111,9 +4118,11 @@ Http::patch('/v1/messaging/messages/email/:messageId')
         $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
 
         if ($status === MessageStatus::PROCESSING) {
-            $queueForMessaging
-                ->setType(MESSAGE_SEND_TYPE_EXTERNAL)
-                ->setMessageId($message->getId());
+            $publisherForMessaging->enqueue(new MessagingMessage(
+                type: MESSAGE_SEND_TYPE_EXTERNAL,
+                project: $project,
+                messageId: $message->getId(),
+            ));
         }
 
         $queueForEvents
@@ -4175,9 +4184,9 @@ Http::patch('/v1/messaging/messages/sms/:messageId')
     ->inject('dbForProject')
     ->inject('dbForPlatform')
     ->inject('project')
-    ->inject('queueForMessaging')
+    ->inject('publisherForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $content, ?bool $draft, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $content, ?bool $draft, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -4293,9 +4302,11 @@ Http::patch('/v1/messaging/messages/sms/:messageId')
         $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
 
         if ($status === MessageStatus::PROCESSING) {
-            $queueForMessaging
-                ->setType(MESSAGE_SEND_TYPE_EXTERNAL)
-                ->setMessageId($message->getId());
+            $publisherForMessaging->enqueue(new MessagingMessage(
+                type: MESSAGE_SEND_TYPE_EXTERNAL,
+                project: $project,
+                messageId: $message->getId(),
+            ));
         }
 
         $queueForEvents
@@ -4349,10 +4360,10 @@ Http::patch('/v1/messaging/messages/push/:messageId')
     ->inject('dbForProject')
     ->inject('dbForPlatform')
     ->inject('project')
-    ->inject('queueForMessaging')
+    ->inject('publisherForMessaging')
     ->inject('response')
     ->inject('platform')
-    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $title, ?string $body, ?array $data, ?string $action, ?string $image, ?string $icon, ?string $sound, ?string $color, ?string $tag, ?int $badge, ?bool $draft, ?string $scheduledAt, ?bool $contentAvailable, ?bool $critical, ?string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response, array $platform) {
+    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $title, ?string $body, ?array $data, ?string $action, ?string $image, ?string $icon, ?string $sound, ?string $color, ?string $tag, ?int $badge, ?bool $draft, ?string $scheduledAt, ?bool $contentAvailable, ?bool $critical, ?string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response, array $platform) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -4554,9 +4565,11 @@ Http::patch('/v1/messaging/messages/push/:messageId')
         $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
 
         if ($status === MessageStatus::PROCESSING) {
-            $queueForMessaging
-                ->setType(MESSAGE_SEND_TYPE_EXTERNAL)
-                ->setMessageId($message->getId());
+            $publisherForMessaging->enqueue(new MessagingMessage(
+                type: MESSAGE_SEND_TYPE_EXTERNAL,
+                project: $project,
+                messageId: $message->getId(),
+            ));
         }
 
         $queueForEvents

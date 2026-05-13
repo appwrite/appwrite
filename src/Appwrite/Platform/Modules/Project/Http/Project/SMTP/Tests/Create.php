@@ -2,7 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Project\Http\Project\SMTP\Tests;
 
-use Appwrite\Event\Mail;
+use Appwrite\Event\Message\Mail as MailMessage;
+use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Extend\Exception as Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
@@ -67,7 +68,7 @@ class Create extends Action
             ->param('secure', '', new WhiteList(['tls', 'ssl'], true), 'Does SMTP server use secure connection', optional: true, deprecated: true) // Backwards compatibility
             ->inject('response')
             ->inject('project')
-            ->inject('queueForMails')
+            ->inject('publisherForMails')
             ->inject('plan')
             ->callback($this->action(...));
     }
@@ -87,7 +88,7 @@ class Create extends Action
         string $paramSecure, // Backwards compatibility
         Response $response,
         Document $project,
-        Mail $queueForMails,
+        MailPublisher $publisherForMails,
         array $plan
     ): void {
         // Backwards compatibility: use inline params if provided, otherwise fall back to project SMTP config.
@@ -153,23 +154,24 @@ class Create extends Action
             ->setParam('{{privacyUrl}}', $plan['privacyUrl'] ?? APP_EMAIL_PRIVACY_URL);
 
         foreach ($emails as $email) {
-            $queueForMails
-                ->setSmtpHost($host)
-                ->setSmtpPort($port)
-                ->setSmtpUsername($username)
-                ->setSmtpPassword($password)
-                ->setSmtpSecure($secure)
-                ->setSmtpReplyToEmail($replyToEmail)
-                ->setSmtpReplyToName($replyToName)
-                ->setSmtpSenderEmail($senderEmail)
-                ->setSmtpSenderName($senderName)
-                ->setRecipient($email)
-                ->setName('')
-                ->setBodyTemplate(APP_CE_CONFIG_DIR . '/locale/templates/email-base-styled.tpl')
-                ->setBody($template->render())
-                ->setVariables([])
-                ->setSubject($subject)
-                ->trigger();
+            $publisherForMails->enqueue(new MailMessage(
+                project: $project,
+                recipient: $email,
+                subject: $subject,
+                bodyTemplate: APP_CE_CONFIG_DIR . '/locale/templates/email-base-styled.tpl',
+                body: $template->render(),
+                smtp: [
+                    'host' => $host,
+                    'port' => $port,
+                    'username' => $username,
+                    'password' => $password,
+                    'secure' => $secure,
+                    'replyToEmail' => $replyToEmail,
+                    'replyToName' => $replyToName,
+                    'senderEmail' => $senderEmail,
+                    'senderName' => $senderName,
+                ],
+            ));
         }
 
         $response->noContent();

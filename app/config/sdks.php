@@ -323,7 +323,7 @@ return [
             [
                 'key' => 'codex-plugin',
                 'name' => 'CodexPlugin',
-                'version' => '0.1.0',
+                'version' => '0.1.1',
                 'url' => 'https://github.com/appwrite/codex-plugin.git',
                 'enabled' => true,
                 'beta' => false,

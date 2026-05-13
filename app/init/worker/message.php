@@ -4,8 +4,6 @@ use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
-use Appwrite\Event\Mail;
-use Appwrite\Event\Messaging;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Usage\Context;
@@ -331,14 +329,6 @@ return function (Container $container): void {
 
     $container->set('queueForDatabase', function (Publisher $publisher) {
         return new EventDatabase($publisher);
-    }, ['publisher']);
-
-    $container->set('queueForMessaging', function (Publisher $publisher) {
-        return new Messaging($publisher);
-    }, ['publisher']);
-
-    $container->set('queueForMails', function (Publisher $publisher) {
-        return new Mail($publisher);
     }, ['publisher']);
 
     $container->set('queueForDeletes', function (Publisher $publisher) {

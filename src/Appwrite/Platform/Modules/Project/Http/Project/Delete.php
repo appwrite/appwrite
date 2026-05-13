@@ -33,7 +33,6 @@ class Delete extends Action
             ->desc('Delete project')
             ->groups(['api', 'project'])
             ->label('scope', 'project.write')
-            ->label('event', 'project.delete')
             ->label('audits.event', 'project.delete')
             ->label('audits.resource', 'project/{project.$id}')
             ->label('sdk', new Method(

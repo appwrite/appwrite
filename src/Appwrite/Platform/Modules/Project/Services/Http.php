@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Project\Services;
 use Appwrite\Platform\Modules\Project\Http\Init;
 use Appwrite\Platform\Modules\Project\Http\Project\AuthMethods\Update as UpdateAuthMethod;
 use Appwrite\Platform\Modules\Project\Http\Project\Delete as DeleteProject;
+use Appwrite\Platform\Modules\Project\Http\Project\Get as GetProject;
 use Appwrite\Platform\Modules\Project\Http\Project\Keys\Create as CreateKey;
 use Appwrite\Platform\Modules\Project\Http\Project\Keys\Delete as DeleteKey;
 use Appwrite\Platform\Modules\Project\Http\Project\Keys\Ephemeral\Create as CreateEphemeralKey;
@@ -110,6 +111,7 @@ class Http extends Service
 
         // Project
         $this->addAction(DeleteProject::getName(), new DeleteProject());
+        $this->addAction(GetProject::getName(), new GetProject());
         $this->addAction(UpdateProjectLabels::getName(), new UpdateProjectLabels());
         $this->addAction(UpdateProjectProtocol::getName(), new UpdateProjectProtocol());
         $this->addAction(UpdateProjectService::getName(), new UpdateProjectService());

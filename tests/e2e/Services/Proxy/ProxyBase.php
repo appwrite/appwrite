@@ -209,8 +209,8 @@ trait ProxyBase
         $this->assertEquals(200, $rules['headers']['status-code']);
         $this->assertEquals(2, $rules['body']['total']);
 
-        $this->cleanupSite($siteId);
         $this->cleanupRule($ruleId);
+        $this->cleanupSite($siteId);
     }
 
     public function testCreateFunctionRule(): void

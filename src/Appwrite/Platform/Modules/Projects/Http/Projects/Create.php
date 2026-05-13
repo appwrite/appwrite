@@ -28,7 +28,6 @@ use Utopia\Pools\Group;
 use Utopia\System\System;
 use Utopia\Validator;
 use Utopia\Validator\Text;
-use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 
 class Create extends Action
@@ -72,15 +71,6 @@ class Create extends Action
             ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
             ->param('teamId', '', new UID(), 'Team unique ID.')
             ->param('region', System::getEnv('_APP_REGION', 'default'), new WhiteList(array_keys(array_filter(Config::getParam('regions'), fn ($config) => !$config['disabled']))), 'Project Region.', true)
-            ->param('description', '', new Text(256), 'Project description. Max length: 256 chars.', true)
-            ->param('logo', '', new Text(1024), 'Project logo.', true)
-            ->param('url', '', new URL(), 'Project URL.', true)
-            ->param('legalName', '', new Text(256), 'Project legal Name. Max length: 256 chars.', true)
-            ->param('legalCountry', '', new Text(256), 'Project legal Country. Max length: 256 chars.', true)
-            ->param('legalState', '', new Text(256), 'Project legal State. Max length: 256 chars.', true)
-            ->param('legalCity', '', new Text(256), 'Project legal City. Max length: 256 chars.', true)
-            ->param('legalAddress', '', new Text(256), 'Project legal Address. Max length: 256 chars.', true)
-            ->param('legalTaxId', '', new Text(256), 'Project legal Tax ID. Max length: 256 chars.', true)
             ->inject('request')
             ->inject('response')
             ->inject('dbForPlatform')
@@ -90,7 +80,7 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $projectId, string $name, string $teamId, string $region, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Request $request, Response $response, Database $dbForPlatform, Cache $cache, Group $pools, Hooks $hooks)
+    public function action(string $projectId, string $name, string $teamId, string $region, Request $request, Response $response, Database $dbForPlatform, Cache $cache, Group $pools, Hooks $hooks)
     {
         $team = $dbForPlatform->getDocument('teams', $teamId);
 
@@ -175,16 +165,7 @@ class Create extends Action
                 'teamInternalId' => $team->getSequence(),
                 'teamId' => $team->getId(),
                 'region' => $region,
-                'description' => $description,
-                'logo' => $logo,
-                'url' => $url,
                 'version' => APP_VERSION_STABLE,
-                'legalName' => $legalName,
-                'legalCountry' => $legalCountry,
-                'legalState' => $legalState,
-                'legalCity' => $legalCity,
-                'legalAddress' => $legalAddress,
-                'legalTaxId' => ID::custom($legalTaxId),
                 'services' => new \stdClass(),
                 'platforms' => null,
                 'oAuthProviders' => [],

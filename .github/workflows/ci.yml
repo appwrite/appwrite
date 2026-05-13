@@ -406,7 +406,7 @@ jobs:
 
   e2e_service:
     name: Tests / E2E / ${{ matrix.database }} (${{ matrix.mode }}) / ${{ matrix.service }}
-    runs-on: ${{ matrix.runner || 'ubuntu-latest' }}
+    runs-on: ${{ matrix.runner || format('runs-on={0}/runner=4cpu-linux-x64/volume=120g/spot=false', github.run_id) }}
     needs: [build, matrix]
     permissions:
       contents: read
@@ -445,19 +445,11 @@ jobs:
         ]
         include:
           - service: Databases
-            runner: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/family=c7/volume=120g
+            runner: runs-on=${{ github.run_id }}/runner=8cpu-linux-x64/volume=120g/spot=false
             paratest_processes: 3
             timeout_minutes: 30
-          - service: Sites
-            runner: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/family=c7/volume=120g
-          - service: Functions
-            runner: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/family=c7/volume=120g
-          - service: Avatars
-            runner: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/family=c7/volume=120g
-          - service: Realtime
-            runner: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/family=c7/volume=120g
           - service: TablesDB
-            runner: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/family=c7/volume=120g
+            runner: runs-on=${{ github.run_id }}/runner=8cpu-linux-x64/volume=120g/spot=false
             paratest_processes: 3
             timeout_minutes: 30
           - service: Migrations
