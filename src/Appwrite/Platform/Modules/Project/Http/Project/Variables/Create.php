@@ -64,7 +64,7 @@ class Create extends Action
     }
 
     public function action(
-        string $variableId,
+        ?string $variableId = null,
         string $key,
         string $value,
         bool $secret,
@@ -72,7 +72,9 @@ class Create extends Action
         QueueEvent $queueForEvents,
         Database $dbForProject,
     ) {
-        $variableId = ($variableId === 'unique()') ? ID::unique() : $variableId;
+        if (empty($variableId) || $variableId === 'unique()') {
+            $variableId = ID::unique();
+        }
 
         $variable = new Document([
             '$id' => $variableId,
