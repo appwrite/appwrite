@@ -1,6 +1,6 @@
 <?php
 
-use Appwrite\Databases\PresenceState;
+use Appwrite\Presences\State as PresenceState;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Event\Message\Usage as UsageMessage;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;

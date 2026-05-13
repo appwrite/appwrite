@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Databases;
+namespace Appwrite\Presences;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Documents\User;
@@ -16,7 +16,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 
-class PresenceState
+class State
 {
     public const LIST_CACHE_FIELD_PRESENCES = 'presences';
     public const LIST_CACHE_FIELD_TOTAL = 'total';

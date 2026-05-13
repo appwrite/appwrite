@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Presences\HTTP;
 
-use Appwrite\Databases\PresenceState;
+use Appwrite\Presences\State as PresenceState;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action as PlatformAction;
 use Appwrite\SDK\AuthType;
