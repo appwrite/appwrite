@@ -49,6 +49,7 @@ class Get extends Action
             METRIC_DATABASE_ID_OPERATIONS_WRITES
         ];
         if ($this->databaseType === DATABASE_TYPE_LEGACY || $this->databaseType === DATABASE_TYPE_TABLESDB) {
+            $metrics[] = METRIC_DATABASE_ID_OPERATIONS_READS_CACHED;
             return $metrics;
         }
 
@@ -161,6 +162,8 @@ class Get extends Action
             }
         }
 
+        $cachedMetric = str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_READS_CACHED);
+
         $response->dynamic(new Document([
             'range' => $range,
             'collectionsTotal' => $usage[$metrics[0]]['total'],
@@ -169,6 +172,7 @@ class Get extends Action
             'rowsTotal' => $usage[$metrics[1]]['total'],
             'storageTotal' => $usage[$metrics[2]]['total'],
             'databaseReadsTotal' => $usage[$metrics[3]]['total'],
+            'databaseReadsCachedTotal' => $usage[$cachedMetric]['total'] ?? 0,
             'databaseWritesTotal' => $usage[$metrics[4]]['total'],
             'collections' => $usage[$metrics[0]]['data'],
             'tables' => $usage[$metrics[0]]['data'],
@@ -176,6 +180,7 @@ class Get extends Action
             'rows' => $usage[$metrics[1]]['data'],
             'storage' => $usage[$metrics[2]]['data'],
             'databaseReads' => $usage[$metrics[3]]['data'],
+            'databaseReadsCached' => $usage[$cachedMetric]['data'] ?? [],
             'databaseWrites' => $usage[$metrics[4]]['data'],
         ]), $this->getResponseModel());
     }

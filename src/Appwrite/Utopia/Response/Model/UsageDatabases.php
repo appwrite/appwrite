@@ -58,6 +58,12 @@ class UsageDatabases extends Model
                 'default' => 0,
                 'example' => 0,
             ])
+            ->addRule('databasesReadsCachedTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total number of databases reads served from cache.',
+                'default' => 0,
+                'example' => 0,
+            ])
             ->addRule('databasesWritesTotal', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Total number of databases writes.',
@@ -109,6 +115,13 @@ class UsageDatabases extends Model
             ->addRule('databasesReads', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'An array of aggregated number of database reads.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('databasesReadsCached', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'An array of aggregated number of database reads served from cache.',
                 'default' => [],
                 'example' => [],
                 'array' => true

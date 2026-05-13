@@ -48,6 +48,7 @@ class XList extends Action
             METRIC_DATABASES_OPERATIONS_WRITES,
         ];
         if ($this->databaseType === DATABASE_TYPE_LEGACY || $this->databaseType === DATABASE_TYPE_TABLESDB) {
+            $metrics[] = METRIC_DATABASES_OPERATIONS_READS_CACHED;
             return $metrics;
         }
         return array_map(
@@ -149,6 +150,8 @@ class XList extends Action
                 ];
             }
         }
+        $cachedMetric = METRIC_DATABASES_OPERATIONS_READS_CACHED;
+
         $response->dynamic(new Document([
             'range' => $range,
             'databasesTotal' => $usage[$metrics[0]]['total'],
@@ -158,6 +161,7 @@ class XList extends Action
             'rowsTotal' => $usage[$metrics[2]]['total'],
             'storageTotal' => $usage[$metrics[3]]['total'],
             'databasesReadsTotal' => $usage[$metrics[4]]['total'],
+            'databasesReadsCachedTotal' => $usage[$cachedMetric]['total'] ?? 0,
             'databasesWritesTotal' => $usage[$metrics[5]]['total'],
             'databases' => $usage[$metrics[0]]['data'],
             'collections' => $usage[$metrics[1]]['data'],
@@ -166,6 +170,7 @@ class XList extends Action
             'rows' => $usage[$metrics[2]]['data'],
             'storage' => $usage[$metrics[3]]['data'],
             'databasesReads' => $usage[$metrics[4]]['data'],
+            'databasesReadsCached' => $usage[$cachedMetric]['data'] ?? [],
             'databasesWrites' => $usage[$metrics[5]]['data'],
         ]), $this->getResponseModel());
     }
