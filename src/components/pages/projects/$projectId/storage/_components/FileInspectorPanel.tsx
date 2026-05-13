@@ -469,44 +469,49 @@ export function FileInspectorPanel({
 
       {!isPending && previewUrl ? (
         <div className="overflow-hidden rounded-lg border border-border bg-muted/20">
-          <div className="relative flex min-h-[120px] w-full items-center justify-center p-2 sm:p-3">
-            <img
-              src={previewUrl}
-              alt={file.name}
-              decoding="async"
-              onLoad={(e) => {
-                const el = e.currentTarget
-                const dpr =
-                  typeof window !== 'undefined'
-                    ? Math.max(1, window.devicePixelRatio || 1)
-                    : 1
-                if (el.naturalWidth > 0 && el.naturalHeight > 0) {
-                  setPreviewIntrinsicPx({
-                    w: el.naturalWidth,
-                    h: el.naturalHeight,
-                    dpr,
-                  })
-                }
-                setImageLoaded(true)
-              }}
+          <div className="flex w-full justify-center p-1.5 sm:p-2">
+            <div
               className={cn(
-                'w-auto max-w-[min(100%,28rem)] object-contain [image-rendering:auto]',
-                !previewIntrinsicPx && 'max-h-[min(50dvh,32rem)]',
-                'transition-opacity duration-300',
-                imageLoaded ? 'opacity-100' : 'opacity-0',
+                'relative flex aspect-video w-[min(100%,28rem,calc(min(50dvh,32rem)*16/9))] max-w-full shrink-0 items-center justify-center overflow-hidden rounded-md bg-muted/30',
               )}
-              style={inspectorPreviewImageMaxStyle}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="absolute bottom-2 left-2 z-10 h-8 gap-1.5 bg-background/90 text-[13px] opacity-60 shadow-sm backdrop-blur-sm transition-opacity hover:opacity-100 sm:bottom-3 sm:left-3"
-              onClick={() => setTransformWizardOpen(true)}
             >
-              <Wand2 className="h-3.5 w-3.5 shrink-0" />
-              Transform
-            </Button>
+              <img
+                src={previewUrl}
+                alt={file.name}
+                decoding="async"
+                onLoad={(e) => {
+                  const el = e.currentTarget
+                  const dpr =
+                    typeof window !== 'undefined'
+                      ? Math.max(1, window.devicePixelRatio || 1)
+                      : 1
+                  if (el.naturalWidth > 0 && el.naturalHeight > 0) {
+                    setPreviewIntrinsicPx({
+                      w: el.naturalWidth,
+                      h: el.naturalHeight,
+                      dpr,
+                    })
+                  }
+                  setImageLoaded(true)
+                }}
+                className={cn(
+                  'h-full w-full max-h-full max-w-full object-contain [image-rendering:auto]',
+                  'transition-opacity duration-300',
+                  imageLoaded ? 'opacity-100' : 'opacity-0',
+                )}
+                style={inspectorPreviewImageMaxStyle}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="absolute bottom-2 left-2 z-10 h-8 gap-1.5 bg-background/90 text-[13px] opacity-60 shadow-sm backdrop-blur-sm transition-opacity hover:opacity-100 sm:bottom-3 sm:left-3"
+                onClick={() => setTransformWizardOpen(true)}
+              >
+                <Wand2 className="h-3.5 w-3.5 shrink-0" />
+                Transform
+              </Button>
+            </div>
           </div>
         </div>
       ) : null}

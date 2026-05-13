@@ -32,7 +32,11 @@ import { Button } from '@/components/ui/button'
 import { useNavigate } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { sdk } from '@/lib/appwrite/sdk'
-import { Dependencies } from '@/lib/react-query/hooks'
+import {
+  Dependencies,
+  getCachedBucketListsFromQueryClient,
+  pickNextBucketIdAfterDelete,
+} from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   buildConsoleUrl,
@@ -69,9 +73,23 @@ export function BucketContextMenu({
       await projectSdk.storage.deleteBucket({ bucketId: bucket.id })
     },
     onSuccess: async () => {
+      const deletedId = bucket.id
+      const lists = getCachedBucketListsFromQueryClient(queryClient, projectId)
+      const nextBucketId = pickNextBucketIdAfterDelete(lists, deletedId)
       await queryClient.refetchQueries({ queryKey: Dependencies.BUCKETS })
       toast.success('Bucket deleted')
       setDeleteDialogOpen(false)
+      if (nextBucketId) {
+        navigate({
+          to: '/projects/$projectId/storage/$bucketId',
+          params: { projectId, bucketId: nextBucketId },
+        })
+      } else {
+        navigate({
+          to: '/projects/$projectId/storage',
+          params: { projectId },
+        })
+      }
     },
     onError: (error: Error) => {
       toast.error(getErrorMessage(error) || 'Failed to delete bucket')

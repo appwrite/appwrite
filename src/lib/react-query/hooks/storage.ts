@@ -5,6 +5,7 @@
  */
 
 import { useQuery, queryOptions, keepPreviousData } from '@tanstack/react-query'
+import type { QueryClient } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
@@ -66,6 +67,39 @@ export async function fetchProjectBuckets(
     buckets: response.buckets || [],
     total: response.total || 0,
   }
+}
+
+/**
+ * From cached bucket lists (any query variant), pick a neighbor of the deleted
+ * bucket: same list order, prefer following bucket, else previous. Returns null
+ * if the deleted bucket was the only one or not found in any list.
+ */
+export function pickNextBucketIdAfterDelete(
+  bucketLists: Models.Bucket[][],
+  deletedBucketId: string,
+): string | null {
+  for (const buckets of bucketLists) {
+    if (buckets.length === 0) continue
+    const idx = buckets.findIndex((b) => b.$id === deletedBucketId)
+    if (idx === -1) continue
+    if (buckets.length === 1) return null
+    if (idx < buckets.length - 1) return buckets[idx + 1]!.$id
+    return buckets[idx - 1]!.$id
+  }
+  return null
+}
+
+/**
+ * Read all cached bucket arrays for a project (any pagination / sort key).
+ */
+export function getCachedBucketListsFromQueryClient(
+  queryClient: QueryClient,
+  projectId: string | undefined,
+): Models.Bucket[][] {
+  if (!projectId) return []
+  return queryClient
+    .getQueriesData<Models.BucketList>({ queryKey: ['buckets', 'project', projectId] })
+    .map(([, data]) => data?.buckets ?? [])
 }
 
 /**

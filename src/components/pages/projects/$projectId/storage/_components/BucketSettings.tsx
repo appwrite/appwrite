@@ -9,6 +9,8 @@ import {
   Dependencies,
   useProject,
   useOrganizationPlan,
+  getCachedBucketListsFromQueryClient,
+  pickNextBucketIdAfterDelete,
 } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
@@ -294,13 +296,22 @@ export function BucketSettings() {
       return await projectSdk.storage.deleteBucket({ bucketId })
     },
     onSuccess: async () => {
-      // Refetch buckets list so the list view shows updated data (uses refetchOnMount: false)
+      const deletedId = bucketId!
+      const lists = getCachedBucketListsFromQueryClient(queryClient, projectId)
+      const nextBucketId = pickNextBucketIdAfterDelete(lists, deletedId)
       await queryClient.refetchQueries({ queryKey: Dependencies.BUCKETS })
       toast.success('Bucket has been deleted')
-      navigate({
-        to: '/projects/$projectId/storage',
-        params: { projectId: projectId! },
-      })
+      if (nextBucketId) {
+        navigate({
+          to: '/projects/$projectId/storage/$bucketId',
+          params: { projectId: projectId!, bucketId: nextBucketId },
+        })
+      } else {
+        navigate({
+          to: '/projects/$projectId/storage',
+          params: { projectId: projectId! },
+        })
+      }
     },
     onError: (error) => {
       toast.error(getErrorMessage(error))
