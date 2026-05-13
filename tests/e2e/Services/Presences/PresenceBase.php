@@ -504,6 +504,114 @@ trait PresenceBase
         $this->assertEquals(['source' => 'update'], $update['body']['metadata']);
     }
 
+    public function testUpdatePresenceUserIdReassignsDefaultPermissions(): void
+    {
+        if ($this->getSide() !== 'server') {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $projectId = $this->getProject()['$id'];
+        $user1 = $this->getUser(true);
+        $user2 = $this->getUser(true);
+
+        $headersUser1 = [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $user1['session'],
+        ];
+
+        $headersUser2 = [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $user2['session'],
+        ];
+
+        $create = $this->client->call(
+            Client::METHOD_PUT,
+            '/presences/' . ID::unique(),
+            \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ], $headersUser1),
+            [
+                'status' => 'online',
+                'metadata' => ['owner' => 'user1'],
+            ]
+        );
+
+        $this->assertEquals(200, $create['headers']['status-code']);
+        $presence = $this->resolvePresenceForUser(
+            $user1['$id'],
+            \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ], $headersUser1)
+        );
+
+        $reassign = $this->client->call(
+            Client::METHOD_PATCH,
+            '/presences/' . $presence['$id'],
+            \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ], $this->getPresenceServerHeaders()),
+            [
+                'userId' => $user2['$id'],
+                'status' => 'busy',
+            ]
+        );
+
+        $this->assertEquals(200, $reassign['headers']['status-code']);
+        $this->assertSame($user2['$id'], $reassign['body']['userId']);
+
+        $getOldOwner = $this->client->call(
+            Client::METHOD_GET,
+            '/presences/' . $presence['$id'],
+            \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ], $headersUser1)
+        );
+        $this->assertEquals(404, $getOldOwner['headers']['status-code']);
+
+        $getNewOwner = $this->client->call(
+            Client::METHOD_GET,
+            '/presences/' . $presence['$id'],
+            \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ], $headersUser2)
+        );
+        $this->assertEquals(200, $getNewOwner['headers']['status-code']);
+        $this->assertSame($user2['$id'], $getNewOwner['body']['userId']);
+
+        $patchOldOwner = $this->client->call(
+            Client::METHOD_PATCH,
+            '/presences/' . $presence['$id'],
+            \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ], $headersUser1),
+            [
+                'status' => 'offline',
+            ]
+        );
+        $this->assertEquals(404, $patchOldOwner['headers']['status-code']);
+
+        $patchNewOwner = $this->client->call(
+            Client::METHOD_PATCH,
+            '/presences/' . $presence['$id'],
+            \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ], $headersUser2),
+            [
+                'status' => 'away',
+            ]
+        );
+        $this->assertEquals(200, $patchNewOwner['headers']['status-code']);
+        $this->assertSame('away', $patchNewOwner['body']['status']);
+    }
+
     public function testDeletePresence(): void
     {
         if ($this->getSide() === 'client') {

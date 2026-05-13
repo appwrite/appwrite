@@ -166,6 +166,8 @@ class Update extends PlatformAction
 
         if ($permissions !== null) {
             $presenceState->setPermissions($updates, $permissions, $user, $authorization);
+        } elseif ($userId !== null && $userId !== $presence->getAttribute('userId')) {
+            $presenceState->setOwnerPermissions($updates, $userId);
         }
 
         if (empty($updateData) && $permissions === null) {

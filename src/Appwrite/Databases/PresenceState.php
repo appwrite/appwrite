@@ -128,6 +128,27 @@ class PresenceState
         });
     }
 
+    public function setOwnerPermissions(Document $document, string $userId): Document
+    {
+        $allowedPermissions = [
+            Database::PERMISSION_READ,
+            Database::PERMISSION_UPDATE,
+            Database::PERMISSION_DELETE,
+            Database::PERMISSION_WRITE,
+        ];
+
+        $ownerPermissions = [];
+        foreach ($allowedPermissions as $permission) {
+            $ownerPermissions[] = (new Permission($permission, 'user', $userId))->toString();
+        }
+
+        sort($ownerPermissions, SORT_STRING);
+        $document->setAttribute('$permissions', $ownerPermissions);
+        $document->setAttribute('perms_md5', \md5(\json_encode($ownerPermissions)));
+
+        return $document;
+    }
+
     private function assertPermissionsAgainstAuthorization(array $permissions, Authorization $authorization): void
     {
         foreach (Database::PERMISSIONS as $type) {
