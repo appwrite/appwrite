@@ -82,6 +82,12 @@ class Functions extends Action
         $functionMessage = FunctionMessage::fromArray($payload);
         $type = $functionMessage->type;
 
+        Span::add('project.id', $project->getId());
+        Span::add('payload.type', $type);
+        Span::add('queue.pid', $message->getPid());
+        Span::add('queue.name', $message->getQueue());
+        Span::add('message.timestamp', (string) $message->getTimestamp());
+
         $events = $functionMessage->events;
         $data = $functionMessage->body;
         $eventData = $functionMessage->payload;
@@ -120,19 +126,7 @@ class Functions extends Action
         $log->addTag('type', $type);
 
         if (empty($events) && !$function->isEmpty()) {
-            $traceProjectId = System::getEnv('_APP_TRACE_PROJECT_ID', '');
-            $traceFunctionId = System::getEnv('_APP_TRACE_FUNCTION_ID', '');
-            if ($traceProjectId !== '' && $traceFunctionId !== '' && $project->getId() === $traceProjectId && $function->getId() === $traceFunctionId) {
-                Span::init('execution.trace.functions_worker_dequeue');
-                Span::add('datetime', gmdate('c'));
-                Span::add('projectId', $project->getId());
-                Span::add('functionId', $function->getId());
-                Span::add('payloadType', $type);
-                Span::add('queuePid', $message->getPid());
-                Span::add('queueName', $message->getQueue());
-                Span::add('messageTimestamp', (string) $message->getTimestamp());
-                Span::current()?->finish();
-            }
+            Span::add('function.id', $function->getId());
         }
 
         if (!empty($events)) {
@@ -324,19 +318,11 @@ class Functions extends Action
             'duration' => 0.0,
         ]);
 
-        $traceProjectId = System::getEnv('_APP_TRACE_PROJECT_ID', '');
-        $traceFunctionId = System::getEnv('_APP_TRACE_FUNCTION_ID', '');
-        if ($traceProjectId !== '' && $traceFunctionId !== '' && $project->getId() === $traceProjectId && $function->getId() === $traceFunctionId) {
-            Span::init('execution.trace.functions_worker_before_execution_completed_bus_fail');
-            Span::add('datetime', gmdate('c'));
-            Span::add('projectId', $project->getId());
-            Span::add('functionId', $function->getId());
-            Span::add('executionId', $execution->getId());
-            Span::add('deploymentId', $execution->getAttribute('deploymentId', ''));
-            Span::add('trigger', $trigger);
-            Span::add('status', $execution->getAttribute('status', ''));
-            Span::current()?->finish();
-        }
+        Span::add('function.id', $function->getId());
+        Span::add('execution.id', $execution->getId());
+        Span::add('deployment.id', $execution->getAttribute('deploymentId', ''));
+        Span::add('execution.trigger', $trigger);
+        Span::add('execution.status', $execution->getAttribute('status', ''));
 
         $bus->dispatch(new ExecutionCompleted(
             execution: $execution->getArrayCopy(),
@@ -392,6 +378,10 @@ class Functions extends Action
         $functionId = $function->getId();
         $deploymentId = $function->getAttribute('deploymentId', '');
         $spec = Config::getParam('specifications')[$function->getAttribute('runtimeSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
+
+        Span::add('function.id', $functionId);
+        Span::add('deployment.id', $deploymentId);
+        Span::add('execution.trigger', $trigger);
 
         $log->addTag('deploymentId', $deploymentId);
 
@@ -451,6 +441,8 @@ class Functions extends Action
             $executionId = ID::unique();
         }
         $headers['x-appwrite-execution-id'] = $executionId;
+
+        Span::add('execution.id', $executionId);
 
         $headersFiltered = [];
         foreach ($headers as $key => $value) {
@@ -556,18 +548,6 @@ class Functions extends Action
             $source = $deployment->getAttribute('buildPath', '');
             $extension = str_ends_with($source, '.tar') ? 'tar' : 'tar.gz';
             $command = $version === 'v2' ? '' : "cp /tmp/code.$extension /mnt/code/code.$extension && nohup helpers/start.sh \"$command\"";
-            $traceProjectId = System::getEnv('_APP_TRACE_PROJECT_ID', '');
-            $traceFunctionId = System::getEnv('_APP_TRACE_FUNCTION_ID', '');
-            if ($traceProjectId !== '' && $traceFunctionId !== '' && $project->getId() === $traceProjectId && $functionId === $traceFunctionId) {
-                Span::init('execution.trace.functions_worker_before_executor');
-                Span::add('datetime', gmdate('c'));
-                Span::add('projectId', $project->getId());
-                Span::add('functionId', $functionId);
-                Span::add('executionId', $executionId);
-                Span::add('deploymentId', $deployment->getId());
-                Span::add('trigger', $trigger);
-                Span::current()?->finish();
-            }
             try {
                 $executionResponse = $executor->createExecution(
                     projectId: $project->getId(),
@@ -644,19 +624,8 @@ class Functions extends Action
             $errorCode = $th->getCode();
         } finally {
             /** Persist final execution status and record usage */
-            $traceProjectId = System::getEnv('_APP_TRACE_PROJECT_ID', '');
-            $traceFunctionId = System::getEnv('_APP_TRACE_FUNCTION_ID', '');
-            if ($traceProjectId !== '' && $traceFunctionId !== '' && $project->getId() === $traceProjectId && $functionId === $traceFunctionId) {
-                Span::init('execution.trace.functions_worker_before_execution_completed_bus');
-                Span::add('datetime', gmdate('c'));
-                Span::add('projectId', $project->getId());
-                Span::add('functionId', $functionId);
-                Span::add('executionId', $execution->getId());
-                Span::add('deploymentId', $execution->getAttribute('deploymentId', ''));
-                Span::add('status', $execution->getAttribute('status', ''));
-                Span::add('trigger', $trigger);
-                Span::current()?->finish();
-            }
+            Span::add('execution.status', $execution->getAttribute('status', ''));
+
             $bus->dispatch(new ExecutionCompleted(
                 execution: $execution->getArrayCopy(),
                 project: $project->getArrayCopy(),

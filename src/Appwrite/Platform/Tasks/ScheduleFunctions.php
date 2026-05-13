@@ -106,28 +106,25 @@ class ScheduleFunctions extends ScheduleBase
                         new Queue(System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME), 'utopia-queue', Event::FUNCTIONS_QUEUE_TTL)
                     );
 
-                    $projectDoc = $schedule['project'];
-                    $functionDoc = $schedule['resource'];
-                    $traceProjectId = System::getEnv('_APP_TRACE_PROJECT_ID', '');
-                    $traceFunctionId = System::getEnv('_APP_TRACE_FUNCTION_ID', '');
-                    if ($traceProjectId !== '' && $traceFunctionId !== '' && $projectDoc->getId() === $traceProjectId && $functionDoc->getId() === $traceFunctionId) {
-                        Span::init('execution.trace.v1_functions_enqueue');
-                        Span::add('datetime', gmdate('c'));
-                        Span::add('projectId', $projectDoc->getId());
-                        Span::add('functionId', $functionDoc->getId());
-                        Span::add('scheduleId', $schedule['$id'] ?? '');
+
+                    Span::init('schedule.functions.enqueue');
+                    try {
+                        Span::add('project.id', $schedule['project']->getId());
+                        Span::add('function.id', $schedule['resource']->getId());
+                        Span::add('schedule.id', $schedule['$id'] ?? '');
+
+                        $publisherForFunctions->enqueue(new FunctionMessage(
+                            project: $schedule['project'],
+                            function: $schedule['resource'],
+                            type: 'schedule',
+                            method: 'POST',
+                            path: '/',
+                        ));
+
+                        $this->recordEnqueueDelay($delayConfig['nextDate']);
+                    } finally {
                         Span::current()?->finish();
                     }
-
-                    $publisherForFunctions->enqueue(new FunctionMessage(
-                        project: $schedule['project'],
-                        function: $schedule['resource'],
-                        type: 'schedule',
-                        method: 'POST',
-                        path: '/',
-                    ));
-
-                    $this->recordEnqueueDelay($delayConfig['nextDate']);
                 }
             });
         }

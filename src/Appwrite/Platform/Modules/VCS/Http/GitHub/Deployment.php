@@ -59,9 +59,9 @@ trait Deployment
                 $resourceType = $repository->getAttribute('resourceType');
 
                 $logBase = "vcs.github.event.repo.{$repositoryId}";
-                Span::add("{$logBase}.projectId", $projectId);
-                Span::add("{$logBase}.resourceId", $resourceId);
-                Span::add("{$logBase}.resourceType", $resourceType);
+                Span::add('project.id', $projectId);
+                Span::add("{$logBase}.resource.id", $resourceId);
+                Span::add("{$logBase}.resource.type", $resourceType);
 
                 if ($resourceType !== "function" && $resourceType !== "site") {
                     continue;
