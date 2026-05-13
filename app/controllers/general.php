@@ -29,6 +29,7 @@ use Appwrite\Utopia\Request\Filters\V22 as RequestV22;
 use Appwrite\Utopia\Request\Filters\V23 as RequestV23;
 use Appwrite\Utopia\Request\Filters\V24 as RequestV24;
 use Appwrite\Utopia\Request\Filters\V25 as RequestV25;
+use Appwrite\Utopia\Request\Filters\V26 as RequestV26;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filters\V16 as ResponseV16;
 use Appwrite\Utopia\Response\Filters\V17 as ResponseV17;
@@ -40,6 +41,7 @@ use Appwrite\Utopia\Response\Filters\V22 as ResponseV22;
 use Appwrite\Utopia\Response\Filters\V23 as ResponseV23;
 use Appwrite\Utopia\Response\Filters\V24 as ResponseV24;
 use Appwrite\Utopia\Response\Filters\V25 as ResponseV25;
+use Appwrite\Utopia\Response\Filters\V26 as ResponseV26;
 use Appwrite\Utopia\View;
 use Executor\Exception\Timeout as ExecutorTimeout;
 use Executor\Executor;
@@ -914,6 +916,9 @@ Http::init()
             if (version_compare($requestFormat, '1.9.4', '<')) {
                 $request->addFilter(new RequestV25());
             }
+            if (version_compare($requestFormat, '1.9.5', '<')) {
+                $request->addFilter(new RequestV26());
+            }
         }
 
         $localeParam = (string) $request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
@@ -938,6 +943,9 @@ Http::init()
          */
         $responseFormat = $request->getHeader('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
         if ($responseFormat) {
+            if (version_compare($responseFormat, '1.9.5', '<')) {
+                $response->addFilter(new ResponseV26());
+            }
             if (version_compare($responseFormat, '1.9.4', '<')) {
                 $response->addFilter(new ResponseV25());
             }
@@ -1274,7 +1282,7 @@ Http::error()
         if (!$publish && $project->getId() !== 'console') {
             $errorUser = new DBUser();
             try {
-                $resolvedUser = $utopia->getResource('user');
+                $resolvedUser = $utopia->context()->get('user');
                 if ($resolvedUser instanceof DBUser) {
                     $errorUser = $resolvedUser;
                 }
@@ -1293,7 +1301,7 @@ Http::error()
         if ($logger && $publish) {
             try {
                 /** @var Utopia\Database\Document $user */
-                $user = $utopia->getResource('user');
+                $user = $utopia->context()->get('user');
             } catch (\Throwable) {
                 // All good, user is optional information for logger
             }
@@ -1494,7 +1502,7 @@ Http::error()
         // the cors resource (which depends on rule -> DB) would cascade.
         // Uses override:true to avoid duplicate headers if init() already set them.
         try {
-            $cors = $utopia->getResource('cors');
+            $cors = $utopia->context()->get('cors');
             foreach ($cors->headers($request->getOrigin()) as $name => $value) {
                 $response
                     ->removeHeader($name)

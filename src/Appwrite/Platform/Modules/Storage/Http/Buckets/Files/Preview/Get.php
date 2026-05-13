@@ -4,6 +4,8 @@ namespace Appwrite\Platform\Modules\Storage\Http\Buckets\Files\Preview;
 
 use Appwrite\Extend\Exception;
 use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\Platform\Modules\Storage\Config\CacheControl;
+use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -94,6 +96,7 @@ class Get extends Action
             ->inject('project')
             ->inject('authorization')
             ->inject('user')
+            ->inject('cacheControlForStorage')
             ->callback($this->action(...));
     }
 
@@ -120,7 +123,8 @@ class Get extends Action
         Device $deviceForLocal,
         Document $project,
         Authorization $authorization,
-        User $user
+        User $user,
+        callable $cacheControlForStorage
     ) {
 
         if (!\extension_loaded('imagick')) {
@@ -241,26 +245,41 @@ class Get extends Action
             throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, $e->getMessage());
         }
 
-        $image->crop((int) $width, (int) $height, $gravity);
+        if ($width > 0 || $height > 0 || $gravity !== Image::GRAVITY_CENTER) {
+            Span::add('storage.transform.crop.width', $width);
+            Span::add('storage.transform.crop.height', $height);
+            Span::add('storage.transform.crop.gravity', $gravity);
+            $image->crop($width, $height, $gravity);
+        }
 
-        if (!empty($opacity)) {
+        if ($opacity !== 1.0) {
+            Span::add('storage.transform.opacity', $opacity);
             $image->setOpacity($opacity);
         }
 
         if (!empty($background)) {
+            Span::add('storage.transform.background', $background);
             $image->setBackground('#' . $background);
         }
 
-        if (!empty($borderWidth)) {
+        if ($borderWidth > 0) {
+            Span::add('storage.transform.border.width', $borderWidth);
+            Span::add('storage.transform.border.color', $borderColor);
             $image->setBorder($borderWidth, '#' . $borderColor);
         }
 
-        if (!empty($borderRadius)) {
+        if ($borderRadius > 0) {
+            Span::add('storage.transform.borderRadius', $borderRadius);
             $image->setBorderRadius($borderRadius);
         }
 
-        if (!empty($rotation)) {
+        if ($rotation !== 0) {
+            Span::add('storage.transform.rotation', $rotation);
             $image->setRotation(($rotation + 360) % 360);
+        }
+
+        if ($quality !== -1) {
+            Span::add('storage.transform.quality', $quality);
         }
 
         $data = $image->output($output, $quality);
@@ -294,8 +313,20 @@ class Get extends Action
             }
         }
 
+        $maxAge = 2592000; // 30 days
+        $cacheControl = $cacheControlForStorage(new StorageCacheControl(
+            source: CacheControl::SOURCE_ACTION,
+            user: $user,
+            maxAge: $maxAge,
+            project: $project,
+            bucket: $bucket,
+            file: $file,
+            resourceToken: $resourceToken,
+            fileSecurity: $fileSecurity,
+        ));
+
         $response
-            ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
+            ->addHeader('Cache-Control', $cacheControl)
             ->setContentType($contentType)
             ->file($data);
 

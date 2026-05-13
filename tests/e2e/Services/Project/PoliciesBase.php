@@ -1082,7 +1082,9 @@ trait PoliciesBase
         ];
 
         if ($authenticated) {
-            $headers = array_merge($headers, $this->getHeaders());
+            $headers = array_merge($headers, $this->getHeaders(), [
+                'x-appwrite-response-format' => '1.9.4',
+            ]);
         }
 
         return $headers;
@@ -1094,6 +1096,7 @@ trait PoliciesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-response-format' => '1.9.4',
         ]);
     }
 

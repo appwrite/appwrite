@@ -154,7 +154,7 @@ class Server
 
         $nativeServer = $adapter->getNativeServer();
 
-        $container = $adapter->getContainer();
+        $container = $adapter->resources();
         $container->set('installerState', fn () => $state);
         $container->set('installerConfig', fn () => $config);
         $container->set('installerPaths', fn () => $paths);

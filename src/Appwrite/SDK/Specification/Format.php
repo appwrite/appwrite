@@ -68,6 +68,17 @@ abstract class Format
                 'mock-unverified'
             ],
         ],
+        [
+            'namespace' => 'project',
+            'methods' => [
+                'getOAuth2Provider'
+            ],
+            'parameter' => 'providerId',
+            'excludeKeys' => [
+                'mock',
+                'mock-unverified'
+            ],
+        ],
     ];
 
     /**
@@ -743,19 +754,70 @@ abstract class Format
                 break;
             case 'project':
                 switch ($method) {
+                    case 'updateAuthMethod':
+                        switch ($param) {
+                            case 'methodId':
+                                return 'ProjectAuthMethodId';
+                        }
+                        break;
+                    case 'getPolicy':
+                        switch ($param) {
+                            case 'policyId':
+                                return 'ProjectPolicyId';
+                        }
+                        break;
+                    case 'getOAuth2Provider':
+                        switch ($param) {
+                            case 'providerId':
+                                return 'ProjectOAuthProviderId';
+                        }
+                        break;
                     case 'getEmailTemplate':
                     case 'updateEmailTemplate':
                         switch ($param) {
                             case 'templateId':
-                                return 'EmailTemplateType';
+                                return 'ProjectEmailTemplateId';
                             case 'locale':
-                                return 'EmailTemplateLocale';
+                                return 'ProjectEmailTemplateLocale';
                         }
                         break;
                     case 'getUsage':
                         switch ($param) {
                             case 'period':
                                 return 'ProjectUsageRange';
+                        }
+                        break;
+                    case 'updateProtocol':
+                        switch ($param) {
+                            case 'protocolId':
+                                return 'ProjectProtocolId';
+                        }
+                        break;
+                    case 'updateService':
+                        switch ($param) {
+                            case 'serviceId':
+                                return 'ProjectServiceId';
+                        }
+                        break;
+                    case 'updateSMTP':
+                    case 'createSMTPTest':
+                        switch ($param) {
+                            case 'secure':
+                                return 'ProjectSMTPSecure';
+                        }
+                        break;
+                    case 'updateOAuth2Google':
+                        switch ($param) {
+                            case 'prompt':
+                                return 'ProjectOAuth2GooglePrompt';
+                        }
+                        break;
+                    case 'createKey':
+                    case 'createEphemeralKey':
+                    case 'updateKey':
+                        switch ($param) {
+                            case 'scopes':
+                                return 'ProjectKeyScopes';
                         }
                         break;
                 }
@@ -990,8 +1052,12 @@ abstract class Format
         return self::REQUEST_PARAMETER_OVERRIDES;
     }
 
-    public function getResponseEnumName(string $model, string $param): ?string
+    public function getResponseEnumName(string $model, string $param, ?string $enumSDKName = null): ?string
     {
+        if ($enumSDKName) {
+            return $enumSDKName;
+        }
+
         if ($param === 'type' && \str_starts_with($model, 'platform') && $model !== 'platformList') {
             return 'PlatformType';
         }

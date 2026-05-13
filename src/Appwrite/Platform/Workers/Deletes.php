@@ -222,9 +222,23 @@ class Deletes extends Action
                 $this->deleteExpiredPresences($project, $getProjectDB, $publisherForUsage);
                 $this->deleteOldDeployments($queueForDeletes, $project, $getProjectDB);
                 break;
+            case DELETE_TYPE_REPORT:
+                $this->deleteReport($dbForPlatform, $project, $document);
+                break;
             default:
                 throw new \Exception('No delete operation for type: ' . \strval($type));
         }
+    }
+
+    private function deleteReport(Database $dbForPlatform, Document $project, Document $report): void
+    {
+        $projectInternalId = $project->getSequence();
+        $reportInternalId = $report->getSequence();
+
+        $this->deleteByGroup('insights', [
+            Query::equal('projectInternalId', [$projectInternalId]),
+            Query::equal('reportInternalId', [$reportInternalId]),
+        ], $dbForPlatform);
     }
 
     private function cleanDatabase(
@@ -720,6 +734,26 @@ class Deletes extends Action
             ], $dbForPlatform);
         } catch (Throwable $th) {
             Console::error('Failed to delete schedules: ' . $th->getMessage());
+        }
+
+        // Delete Advisor insights
+        try {
+            $this->deleteByGroup('insights', [
+                Query::equal('projectInternalId', [$projectInternalId]),
+                Query::orderAsc()
+            ], $dbForPlatform);
+        } catch (Throwable $th) {
+            Console::error('Failed to delete insights: ' . $th->getMessage());
+        }
+
+        // Delete Advisor reports
+        try {
+            $this->deleteByGroup('reports', [
+                Query::equal('projectInternalId', [$projectInternalId]),
+                Query::orderAsc()
+            ], $dbForPlatform);
+        } catch (Throwable $th) {
+            Console::error('Failed to delete reports: ' . $th->getMessage());
         }
 
         /**

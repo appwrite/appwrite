@@ -252,6 +252,9 @@ class Response extends SwooleResponse
     // Project
     public const MODEL_PROJECT = 'project';
     public const MODEL_PROJECT_LIST = 'projectList';
+    public const MODEL_PROJECT_AUTH_METHOD = 'projectAuthMethod';
+    public const MODEL_PROJECT_SERVICE = 'projectService';
+    public const MODEL_PROJECT_PROTOCOL = 'projectProtocol';
     public const MODEL_WEBHOOK = 'webhook';
     public const MODEL_WEBHOOK_LIST = 'webhookList';
     public const MODEL_KEY = 'key';
@@ -334,6 +337,13 @@ class Response extends SwooleResponse
     public const MODEL_HEALTH_ANTIVIRUS = 'healthAntivirus';
     public const MODEL_HEALTH_CERTIFICATE = 'healthCertificate';
     public const MODEL_HEALTH_STATUS_LIST = 'healthStatusList';
+
+    // Advisor
+    public const MODEL_INSIGHT = 'insight';
+    public const MODEL_INSIGHT_LIST = 'insightList';
+    public const MODEL_INSIGHT_CTA = 'insightCTA';
+    public const MODEL_REPORT = 'report';
+    public const MODEL_REPORT_LIST = 'reportList';
 
     // Console
     public const MODEL_CONSOLE_VARIABLES = 'consoleVariables';
@@ -438,9 +448,10 @@ class Response extends SwooleResponse
         return isset(self::$models[$key]);
     }
 
-    public function applyFilters(array $data, string $model): array
+    public function applyFilters(array $data, string $model, Document $raw): array
     {
         foreach ($this->filters as $filter) {
+            $filter->setRawContent($raw);
             $data = $filter->parse($data, $model);
         }
 
@@ -460,7 +471,7 @@ class Response extends SwooleResponse
     public function dynamic(Document $document, string $model): void
     {
         $output = $this->output(clone $document, $model);
-        $output = $this->applyFilters($output, $model);
+        $output = $this->applyFilters($output, $model, raw: clone $document);
 
         switch ($this->getContentType()) {
             case self::CONTENT_TYPE_JSON:

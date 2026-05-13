@@ -2,9 +2,10 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Functions;
 
-use Appwrite\Event\Build;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
+use Appwrite\Event\Message\Build as BuildMessage;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Validator\FunctionEvent;
 use Appwrite\Event\Webhook;
@@ -115,7 +116,7 @@ class Create extends Base
             ->inject('timelimit')
             ->inject('project')
             ->inject('queueForEvents')
-            ->inject('queueForBuilds')
+            ->inject('publisherForBuilds')
             ->inject('queueForRealtime')
             ->inject('queueForWebhooks')
             ->inject('queueForFunctions')
@@ -157,7 +158,7 @@ class Create extends Base
         callable $timelimit,
         Document $project,
         Event $queueForEvents,
-        Build $queueForBuilds,
+        BuildPublisher $publisherForBuilds,
         Realtime $queueForRealtime,
         Webhook $queueForWebhooks,
         Func $queueForFunctions,
@@ -326,10 +327,11 @@ class Create extends Base
                     project: $project,
                     installation: $installation,
                     dbForProject: $dbForProject,
-                    queueForBuilds: $queueForBuilds,
+                    publisherForBuilds: $publisherForBuilds,
                     template: $template,
                     github: $github,
                     activate: true,
+                    platform: $platform,
                     reference: $providerBranch,
                     referenceType: 'branch'
                 );
@@ -367,11 +369,14 @@ class Create extends Base
                     'latestDeploymentStatus' => $deployment->getAttribute('status', ''),
                 ]));
 
-                $queueForBuilds
-                    ->setType(BUILD_TYPE_DEPLOYMENT)
-                    ->setResource($function)
-                    ->setDeployment($deployment)
-                    ->setTemplate($template);
+                $publisherForBuilds->enqueue(new BuildMessage(
+                    project: $project,
+                    resource: $function,
+                    deployment: $deployment,
+                    type: BUILD_TYPE_DEPLOYMENT,
+                    template: $template,
+                    platform: $platform,
+                ));
             }
 
             $functionsDomain = $platform['functionsDomain'];

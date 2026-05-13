@@ -2,8 +2,9 @@
 
 namespace Appwrite\Platform\Workers;
 
-use Appwrite\Event\Mail;
+use Appwrite\Event\Message\Mail as MailMessage;
 use Appwrite\Event\Message\Usage as UsageMessage;
+use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context as UsageContext;
@@ -36,7 +37,7 @@ class Webhooks extends Action
             ->inject('message')
             ->inject('project')
             ->inject('dbForPlatform')
-            ->inject('queueForMails')
+            ->inject('publisherForMails')
             ->inject('publisherForUsage')
             ->inject('log')
             ->inject('plan')
@@ -47,14 +48,14 @@ class Webhooks extends Action
      * @param Message $message
      * @param Document $project
      * @param Database $dbForPlatform
-     * @param Mail $queueForMails
+     * @param MailPublisher $publisherForMails
      * @param UsagePublisher $publisherForUsage
      * @param Log $log
      * @param array $plan
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Document $project, Database $dbForPlatform, Mail $queueForMails, UsagePublisher $publisherForUsage, Log $log, array $plan): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, MailPublisher $publisherForMails, UsagePublisher $publisherForUsage, Log $log, array $plan): void
     {
         $this->errors = [];
         $payload = $message->getPayload();
@@ -73,7 +74,7 @@ class Webhooks extends Action
 
         foreach ($project->getAttribute('webhooks', []) as $webhook) {
             if (array_intersect($webhook->getAttribute('events', []), $events)) {
-                $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForPlatform, $queueForMails, $publisherForUsage, $plan);
+                $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForPlatform, $publisherForMails, $publisherForUsage, $plan);
             }
         }
 
@@ -89,11 +90,11 @@ class Webhooks extends Action
      * @param Document $user
      * @param Document $project
      * @param Database $dbForPlatform
-     * @param Mail $queueForMails
+     * @param MailPublisher $publisherForMails
      * @param array $plan
      * @return void
      */
-    private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForPlatform, Mail $queueForMails, UsagePublisher $publisherForUsage, array $plan): void
+    private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForPlatform, MailPublisher $publisherForMails, UsagePublisher $publisherForUsage, array $plan): void
     {
         if ($webhook->getAttribute('enabled') !== true) {
             return;
@@ -171,7 +172,7 @@ class Webhooks extends Action
             if ($attempts >= \intval(System::getEnv('_APP_WEBHOOK_MAX_FAILED_ATTEMPTS', '10'))) {
                 $webhook->setAttribute('enabled', false);
                 $updatePayload['enabled'] = false;
-                $this->sendEmailAlert($attempts, $statusCode, $webhook, $project, $dbForPlatform, $queueForMails, $plan);
+                $this->sendEmailAlert($attempts, $statusCode, $webhook, $project, $dbForPlatform, $publisherForMails, $plan);
             }
 
             $dbForPlatform->updateDocument('webhooks', $webhook->getId(), new Document($updatePayload));
@@ -203,11 +204,11 @@ class Webhooks extends Action
      * @param Document $webhook
      * @param Document $project
      * @param Database $dbForPlatform
-     * @param Mail $queueForMails
+     * @param MailPublisher $publisherForMails
      * @param array $plan
      * @return void
      */
-    public function sendEmailAlert(int $attempts, mixed $statusCode, Document $webhook, Document $project, Database $dbForPlatform, Mail $queueForMails, array $plan): void
+    public function sendEmailAlert(int $attempts, mixed $statusCode, Document $webhook, Document $project, Database $dbForPlatform, MailPublisher $publisherForMails, array $plan): void
     {
         $memberships = $dbForPlatform->find('memberships', [
             Query::equal('teamInternalId', [$project->getAttribute('teamInternalId')]),
@@ -251,18 +252,16 @@ class Webhooks extends Action
             ->setParam('{{message}}', $template->render())
             ->setParam('{{year}}', date("Y"));
 
-        $queueForMails
-            ->setProject($project)
-            ->setSubject($subject)
-            ->setPreview($preview)
-            ->setBody($body->render());
-
         foreach ($users as $user) {
-            $queueForMails
-                ->setVariables(['user' => $user->getAttribute('name', '')])
-                ->setName($user->getAttribute('name', ''))
-                ->setRecipient($user->getAttribute('email'))
-                ->trigger();
+            $publisherForMails->enqueue(new MailMessage(
+                project: $project,
+                recipient: $user->getAttribute('email'),
+                name: $user->getAttribute('name', ''),
+                subject: $subject,
+                body: $body->render(),
+                preview: $preview,
+                variables: ['user' => $user->getAttribute('name', '')],
+            ));
         }
     }
 }
