@@ -10,6 +10,7 @@ use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Structure as StructureException;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
@@ -61,9 +62,10 @@ class PresenceState
         mixed $userInternalId,
         ?callable $onPresenceCreated = null
     ): Document {
-        if ($presenceId !== 'unique()') {
-            $presenceDocument->setAttribute('$id', $presenceId);
+        if ($presenceId === 'unique()') {
+            $presenceId = ID::unique();
         }
+        $presenceDocument->setAttribute('$id', $presenceId);
 
         $presenceCreated = false;
 
