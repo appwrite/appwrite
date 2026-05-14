@@ -1138,13 +1138,6 @@ return function (Container $context): void {
                     }
                 }
 
-                // Backwards compatibility: We cannot have organization project API call without organitation, take first one
-                if (empty($teamId)) {
-                    if (!$user->isEmpty()) {
-                        $teamId = ($user->getAttribute('memberships', [])[0] ?? new Document())->getAttribute('teamId', '');
-                    }
-                }
-
                 if (!empty($teamId)) {
                     $team = $authorization->skip(function () use ($dbForPlatform, $teamId) {
                         return $dbForPlatform->getDocument('teams', $teamId);

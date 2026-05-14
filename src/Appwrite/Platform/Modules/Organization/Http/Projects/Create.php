@@ -67,7 +67,7 @@ class Create extends Action
             ->param('projectId', '', new ProjectId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, and hyphen. Can\'t start with a special char. Max length is 36 chars.')
             ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
             ->param('region', System::getEnv('_APP_REGION', 'default'), new WhiteList(array_keys(array_filter(Config::getParam('regions'), fn ($config) => !$config['disabled']))), 'Project Region.', true)
-            ->param('teamId', '', new UID(), 'Team unique ID.', deprecated: true) // Backwards compatibility
+            ->param('teamId', '', new UID(), 'Team unique ID.', deprecated: true, optional: true) // Backwards compatibility
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('cache')
