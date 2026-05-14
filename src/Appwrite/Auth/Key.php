@@ -183,7 +183,7 @@ class Key
                     $bannerDisabled,
                     $projectCheckDisabled,
                     $previewAuthDisabled,
-                    $deploymentStatusIgnored,
+                    $deploymentStatusIgnored
                 );
             case API_KEY_STANDARD:
                 $key = $project->find(
