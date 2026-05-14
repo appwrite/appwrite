@@ -3,11 +3,11 @@
 namespace Appwrite\Platform\Modules\Health\Http\Health\Queue\Failed;
 
 use Appwrite\Event\Database;
-use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Audit;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Publisher\Certificate;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
@@ -75,7 +75,7 @@ class Get extends Base
             ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
             ->inject('response')
             ->inject('queueForDatabase')
-            ->inject('queueForDeletes')
+            ->inject('publisherForDeletes')
             ->inject('publisherForAudits')
             ->inject('publisherForMails')
             ->inject('publisherForFunctions')
@@ -95,7 +95,7 @@ class Get extends Base
         int|string $threshold,
         Response $response,
         Database $queueForDatabase,
-        Delete $queueForDeletes,
+        DeletePublisher $publisherForDeletes,
         Audit $publisherForAudits,
         MailPublisher $publisherForMails,
         FunctionPublisher $publisherForFunctions,
@@ -112,7 +112,7 @@ class Get extends Base
 
         $queue = match ($name) {
             System::getEnv('_APP_DATABASE_QUEUE_NAME', Event::DATABASE_QUEUE_NAME) => $queueForDatabase,
-            System::getEnv('_APP_DELETE_QUEUE_NAME', Event::DELETE_QUEUE_NAME) => $queueForDeletes,
+            System::getEnv('_APP_DELETE_QUEUE_NAME', Event::DELETE_QUEUE_NAME) => $publisherForDeletes,
             System::getEnv('_APP_AUDITS_QUEUE_NAME', Event::AUDITS_QUEUE_NAME) => $publisherForAudits,
             System::getEnv('_APP_MAILS_QUEUE_NAME', Event::MAILS_QUEUE_NAME) => $publisherForMails,
             System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME) => $publisherForFunctions,

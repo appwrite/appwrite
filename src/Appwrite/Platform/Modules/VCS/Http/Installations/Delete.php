@@ -2,7 +2,8 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\Installations;
 
-use Appwrite\Event\Delete as DeleteEvent;
+use Appwrite\Event\Message\Delete as DeleteMessage;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
@@ -11,6 +12,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Text;
 
@@ -49,7 +51,8 @@ class Delete extends Action
             ->param('installationId', '', new Text(256), 'Installation Id')
             ->inject('response')
             ->inject('dbForPlatform')
-            ->inject('queueForDeletes')
+            ->inject('publisherForDeletes')
+            ->inject('project')
             ->callback($this->action(...));
     }
 
@@ -57,7 +60,8 @@ class Delete extends Action
         string $installationId,
         Response $response,
         Database $dbForPlatform,
-        DeleteEvent $queueForDeletes
+        DeletePublisher $publisherForDeletes,
+        Document $project,
     ) {
         $installation = $dbForPlatform->getDocument('installations', $installationId);
 
@@ -69,9 +73,11 @@ class Delete extends Action
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove installation from DB');
         }
 
-        $queueForDeletes
-            ->setType(DELETE_TYPE_DOCUMENT)
-            ->setDocument($installation);
+        $publisherForDeletes->enqueue(new DeleteMessage(
+            project: $project,
+            type: DELETE_TYPE_DOCUMENT,
+            document: $installation,
+        ));
 
         $response->noContent();
     }
