@@ -220,7 +220,6 @@ class Deletes extends Action
                 $this->deleteExpiredSessions($project, $getProjectDB);
                 $this->deleteExpiredTransactions($project, $getProjectDB);
                 $this->deleteExpiredPresences($project, $getProjectDB, $publisherForUsage);
-                $this->deleteStalePresences($project, $getProjectDB, $publisherForUsage);
                 $this->deleteOldDeployments($queueForDeletes, $project, $getProjectDB);
                 break;
             case DELETE_TYPE_REPORT:
@@ -1755,27 +1754,6 @@ class Deletes extends Action
 
         $deleted = $dbForProject->deleteDocuments('presenceLogs', [
             Query::lessThan('expiresAt', $now),
-        ], onError: function (Throwable $th) {
-            // Swallow errors to avoid breaking the cleanup process
-        });
-
-        if ($deleted > 0) {
-            $usage = (new UsageContext())->addMetric(METRIC_USERS_PRESENCE, -$deleted);
-            $publisherForUsage->enqueue(new Usage(
-                project: $project,
-                metrics: $usage->getMetrics(),
-            ));
-        }
-    }
-
-    private function deleteStalePresences(Document $project, callable $getProjectDB, UsagePublisher $publisherForUsage): void
-    {
-        $dbForProject = $getProjectDB($project);
-
-        $oldestAllowed = DateTime::format((new \DateTime())->sub(\DateInterval::createFromDateString('30 days')));
-
-        $deleted = $dbForProject->deleteDocuments('presenceLogs', [
-            Query::lessThan('$createdAt', $oldestAllowed),
         ], onError: function (Throwable $th) {
             // Swallow errors to avoid breaking the cleanup process
         });
