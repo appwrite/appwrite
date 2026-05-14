@@ -5,6 +5,7 @@ use Appwrite\Event\Publisher\Audit as AuditPublisher;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Publisher\Certificate as CertificatePublisher;
 use Appwrite\Event\Publisher\Execution as ExecutionPublisher;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
@@ -107,6 +108,10 @@ $container->set('publisherForUsage', fn (Publisher $publisher) => new UsagePubli
 $container->set('publisherForExecutions', fn (Publisher $publisher) => new ExecutionPublisher(
     $publisher,
     new Queue(System::getEnv('_APP_EXECUTIONS_QUEUE_NAME', Event::EXECUTIONS_QUEUE_NAME))
+), ['publisher']);
+$container->set('publisherForFunctions', fn (Publisher $publisher) => new FunctionPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME), 'utopia-queue', Event::FUNCTIONS_QUEUE_TTL)
 ), ['publisher']);
 $container->set('publisherForMigrations', fn (Publisher $publisher) => new MigrationPublisher(
     $publisher,

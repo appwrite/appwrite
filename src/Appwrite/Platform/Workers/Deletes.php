@@ -147,7 +147,7 @@ class Deletes extends Action
                     case DELETE_TYPE_RULES:
                         $this->deleteRule($dbForPlatform, $document, $certificates);
                         break;
-                    case DELETE_TYPE_TRANSACTION:
+                    case DELETE_TYPE_TRANSACTIONS:
                         $this->deleteTransactionLogs($getProjectDB, $document, $project);
                         break;
                     default:

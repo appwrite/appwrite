@@ -4,8 +4,8 @@ require_once __DIR__ . '/init.php';
 
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
-use Appwrite\Event\Func;
 use Appwrite\Event\Publisher\Certificate as CertificatePublisher;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Platform\Appwrite;
@@ -281,9 +281,10 @@ $container->set('publisherForStatsResources', fn (Publisher $publisher) => new S
     $publisher,
     new Queue(System::getEnv('_APP_STATS_RESOURCES_QUEUE_NAME', Event::STATS_RESOURCES_QUEUE_NAME))
 ), ['publisher']);
-$container->set('queueForFunctions', function (Publisher $publisher) {
-    return new Func($publisher);
-}, ['publisher']);
+$container->set('publisherForFunctions', fn (Publisher $publisher) => new FunctionPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME), 'utopia-queue', Event::FUNCTIONS_QUEUE_TTL)
+), ['publisher']);
 $container->set('queueForDeletes', function (Publisher $publisher) {
     return new Delete($publisher);
 }, ['publisher']);

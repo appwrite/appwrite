@@ -8,7 +8,8 @@ use Appwrite\Event\Context\Audit as AuditContext;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
-use Appwrite\Event\Func;
+use Appwrite\Event\Message\Func as FunctionMessage;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
@@ -48,6 +49,7 @@ use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
 use Utopia\Pools\Group;
 use Utopia\Queue\Publisher;
+use Utopia\Queue\Queue;
 use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -113,7 +115,10 @@ return function (Container $context): void {
     $context->set('queueForRealtime', fn () => new Realtime(), []);
     $context->set('usage', fn () => new UsageContext(), []);
     $context->set('auditContext', fn () => new AuditContext(), []);
-    $context->set('queueForFunctions', fn (Publisher $publisher) => new Func($publisher), ['publisher']);
+    $context->set('publisherForFunctions', fn (Publisher $publisher) => new FunctionPublisher(
+        $publisher,
+        new Queue(System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME), 'utopia-queue', Event::FUNCTIONS_QUEUE_TTL)
+    ), ['publisher']);
     $context->set('eventProcessor', fn () => new EventProcessor(), []);
     $context->set('dbForPlatform', function (Group $pools, Cache $cache, Authorization $authorization) {
         $adapter = new DatabasePool($pools->get('console'));
@@ -635,7 +640,7 @@ return function (Container $context): void {
         return;
     }, ['user', 'store', 'proofForToken']);
 
-    $context->set('dbForProject', function (Group $pools, Database $dbForPlatform, Cache $cache, Document $project, Response $response, Publisher $publisher, Publisher $publisherFunctions, Publisher $publisherWebhooks, Event $queueForEvents, Func $queueForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime, UsageContext $usage, Authorization $authorization, Request $request) {
+    $context->set('dbForProject', function (Group $pools, Database $dbForPlatform, Cache $cache, Document $project, Response $response, Publisher $publisher, Publisher $publisherFunctions, Publisher $publisherWebhooks, Event $queueForEvents, FunctionPublisher $publisherForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime, UsageContext $usage, Authorization $authorization, Request $request) {
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $dbForPlatform;
         }
@@ -691,7 +696,7 @@ return function (Container $context): void {
          * Accounts can be created in many ways beyond `createAccount`
          * (anonymous, OAuth, phone, etc.), and those flows are probably not covered in event tests; so we handle this here.
          */
-        $eventDatabaseListener = function (Document $project, Document $document, Response $response, Event $queueForEvents, Func $queueForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime) {
+        $eventDatabaseListener = function (Document $project, Document $document, Response $response, Event $queueForEvents, FunctionPublisher $publisherForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime) {
             // Only trigger events for user creation with the database listener.
             if ($document->getCollection() !== 'users') {
                 return;
@@ -703,9 +708,15 @@ return function (Container $context): void {
                 ->setPayload($response->output($document, Response::MODEL_USER));
 
             // Trigger functions, webhooks, and realtime events
-            $queueForFunctions
-                ->from($queueForEvents)
-                ->trigger();
+            $publisherForFunctions->enqueue(FunctionMessage::fromEvent(
+                event: $queueForEvents->getEvent(),
+                params: $queueForEvents->getParams(),
+                project: $queueForEvents->getProject(),
+                user: $queueForEvents->getUser(),
+                userId: $queueForEvents->getUserId(),
+                payload: $queueForEvents->getPayload(),
+                platform: $queueForEvents->getPlatform(),
+            ));
 
             /** Trigger webhooks events only if a project has them enabled */
             if (! empty($project->getAttribute('webhooks'))) {
@@ -885,7 +896,6 @@ return function (Container $context): void {
         // Clone the queues, to prevent events triggered by the database listener
         // from overwriting the events that are supposed to be triggered in the shutdown hook.
         $queueForEventsClone = new Event($publisher);
-        $queueForFunctions = new Func($publisherFunctions);
         $queueForWebhooks = new Webhook($publisherWebhooks);
         $queueForRealtime = new Realtime();
 
@@ -900,7 +910,7 @@ return function (Container $context): void {
                 $document,
                 $response,
                 $queueForEventsClone->from($queueForEvents),
-                $queueForFunctions->from($queueForEvents),
+                $publisherForFunctions,
                 $queueForWebhooks->from($queueForEvents),
                 $queueForRealtime->from($queueForEvents)
             ))
@@ -909,7 +919,7 @@ return function (Container $context): void {
             ->on(Database::EVENT_DOCUMENT_DELETE, 'purge-function-events-cache', fn ($event, $document) => $functionsEventsCacheListener($event, $document, $project, $database));
 
         return $database;
-    }, ['pools', 'dbForPlatform', 'cache', 'project', 'response', 'publisher', 'publisherFunctions', 'publisherWebhooks', 'queueForEvents', 'queueForFunctions', 'queueForWebhooks', 'queueForRealtime', 'usage', 'authorization', 'request']);
+    }, ['pools', 'dbForPlatform', 'cache', 'project', 'response', 'publisher', 'publisherFunctions', 'publisherWebhooks', 'queueForEvents', 'publisherForFunctions', 'queueForWebhooks', 'queueForRealtime', 'usage', 'authorization', 'request']);
 
     $context->set('schema', function ($utopia, $dbForProject, $authorization) {
 

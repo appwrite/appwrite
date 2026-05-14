@@ -63,7 +63,7 @@ class Delete extends DocumentsDelete
             ->inject('usage')
             ->inject('queueForEvents')
             ->inject('queueForRealtime')
-            ->inject('queueForFunctions')
+            ->inject('publisherForFunctions')
             ->inject('queueForWebhooks')
             ->inject('plan')
             ->inject('eventProcessor')

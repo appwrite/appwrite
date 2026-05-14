@@ -5,7 +5,8 @@ namespace Appwrite\Platform\Modules\Functions\Http\Executions;
 use Ahc\Jwt\JWT;
 use Appwrite\Event\Delete as DeleteEvent;
 use Appwrite\Event\Event;
-use Appwrite\Event\Func;
+use Appwrite\Event\Message\Func as FunctionMessage;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\Validator\Headers;
@@ -95,7 +96,7 @@ class Create extends Base
             ->inject('user')
             ->inject('queueForEvents')
             ->inject('usage')
-            ->inject('queueForFunctions')
+            ->inject('publisherForFunctions')
             ->inject('geodb')
             ->inject('store')
             ->inject('proofForToken')
@@ -123,7 +124,7 @@ class Create extends Base
         User $user,
         Event $queueForEvents,
         Context $usage,
-        Func $queueForFunctions,
+        FunctionPublisher $publisherForFunctions,
         Reader $geodb,
         Store $store,
         Token $proofForToken,
@@ -294,20 +295,19 @@ class Create extends Base
         if ($async) {
             if (is_null($scheduledAt)) {
                 $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
-                $queueForFunctions
-                    ->setType('http')
-                    ->setExecution($execution)
-                    ->setFunction($function)
-                    ->setBody($body)
-                    ->setHeaders($headers)
-                    ->setPath($path)
-                    ->setMethod($method)
-                    ->setJWT($jwt)
-                    ->setProject($project)
-                    ->setUser($user)
-                    ->setParam('functionId', $function->getId())
-                    ->setParam('executionId', $execution->getId())
-                    ->trigger();
+                $publisherForFunctions->enqueue(new FunctionMessage(
+                    project: $project,
+                    user: $user,
+                    function: $function,
+                    functionId: $function->getId(),
+                    execution: $execution,
+                    type: 'http',
+                    jwt: $jwt,
+                    body: $body,
+                    path: $path,
+                    headers: $headers,
+                    method: $method,
+                ));
             } else {
                 $data = [
                     'headers' => $headers,
