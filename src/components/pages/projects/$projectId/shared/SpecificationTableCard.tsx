@@ -1,0 +1,176 @@
+import { useId, type ReactNode } from 'react'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { cn } from '@/lib/utils'
+import {
+  isSpecificationAllowedInPlan,
+  type SpecificationWithPlan,
+} from '@/lib/specifications'
+
+export type SpecificationTableRow = SpecificationWithPlan & {
+  slug?: string
+  cpus?: number
+  memory?: number
+}
+
+const PROFILES_STRIP_SUBCOPY: Record<
+  'build' | 'runtime-site' | 'runtime-function',
+  string
+> = {
+  build:
+    'Select one profile — applies to install and build phases on the build worker.',
+  'runtime-site':
+    'Select one profile — vCPU and memory allocated per request while your site serves traffic (SSR and dynamic routes).',
+  'runtime-function':
+    'Select one profile — vCPU and memory allocated for each function execution.',
+}
+
+type SpecificationTableCardProps = {
+  title: string
+  description: string
+  /** Drives the mono subcopy under “Compute profiles” */
+  scope: 'build' | 'runtime-site' | 'runtime-function'
+  specs: SpecificationTableRow[]
+  selectedSlug: string
+  onSelectedSlugChange: (slug: string) => void
+  hasChanges: boolean
+  isSaving: boolean
+  onSave: () => void
+  footerNote?: ReactNode
+}
+
+export function SpecificationTableCard({
+  title,
+  description,
+  scope,
+  specs,
+  selectedSlug,
+  onSelectedSlugChange,
+  hasChanges,
+  isSaving,
+  onSave,
+  footerNote,
+}: SpecificationTableCardProps) {
+  const radioGroupId = useId()
+  const rows = specs.filter((s) => s.slug && String(s.slug).trim() !== '')
+  const radioName = `spec-${scope}-${radioGroupId}`
+
+  return (
+    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+      <div className="px-6 py-4">
+        <h3 className="text-[15px] font-semibold text-foreground">{title}</h3>
+        <p className="text-[13px] text-muted-foreground mt-2">{description}</p>
+      </div>
+      <div className="border-t border-border" />
+      <div className="px-0 py-0 sm:px-0">
+        <div className="border-b border-border bg-muted/20 px-4 py-2 sm:px-6">
+          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+            Compute profiles
+          </p>
+          <p className="text-[12px] text-muted-foreground mt-0.5 font-mono">
+            {PROFILES_STRIP_SUBCOPY[scope]}
+          </p>
+        </div>
+        <Table withScrollContainer={false}>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent border-b border-border">
+              <TableHead className="w-[44px] px-4 py-3" />
+              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                Identifier
+              </TableHead>
+              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                vCPU
+              </TableHead>
+              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                Memory
+              </TableHead>
+              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                Availability
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {rows.map((spec) => {
+              const slug = spec.slug as string
+              const allowed = isSpecificationAllowedInPlan(spec)
+              const selected = selectedSlug === slug
+              return (
+                <TableRow
+                  key={slug}
+                  className={cn(
+                    'cursor-pointer border-b border-border transition-colors',
+                    selected && 'bg-primary/[0.06]',
+                    !allowed && 'cursor-not-allowed opacity-55 hover:bg-transparent',
+                    allowed && 'hover:bg-muted/40',
+                  )}
+                  onClick={() => {
+                    if (allowed) onSelectedSlugChange(slug)
+                  }}
+                >
+                  <TableCell className="px-4 py-3 align-middle">
+                    <input
+                      type="radio"
+                      name={radioName}
+                      className="h-4 w-4 accent-primary"
+                      checked={selected}
+                      disabled={!allowed}
+                      onChange={() => allowed && onSelectedSlugChange(slug)}
+                      aria-label={`Select specification ${slug}`}
+                    />
+                  </TableCell>
+                  <TableCell className="px-4 py-3">
+                    <span className="font-mono text-[12px] font-medium text-foreground tracking-tight">
+                      {slug}
+                    </span>
+                  </TableCell>
+                  <TableCell className="px-4 py-3">
+                    <span className="text-[13px] tabular-nums text-foreground">
+                      {spec.cpus ?? '—'}
+                    </span>
+                  </TableCell>
+                  <TableCell className="px-4 py-3">
+                    <span className="text-[13px] tabular-nums text-foreground">
+                      {spec.memory != null ? `${spec.memory} MB` : '—'}
+                    </span>
+                  </TableCell>
+                  <TableCell className="px-4 py-3">
+                    {allowed ? (
+                      <Badge variant="success" className="text-[10px] shrink-0">
+                        Available
+                      </Badge>
+                    ) : (
+                      <Badge variant="warning" className="text-[10px] shrink-0">
+                        Plan limit
+                      </Badge>
+                    )}
+                  </TableCell>
+                </TableRow>
+              )
+            })}
+          </TableBody>
+        </Table>
+      </div>
+      {footerNote ? (
+        <div className="border-t border-border px-6 py-3">{footerNote}</div>
+      ) : null}
+      <div className="px-6 py-4 border-t border-border bg-muted/30">
+        <Button
+          size="sm"
+          className="h-9 text-[13px]"
+          disabled={!hasChanges || isSaving}
+          onClick={onSave}
+        >
+          Update
+        </Button>
+      </div>
+    </div>
+  )
+}

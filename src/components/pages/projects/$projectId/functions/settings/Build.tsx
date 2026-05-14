@@ -1,0 +1,177 @@
+import { useState, useEffect, useMemo } from 'react'
+import { useParams } from '@tanstack/react-router'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  useProjectFunction,
+  useFunctionSpecifications,
+  buildFunctionUpdateParams,
+} from '@/lib/react-query/hooks'
+import { sdk } from '@/lib/appwrite/sdk'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import type { Models } from '@appwrite.io/console'
+import { toast } from 'sonner'
+import { hasUnavailableSpecifications } from '@/lib/specifications'
+import { SpecificationTableCard } from '../../shared/SpecificationTableCard'
+
+const CONTACT_SALES_URL =
+  import.meta.env.VITE_CONTACT_SALES_URL ||
+  'https://appwrite.io/contact-us/enterprise'
+
+export function View() {
+  const { projectId, functionId } = useParams({ strict: false })
+  const queryClient = useQueryClient()
+
+  const { data: func, isLoading: funcLoading } = useProjectFunction(
+    projectId,
+    functionId,
+  )
+  const { data: specificationsData } = useFunctionSpecifications(projectId)
+
+  const [commands, setCommands] = useState('')
+  const [buildSpecification, setBuildSpecification] = useState('')
+
+  useEffect(() => {
+    if (func) {
+      setCommands(func.commands || '')
+      setBuildSpecification(func.buildSpecification || '')
+    }
+  }, [func])
+
+  const specifications = useMemo(
+    () => specificationsData?.specifications || [],
+    [specificationsData],
+  )
+
+  const updateFunctionMutation = useMutation({
+    mutationFn: async (updates: Partial<Models.Function>) => {
+      if (!projectId || !functionId || !func)
+        throw new Error('Project ID, Function ID, and Function are required')
+      const projectSdk = sdk.forProject(projectId)
+      return await projectSdk.functions.update(
+        buildFunctionUpdateParams(func, updates),
+      )
+    },
+    onSuccess: () => {
+      toast.success('Function updated successfully')
+      queryClient.invalidateQueries({
+        queryKey: ['function', 'project', projectId, functionId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['functions', 'project', projectId],
+      })
+    },
+    onError: (error: unknown) => {
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to update function',
+      )
+    },
+  })
+
+  const commandsDirty = commands !== (func?.commands || '')
+  const specDirty =
+    buildSpecification !== (func?.buildSpecification || '')
+
+  const handleSaveCommands = () => {
+    updateFunctionMutation.mutate({ commands })
+  }
+
+  const handleSaveSpecification = () => {
+    updateFunctionMutation.mutate({
+      buildSpecification: buildSpecification || undefined,
+    })
+  }
+
+  if (funcLoading) {
+    return (
+      <div className="rounded-lg border border-border bg-card py-12 text-center">
+        <p className="text-[13px] text-muted-foreground">Loading settings...</p>
+      </div>
+    )
+  }
+
+  if (!func) return null
+
+  const specFooterNote = hasUnavailableSpecifications(specifications) ? (
+    <div className="rounded-lg border border-border bg-muted/30 px-3 py-2.5">
+      <p className="text-[12px] text-muted-foreground">
+        Need more resources?{' '}
+        <a
+          href="#"
+          className="font-medium text-foreground underline hover:no-underline"
+          onClick={(e) => {
+            e.preventDefault()
+          }}
+        >
+          Upgrade your plan
+        </a>{' '}
+        or{' '}
+        <a
+          href={CONTACT_SALES_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-medium text-foreground underline hover:no-underline"
+        >
+          contact sales
+        </a>{' '}
+        to unlock additional specifications.
+      </p>
+    </div>
+  ) : undefined
+
+  return (
+    <>
+      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+        <div className="px-6 py-4">
+          <h3 className="text-[15px] font-semibold text-foreground">Commands</h3>
+          <p className="text-[13px] text-muted-foreground mt-2">
+            Commands run while your function deployment is being built and
+            packaged.
+          </p>
+        </div>
+        <div className="border-t border-border" />
+        <div className="px-6 py-4">
+          <Label htmlFor="build-commands" className="text-[13px]">
+            Commands
+          </Label>
+          <Input
+            id="build-commands"
+            value={commands}
+            onChange={(e) => setCommands(e.target.value)}
+            placeholder="npm install"
+            className="mt-2 h-9 font-mono text-[13px]"
+          />
+          <p className="mt-1 text-[12px] text-muted-foreground">
+            Commands to run during function build.
+          </p>
+        </div>
+        <div className="px-6 py-4 border-t border-border bg-muted/30">
+          <Button
+            size="sm"
+            className="h-9 text-[13px]"
+            disabled={!commandsDirty || updateFunctionMutation.isPending}
+            onClick={handleSaveCommands}
+          >
+            Update
+          </Button>
+        </div>
+      </div>
+
+      {specifications.length > 0 ? (
+        <SpecificationTableCard
+          title="Specification"
+          description="CPU and memory allocated on the build worker while your function image is produced."
+          scope="build"
+          specs={specifications}
+          selectedSlug={buildSpecification}
+          onSelectedSlugChange={setBuildSpecification}
+          hasChanges={specDirty}
+          isSaving={updateFunctionMutation.isPending}
+          onSave={handleSaveSpecification}
+          footerNote={specFooterNote}
+        />
+      ) : null}
+    </>
+  )
+}

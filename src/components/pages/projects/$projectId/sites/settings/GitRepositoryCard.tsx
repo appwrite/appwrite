@@ -1,14 +1,10 @@
 /**
- * Git Repository Card Component
- *
- * Manages Git repository connection and configuration for the site.
+ * Repository card — Git connection and configuration for the site.
  * Shows an empty state with "Connect repository" when no repo is connected.
  */
 
 import { useState, useEffect, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
 import {
   Dialog,
   DialogContent,
@@ -71,9 +67,6 @@ export function GitRepositoryCard({
   const [selectedDir, setSelectedDir] = useState(
     site?.providerRootDirectory || '',
   )
-  const [silentMode, setSilentMode] = useState(
-    site?.providerSilentMode ?? false,
-  )
 
   // Connect repository modal state
   const [selectedInstallationId, setSelectedInstallationId] =
@@ -120,7 +113,6 @@ export function GitRepositoryCard({
     if (site) {
       setSelectedBranch(site.providerBranch || '')
       setSelectedDir(site.providerRootDirectory || '')
-      setSilentMode(site.providerSilentMode ?? false)
     }
   }, [site])
 
@@ -223,7 +215,6 @@ export function GitRepositoryCard({
       setDisconnectDialogOpen(false)
       setSelectedBranch('')
       setSelectedDir('')
-      setSilentMode(false)
       queryClient.invalidateQueries({
         queryKey: ['site', 'project', projectId, siteId],
       })
@@ -236,8 +227,7 @@ export function GitRepositoryCard({
   const handleSaveConfiguration = () => {
     const hasChanges =
       selectedBranch !== site?.providerBranch ||
-      selectedDir !== (site?.providerRootDirectory || '') ||
-      silentMode !== (site?.providerSilentMode ?? false)
+      selectedDir !== (site?.providerRootDirectory || '')
 
     if (!hasChanges) {
       toast.info('No changes to save')
@@ -247,7 +237,6 @@ export function GitRepositoryCard({
     updateSiteMutation.mutate({
       providerBranch: selectedBranch || undefined,
       providerRootDirectory: selectedDir || undefined,
-      providerSilentMode: silentMode,
     })
   }
 
@@ -266,10 +255,9 @@ export function GitRepositoryCard({
   const hasChanges = useMemo(() => {
     return (
       selectedBranch !== site?.providerBranch ||
-      selectedDir !== (site?.providerRootDirectory || '') ||
-      silentMode !== (site?.providerSilentMode ?? false)
+      selectedDir !== (site?.providerRootDirectory || '')
     )
-  }, [selectedBranch, selectedDir, silentMode, site])
+  }, [selectedBranch, selectedDir, site])
 
   const installationId: string | undefined =
     site?.installationId != null ? site.installationId : undefined
@@ -279,9 +267,7 @@ export function GitRepositoryCard({
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">
-          Git Repository
-        </h3>
+        <h3 className="text-[15px] font-semibold text-foreground">Repository</h3>
         <p className="text-[13px] text-muted-foreground mt-2">
           Connect your site to a Git repository for automatic deployments
         </p>
@@ -480,23 +466,6 @@ export function GitRepositoryCard({
                 label="Root directory"
                 description="Choose the directory containing your site code"
               />
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="silent-mode" className="text-[13px]">
-                    Silent mode
-                  </Label>
-                  <p className="text-[12px] text-muted-foreground">
-                    Disable automated comments on repository commits
-                  </p>
-                </div>
-                <Switch
-                  id="silent-mode"
-                  checked={silentMode}
-                  onCheckedChange={setSilentMode}
-                  disabled={updateSiteMutation.isPending}
-                />
-              </div>
             </fieldset>
           </div>
         )}

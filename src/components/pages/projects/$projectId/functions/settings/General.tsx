@@ -1,0 +1,330 @@
+import { useState, useEffect } from 'react'
+import { useParams, useNavigate } from '@tanstack/react-router'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import {
+  useProjectFunction,
+  buildFunctionUpdateParams,
+  useDeleteFunction,
+} from '@/lib/react-query/hooks'
+import { sdk } from '@/lib/appwrite/sdk'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import type { Models } from '@appwrite.io/console'
+import { toast } from 'sonner'
+import { Trash2 } from 'lucide-react'
+import { CopyableId } from '@/components/global/shared/CopyableId'
+import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
+
+export function View() {
+  const { projectId, functionId } = useParams({ strict: false })
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+
+  const { data: func, isLoading: funcLoading } = useProjectFunction(
+    projectId,
+    functionId,
+  )
+
+  const [name, setName] = useState('')
+  const [enabled, setEnabled] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+
+  const deleteFunctionMutation = useDeleteFunction(projectId)
+
+  useEffect(() => {
+    if (func) {
+      setName(func.name || '')
+      setEnabled(func.enabled !== false)
+    }
+  }, [func])
+
+  const updateFunctionMutation = useMutation({
+    mutationFn: async (updates: Partial<Models.Function>) => {
+      if (!projectId || !functionId || !func)
+        throw new Error('Project ID, Function ID, and Function are required')
+      const projectSdk = sdk.forProject(projectId)
+      return await projectSdk.functions.update(
+        buildFunctionUpdateParams(func, updates),
+      )
+    },
+    onSuccess: () => {
+      toast.success('Function updated successfully')
+      queryClient.invalidateQueries({
+        queryKey: ['function', 'project', projectId, functionId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['functions', 'project', projectId],
+      })
+    },
+    onError: (error: unknown) => {
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to update function',
+      )
+    },
+  })
+
+  const updateEnabledMutation = useMutation({
+    mutationFn: async (nextEnabled: boolean) => {
+      if (!projectId || !functionId || !func)
+        throw new Error('Project ID, Function ID, and Function are required')
+      const projectSdk = sdk.forProject(projectId)
+      return await projectSdk.functions.update(
+        buildFunctionUpdateParams(func, { enabled: nextEnabled }),
+      )
+    },
+    onSuccess: (_, nextEnabled) => {
+      toast.success(`Function has been ${nextEnabled ? 'enabled' : 'disabled'}`)
+      queryClient.invalidateQueries({
+        queryKey: ['function', 'project', projectId, functionId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['functions', 'project', projectId],
+      })
+    },
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error))
+      if (func) {
+        setEnabled(func.enabled !== false)
+      }
+    },
+  })
+
+  const handleSaveName = () => {
+    if (!name.trim()) {
+      toast.error('Function name is required')
+      return
+    }
+    updateFunctionMutation.mutate({ name })
+  }
+
+  const handleDeleteFunction = () => {
+    if (!functionId) return
+    deleteFunctionMutation.mutate(functionId, {
+      onSuccess: () => {
+        toast.success('Function deleted successfully')
+        navigate({
+          to: '/projects/$projectId/functions',
+          params: { projectId: projectId! },
+        })
+      },
+      onError: (error: unknown) => {
+        toast.error(
+          error instanceof Error ? error.message : 'Failed to delete function',
+        )
+      },
+    })
+    setDeleteDialogOpen(false)
+  }
+
+  if (funcLoading) {
+    return (
+      <div className="rounded-lg border border-border bg-card py-12 text-center">
+        <p className="text-[13px] text-muted-foreground">Loading settings...</p>
+      </div>
+    )
+  }
+
+  if (!func) return null
+
+  return (
+    <>
+      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+        <div className="px-6 py-4">
+          <h3 className="text-[15px] font-semibold text-foreground">Details</h3>
+          <p className="text-[13px] text-muted-foreground mt-2">
+            Identifiers and timestamps for this function.
+          </p>
+        </div>
+        <div className="border-t border-border" />
+        <div className="px-6 py-4 space-y-1">
+          <p className="text-[13px] text-muted-foreground">
+            Function ID:{' '}
+            <span className="ml-1.5">
+              <CopyableId id={func.$id} size="sm" />
+            </span>
+          </p>
+          <p className="text-[13px] text-muted-foreground">
+            Created:{' '}
+            <DateTooltip
+              date={new Date(func.$createdAt)}
+              showFormattedDate
+              className="text-foreground"
+            />
+          </p>
+          <p className="text-[13px] text-muted-foreground">
+            Last updated:{' '}
+            <DateTooltip
+              date={new Date(func.$updatedAt || func.$createdAt)}
+              showFormattedDate
+              className="text-foreground"
+            />
+          </p>
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+        <div className="px-6 py-4">
+          <h3 className="text-[15px] font-semibold text-foreground">Name</h3>
+          <p className="text-[13px] text-muted-foreground mt-2">
+            Function name used for identification
+          </p>
+        </div>
+        <div className="border-t border-border" />
+        <div className="px-6 py-4">
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Enter function name"
+            className="h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+          />
+        </div>
+        <div className="px-6 py-4 border-t border-border bg-muted/30">
+          <Button
+            size="sm"
+            className="h-9 text-[13px]"
+            disabled={
+              name === func.name ||
+              !name.trim() ||
+              updateFunctionMutation.isPending
+            }
+            onClick={handleSaveName}
+          >
+            Update
+          </Button>
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+        <div className="px-6 py-4">
+          <h3 className="text-[15px] font-semibold text-foreground">Status</h3>
+          <p className="text-[13px] text-muted-foreground mt-2">
+            Enable or disable this function without deleting it.
+          </p>
+        </div>
+        <div className="border-t border-border" />
+        <div className="px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Switch
+                id="toggle-enabled"
+                checked={enabled}
+                onCheckedChange={setEnabled}
+                disabled={updateEnabledMutation.isPending}
+              />
+              <Label
+                htmlFor="toggle-enabled"
+                className="text-[13px] text-foreground"
+              >
+                {enabled ? 'Enabled' : 'Disabled'}
+              </Label>
+            </div>
+          </div>
+        </div>
+        <div className="px-6 py-4 border-t border-border bg-muted/30">
+          <Button
+            size="sm"
+            className="h-9 text-[13px]"
+            disabled={
+              enabled === (func.enabled !== false) ||
+              updateEnabledMutation.isPending
+            }
+            onClick={() => {
+              if (enabled !== (func.enabled !== false)) {
+                updateEnabledMutation.mutate(enabled)
+              }
+            }}
+          >
+            Update
+          </Button>
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden">
+        <div className="px-6 py-4">
+          <h3 className="text-[15px] font-semibold text-foreground">
+            Delete function
+          </h3>
+        </div>
+        <div className="border-t border-destructive/20" />
+        <div className="px-6 py-4">
+          <p className="text-[13px] text-muted-foreground">
+            Permanently delete this function and all its data. This action cannot
+            be undone.
+          </p>
+          <div className="flex items-center gap-3 mt-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+              {func.runtime ? (
+                <RuntimeIcon runtime={func.runtime} className="h-5 w-5" />
+              ) : (
+                <Trash2 className="h-5 w-5 text-muted-foreground" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[14px] font-medium text-foreground truncate">
+                {func.name || 'Unnamed Function'}
+              </p>
+              <p className="text-[12px] text-muted-foreground">
+                {func.runtime || 'No runtime'}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="px-6 py-4 border-t border-destructive/20 bg-destructive/5">
+          <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+            <DialogTrigger asChild>
+              <Button
+                variant="destructive"
+                size="sm"
+                className="h-9 text-[13px]"
+                disabled={deleteFunctionMutation.isPending}
+              >
+                <Trash2 className="mr-1.5 h-4 w-4" />
+                Delete function
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md p-0">
+              <DialogHeader className="px-6 pt-6 text-left">
+                <DialogTitle>Delete function</DialogTitle>
+                <DialogDescription className="text-[13px] mt-2">
+                  Are you sure you want to delete{' '}
+                  <span className="font-medium text-foreground">
+                    {func.name || 'this function'}
+                  </span>{' '}
+                  and all its data? This action cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => setDeleteDialogOpen(false)}
+                  disabled={deleteFunctionMutation.isPending}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleDeleteFunction}
+                  disabled={deleteFunctionMutation.isPending}
+                >
+                  Delete
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
+    </>
+  )
+}

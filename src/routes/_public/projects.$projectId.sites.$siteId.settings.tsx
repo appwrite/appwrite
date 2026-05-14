@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { View } from '@/components/pages/projects/$projectId/sites/Settings'
+import { SiteSettingsLayout } from '@/components/pages/projects/$projectId/sites/settings/SiteSettingsLayout'
 import {
   siteQueryOptions,
   siteVariablesQueryOptions,
@@ -30,33 +30,19 @@ export const Route = createFileRoute(
     }
 
     await queryClient.ensureQueryData(projectQueryOptions(projectId))
-    // Fetch site - blocks navigation until ready
     await queryClient.ensureQueryData(siteQueryOptions(projectId, siteId))
 
-    // Fetch critical data before rendering to prevent layout shifts
-    // Uses ensureQueryData with queryOptions to prevent duplicate API calls
     await Promise.all([
-      // Fetch project variables
       queryClient.ensureQueryData(projectVariablesQueryOptions(projectId)),
-      // Fetch site variables
       queryClient.ensureQueryData(siteVariablesQueryOptions(projectId, siteId)),
-      // Fetch frameworks
       queryClient.ensureQueryData(siteFrameworksQueryOptions(projectId)),
-      // Fetch VCS installations
       queryClient.ensureQueryData(
         vcsInstallationsQueryOptions(projectId, 0, 10),
       ),
-      // Fetch specifications (cloud only)
       queryClient
         .ensureQueryData(siteSpecificationsQueryOptions(projectId))
-        .catch(() => {
-          // Ignore errors - specifications might not be available in self-hosted
-        }),
+        .catch(() => {}),
     ])
   },
-  component: SiteSettingsPage,
+  component: SiteSettingsLayout,
 })
-
-function SiteSettingsPage() {
-  return <View />
-}

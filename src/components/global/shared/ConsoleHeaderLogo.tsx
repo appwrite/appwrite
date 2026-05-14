@@ -1,4 +1,31 @@
+import { useLayoutEffect, useRef, useSyncExternalStore } from 'react'
 import { cn } from '@/lib/utils'
+
+let suppressLogoHoverFlipUntilLeave = false
+const logoFlipSuppressListeners = new Set<() => void>()
+
+function emitLogoFlipSuppressChange() {
+  logoFlipSuppressListeners.forEach((listener) => listener())
+}
+
+function setSuppressLogoHoverFlipUntilLeave(next: boolean) {
+  if (suppressLogoHoverFlipUntilLeave === next) return
+  suppressLogoHoverFlipUntilLeave = next
+  emitLogoFlipSuppressChange()
+}
+
+function subscribeLogoFlipSuppress(listener: () => void) {
+  logoFlipSuppressListeners.add(listener)
+  return () => logoFlipSuppressListeners.delete(listener)
+}
+
+function getLogoFlipSuppressSnapshot() {
+  return suppressLogoHoverFlipUntilLeave
+}
+
+function getLogoFlipSuppressServerSnapshot() {
+  return false
+}
 
 /** Filled Appwrite mark (header); uses `currentColor`. */
 function FilledAppwriteMark({ className }: { className?: string }) {
@@ -46,21 +73,55 @@ function FilledCloudMark({ className }: { className?: string }) {
   )
 }
 
-/** Appwrite mark + pink cloud on hover (3D flip); parent header link must use Tailwind `group`. */
+/**
+ * Appwrite mark + pink cloud on hover (3D flip); parent header link must use Tailwind `group`.
+ * After a click (navigate home), the mark stays on Appwrite until the pointer leaves the link so
+ * remounts under the cursor do not replay hover / snap-to-cloud flashes.
+ */
 export function ConsoleHeaderLogo({ className }: { className?: string }) {
+  const rootRef = useRef<HTMLDivElement>(null)
+  const flipSuppressed = useSyncExternalStore(
+    subscribeLogoFlipSuppress,
+    getLogoFlipSuppressSnapshot,
+    getLogoFlipSuppressServerSnapshot,
+  )
+
+  useLayoutEffect(() => {
+    if (typeof window === 'undefined') return
+    const parent = rootRef.current?.parentElement
+    if (!parent) return
+
+    if (suppressLogoHoverFlipUntilLeave && !parent.matches(':hover')) {
+      setSuppressLogoHoverFlipUntilLeave(false)
+    }
+
+    const armSuppress = () => setSuppressLogoHoverFlipUntilLeave(true)
+    const clearSuppress = () => setSuppressLogoHoverFlipUntilLeave(false)
+
+    parent.addEventListener('pointerdown', armSuppress)
+    parent.addEventListener('click', armSuppress)
+    parent.addEventListener('pointerleave', clearSuppress)
+    parent.addEventListener('pointercancel', clearSuppress)
+    return () => {
+      parent.removeEventListener('pointerdown', armSuppress)
+      parent.removeEventListener('click', armSuppress)
+      parent.removeEventListener('pointerleave', clearSuppress)
+      parent.removeEventListener('pointercancel', clearSuppress)
+    }
+  }, [])
+
   return (
-    <div
-      className={cn(
-        'relative h-6 w-6 shrink-0 [perspective:88px]',
-        className,
-      )}
-    >
+    <div ref={rootRef} className={cn('relative h-6 w-6 shrink-0 [perspective:88px]', className)}>
       <div
         className={cn(
           'absolute inset-0 flex items-center justify-center [transform-style:preserve-3d]',
-          '[transform:rotateY(0deg)] transition-transform duration-300 ease-out',
-          'group-hover:[transform:rotateY(180deg)]',
-          'motion-reduce:transition-none motion-reduce:group-hover:[transform:rotateY(0deg)]',
+          flipSuppressed
+            ? '[transform:rotateY(0deg)] transition-none'
+            : cn(
+                '[transform:rotateY(0deg)] transition-transform duration-300 ease-out',
+                'group-hover:[transform:rotateY(180deg)]',
+                'motion-reduce:transition-none motion-reduce:group-hover:[transform:rotateY(0deg)]',
+              ),
         )}
       >
         <div

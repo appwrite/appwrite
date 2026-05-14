@@ -2,8 +2,13 @@ import { useParams, useNavigate } from '@tanstack/react-router'
 import { useProjectSite } from '@/lib/react-query/hooks'
 import { NameCard } from './settings/NameCard'
 import { GitRepositoryCard } from './settings/GitRepositoryCard'
-import { BuildSettingsCard } from './settings/BuildSettingsCard'
-import { RuntimeSettingsCard } from './settings/RuntimeSettingsCard'
+import { SiteBuildFrameworkCard } from './settings/SiteBuildFrameworkCard'
+import { SiteBuildCommandsCard } from './settings/SiteBuildCommandsCard'
+import { SiteBuildSpecificationCard } from './settings/SiteBuildSpecificationCard'
+import { SiteRuntimeImageCard } from './settings/SiteRuntimeImageCard'
+import { SiteRuntimeTimeoutCard } from './settings/SiteRuntimeTimeoutCard'
+import { SiteRuntimeLoggingCard } from './settings/SiteRuntimeLoggingCard'
+import { SiteRuntimeSpecificationCard } from './settings/SiteRuntimeSpecificationCard'
 import { DangerZoneCard } from './settings/DangerZoneCard'
 
 export function SiteSettingsView() {
@@ -43,7 +48,7 @@ export function SiteSettingsView() {
             <NameCard projectId={projectId} siteId={siteId} site={site} />
           )}
 
-          {/* 2. Git Repository (conditional - only if repository connected) */}
+          {/* 2. Repository (conditional - only if repository connected) */}
           {site && (
             <GitRepositoryCard
               projectId={projectId}
@@ -54,22 +59,51 @@ export function SiteSettingsView() {
 
           {/* 3. Build */}
           {site && (
-            <BuildSettingsCard
-              projectId={projectId}
-              siteId={siteId}
-              site={site}
-              isCloud={isCloud}
-            />
+            <>
+              <SiteBuildFrameworkCard
+                projectId={projectId}
+                siteId={siteId}
+                site={site}
+              />
+              <SiteBuildCommandsCard
+                projectId={projectId}
+                siteId={siteId}
+                site={site}
+              />
+              <SiteBuildSpecificationCard
+                projectId={projectId}
+                siteId={siteId}
+                site={site}
+                isCloud={isCloud}
+              />
+            </>
           )}
 
           {/* 4. Runtime */}
           {site && (
-            <RuntimeSettingsCard
-              projectId={projectId}
-              siteId={siteId}
-              site={site}
-              isCloud={isCloud}
-            />
+            <>
+              <SiteRuntimeImageCard
+                projectId={projectId}
+                siteId={siteId}
+                site={site}
+              />
+              <SiteRuntimeTimeoutCard
+                projectId={projectId}
+                siteId={siteId}
+                site={site}
+              />
+              <SiteRuntimeLoggingCard
+                projectId={projectId}
+                siteId={siteId}
+                site={site}
+              />
+              <SiteRuntimeSpecificationCard
+                projectId={projectId}
+                siteId={siteId}
+                site={site}
+                isCloud={isCloud}
+              />
+            </>
           )}
 
           {/* 5. Danger Zone */}

@@ -1,8 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
 import {
   Dialog,
   DialogContent,
@@ -60,7 +58,6 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
   const [selectedDir, setSelectedDir] = useState(
     func.providerRootDirectory || '',
   )
-  const [silentMode, setSilentMode] = useState(func.providerSilentMode ?? false)
 
   // Connect repository modal state
   const [selectedInstallationId, setSelectedInstallationId] =
@@ -106,11 +103,9 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
   useEffect(() => {
     setSelectedBranch(func.providerBranch || '')
     setSelectedDir(func.providerRootDirectory || '')
-    setSilentMode(func.providerSilentMode ?? false)
   }, [
     func.providerBranch,
     func.providerRootDirectory,
-    func.providerSilentMode,
     func.installationId,
     func.providerRepositoryId,
   ])
@@ -211,7 +206,6 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
       setDisconnectDialogOpen(false)
       setSelectedBranch('')
       setSelectedDir('')
-      setSilentMode(false)
       queryClient.invalidateQueries({
         queryKey: ['function', 'project', projectId, func.$id],
       })
@@ -224,8 +218,7 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
   const handleSaveConfiguration = () => {
     const hasChanges =
       selectedBranch !== func.providerBranch ||
-      selectedDir !== (func.providerRootDirectory || '') ||
-      silentMode !== (func.providerSilentMode ?? false)
+      selectedDir !== (func.providerRootDirectory || '')
 
     if (!hasChanges) {
       toast.info('No changes to save')
@@ -235,7 +228,6 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
     updateFunctionMutation.mutate({
       providerBranch: selectedBranch || undefined,
       providerRootDirectory: selectedDir || undefined,
-      providerSilentMode: silentMode,
     })
   }
 
@@ -254,17 +246,14 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
   const hasChanges = useMemo(() => {
     return (
       selectedBranch !== func.providerBranch ||
-      selectedDir !== (func.providerRootDirectory || '') ||
-      silentMode !== (func.providerSilentMode ?? false)
+      selectedDir !== (func.providerRootDirectory || '')
     )
-  }, [selectedBranch, selectedDir, silentMode, func])
+  }, [selectedBranch, selectedDir, func])
 
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">
-          Git Repository
-        </h3>
+        <h3 className="text-[15px] font-semibold text-foreground">Repository</h3>
         <p className="text-[13px] text-muted-foreground mt-2">
           Connect your function to a Git repository for automatic deployments
         </p>
@@ -460,24 +449,6 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
                 label="Root directory"
                 description="Choose the directory containing your function code"
               />
-
-              {/* Silent mode toggle */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="silentMode" className="text-[13px]">
-                    Silent mode
-                  </Label>
-                  <p className="text-[12px] text-muted-foreground">
-                    Disable automated comments on repository commits
-                  </p>
-                </div>
-                <Switch
-                  id="silentMode"
-                  checked={silentMode}
-                  onCheckedChange={setSilentMode}
-                  disabled={updateFunctionMutation.isPending}
-                />
-              </div>
             </fieldset>
           </div>
         )}

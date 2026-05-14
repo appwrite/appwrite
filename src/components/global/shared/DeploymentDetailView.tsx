@@ -525,16 +525,19 @@ export function DeploymentDetailView({
     lineAnchorRef.current = line
   }, [deployment?.$id])
 
-  // Determine if this is a site or function deployment (needed for navigation)
-  const isSiteDeployment =
-    resourceId.includes('site') || deploymentDetailRoute.includes('sites')
+  // Determine site vs function from the route only — never infer from resource IDs
+  // (e.g. a function ID like "website-api" contains "site" and would misclassify as a site).
+  const isSiteDeployment = deploymentDetailRoute.includes('/sites/')
   const parentResourceParam = isSiteDeployment ? 'siteId' : 'functionId'
+
+  /** Prefer the loaded model's id so mutations match the deployment the UI is showing. */
+  const apiDeploymentId = deployment?.$id ?? deploymentId
 
   // Get current deployment index and find previous/next
   const deploymentIndex = useMemo(() => {
-    if (!deployments || !deploymentId) return -1
-    return deployments.findIndex((d) => d.$id === deploymentId)
-  }, [deployments, deploymentId])
+    if (!deployments || !apiDeploymentId) return -1
+    return deployments.findIndex((d) => d.$id === apiDeploymentId)
+  }, [deployments, apiDeploymentId])
 
   const previousDeployment =
     deploymentIndex > 0 ? deployments[deploymentIndex - 1] : null
@@ -550,13 +553,13 @@ export function DeploymentDetailView({
   const siteProxyRules = useDeploymentProxyRules(
     isSiteDeployment ? projectId : null,
     isSiteDeployment ? resourceId : null,
-    isSiteDeployment ? deploymentId : null,
+    isSiteDeployment ? apiDeploymentId : null,
   )
 
   const functionProxyRules = useFunctionDeploymentProxyRules(
     !isSiteDeployment ? projectId : null,
     !isSiteDeployment ? resourceId : null,
-    !isSiteDeployment ? deploymentId : null,
+    !isSiteDeployment ? apiDeploymentId : null,
   )
 
   const proxyRules = isSiteDeployment ? siteProxyRules : functionProxyRules
@@ -1079,7 +1082,7 @@ export function DeploymentDetailView({
       if (!onCancelBuild) {
         throw new Error('Cancel build is not available')
       }
-      return await onCancelBuild(deploymentId)
+      return await onCancelBuild(apiDeploymentId)
     },
     onSuccess: async () => {
       for (const queryKey of invalidateQueries) {
@@ -1104,7 +1107,7 @@ export function DeploymentDetailView({
           'Cannot delete the active deployment. Please activate another deployment first.',
         )
       }
-      return await onDelete(deploymentId)
+      return await onDelete(apiDeploymentId)
     },
     onSuccess: async () => {
       await refetchAndNavigate()
@@ -1121,7 +1124,7 @@ export function DeploymentDetailView({
       if (!onRedeploy) {
         throw new Error('Redeploy is not available for this deployment type')
       }
-      return await onRedeploy(projectId, resourceId, deploymentId)
+      return await onRedeploy(projectId, resourceId, apiDeploymentId)
     },
     onSuccess: () => {
       invalidateQueries.forEach((queryKey) => {
@@ -1144,7 +1147,7 @@ export function DeploymentDetailView({
       if (!onActivate) {
         throw new Error('Activate is not available for this deployment type')
       }
-      return await onActivate(projectId, resourceId, deploymentId)
+      return await onActivate(projectId, resourceId, apiDeploymentId)
     },
     onSuccess: () => {
       invalidateQueries.forEach((queryKey) => {
@@ -1163,13 +1166,13 @@ export function DeploymentDetailView({
 
   // Handle download source code
   const handleDownloadSource = () => {
-    onDownloadSource(projectId, resourceId, deploymentId)
+    onDownloadSource(projectId, resourceId, apiDeploymentId)
   }
 
   // Handle download build output (only when deployment has completed)
   const handleDownloadBuild = () => {
     if (!isDeploymentCompleted(deployment?.status)) return
-    onDownloadBuild(projectId, resourceId, deploymentId)
+    onDownloadBuild(projectId, resourceId, apiDeploymentId)
   }
 
   const syncLineSearchUrl = useCallback(
@@ -1291,7 +1294,7 @@ export function DeploymentDetailView({
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `deployment-${deploymentId}-logs.txt`
+    a.download = `deployment-${apiDeploymentId}-logs.txt`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
