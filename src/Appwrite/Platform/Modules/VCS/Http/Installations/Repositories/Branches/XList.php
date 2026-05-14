@@ -163,7 +163,7 @@ class XList extends Action
             }
         }
 
-        $remainingBranches = $github->listBranches($owner, $repositoryName, 1, $maxPages + 1);
+        $remainingBranches = $github->listBranches($owner, $repositoryName, self::GITHUB_BRANCHES_PER_PAGE, $maxPages + 1);
         if (!empty($remainingBranches)) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, 'Repository has too many branches to list. Narrow the results using the search parameter.');
         }
