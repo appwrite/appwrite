@@ -107,7 +107,7 @@ class Dispatcher
             if (!$present && !$param['optional']) {
                 throw new Exception(
                     Exception::REALTIME_MESSAGE_FORMAT_INVALID,
-                    \sprintf(self::REQUIRED_PARAM_ERROR_FORMAT, $key),
+                    \sprintf(self::REQUIRED_PARAM_ERROR_FORMAT, \ucfirst($key)),
                 );
             }
 
