@@ -758,10 +758,14 @@ Http::get('/v1/users')
                 $sequences[] = $user->getSequence();
             }
 
-            $targets = $dbForProject->find('targets', [
-                Query::equal('userInternalId', $sequences),
-                Query::limit(PHP_INT_MAX),
-            ]);
+            try {
+                $targets = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->find('targets', [
+                    Query::equal('userInternalId', $sequences),
+                    Query::limit(PHP_INT_MAX),
+                ]));
+            } catch (QueryException $e) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+            }
 
             $targetsByUser = [];
             foreach ($targets as $target) {
