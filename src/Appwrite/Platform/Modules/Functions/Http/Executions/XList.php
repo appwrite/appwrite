@@ -39,7 +39,7 @@ class XList extends Base
             ->setHttpPath('/v1/functions/:functionId/executions')
             ->desc('List executions')
             ->groups(['api', 'functions'])
-            ->label('scope', 'execution.read')
+            ->label('scope', ['executions.read', 'execution.read'])
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('sdk', new Method(
                 namespace: 'functions',
@@ -62,6 +62,7 @@ class XList extends Base
             ->inject('response')
             ->inject('dbForProject')
             ->inject('authorization')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
@@ -71,12 +72,13 @@ class XList extends Base
         bool $includeTotal,
         Response $response,
         Database $dbForProject,
-        Authorization $authorization
+        Authorization $authorization,
+        User $user
     ) {
         $function = $authorization->skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
-        $isAPIKey = User::isApp($authorization->getRoles());
-        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
+        $isAPIKey = $user->isApp($authorization->getRoles());
+        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         if ($function->isEmpty() || (!$function->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::FUNCTION_NOT_FOUND);

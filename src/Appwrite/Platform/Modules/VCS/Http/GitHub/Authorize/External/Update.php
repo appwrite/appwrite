@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\GitHub\Authorize\External;
 
-use Appwrite\Event\Build;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\VCS\Http\GitHub\Deployment;
@@ -60,7 +60,7 @@ class Update extends Action
             ->inject('dbForPlatform')
             ->inject('authorization')
             ->inject('getProjectDB')
-            ->inject('queueForBuilds')
+            ->inject('publisherForBuilds')
             ->inject('platform')
             ->callback($this->action(...));
     }
@@ -75,7 +75,7 @@ class Update extends Action
         Database $dbForPlatform,
         Authorization $authorization,
         callable $getProjectDB,
-        Build $queueForBuilds,
+        BuildPublisher $publisherForBuilds,
         array $platform
     ) {
         $installation = $dbForPlatform->getDocument('installations', $installationId);
@@ -110,10 +110,7 @@ class Update extends Action
         $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
 
         try {
-            $providerRepositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
-            if (empty($providerRepositoryName)) {
-                throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
-            }
+            $providerRepositoryName = $github->getRepositoryName($providerRepositoryId);
         } catch (RepositoryNotFound $e) {
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
@@ -133,7 +130,7 @@ class Update extends Action
         $providerCommitAuthor = $commitDetails["commitAuthor"] ?? '';
         $providerCommitAuthorUrl = $commitDetails["commitAuthorUrl"] ?? '';
 
-        $this->createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, true, $dbForPlatform, $authorization, $queueForBuilds, $getProjectDB, $platform);
+        $this->createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, true, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform);
 
         $response->noContent();
     }

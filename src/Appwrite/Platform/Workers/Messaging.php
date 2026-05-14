@@ -2,8 +2,10 @@
 
 namespace Appwrite\Platform\Workers;
 
-use Appwrite\Event\StatsUsage;
+use Appwrite\Event\Message\Usage;
+use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Messaging\Status as MessageStatus;
+use Appwrite\Usage\Context as UsageContext;
 use libphonenumber\NumberParseException;
 use libphonenumber\PhoneNumberUtil;
 use Swoole\Runtime;
@@ -71,7 +73,7 @@ class Messaging extends Action
             ->inject('log')
             ->inject('dbForProject')
             ->inject('deviceForFiles')
-            ->inject('queueForStatsUsage')
+            ->inject('publisherForUsage')
             ->callback($this->action(...));
     }
 
@@ -81,7 +83,7 @@ class Messaging extends Action
      * @param Log $log
      * @param Database $dbForProject
      * @param Device $deviceForFiles
-     * @param StatsUsage $queueForStatsUsage
+     * @param UsagePublisher $publisherForUsage
      * @return void
      * @throws \Exception
      */
@@ -91,10 +93,10 @@ class Messaging extends Action
         Log $log,
         Database $dbForProject,
         Device $deviceForFiles,
-        StatsUsage $queueForStatsUsage
+        UsagePublisher $publisherForUsage
     ): void {
         Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
-        $payload = $message->getPayload() ?? [];
+        $payload = $message->getPayload();
 
         if (empty($payload)) {
             throw new \Exception('Missing payload');
@@ -104,27 +106,20 @@ class Messaging extends Action
 
         Span::add('message.type', $type);
 
-        try {
-            switch ($type) {
-                case MESSAGE_SEND_TYPE_INTERNAL:
-                    $message = new Document($payload['message'] ?? []);
-                    $recipients = $payload['recipients'] ?? [];
+        switch ($type) {
+            case MESSAGE_SEND_TYPE_INTERNAL:
+                $message = new Document($payload['message'] ?? []);
+                $recipients = $payload['recipients'] ?? [];
 
-                    $this->sendInternalSMSMessage($message, $project, $recipients, $log);
-                    break;
-                case MESSAGE_SEND_TYPE_EXTERNAL:
-                    $message = $dbForProject->getDocument('messages', $payload['messageId']);
+                $this->sendInternalSMSMessage($message, $project, $recipients, $log);
+                break;
+            case MESSAGE_SEND_TYPE_EXTERNAL:
+                $message = $dbForProject->getDocument('messages', $payload['messageId']);
 
-                    $this->sendExternalMessage($dbForProject, $message, $deviceForFiles, $project, $queueForStatsUsage);
-                    break;
-                default:
-                    throw new \Exception('Unknown message type: ' . $type);
-            }
-        } catch (\Throwable $e) {
-            Span::error($e);
-            throw $e;
-        } finally {
-            Span::current()?->finish();
+                $this->sendExternalMessage($dbForProject, $message, $deviceForFiles, $project, $publisherForUsage);
+                break;
+            default:
+                throw new \Exception('Unknown message type: ' . $type);
         }
     }
 
@@ -133,7 +128,7 @@ class Messaging extends Action
         Document $message,
         Device $deviceForFiles,
         Document $project,
-        StatsUsage $queueForStatsUsage
+        UsagePublisher $publisherForUsage
     ): void {
         $topicIds = $message->getAttribute('topics', []);
         $targetIds = $message->getAttribute('targets', []);
@@ -160,21 +155,26 @@ class Messaging extends Action
         }
 
         if (\count($userIds) > 0) {
-            $users = $dbForProject->find('users', [
-                Query::equal('$id', $userIds),
-                Query::limit(\count($userIds)),
-            ]);
-            foreach ($users as $user) {
-                $targets = \array_filter($user->getAttribute('targets'), function (Document $target) use ($providerType) {
-                    return $target->getAttribute('providerType') === $providerType;
-                });
+            $limit = 1000;
+            $offset = 0;
+
+            do {
+                $targets = $dbForProject->find('targets', [
+                    Query::equal('userId', $userIds),
+                    Query::select(['providerId', 'identifier']),
+                    Query::equal('providerType', [$providerType]),
+                    Query::limit($limit),
+                    Query::offset($offset),
+                ]);
 
                 \array_push($allTargets, ...$targets);
-            }
+                $offset += \count($targets);
+            } while (\count($targets) === $limit);
         }
 
         if (\count($targetIds) > 0) {
             $targets = $dbForProject->find('targets', [
+                Query::select(['providerId', 'identifier']),
                 Query::equal('$id', $targetIds),
                 Query::equal('providerType', [$providerType]),
                 Query::limit(\count($targetIds)),
@@ -239,8 +239,8 @@ class Messaging extends Action
         /**
          * @var array<array> $results
          */
-        $results = batch(\array_map(function ($providerId) use ($identifiers, &$providers, $default, $message, $dbForProject, $deviceForFiles, $project, $queueForStatsUsage) {
-            return function () use ($providerId, $identifiers, &$providers, $default, $message, $dbForProject, $deviceForFiles, $project, $queueForStatsUsage) {
+        $results = batch(\array_map(function ($providerId) use ($identifiers, &$providers, $default, $message, $dbForProject, $deviceForFiles, $project, $publisherForUsage) {
+            return function () use ($providerId, $identifiers, &$providers, $default, $message, $dbForProject, $deviceForFiles, $project, $publisherForUsage) {
                 if (\array_key_exists($providerId, $providers)) {
                     $provider = $providers[$providerId];
                 } else {
@@ -255,7 +255,9 @@ class Messaging extends Action
 
                 $identifiersForProvider = $identifiers[$providerId];
 
-                $adapter = match ($provider->getAttribute('type')) {
+                $providerType = $provider->getAttribute('type');
+
+                $adapter = match ($providerType) {
                     MESSAGE_TYPE_SMS => $this->getSmsAdapter($provider),
                     MESSAGE_TYPE_PUSH => $this->getPushAdapter($provider),
                     MESSAGE_TYPE_EMAIL => $this->getEmailAdapter($provider),
@@ -267,23 +269,22 @@ class Messaging extends Action
                     $adapter->getMaxMessagesPerRequest()
                 );
 
-                return batch(\array_map(function ($batch) use ($message, $provider, $adapter, $dbForProject, $deviceForFiles, $project, $queueForStatsUsage) {
-                    return function () use ($batch, $message, $provider, $adapter, $dbForProject, $deviceForFiles, $project, $queueForStatsUsage) {
+                return batch(\array_map(function ($batch) use ($message, $provider, $providerType, $adapter, $dbForProject, $deviceForFiles, $project, $publisherForUsage) {
+                    return function () use ($batch, $message, $provider, $providerType, $adapter, $dbForProject, $deviceForFiles, $project, $publisherForUsage) {
                         $deliveredTotal = 0;
                         $deliveryErrors = [];
                         $messageData = clone $message;
                         $messageData->setAttribute('to', $batch);
 
-                        $data = match ($provider->getAttribute('type')) {
+                        $data = match ($providerType) {
                             MESSAGE_TYPE_SMS => $this->buildSmsMessage($messageData, $provider),
                             MESSAGE_TYPE_PUSH => $this->buildPushMessage($messageData),
                             MESSAGE_TYPE_EMAIL => $this->buildEmailMessage($dbForProject, $messageData, $provider, $deviceForFiles, $project),
-                            default => throw new \Exception('Provider with the requested ID is of the incorrect type')
                         };
 
                         try {
                             $response = $adapter->send($data);
-                            $deliveredTotal += $response['deliveredTo'];
+                            $deliveredTotal += (int) $response['deliveredTo'];
                             foreach ($response['results'] as $result) {
                                 if ($result['status'] === 'failure') {
                                     $deliveryErrors[] = "Failed sending to target {$result['recipient']} with error: {$result['error']}";
@@ -308,8 +309,8 @@ class Messaging extends Action
                             $deliveryErrors[] = 'Failed sending to targets with error: ' . $e->getMessage();
                         } finally {
                             $errorTotal = \count($deliveryErrors);
-                            $queueForStatsUsage
-                                ->setProject($project)
+                            $usage = new UsageContext();
+                            $usage
                                 ->addMetric(METRIC_MESSAGES, ($deliveredTotal + $errorTotal))
                                 ->addMetric(METRIC_MESSAGES_SENT, $deliveredTotal)
                                 ->addMetric(METRIC_MESSAGES_FAILED, $errorTotal)
@@ -318,8 +319,12 @@ class Messaging extends Action
                                 ->addMetric(str_replace('{type}', $provider->getAttribute('type'), METRIC_MESSAGES_TYPE_FAILED), $errorTotal)
                                 ->addMetric(str_replace(['{type}', '{provider}'], [$provider->getAttribute('type'), $provider->getAttribute('provider')], METRIC_MESSAGES_TYPE_PROVIDER), ($deliveredTotal + $errorTotal))
                                 ->addMetric(str_replace(['{type}', '{provider}'], [$provider->getAttribute('type'), $provider->getAttribute('provider')], METRIC_MESSAGES_TYPE_PROVIDER_SENT), $deliveredTotal)
-                                ->addMetric(str_replace(['{type}', '{provider}'], [$provider->getAttribute('type'), $provider->getAttribute('provider')], METRIC_MESSAGES_TYPE_PROVIDER_FAILED), $errorTotal)
-                                ->trigger();
+                                ->addMetric(str_replace(['{type}', '{provider}'], [$provider->getAttribute('type'), $provider->getAttribute('provider')], METRIC_MESSAGES_TYPE_PROVIDER_FAILED), $errorTotal);
+
+                            $publisherForUsage->enqueue(new Usage(
+                                project: $project,
+                                metrics: $usage->getMetrics(),
+                            ));
 
                             return [
                                 'deliveredTotal' => $deliveredTotal,
@@ -374,7 +379,7 @@ class Messaging extends Action
         ]));
 
         // Delete any attachments that were downloaded to local storage
-        if ($provider->getAttribute('type') === MESSAGE_TYPE_EMAIL) {
+        if ($providerType === MESSAGE_TYPE_EMAIL) {
             if ($deviceForFiles->getType() === Storage::DEVICE_LOCAL) {
                 return;
             }

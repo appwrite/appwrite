@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Email;
 
-use Appwrite\Network\Validator\Email;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Email\Create as EmailCreate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -11,6 +10,7 @@ use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
+use Utopia\Emails\Validator\Email;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
@@ -34,7 +34,7 @@ class Create extends EmailCreate
             ->setHttpPath('/v1/tablesdb/:databaseId/tables/:tableId/columns/email')
             ->desc('Create email column')
             ->groups(['api', 'database', 'schema'])
-            ->label('scope', ['tables.write', 'collections.write'])
+            ->label('scope', ['tables.write', 'collections.write', 'columns.write', 'attributes.write'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].create')
             ->label('audits.event', 'column.create')

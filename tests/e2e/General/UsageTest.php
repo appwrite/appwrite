@@ -532,10 +532,7 @@ class UsageTest extends Scope
             $attr = $this->client->call(
                 Client::METHOD_GET,
                 '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/name',
-                array_merge([
-                    'content-type' => 'application/json',
-                    'x-appwrite-project' => $this->getProject()['$id']
-                ], $this->getHeaders())
+                $this->getConsoleHeaders()
             );
             $this->assertEquals(200, $attr['headers']['status-code']);
             $this->assertEquals('available', $attr['body']['status']);
@@ -787,10 +784,7 @@ class UsageTest extends Scope
             $attr = $this->client->call(
                 Client::METHOD_GET,
                 '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/name',
-                array_merge([
-                    'content-type' => 'application/json',
-                    'x-appwrite-project' => $this->getProject()['$id']
-                ], $this->getHeaders())
+                $this->getConsoleHeaders()
             );
             $this->assertEquals(200, $attr['headers']['status-code']);
             $this->assertEquals('available', $attr['body']['status']);
@@ -1330,8 +1324,8 @@ class UsageTest extends Scope
             $this->assertEquals($requestsTotal, $response['body']['requests'][array_key_last($response['body']['requests'])]['value']);
             $this->validateDates($response['body']['requests']);
             // vectordbTotal should reflect only VectorsDB instances, not relational databases.
-            $this->assertEquals($vectordbTotal, $response['body']['vectordbDatabasesTotal']);
-            $this->assertEquals($documentsTotal, $response['body']['vectordbDocumentsTotal']);
+            $this->assertEquals($vectordbTotal, $response['body']['vectorsdbDatabasesTotal']);
+            $this->assertEquals($documentsTotal, $response['body']['vectorsdbDocumentsTotal']);
         });
 
         $response = $this->client->call(
@@ -1505,9 +1499,7 @@ class UsageTest extends Scope
             $response = $this->client->call(
                 Client::METHOD_GET,
                 '/functions/' . $functionId . '/executions/' . $executionId,
-                array_merge([
-                    'x-appwrite-project' => $this->getProject()['$id']
-                ], $this->getHeaders()),
+                $this->getConsoleHeaders(),
             );
             $this->assertContains($response['body']['status'], ['completed', 'failed']);
         }, 30_000, 500);
@@ -1612,8 +1604,6 @@ class UsageTest extends Scope
             'providerRootDirectory' => './',
             'siteId' => ID::unique()
         ]);
-
-        $this->assertNotNull($siteId);
 
         $deployment = $this->createDeploymentSite($siteId, [
             'siteId' => $siteId,

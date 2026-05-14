@@ -26,9 +26,9 @@ use Utopia\Validator\Range;
 abstract class Action extends UtopiaAction
 {
     /**
-     * @var string|null The current context (either 'column' or 'attribute')
+     * @var string The current context (either 'column' or 'attribute')
      */
-    private ?string $context = ATTRIBUTES;
+    private string $context = ATTRIBUTES;
 
     /**
      * Get the correct response model.
@@ -240,6 +240,10 @@ abstract class Action extends UtopiaAction
             Database::VAR_INTEGER => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_INTEGER
                 : UtopiaResponse::MODEL_COLUMN_INTEGER,
+
+            Database::VAR_BIGINT => $isCollections
+                ? UtopiaResponse::MODEL_ATTRIBUTE_BIGINT
+                : UtopiaResponse::MODEL_COLUMN_BIGINT,
 
             Database::VAR_FLOAT => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_FLOAT
@@ -540,6 +544,7 @@ abstract class Action extends UtopiaAction
 
         switch ($attribute->getAttribute('format')) {
             case APP_DATABASE_ATTRIBUTE_INT_RANGE:
+            case APP_DATABASE_ATTRIBUTE_BIGINT_RANGE:
             case APP_DATABASE_ATTRIBUTE_FLOAT_RANGE:
                 $min ??= $attribute->getAttribute('formatOptions')['min'];
                 $max ??= $attribute->getAttribute('formatOptions')['max'];
@@ -548,14 +553,15 @@ abstract class Action extends UtopiaAction
                     throw new Exception($this->getInvalidValueException(), 'Minimum value must be lesser than maximum value');
                 }
 
-                if ($attribute->getAttribute('format') === APP_DATABASE_ATTRIBUTE_INT_RANGE) {
-                    $validator = new Range($min, $max, Database::VAR_INTEGER);
-                } else {
+                if ($attribute->getAttribute('format') === APP_DATABASE_ATTRIBUTE_FLOAT_RANGE) {
                     $validator = new Range($min, $max, Database::VAR_FLOAT);
 
                     if (!is_null($default)) {
                         $default = \floatval($default);
                     }
+                } else {
+                    // intRange and bigintRange share the same integer range semantics
+                    $validator = new Range($min, $max, Range::TYPE_INTEGER);
                 }
 
                 if (!is_null($default) && !$validator->isValid($default)) {

@@ -244,35 +244,37 @@ Http::get('/v1/mock/github/callback')
             throw new Exception(Exception::PROJECT_NOT_FOUND, $error);
         }
 
-        if (!empty($providerInstallationId)) {
-            $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-            $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
-            $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
-            $owner = $github->getOwnerName($providerInstallationId) ?? '';
-
-            $projectInternalId = $project->getSequence();
-
-            $teamId = $project->getAttribute('teamId', '');
-
-            $installation = new Document([
-                '$id' => ID::unique(),
-                '$permissions' => [
-                    Permission::read(Role::team(ID::custom($teamId))),
-                    Permission::update(Role::team(ID::custom($teamId), 'owner')),
-                    Permission::update(Role::team(ID::custom($teamId), 'developer')),
-                    Permission::delete(Role::team(ID::custom($teamId), 'owner')),
-                    Permission::delete(Role::team(ID::custom($teamId), 'developer')),
-                ],
-                'providerInstallationId' => $providerInstallationId,
-                'projectId' => $projectId,
-                'projectInternalId' => $projectInternalId,
-                'provider' => 'github',
-                'organization' => $owner,
-                'personal' => false
-            ]);
-
-            $installation = $dbForPlatform->createDocument('installations', $installation);
+        if (empty($providerInstallationId)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Missing provider installation ID');
         }
+
+        $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
+        $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
+        $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
+        $owner = $github->getOwnerName($providerInstallationId);
+
+        $projectInternalId = $project->getSequence();
+
+        $teamId = $project->getAttribute('teamId', '');
+
+        $installation = new Document([
+            '$id' => ID::unique(),
+            '$permissions' => [
+                Permission::read(Role::team(ID::custom($teamId))),
+                Permission::update(Role::team(ID::custom($teamId), 'owner')),
+                Permission::update(Role::team(ID::custom($teamId), 'developer')),
+                Permission::delete(Role::team(ID::custom($teamId), 'owner')),
+                Permission::delete(Role::team(ID::custom($teamId), 'developer')),
+            ],
+            'providerInstallationId' => $providerInstallationId,
+            'projectId' => $projectId,
+            'projectInternalId' => $projectInternalId,
+            'provider' => 'github',
+            'organization' => $owner,
+            'personal' => false
+        ]);
+
+        $installation = $dbForPlatform->createDocument('installations', $installation);
 
         $response->json([
             'installationId' => $installation->getId(),

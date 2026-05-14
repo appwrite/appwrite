@@ -3,7 +3,7 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
 use Appwrite\Event\Event;
-use Appwrite\Event\StatsUsage;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\SDK\AuthType;
@@ -12,6 +12,7 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Parameter;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response as UtopiaResponse;
@@ -48,6 +49,11 @@ class Create extends Action
     protected function getBulkResponseModel(): string
     {
         return UtopiaResponse::MODEL_DOCUMENT_LIST;
+    }
+
+    protected function getSupportForEmptyDocument()
+    {
+        return false;
     }
 
     public function __construct()
@@ -130,39 +136,51 @@ class Create extends Action
             ->inject('getDatabasesDB')
             ->inject('user')
             ->inject('queueForEvents')
-            ->inject('queueForStatsUsage')
+            ->inject('usage')
             ->inject('queueForRealtime')
-            ->inject('queueForFunctions')
+            ->inject('publisherForFunctions')
             ->inject('queueForWebhooks')
             ->inject('plan')
             ->inject('authorization')
             ->inject('eventProcessor')
             ->callback($this->action(...));
     }
-    public function action(string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, ?array $documents, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, array $plan, Authorization $authorization, EventProcessor $eventProcessor): void
+
+    public function action(string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, ?array $documents, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, User $user, Event $queueForEvents, Context $usage, Event $queueForRealtime, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, array $plan, Authorization $authorization, EventProcessor $eventProcessor): void
     {
         $data = \is_string($data)
             ? \json_decode($data, true)
             : $data;
 
+        $supportsEmptyDocument = $this->getSupportForEmptyDocument();
+        $hasData = !empty($data);
+        $hasDocuments = !empty($documents);
+
         /**
          * Determine which internal path to call, single or bulk
          */
-        if (empty($data) && empty($documents)) {
+        if (!$supportsEmptyDocument && !$hasData && !$hasDocuments) {
             // No single or bulk documents provided
             throw new Exception($this->getMissingDataException());
         }
-        if (!empty($data) && !empty($documents)) {
+
+        // When empty documents are supported, an empty payload should still be treated as single create.
+        if ($supportsEmptyDocument && !$hasData && !$hasDocuments) {
+            $data = [];
+            $hasData = true;
+        }
+
+        if ($hasData && $hasDocuments) {
             // Both single and bulk documents provided
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'You can only send one of the following parameters: data, ' . $this->getSDKGroup());
         }
-        if (!empty($data) && empty($documentId)) {
+        if ($hasData && empty($documentId)) {
             // Single document provided without document ID
             $document = $this->isCollectionsAPI() ? 'Document' : 'Row';
             $message = "$document ID is required when creating a single " . strtolower($document) . '.';
             throw new Exception($this->getMissingDataException(), $message);
         }
-        if (!empty($documents) && !empty($documentId)) {
+        if ($hasDocuments && !empty($documentId)) {
             // Bulk documents provided with document ID
             $documentId = $this->isCollectionsAPI() ? 'documentId' : 'rowId';
             throw new Exception(
@@ -170,21 +188,21 @@ class Create extends Action
                 "Param \"$documentId\" is not allowed when creating multiple " . $this->getSDKGroup() . ', set "$id" on each instead.'
             );
         }
-        if (!empty($documents) && !empty($permissions)) {
+        if ($hasDocuments && !empty($permissions)) {
             // Bulk documents provided with permissions
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Param "permissions" is disallowed when creating multiple ' . $this->getSDKGroup() . ', set "$permissions" on each instead');
         }
 
-        $isBulk = true;
-        if (!empty($data)) {
+        $isBulk = $hasDocuments;
+        if ($hasData) {
             // Single document provided, convert to single item array
             // But remember that it was single to respond with a single document
             $isBulk = false;
             $documents = [$data];
         }
 
-        $isAPIKey = User::isApp($authorization->getRoles());
-        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
+        $isAPIKey = $user->isApp($authorization->getRoles());
+        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         if ($isBulk && !$isAPIKey && !$isPrivilegedUser) {
             throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE);
@@ -206,10 +224,10 @@ class Create extends Action
         );
 
         if ($isBulk && $hasRelationships) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk create is not supported for ' . $this->getSDKNamespace() .' with relationship ' . $this->getStructureContext());
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk create is not supported for ' . $this->getSDKNamespace() . ' with relationship ' . $this->getStructureContext());
         }
 
-        $setPermissions = function (Document $document, ?array $permissions) use ($user, $isAPIKey, $isPrivilegedUser, $isBulk, $dbForProject, $authorization) {
+        $setPermissions = function (Document $document, ?array $permissions) use ($user, $isAPIKey, $isPrivilegedUser, $isBulk, $authorization) {
             $allowedPermissions = [
                 Database::PERMISSION_READ,
                 Database::PERMISSION_UPDATE,
@@ -274,16 +292,6 @@ class Create extends Action
             );
             if (($permission === Database::PERMISSION_UPDATE && !$documentSecurity) || !$validCollection) {
                 throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
-            }
-
-            if ($permission === Database::PERMISSION_UPDATE) {
-                $validDocument = $authorization->isValid(
-                    new Input($permission, $document->getUpdate())
-                );
-                $valid = $validCollection || $validDocument;
-                if ($documentSecurity && !$valid) {
-                    throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
-                }
             }
 
             $relationships = \array_filter(
@@ -491,7 +499,7 @@ class Create extends Action
             );
         }
 
-        $queueForStatsUsage
+        $usage
             ->addMetric($this->getDatabasesOperationWriteMetric(), \max(1, $operations))
             ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), $this->getDatabasesIdOperationWriteMetric()), \max(1, $operations)); // per collection
 
@@ -510,7 +518,7 @@ class Create extends Action
                 $created,
                 $queueForEvents,
                 $queueForRealtime,
-                $queueForFunctions,
+                $publisherForFunctions,
                 $queueForWebhooks,
                 $dbForProject,
                 $eventProcessor

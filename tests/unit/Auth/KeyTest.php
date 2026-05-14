@@ -14,7 +14,7 @@ class KeyTest extends TestCase
 {
     public function testDecode(): void
     {
-        // Decode dynamic key
+        // Decode ephemeral key
         $projectId = 'test';
         $usage = false;
         $scopes = [
@@ -25,7 +25,7 @@ class KeyTest extends TestCase
         $roleScopes = Config::getParam('roles', [])[User::ROLE_APPS]['scopes'];
         $guestRoleScopes = Config::getParam('roles', [])[User::ROLE_GUESTS]['scopes'];
 
-        $key = static::generateKey($projectId, $usage, $scopes);
+        $key = self::generateKey($projectId, $usage, $scopes);
         $decoded = Key::decode(
             project: new Document(['$id' => $projectId]),
             team: new Document(),
@@ -36,12 +36,12 @@ class KeyTest extends TestCase
         $this->assertEquals($projectId, $decoded->getProjectId());
         $this->assertEquals('', $decoded->getTeamId());
         $this->assertEquals('', $decoded->getUserId());
-        $this->assertEquals(API_KEY_DYNAMIC, $decoded->getType());
+        $this->assertEquals(API_KEY_EPHEMERAL, $decoded->getType());
         $this->assertEquals(User::ROLE_APPS, $decoded->getRole());
         $this->assertEquals(\array_merge($scopes, $roleScopes), $decoded->getScopes());
-        $this->assertEquals('Dynamic Key', $decoded->getName());
+        $this->assertEquals('Ephemeral Key', $decoded->getName());
 
-        // Decode dynamic key with extras
+        // Decode ephemeral key with extras
         $extra = [
             'disabledMetrics' => ['metric123'],
             'hostnameOverride' => true,
@@ -49,9 +49,8 @@ class KeyTest extends TestCase
             'projectCheckDisabled' => true,
             'previewAuthDisabled' => true,
             'deploymentStatusIgnored' => true,
-            'source' => KEY_SOURCE_MIGRATION,
         ];
-        $key = static::generateKey($projectId, $usage, $scopes, extra: $extra);
+        $key = self::generateKey($projectId, $usage, $scopes, extra: $extra);
         $decoded = Key::decode(
             project: new Document(['$id' => $projectId]),
             team: new Document(),
@@ -61,41 +60,19 @@ class KeyTest extends TestCase
         $this->assertEquals($projectId, $decoded->getProjectId());
         $this->assertEquals('', $decoded->getTeamId());
         $this->assertEquals('', $decoded->getUserId());
-        $this->assertEquals(API_KEY_DYNAMIC, $decoded->getType());
+        $this->assertEquals(API_KEY_EPHEMERAL, $decoded->getType());
         $this->assertEquals(User::ROLE_APPS, $decoded->getRole());
         $this->assertEquals(\array_merge($scopes, $roleScopes), $decoded->getScopes());
-        $this->assertEquals('Dynamic Key', $decoded->getName());
+        $this->assertEquals('Ephemeral Key', $decoded->getName());
         $this->assertEquals(['metric123'], $decoded->getDisabledMetrics());
         $this->assertEquals(true, $decoded->getHostnameOverride());
         $this->assertEquals(true, $decoded->isBannerDisabled());
         $this->assertEquals(true, $decoded->isProjectCheckDisabled());
         $this->assertEquals(true, $decoded->isPreviewAuthDisabled());
         $this->assertEquals(true, $decoded->isDeploymentStatusIgnored());
-        $this->assertEquals(KEY_SOURCE_MIGRATION, $decoded->getSource());
 
-        // Decode dynamic key with scopedProjectId — scopes must NOT be merged with role scopes
-        $scopedProjectId = 'scoped-project-123';
-        $extra = [
-            'scopedProjectId' => $scopedProjectId,
-            'source' => KEY_SOURCE_MIGRATION,
-        ];
-        $key = static::generateKey('console', $usage, $scopes, extra: $extra);
-        $decoded = Key::decode(
-            project: new Document(['$id' => 'console']),
-            team: new Document(),
-            user: new Document(),
-            key: $key,
-        );
-        $this->assertEquals('console', $decoded->getProjectId());
-        $this->assertEquals(API_KEY_DYNAMIC, $decoded->getType());
-        $this->assertEquals(User::ROLE_APPS, $decoded->getRole());
-        $this->assertEquals($scopes, $decoded->getScopes());
-        $this->assertNotEquals(\array_merge($scopes, $roleScopes), $decoded->getScopes());
-        $this->assertEquals($scopedProjectId, $decoded->getScopedProjectId());
-        $this->assertEquals(KEY_SOURCE_MIGRATION, $decoded->getSource());
-
-        // Decode invalid dynamic key
-        $invalidKey = API_KEY_DYNAMIC . '_invalid_jwt_token';
+        // Decode invalid ephemeral key
+        $invalidKey = API_KEY_EPHEMERAL . '_invalid_jwt_token';
         $decoded = Key::decode(
             project: new Document(['$id' => $projectId]),
             team: new Document(),
@@ -105,13 +82,13 @@ class KeyTest extends TestCase
         $this->assertEquals($projectId, $decoded->getProjectId());
         $this->assertEquals('', $decoded->getTeamId());
         $this->assertEquals('', $decoded->getUserId());
-        $this->assertEquals(API_KEY_DYNAMIC, $decoded->getType());
+        $this->assertEquals(API_KEY_EPHEMERAL, $decoded->getType());
         $this->assertEquals(User::ROLE_GUESTS, $decoded->getRole());
         $this->assertEquals($guestRoleScopes, $decoded->getScopes());
         $this->assertEquals('UNKNOWN', $decoded->getName());
 
-        // Decode expired dynamic key
-        $expiredKey = static::generateKey($projectId, $usage, $scopes, maxAge: 1, timestamp: time() - 60);
+        // Decode expired ephemeral key
+        $expiredKey = self::generateKey($projectId, $usage, $scopes, maxAge: 1, timestamp: time() - 60);
         \sleep(2);
         $decoded = Key::decode(
             project: new Document(['$id' => $projectId]),
@@ -122,7 +99,7 @@ class KeyTest extends TestCase
         $this->assertEquals($projectId, $decoded->getProjectId());
         $this->assertEquals('', $decoded->getTeamId());
         $this->assertEquals('', $decoded->getUserId());
-        $this->assertEquals(API_KEY_DYNAMIC, $decoded->getType());
+        $this->assertEquals(API_KEY_EPHEMERAL, $decoded->getType());
         $this->assertEquals(User::ROLE_GUESTS, $decoded->getRole());
         $this->assertEquals($guestRoleScopes, $decoded->getScopes());
         $this->assertEquals('UNKNOWN', $decoded->getName());
@@ -386,6 +363,6 @@ class KeyTest extends TestCase
             'scopes' => $scopes,
         ], $extra));
 
-        return API_KEY_DYNAMIC . '_' . $apiKey;
+        return API_KEY_EPHEMERAL . '_' . $apiKey;
     }
 }

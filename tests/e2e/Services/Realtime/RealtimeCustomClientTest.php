@@ -335,10 +335,12 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('data', $response);
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
-        $this->assertCount(2, $response['data']['channels']);
+        $this->assertCount(4, $response['data']['channels']);
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertContains('account', $response['data']['channels']);
         $this->assertContains('account.' . $userId, $response['data']['channels']);
+        $this->assertContains('account.update', $response['data']['channels']);
+        $this->assertContains('account.' . $userId . '.update', $response['data']['channels']);
         $this->assertContains("users.{$userId}.update.name", $response['data']['events']);
         $this->assertContains("users.{$userId}.update", $response['data']['events']);
         $this->assertContains("users.{$userId}", $response['data']['events']);
@@ -368,10 +370,12 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('data', $response);
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
-        $this->assertCount(2, $response['data']['channels']);
+        $this->assertCount(4, $response['data']['channels']);
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertContains('account', $response['data']['channels']);
         $this->assertContains('account.' . $userId, $response['data']['channels']);
+        $this->assertContains('account.update', $response['data']['channels']);
+        $this->assertContains('account.' . $userId . '.update', $response['data']['channels']);
         $this->assertContains("users.{$userId}.update.password", $response['data']['events']);
         $this->assertContains("users.{$userId}.update", $response['data']['events']);
         $this->assertContains("users.{$userId}", $response['data']['events']);
@@ -401,10 +405,12 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('data', $response);
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
-        $this->assertCount(2, $response['data']['channels']);
+        $this->assertCount(4, $response['data']['channels']);
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertContains('account', $response['data']['channels']);
         $this->assertContains('account.' . $userId, $response['data']['channels']);
+        $this->assertContains('account.update', $response['data']['channels']);
+        $this->assertContains('account.' . $userId . '.update', $response['data']['channels']);
         $this->assertContains("users.{$userId}.update.email", $response['data']['events']);
         $this->assertContains("users.{$userId}.update", $response['data']['events']);
         $this->assertContains("users.{$userId}", $response['data']['events']);
@@ -432,11 +438,14 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('data', $response);
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
+        // Nested user event (verification) — must NOT suffix the account channels.
         $this->assertCount(2, $response['data']['channels']);
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertArrayNotHasKey('secret', $response['data']);
         $this->assertContains('account', $response['data']['channels']);
         $this->assertContains('account.' . $userId, $response['data']['channels']);
+        $this->assertNotContains('account.create', $response['data']['channels']);
+        $this->assertNotContains('account.' . $userId . '.create', $response['data']['channels']);
         $this->assertContains("users.{$userId}.verification.{$verificationId}.create", $response['data']['events']);
         $this->assertContains("users.{$userId}.verification.{$verificationId}", $response['data']['events']);
         $this->assertContains("users.{$userId}.verification.*.create", $response['data']['events']);
@@ -475,10 +484,13 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('data', $response);
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
+        // Nested user event (verification) — must NOT suffix the account channels.
         $this->assertCount(2, $response['data']['channels']);
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertContains('account', $response['data']['channels']);
         $this->assertContains('account.' . $userId, $response['data']['channels']);
+        $this->assertNotContains('account.update', $response['data']['channels']);
+        $this->assertNotContains('account.' . $userId . '.update', $response['data']['channels']);
         $this->assertContains("users.{$userId}.verification.{$verificationId}.update", $response['data']['events']);
         $this->assertContains("users.{$userId}.verification.{$verificationId}", $response['data']['events']);
         $this->assertContains("users.{$userId}.verification.*.update", $response['data']['events']);
@@ -510,10 +522,12 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('data', $response);
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
-        $this->assertCount(2, $response['data']['channels']);
+        $this->assertCount(4, $response['data']['channels']);
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertContains('account', $response['data']['channels']);
         $this->assertContains('account.' . $userId, $response['data']['channels']);
+        $this->assertContains('account.update', $response['data']['channels']);
+        $this->assertContains('account.' . $userId . '.update', $response['data']['channels']);
         $this->assertContains("users.{$userId}.update.prefs", $response['data']['events']);
         $this->assertContains("users.{$userId}.update", $response['data']['events']);
         $this->assertContains("users.{$userId}", $response['data']['events']);
@@ -551,10 +565,13 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('data', $response);
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
+        // Nested user event (sessions) — must NOT suffix the account channels.
         $this->assertCount(2, $response['data']['channels']);
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertContains('account', $response['data']['channels']);
         $this->assertContains('account.' . $userId, $response['data']['channels']);
+        $this->assertNotContains('account.create', $response['data']['channels']);
+        $this->assertNotContains('account.' . $userId . '.create', $response['data']['channels']);
         $this->assertContains("users.{$userId}.sessions.{$sessionNewId}.create", $response['data']['events']);
         $this->assertContains("users.{$userId}.sessions.{$sessionNewId}", $response['data']['events']);
         $this->assertContains("users.{$userId}.sessions.*.create", $response['data']['events']);
@@ -583,10 +600,13 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('data', $response);
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
+        // Nested user event (sessions) — must NOT suffix the account channels.
         $this->assertCount(2, $response['data']['channels']);
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertContains('account', $response['data']['channels']);
         $this->assertContains('account.' . $userId, $response['data']['channels']);
+        $this->assertNotContains('account.delete', $response['data']['channels']);
+        $this->assertNotContains('account.' . $userId . '.delete', $response['data']['channels']);
         $this->assertContains("users.{$userId}.sessions.{$sessionNewId}.delete", $response['data']['events']);
         $this->assertContains("users.{$userId}.sessions.{$sessionNewId}", $response['data']['events']);
         $this->assertContains("users.{$userId}.sessions.*.delete", $response['data']['events']);
@@ -620,10 +640,13 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('data', $response);
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
+        // Nested user event (sessions) — must NOT suffix the account channels.
         $this->assertCount(2, $response['data']['channels']);
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertContains('account', $response['data']['channels']);
         $this->assertContains('account.' . $userId, $response['data']['channels']);
+        $this->assertNotContains('account.delete', $response['data']['channels']);
+        $this->assertNotContains('account.' . $userId . '.delete', $response['data']['channels']);
         $this->assertContains("users.{$userId}.sessions.{$sessionNewId}.delete", $response['data']['events']);
         $this->assertContains("users.{$userId}.sessions.{$sessionNewId}", $response['data']['events']);
         $this->assertContains("users.{$userId}.sessions.*.delete", $response['data']['events']);
@@ -661,10 +684,13 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('data', $response);
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
+        // Nested user event (recovery) — must NOT suffix the account channels.
         $this->assertCount(2, $response['data']['channels']);
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertContains('account', $response['data']['channels']);
         $this->assertContains('account.' . $userId, $response['data']['channels']);
+        $this->assertNotContains('account.create', $response['data']['channels']);
+        $this->assertNotContains('account.' . $userId . '.create', $response['data']['channels']);
         $this->assertContains("users.{$userId}.recovery.{$recoveryId}.create", $response['data']['events']);
         $this->assertContains("users.{$userId}.recovery.{$recoveryId}", $response['data']['events']);
         $this->assertContains("users.{$userId}.recovery.*.create", $response['data']['events']);
@@ -695,10 +721,13 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('data', $response);
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
+        // Nested user event (recovery) — must NOT suffix the account channels.
         $this->assertCount(2, $response['data']['channels']);
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertContains('account', $response['data']['channels']);
         $this->assertContains('account.' . $userId, $response['data']['channels']);
+        $this->assertNotContains('account.update', $response['data']['channels']);
+        $this->assertNotContains('account.' . $userId . '.update', $response['data']['channels']);
         $this->assertContains("users.{$userId}.recovery.{$recoveryId}.update", $response['data']['events']);
         $this->assertContains("users.{$userId}.recovery.{$recoveryId}", $response['data']['events']);
         $this->assertContains("users.{$userId}.recovery.*.update", $response['data']['events']);
@@ -820,7 +849,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(8, $response['data']['channels']);
+        $this->assertCount(16, $response['data']['channels']);
         $this->assertContains('documents', $response['data']['channels']);
         $this->assertContains('databases.' . $databaseId . '.collections.' . $actorsId . '.documents.' . $documentId, $response['data']['channels']);
         $this->assertContains('databases.' . $databaseId . '.collections.' . $actorsId . '.documents', $response['data']['channels']);
@@ -865,7 +894,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(8, $response['data']['channels']);
+        $this->assertCount(16, $response['data']['channels']);
         $this->assertContains('documents', $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$documentId}", $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents", $response['data']['channels']);
@@ -921,7 +950,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(8, $response['data']['channels']);
+        $this->assertCount(16, $response['data']['channels']);
         $this->assertContains('documents', $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$documentId}", $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents", $response['data']['channels']);
@@ -977,7 +1006,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(8, $response['data']['channels']);
+        $this->assertCount(16, $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response['data']['payload']['$id']}.create", $response['data']['events']);
         $this->assertContains("databases.*.collections.*.documents.*.create", $response['data']['events']);
         $this->assertContains("databases.{$databaseId}.collections.*.documents.*.create", $response['data']['events']);
@@ -1009,7 +1038,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(8, $response['data']['channels']);
+        $this->assertCount(16, $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response['data']['payload']['$id']}.create", $response['data']['events']);
         $this->assertContains("databases.*.collections.*.documents.*.create", $response['data']['events']);
         $this->assertContains("databases.{$databaseId}.collections.*.documents.*.create", $response['data']['events']);
@@ -1058,7 +1087,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(8, $response['data']['channels']);
+        $this->assertCount(16, $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response['data']['payload']['$id']}.update", $response['data']['events']);
         $this->assertContains("databases.*.collections.*.documents.*.update", $response['data']['events']);
         $this->assertContains("databases.{$databaseId}.collections.*.documents.*.update", $response['data']['events']);
@@ -1086,7 +1115,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(8, $response['data']['channels']);
+        $this->assertCount(16, $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response['data']['payload']['$id']}.update", $response['data']['events']);
         $this->assertContains("databases.*.collections.*.documents.*.update", $response['data']['events']);
         $this->assertContains("databases.{$databaseId}.collections.*.documents.*.update", $response['data']['events']);
@@ -1114,7 +1143,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(8, $response['data']['channels']);
+        $this->assertCount(16, $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response['data']['payload']['$id']}.update", $response['data']['events']);
         $this->assertContains("databases.*.collections.*.documents.*.update", $response['data']['events']);
         $this->assertContains("databases.{$databaseId}.collections.*.documents.*.update", $response['data']['events']);
@@ -1151,7 +1180,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(8, $response['data']['channels']);
+        $this->assertCount(16, $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response['data']['payload']['$id']}.delete", $response['data']['events']);
         $this->assertContains("databases.*.collections.*.documents.*.delete", $response['data']['events']);
         $this->assertContains("databases.{$databaseId}.collections.*.documents.*.delete", $response['data']['events']);
@@ -1180,7 +1209,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(8, $response['data']['channels']);
+        $this->assertCount(16, $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response['data']['payload']['$id']}.delete", $response['data']['events']);
         $this->assertContains("databases.*.collections.*.documents.*.delete", $response['data']['events']);
         $this->assertContains("databases.{$databaseId}.collections.*.documents.*.delete", $response['data']['events']);
@@ -1209,7 +1238,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(8, $response['data']['channels']);
+        $this->assertCount(16, $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response['data']['payload']['$id']}.delete", $response['data']['events']);
         $this->assertContains("databases.*.collections.*.documents.*.delete", $response['data']['events']);
         $this->assertContains("databases.{$databaseId}.collections.*.documents.*.delete", $response['data']['events']);
@@ -1256,7 +1285,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(8, $response['data']['channels']);
+        $this->assertCount(16, $response['data']['channels']);
 
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response['data']['payload']['$id']}.upsert", $response['data']['events']);
         $this->assertContains("databases.*.collections.*.documents.*.upsert", $response['data']['events']);
@@ -1435,7 +1464,7 @@ class RealtimeCustomClientTest extends Scope
             $this->assertEquals('event', $response1['type']);
             $this->assertNotEmpty($response1['data']);
             $this->assertArrayHasKey('timestamp', $response1['data']);
-            $this->assertCount(8, $response1['data']['channels']);
+            $this->assertCount(16, $response1['data']['channels']);
             $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response1['data']['payload']['$id']}.create", $response1['data']['events']);
             $this->assertContains("databases.*.collections.*.documents.*.create", $response1['data']['events']);
             $this->assertContains("databases.{$databaseId}.collections.*.documents.*.create", $response1['data']['events']);
@@ -1466,7 +1495,7 @@ class RealtimeCustomClientTest extends Scope
             $this->assertEquals('event', $response2['type']);
             $this->assertNotEmpty($response2['data']);
             $this->assertArrayHasKey('timestamp', $response2['data']);
-            $this->assertCount(8, $response2['data']['channels']);
+            $this->assertCount(16, $response2['data']['channels']);
             $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response2['data']['payload']['$id']}.create", $response2['data']['events']);
             $this->assertContains("databases.*.collections.*.documents.*.create", $response2['data']['events']);
             $this->assertContains("databases.{$databaseId}.collections.*.documents.*.create", $response2['data']['events']);
@@ -1516,7 +1545,7 @@ class RealtimeCustomClientTest extends Scope
             $this->assertEquals('event', $response1['type']);
             $this->assertNotEmpty($response1['data']);
             $this->assertArrayHasKey('timestamp', $response1['data']);
-            $this->assertCount(8, $response1['data']['channels']);
+            $this->assertCount(16, $response1['data']['channels']);
             $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response1['data']['payload']['$id']}.update", $response1['data']['events']);
             $this->assertContains("databases.*.collections.*.documents.*.update", $response1['data']['events']);
             $this->assertContains("databases.{$databaseId}.collections.*.documents.*.update", $response1['data']['events']);
@@ -1570,7 +1599,7 @@ class RealtimeCustomClientTest extends Scope
             $this->assertEquals('event', $response2['type']);
             $this->assertNotEmpty($response2['data']);
             $this->assertArrayHasKey('timestamp', $response2['data']);
-            $this->assertCount(8, $response2['data']['channels']);
+            $this->assertCount(16, $response2['data']['channels']);
             $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response2['data']['payload']['$id']}.update", $response2['data']['events']);
             $this->assertContains("databases.*.collections.*.documents.*.update", $response2['data']['events']);
             $this->assertContains("databases.{$databaseId}.collections.*.documents.*.update", $response2['data']['events']);
@@ -1623,7 +1652,7 @@ class RealtimeCustomClientTest extends Scope
             $this->assertEquals('event', $response1['type']);
             $this->assertNotEmpty($response1['data']);
             $this->assertArrayHasKey('timestamp', $response1['data']);
-            $this->assertCount(8, $response1['data']['channels']);
+            $this->assertCount(16, $response1['data']['channels']);
             $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response1['data']['payload']['$id']}.update", $response1['data']['events']);
             $this->assertContains("databases.*.collections.*.documents.*.update", $response1['data']['events']);
             $this->assertContains("databases.{$databaseId}.collections.*.documents.*.update", $response1['data']['events']);
@@ -1650,7 +1679,7 @@ class RealtimeCustomClientTest extends Scope
             $this->assertEquals('event', $response2['type']);
             $this->assertNotEmpty($response2['data']);
             $this->assertArrayHasKey('timestamp', $response2['data']);
-            $this->assertCount(8, $response2['data']['channels']);
+            $this->assertCount(16, $response2['data']['channels']);
             $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response2['data']['payload']['$id']}.update", $response2['data']['events']);
             $this->assertContains("databases.*.collections.*.documents.*.update", $response2['data']['events']);
             $this->assertContains("databases.{$databaseId}.collections.*.documents.*.update", $response2['data']['events']);
@@ -1689,7 +1718,7 @@ class RealtimeCustomClientTest extends Scope
             $this->assertEquals('event', $response1['type']);
             $this->assertNotEmpty($response1['data']);
             $this->assertArrayHasKey('timestamp', $response1['data']);
-            $this->assertCount(8, $response1['data']['channels']);
+            $this->assertCount(16, $response1['data']['channels']);
             $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response1['data']['payload']['$id']}.delete", $response1['data']['events']);
             $this->assertContains("databases.*.collections.*.documents.*.delete", $response1['data']['events']);
             $this->assertContains("databases.{$databaseId}.collections.*.documents.*.delete", $response1['data']['events']);
@@ -1720,7 +1749,7 @@ class RealtimeCustomClientTest extends Scope
             $this->assertEquals('event', $response2['type']);
             $this->assertNotEmpty($response2['data']);
             $this->assertArrayHasKey('timestamp', $response2['data']);
-            $this->assertCount(8, $response2['data']['channels']);
+            $this->assertCount(16, $response2['data']['channels']);
             $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response2['data']['payload']['$id']}.delete", $response2['data']['events']);
             $this->assertContains("databases.*.collections.*.documents.*.delete", $response2['data']['events']);
             $this->assertContains("databases.{$databaseId}.collections.*.documents.*.delete", $response2['data']['events']);
@@ -1773,7 +1802,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(8, $response['data']['channels']);
+        $this->assertCount(16, $response['data']['channels']);
 
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response['data']['payload']['$id']}.upsert", $response['data']['events']);
         $this->assertContains("databases.*.collections.*.documents.*.upsert", $response['data']['events']);
@@ -1811,7 +1840,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(8, $response['data']['channels']);
+        $this->assertCount(16, $response['data']['channels']);
 
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response['data']['payload']['$id']}.upsert", $response['data']['events']);
         $this->assertContains("databases.*.collections.*.documents.*.upsert", $response['data']['events']);
@@ -1953,7 +1982,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(8, $response['data']['channels']);
+        $this->assertCount(16, $response['data']['channels']);
         $this->assertContains('documents', $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$documentId}", $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents", $response['data']['channels']);
@@ -1992,7 +2021,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(8, $response['data']['channels']);
+        $this->assertCount(16, $response['data']['channels']);
         $this->assertContains('documents', $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$documentId}", $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents", $response['data']['channels']);
@@ -2042,7 +2071,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(8, $response['data']['channels']);
+        $this->assertCount(16, $response['data']['channels']);
         $this->assertContains('documents', $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$documentId}", $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents", $response['data']['channels']);
@@ -2130,10 +2159,13 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(3, $response['data']['channels']);
+        $this->assertCount(6, $response['data']['channels']);
         $this->assertContains('files', $response['data']['channels']);
         $this->assertContains("buckets.{$bucketId}.files.{$fileId}", $response['data']['channels']);
         $this->assertContains("buckets.{$bucketId}.files", $response['data']['channels']);
+        $this->assertContains('files.create', $response['data']['channels']);
+        $this->assertContains("buckets.{$bucketId}.files.create", $response['data']['channels']);
+        $this->assertContains("buckets.{$bucketId}.files.{$fileId}.create", $response['data']['channels']);
         $this->assertContains("buckets.{$bucketId}.files.{$fileId}.create", $response['data']['events']);
         $this->assertContains("buckets.{$bucketId}.files.{$fileId}", $response['data']['events']);
         $this->assertContains("buckets.{$bucketId}.files.*.create", $response['data']['events']);
@@ -2169,10 +2201,13 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(3, $response['data']['channels']);
+        $this->assertCount(6, $response['data']['channels']);
         $this->assertContains('files', $response['data']['channels']);
         $this->assertContains("buckets.{$bucketId}.files.{$fileId}", $response['data']['channels']);
         $this->assertContains("buckets.{$bucketId}.files", $response['data']['channels']);
+        $this->assertContains('files.update', $response['data']['channels']);
+        $this->assertContains("buckets.{$bucketId}.files.update", $response['data']['channels']);
+        $this->assertContains("buckets.{$bucketId}.files.{$fileId}.update", $response['data']['channels']);
         $this->assertContains("buckets.{$bucketId}.files.{$fileId}.update", $response['data']['events']);
         $this->assertContains("buckets.{$bucketId}.files.{$fileId}", $response['data']['events']);
         $this->assertContains("buckets.{$bucketId}.files.*.update", $response['data']['events']);
@@ -2200,10 +2235,13 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(3, $response['data']['channels']);
+        $this->assertCount(6, $response['data']['channels']);
         $this->assertContains('files', $response['data']['channels']);
         $this->assertContains("buckets.{$bucketId}.files.{$fileId}", $response['data']['channels']);
         $this->assertContains("buckets.{$bucketId}.files", $response['data']['channels']);
+        $this->assertContains('files.delete', $response['data']['channels']);
+        $this->assertContains("buckets.{$bucketId}.files.delete", $response['data']['channels']);
+        $this->assertContains("buckets.{$bucketId}.files.{$fileId}.delete", $response['data']['channels']);
         $this->assertContains("buckets.{$bucketId}.files.{$fileId}.delete", $response['data']['events']);
         $this->assertContains("buckets.{$bucketId}.files.{$fileId}", $response['data']['events']);
         $this->assertContains("buckets.{$bucketId}.files.*.delete", $response['data']['events']);
@@ -2289,7 +2327,7 @@ class RealtimeCustomClientTest extends Scope
             ]);
 
             $this->assertEquals('ready', $deployment['body']['status'], \json_encode($deployment['body']));
-        });
+        }, 240_000, 500);
 
         $response = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
             'content-type' => 'application/json',
@@ -2320,7 +2358,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(5, $response['data']['channels']);
+        $this->assertCount(8, $response['data']['channels']);
         $this->assertContains('console', $response['data']['channels']);
         $this->assertContains("projects.{$this->getProject()['$id']}", $response['data']['channels']);
         $this->assertContains('executions', $response['data']['channels']);
@@ -2343,7 +2381,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $responseUpdate['type']);
         $this->assertNotEmpty($responseUpdate['data']);
         $this->assertArrayHasKey('timestamp', $responseUpdate['data']);
-        $this->assertCount(5, $responseUpdate['data']['channels']);
+        $this->assertCount(8, $responseUpdate['data']['channels']);
         $this->assertContains('console', $responseUpdate['data']['channels']);
         $this->assertContains("projects.{$this->getProject()['$id']}", $response['data']['channels']);
         $this->assertContains('executions', $responseUpdate['data']['channels']);
@@ -2418,9 +2456,11 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(2, $response['data']['channels']);
+        $this->assertCount(4, $response['data']['channels']);
         $this->assertContains('teams', $response['data']['channels']);
         $this->assertContains("teams.{$teamId}", $response['data']['channels']);
+        $this->assertContains('teams.create', $response['data']['channels']);
+        $this->assertContains("teams.{$teamId}.create", $response['data']['channels']);
         $this->assertContains("teams.{$teamId}.create", $response['data']['events']);
         $this->assertContains("teams.{$teamId}", $response['data']['events']);
         $this->assertContains("teams.*.create", $response['data']['events']);
@@ -2447,9 +2487,11 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(2, $response['data']['channels']);
+        $this->assertCount(4, $response['data']['channels']);
         $this->assertContains('teams', $response['data']['channels']);
         $this->assertContains("teams.{$teamId}", $response['data']['channels']);
+        $this->assertContains('teams.update', $response['data']['channels']);
+        $this->assertContains("teams.{$teamId}.update", $response['data']['channels']);
         $this->assertContains("teams.{$teamId}.update", $response['data']['events']);
         $this->assertContains("teams.{$teamId}", $response['data']['events']);
         $this->assertContains("teams.*.update", $response['data']['events']);
@@ -2480,9 +2522,11 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(2, $response['data']['channels']);
+        $this->assertCount(4, $response['data']['channels']);
         $this->assertContains('teams', $response['data']['channels']);
         $this->assertContains("teams.{$teamId}", $response['data']['channels']);
+        $this->assertContains('teams.update', $response['data']['channels']);
+        $this->assertContains("teams.{$teamId}.update", $response['data']['channels']);
         $this->assertContains("teams.{$teamId}.update", $response['data']['events']);
         $this->assertContains("teams.{$teamId}.update.prefs", $response['data']['events']);
         $this->assertContains("teams.{$teamId}", $response['data']['events']);
@@ -2547,9 +2591,11 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(2, $response['data']['channels']);
+        $this->assertCount(4, $response['data']['channels']);
         $this->assertContains('memberships', $response['data']['channels']);
         $this->assertContains("memberships.{$membershipId}", $response['data']['channels']);
+        $this->assertContains('memberships.update', $response['data']['channels']);
+        $this->assertContains("memberships.{$membershipId}.update", $response['data']['channels']);
         $this->assertContains("teams.{$teamId}.memberships.{$membershipId}.update", $response['data']['events']);
         $this->assertContains("teams.{$teamId}.memberships.{$membershipId}", $response['data']['events']);
         $this->assertContains("teams.{$teamId}.memberships.*.update", $response['data']['events']);
@@ -3039,8 +3085,21 @@ class RealtimeCustomClientTest extends Scope
 
         $this->assertEquals(200, $update['headers']['status-code']);
 
-        $event = json_decode($client->receive(), true);
+        // Drain WebSocket messages until the .update event arrives.
+        // Earlier events (e.g. a late-arriving .create from the row seed above) are skipped.
+        $updateEvent = "tablesdb.{$databaseId}.tables.{$tableId}.rows.{$rowId}.update";
+        $event = null;
+        $deadline = \time() + 10;
+        while (\time() < $deadline) {
+            $raw = $client->receive();
+            $msg = json_decode($raw, true);
+            if (($msg['type'] ?? '') === 'event' && \in_array($updateEvent, $msg['data']['events'] ?? [])) {
+                $event = $msg;
+                break;
+            }
+        }
 
+        $this->assertNotNull($event, 'Timed out waiting for the row update event');
         $this->assertArrayHasKey('type', $event);
         $this->assertArrayHasKey('data', $event);
         $this->assertEquals('event', $event['type']);
@@ -3280,6 +3339,277 @@ class RealtimeCustomClientTest extends Scope
         $this->assertContains("databases.{$databaseId}.tables.{$collectionId}.rows.{$documentId}.delete", $response['data']['events']);
 
         $client->close();
+    }
+
+    public function testChannelMirrorEventsAcrossDatabasesAndTablesdb(): void
+    {
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+
+        /**
+         * Case 1: Trigger event through /databases route and verify both
+         * legacy collections/documents and tables/rows events are generated.
+         */
+        $legacyDatabase = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'Mirror Legacy DB',
+        ]);
+        $this->assertEquals(201, $legacyDatabase['headers']['status-code']);
+        $legacyDatabaseId = $legacyDatabase['body']['$id'];
+
+        $legacyCollection = $this->client->call(Client::METHOD_POST, '/databases/' . $legacyDatabaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Legacy Collection',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            'documentSecurity' => true,
+        ]);
+        $legacyCollectionId = $legacyCollection['body']['$id'];
+
+        $attribute = $this->client->call(Client::METHOD_POST, '/databases/' . $legacyDatabaseId . '/collections/' . $legacyCollectionId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ]);
+        $this->assertEquals(202, $attribute['headers']['status-code']);
+
+        $this->assertEventually(function () use ($legacyDatabaseId, $legacyCollectionId) {
+            $attribute = $this->client->call(Client::METHOD_GET, '/databases/' . $legacyDatabaseId . '/collections/' . $legacyCollectionId . '/attributes/name', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+
+            $this->assertEquals('available', $attribute['body']['status']);
+        }, 30000, 250);
+
+        $legacyClient = $this->getWebsocket([
+            "databases.{$legacyDatabaseId}.collections.{$legacyCollectionId}.documents",
+            "databases.{$legacyDatabaseId}.tables.{$legacyCollectionId}.rows",
+        ], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]);
+
+        $connected = json_decode($legacyClient->receive(), true);
+        $this->assertEquals('connected', $connected['type']);
+
+        $legacyDocumentId = ID::unique();
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $legacyDatabaseId . '/collections/' . $legacyCollectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'documentId' => $legacyDocumentId,
+            'data' => [
+                'name' => 'legacy-route-create',
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $document['headers']['status-code']);
+
+        $legacyEvent = json_decode($legacyClient->receive(), true);
+        $this->assertEquals('event', $legacyEvent['type']);
+        $this->assertContains(
+            "databases.{$legacyDatabaseId}.collections.{$legacyCollectionId}.documents.{$legacyDocumentId}.create",
+            $legacyEvent['data']['events']
+        );
+        $this->assertContains(
+            "databases.{$legacyDatabaseId}.tables.{$legacyCollectionId}.rows.{$legacyDocumentId}.create",
+            $legacyEvent['data']['events']
+        );
+        $legacyClient->close();
+
+        /**
+         * Case 2: Trigger event through /tablesdb route and verify both
+         * tables/rows and legacy collections/documents events are generated.
+         */
+        $tablesDatabase = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $this->getHeaders()), [
+            'databaseId' => ID::unique(),
+            'name' => 'Mirror TablesDB',
+        ]);
+        $this->assertEquals(201, $tablesDatabase['headers']['status-code']);
+        $tablesDatabaseId = $tablesDatabase['body']['$id'];
+
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $tablesDatabaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $this->getHeaders()), [
+            'tableId' => ID::unique(),
+            'name' => 'Mirror Table',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $table['headers']['status-code']);
+        $tableId = $table['body']['$id'];
+
+        $column = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $tablesDatabaseId . '/tables/' . $tableId . '/columns/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $this->getHeaders()), [
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ]);
+        $this->assertEquals(202, $column['headers']['status-code']);
+
+        $this->assertEventually(function () use ($tablesDatabaseId, $tableId) {
+            $column = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $tablesDatabaseId . '/tables/' . $tableId . '/columns/name', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals('available', $column['body']['status']);
+        }, 120000, 500);
+
+        $tablesClient = $this->getWebsocket([
+            "databases.{$tablesDatabaseId}.tables.{$tableId}.rows",
+            "databases.{$tablesDatabaseId}.collections.{$tableId}.documents",
+        ], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]);
+
+        $connected = json_decode($tablesClient->receive(), true);
+        $this->assertEquals('connected', $connected['type']);
+
+        $rowId = ID::unique();
+        $row = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $tablesDatabaseId . '/tables/' . $tableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $this->getHeaders()), [
+            'rowId' => $rowId,
+            'data' => [
+                'name' => 'tablesdb-route-create',
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $row['headers']['status-code']);
+
+        $tablesEvent = json_decode($tablesClient->receive(), true);
+        $this->assertEquals('event', $tablesEvent['type']);
+        $this->assertContains(
+            "databases.{$tablesDatabaseId}.tables.{$tableId}.rows.{$rowId}.create",
+            $tablesEvent['data']['events']
+        );
+        $this->assertContains(
+            "databases.{$tablesDatabaseId}.collections.{$tableId}.documents.{$rowId}.create",
+            $tablesEvent['data']['events']
+        );
+        $tablesClient->close();
+
+        /**
+         * Case 3: Trigger event through /documentsdb route and verify only
+         * documentsdb events are generated (no databases/tablesdb mirrors).
+         */
+        $documentsDatabase = $this->client->call(Client::METHOD_POST, '/documentsdb', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'Mirror DocumentsDB',
+        ]);
+        $this->assertEquals(201, $documentsDatabase['headers']['status-code']);
+        $documentsDatabaseId = $documentsDatabase['body']['$id'];
+
+        $documentsCollection = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $documentsDatabaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Mirror Documents Collection',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            'documentSecurity' => true,
+        ]);
+        $this->assertEquals(201, $documentsCollection['headers']['status-code']);
+        $documentsCollectionId = $documentsCollection['body']['$id'];
+
+        $documentsClient = $this->getWebsocket([
+            "documentsdb.{$documentsDatabaseId}.collections.{$documentsCollectionId}.documents",
+            'documents',
+        ], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]);
+
+        $connected = json_decode($documentsClient->receive(), true);
+        $this->assertEquals('connected', $connected['type']);
+
+        $documentsDocumentId = ID::unique();
+        $documentsDocument = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $documentsDatabaseId . '/collections/' . $documentsCollectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $this->getHeaders()), [
+            'documentId' => $documentsDocumentId,
+            'data' => [
+                'name' => 'documentsdb-route-create',
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $documentsDocument['headers']['status-code']);
+
+        $documentsEvent = json_decode($documentsClient->receive(), true);
+        $this->assertEquals('event', $documentsEvent['type']);
+        $this->assertContains(
+            "documentsdb.{$documentsDatabaseId}.collections.{$documentsCollectionId}.documents.{$documentsDocumentId}.create",
+            $documentsEvent['data']['events']
+        );
+        $this->assertEmpty(
+            array_filter(
+                $documentsEvent['data']['events'],
+                fn (string $event) => \str_starts_with($event, 'databases.') || \str_starts_with($event, 'tablesdb.')
+            )
+        );
+        $documentsClient->close();
     }
 
     public function testChannelDatabaseTransactionMultipleOperations()
@@ -3544,7 +3874,7 @@ class RealtimeCustomClientTest extends Scope
             $this->fail('Should not receive any event after rollback');
         } catch (TimeoutException $e) {
             // Expected - no event should be triggered
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
 
         $client->close();
@@ -3743,7 +4073,51 @@ class RealtimeCustomClientTest extends Scope
         $session = $user['session'] ?? '';
         $projectId = $this->getProject()['$id'];
 
-        Coroutine\run(function () use ($session, $projectId) {
+        // Setup DB/collection/attribute outside coroutine to avoid fatal errors on assertion failure
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'Concurrent DB',
+        ]);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Concurrent Collection',
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            'documentSecurity' => true,
+        ]);
+        $collectionId = $collection['body']['$id'];
+
+        $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/attributes/string", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'name',
+            'size' => 64,
+            'required' => true,
+        ]);
+
+        $this->assertEventually(function () use ($databaseId, $collectionId) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/name', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status'] ?? null);
+        }, 30000, 250);
+
+        Coroutine\run(function () use ($session, $projectId, $databaseId, $collectionId) {
             $headers = [
                 'origin' => 'http://localhost',
                 'cookie' => 'a_session_' . $projectId . '=' . $session
@@ -3759,50 +4133,6 @@ class RealtimeCustomClientTest extends Scope
                 $response = json_decode($client->receive(), true);
                 $this->assertEquals('connected', $response['type']);
             }
-
-            // Setup DB/collection/attribute
-            $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $projectId,
-                'x-appwrite-key' => $this->getProject()['apiKey']
-            ]), [
-                'databaseId' => ID::unique(),
-                'name' => 'Concurrent DB',
-            ]);
-            $databaseId = $database['body']['$id'];
-
-            $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $projectId,
-                'x-appwrite-key' => $this->getProject()['apiKey']
-            ]), [
-                'collectionId' => ID::unique(),
-                'name' => 'Concurrent Collection',
-                'permissions' => [
-                    Permission::create(Role::user($this->getUser()['$id'])),
-                ],
-                'documentSecurity' => true,
-            ]);
-            $collectionId = $collection['body']['$id'];
-
-            $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/attributes/string", array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $projectId,
-                'x-appwrite-key' => $this->getProject()['apiKey']
-            ]), [
-                'key' => 'name',
-                'size' => 64,
-                'required' => true,
-            ]);
-
-            $this->assertEventually(function () use ($databaseId, $collectionId) {
-                $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/name', array_merge([
-                    'content-type' => 'application/json',
-                    'x-appwrite-project' => $this->getProject()['$id'],
-                    'x-appwrite-key' => $this->getProject()['apiKey'],
-                ]));
-                $this->assertEquals('available', $response['body']['status']);
-            }, 30000, 250);
 
             $creates = [
                 ['name' => 'Doc A'],
@@ -3955,7 +4285,16 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals(256, $name['body']['size']);
         $this->assertTrue($name['body']['required']);
 
-        sleep(2);
+        $this->assertEventually(function () use ($databaseId, $actorsId) {
+            $column = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $actorsId . '/columns/name', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $column['headers']['status-code']);
+            $this->assertEquals('available', $column['body']['status']);
+        }, 120000, 500);
 
         /**
          * Test Document Create
@@ -3983,7 +4322,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(8, $response['data']['channels']);
+        $this->assertCount(16, $response['data']['channels']);
         $this->assertContains('documents', $response['data']['channels']);
         $this->assertContains('databases.' . $databaseId . '.collections.' . $actorsId . '.documents.' . $rowId, $response['data']['channels']);
         $this->assertContains('databases.' . $databaseId . '.collections.' . $actorsId . '.documents', $response['data']['channels']);
@@ -4040,7 +4379,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(8, $response['data']['channels']);
+        $this->assertCount(16, $response['data']['channels']);
         $this->assertContains('documents', $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$rowId}", $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents", $response['data']['channels']);
@@ -4108,7 +4447,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(8, $response['data']['channels']);
+        $this->assertCount(16, $response['data']['channels']);
         $this->assertContains('documents', $response['data']['channels']);
         $this->assertContains('rows', $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$rowId}", $response['data']['channels']);
@@ -4179,7 +4518,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(8, $response['data']['channels']);
+        $this->assertCount(16, $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response['data']['payload']['$id']}.create", $response['data']['events']);
         $this->assertContains("databases.*.collections.*.documents.*.create", $response['data']['events']);
         $this->assertContains("databases.{$databaseId}.collections.*.documents.*.create", $response['data']['events']);
@@ -4225,7 +4564,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(8, $response['data']['channels']);
+        $this->assertCount(16, $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response['data']['payload']['$id']}.create", $response['data']['events']);
         $this->assertContains("databases.*.collections.*.documents.*.create", $response['data']['events']);
         $this->assertContains("databases.{$databaseId}.collections.*.documents.*.create", $response['data']['events']);
@@ -4289,7 +4628,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(8, $response['data']['channels']);
+        $this->assertCount(16, $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response['data']['payload']['$id']}.update", $response['data']['events']);
         $this->assertContains("databases.*.collections.*.documents.*.update", $response['data']['events']);
         $this->assertContains("databases.{$databaseId}.collections.*.documents.*.update", $response['data']['events']);
@@ -4331,7 +4670,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(8, $response['data']['channels']);
+        $this->assertCount(16, $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response['data']['payload']['$id']}.update", $response['data']['events']);
         $this->assertContains("databases.*.collections.*.documents.*.update", $response['data']['events']);
         $this->assertContains("databases.{$databaseId}.collections.*.documents.*.update", $response['data']['events']);
@@ -4373,7 +4712,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(8, $response['data']['channels']);
+        $this->assertCount(16, $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response['data']['payload']['$id']}.update", $response['data']['events']);
         $this->assertContains("databases.*.collections.*.documents.*.update", $response['data']['events']);
         $this->assertContains("databases.{$databaseId}.collections.*.documents.*.update", $response['data']['events']);
@@ -4424,7 +4763,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(8, $response['data']['channels']);
+        $this->assertCount(16, $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response['data']['payload']['$id']}.delete", $response['data']['events']);
         $this->assertContains("databases.*.collections.*.documents.*.delete", $response['data']['events']);
         $this->assertContains("databases.{$databaseId}.collections.*.documents.*.delete", $response['data']['events']);
@@ -4467,7 +4806,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(8, $response['data']['channels']);
+        $this->assertCount(16, $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response['data']['payload']['$id']}.delete", $response['data']['events']);
         $this->assertContains("databases.*.collections.*.documents.*.delete", $response['data']['events']);
         $this->assertContains("databases.{$databaseId}.collections.*.documents.*.delete", $response['data']['events']);
@@ -4496,7 +4835,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(8, $response['data']['channels']);
+        $this->assertCount(16, $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response['data']['payload']['$id']}.delete", $response['data']['events']);
         $this->assertContains("databases.*.collections.*.documents.*.delete", $response['data']['events']);
         $this->assertContains("databases.{$databaseId}.collections.*.documents.*.delete", $response['data']['events']);
@@ -4543,7 +4882,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(8, $response['data']['channels']);
+        $this->assertCount(16, $response['data']['channels']);
 
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response['data']['payload']['$id']}.upsert", $response['data']['events']);
         $this->assertContains("databases.*.collections.*.documents.*.upsert", $response['data']['events']);
@@ -4664,12 +5003,14 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(3, $response['data']['channels']);
+        $this->assertCount(6, $response['data']['channels']);
         $this->assertContains('documents', $response['data']['channels']);
         $this->assertContains('documentsdb.' . $databaseId . '.collections.' . $actorsId . '.documents.' . $documentId, $response['data']['channels']);
         $this->assertContains('documentsdb.' . $databaseId . '.collections.' . $actorsId . '.documents', $response['data']['channels']);
         $this->assertContains('documentsdb.' . $databaseId . '.collections.' . $actorsId . '.documents.' . $documentId, $response['data']['channels']);
         $this->assertContains('documentsdb.' . $databaseId . '.collections.' . $actorsId . '.documents', $response['data']['channels']);
+        $this->assertContains("documentsdb.{$databaseId}.collections.{$actorsId}.documents.{$documentId}.create", $response['data']['events']);
+        $this->assertEmpty(array_filter($response['data']['events'], fn (string $event) => \str_starts_with($event, 'databases.') || \str_starts_with($event, 'tablesdb.')));
         $this->assertNotEmpty($response['data']['payload']);
         $this->assertEquals('Chris Evans', $response['data']['payload']['name']);
 
@@ -4697,10 +5038,12 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(3, $response['data']['channels']);
+        $this->assertCount(6, $response['data']['channels']);
         $this->assertContains('documents', $response['data']['channels']);
         $this->assertContains("documentsdb.{$databaseId}.collections.{$actorsId}.documents.{$documentId}", $response['data']['channels']);
         $this->assertContains("documentsdb.{$databaseId}.collections.{$actorsId}.documents", $response['data']['channels']);
+        $this->assertContains("documentsdb.{$databaseId}.collections.{$actorsId}.documents.{$documentId}.update", $response['data']['events']);
+        $this->assertEmpty(array_filter($response['data']['events'], fn (string $event) => \str_starts_with($event, 'databases.') || \str_starts_with($event, 'tablesdb.')));
         $this->assertNotEmpty($response['data']['payload']);
 
         $this->assertEquals('Chris Evans 2', $response['data']['payload']['name']);
@@ -4739,7 +5082,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(3, $response['data']['channels']);
+        $this->assertCount(6, $response['data']['channels']);
         $this->assertContains('documents', $response['data']['channels']);
         $this->assertContains("documentsdb.{$databaseId}.collections.{$actorsId}.documents.{$documentId}", $response['data']['channels']);
         $this->assertContains("documentsdb.{$databaseId}.collections.{$actorsId}.documents", $response['data']['channels']);
@@ -4783,7 +5126,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(3, $response['data']['channels']);
+        $this->assertCount(6, $response['data']['channels']);
         $this->assertNotEmpty($response['data']['payload']);
         $this->assertIsArray($response['data']['payload']);
         $this->assertArrayHasKey('$id', $response['data']['payload']);
@@ -4801,7 +5144,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(3, $response['data']['channels']);
+        $this->assertCount(6, $response['data']['channels']);
         $this->assertNotEmpty($response['data']['payload']);
         $this->assertIsArray($response['data']['payload']);
         $this->assertArrayHasKey('$id', $response['data']['payload']);
@@ -4836,7 +5179,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(3, $response['data']['channels']);
+        $this->assertCount(6, $response['data']['channels']);
         $this->assertContains("documentsdb.{$databaseId}.collections.{$actorsId}.documents.{$response['data']['payload']['$id']}.update", $response['data']['events']);
         $this->assertContains("documentsdb.*.collections.*.documents.*.update", $response['data']['events']);
         $this->assertContains("documentsdb.{$databaseId}.collections.*.documents.*.update", $response['data']['events']);
@@ -4864,7 +5207,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(3, $response['data']['channels']);
+        $this->assertCount(6, $response['data']['channels']);
         $this->assertContains("documentsdb.{$databaseId}.collections.{$actorsId}.documents.{$response['data']['payload']['$id']}.update", $response['data']['events']);
         $this->assertContains("documentsdb.*.collections.*.documents.*.update", $response['data']['events']);
         $this->assertContains("documentsdb.{$databaseId}.collections.*.documents.*.update", $response['data']['events']);
@@ -4892,7 +5235,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(3, $response['data']['channels']);
+        $this->assertCount(6, $response['data']['channels']);
         $this->assertContains("documentsdb.{$databaseId}.collections.{$actorsId}.documents.{$response['data']['payload']['$id']}.update", $response['data']['events']);
         $this->assertContains("documentsdb.*.collections.*.documents.*.update", $response['data']['events']);
         $this->assertContains("documentsdb.{$databaseId}.collections.*.documents.*.update", $response['data']['events']);
@@ -4929,7 +5272,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(3, $response['data']['channels']);
+        $this->assertCount(6, $response['data']['channels']);
         $this->assertContains("documentsdb.{$databaseId}.collections.{$actorsId}.documents.{$response['data']['payload']['$id']}.delete", $response['data']['events']);
         $this->assertContains("documentsdb.*.collections.*.documents.*.delete", $response['data']['events']);
         $this->assertContains("documentsdb.{$databaseId}.collections.*.documents.*.delete", $response['data']['events']);
@@ -4958,7 +5301,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(3, $response['data']['channels']);
+        $this->assertCount(6, $response['data']['channels']);
         $this->assertContains("documentsdb.{$databaseId}.collections.{$actorsId}.documents.{$response['data']['payload']['$id']}.delete", $response['data']['events']);
         $this->assertContains("documentsdb.*.collections.*.documents.*.delete", $response['data']['events']);
         $this->assertContains("documentsdb.{$databaseId}.collections.*.documents.*.delete", $response['data']['events']);
@@ -4987,7 +5330,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(3, $response['data']['channels']);
+        $this->assertCount(6, $response['data']['channels']);
         $this->assertContains("documentsdb.{$databaseId}.collections.{$actorsId}.documents.{$response['data']['payload']['$id']}.delete", $response['data']['events']);
         $this->assertContains("documentsdb.*.collections.*.documents.*.delete", $response['data']['events']);
         $this->assertContains("documentsdb.{$databaseId}.collections.*.documents.*.delete", $response['data']['events']);
@@ -5034,7 +5377,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(3, $response['data']['channels']);
+        $this->assertCount(6, $response['data']['channels']);
 
         $this->assertContains("documentsdb.{$databaseId}.collections.{$actorsId}.documents.{$response['data']['payload']['$id']}.upsert", $response['data']['events']);
         $this->assertContains("documentsdb.*.collections.*.documents.*.upsert", $response['data']['events']);
@@ -5139,7 +5482,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
         // vectorsdb channels should include 3 items like documentsdb
-        $this->assertCount(3, $response['data']['channels']);
+        $this->assertCount(6, $response['data']['channels']);
         $this->assertContains('documents', $response['data']['channels']);
         $this->assertContains('vectorsdb.' . $databaseId . '.collections.' . $actorsId . '.documents.' . $documentId, $response['data']['channels']);
         $this->assertContains('vectorsdb.' . $databaseId . '.collections.' . $actorsId . '.documents', $response['data']['channels']);
@@ -5170,7 +5513,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(3, $response['data']['channels']);
+        $this->assertCount(6, $response['data']['channels']);
         $this->assertContains('vectorsdb.' . $databaseId . '.collections.' . $actorsId . '.documents.' . $documentId, $response['data']['channels']);
         $this->assertContains('vectorsdb.' . $databaseId . '.collections.' . $actorsId . '.documents', $response['data']['channels']);
         $this->assertNotEmpty($response['data']['payload']);
@@ -5189,7 +5532,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(3, $response['data']['channels']);
+        $this->assertCount(6, $response['data']['channels']);
         $this->assertContains('vectorsdb.' . $databaseId . '.collections.' . $actorsId . '.documents.' . $documentId, $response['data']['channels']);
         $this->assertContains('vectorsdb.' . $databaseId . '.collections.' . $actorsId . '.documents', $response['data']['channels']);
 
@@ -5228,7 +5571,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(3, $response['data']['channels']);
+        $this->assertCount(6, $response['data']['channels']);
         $this->assertContains('vectorsdb.' . $databaseId . '.collections.' . $actorsId . '.documents.' . $response['data']['payload']['$id'] . '.create', $response['data']['events']);
         $this->assertContains('vectorsdb.*.collections.*.documents.*.create', $response['data']['events']);
         $this->assertContains('vectorsdb.' . $databaseId . '.collections.*.documents.*.create', $response['data']['events']);
@@ -5243,8 +5586,154 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(3, $response['data']['channels']);
+        $this->assertCount(6, $response['data']['channels']);
         $this->assertContains('vectorsdb.' . $databaseId . '.collections.' . $actorsId . '.documents.' . $response['data']['payload']['$id'] . '.create', $response['data']['events']);
+
+        $client->close();
+    }
+
+    public function testChannelDatabaseAtomicOperations()
+    {
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+
+        $client = $this->getWebsocket(['documents', 'collections'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ], null);
+
+        $response = json_decode($client->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+
+        // Test Database Create
+
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'Atomic DB',
+        ]);
+        $databaseId = $database['body']['$id'];
+
+        //Test Collection Create
+
+        $actors = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Atomic Actors',
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            'documentSecurity' => true,
+        ]);
+        $actorsId = $actors['body']['$id'];
+
+        //Test Attribute Create
+
+        $scoreAttr = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $actorsId . '/attributes/integer', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'score',
+            'required' => true,
+        ]);
+
+        $this->assertEventually(function () use ($databaseId, $actorsId) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $actorsId . '/attributes/score', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
+
+        //Test Document Create
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $actorsId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => ID::unique(),
+            'data' => [
+                'score' => 10
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $documentId = $document['body']['$id'];
+
+        $client->receive();
+
+        // Test Document Increment
+        $increment = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $actorsId . '/documents/' . $documentId . '/score/increment', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'value' => 5
+        ]);
+
+        $this->assertEquals(200, $increment['headers']['status-code']);
+
+        $response = json_decode($client->receive(), true);
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('event', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertArrayHasKey('timestamp', $response['data']);
+        $this->assertCount(16, $response['data']['channels']);
+        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$documentId}.update", $response['data']['events']);
+
+        $this->assertNotEmpty($response['data']['payload']);
+        $this->assertIsArray($response['data']['payload']);
+        $this->assertArrayHasKey('$id', $response['data']['payload']);
+        $this->assertEquals(15, $response['data']['payload']['score']);
+
+        try {
+            $client->receive();
+            $this->fail('Should not receive duplicate event');
+        } catch (TimeoutException $e) {
+            $this->addToAssertionCount(1);
+        }
+
+        // Test Document Decrement
+        $decrement = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $actorsId . '/documents/' . $documentId . '/score/decrement', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'value' => 3
+        ]);
+
+        $this->assertEquals(200, $decrement['headers']['status-code']);
+
+        $response = json_decode($client->receive(), true);
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('event', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertArrayHasKey('timestamp', $response['data']);
+        $this->assertCount(16, $response['data']['channels']);
+        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$documentId}.update", $response['data']['events']);
+
+        $this->assertNotEmpty($response['data']['payload']);
+        $this->assertIsArray($response['data']['payload']);
+        $this->assertArrayHasKey('$id', $response['data']['payload']);
+        $this->assertEquals(12, $response['data']['payload']['score']);
+
+        try {
+            $client->receive();
+            $this->fail('Should not receive duplicate event');
+        } catch (TimeoutException $e) {
+            $this->addToAssertionCount(1);
+        }
 
         $client->close();
     }

@@ -85,8 +85,6 @@ class Create extends Action
 
         curl_exec($ch);
 
-        curl_close($ch);
-
         $response->chunk('', true);
     }
 }

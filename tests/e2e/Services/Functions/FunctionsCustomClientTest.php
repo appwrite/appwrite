@@ -414,7 +414,7 @@ class FunctionsCustomClientTest extends Scope
             'offset' => 2
         ]);
         $this->assertEquals(200, $templatesOffset['headers']['status-code']);
-        $this->addToAssertionCount(1, $templatesOffset['body']['templates']);
+        $this->addToAssertionCount(1);
         $this->assertEquals($templates['body']['templates'][2]['id'], $templatesOffset['body']['templates'][0]['id']);
 
         // List templates with filters

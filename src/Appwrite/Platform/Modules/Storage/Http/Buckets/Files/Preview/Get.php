@@ -4,6 +4,8 @@ namespace Appwrite\Platform\Modules\Storage\Http\Buckets\Files\Preview;
 
 use Appwrite\Extend\Exception;
 use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\Platform\Modules\Storage\Config\CacheControl;
+use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -15,7 +17,6 @@ use Utopia\Compression\Algorithms\GZIP;
 use Utopia\Compression\Algorithms\Zstd;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
-use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -26,6 +27,7 @@ use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Image\Image;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Span\Span;
 use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\Validator\HexColor;
@@ -54,6 +56,7 @@ class Get extends Action
             ->label('cache', true)
             ->label('cache.resourceType', 'bucket/{request.bucketId}')
             ->label('cache.resource', 'file/{request.fileId}')
+            ->label('cache.params', ['width', 'height', 'gravity', 'quality', 'borderWidth', 'borderColor', 'borderRadius', 'opacity', 'rotation', 'background', 'output', 'project'])
             ->label('sdk', new Method(
                 namespace: 'storage',
                 group: 'files',
@@ -92,6 +95,8 @@ class Get extends Action
             ->inject('deviceForLocal')
             ->inject('project')
             ->inject('authorization')
+            ->inject('user')
+            ->inject('cacheControlForStorage')
             ->callback($this->action(...));
     }
 
@@ -117,7 +122,9 @@ class Get extends Action
         Device $deviceForFiles,
         Device $deviceForLocal,
         Document $project,
-        Authorization $authorization
+        Authorization $authorization,
+        User $user,
+        callable $cacheControlForStorage
     ) {
 
         if (!\extension_loaded('imagick')) {
@@ -127,8 +134,8 @@ class Get extends Action
         /* @type Document $bucket */
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        $isAPIKey = User::isApp($authorization->getRoles());
-        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
+        $isAPIKey = $user->isApp($authorization->getRoles());
+        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
@@ -197,7 +204,7 @@ class Get extends Action
 
             // when file extension is not provided and the mime type is not one of our supported outputs
             // we fallback to `jpg` output format
-            $output = empty($type) ? (array_search($mime, $outputs) ?? 'jpg') : $type;
+            $output = empty($type) ? (array_search($mime, $outputs) ?: 'jpg') : $type;
         }
 
         $startTime = \microtime(true);
@@ -238,26 +245,41 @@ class Get extends Action
             throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, $e->getMessage());
         }
 
-        $image->crop((int) $width, (int) $height, $gravity);
+        if ($width > 0 || $height > 0 || $gravity !== Image::GRAVITY_CENTER) {
+            Span::add('storage.transform.crop.width', $width);
+            Span::add('storage.transform.crop.height', $height);
+            Span::add('storage.transform.crop.gravity', $gravity);
+            $image->crop($width, $height, $gravity);
+        }
 
-        if (!empty($opacity) || $opacity === 0) {
+        if ($opacity !== 1.0) {
+            Span::add('storage.transform.opacity', $opacity);
             $image->setOpacity($opacity);
         }
 
         if (!empty($background)) {
+            Span::add('storage.transform.background', $background);
             $image->setBackground('#' . $background);
         }
 
-        if (!empty($borderWidth)) {
+        if ($borderWidth > 0) {
+            Span::add('storage.transform.border.width', $borderWidth);
+            Span::add('storage.transform.border.color', $borderColor);
             $image->setBorder($borderWidth, '#' . $borderColor);
         }
 
-        if (!empty($borderRadius)) {
+        if ($borderRadius > 0) {
+            Span::add('storage.transform.borderRadius', $borderRadius);
             $image->setBorderRadius($borderRadius);
         }
 
-        if (!empty($rotation)) {
+        if ($rotation !== 0) {
+            Span::add('storage.transform.rotation', $rotation);
             $image->setRotation(($rotation + 360) % 360);
+        }
+
+        if ($quality !== -1) {
+            Span::add('storage.transform.quality', $quality);
         }
 
         $data = $image->output($output, $quality);
@@ -266,21 +288,45 @@ class Get extends Action
 
         $totalTime = \microtime(true) - $startTime;
 
-        Console::info("File preview rendered,project=" . $project->getId() . ",bucket=" . $bucketId . ",file=" . $file->getId() . ",uri=" . $request->getURI() . ",total=" . $totalTime . ",rendering=" . $renderingTime . ",decryption=" . $decryptionTime . ",decompression=" . $decompressionTime . ",download=" . $downloadTime);
+        Span::add('storage.file.id', $file->getId());
+        Span::add('storage.bucket.id', $bucketId);
+        Span::add('storage.file.size_bytes', $file->getAttribute('sizeActual'));
+        if (!empty($type)) {
+            Span::add('storage.file.extension', $type);
+        }
+        Span::add('storage.timing.download_seconds', $downloadTime);
+        Span::add('storage.timing.decryption_seconds', $decryptionTime);
+        Span::add('storage.timing.decompression_seconds', $decompressionTime);
+        Span::add('storage.timing.rendering_seconds', $renderingTime);
+        Span::add('storage.timing.total_seconds', $totalTime);
 
         $contentType = (\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg'];
 
         //Do not update transformedAt if it's a console user
-        if (!User::isPrivileged($authorization->getRoles())) {
+        if (!$user->isPrivileged($authorization->getRoles())) {
             $transformedAt = $file->getAttribute('transformedAt', '');
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $transformedAt) {
                 $file->setAttribute('transformedAt', DateTime::now());
-                $authorization->skip(fn () => $dbForProject->updateDocument('bucket_' . $file->getAttribute('bucketInternalId'), $file->getId(), $file));
+                $authorization->skip(fn () => $dbForProject->updateDocument('bucket_' . $file->getAttribute('bucketInternalId'), $file->getId(), new Document([
+                    'transformedAt' => $file->getAttribute('transformedAt'),
+                ])));
             }
         }
 
+        $maxAge = 2592000; // 30 days
+        $cacheControl = $cacheControlForStorage(new StorageCacheControl(
+            source: CacheControl::SOURCE_ACTION,
+            user: $user,
+            maxAge: $maxAge,
+            project: $project,
+            bucket: $bucket,
+            file: $file,
+            resourceToken: $resourceToken,
+            fileSecurity: $fileSecurity,
+        ));
+
         $response
-            ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
+            ->addHeader('Cache-Control', $cacheControl)
             ->setContentType($contentType)
             ->file($data);
 

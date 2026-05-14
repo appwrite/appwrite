@@ -31,7 +31,7 @@ class Get extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/functions/:functionId/deployments/:deploymentId/download')
-            ->httpAlias('/v1/functions/:functionId/deployments/:deploymentId/build/download', ['type' => 'output'])
+            ->httpAlias('/v1/functions/:functionId/deployments/:deploymentId/build/download')
             ->groups(['api', 'functions'])
             ->desc('Get deployment download')
             ->label('scope', 'functions.read')
@@ -88,16 +88,11 @@ class Get extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        switch ($type) {
-            case 'output':
-                $path = $deployment->getAttribute('buildPath', '');
-                $device = $deviceForBuilds;
-                break;
-            case 'source':
-                $path = $deployment->getAttribute('sourcePath', '');
-                $device = $deviceForFunctions;
-                break;
-        }
+        [$path, $device] = match ($type) {
+            'output' => [$deployment->getAttribute('buildPath', ''), $deviceForBuilds],
+            'source' => [$deployment->getAttribute('sourcePath', ''), $deviceForFunctions],
+            default => throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid deployment download type.'),
+        };
 
         if (!$device->exists($path)) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);

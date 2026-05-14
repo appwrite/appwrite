@@ -15,7 +15,6 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
-use Appwrite\Network\Validator\Email as EmailValidator;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
@@ -60,6 +59,7 @@ use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
 use Utopia\Emails\Email;
+use Utopia\Emails\Validator\Email as EmailValidator;
 use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 use Utopia\System\System;
@@ -73,7 +73,7 @@ use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
 /** TODO: Remove function when we move to using utopia/platform */
-function createUser(Hash $hash, string $userId, ?string $email, ?string $password, ?string $phone, ?string $name, Document $project, Database $dbForProject, Hooks $hooks): Document
+function createUser(Hash $hash, string $userId, ?string $email, ?string $password, ?string $phone, ?string $name, Document $project, Database $dbForProject, Hooks $hooks, array $plan): Document
 {
     $name = $name ?? '';
     $plaintextPassword = $password;
@@ -110,11 +110,39 @@ function createUser(Hash $hash, string $userId, ?string $email, ?string $passwor
             }
         }
 
+        $emailMetadata = [
+            'emailCanonical' => null,
+            'emailIsCanonical' => null,
+            'emailIsCorporate' => null,
+            'emailIsDisposable' => null,
+            'emailIsFree' => null,
+        ];
+
         try {
-            $emailCanonical = new Email($email);
-        } catch (Throwable) {
-            $emailCanonical = null;
+            $parsedEmail = new Email($email ?? '');
+            $canonical = $parsedEmail->getCanonical();
+            $emailMetadata = [
+                'emailCanonical' => $canonical,
+                'emailIsCanonical' => $parsedEmail->get() === $canonical,
+                'emailIsCorporate' => $parsedEmail->isCorporate(),
+                'emailIsDisposable' => $parsedEmail->isDisposable(),
+                'emailIsFree' => $parsedEmail->isFree(),
+            ];
+        } catch (\Throwable) {
         }
+
+        if ((($project->getId() === 'console') || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && ($emailMetadata['emailIsDisposable'] ?? false)) {
+            throw new Exception(Exception::USER_EMAIL_DISPOSABLE);
+        }
+
+        if ((($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && ($emailMetadata['emailIsCanonical'] ?? true) === false) {
+            throw new Exception(Exception::USER_EMAIL_NOT_CANONICAL);
+        }
+
+        if ((($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && ($emailMetadata['emailIsFree'] ?? false)) {
+            throw new Exception(Exception::USER_EMAIL_FREE);
+        }
+
         $hashedPassword = null;
 
         $isHashed = !$hash instanceof Plaintext;
@@ -159,11 +187,11 @@ function createUser(Hash $hash, string $userId, ?string $email, ?string $passwor
             'tokens' => null,
             'memberships' => null,
             'search' => implode(' ', [$userId, $email, $phone, $name]),
-            'emailCanonical' => $emailCanonical?->getCanonical(),
-            'emailIsCanonical' => $emailCanonical?->isCanonicalSupported(),
-            'emailIsCorporate' => $emailCanonical?->isCorporate(),
-            'emailIsDisposable' => $emailCanonical?->isDisposable(),
-            'emailIsFree' => $emailCanonical?->isFree(),
+            'emailCanonical' => $emailMetadata['emailCanonical'],
+            'emailIsCanonical' => $emailMetadata['emailIsCanonical'],
+            'emailIsCorporate' => $emailMetadata['emailIsCorporate'],
+            'emailIsDisposable' => $emailMetadata['emailIsDisposable'],
+            'emailIsFree' => $emailMetadata['emailIsFree'],
         ]);
 
         if (!$isHashed && !empty($password)) {
@@ -256,10 +284,11 @@ Http::post('/v1/users')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('hooks')
-    ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
+    ->inject('plan')
+    ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
         $plaintext = new Plaintext();
 
-        $user = createUser($plaintext, $userId, $email, $password, $phone, $name, $project, $dbForProject, $hooks);
+        $user = createUser($plaintext, $userId, $email, $password, $phone, $name, $project, $dbForProject, $hooks, $plan);
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($user, Response::MODEL_USER);
@@ -292,11 +321,12 @@ Http::post('/v1/users/bcrypt')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('hooks')
-    ->action(function (string $userId, string $email, string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
+    ->inject('plan')
+    ->action(function (string $userId, string $email, string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
         $bcrypt = new Bcrypt();
         $bcrypt->setCost(8); // Default cost
 
-        $user = createUser($bcrypt, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
+        $user = createUser($bcrypt, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks, $plan);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -330,10 +360,11 @@ Http::post('/v1/users/md5')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('hooks')
-    ->action(function (string $userId, string $email, string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
+    ->inject('plan')
+    ->action(function (string $userId, string $email, string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
         $md5 = new MD5();
 
-        $user = createUser($md5, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
+        $user = createUser($md5, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks, $plan);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -367,10 +398,11 @@ Http::post('/v1/users/argon2')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('hooks')
-    ->action(function (string $userId, string $email, string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
+    ->inject('plan')
+    ->action(function (string $userId, string $email, string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
         $argon2 = new Argon2();
 
-        $user = createUser($argon2, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
+        $user = createUser($argon2, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks, $plan);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -405,13 +437,14 @@ Http::post('/v1/users/sha')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('hooks')
-    ->action(function (string $userId, string $email, string $password, string $passwordVersion, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
+    ->inject('plan')
+    ->action(function (string $userId, string $email, string $password, string $passwordVersion, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
         $sha = new Sha();
         if (!empty($passwordVersion)) {
             $sha->setVersion($passwordVersion);
         }
 
-        $user = createUser($sha, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
+        $user = createUser($sha, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks, $plan);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -445,10 +478,11 @@ Http::post('/v1/users/phpass')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('hooks')
-    ->action(function (string $userId, string $email, string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
+    ->inject('plan')
+    ->action(function (string $userId, string $email, string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
         $phpass = new PHPass();
 
-        $user = createUser($phpass, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
+        $user = createUser($phpass, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks, $plan);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -487,7 +521,8 @@ Http::post('/v1/users/scrypt')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('hooks')
-    ->action(function (string $userId, string $email, string $password, string $passwordSalt, int $passwordCpu, int $passwordMemory, int $passwordParallel, int $passwordLength, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
+    ->inject('plan')
+    ->action(function (string $userId, string $email, string $password, string $passwordSalt, int $passwordCpu, int $passwordMemory, int $passwordParallel, int $passwordLength, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
         $scrypt = new Scrypt();
         $scrypt
             ->setSalt($passwordSalt)
@@ -496,7 +531,7 @@ Http::post('/v1/users/scrypt')
             ->setParallelCost($passwordParallel)
             ->setLength($passwordLength);
 
-        $user = createUser($scrypt, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
+        $user = createUser($scrypt, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks, $plan);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -533,14 +568,15 @@ Http::post('/v1/users/scrypt-modified')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('hooks')
-    ->action(function (string $userId, string $email, string $password, string $passwordSalt, string $passwordSaltSeparator, string $passwordSignerKey, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
+    ->inject('plan')
+    ->action(function (string $userId, string $email, string $password, string $passwordSalt, string $passwordSaltSeparator, string $passwordSignerKey, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
         $scryptModified = new ScryptModified();
         $scryptModified
             ->setSalt($passwordSalt)
             ->setSaltSeparator($passwordSaltSeparator)
             ->setSignerKey($passwordSignerKey);
 
-        $user = createUser($scryptModified, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
+        $user = createUser($scryptModified, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks, $plan);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -820,7 +856,7 @@ Http::get('/v1/users/:userId/targets/:targetId')
 Http::get('/v1/users/:userId/sessions')
     ->desc('List user sessions')
     ->groups(['api', 'users'])
-    ->label('scope', 'users.read')
+    ->label('scope', ['users.read', 'sessions.read'])
     ->label('sdk', new Method(
         namespace: 'users',
         group: 'sessions',
@@ -972,6 +1008,8 @@ Http::get('/v1/users/:userId/logs')
                 'userId' => ID::custom($log['data']['userId']),
                 'userEmail' => $log['data']['userEmail'] ?? null,
                 'userName' => $log['data']['userName'] ?? null,
+                'mode' => $log['data']['mode'] ?? null,
+                'userType' => $log['data']['userType'] ?? null,
                 'ip' => $log['ip'],
                 'time' => $log['time'],
                 'osCode' => $os['osCode'],
@@ -1212,6 +1250,47 @@ Http::put('/v1/users/:userId/labels')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
+Http::patch('/v1/users/:userId/impersonator')
+    ->desc('Update user impersonator capability')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.[userId].update.impersonator')
+    ->label('scope', 'users.write')
+    ->label('audits.event', 'user.update')
+    ->label('audits.resource', 'user/{response.$id}')
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'users',
+        name: 'updateImpersonator',
+        description: '/docs/references/users/update-user-impersonator.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USER,
+            )
+        ]
+    ))
+    ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
+    ->param('impersonator', false, new Boolean(true), 'Whether the user can impersonate other users. When true, the user can browse project users to choose a target and can pass impersonation headers to act as that user. Internal audit logs still attribute impersonated actions to the original impersonator and store the target user details only in internal audit payload data.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('queueForEvents')
+    ->action(function (string $userId, bool $impersonator, Response $response, Database $dbForProject, Event $queueForEvents) {
+
+        $user = $dbForProject->getDocument('users', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['impersonator' => $impersonator]));
+
+        $queueForEvents
+            ->setParam('userId', $user->getId());
+
+        $response->dynamic($user, Response::MODEL_USER);
+    });
+
 Http::patch('/v1/users/:userId/verification/phone')
     ->desc('Update phone verification')
     ->groups(['api', 'users'])
@@ -1429,8 +1508,10 @@ Http::patch('/v1/users/:userId/email')
     ->param('email', '', new EmailValidator(allowEmpty: true), 'User email.')
     ->inject('response')
     ->inject('dbForProject')
+    ->inject('project')
+    ->inject('plan')
     ->inject('queueForEvents')
-    ->action(function (string $userId, string $email, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $userId, string $email, Response $response, Database $dbForProject, Document $project, array $plan, Event $queueForEvents) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -1454,27 +1535,54 @@ Http::patch('/v1/users/:userId/email')
                 Query::equal('identifier', [$email]),
             ]);
 
-            if ($target instanceof Document && !$target->isEmpty()) {
+            if (!$target->isEmpty()) {
                 throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
             }
         }
 
         $oldEmail = $user->getAttribute('email');
 
+        $emailMetadata = [
+            'emailCanonical' => null,
+            'emailIsCanonical' => null,
+            'emailIsCorporate' => null,
+            'emailIsDisposable' => null,
+            'emailIsFree' => null,
+        ];
+
         try {
-            $emailCanonical = new Email($email);
-        } catch (Throwable) {
-            $emailCanonical = null;
+            $parsedEmail = new Email($email);
+            $canonical = $parsedEmail->getCanonical();
+            $emailMetadata = [
+                'emailCanonical' => $canonical,
+                'emailIsCanonical' => $parsedEmail->get() === $canonical,
+                'emailIsCorporate' => $parsedEmail->isCorporate(),
+                'emailIsDisposable' => $parsedEmail->isDisposable(),
+                'emailIsFree' => $parsedEmail->isFree(),
+            ];
+        } catch (\Throwable) {
+        }
+
+        if ((($project->getId() === 'console') || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && ($emailMetadata['emailIsDisposable'] ?? false)) {
+            throw new Exception(Exception::USER_EMAIL_DISPOSABLE);
+        }
+
+        if ((($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && ($emailMetadata['emailIsCanonical'] ?? true) === false) {
+            throw new Exception(Exception::USER_EMAIL_NOT_CANONICAL);
+        }
+
+        if ((($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && ($emailMetadata['emailIsFree'] ?? false)) {
+            throw new Exception(Exception::USER_EMAIL_FREE);
         }
 
         $user
             ->setAttribute('email', $email)
             ->setAttribute('emailVerification', false)
-            ->setAttribute('emailCanonical', $emailCanonical?->getCanonical())
-            ->setAttribute('emailIsCanonical', $emailCanonical?->isCanonicalSupported())
-            ->setAttribute('emailIsCorporate', $emailCanonical?->isCorporate())
-            ->setAttribute('emailIsDisposable', $emailCanonical?->isDisposable())
-            ->setAttribute('emailIsFree', $emailCanonical?->isFree())
+            ->setAttribute('emailCanonical', $emailMetadata['emailCanonical'])
+            ->setAttribute('emailIsCanonical', $emailMetadata['emailIsCanonical'])
+            ->setAttribute('emailIsCorporate', $emailMetadata['emailIsCorporate'])
+            ->setAttribute('emailIsDisposable', $emailMetadata['emailIsDisposable'])
+            ->setAttribute('emailIsFree', $emailMetadata['emailIsFree'])
         ;
 
         try {
@@ -1487,9 +1595,6 @@ Http::patch('/v1/users/:userId/email')
                 'emailIsDisposable' => $user->getAttribute('emailIsDisposable'),
                 'emailIsFree' => $user->getAttribute('emailIsFree'),
             ]));
-            /**
-             * @var Document $oldTarget
-             */
             $oldTarget = $user->find('identifier', $oldEmail, 'targets');
 
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
@@ -1573,7 +1678,7 @@ Http::patch('/v1/users/:userId/phone')
                 Query::equal('identifier', [$number]),
             ]);
 
-            if ($target instanceof Document && !$target->isEmpty()) {
+            if (!$target->isEmpty()) {
                 throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
             }
         }
@@ -1583,9 +1688,6 @@ Http::patch('/v1/users/:userId/phone')
                 'phone' => $phoneValue,
                 'phoneVerification' => $user->getAttribute('phoneVerification'),
             ]));
-            /**
-             * @var Document $oldTarget
-             */
             $oldTarget = $user->find('identifier', $oldPhone, 'targets');
 
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
@@ -2144,8 +2246,8 @@ Http::delete('/v1/users/:userId/mfa/authenticators/:type')
     ->label('event', 'users.[userId].delete.mfa')
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.update')
-    ->label('audits.resource', 'user/{response.$id}')
-    ->label('audits.userId', '{response.$id}')
+    ->label('audits.resource', 'user/{request.userId}')
+    ->label('audits.userId', '{request.userId}')
     ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk', [
         new Method(
@@ -2212,7 +2314,7 @@ Http::post('/v1/users/:userId/sessions')
     ->desc('Create session')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].sessions.[sessionId].create')
-    ->label('scope', 'users.write')
+    ->label('scope', ['users.write', 'sessions.write'])
     ->label('audits.event', 'session.create')
     ->label('audits.resource', 'user/{request.userId}')
     ->label('usage.metric', 'sessions.{scope}.requests.create')
@@ -2296,9 +2398,8 @@ Http::post('/v1/users/:userId/sessions')
             ->setParam('sessionId', $session->getId())
             ->setPayload($response->output($session, Response::MODEL_SESSION));
 
-        return $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($session, Response::MODEL_SESSION);
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($session, Response::MODEL_SESSION);
     });
 
 Http::post('/v1/users/:userId/tokens')
@@ -2361,16 +2462,15 @@ Http::post('/v1/users/:userId/tokens')
             ->setParam('tokenId', $token->getId())
             ->setPayload($response->output($token, Response::MODEL_TOKEN));
 
-        return $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($token, Response::MODEL_TOKEN);
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($token, Response::MODEL_TOKEN);
     });
 
 Http::delete('/v1/users/:userId/sessions/:sessionId')
     ->desc('Delete user session')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].sessions.[sessionId].delete')
-    ->label('scope', 'users.write')
+    ->label('scope', ['users.write', 'sessions.write'])
     ->label('audits.event', 'session.delete')
     ->label('audits.resource', 'user/{request.userId}')
     ->label('sdk', new Method(
@@ -2421,7 +2521,7 @@ Http::delete('/v1/users/:userId/sessions')
     ->desc('Delete user sessions')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].sessions.delete')
-    ->label('scope', 'users.write')
+    ->label('scope', ['users.write', 'sessions.write'])
     ->label('audits.event', 'session.delete')
     ->label('audits.resource', 'user/{user.$id}')
     ->label('sdk', new Method(
@@ -2617,7 +2717,7 @@ Http::delete('/v1/users/identities/:identityId')
             ->setParam('identityId', $identity->getId())
             ->setPayload($response->output($identity, Response::MODEL_IDENTITY));
 
-        return $response->noContent();
+        $response->noContent();
     });
 
 Http::post('/v1/users/:userId/jwts')
@@ -2736,6 +2836,7 @@ Http::get('/v1/users/usage')
         $format = match ($days['period']) {
             '1h' => 'Y-m-d\TH:00:00.000P',
             '1d' => 'Y-m-d\T00:00:00.000P',
+            default => throw new \LogicException('Unsupported period: ' . $days['period']),
         };
 
         foreach ($metrics as $metric) {

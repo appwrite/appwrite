@@ -31,9 +31,6 @@ class FunctionUseCases
     public const DEV_TOOLS = 'dev-tools';
     public const AUTH = 'auth';
 
-    /**
-     * @var array<string>
-     */
     public static function getAll(): array
     {
         return [
@@ -82,12 +79,13 @@ return [
             ...getRuntimes($templateRuntimes['DENO'], 'deno cache src/main.ts', 'src/main.ts', 'deno/starter', $allowList),
             ...getRuntimes($templateRuntimes['BUN'], 'bun install', 'src/main.ts', 'bun/starter', $allowList),
             ...getRuntimes($templateRuntimes['RUBY'], 'bundle install', 'lib/main.rb', 'ruby/starter', $allowList),
+            ...getRuntimes($templateRuntimes['RUST'], '', 'main.rs', 'rust/starter', $allowList),
         ],
-        'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/starter">file</a>.',
+        'instructions' => 'For documentation and instructions check out the <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates">templates repository</a>.',
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.2.*',
+        'providerVersion' => '0.3.*',
         'variables' => [],
         'scopes' => ['users.read']
     ],

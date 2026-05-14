@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\Network\Validator\Redirect;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Specification\Format\OpenAPI3;
@@ -18,6 +19,8 @@ use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\DI\Container;
 use Utopia\Http\Http;
 use Utopia\Http\Request as UtopiaRequest;
 use Utopia\Http\Response as UtopiaResponse;
@@ -159,7 +162,31 @@ class Specs extends Action
                     'name' => 'X-Appwrite-Dev-Key',
                     'description' => 'Your secret dev API key',
                     'in' => 'header',
-                ]
+                ],
+                'Cookie' => [
+                    'type' => 'apiKey',
+                    'name' => 'Cookie',
+                    'description' => 'The user cookie to authenticate with. Used by SDKs that forward an incoming Cookie header in server-side runtimes.',
+                    'in' => 'header',
+                ],
+                'ImpersonateUserId' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Impersonate-User-Id',
+                    'description' => 'Impersonate a user by ID on an already user-authenticated request. Requires the current request to be authenticated as a user with impersonator capability; X-Appwrite-Key alone is not sufficient. Impersonator users are intentionally granted users.read so they can discover a target before impersonation begins. Internal audit logs still attribute actions to the original impersonator and record the impersonated target only in internal audit payload data.',
+                    'in' => 'header',
+                ],
+                'ImpersonateUserEmail' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Impersonate-User-Email',
+                    'description' => 'Impersonate a user by email on an already user-authenticated request. Requires the current request to be authenticated as a user with impersonator capability; X-Appwrite-Key alone is not sufficient. Impersonator users are intentionally granted users.read so they can discover a target before impersonation begins. Internal audit logs still attribute actions to the original impersonator and record the impersonated target only in internal audit payload data.',
+                    'in' => 'header',
+                ],
+                'ImpersonateUserPhone' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Impersonate-User-Phone',
+                    'description' => 'Impersonate a user by phone on an already user-authenticated request. Requires the current request to be authenticated as a user with impersonator capability; X-Appwrite-Key alone is not sufficient. Impersonator users are intentionally granted users.read so they can discover a target before impersonation begins. Internal audit logs still attribute actions to the original impersonator and record the impersonated target only in internal audit payload data.',
+                    'in' => 'header',
+                ],
             ],
             APP_SDK_PLATFORM_SERVER => [
                 'Project' => [
@@ -198,6 +225,36 @@ class Specs extends Action
                     'description' => 'The user agent string of the client that made the request',
                     'in' => 'header',
                 ],
+                'DevKey' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Dev-Key',
+                    'description' => 'Your secret dev API key',
+                    'in' => 'header',
+                ],
+                'Cookie' => [
+                    'type' => 'apiKey',
+                    'name' => 'Cookie',
+                    'description' => 'The user cookie to authenticate with. Used by SDKs that forward an incoming Cookie header in server-side runtimes.',
+                    'in' => 'header',
+                ],
+                'ImpersonateUserId' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Impersonate-User-Id',
+                    'description' => 'Impersonate a user by ID on an already user-authenticated request. Requires the current request to be authenticated as a user with impersonator capability; X-Appwrite-Key alone is not sufficient. Impersonator users are intentionally granted users.read so they can discover a target before impersonation begins. Internal audit logs still attribute actions to the original impersonator and record the impersonated target only in internal audit payload data.',
+                    'in' => 'header',
+                ],
+                'ImpersonateUserEmail' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Impersonate-User-Email',
+                    'description' => 'Impersonate a user by email on an already user-authenticated request. Requires the current request to be authenticated as a user with impersonator capability; X-Appwrite-Key alone is not sufficient. Impersonator users are intentionally granted users.read so they can discover a target before impersonation begins. Internal audit logs still attribute actions to the original impersonator and record the impersonated target only in internal audit payload data.',
+                    'in' => 'header',
+                ],
+                'ImpersonateUserPhone' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Impersonate-User-Phone',
+                    'description' => 'Impersonate a user by phone on an already user-authenticated request. Requires the current request to be authenticated as a user with impersonator capability; X-Appwrite-Key alone is not sufficient. Impersonator users are intentionally granted users.read so they can discover a target before impersonation begins. Internal audit logs still attribute actions to the original impersonator and record the impersonated target only in internal audit payload data.',
+                    'in' => 'header',
+                ],
             ],
             APP_SDK_PLATFORM_CONSOLE => [
                 'Project' => [
@@ -233,11 +290,185 @@ class Specs extends Action
                 'Cookie' => [
                     'type' => 'apiKey',
                     'name' => 'Cookie',
-                    'description' => 'The user cookie to authenticate with',
+                    'description' => 'The user cookie to authenticate with. Used by SDKs that forward an incoming Cookie header in server-side runtimes.',
+                    'in' => 'header',
+                ],
+                'Session' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Session',
+                    'description' => 'The user session to authenticate with',
+                    'in' => 'header',
+                ],
+                'DevKey' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Dev-Key',
+                    'description' => 'Your secret dev API key',
+                    'in' => 'header',
+                ],
+                'ImpersonateUserId' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Impersonate-User-Id',
+                    'description' => 'Impersonate a user by ID on an already user-authenticated request. Requires the current request to be authenticated as a user with impersonator capability; X-Appwrite-Key alone is not sufficient. Impersonator users are intentionally granted users.read so they can discover a target before impersonation begins. Internal audit logs still attribute actions to the original impersonator and record the impersonated target only in internal audit payload data.',
+                    'in' => 'header',
+                ],
+                'ImpersonateUserEmail' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Impersonate-User-Email',
+                    'description' => 'Impersonate a user by email on an already user-authenticated request. Requires the current request to be authenticated as a user with impersonator capability; X-Appwrite-Key alone is not sufficient. Impersonator users are intentionally granted users.read so they can discover a target before impersonation begins. Internal audit logs still attribute actions to the original impersonator and record the impersonated target only in internal audit payload data.',
+                    'in' => 'header',
+                ],
+                'ImpersonateUserPhone' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Impersonate-User-Phone',
+                    'description' => 'Impersonate a user by phone on an already user-authenticated request. Requires the current request to be authenticated as a user with impersonator capability; X-Appwrite-Key alone is not sufficient. Impersonator users are intentionally granted users.read so they can discover a target before impersonation begins. Internal audit logs still attribute actions to the original impersonator and record the impersonated target only in internal audit payload data.',
                     'in' => 'header',
                 ],
             ],
         ];
+    }
+
+    protected function verifyParsedSpec(array $spec): void
+    {
+        $services = [];
+        foreach ($spec['tags'] ?? [] as $tag) {
+            if (!\is_array($tag)) {
+                continue;
+            }
+
+            $service = $tag['name'] ?? null;
+            if (!\is_string($service) || $service === '') {
+                continue;
+            }
+
+            $services[$this->normalizeSdkName($service)] = $service;
+        }
+
+        if (empty($services)) {
+            return;
+        }
+
+        $enums = [];
+        $this->collectSpecEnumNames($spec, $enums);
+
+        if (empty($enums)) {
+            return;
+        }
+
+        $overlaps = [];
+        foreach ($services as $normalized => $service) {
+            if (!isset($enums[$normalized])) {
+                continue;
+            }
+
+            foreach ($enums[$normalized] as $enum) {
+                $overlaps[] = "service '{$service}' with enum '{$enum}'";
+            }
+        }
+
+        if (!empty($overlaps)) {
+            throw new \RuntimeException(
+                'Spec service names must not overlap enum names. Overlaps: '
+                . \implode(', ', \array_unique($overlaps))
+            );
+        }
+    }
+
+    private function collectSpecEnumNames(array $node, array &$enums, ?string $fallbackName = null, bool $skipCurrentEnum = false): void
+    {
+        if (!$skipCurrentEnum && isset($node['enum']) && \is_array($node['enum'])) {
+            $enumName = $this->getExplicitSpecEnumName($node)
+                ?? $this->getFallbackSpecEnumName($node, $fallbackName);
+
+            if (!\is_null($enumName)) {
+                $this->addSpecEnumName($enums, $enumName);
+            }
+        }
+
+        $itemsEnumHandled = false;
+        if (
+            isset($node['items'])
+            && \is_array($node['items'])
+            && isset($node['items']['enum'])
+            && \is_array($node['items']['enum'])
+        ) {
+            $enumName = $this->getExplicitSpecEnumName($node['items'])
+                ?? $this->getExplicitSpecEnumName($node)
+                ?? $this->getFallbackSpecEnumName($node, $fallbackName);
+
+            if (!\is_null($enumName)) {
+                $this->addSpecEnumName($enums, $enumName);
+            }
+
+            $itemsEnumHandled = true;
+        }
+
+        $explicitEnumName = $this->getExplicitSpecEnumName($node);
+        if (!\is_null($explicitEnumName) && !isset($node['enum']) && !$itemsEnumHandled) {
+            $this->addSpecEnumName($enums, $explicitEnumName);
+        }
+
+        foreach ($node as $key => $value) {
+            if (!\is_array($value)) {
+                continue;
+            }
+
+            $this->collectSpecEnumNames(
+                $value,
+                $enums,
+                $this->getChildSpecEnumFallbackName($node, $key, $value, $fallbackName),
+                $key === 'items' && $itemsEnumHandled
+            );
+        }
+    }
+
+    private function addSpecEnumName(array &$enums, string $name): void
+    {
+        $enums[$this->normalizeSdkName($name)][] = $this->formatSdkName($name);
+    }
+
+    private function getExplicitSpecEnumName(array $node): ?string
+    {
+        $enumName = $node['x-enum-name'] ?? null;
+
+        return \is_string($enumName) && $enumName !== '' ? $enumName : null;
+    }
+
+    private function getFallbackSpecEnumName(array $node, ?string $fallbackName): ?string
+    {
+        $name = $node['name'] ?? $fallbackName;
+
+        return \is_string($name) && $name !== '' ? $name : null;
+    }
+
+    private function getChildSpecEnumFallbackName(
+        array $parent,
+        int|string $key,
+        array $child,
+        ?string $fallbackName
+    ): ?string {
+        if (isset($child['name']) && \is_string($child['name']) && $child['name'] !== '') {
+            return $child['name'];
+        }
+
+        if ($key === 'schema' || $key === 'items') {
+            return $this->getFallbackSpecEnumName($parent, $fallbackName);
+        }
+
+        if (\is_string($key) && !\in_array($key, ['components', 'content', 'definitions', 'delete', 'get', 'head', 'options', 'parameters', 'patch', 'paths', 'post', 'properties', 'put', 'responses'], true)) {
+            return $key;
+        }
+
+        return $fallbackName;
+    }
+
+    private function formatSdkName(string $name): string
+    {
+        return \str_replace(' ', '', \ucwords(\str_replace(['-', '_', '/'], ' ', $name)));
+    }
+
+    private function normalizeSdkName(string $name): string
+    {
+        return \strtolower((string) \preg_replace('/[^a-z0-9]/i', '', $name));
     }
 
     public function getSDKPlatformsForRouteSecurity(array $routeSecurity): array
@@ -282,17 +513,30 @@ class Specs extends Action
 
         $mocks = ($mode === 'mocks');
 
-        // Mock dependencies
-        Http::setResource('request', fn () => $this->getRequest());
-        Http::setResource('response', fn () => $response);
-        Http::setResource('dbForPlatform', fn () => new Database(new MySQL(''), new Cache(new None())));
-        Http::setResource('dbForProject', fn () => new Database(new MySQL(''), new Cache(new None())));
+        // Mock dependencies needed by param validator injections in route definitions
+        $specsContainer = new Container();
+        $specsContainer->set('request', fn () => $this->getRequest());
+        $specsContainer->set('response', fn () => $response);
+        $specsContainer->set('dbForPlatform', fn () => new Database(new MySQL(''), new Cache(new None())));
+        $specsContainer->set('dbForProject', fn () => new Database(new MySQL(''), new Cache(new None())));
+        $specsContainer->set('redirectValidator', fn () => new Redirect([], []));
+        $specsContainer->set('project', fn () => new Document([]));
+        $specsContainer->set('passwordsDictionary', fn () => []);
+        $specsContainer->set('localeCodes', fn () => \array_map(fn ($locale) => $locale['code'], Config::getParam('locale-codes', [])));
+        $specsContainer->set('plan', fn () => []);
 
         $platforms = static::getPlatforms();
         $authCounts = $this->getAuthCounts();
         $keys = $this->getKeys();
 
         $generatedFiles = [];
+        $endpoint = System::getEnv('_APP_HOME', 'https://appwrite.io');
+        $email = System::getEnv('_APP_SYSTEM_TEAM_EMAIL', 'team@appwrite.io');
+        $specsDir = __DIR__ . '/../../../../app/config/specs';
+
+        if (!is_dir($specsDir) && !@mkdir($specsDir, 0755, true) && !is_dir($specsDir)) {
+            throw new Exception('Failed to create specs directory: ' . $specsDir);
+        }
 
         foreach ($platforms as $platform) {
             $routes = [];
@@ -377,7 +621,7 @@ class Specs extends Action
             }
 
             $arguments = [
-                new Http('UTC'),
+                $specsContainer,
                 $services,
                 $routes,
                 $models,
@@ -389,8 +633,6 @@ class Specs extends Action
             foreach (['swagger2', 'open-api3'] as $format) {
                 $formatInstance = $this->getFormatInstance($format, $arguments);
                 $specs = new Specification($formatInstance);
-                $endpoint = System::getEnv('_APP_HOME', '[HOSTNAME]');
-                $email = System::getEnv('_APP_SYSTEM_TEAM_EMAIL', APP_EMAIL_TEAM);
 
                 $formatInstance
                     ->setParam('name', APP_NAME)
@@ -409,36 +651,36 @@ class Specs extends Action
                     ->setParam('docs.description', 'Full API docs, specs and tutorials')
                     ->setParam('docs.url', $endpoint . '/docs');
 
-                $specsDir = __DIR__ . '/../../../../app/config/specs';
+                $path = $mocks
+                    ? $specsDir . '/' . $format . '-mocks-' . $platform . '.json'
+                    : $specsDir . '/' . $format . '-' . $version . '-' . $platform . '.json';
 
-                if (!is_dir($specsDir)) {
-                    if (!mkdir($specsDir, 0755, true)) {
-                        throw new Exception('Failed to create specs directory: ' . $specsDir);
-                    }
+                try {
+                    $parsedSpecs = $specs->parse();
+                    $this->verifyParsedSpec($parsedSpecs);
+                } catch (\RuntimeException $e) {
+                    throw new \RuntimeException("Spec generation failed for {$platform} ({$format}): " . $e->getMessage(), 0, $e);
                 }
 
-                if ($mocks) {
-                    $path = $specsDir . '/' . $format . '-mocks-' . $platform . '.json';
+                $encodedSpecs = \json_encode($parsedSpecs, JSON_PRETTY_PRINT);
 
-                    if (!file_put_contents($path, json_encode($specs->parse(), JSON_PRETTY_PRINT))) {
-                        throw new Exception('Failed to save mocks spec file: ' . $path);
-                    }
+                unset($parsedSpecs);
 
-                    $generatedFiles[] = realpath($path);
-                    Console::success('Saved mocks spec file: ' . realpath($path));
-
-                    continue;
+                if ($encodedSpecs === false) {
+                    throw new Exception('Failed to encode ' . ($mocks ? 'mocks ' : '') . 'spec file: ' . \json_last_error_msg());
                 }
 
-                $path = $specsDir . '/' . $format . '-' . $version . '-' . $platform . '.json';
-
-                if (!file_put_contents($path, json_encode($specs->parse(), JSON_PRETTY_PRINT))) {
-                    throw new Exception('Failed to save spec file: ' . $path);
+                if (\file_put_contents($path, $encodedSpecs) === false) {
+                    throw new Exception('Failed to save ' . ($mocks ? 'mocks ' : '') . 'spec file: ' . $path);
                 }
 
                 $generatedFiles[] = realpath($path);
-                Console::success('Saved spec file: ' . realpath($path));
+                Console::success('Saved ' . ($mocks ? 'mocks ' : '') . 'spec file: ' . realpath($path));
+
+                unset($encodedSpecs, $specs, $formatInstance);
             }
+
+            unset($arguments, $models, $routes, $services);
         }
 
         if ($git === 'yes') {

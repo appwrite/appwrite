@@ -12,8 +12,12 @@ $version = $this->getParam('version', '');
 $organization = $this->getParam('organization', '');
 $image = $this->getParam('image', '');
 $enableAssistant = $this->getParam('enableAssistant', false);
-$dbService = $this->getParam('database');
-
+$dbService = $this->getParam('database', 'mongodb');
+$allowedDbServices = ['mariadb', 'mongodb'];
+if (!\in_array($dbService, $allowedDbServices, true)) {
+    $dbService = 'mongodb';
+}
+$hostPath = rtrim($this->getParam('hostPath', ''), '/');
 ?>services:
   traefik:
     image: traefik:3.6
@@ -63,6 +67,9 @@ $dbService = $this->getParam('database');
       - traefik.http.routers.appwrite_api_https.service=appwrite_api
       - traefik.http.routers.appwrite_api_https.tls=true
     volumes:
+<?php if ($version === 'local' && !empty($hostPath)): ?>
+      - "<?php echo $hostPath; ?>:/usr/src/code:rw"
+<?php endif; ?>
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-imports:/storage/imports:rw
       - appwrite-cache:/storage/cache:rw
@@ -72,8 +79,10 @@ $dbService = $this->getParam('database');
       - appwrite-sites:/storage/sites:rw
       - appwrite-builds:/storage/builds:rw
     depends_on:
-      - redis
-      - <?= $dbService  . "\n" ?>
+      redis:
+        condition: service_healthy
+      <?= $dbService ?>:
+        condition: service_healthy
 #      - clamav
     environment:
       - _APP_ENV
@@ -111,7 +120,6 @@ $dbService = $this->getParam('database');
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_DB_ADAPTER
       - _APP_SMTP_HOST
       - _APP_SMTP_PORT
       - _APP_SMTP_SECURE
@@ -185,7 +193,7 @@ $dbService = $this->getParam('database');
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: <?php echo $organization; ?>/console:7.6.4
+    image: <?php echo $organization; ?>/console:7.8.26
     restart: unless-stopped
     networks:
       - appwrite
@@ -227,8 +235,10 @@ $dbService = $this->getParam('database');
     networks:
       - appwrite
     depends_on:
-      - redis
-      - <?= $dbService  . "\n" ?>
+      redis:
+        condition: service_healthy
+      <?= $dbService ?>:
+        condition: service_healthy
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -245,7 +255,6 @@ $dbService = $this->getParam('database');
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_DB_ADAPTER
       - _APP_USAGE_STATS
       - _APP_LOGGING_CONFIG
 
@@ -258,8 +267,10 @@ $dbService = $this->getParam('database');
     networks:
       - appwrite
     depends_on:
-      - redis
-      - <?= $dbService  . "\n" ?>
+      redis:
+        condition: service_healthy
+      <?= $dbService ?>:
+        condition: service_healthy
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -274,7 +285,6 @@ $dbService = $this->getParam('database');
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_DB_ADAPTER
       - _APP_LOGGING_CONFIG
 
   appwrite-worker-webhooks:
@@ -286,8 +296,10 @@ $dbService = $this->getParam('database');
     networks:
       - appwrite
     depends_on:
-      - redis
-      - <?= $dbService  . "\n" ?>
+      redis:
+        condition: service_healthy
+      <?= $dbService ?>:
+        condition: service_healthy
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -300,7 +312,6 @@ $dbService = $this->getParam('database');
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_DB_ADAPTER
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -316,8 +327,10 @@ $dbService = $this->getParam('database');
     networks:
       - appwrite
     depends_on:
-      - redis
-      - <?= $dbService  . "\n" ?>
+      redis:
+        condition: service_healthy
+      <?= $dbService ?>:
+        condition: service_healthy
     volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
@@ -339,7 +352,6 @@ $dbService = $this->getParam('database');
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_DB_ADAPTER
       - _APP_STORAGE_DEVICE
       - _APP_STORAGE_S3_ACCESS_KEY
       - _APP_STORAGE_S3_SECRET
@@ -381,8 +393,10 @@ $dbService = $this->getParam('database');
     networks:
       - appwrite
     depends_on:
-      - redis
-      - <?= $dbService  . "\n" ?>
+      redis:
+        condition: service_healthy
+      <?= $dbService ?>:
+        condition: service_healthy
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -397,7 +411,6 @@ $dbService = $this->getParam('database');
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_DB_ADAPTER
       - _APP_LOGGING_CONFIG
 
   appwrite-worker-builds:
@@ -409,8 +422,10 @@ $dbService = $this->getParam('database');
     networks:
       - appwrite
     depends_on:
-      - redis
-      - <?= $dbService  . "\n" ?>
+      redis:
+        condition: service_healthy
+      <?= $dbService ?>:
+        condition: service_healthy
     volumes:
       - appwrite-functions:/storage/functions:rw
       - appwrite-sites:/storage/sites:rw
@@ -432,7 +447,6 @@ $dbService = $this->getParam('database');
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_DB_ADAPTER
       - _APP_LOGGING_CONFIG
       - _APP_VCS_GITHUB_APP_NAME
       - _APP_VCS_GITHUB_PRIVATE_KEY
@@ -479,8 +493,10 @@ $dbService = $this->getParam('database');
     networks:
       - appwrite
     depends_on:
-      - redis
-      - <?= $dbService  . "\n" ?>
+      redis:
+        condition: service_healthy
+      <?= $dbService ?>:
+        condition: service_healthy
     volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
@@ -506,7 +522,35 @@ $dbService = $this->getParam('database');
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_LOGGING_CONFIG
+
+  appwrite-worker-executions:
+    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
+    entrypoint: worker-executions
+    <<: *x-logging
+    container_name: appwrite-worker-executions
+    restart: unless-stopped
+    networks:
+      - appwrite
+    depends_on:
+      redis:
+        condition: service_healthy
+      <?= $dbService ?>:
+        condition: service_healthy
+    environment:
+      - _APP_ENV
+      - _APP_WORKER_PER_CORE
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_ENV
       - _APP_DB_ADAPTER
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
       - _APP_LOGGING_CONFIG
 
   appwrite-worker-functions:
@@ -518,9 +562,12 @@ $dbService = $this->getParam('database');
     networks:
       - appwrite
     depends_on:
-      - redis
-      - <?= $dbService  . "\n" ?>
-      - openruntimes-executor
+      redis:
+        condition: service_healthy
+      <?= $dbService ?>:
+        condition: service_healthy
+      openruntimes-executor:
+        condition: service_started
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -537,7 +584,6 @@ $dbService = $this->getParam('database');
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_DB_ADAPTER
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_SITES_TIMEOUT
       - _APP_COMPUTE_BUILD_TIMEOUT
@@ -559,8 +605,10 @@ $dbService = $this->getParam('database');
     networks:
       - appwrite
     depends_on:
-      - redis
-      - <?= $dbService  . "\n" ?>
+      redis:
+        condition: service_healthy
+      <?= $dbService ?>:
+        condition: service_healthy
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -573,7 +621,6 @@ $dbService = $this->getParam('database');
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_DB_ADAPTER
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -598,8 +645,10 @@ $dbService = $this->getParam('database');
     volumes:
       - appwrite-uploads:/storage/uploads:rw
     depends_on:
-      - redis
-      - <?= $dbService  . "\n" ?>
+      redis:
+        condition: service_healthy
+      <?= $dbService ?>:
+        condition: service_healthy
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -614,7 +663,6 @@ $dbService = $this->getParam('database');
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_DB_ADAPTER
       - _APP_LOGGING_CONFIG
       - _APP_SMS_FROM
       - _APP_SMS_PROVIDER
@@ -652,7 +700,8 @@ $dbService = $this->getParam('database');
     volumes:
       - appwrite-imports:/storage/imports:rw
     depends_on:
-      - <?= $dbService  . "\n" ?>
+      <?= $dbService ?>:
+        condition: service_healthy
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -674,7 +723,6 @@ $dbService = $this->getParam('database');
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_DB_ADAPTER
       - _APP_LOGGING_CONFIG
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
@@ -688,8 +736,10 @@ $dbService = $this->getParam('database');
     networks:
       - appwrite
     depends_on:
-      - redis
-      - <?= $dbService  . "\n" ?>
+      redis:
+        condition: service_healthy
+      <?= $dbService ?>:
+        condition: service_healthy
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -711,7 +761,6 @@ $dbService = $this->getParam('database');
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_DB_ADAPTER
       - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_RETENTION_EXECUTION
       - _APP_MAINTENANCE_RETENTION_CACHE
@@ -730,8 +779,10 @@ $dbService = $this->getParam('database');
     networks:
       - appwrite
     depends_on:
-      - redis
-      - <?= $dbService  . "\n" ?>
+      redis:
+        condition: service_healthy
+      <?= $dbService ?>:
+        condition: service_healthy
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -742,7 +793,6 @@ $dbService = $this->getParam('database');
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_DB_ADAPTER
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -761,8 +811,10 @@ $dbService = $this->getParam('database');
     networks:
       - appwrite
     depends_on:
-      - redis
-      - <?= $dbService  . "\n" ?>
+      redis:
+        condition: service_healthy
+      <?= $dbService ?>:
+        condition: service_healthy
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -773,7 +825,6 @@ $dbService = $this->getParam('database');
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_DB_ADAPTER
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -791,8 +842,10 @@ $dbService = $this->getParam('database');
     networks:
       - appwrite
     depends_on:
-      - redis
-      - <?= $dbService  . "\n" ?>
+      redis:
+        condition: service_healthy
+      <?= $dbService ?>:
+        condition: service_healthy
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -803,7 +856,6 @@ $dbService = $this->getParam('database');
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_DB_ADAPTER
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -821,12 +873,21 @@ $dbService = $this->getParam('database');
     networks:
       - appwrite
     depends_on:
-      - <?= $dbService  . "\n" ?>
-      - redis
+      <?= $dbService ?>:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
+      - _APP_OPTIONS_FORCE_HTTPS
+      - _APP_DOMAIN
+      - _APP_CONSOLE_DOMAIN
+      - _APP_DOMAIN_FUNCTIONS
+      - _APP_DOMAIN_SITES
+      - _APP_MIGRATION_HOST
+      - _APP_CONSOLE_SCHEMA
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -837,7 +898,6 @@ $dbService = $this->getParam('database');
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_DB_ADAPTER
 
   appwrite-task-scheduler-executions:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
@@ -848,12 +908,21 @@ $dbService = $this->getParam('database');
     networks:
       - appwrite
     depends_on:
-      - <?= $dbService  . "\n" ?>
-      - redis
+      <?= $dbService ?>:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
+      - _APP_OPTIONS_FORCE_HTTPS
+      - _APP_DOMAIN
+      - _APP_CONSOLE_DOMAIN
+      - _APP_DOMAIN_FUNCTIONS
+      - _APP_DOMAIN_SITES
+      - _APP_MIGRATION_HOST
+      - _APP_CONSOLE_SCHEMA
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -864,7 +933,6 @@ $dbService = $this->getParam('database');
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_DB_ADAPTER
 
   appwrite-task-scheduler-messages:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
@@ -875,8 +943,10 @@ $dbService = $this->getParam('database');
     networks:
       - appwrite
     depends_on:
-      - <?= $dbService  . "\n" ?>
-      - redis
+      <?= $dbService ?>:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -891,7 +961,6 @@ $dbService = $this->getParam('database');
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_DB_ADAPTER
 
 <?php if ($enableAssistant): ?>
   appwrite-assistant:
@@ -919,7 +988,7 @@ $dbService = $this->getParam('database');
     <<: *x-logging
     restart: unless-stopped
     stop_signal: SIGINT
-    image: openruntimes/executor:0.7.22
+    image: openruntimes/executor:0.11.4
     networks:
       - appwrite
       - runtimes
@@ -966,7 +1035,6 @@ $dbService = $this->getParam('database');
       - OPR_EXECUTOR_STORAGE_WASABI_BUCKET=$_APP_STORAGE_WASABI_BUCKET
 
 <?php if ($dbService === 'mariadb'): ?>
-
   mariadb:
     image: mariadb:10.11
     container_name: appwrite-mariadb
@@ -982,6 +1050,12 @@ $dbService = $this->getParam('database');
       - MYSQL_PASSWORD=${_APP_DB_PASS}
       - MARIADB_AUTO_UPGRADE=1
     command: 'mysqld --innodb-flush-method=fsync'
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
 
 <?php elseif ($dbService === 'mongodb'): ?>
 
@@ -989,13 +1063,12 @@ $dbService = $this->getParam('database');
     image: mongo:8.2.5
     container_name: appwrite-mongodb
     <<: *x-logging
+    restart: unless-stopped
     networks:
       - appwrite
     volumes:
       - appwrite-mongodb:/data/db
       - appwrite-mongodb-keyfile:/data/keyfile
-    ports:
-      - "27017:27017"
     environment:
       - MONGO_INITDB_ROOT_USERNAME=root
       - MONGO_INITDB_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
@@ -1059,18 +1132,24 @@ $dbService = $this->getParam('database');
 <?php elseif ($dbService === 'postgresql'): ?>
 
   postgresql:
-    image: postgres:18
+    image: appwrite/postgres:0.1.0
     container_name: appwrite-postgresql
     restart: unless-stopped
     networks:
       - appwrite
     volumes:
-      - appwrite-postgresql:/var/lib/postgresql/data:rw
+      - appwrite-postgresql:/var/lib/postgresql:rw
     environment:
       - POSTGRES_DB=${_APP_DB_SCHEMA}
       - POSTGRES_USER=${_APP_DB_USER}
       - POSTGRES_PASSWORD=${_APP_DB_PASS}
     command: "postgres"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${_APP_DB_USER} -d ${_APP_DB_SCHEMA}"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
 
 <?php endif; ?>
 
@@ -1088,6 +1167,12 @@ $dbService = $this->getParam('database');
       - appwrite
     volumes:
       - appwrite-redis:/data:rw
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   # clamav:
   #   image: appwrite/clamav:1.2.0

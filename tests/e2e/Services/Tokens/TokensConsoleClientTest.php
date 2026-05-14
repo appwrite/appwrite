@@ -25,8 +25,8 @@ class TokensConsoleClientTest extends Scope
 
     protected function setupToken(): array
     {
-        if (!empty(static::$tokenData)) {
-            return static::$tokenData;
+        if (!empty(self::$tokenData)) {
+            return self::$tokenData;
         }
 
         $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
@@ -68,13 +68,13 @@ class TokensConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()));
 
-        static::$tokenData = [
+        self::$tokenData = [
             'fileId' => $fileId,
             'bucketId' => $bucketId,
             'tokenId' => $token['body']['$id'],
         ];
 
-        return static::$tokenData;
+        return self::$tokenData;
     }
 
     public function testCreateToken(): void
@@ -147,7 +147,6 @@ class TokensConsoleClientTest extends Scope
             $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 86400 * 365 * 10, 10); // 10 years maxAge
             try {
                 $payload = $jwt->decode($token['body']['secret']);
-                $this->assertIsArray($payload, 'JWT payload should decode to an array');
                 $this->assertArrayHasKey('tokenId', $payload, 'JWT payload should contain tokenId');
                 $this->assertArrayHasKey('resourceId', $payload, 'JWT payload should contain resourceId');
                 $this->assertArrayHasKey('resourceType', $payload, 'JWT payload should contain resourceType');
@@ -204,7 +203,6 @@ class TokensConsoleClientTest extends Scope
         $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 86400 * 365 * 10, 10); // 10 years maxAge
         try {
             $payload = $jwt->decode($token['body']['secret']);
-            $this->assertIsArray($payload, 'JWT payload should decode to an array');
             $this->assertArrayHasKey('exp', $payload, 'JWT payload should contain exp field');
 
             $expectedExp = (new \DateTime($expiry))->getTimestamp();
@@ -226,7 +224,6 @@ class TokensConsoleClientTest extends Scope
         // Verify JWT does not contain exp for infinite expiry using native JWT decode
         try {
             $payload = $jwt->decode($token['body']['secret']);
-            $this->assertIsArray($payload, 'JWT payload should decode to an array');
             $this->assertArrayNotHasKey('exp', $payload, 'JWT payload should not contain exp field for infinite expiry');
         } catch (JWTException $e) {
             $this->fail('Failed to decode JWT: ' . $e->getMessage());
@@ -265,7 +262,6 @@ class TokensConsoleClientTest extends Scope
             // Verify the JWT token is valid and contains correct information
             try {
                 $payload = $jwt->decode($token['secret']);
-                $this->assertIsArray($payload, 'JWT payload should decode to an array');
                 $this->assertArrayHasKey('tokenId', $payload, 'JWT payload should contain tokenId');
                 $this->assertArrayHasKey('resourceId', $payload, 'JWT payload should contain resourceId');
                 $this->assertArrayHasKey('resourceType', $payload, 'JWT payload should contain resourceType');

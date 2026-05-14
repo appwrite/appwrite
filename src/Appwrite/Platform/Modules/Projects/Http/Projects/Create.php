@@ -21,8 +21,6 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\UID;
 use Utopia\DSN\DSN;
 use Utopia\Platform\Scope\HTTP;
@@ -30,7 +28,6 @@ use Utopia\Pools\Group;
 use Utopia\System\System;
 use Utopia\Validator;
 use Utopia\Validator\Text;
-use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 
 class Create extends Action
@@ -74,15 +71,6 @@ class Create extends Action
             ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
             ->param('teamId', '', new UID(), 'Team unique ID.')
             ->param('region', System::getEnv('_APP_REGION', 'default'), new WhiteList(array_keys(array_filter(Config::getParam('regions'), fn ($config) => !$config['disabled']))), 'Project Region.', true)
-            ->param('description', '', new Text(256), 'Project description. Max length: 256 chars.', true)
-            ->param('logo', '', new Text(1024), 'Project logo.', true)
-            ->param('url', '', new URL(), 'Project URL.', true)
-            ->param('legalName', '', new Text(256), 'Project legal Name. Max length: 256 chars.', true)
-            ->param('legalCountry', '', new Text(256), 'Project legal Country. Max length: 256 chars.', true)
-            ->param('legalState', '', new Text(256), 'Project legal State. Max length: 256 chars.', true)
-            ->param('legalCity', '', new Text(256), 'Project legal City. Max length: 256 chars.', true)
-            ->param('legalAddress', '', new Text(256), 'Project legal Address. Max length: 256 chars.', true)
-            ->param('legalTaxId', '', new Text(256), 'Project legal Tax ID. Max length: 256 chars.', true)
             ->inject('request')
             ->inject('response')
             ->inject('dbForPlatform')
@@ -92,7 +80,7 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $projectId, string $name, string $teamId, string $region, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Request $request, Response $response, Database $dbForPlatform, Cache $cache, Group $pools, Hooks $hooks)
+    public function action(string $projectId, string $name, string $teamId, string $region, Request $request, Response $response, Database $dbForPlatform, Cache $cache, Group $pools, Hooks $hooks)
     {
         $team = $dbForPlatform->getDocument('teams', $teamId);
 
@@ -109,16 +97,21 @@ class Create extends Action
         $auth = Config::getParam('auth', []);
         $auths = [
             'limit' => 0,
-            'maxSessions' => APP_LIMIT_USER_SESSIONS_DEFAULT,
+            'maxSessions' => 0,
             'passwordHistory' => 0,
             'passwordDictionary' => false,
             'duration' => TOKEN_EXPIRATION_LOGIN_LONG,
             'personalDataCheck' => false,
+            'disposableEmails' => false,
+            'canonicalEmails' => false,
+            'freeEmails' => false,
             'mockNumbers' => [],
             'sessionAlerts' => false,
             'membershipsUserName' => false,
             'membershipsUserEmail' => false,
             'membershipsMfa' => false,
+            'membershipsUserId' => false,
+            'membershipsUserPhone' => false,
             'invalidateSessions' => true
         ];
 
@@ -172,16 +165,7 @@ class Create extends Action
                 'teamInternalId' => $team->getSequence(),
                 'teamId' => $team->getId(),
                 'region' => $region,
-                'description' => $description,
-                'logo' => $logo,
-                'url' => $url,
                 'version' => APP_VERSION_STABLE,
-                'legalName' => $legalName,
-                'legalCountry' => $legalCountry,
-                'legalState' => $legalState,
-                'legalCity' => $legalCity,
-                'legalAddress' => $legalAddress,
-                'legalTaxId' => ID::custom($legalTaxId),
                 'services' => new \stdClass(),
                 'platforms' => null,
                 'oAuthProviders' => [],
@@ -206,28 +190,16 @@ class Create extends Action
         }
 
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-        $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
         $projectTables = !\in_array($dsn->getHost(), $sharedTables);
-        $sharedTablesV1 = \in_array($dsn->getHost(), $sharedTablesV1);
-        $sharedTablesV2 = !$projectTables && !$sharedTablesV1;
-        $sharedTables = $sharedTablesV1 || $sharedTablesV2;
 
-        if (!$sharedTablesV2) {
+        if ($projectTables) {
             $adapter = new DatabasePool($pools->get($dsn->getHost()));
             $dbForProject = new Database($adapter, $cache);
-            $dbForProject->setDatabase(APP_DATABASE);
-
-            if ($sharedTables) {
-                $dbForProject
-                    ->setSharedTables(true)
-                    ->setTenant($sharedTablesV1 ? (int)$project->getSequence() : null)
-                    ->setNamespace($dsn->getParam('namespace'));
-            } else {
-                $dbForProject
-                    ->setSharedTables(false)
-                    ->setTenant(null)
-                    ->setNamespace('_' . $project->getSequence());
-            }
+            $dbForProject
+                ->setDatabase(APP_DATABASE)
+                ->setSharedTables(false)
+                ->setTenant(null)
+                ->setNamespace('_' . $project->getSequence());
 
             $create = true;
 
@@ -237,27 +209,11 @@ class Create extends Action
                 $create = false;
             }
 
-            if ($create || $projectTables) {
-                $adapter = new AdapterDatabase($dbForProject);
-                $audit = new Audit($adapter);
-                $audit->setup();
-            }
+            $adapter = new AdapterDatabase($dbForProject);
+            $audit = new Audit($adapter);
+            $audit->setup();
 
-            if (!$create && $sharedTablesV1) {
-                $adapter = new AdapterDatabase($dbForProject);
-                $attributes = $adapter->getAttributeDocuments();
-                $indexes = $adapter->getIndexDocuments();
-                $dbForProject->createDocument(Database::METADATA, new Document([
-                    '$id' => ID::custom('audit'),
-                    '$permissions' => [Permission::create(Role::any())],
-                    'name' => 'audit',
-                    'attributes' => $attributes,
-                    'indexes' => $indexes,
-                    'documentSecurity' => true
-                ]));
-            }
-
-            if ($create || $sharedTablesV1) {
+            if ($create) {
                 /** @var array $collections */
                 $collections = Config::getParam('collections', [])['projects'] ?? [];
 
@@ -272,14 +228,7 @@ class Create extends Action
                     try {
                         $dbForProject->createCollection($key, $attributes, $indexes);
                     } catch (Duplicate) {
-                        $dbForProject->createDocument(Database::METADATA, new Document([
-                            '$id' => ID::custom($key),
-                            '$permissions' => [Permission::create(Role::any())],
-                            'name' => $key,
-                            'attributes' => $attributes,
-                            'indexes' => $indexes,
-                            'documentSecurity' => true
-                        ]));
+                        // Collection already exists
                     }
                 }
             }

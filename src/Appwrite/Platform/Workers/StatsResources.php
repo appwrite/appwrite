@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\Event\Message\StatsResources as StatsResourcesMessage;
 use Appwrite\Platform\Action;
 use Exception;
 use Throwable;
@@ -67,8 +68,8 @@ class StatsResources extends Action
     {
         $this->logError = $logError;
 
-        $payload = $message->getPayload() ?? [];
-        if (empty($payload)) {
+        $statsResources = StatsResourcesMessage::fromArray($message->getPayload());
+        if ($statsResources->project->isEmpty()) {
             throw new Exception('Missing payload');
         }
 
@@ -208,7 +209,7 @@ class StatsResources extends Action
     {
         $totalFiles = 0;
         $totalStorage = 0;
-        $this->foreachDocument($dbForProject, 'buckets', [], function ($bucket) use ($dbForProject, $dbForLogs, $region, &$totalFiles, &$totalStorage) {
+        $this->foreachDocument($dbForProject, 'buckets', [], function ($bucket) use ($dbForProject, $region, &$totalFiles, &$totalStorage) {
             try {
                 $files = $dbForProject->count('bucket_' . $bucket->getSequence());
             } catch (Throwable $th) {
@@ -340,7 +341,7 @@ class StatsResources extends Action
             $databaseIdStorageMetric = $databaseType . '.' . $databaseIdStorageMetric;
         }
 
-        $this->foreachDocument($dbForProject, 'database_' . $database->getSequence(), [], function ($collection) use ($dbForProject, $dbForDatabases, $database, $region, &$databaseStorage, &$databaseDocuments, $databaseIdCollectionIdDocumentsMetric, $databaseIdCollectionIdStorageMetric) {
+        $this->foreachDocument($dbForProject, 'database_' . $database->getSequence(), [], function ($collection) use ($dbForDatabases, $database, $region, &$databaseStorage, &$databaseDocuments, $databaseIdCollectionIdDocumentsMetric, $databaseIdCollectionIdStorageMetric) {
             $documents = $dbForDatabases->count('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
             $metric = str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getSequence(), $collection->getSequence()], $databaseIdCollectionIdDocumentsMetric);
             $this->createStatsDocuments($region, $metric, $documents);

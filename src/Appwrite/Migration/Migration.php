@@ -13,6 +13,7 @@ use Utopia\Database\Exception\Limit;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\PDO;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 
 abstract class Migration
@@ -91,6 +92,12 @@ abstract class Migration
         '1.7.4' => 'V22',
         '1.8.0' => 'V23',
         '1.8.1' => 'V23',
+        '1.9.0' => 'V24',
+        '1.9.1' => 'V24',
+        '1.9.2' => 'V24',
+        '1.9.3' => 'V24',
+        '1.9.4' => 'V24',
+        '1.9.5' => 'V24',
     ];
 
     /**
@@ -201,6 +208,30 @@ abstract class Migration
                 }
             });
         }
+    }
+
+    /**
+     * @param array<Query> $queries
+     * @return \Generator<int, Document>
+     * @throws Exception
+     */
+    protected function documentsIterator(string $collection, array $queries = []): \Generator
+    {
+        $offset = 0;
+
+        do {
+            $documents = $this->dbForProject->find($collection, [
+                ...$queries,
+                Query::limit($this->limit),
+                Query::offset($offset),
+            ]);
+
+            foreach ($documents as $document) {
+                yield $document;
+            }
+
+            $offset += \count($documents);
+        } while (\count($documents) === $this->limit);
     }
 
     /**

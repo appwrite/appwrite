@@ -2,8 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Proxy\Http\Rules\Redirect;
 
-use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Proxy\Action;
 use Appwrite\SDK\AuthType;
@@ -14,6 +14,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Logger\Log;
 use Utopia\Platform\Scope\HTTP;
@@ -46,12 +47,14 @@ class Create extends Action
             ->label('audits.resource', 'rule/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'proxy',
-                group: null,
+                group: 'rules',
                 name: 'createRedirectRule',
                 description: <<<EOT
                 Create a new proxy rule for to redirect from custom domain to another domain.
+
+                Rule ID is automatically generated as MD5 hash of a rule domain for performance purposes.
                 EOT,
-                auth: [AuthType::ADMIN],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,
@@ -69,22 +72,39 @@ class Create extends Action
             ->param('resourceType', '', new WhiteList(['site', 'function']), 'Type of parent resource.')
             ->inject('response')
             ->inject('project')
-            ->inject('queueForCertificates')
+            ->inject('publisherForCertificates')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
             ->inject('dbForProject')
             ->inject('platform')
             ->inject('log')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $domain, string $url, int $statusCode, string $resourceId, string $resourceType, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForPlatform, Database $dbForProject, array $platform, Log $log)
-    {
+    public function action(
+        string $domain,
+        string $url,
+        int $statusCode,
+        string $resourceId,
+        string $resourceType,
+        Response $response,
+        Document $project,
+        Certificate $publisherForCertificates,
+        Event $queueForEvents,
+        Database $dbForPlatform,
+        Database $dbForProject,
+        array $platform,
+        Log $log,
+        Authorization $authorization,
+    ) {
+
         $this->validateDomainRestrictions($domain, $platform);
 
         $collection = match ($resourceType) {
             'site' => 'sites',
-            'function' => 'functions'
+            'function' => 'functions',
+            default => throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid resource type: ' . $resourceType),
         };
         $resource = $dbForProject->getDocument($collection, $resourceId);
         if ($resource->isEmpty()) {
@@ -130,22 +150,30 @@ class Create extends Action
         }
 
         try {
-            $rule = $dbForPlatform->createDocument('rules', $rule);
+            $rule = $authorization->skip(fn () => $dbForPlatform->createDocument('rules', $rule));
         } catch (Duplicate $e) {
             throw new Exception(Exception::RULE_ALREADY_EXISTS);
         }
 
         if ($rule->getAttribute('status', '') === RULE_STATUS_CERTIFICATE_GENERATING) {
-            $queueForCertificates
-                ->setDomain(new Document([
+            $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(
+                project: $project,
+                domain: new Document([
                     'domain' => $rule->getAttribute('domain'),
                     'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
-                ]))
-                ->setAction(Certificate::ACTION_GENERATION)
-                ->trigger();
+                ]),
+                action: \Appwrite\Event\Certificate::ACTION_GENERATION,
+            ));
         }
 
         $queueForEvents->setParam('ruleId', $rule->getId());
+
+        // Rename 'created' status to 'unverified' for consistency.
+        // 'verifying' and 'verified' statuses stay as is.
+        // 'unverified' in the meaning of failed certificate generation stays as is.
+        if ($rule->getAttribute('status') === 'created') {
+            $rule->setAttribute('status', 'unverified');
+        }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)

@@ -137,8 +137,8 @@ trait ProjectCustom
                     'functions.write',
                     'sites.read',
                     'sites.write',
-                    'execution.read',
-                    'execution.write',
+                    'executions.read',
+                    'executions.write',
                     'log.read',
                     'log.write',
                     'locale.read',
@@ -161,6 +161,26 @@ trait ProjectCustom
                     'migrations.read',
                     'tokens.read',
                     'tokens.write',
+                    'webhooks.read',
+                    'webhooks.write',
+                    'project.read',
+                    'project.write',
+                    'keys.read',
+                    'keys.write',
+                    'platforms.read',
+                    'platforms.write',
+                    'oauth2.read',
+                    'oauth2.write',
+                    'mocks.read',
+                    'mocks.write',
+                    'project.policies.read',
+                    'project.policies.write',
+                    'templates.read',
+                    'templates.write',
+                    'insights.read',
+                    'insights.write',
+                    'reports.read',
+                    'reports.write',
                 ],
             ]);
 
@@ -191,12 +211,14 @@ trait ProjectCustom
         $this->assertNotEmpty($devKey['body']);
         $this->assertNotEmpty($devKey['body']['secret']);
 
-        $webhook = $this->client->call(Client::METHOD_POST, '/projects/' . $project['body']['$id'] . '/webhooks', [
+        $webhook = $this->client->call(Client::METHOD_POST, '/webhooks', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-            'x-appwrite-project' => 'console',
+            'x-appwrite-project' => $project['body']['$id'],
+            'x-appwrite-mode' => 'admin'
         ], [
+            'webhookId' => 'unique()',
             'name' => 'Webhook Test',
             'events' => [
                 'databases.*',
@@ -206,7 +228,7 @@ trait ProjectCustom
                 'users.*'
             ],
             'url' => 'http://request-catcher-webhook:5000/',
-            'security' => false,
+            'tls' => false,
         ]);
 
         $this->assertEquals(201, $webhook['headers']['status-code']);
@@ -233,7 +255,7 @@ trait ProjectCustom
             'apiKey' => $key['body']['secret'],
             'devKey' => $devKey['body']['secret'],
             'webhookId' => $webhook['body']['$id'],
-            'signatureKey' => $webhook['body']['signatureKey'],
+            'signatureKey' => $webhook['body']['secret'],
         ];
     }
 

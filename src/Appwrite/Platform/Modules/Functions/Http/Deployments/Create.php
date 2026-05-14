@@ -2,8 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments;
 
-use Appwrite\Event\Build;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Build as BuildMessage;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -87,9 +88,10 @@ class Create extends Action
             ->inject('project')
             ->inject('deviceForFunctions')
             ->inject('deviceForLocal')
-            ->inject('queueForBuilds')
+            ->inject('publisherForBuilds')
             ->inject('plan')
             ->inject('authorization')
+            ->inject('platform')
             ->callback($this->action(...));
     }
 
@@ -106,9 +108,10 @@ class Create extends Action
         Document $project,
         Device $deviceForFunctions,
         Device $deviceForLocal,
-        Build $queueForBuilds,
+        BuildPublisher $publisherForBuilds,
         array $plan,
-        Authorization $authorization
+        Authorization $authorization,
+        array $platform
     ) {
         $activate = \strval($activate) === 'true' || \strval($activate) === '1';
 
@@ -175,15 +178,8 @@ class Create extends Action
                 throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
             }
 
-            // TODO remove the condition that checks `$end === $fileSize` in next breaking version
-            if ($end === $fileSize - 1 || $end === $fileSize) {
-                //if it's a last chunks the chunk size might differ, so we set the $chunks and $chunk to notify it's last chunk
-                $chunks = $chunk = -1;
-            } else {
-                // Calculate total number of chunks based on the chunk size i.e ($rangeEnd - $rangeStart)
-                $chunks = (int) ceil($fileSize / ($end + 1 - $start));
-                $chunk = (int) ($start / ($end + 1 - $start)) + 1;
-            }
+            $chunks = (int) ceil($fileSize / APP_LIMIT_UPLOAD_CHUNK_SIZE);
+            $chunk = (int) ($start / APP_LIMIT_UPLOAD_CHUNK_SIZE) + 1;
         }
 
         if (!$fileSizeValidator->isValid($fileSize) && $functionSizeLimit !== 0) { // Check if file size is exceeding allowed limit
@@ -202,9 +198,14 @@ class Create extends Action
         $metadata = ['content_type' => $deviceForLocal->getFileMimeType($fileTmpName)];
         if (!$deployment->isEmpty()) {
             $chunks = $deployment->getAttribute('sourceChunksTotal', 1);
+            $uploaded = $deployment->getAttribute('sourceChunksUploaded', 0);
             $metadata = $deployment->getAttribute('sourceMetadata', []);
-            if ($chunk === -1) {
-                $chunk = $chunks;
+
+            if ($uploaded === $chunks) {
+                $response
+                    ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+                    ->dynamic($deployment, Response::MODEL_DEPLOYMENT);
+                return;
             }
         }
 
@@ -252,6 +253,8 @@ class Create extends Action
                     'sourcePath' => $path,
                     'sourceSize' => $fileSize,
                     'totalSize' => $fileSize,
+                    'sourceChunksTotal' => $chunks,
+                    'sourceChunksUploaded' => $chunksUploaded,
                     'activate' => $activate,
                     'sourceMetadata' => $metadata,
                     'type' => $type
@@ -266,15 +269,19 @@ class Create extends Action
             } else {
                 $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document([
                     'sourceSize' => $fileSize,
+                    'sourceChunksUploaded' => $chunksUploaded,
                     'sourceMetadata' => $metadata,
                 ]));
             }
 
             // Start the build
-            $queueForBuilds
-                ->setType(BUILD_TYPE_DEPLOYMENT)
-                ->setResource($function)
-                ->setDeployment($deployment);
+            $publisherForBuilds->enqueue(new BuildMessage(
+                project: $project,
+                resource: $function,
+                deployment: $deployment,
+                type: BUILD_TYPE_DEPLOYMENT,
+                platform: $platform,
+            ));
         } else {
             if ($deployment->isEmpty()) {
                 $deployment = $dbForProject->createDocument('deployments', new Document([

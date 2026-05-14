@@ -2,13 +2,15 @@
 
 require_once __DIR__ . '/init.php';
 
-use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
-use Appwrite\Event\Func;
-use Appwrite\Event\StatsResources;
-use Appwrite\Event\StatsUsage;
+use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Certificate as CertificatePublisher;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
+use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
+use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Platform\Appwrite;
 use Appwrite\Runtimes\Runtimes;
+use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Database\Documents\User;
 use Executor\Executor;
 use Swoole\Runtime;
@@ -16,19 +18,22 @@ use Swoole\Timer;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
+use Utopia\CLI\Adapters\Generic;
+use Utopia\CLI\CLI;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\DI\Dependency;
+use Utopia\DI\Container;
 use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Platform\Service;
 use Utopia\Pools\Group;
 use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Publisher;
+use Utopia\Queue\Queue;
 use Utopia\Registry\Registry;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
@@ -44,30 +49,24 @@ require_once __DIR__ . '/controllers/general.php';
 global $register;
 
 $platform = new Appwrite();
-$args = $platform->getEnv('argv');
+$args = $_SERVER['argv'] ?? [];
 
 \array_shift($args);
-if (!isset($args[0])) {
+if (! isset($args[0])) {
     Console::error('Missing task name');
     Console::exit(1);
 }
 
 $taskName = $args[0];
+$container = new Container();
+$cli = new CLI(new Generic(), $_SERVER['argv'] ?? [], $container);
+
+$platform->setCli($cli);
 $platform->init(Service::TYPE_TASK);
-$cli = $platform->getCli();
 
-$setResource = function (string $name, callable $callback, array $injections = []) use ($cli) {
-    $dependency = new Dependency();
-    $dependency->setName($name)->setCallback($callback);
-    foreach ($injections as $injection) {
-        $dependency->inject($injection);
-    }
-    $cli->setResource($dependency);
-};
+$container->set('register', fn () => $register, []);
 
-$setResource('register', fn () => $register, []);
-
-$setResource('cache', function ($pools) {
+$container->set('cache', function ($pools) {
     $list = Config::getParam('pools-cache', []);
     $adapters = [];
 
@@ -78,17 +77,18 @@ $setResource('cache', function ($pools) {
     return new Cache(new Sharding($adapters));
 }, ['pools']);
 
-$setResource('pools', function (Registry $register) {
+$container->set('pools', function (Registry $register) {
     return $register->get('pools');
 }, ['register']);
 
-$setResource('authorization', function () {
+$container->set('authorization', function () {
     $authorization = new Authorization();
     $authorization->disable();
+
     return $authorization;
 }, []);
 
-$setResource('dbForPlatform', function ($pools, $cache, $authorization) {
+$container->set('dbForPlatform', function ($pools, $cache, $authorization) {
     $sleep = 3;
     $maxAttempts = 5;
     $attempts = 0;
@@ -113,7 +113,7 @@ $setResource('dbForPlatform', function ($pools, $cache, $authorization) {
             $collections = Config::getParam('collections', [])['console'];
             $last = \array_key_last($collections);
 
-            if (!($dbForPlatform->exists($dbForPlatform->getDatabase(), $last))) { /** TODO cache ready variable using registry */
+            if (! ($dbForPlatform->exists($dbForPlatform->getDatabase(), $last))) { /** TODO cache ready variable using registry */
                 throw new Exception('Tables not ready yet.');
             }
 
@@ -122,26 +122,26 @@ $setResource('dbForPlatform', function ($pools, $cache, $authorization) {
             Console::warning($err->getMessage());
             sleep($sleep);
         }
-    } while ($attempts < $maxAttempts && !$ready);
+    } while ($attempts < $maxAttempts && ! $ready);
 
-    if (!$ready) {
-        throw new Exception("Console is not ready yet. Please try again later.");
+    if (! $ready) {
+        throw new Exception('Console is not ready yet. Please try again later.');
     }
 
     return $dbForPlatform;
 }, ['pools', 'cache', 'authorization']);
 
-$setResource('console', function () {
+$container->set('console', function () {
     return new Document(Config::getParam('console'));
 }, []);
 
-$setResource(
+$container->set(
     'isResourceBlocked',
     fn () => fn (Document $project, string $resourceType, ?string $resourceId) => false,
     []
 );
 
-$setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache, $authorization) {
+$container->set('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache, $authorization) {
     $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
 
     return function (Document $project) use ($pools, $dbForPlatform, $cache, $authorization, &$databases) {
@@ -157,13 +157,20 @@ $setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $c
         }
 
         if (isset($databases[$dsn->getHost()])) {
+            /** @var array $collections */
+            $collections = Config::getParam('collections', []);
+            $projectCollections = $collections['projects'] ?? [];
+            $projectsGlobalCollections = array_keys($projectCollections);
+            $projectsGlobalCollections[] = 'audit';
+
             $database = $databases[$dsn->getHost()];
             $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
             if (\in_array($dsn->getHost(), $sharedTables)) {
                 $database
                     ->setSharedTables(true)
-                    ->setTenant((int)$project->getSequence())
+                    ->setGlobalCollections($projectsGlobalCollections)
+                    ->setTenant($project->getSequence())
                     ->setNamespace($dsn->getParam('namespace'));
             } else {
                 $database
@@ -182,9 +189,16 @@ $setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $c
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
         if (\in_array($dsn->getHost(), $sharedTables)) {
+            /** @var array $collections */
+            $collections = Config::getParam('collections', []);
+            $projectCollections = $collections['projects'] ?? [];
+            $projectsGlobalCollections = array_keys($projectCollections);
+            $projectsGlobalCollections[] = 'audit';
+
             $database
                 ->setSharedTables(true)
-                ->setTenant((int)$project->getSequence())
+                ->setTenant($project->getSequence())
+                ->setGlobalCollections($projectsGlobalCollections)
                 ->setNamespace($dsn->getParam('namespace'));
         } else {
             $database
@@ -203,14 +217,19 @@ $setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $c
     };
 }, ['pools', 'dbForPlatform', 'cache', 'authorization']);
 
-$setResource('getLogsDB', function (Group $pools, Cache $cache, Authorization $authorization) {
+$container->set('getLogsDB', function (Group $pools, Cache $cache, Authorization $authorization) {
     $database = null;
 
-    return function (?Document $project = null) use ($pools, $cache, $database, $authorization) {
+    return function (?Document $project = null) use ($pools, $cache, &$database, $authorization) {
         if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant((int)$project->getSequence());
+            $database->setTenant($project->getSequence());
             return $database;
         }
+
+        /** @var array $collections */
+        $collections = Config::getParam('collections', []);
+        $logsCollections = $collections['logs'] ?? [];
+        $logsCollections = array_keys($logsCollections);
 
         $adapter = new DatabasePool($pools->get('logs'));
         $database = new Database($adapter, $cache);
@@ -220,51 +239,56 @@ $setResource('getLogsDB', function (Group $pools, Cache $cache, Authorization $a
             ->setAuthorization($authorization)
             ->setSharedTables(true)
             ->setNamespace('logsV1')
+            ->setGlobalCollections($logsCollections)
             ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_TASK)
             ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
 
         // set tenant
         if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant((int)$project->getSequence());
+            $database->setTenant($project->getSequence());
         }
 
         return $database;
     };
 }, ['pools', 'cache', 'authorization']);
-$setResource('publisher', function (Group $pools) {
+$container->set('publisher', function (Group $pools) {
     return new BrokerPool(publisher: $pools->get('publisher'));
 }, ['pools']);
-$setResource('publisherDatabases', function (BrokerPool $publisher) {
+$container->set('publisherDatabases', function (BrokerPool $publisher) {
     return $publisher;
 }, ['publisher']);
-$setResource('publisherFunctions', function (BrokerPool $publisher) {
+$container->set('publisherFunctions', function (BrokerPool $publisher) {
     return $publisher;
 }, ['publisher']);
-$setResource('publisherMigrations', function (BrokerPool $publisher) {
+$container->set('publisherMigrations', function (BrokerPool $publisher) {
     return $publisher;
 }, ['publisher']);
-$setResource('publisherStatsUsage', function (BrokerPool $publisher) {
+$container->set('publisherMessaging', function (BrokerPool $publisher) {
     return $publisher;
 }, ['publisher']);
-$setResource('publisherMessaging', function (BrokerPool $publisher) {
-    return $publisher;
-}, ['publisher']);
-$setResource('queueForStatsUsage', function (Publisher $publisher) {
-    return new StatsUsage($publisher);
-}, ['publisher']);
-$setResource('queueForStatsResources', function (Publisher $publisher) {
-    return new StatsResources($publisher);
-}, ['publisher']);
-$setResource('queueForFunctions', function (Publisher $publisher) {
-    return new Func($publisher);
-}, ['publisher']);
-$setResource('queueForDeletes', function (Publisher $publisher) {
+$container->set('usage', function () {
+    return new UsageContext();
+}, []);
+$container->set('publisherForUsage', fn (Publisher $publisher) => new UsagePublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', Event::STATS_USAGE_QUEUE_NAME))
+), ['publisher']);
+$container->set('publisherForCertificates', fn (Publisher $publisher) => new CertificatePublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_CERTIFICATES_QUEUE_NAME', Event::CERTIFICATES_QUEUE_NAME))
+), ['publisher']);
+$container->set('publisherForStatsResources', fn (Publisher $publisher) => new StatsResourcesPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_STATS_RESOURCES_QUEUE_NAME', Event::STATS_RESOURCES_QUEUE_NAME))
+), ['publisher']);
+$container->set('publisherForFunctions', fn (Publisher $publisher) => new FunctionPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME), 'utopia-queue', Event::FUNCTIONS_QUEUE_TTL)
+), ['publisher']);
+$container->set('queueForDeletes', function (Publisher $publisher) {
     return new Delete($publisher);
 }, ['publisher']);
-$setResource('queueForCertificates', function (Publisher $publisher) {
-    return new Certificate($publisher);
-}, ['publisher']);
-$setResource('logError', function (Registry $register) {
+$container->set('logError', function (Registry $register) {
     return function (Throwable $error, string $namespace, string $action) use ($register) {
         Console::error('[Error] Timestamp: ' . date('c', time()));
         Console::error('[Error] Type: ' . get_class($error));
@@ -316,25 +340,28 @@ $setResource('logError', function (Registry $register) {
     };
 }, ['register']);
 
-$setResource('executor', fn () => new Executor(), []);
+$container->set('executor', fn () => new Executor(), []);
 
-$setResource('bus', function (Registry $register) use ($cli) {
-    return $register->get('bus')->setResolver(fn (string $name) => $cli->getResource($name));
+$container->set('bus', function (Registry $register) use ($container) {
+    return $register->get('bus')->setResolver(fn (string $name) => $container->get($name));
 }, ['register']);
 
-$setResource('telemetry', fn () => new NoTelemetry(), []);
+$container->set('telemetry', fn () => new NoTelemetry(), []);
+
+$exitCode = 0;
 
 $cli
     ->error()
     ->inject('error')
     ->inject('logError')
-    ->action(function (Throwable $error, callable $logError) use ($taskName) {
+    ->action(function (Throwable $error, callable $logError) use ($taskName, &$exitCode) {
         call_user_func_array($logError, [
             $error,
             'Task',
             $taskName,
         ]);
 
+        $exitCode = 1;
         Timer::clearAll();
     });
 
@@ -343,3 +370,4 @@ $cli->shutdown()->action(fn () => Timer::clearAll());
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 require_once __DIR__ . '/init/span.php';
 run($cli->run(...));
+Console::exit($exitCode);

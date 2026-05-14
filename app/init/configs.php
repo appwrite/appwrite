@@ -12,7 +12,7 @@ Config::load('runtimes-v2', __DIR__ . '/../config/runtimes-v2.php', $configAdapt
 Config::load('template-runtimes', __DIR__ . '/../config/template-runtimes.php', $configAdapter);
 Config::load('events', __DIR__ . '/../config/events.php', $configAdapter);
 Config::load('auth', __DIR__ . '/../config/auth.php', $configAdapter);
-Config::load('apis', __DIR__ . '/../config/apis.php', $configAdapter);  // List of APIs
+Config::load('protocols', __DIR__ . '/../config/protocols.php', $configAdapter);
 Config::load('errors', __DIR__ . '/../config/errors.php', $configAdapter);
 Config::load('oAuthProviders', __DIR__ . '/../config/oAuthProviders.php', $configAdapter);
 Config::load('sdks', __DIR__ . '/../config/sdks.php', $configAdapter);
@@ -25,7 +25,6 @@ Config::load('roles', __DIR__ . '/../config/roles.php', $configAdapter);  // Use
 Config::load('projectScopes', __DIR__ . '/../config/scopes/project.php', $configAdapter);
 Config::load('organizationScopes', __DIR__ . '/../config/scopes/organization.php', $configAdapter);
 Config::load('accountScopes', __DIR__ . '/../config/scopes/account.php', $configAdapter);
-Config::load('consoleProjectScopes', __DIR__ . '/../config/scopes/consoleProject.php', $configAdapter);
 Config::load('services', __DIR__ . '/../config/services.php', $configAdapter);  // List of services
 Config::load('variables', __DIR__ . '/../config/variables.php', $configAdapter);  // List of env variables
 Config::load('regions', __DIR__ . '/../config/regions.php', $configAdapter); // List of available regions

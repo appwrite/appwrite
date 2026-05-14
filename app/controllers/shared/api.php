@@ -3,21 +3,25 @@
 use Appwrite\Auth\Key;
 use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Bus\Events\RequestCompleted;
-use Appwrite\Event\Audit;
-use Appwrite\Event\Build;
+use Appwrite\Event\Context\Audit as AuditContext;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
-use Appwrite\Event\Func;
-use Appwrite\Event\Mail;
-use Appwrite\Event\Messaging;
+use Appwrite\Event\Message\Audit as AuditMessage;
+use Appwrite\Event\Message\Func as FunctionMessage;
+use Appwrite\Event\Message\Usage as UsageMessage;
+use Appwrite\Event\Publisher\Audit;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
+use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
-use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\EventProcessor;
+use Appwrite\Platform\Modules\Storage\Config\CacheControl;
+use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Appwrite\SDK\Method;
+use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -35,13 +39,14 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Roles;
 use Utopia\Http\Http;
+use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Validator\WhiteList;
 
-$parseLabel = function (string $label, array $responsePayload, array $requestParams, User $user) {
+$parseLabel = function (string $label, array $responsePayload, array $requestParams, User $user, Document $project) {
     preg_match_all('/{(.*?)}/', $label, $matches);
-    foreach ($matches[1] ?? [] as $pos => $match) {
+    foreach ($matches[1] as $pos => $match) {
         $find = $matches[0][$pos];
         $parts = explode('.', $match);
 
@@ -49,11 +54,12 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
             throw new Exception(Exception::GENERAL_SERVER_ERROR, "The server encountered an error while parsing the label: $label. Please create an issue on GitHub to allow us to investigate further https://github.com/appwrite/appwrite/issues/new/choose");
         }
 
-        $namespace = $parts[0] ?? '';
-        $replace = $parts[1] ?? '';
+        $namespace = $parts[0];
+        $replace = $parts[1];
 
         $params = match ($namespace) {
-            'user' => (array)$user,
+            'user' => (array) $user,
+            'project' => $project->getArrayCopy(),
             'request' => $requestParams,
             default => $responsePayload,
         };
@@ -61,13 +67,13 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
         if (array_key_exists($replace, $params)) {
             $replacement = $params[$replace];
             // Convert to string if it's not already a string
-            if (!is_string($replacement)) {
+            if (! is_string($replacement)) {
                 if (is_array($replacement)) {
                     $replacement = json_encode($replacement);
                 } elseif (is_object($replacement) && method_exists($replacement, '__toString')) {
-                    $replacement = (string)$replacement;
+                    $replacement = (string) $replacement;
                 } elseif (is_scalar($replacement)) {
-                    $replacement = (string)$replacement;
+                    $replacement = (string) $replacement;
                 } else {
                     throw new Exception(Exception::GENERAL_SERVER_ERROR, "The server encountered an error while parsing the label: $label. Please create an issue on GitHub to allow us to investigate further https://github.com/appwrite/appwrite/issues/new/choose");
                 }
@@ -75,6 +81,7 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
             $label = \str_replace($find, $replacement, $label);
         }
     }
+
     return $label;
 };
 
@@ -84,7 +91,7 @@ Http::init()
     ->inject('request')
     ->inject('dbForPlatform')
     ->inject('dbForProject')
-    ->inject('queueForAudits')
+    ->inject('auditContext')
     ->inject('project')
     ->inject('user')
     ->inject('session')
@@ -93,8 +100,11 @@ Http::init()
     ->inject('team')
     ->inject('apiKey')
     ->inject('authorization')
-    ->action(function (Http $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, Audit $queueForAudits, Document $project, Document $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization) {
+    ->action(function (Http $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization) {
         $route = $utopia->getRoute();
+        if ($route === null) {
+            throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
+        }
 
         /**
          * Handle user authentication and session validation.
@@ -160,7 +170,7 @@ Http::init()
         $scopes = $roles[$role]['scopes'];
 
         // Step 5: API Key Authentication
-        if (!empty($apiKey)) {
+        if (! empty($apiKey)) {
             // Check if key is expired
             if ($apiKey->isExpired()) {
                 throw new Exception(Exception::PROJECT_KEY_EXPIRED);
@@ -170,42 +180,42 @@ Http::init()
             $role = $apiKey->getRole();
             $scopes = $apiKey->getScopes();
 
-
             // Handle special app role case
             if ($apiKey->getRole() === User::ROLE_APPS) {
                 // Disable authorization checks for project API keys
-                if (($apiKey->getType() === API_KEY_STANDARD || $apiKey->getType() === API_KEY_DYNAMIC) && $apiKey->getProjectId() === $project->getId()) {
+                // Dynamic supported for backwards compatibility
+                if (($apiKey->getType() === API_KEY_STANDARD || $apiKey->getType() === API_KEY_EPHEMERAL || $apiKey->getType() === 'dynamic') && $apiKey->getProjectId() === $project->getId()) {
                     $authorization->setDefaultStatus(false);
                 }
 
                 $user = new User([
                     '$id' => '',
                     'status' => true,
-                    'type' => ACTIVITY_TYPE_APP,
+                    'type' => ACTIVITY_TYPE_KEY_PROJECT,
                     'email' => 'app.' . $project->getId() . '@service.' . $request->getHostname(),
                     'password' => '',
                     'name' => $apiKey->getName(),
                 ]);
 
-                $queueForAudits->setUser($user);
+                $auditContext->user = $user;
             }
 
             // For standard keys, update last accessed time
             if (\in_array($apiKey->getType(), [API_KEY_STANDARD, API_KEY_ORGANIZATION, API_KEY_ACCOUNT])) {
                 $dbKey = null;
-                if (!empty($apiKey->getProjectId())) {
+                if (! empty($apiKey->getProjectId())) {
                     $dbKey = $project->find(
                         key: 'secret',
                         find: $request->getHeader('x-appwrite-key', ''),
                         subject: 'keys'
                     );
-                } elseif (!empty($apiKey->getUserId())) {
+                } elseif (! empty($apiKey->getUserId())) {
                     $dbKey = $user->find(
                         key: 'secret',
                         find: $request->getHeader('x-appwrite-key', ''),
                         subject: 'keys'
                     );
-                } elseif (!empty($apiKey->getTeamId())) {
+                } elseif (! empty($apiKey->getTeamId())) {
                     $dbKey = $team->find(
                         key: 'secret',
                         find: $request->getHeader('x-appwrite-key', ''),
@@ -214,8 +224,6 @@ Http::init()
                 }
 
                 if (!$dbKey) {
-                    \var_dump($apiKey);
-                    \var_dump($request->getHeader('x-appwrite-key', ''));
                     throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
 
@@ -233,7 +241,7 @@ Http::init()
                 if ($sdk !== 'UNKNOWN' && $sdkValidator->isValid($sdk)) {
                     $sdks = $dbKey->getAttribute('sdks', []);
 
-                    if (!in_array($sdk, $sdks)) {
+                    if (! in_array($sdk, $sdks)) {
                         $sdks[] = $sdk;
 
                         $updates->setAttribute('sdks', $sdks);
@@ -241,19 +249,25 @@ Http::init()
                     }
                 }
 
-                if (!$updates->isEmpty()) {
+                if (! $updates->isEmpty()) {
                     $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->updateDocument('keys', $dbKey->getId(), $updates));
 
-                    if (!empty($apiKey->getProjectId())) {
+                    if (! empty($apiKey->getProjectId())) {
                         $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
-                    } elseif (!empty($apiKey->getUserId())) {
+                    } elseif (! empty($apiKey->getUserId())) {
                         $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('users', $user->getId()));
-                    } elseif (!empty($apiKey->getTeamId())) {
+                    } elseif (! empty($apiKey->getTeamId())) {
                         $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('teams', $team->getId()));
                     }
                 }
 
-                $queueForAudits->setUser($user);
+                $userClone = clone $user;
+                $userClone->setAttribute('type', match ($apiKey->getType()) {
+                    API_KEY_STANDARD => ACTIVITY_TYPE_KEY_PROJECT,
+                    API_KEY_ACCOUNT => ACTIVITY_TYPE_KEY_ACCOUNT,
+                    default => ACTIVITY_TYPE_KEY_ORGANIZATION,
+                });
+                $auditContext->user = $userClone;
             }
 
             // Apply permission
@@ -285,7 +299,7 @@ Http::init()
                 }
             }
         } // Admin User Authentication
-        elseif (($project->getId() === 'console' && !$team->isEmpty() && !$user->isEmpty()) || ($project->getId() !== 'console' && !$user->isEmpty() && $mode === APP_MODE_ADMIN)) {
+        elseif (($project->getId() === 'console' && ! $team->isEmpty() && ! $user->isEmpty()) || ($project->getId() !== 'console' && ! $user->isEmpty() && $mode === APP_MODE_ADMIN)) {
             $teamId = $team->getId();
             $adminRoles = [];
             $memberships = $user->getAttribute('memberships', []);
@@ -310,7 +324,7 @@ Http::init()
             // Useful for those who have project-specific roles but don't have team-wide role.
             $scopes = ['teams.read', 'projects.read'];
             foreach ($adminRoles as $adminRole) {
-                $isTeamWideRole = !str_starts_with($adminRole, 'project-');
+                $isTeamWideRole = ! str_starts_with($adminRole, 'project-');
                 $isProjectSpecificRole = $projectId !== 'console' && str_starts_with($adminRole, 'project-' . $projectId);
 
                 if ($isTeamWideRole || $isProjectSpecificRole) {
@@ -338,21 +352,17 @@ Http::init()
 
         $scopes = \array_unique($scopes);
 
-        // Migration-sourced keys are scoped to a single project's console
-        // endpoints (e.g. /v1/projects/:projectId/platforms). Verify the
-        // URL :projectId matches the token's scopedProjectId.
-        if (!empty($apiKey) && $apiKey->getSource() === KEY_SOURCE_MIGRATION) {
-            $scopedProjectId = $apiKey->getScopedProjectId();
-
-            if (empty($scopedProjectId)) {
-                throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE);
-            }
-
-            $pathValues = $route->getPathValues($request);
-
-            if (($pathValues['projectId'] ?? '') !== $scopedProjectId) {
-                throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE);
-            }
+        // Intentional: impersonators get users.read so they can discover a target user
+        // before impersonation starts, and keep that access while impersonating.
+        if (
+            !$user->isEmpty()
+            && (
+                $user->getAttribute('impersonator', false)
+                || $user->getAttribute('impersonatorUserId')
+            )
+        ) {
+            $scopes[] = 'users.read';
+            $scopes = \array_unique($scopes);
         }
 
         $authorization->addRole($role);
@@ -365,18 +375,18 @@ Http::init()
          * But, for actions on resources (sites, functions, etc.) in a non-console project, we explicitly check
          * whether the admin user has necessary permission on the project (sites, functions, etc. don't have permissions associated to them).
          */
-        if (empty($apiKey) && !$user->isEmpty() && $project->getId() !== 'console' && $mode === APP_MODE_ADMIN) {
+        if (empty($apiKey) && ! $user->isEmpty() && $project->getId() !== 'console' && $mode === APP_MODE_ADMIN) {
             $input = new Input(Database::PERMISSION_READ, $project->getPermissionsByType(Database::PERMISSION_READ));
             $initialStatus = $authorization->getStatus();
             $authorization->enable();
-            if (!$authorization->isValid($input)) {
+            if (! $authorization->isValid($input)) {
                 throw new Exception(Exception::PROJECT_NOT_FOUND);
             }
             $authorization->setStatus($initialStatus);
         }
 
         // Step 6: Update project and user last activity
-        if (!$project->isEmpty() && $project->getId() !== 'console') {
+        if ($project->getId() !== 'console') {
             $accessedAt = $project->getAttribute('accessedAt', 0);
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
                 $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
@@ -385,12 +395,15 @@ Http::init()
             }
         }
 
-        if (!empty($user->getId())) {
+        if (! empty($user->getId())) {
+            $impersonatorUserId = $user->getAttribute('impersonatorUserId');
             $accessedAt = $user->getAttribute('accessedAt', 0);
-            if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCESS)) > $accessedAt) {
+
+            // Skip updating accessedAt for impersonated requests so we don't attribute activity to the target user.
+            if (! $impersonatorUserId && DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCESS)) > $accessedAt) {
                 $user->setAttribute('accessedAt', DateTime::now());
 
-                if ($project->getId() !== 'console' && APP_MODE_ADMIN !== $mode) {
+                if ($project->getId() !== 'console' && $mode !== APP_MODE_ADMIN) {
                     $dbForProject->updateDocument('users', $user->getId(), new Document([
                         'accessedAt' => $user->getAttribute('accessedAt')
                     ]));
@@ -403,9 +416,6 @@ Http::init()
         }
 
         // Steps 7-9: Access Control - Method, Namespace and Scope Validation
-        /**
-         * @var ?Method $method
-         */
         $method = $route->getLabel('sdk', false);
 
         // Take the first method if there's more than one,
@@ -414,26 +424,35 @@ Http::init()
             $method = $method[0];
         }
 
-        if (!empty($method)) {
-            $namespace = $method->getNamespace();
+        if (! empty($method)) {
+            $namespace = \strtolower($method->getNamespace());
 
             if (
                 array_key_exists($namespace, $project->getAttribute('services', []))
-                && !$project->getAttribute('services', [])[$namespace]
-                && !(User::isPrivileged($authorization->getRoles()) || User::isApp($authorization->getRoles()))
+                && ! $project->getAttribute('services', [])[$namespace]
+                && ! ($user->isPrivileged($authorization->getRoles()) || $user->isApp($authorization->getRoles()))
             ) {
                 throw new Exception(Exception::GENERAL_SERVICE_DISABLED);
             }
         }
 
+        // Step 8b: Check REST protocol status
+        if (
+            array_key_exists('rest', $project->getAttribute('apis', []))
+            && ! $project->getAttribute('apis', [])['rest']
+            && ! ($user->isPrivileged($authorization->getRoles()) || $user->isApp($authorization->getRoles()))
+        ) {
+            throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
+        }
+
         // Step 9: Validate scope permissions
-        $allowed = (array)$route->getLabel('scope', 'none');
+        $allowed = (array) $route->getLabel('scope', 'none');
         if (empty(\array_intersect($allowed, $scopes))) {
             throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, $user->getAttribute('email', 'User') . ' (role: ' . \strtolower($roles[$role]['label']) . ') missing scopes (' . \json_encode($allowed) . ')');
         }
 
         // Step 10: Check if user is blocked
-        if (false === $user->getAttribute('status')) { // Account is blocked
+        if ($user->getAttribute('status') === false) { // Account is blocked
             throw new Exception(Exception::USER_BLOCKED);
         }
 
@@ -451,7 +470,7 @@ Http::init()
         $minimumFactors = ($mfaEnabled && $hasMoreFactors) ? 2 : 1;
 
         // Step 13: Handle Multi-Factor Authentication
-        if (!in_array('mfa', $route->getGroups())) {
+        if (! in_array('mfa', $route->getGroups())) {
             if ($session && \count($session->getAttribute('factors', [])) < $minimumFactors) {
                 throw new Exception(Exception::USER_MORE_FACTORS_REQUIRED);
             }
@@ -465,106 +484,116 @@ Http::init()
     ->inject('response')
     ->inject('project')
     ->inject('user')
+    ->inject('timelimit')
+    ->inject('devKey')
+    ->inject('authorization')
+    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, callable $timelimit, Document $devKey, Authorization $authorization) {
+        $response->setUser($user);
+        $request->setUser($user);
+
+        $roles = $authorization->getRoles();
+        $shouldCheckAbuse = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled'
+            && ! $user->isApp($roles)
+            && ! $user->isPrivileged($roles)
+            && $devKey->isEmpty();
+
+        $route = $utopia->getRoute();
+        if ($route === null) {
+            throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
+        }
+
+        $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
+        $abuseKeyLabel = (! is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
+        $closestLimit = null;
+
+        foreach ($abuseKeyLabel as $abuseKey) {
+            $isRateLimited = false;
+
+            try {
+                $start = $request->getContentRangeStart();
+                $end = $request->getContentRangeEnd();
+                $timeLimit = $timelimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600));
+                $timeLimit
+                    ->setParam('{projectId}', $project->getId())
+                    ->setParam('{userId}', $user->getId())
+                    ->setParam('{userAgent}', $request->getUserAgent(''))
+                    ->setParam('{ip}', $request->getIP())
+                    ->setParam('{url}', $request->getHostname() . $route->getPath())
+                    ->setParam('{method}', $request->getMethod())
+                    ->setParam('{chunkId}', (int) ($start / ($end + 1 - $start)));
+
+                foreach ($request->getParams() as $key => $value) {
+                    if (! empty($value)) {
+                        $timeLimit->setParam('{param-' . $key . '}', (\is_array($value)) ? \json_encode($value) : $value);
+                    }
+                }
+
+                $abuse = new Abuse($timeLimit);
+                $remaining = $timeLimit->remaining();
+                $limit = $timeLimit->limit();
+                $time = $timeLimit->time() + $route->getLabel('abuse-time', 3600);
+
+                if ($limit && ($remaining < $closestLimit || is_null($closestLimit))) {
+                    $closestLimit = $remaining;
+                    $response
+                        ->addHeader('X-RateLimit-Limit', $limit)
+                        ->addHeader('X-RateLimit-Remaining', $remaining)
+                        ->addHeader('X-RateLimit-Reset', $time);
+                }
+
+                if ($shouldCheckAbuse) {
+                    $isRateLimited = $abuse->check();
+                }
+            } catch (\Throwable $th) {
+                \error_log((string) $th);
+
+                continue;
+            }
+
+            if ($isRateLimited) {
+                throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED);
+            }
+        }
+    });
+
+Http::init()
+    ->groups(['api'])
+    ->inject('utopia')
+    ->inject('request')
+    ->inject('response')
+    ->inject('project')
+    ->inject('user')
     ->inject('queueForEvents')
-    ->inject('queueForMessaging')
-    ->inject('queueForAudits')
+    ->inject('auditContext')
     ->inject('queueForDeletes')
     ->inject('queueForDatabase')
-    ->inject('queueForBuilds')
-    ->inject('queueForStatsUsage')
-    ->inject('queueForFunctions')
-    ->inject('queueForMails')
+    ->inject('usage')
+    ->inject('publisherForFunctions')
     ->inject('dbForProject')
-    ->inject('timelimit')
     ->inject('resourceToken')
     ->inject('mode')
     ->inject('apiKey')
     ->inject('plan')
-    ->inject('devKey')
     ->inject('telemetry')
     ->inject('platform')
     ->inject('authorization')
-    ->action(function (Http $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Mail $queueForMails, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry, array $platform, Authorization $authorization) {
+    ->inject('cacheControlForStorage')
+    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Delete $queueForDeletes, EventDatabase $queueForDatabase, Context $usage, FunctionPublisher $publisherForFunctions, Database $dbForProject, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Telemetry $telemetry, array $platform, Authorization $authorization, callable $cacheControlForStorage) {
+
+        $response->setUser($user);
+        $request->setUser($user);
 
         $route = $utopia->getRoute();
+        if ($route === null) {
+            throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
+        }
+
         $path = $route->getMatchedPath();
         $databaseType = match (true) {
             str_contains($path, '/documentsdb') => DATABASE_TYPE_DOCUMENTSDB,
             str_contains($path, '/vectorsdb') => DATABASE_TYPE_VECTORSDB,
             default => '',
         };
-
-        if (
-            array_key_exists('rest', $project->getAttribute('apis', []))
-            && !$project->getAttribute('apis', [])['rest']
-            && !(User::isPrivileged($authorization->getRoles()) || User::isApp($authorization->getRoles()))
-        ) {
-            throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
-        }
-
-        /*
-        * Abuse Check
-        */
-
-        $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
-        $timeLimitArray = [];
-
-        $abuseKeyLabel = (!is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
-
-        foreach ($abuseKeyLabel as $abuseKey) {
-            $start = $request->getContentRangeStart();
-            $end = $request->getContentRangeEnd();
-            $timeLimit = $timelimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600));
-            $timeLimit
-                ->setParam('{projectId}', $project->getId())
-                ->setParam('{userId}', $user->getId())
-                ->setParam('{userAgent}', $request->getUserAgent(''))
-                ->setParam('{ip}', $request->getIP())
-                ->setParam('{url}', $request->getHostname() . $route->getPath())
-                ->setParam('{method}', $request->getMethod())
-                ->setParam('{chunkId}', (int)($start / ($end + 1 - $start)));
-            $timeLimitArray[] = $timeLimit;
-        }
-
-        $closestLimit = null;
-
-        $roles = $authorization->getRoles();
-        $isPrivilegedUser = User::isPrivileged($roles);
-        $isAppUser = User::isApp($roles);
-
-        foreach ($timeLimitArray as $timeLimit) {
-            foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
-                if (!empty($value)) {
-                    $timeLimit->setParam('{param-' . $key . '}', (\is_array($value)) ? \json_encode($value) : $value);
-                }
-            }
-
-            $abuse = new Abuse($timeLimit);
-            $remaining = $timeLimit->remaining();
-
-            $limit = $timeLimit->limit();
-            $time = $timeLimit->time() + $route->getLabel('abuse-time', 3600);
-
-            if ($limit && ($remaining < $closestLimit || is_null($closestLimit))) {
-                $closestLimit = $remaining;
-                $response
-                    ->addHeader('X-RateLimit-Limit', $limit)
-                    ->addHeader('X-RateLimit-Remaining', $remaining)
-                    ->addHeader('X-RateLimit-Reset', $time);
-            }
-
-            $enabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
-
-            if (
-                $enabled                // Abuse is enabled
-                && !$isAppUser          // User is not API key
-                && !$isPrivilegedUser   // User is not an admin
-                && $devKey->isEmpty()  // request doesn't not contain development key
-                && $abuse->check()      // Route is rate-limited
-            ) {
-                throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED);
-            }
-        }
 
         /**
          *  TODO: (@loks0n)
@@ -578,104 +607,91 @@ Http::init()
             ->setProject($project)
             ->setUser($user);
 
-        $queueForAudits
-            ->setMode($mode)
-            ->setUserAgent($request->getUserAgent(''))
-            ->setIP($request->getIP())
-            ->setHostname($request->getHostname())
-            ->setEvent($route->getLabel('audits.event', ''))
-            ->setProject($project);
+        $auditContext->mode = $mode;
+        $auditContext->userAgent = $request->getUserAgent('');
+        $auditContext->ip = $request->getIP();
+        $auditContext->hostname = $request->getHostname();
+        $auditContext->event = $route->getLabel('audits.event', '');
+        $auditContext->project = $project;
 
         /* If a session exists, use the user associated with the session */
-        if (!$user->isEmpty()) {
+        if (! $user->isEmpty()) {
             $userClone = clone $user;
             // $user doesn't support `type` and can cause unintended effects.
-            $userClone->setAttribute('type', ACTIVITY_TYPE_USER);
-            $queueForAudits->setUser($userClone);
-        }
-
-        if (!empty($apiKey) && !empty($apiKey->getDisabledMetrics())) {
-            foreach ($apiKey->getDisabledMetrics() as $key) {
-                $queueForStatsUsage->disableMetric($key);
+            if (empty($user->getAttribute('type'))) {
+                $userClone->setAttribute('type', $mode === APP_MODE_ADMIN ? ACTIVITY_TYPE_ADMIN : ACTIVITY_TYPE_USER);
             }
+            $auditContext->user = $userClone;
         }
 
         /* Auto-set projects */
         $queueForDeletes->setProject($project);
         $queueForDatabase->setProject($project);
-        $queueForMessaging->setProject($project);
-        $queueForFunctions->setProject($project);
-        $queueForBuilds->setProject($project);
-        $queueForMails->setProject($project);
-
-        /* Auto-set platforms */
-        $queueForFunctions->setPlatform($platform);
-        $queueForBuilds->setPlatform($platform);
-        $queueForMails->setPlatform($platform);
-
 
         $useCache = $route->getLabel('cache', false);
         $storageCacheOperationsCounter = $telemetry->createCounter('storage.cache.operations.load');
         if ($useCache) {
             $route = $utopia->match($request);
+            $roles = $authorization->getRoles();
+            $isAppUser = $user->isApp($roles);
             $isImageTransformation = $route->getPath() === '/v1/storage/buckets/:bucketId/files/:fileId/preview';
-            $isDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && !User::isPrivileged($authorization->getRoles());
+            $isDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && ! $user->isPrivileged($roles);
 
             $key = $request->cacheIdentifier();
-            $cacheLog  = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
+            Span::add('storage.cache.key', $key);
+            $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
             $cache = new Cache(
                 new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
             );
             $timestamp = 60 * 60 * 24 * 180; // Temporarily increase the TTL to 180 day to ensure files in the cache are still fetched.
             $data = $cache->load($key, $timestamp);
 
-            if (!empty($data) && !$cacheLog->isEmpty()) {
-                $usageMetric = $route->getLabel('usage.metric', null);
-                if ($usageMetric === METRIC_AVATARS_SCREENSHOTS_GENERATED) {
-                    $queueForStatsUsage->disableMetric(METRIC_AVATARS_SCREENSHOTS_GENERATED);
-                }
+            if (! empty($data) && ! $cacheLog->isEmpty()) {
+                $cacheControl = \sprintf('private, max-age=%d', $timestamp);
                 $parts = explode('/', $cacheLog->getAttribute('resourceType', ''));
-                $type = $parts[0] ?? null;
+                $type = $parts[0];
 
-                if ($type === 'bucket' && (!$isImageTransformation || !$isDisabled)) {
+                if ($type === 'bucket' && (! $isImageTransformation || ! $isDisabled)) {
                     $bucketId = $parts[1] ?? null;
                     $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-                    $isToken = !$resourceToken->isEmpty() && $resourceToken->getAttribute('bucketInternalId') === $bucket->getSequence();
-                    $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
+                    $isToken = ! $resourceToken->isEmpty() && $resourceToken->getAttribute('bucketInternalId') === $bucket->getSequence();
+                    $isPrivilegedUser = $user->isPrivileged($roles);
 
-                    if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAppUser && !$isPrivilegedUser)) {
+                    if ($bucket->isEmpty() || (! $bucket->getAttribute('enabled') && ! $isAppUser && ! $isPrivilegedUser)) {
                         throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
                     }
 
-                    if (!$bucket->getAttribute('transformations', true) && !$isAppUser && !$isPrivilegedUser) {
+                    if (! $bucket->getAttribute('transformations', true) && ! $isAppUser && ! $isPrivilegedUser) {
                         throw new Exception(Exception::STORAGE_BUCKET_TRANSFORMATIONS_DISABLED);
                     }
 
                     $fileSecurity = $bucket->getAttribute('fileSecurity', false);
                     $valid = $authorization->isValid(new Input(Database::PERMISSION_READ, $bucket->getRead()));
-                    if (!$fileSecurity && !$valid && !$isToken) {
+                    if (! $fileSecurity && ! $valid && ! $isToken) {
                         throw new Exception(Exception::USER_UNAUTHORIZED);
                     }
 
                     $parts = explode('/', $cacheLog->getAttribute('resource'));
                     $fileId = $parts[1] ?? null;
 
-                    if ($fileSecurity && !$valid && !$isToken) {
+                    if ($fileSecurity && ! $valid && ! $isToken) {
                         $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
                     } else {
                         $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
                     }
 
-                    if (!$resourceToken->isEmpty() && $resourceToken->getAttribute('fileInternalId') !== $file->getSequence()) {
+                    if (! $resourceToken->isEmpty() && $resourceToken->getAttribute('fileInternalId') !== $file->getSequence()) {
                         throw new Exception(Exception::USER_UNAUTHORIZED);
                     }
 
                     if ($file->isEmpty()) {
                         throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
                     }
-                    //Do not update transformedAt if it's a console user
-                    if (!User::isPrivileged($authorization->getRoles())) {
+                    Span::add('storage.bucket.id', $bucketId);
+                    Span::add('storage.file.id', $fileId);
+                    // Do not update transformedAt if it's a console user
+                    if (! $user->isPrivileged($authorization->getRoles())) {
                         $transformedAt = $file->getAttribute('transformedAt', '');
                         if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $transformedAt) {
                             $file->setAttribute('transformedAt', DateTime::now());
@@ -684,18 +700,44 @@ Http::init()
                             ])));
                         }
                     }
+
+                    if ($isImageTransformation) {
+                        $cacheControl = $cacheControlForStorage(new StorageCacheControl(
+                            source: CacheControl::SOURCE_CACHE,
+                            user: $user,
+                            maxAge: $timestamp,
+                            project: $project,
+                            bucket: $bucket,
+                            file: $file,
+                            resourceToken: $resourceToken,
+                            fileSecurity: $fileSecurity,
+                            cacheLog: $cacheLog,
+                            route: $route,
+                        ));
+                    }
+                }
+
+                $accessedAt = $cacheLog->getAttribute('accessedAt', '');
+                if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_CACHE_UPDATE)) > $accessedAt) {
+                    $authorization->skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), new Document([
+                        'accessedAt' => DateTime::now(),
+                    ])));
+                    // Refresh the filesystem file's mtime so TTL-based expiry in cache->load() stays valid
+                    $cache->save($key, $data);
                 }
 
                 $response
-                    ->addHeader('Cache-Control', sprintf('private, max-age=%d', $timestamp))
+                    ->addHeader('Cache-Control', $cacheControl)
                     ->addHeader('X-Appwrite-Cache', 'hit')
                     ->setContentType($cacheLog->getAttribute('mimeType'));
                 $storageCacheOperationsCounter->add(1, ['result' => 'hit']);
-                if (!$isImageTransformation || !$isDisabled) {
+                if (! $isImageTransformation || ! $isDisabled) {
+                    Span::add('storage.cache.hit', true);
                     $response->send($data);
                 }
             } else {
                 $storageCacheOperationsCounter->add(1, ['result' => 'miss']);
+                Span::add('storage.cache.hit', false);
                 $response
                     ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
                     ->addHeader('Pragma', 'no-cache')
@@ -709,12 +751,12 @@ Http::init()
     ->groups(['session'])
     ->inject('user')
     ->inject('request')
-    ->action(function (Document $user, Request $request) {
+    ->action(function (User $user, Request $request) {
         if (\str_contains($request->getURI(), 'oauth2')) {
             return;
         }
 
-        if (!$user->isEmpty()) {
+        if (! $user->isEmpty()) {
             throw new Exception(Exception::USER_SESSION_ALREADY_EXISTS);
         }
     });
@@ -733,7 +775,12 @@ Http::shutdown()
     ->inject('project')
     ->inject('dbForProject')
     ->action(function (Http $utopia, Request $request, Response $response, Document $project, Database $dbForProject) {
-        $sessionLimit = $project->getAttribute('auths', [])['maxSessions'] ?? APP_LIMIT_USER_SESSIONS_DEFAULT;
+        $sessionLimit = $project->getAttribute('auths', [])['maxSessions'] ?? 0;
+
+        if ($sessionLimit === 0) {
+            return;
+        }
+
         $session = $response->getPayload();
         $userId = $session['userId'] ?? '';
         if (empty($userId)) {
@@ -767,13 +814,13 @@ Http::shutdown()
     ->inject('project')
     ->inject('user')
     ->inject('queueForEvents')
-    ->inject('queueForAudits')
-    ->inject('queueForStatsUsage')
+    ->inject('auditContext')
+    ->inject('publisherForAudits')
+    ->inject('usage')
+    ->inject('publisherForUsage')
     ->inject('queueForDeletes')
     ->inject('queueForDatabase')
-    ->inject('queueForBuilds')
-    ->inject('queueForMessaging')
-    ->inject('queueForFunctions')
+    ->inject('publisherForFunctions')
     ->inject('queueForWebhooks')
     ->inject('queueForRealtime')
     ->inject('dbForProject')
@@ -781,11 +828,13 @@ Http::shutdown()
     ->inject('timelimit')
     ->inject('eventProcessor')
     ->inject('bus')
-    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, Audit $queueForAudits, StatsUsage $queueForStatsUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor, Bus $bus) use ($parseLabel) {
+    ->inject('apiKey')
+    ->inject('mode')
+    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Audit $publisherForAudits, Context $usage, UsagePublisher $publisherForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor, Bus $bus, ?Key $apiKey, string $mode) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
-        if (!empty($queueForEvents->getEvent())) {
+        if (! empty($queueForEvents->getEvent())) {
             if (empty($queueForEvents->getPayload())) {
                 $queueForEvents->setPayload($responsePayload);
             }
@@ -807,19 +856,25 @@ Http::shutdown()
             }
 
             // Only trigger functions if there are matching function events
-            if (!empty($functionsEvents)) {
+            if (! empty($functionsEvents)) {
                 foreach ($generatedEvents as $event) {
                     if (isset($functionsEvents[$event])) {
-                        $queueForFunctions
-                            ->from($queueForEvents)
-                            ->trigger();
+                        $publisherForFunctions->enqueue(FunctionMessage::fromEvent(
+                            event: $queueForEvents->getEvent(),
+                            params: $queueForEvents->getParams(),
+                            project: $queueForEvents->getProject(),
+                            user: $queueForEvents->getUser(),
+                            userId: $queueForEvents->getUserId(),
+                            payload: $queueForEvents->getPayload(),
+                            platform: $queueForEvents->getPlatform(),
+                        ));
                         break;
                     }
                 }
             }
 
             // Only trigger webhooks if there are matching webhook events
-            if (!empty($webhooksEvents)) {
+            if (! empty($webhooksEvents)) {
                 foreach ($generatedEvents as $event) {
                     if (isset($webhooksEvents[$event])) {
                         $queueForWebhooks
@@ -843,7 +898,7 @@ Http::shutdown()
 
         if ($abuseEnabled && \count($abuseResetCode) > 0 && \in_array($response->getStatusCode(), $abuseResetCode)) {
             $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
-            $abuseKeyLabel = (!is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
+            $abuseKeyLabel = (! is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
 
             foreach ($abuseKeyLabel as $abuseKey) {
                 $start = $request->getContentRangeStart();
@@ -856,10 +911,10 @@ Http::shutdown()
                     ->setParam('{ip}', $request->getIP())
                     ->setParam('{url}', $request->getHostname() . $route->getPath())
                     ->setParam('{method}', $request->getMethod())
-                    ->setParam('{chunkId}', (int)($start / ($end + 1 - $start)));
+                    ->setParam('{chunkId}', (int) ($start / ($end + 1 - $start)));
 
                 foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
-                    if (!empty($value)) {
+                    if (! empty($value)) {
                         $timeLimit->setParam('{param-' . $key . '}', (\is_array($value)) ? \json_encode($value) : $value);
                     }
                 }
@@ -873,19 +928,21 @@ Http::shutdown()
          * Audit labels
          */
         $pattern = $route->getLabel('audits.resource', null);
-        if (!empty($pattern)) {
-            $resource = $parseLabel($pattern, $responsePayload, $requestParams, $user);
-            if (!empty($resource) && $resource !== $pattern) {
-                $queueForAudits->setResource($resource);
+        if (! empty($pattern)) {
+            $resource = $parseLabel($pattern, $responsePayload, $requestParams, $user, $project);
+            if (! empty($resource) && $resource !== $pattern) {
+                $auditContext->resource = $resource;
             }
         }
 
-        if (!$user->isEmpty()) {
+        if (! $user->isEmpty()) {
             $userClone = clone $user;
             // $user doesn't support `type` and can cause unintended effects.
-            $userClone->setAttribute('type', ACTIVITY_TYPE_USER);
-            $queueForAudits->setUser($userClone);
-        } elseif ($queueForAudits->getUser() === null || $queueForAudits->getUser()->isEmpty()) {
+            if (empty($user->getAttribute('type'))) {
+                $userClone->setAttribute('type', $mode === APP_MODE_ADMIN ? ACTIVITY_TYPE_ADMIN : ACTIVITY_TYPE_USER);
+            }
+            $auditContext->user = $userClone;
+        } elseif ($auditContext->user === null || $auditContext->user->isEmpty()) {
             /**
              * User in the request is empty, and no user was set for auditing previously.
              * This indicates:
@@ -903,40 +960,29 @@ Http::shutdown()
                 'name' => 'Guest',
             ]);
 
-            $queueForAudits->setUser($user);
+            $auditContext->user = $user;
         }
 
-        if (!empty($queueForAudits->getResource()) && !$queueForAudits->getUser()->isEmpty()) {
+        $auditUser = $auditContext->user;
+        if (! empty($auditContext->resource) && ! $auditUser->isEmpty()) {
             /**
              * audits.payload is switched to default true
              * in order to auto audit payload for all endpoints
              */
             $pattern = $route->getLabel('audits.payload', true);
-            if (!empty($pattern)) {
-                $queueForAudits->setPayload($responsePayload);
+            if (! empty($pattern)) {
+                $auditContext->payload = $responsePayload;
             }
 
-            foreach ($queueForEvents->getParams() as $key => $value) {
-                $queueForAudits->setParam($key, $value);
-            }
-
-            $queueForAudits->trigger();
+            $publisherForAudits->enqueue(AuditMessage::fromContext($auditContext));
         }
 
-        if (!empty($queueForDeletes->getType())) {
+        if (! empty($queueForDeletes->getType())) {
             $queueForDeletes->trigger();
         }
 
-        if (!empty($queueForDatabase->getType())) {
+        if (! empty($queueForDatabase->getType())) {
             $queueForDatabase->trigger();
-        }
-
-        if (!empty($queueForBuilds->getType())) {
-            $queueForBuilds->trigger();
-        }
-
-        if (!empty($queueForMessaging->getType())) {
-            $queueForMessaging->trigger();
         }
 
         // Cache label
@@ -944,15 +990,16 @@ Http::shutdown()
         if ($useCache) {
             $resource = $resourceType = null;
             $data = $response->getPayload();
-            if (!empty($data['payload'])) {
+            $statusCode = $response->getStatusCode();
+            if (! empty($data['payload']) && $statusCode >= 200 && $statusCode < 300) {
                 $pattern = $route->getLabel('cache.resource', null);
-                if (!empty($pattern)) {
-                    $resource = $parseLabel($pattern, $responsePayload, $requestParams, $user);
+                if (! empty($pattern)) {
+                    $resource = $parseLabel($pattern, $responsePayload, $requestParams, $user, $project);
                 }
 
                 $pattern = $route->getLabel('cache.resourceType', null);
-                if (!empty($pattern)) {
-                    $resourceType = $parseLabel($pattern, $responsePayload, $requestParams, $user);
+                if (! empty($pattern)) {
+                    $resourceType = $parseLabel($pattern, $responsePayload, $requestParams, $user, $project);
                 }
 
                 $cache = new Cache(
@@ -961,7 +1008,7 @@ Http::shutdown()
 
                 $key = $request->cacheIdentifier();
                 $signature = md5($data['payload']);
-                $cacheLog  =  $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
+                $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
                 $accessedAt = $cacheLog->getAttribute('accessedAt', 0);
                 $now = DateTime::now();
                 if ($cacheLog->isEmpty()) {
@@ -994,7 +1041,7 @@ Http::shutdown()
         }
 
         if ($project->getId() !== 'console') {
-            if (!User::isPrivileged($authorization->getRoles())) {
+            if (! $user->isPrivileged($authorization->getRoles())) {
                 $bus->dispatch(new RequestCompleted(
                     project: $project->getArrayCopy(),
                     request: $request,
@@ -1002,9 +1049,32 @@ Http::shutdown()
                 ));
             }
 
-            $queueForStatsUsage
-                ->setProject($project)
-                ->trigger();
+            // Publish usage metrics if context has data
+            if (! $usage->isEmpty()) {
+                $metrics = $usage->getMetrics();
+
+                // Filter out API key disabled metrics using suffix pattern matching
+                $disabledMetrics = $apiKey?->getDisabledMetrics() ?? [];
+                if (! empty($disabledMetrics)) {
+                    $metrics = array_values(array_filter($metrics, function ($metric) use ($disabledMetrics) {
+                        foreach ($disabledMetrics as $pattern) {
+                            if (str_ends_with($metric['key'], $pattern)) {
+                                return false;
+                            }
+                        }
+
+                        return true;
+                    }));
+                }
+
+                $message = new UsageMessage(
+                    project: $project,
+                    metrics: $metrics,
+                    reduce: $usage->getReduce()
+                );
+
+                $publisherForUsage->enqueue($message);
+            }
         }
     });
 

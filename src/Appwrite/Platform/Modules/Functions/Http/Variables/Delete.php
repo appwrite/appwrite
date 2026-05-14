@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Variables;
 
+use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
@@ -35,6 +36,7 @@ class Delete extends Base
             ->groups(['api', 'functions'])
             ->label('scope', 'functions.write')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
+            ->label('event', 'variables.[variableId].delete')
             ->label('audits.event', 'variable.delete')
             ->label('audits.resource', 'function/{request.functionId}')
             ->label('sdk', new Method(
@@ -56,6 +58,7 @@ class Delete extends Base
             ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function unique ID.', false, ['dbForProject'])
             ->param('variableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Variable unique ID.', false, ['dbForProject'])
             ->inject('response')
+            ->inject('queueForEvents')
             ->inject('dbForProject')
             ->inject('dbForPlatform')
             ->inject('authorization')
@@ -66,6 +69,7 @@ class Delete extends Base
         string $functionId,
         string $variableId,
         Response $response,
+        QueueEvent $queueForEvents,
         Database $dbForProject,
         Database $dbForPlatform,
         Authorization $authorization
@@ -77,11 +81,7 @@ class Delete extends Base
         }
 
         $variable = $dbForProject->getDocument('variables', $variableId);
-        if ($variable === false || $variable->isEmpty() || $variable->getAttribute('resourceInternalId') !== $function->getSequence() || $variable->getAttribute('resourceType') !== 'function') {
-            throw new Exception(Exception::VARIABLE_NOT_FOUND);
-        }
-
-        if ($variable === false || $variable->isEmpty()) {
+        if ($variable->isEmpty() || $variable->getAttribute('resourceInternalId') !== $function->getSequence() || $variable->getAttribute('resourceType') !== 'function') {
             throw new Exception(Exception::VARIABLE_NOT_FOUND);
         }
 
@@ -101,6 +101,8 @@ class Delete extends Base
             'schedule' => $schedule->getAttribute('schedule'),
             'active' => $schedule->getAttribute('active'),
         ])));
+
+        $queueForEvents->setParam('variableId', $variable->getId());
 
         $response->noContent();
     }

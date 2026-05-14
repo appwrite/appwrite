@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Network\Platform;
 use Appwrite\OpenSSL\OpenSSL;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -123,11 +124,17 @@ Database::addFilter(
         return;
     },
     function (mixed $value, Document $document, Database $database) {
-        return $database->getAuthorization()->skip(fn () => $database
+        $platforms = $database->getAuthorization()->skip(fn () => $database
             ->find('platforms', [
                 Query::equal('projectInternalId', [$document->getSequence()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]));
+
+        foreach ($platforms as $platform) {
+            $platform->setAttribute('type', Platform::mapDeprecatedType($platform->getAttribute('type')));
+        }
+
+        return $platforms;
     }
 );
 
@@ -466,5 +473,19 @@ Database::addFilter(
                 Query::equal('resourceInternalId', [$document->getSequence()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]));
+    }
+);
+
+Database::addFilter(
+    'subQueryReportInsights',
+    function (mixed $value) {
+        return;
+    },
+    function (mixed $value, Document $document, Database $database) {
+        return $database->getAuthorization()->skip(fn () => $database->find('insights', [
+            Query::equal('projectInternalId', [$document->getAttribute('projectInternalId')]),
+            Query::equal('reportInternalId', [$document->getSequence()]),
+            Query::limit(APP_LIMIT_SUBQUERY),
+        ]));
     }
 );

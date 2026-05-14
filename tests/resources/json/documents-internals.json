@@ -1,0 +1,254 @@
+[
+    {
+        "$id": "z1y2x3w4v5u6t7s8",
+        "$createdAt": "2022-10-23T10:33:01+00:00",
+        "$updatedAt": "2023-03-15T12:00:41+00:00",
+        "$permissions": [
+            "read(\"any\")",
+            "update(\"user:123\")"
+        ],
+        "name": "Diamond Mendez",
+        "age": 56
+    },
+    {
+        "$id": "r9q0p1o2n3m4l5k6",
+        "$createdAt": "2021-08-11T21:05:13+00:00",
+        "$updatedAt": "2024-01-02T08:45:22+00:00",
+        "$permissions": [
+            "read(\"any\")",
+            "update(\"user:456\")"
+        ],
+        "name": "Michael Huff",
+        "age": 20
+    },
+    {
+        "$id": "j7i8h9g0f1e2d3c4",
+        "$createdAt": "2020-05-29T14:22:56+00:00",
+        "$updatedAt": "2022-11-30T18:19:33+00:00",
+        "$permissions": [
+            "read(\"any\")"
+        ],
+        "name": "Alyssa Rodriguez",
+        "age": 37
+    },
+    {
+        "$id": "b5a6z7y8x9w0v1u2",
+        "$createdAt": "2023-01-18T03:44:09+00:00",
+        "$updatedAt": "2023-09-07T23:50:17+00:00",
+        "$permissions": [
+            "read(\"any\")"
+        ],
+        "name": "Barbara Smith",
+        "age": 26
+    },
+    {
+        "$id": "t3s4r5q6p7o8n9m0",
+        "$createdAt": "2020-11-02T09:12:45+00:00",
+        "$updatedAt": "2021-07-21T15:30:55+00:00",
+        "$permissions": [
+            "read(\"any\")"
+        ],
+        "name": "Evelyn Edwards",
+        "age": 54
+    },
+    {
+        "$id": "l1k2j3i4h5g6f7e8",
+        "$createdAt": "2022-03-19T19:55:27+00:00",
+        "$updatedAt": "2024-05-14T06:28:11+00:00",
+        "$permissions": [
+            "read(\"any\")"
+        ],
+        "name": "Tina Richardson",
+        "age": 41
+    },
+    {
+        "$id": "d9c0b1a2z3y4x5w6",
+        "$createdAt": "2021-04-07T01:18:34+00:00",
+        "$updatedAt": "2023-06-25T11:47:04+00:00",
+        "$permissions": [
+            "read(\"any\")"
+        ],
+        "name": "Joel Hernandez",
+        "age": 49
+    },
+    {
+        "$id": "v7u8t9s0r1q2p3o4",
+        "$createdAt": "2023-08-22T16:40:18+00:00",
+        "$updatedAt": "2024-02-19T04:09:58+00:00",
+        "$permissions": [
+            "read(\"any\")"
+        ],
+        "name": "Zachary Cooper",
+        "age": 59
+    },
+    {
+        "$id": "n5m6l7k8j9i0h1g2",
+        "$createdAt": "2020-02-12T07:59:01+00:00",
+        "$updatedAt": "2022-09-08T13:21:49+00:00",
+        "$permissions": [
+            "read(\"any\")"
+        ],
+        "name": "Brittany Spears",
+        "age": 20
+    },
+    {
+        "$id": "f3e4d5c6b7a8z9y0",
+        "$createdAt": "2021-12-05T22:33:12+00:00",
+        "$updatedAt": "2023-11-11T02:55:37+00:00",
+        "$permissions": [
+            "read(\"any\")"
+        ],
+        "name": "Holly White",
+        "age": 47
+    },
+    {
+        "$id": "x1w2v3u4t5s6r7q8",
+        "$createdAt": "2022-07-14T05:01:50+00:00",
+        "$updatedAt": "2024-04-01T20:10:26+00:00",
+        "$permissions": [
+            "read(\"any\")"
+        ],
+        "name": "Kimberly Barnes",
+        "age": 27
+    },
+    {
+        "$id": "p9o0n1m2l3k4j5i6",
+        "$createdAt": "2020-09-28T11:27:36+00:00",
+        "$updatedAt": "2021-10-17T09:38:08+00:00",
+        "$permissions": [
+            "read(\"any\")"
+        ],
+        "name": "Stephen Miller",
+        "age": 53
+    },
+    {
+        "$id": "h7g8f9e0d1c2b3a4",
+        "$createdAt": "2023-04-04T08:15:59+00:00",
+        "$updatedAt": "2024-06-29T17:03:14+00:00",
+        "$permissions": [
+            "read(\"any\")"
+        ],
+        "name": "Yvonne Newman",
+        "age": 41
+    },
+    {
+        "$id": "y5x6w7v8u9t0s1r2",
+        "$createdAt": "2021-01-25T18:09:21+00:00",
+        "$updatedAt": "2022-08-16T22:44:51+00:00",
+        "$permissions": [
+            "read(\"any\")"
+        ],
+        "name": "Carol Kane",
+        "age": 38
+    },
+    {
+        "$id": "q3p4o5n6m7l8k9j0",
+        "$createdAt": "2022-06-09T12:53:47+00:00",
+        "$updatedAt": "2023-12-24T01:16:05+00:00",
+        "$permissions": [
+            "read(\"any\")"
+        ],
+        "name": "Doris Foster",
+        "age": 44
+    },
+    {
+        "$id": "i1h2g3f4e5d6c7b8",
+        "$createdAt": "2020-07-03T23:37:02+00:00",
+        "$updatedAt": "2021-05-09T05:52:43+00:00",
+        "$permissions": [
+            "read(\"any\")"
+        ],
+        "name": "Joseph Stokes",
+        "age": 28
+    },
+    {
+        "$id": "a9z0y1x2w3v4u5t6",
+        "$createdAt": "2023-10-10T02:20:15+00:00",
+        "$updatedAt": "2024-03-28T14:33:29+00:00",
+        "$permissions": [
+            "read(\"any\")"
+        ],
+        "name": "Steve Williams",
+        "age": 31
+    },
+    {
+        "$id": "s7r8q9p0o1n2m3l4",
+        "$createdAt": "2021-06-16T13:48:53+00:00",
+        "$updatedAt": "2022-04-22T07:07:19+00:00",
+        "$permissions": [
+            "read(\"any\")"
+        ],
+        "name": "James Carey",
+        "age": 29
+    },
+    {
+        "$id": "k5j6i7h8g9f0e1d2",
+        "$createdAt": "2022-12-27T20:06:38+00:00",
+        "$updatedAt": "2023-08-03T10:25:57+00:00",
+        "$permissions": [
+            "read(\"any\")"
+        ],
+        "name": "Kathryn Henry",
+        "age": 38
+    },
+    {
+        "$id": "c3b4a5z6y7x8w9v0",
+        "$createdAt": "2020-04-20T04:41:24+00:00",
+        "$updatedAt": "2021-02-13T19:14:06+00:00",
+        "$permissions": [
+            "read(\"any\")"
+        ],
+        "name": "Christopher Landry",
+        "age": 23
+    },
+    {
+        "$id": "u1t2s3r4q5p6o7n8",
+        "$createdAt": "2023-05-08T00:58:10+00:00",
+        "$updatedAt": "2024-07-05T03:36:48+00:00",
+        "$permissions": [
+            "read(\"any\")"
+        ],
+        "name": "Jennifer Mcgee",
+        "age": 62
+    },
+    {
+        "$id": "m9l0k1j2i3h4g5f6",
+        "$createdAt": "2021-09-01T06:11:42+00:00",
+        "$updatedAt": "2022-01-26T16:59:23+00:00",
+        "$permissions": [
+            "read(\"any\")"
+        ],
+        "name": "Cathy Church",
+        "age": 35
+    },
+    {
+        "$id": "e7d8c9b0a1z2y3x4",
+        "$createdAt": "2022-02-18T15:24:07+00:00",
+        "$updatedAt": "2023-04-12T00:40:31+00:00",
+        "$permissions": [
+            "read(\"any\")"
+        ],
+        "name": "Jose Lopez",
+        "age": 41
+    },
+    {
+        "$id": "w5v6u7t8s9r0q1p2",
+        "$createdAt": "2020-12-13T09:03:55+00:00",
+        "$updatedAt": "2021-11-06T11:23:16+00:00",
+        "$permissions": [
+            "read(\"any\")"
+        ],
+        "name": "William Rose",
+        "age": 30
+    },
+    {
+        "$id": "o3n4m5l6k7j8i9h0",
+        "$createdAt": "2021-12-13T09:03:55+00:00",
+        "$updatedAt": "2022-11-06T11:23:16+00:00",
+        "$permissions": [
+            "read(\"any\")"
+        ],
+        "name": "Charles Hammer",
+        "age": 61
+    }
+]

@@ -5,9 +5,10 @@ namespace Appwrite\Platform\Modules\Account\Http\Account\MFA\Challenges;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
-use Appwrite\Event\Mail;
-use Appwrite\Event\Messaging;
-use Appwrite\Event\StatsUsage;
+use Appwrite\Event\Message\Mail as MailMessage;
+use Appwrite\Event\Message\Messaging as MessagingMessage;
+use Appwrite\Event\Publisher\Mail as MailPublisher;
+use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -15,6 +16,7 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Template\Template;
+use Appwrite\Usage\Context;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use libphonenumber\NumberParseException;
@@ -101,10 +103,10 @@ class Create extends Action
             ->inject('platform')
             ->inject('request')
             ->inject('queueForEvents')
-            ->inject('queueForMessaging')
-            ->inject('queueForMails')
+            ->inject('publisherForMessaging')
+            ->inject('publisherForMails')
             ->inject('timelimit')
-            ->inject('queueForStatsUsage')
+            ->inject('usage')
             ->inject('plan')
             ->inject('proofForToken')
             ->inject('proofForCode')
@@ -121,10 +123,10 @@ class Create extends Action
         array $platform,
         Request $request,
         Event $queueForEvents,
-        Messaging $queueForMessaging,
-        Mail $queueForMails,
+        MessagingPublisher $publisherForMessaging,
+        MailPublisher $publisherForMails,
         callable $timelimit,
-        StatsUsage $queueForStatsUsage,
+        Context $usage,
         array $plan,
         ProofsToken $proofForToken,
         ProofsCode $proofForCode
@@ -170,11 +172,6 @@ class Create extends Action
 
                 $message = Template::fromFile($templatesPath . '/sms-base.tpl');
 
-                $customTemplate = $project->getAttribute('templates', [])['sms.mfaChallenge-' . $locale->default] ?? [];
-                if (!empty($customTemplate)) {
-                    $message = $customTemplate['message'] ?? $message;
-                }
-
                 $messageContent = Template::fromString($locale->getText("sms.verification.body"));
                 $messageContent
                     ->setParam('{{project}}', $projectName)
@@ -185,32 +182,30 @@ class Create extends Action
                 $message = $message->render();
 
                 $phone = $user->getAttribute('phone');
-                $queueForMessaging
-                    ->setType(MESSAGE_SEND_TYPE_INTERNAL)
-                    ->setMessage(new Document([
+                $publisherForMessaging->enqueue(new MessagingMessage(
+                    type: MESSAGE_SEND_TYPE_INTERNAL,
+                    project: $project,
+                    message: new Document([
                         '$id' => $challenge->getId(),
                         'data' => [
                             'content' => $code,
                         ],
-                    ]))
-                    ->setRecipients([$phone])
-                    ->setProviderType(MESSAGE_TYPE_SMS);
+                    ]),
+                    recipients: [$phone],
+                    providerType: MESSAGE_TYPE_SMS,
+                ));
 
                 $helper = PhoneNumberUtil::getInstance();
                 try {
                     $countryCode = $helper->parse($phone)->getCountryCode();
 
                     if (!empty($countryCode)) {
-                        $queueForStatsUsage
-                            ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
+                        $usage->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
                     }
                 } catch (NumberParseException $e) {
                     // Ignore invalid phone number for country code stats
                 }
-                $queueForStatsUsage
-                    ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
-                    ->setProject($project)
-                    ->trigger();
+                $usage->addMetric(METRIC_AUTH_METHOD_PHONE, 1);
                 break;
             case Type::EMAIL:
                 if (empty(System::getEnv('_APP_SMTP_HOST'))) {
@@ -227,7 +222,9 @@ class Create extends Action
                 $preview = $locale->getText("emails.mfaChallenge.preview");
                 $heading = $locale->getText("emails.mfaChallenge.heading");
 
-                $customTemplate = $project->getAttribute('templates', [])['email.mfaChallenge-' . $locale->default] ?? [];
+                $customTemplate =
+                    $project->getAttribute('templates', [])['email.mfaChallenge-' . $locale->default] ??
+                    $project->getAttribute('templates', [])['email.mfaChallenge-' . $locale->fallback] ?? [];
                 $smtpBaseTemplate = $project->getAttribute('smtpBaseTemplate', 'email-base');
 
                 $validator = new FileName();
@@ -257,7 +254,9 @@ class Create extends Action
 
                 $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
                 $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
-                $replyTo = "";
+                $replyToEmail = '';
+                $replyToName = '';
+                $smtpConfig = [];
 
                 if ($smtpEnabled) {
                     if (!empty($smtp['senderEmail'])) {
@@ -266,16 +265,14 @@ class Create extends Action
                     if (!empty($smtp['senderName'])) {
                         $senderName = $smtp['senderName'];
                     }
-                    if (!empty($smtp['replyTo'])) {
-                        $replyTo = $smtp['replyTo'];
+                    // Includes backwards compatibility: fall back to legacy `replyTo` key
+                    $smtpReplyToEmail = $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? '';
+                    if (!empty($smtpReplyToEmail)) {
+                        $replyToEmail = $smtpReplyToEmail;
                     }
-
-                    $queueForMails
-                        ->setSmtpHost($smtp['host'] ?? '')
-                        ->setSmtpPort($smtp['port'] ?? '')
-                        ->setSmtpUsername($smtp['username'] ?? '')
-                        ->setSmtpPassword($smtp['password'] ?? '')
-                        ->setSmtpSecure($smtp['secure'] ?? '');
+                    if (!empty($smtp['replyToName'])) {
+                        $replyToName = $smtp['replyToName'];
+                    }
 
                     if (!empty($customTemplate)) {
                         if (!empty($customTemplate['senderEmail'])) {
@@ -284,18 +281,30 @@ class Create extends Action
                         if (!empty($customTemplate['senderName'])) {
                             $senderName = $customTemplate['senderName'];
                         }
-                        if (!empty($customTemplate['replyTo'])) {
-                            $replyTo = $customTemplate['replyTo'];
+                        // Includes backwards compatibility: fall back to legacy `replyTo` key
+                        $customReplyToEmail = $customTemplate['replyToEmail'] ?? $customTemplate['replyTo'] ?? '';
+                        if (!empty($customReplyToEmail)) {
+                            $replyToEmail = $customReplyToEmail;
+                        }
+                        if (!empty($customTemplate['replyToName'])) {
+                            $replyToName = $customTemplate['replyToName'];
                         }
 
                         $body = $customTemplate['message'] ?? '';
                         $subject = $customTemplate['subject'] ?? $subject;
                     }
 
-                    $queueForMails
-                        ->setSmtpReplyTo($replyTo)
-                        ->setSmtpSenderEmail($senderEmail)
-                        ->setSmtpSenderName($senderName);
+                    $smtpConfig = [
+                        'host' => $smtp['host'] ?? '',
+                        'port' => $smtp['port'] ?? '',
+                        'username' => $smtp['username'] ?? '',
+                        'password' => $smtp['password'] ?? '',
+                        'secure' => $smtp['secure'] ?? '',
+                        'replyToEmail' => $replyToEmail,
+                        'replyToName' => $replyToName,
+                        'senderEmail' => $senderEmail,
+                        'senderName' => $senderName,
+                    ];
                 }
 
                 $emailVariables = [
@@ -322,20 +331,18 @@ class Create extends Action
                     ]);
                 }
 
-                $queueForMails
-                    ->setSubject($subject)
-                    ->setPreview($preview)
-                    ->setBody($body)
-                    ->setBodyTemplate($bodyTemplate)
-                    ->appendVariables($emailVariables)
-                    ->setRecipient($user->getAttribute('email'));
-
-                // since this is console project, set email sender name!
-                if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
-                    $queueForMails->setSenderName($platform['emailSenderName']);
-                }
-
-                $queueForMails->trigger();
+                $publisherForMails->enqueue(new MailMessage(
+                    project: $project,
+                    recipient: $user->getAttribute('email'),
+                    subject: $subject,
+                    bodyTemplate: $bodyTemplate,
+                    body: $body,
+                    preview: $preview,
+                    smtp: $smtpConfig,
+                    variables: $emailVariables,
+                    customMailOptions: $smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE ? ['senderName' => $platform['emailSenderName']] : [],
+                    platform: $platform,
+                ));
                 break;
         }
 

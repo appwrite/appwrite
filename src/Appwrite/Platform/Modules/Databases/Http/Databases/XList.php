@@ -27,6 +27,11 @@ class XList extends Action
         return 'listDatabases';
     }
 
+    protected function getDatabaseTypeQueryFilters(): array
+    {
+        return [Query::equal('type', [$this->getDatabaseType()])];
+    }
+
     public function __construct()
     {
         $this
@@ -91,9 +96,8 @@ class XList extends Action
             $cursor->setValue($cursorDocument);
         }
 
-        $queries[] = Query::equal('type', [$this->getDatabaseType()]);
-
         try {
+            $queries = array_merge($queries, $this->getDatabaseTypeQueryFilters());
             $databases = $dbForProject->find('databases', $queries);
             $total = $includeTotal ? $dbForProject->count('databases', $queries, APP_LIMIT_COUNT) : 0;
         } catch (OrderException $e) {

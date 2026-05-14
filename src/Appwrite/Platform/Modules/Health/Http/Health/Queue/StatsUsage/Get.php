@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Health\Http\Health\Queue\StatsUsage;
 
-use Appwrite\Event\StatsUsage;
+use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -42,16 +42,16 @@ class Get extends Base
                 contentType: ContentType::JSON
             ))
             ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
-            ->inject('queueForStatsUsage')
+            ->inject('publisherForUsage')
             ->inject('response')
             ->callback($this->action(...));
     }
 
-    public function action(int|string $threshold, StatsUsage $queueForStatsUsage, Response $response): void
+    public function action(int|string $threshold, UsagePublisher $publisherForUsage, Response $response): void
     {
         $threshold = (int) $threshold;
 
-        $size = $queueForStatsUsage->getSize();
+        $size = $publisherForUsage->getSize();
 
         $this->assertQueueThreshold($size, $threshold);
 
