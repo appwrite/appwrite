@@ -354,6 +354,16 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()));
 
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
+            'x-appwrite-organization' => $data['teamId'],
+        ], $this->getHeaders()));
+
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
         $this->assertGreaterThan(0, count($response['body']['projects']));
@@ -564,6 +574,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
+            'x-appwrite-organization' => $teamId,
         ], $this->getHeaders()), [
             'queries' => [
                 Query::select(['$id', 'name'])->toString(),
@@ -7041,6 +7052,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
+            'x-appwrite-organization' => $teamId,
         ], $this->getHeaders()), [
             'queries' => [
                 Query::contains('labels', ['nonvip'])->toString(),
@@ -7273,6 +7285,7 @@ class ProjectsConsoleClientTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-response-format' => '1.9.4',
                 'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
+                'x-appwrite-organization' => $teamId,
             ]);
 
             $this->assertEquals(200, $response['headers']['status-code']);
