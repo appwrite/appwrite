@@ -163,7 +163,6 @@ class Key
                 $projectCheckDisabled = $payload['projectCheckDisabled'] ?? false;
                 $previewAuthDisabled = $payload['previewAuthDisabled'] ?? false;
                 $deploymentStatusIgnored = $payload['deploymentStatusIgnored'] ?? false;
-
                 $scopes = \array_merge($payload['scopes'] ?? [], $scopes);
 
                 if (!$projectCheckDisabled && $projectId !== $project->getId()) {
