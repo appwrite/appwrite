@@ -375,6 +375,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
+            'x-appwrite-organization' => $data['teamId'],
         ], $this->getHeaders(), [
             'search' => $id
         ]));
@@ -387,6 +388,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
+            'x-appwrite-organization' => $data['teamId'],
         ], $this->getHeaders(), [
             'search' => 'Project Test'
         ]));
@@ -604,7 +606,8 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-response-format' => '1.9.4'
+            'x-appwrite-response-format' => '1.9.4',
+            'x-appwrite-organization' => $data['teamId'],
         ], $this->getHeaders()), [
             'queries' => [
                 Query::select(['$id', 'name', 'teamId', 'description', '$createdAt', '$updatedAt'])->toString(),
@@ -7066,6 +7069,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
+            'x-appwrite-organization' => $teamId,
         ], $this->getHeaders()), [
             'queries' => [
                 Query::contains('labels', ['vip'])->toString(),
@@ -7078,6 +7082,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
+            'x-appwrite-organization' => $teamId,
         ], $this->getHeaders()), [
             'queries' => [
                 Query::contains('labels', ['imagine'])->toString(),
@@ -7091,6 +7096,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
+            'x-appwrite-organization' => $teamId,
         ], $this->getHeaders()), [
             'queries' => [
                 Query::contains('labels', ['nonvip', 'imagine'])->toString(),
@@ -7105,6 +7111,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
+            'x-appwrite-organization' => $teamId,
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Test project - Labels 2',
@@ -7134,6 +7141,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
+            'x-appwrite-organization' => $teamId,
         ], $this->getHeaders()), [
             'queries' => [
                 Query::contains('labels', ['imagine'])->toString(),
@@ -7149,6 +7157,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
+            'x-appwrite-organization' => $teamId,
         ], $this->getHeaders()), [
             'queries' => [
                 Query::contains('labels', ['vip'])->toString(),
@@ -7163,6 +7172,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
+            'x-appwrite-organization' => $teamId,
         ], $this->getHeaders()), [
             'queries' => [
                 Query::contains('labels', ['vip'])->toString(),
@@ -7178,6 +7188,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
+            'x-appwrite-organization' => $teamId,
         ], $this->getHeaders()), [
             'queries' => [
                 Query::contains('labels', ['vip', 'imagine'])->toString(),
