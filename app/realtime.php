@@ -567,38 +567,6 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
     ));
     $register->get('telemetry.workerCounter')->add(1);
 
-    // Orphan sweep on pod restart -> no connections in in-memory realtime connections object.
-    // So db must be in sync and only one coroutine shall trigger this
-    if ($workerId === 0) {
-        go(function (): void {
-            $hostname = \gethostname();
-            if ($hostname === false || $hostname === '') {
-                return;
-            }
-
-            try {
-                $consoleDB = getConsoleDB();
-                $consoleDB->getAuthorization()->skip(fn () => $consoleDB->foreach('projects', function (Document $project) use ($hostname): void {
-                    try {
-                        $dbForProject = getProjectDB($project);
-                        $deletionCount = $dbForProject->deleteDocuments('presenceLogs', [
-                            Query::equal('hostname', [$hostname]),
-                            Query::equal('source', ['realtime']),
-                        ]);
-                        triggerPresenceUsage(-$deletionCount, $project);
-                    } catch (Throwable $th) {
-                        Console::error("Realtime startup orphan sweep failed for project {$project->getId()}: {$th->getMessage()}");
-                        logError($th, 'realtimeOrphanPresenceCleanup', tags: [
-                            'projectId' => $project->getId(),
-                        ]);
-                    }
-                }));
-            } catch (Throwable $th) {
-                Console::error('Realtime startup orphan sweep error: ' . $th->getMessage());
-            }
-        });
-    }
-
     $attempts = 0;
     $start = time();
 

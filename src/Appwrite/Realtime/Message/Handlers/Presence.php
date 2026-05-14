@@ -9,6 +9,7 @@ use Appwrite\Realtime\Message\Dispatcher;
 use Appwrite\Utopia\Database\Documents\User;
 use Closure;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
@@ -77,8 +78,7 @@ class Presence extends Action
             'userId' => $user->getId(),
             'source' => 'realtime',
             'status' => $status,
-            // Pod identity, used by the realtime worker's startup sweep to clean up rows
-            // orphaned by a previous incarnation of this hostname (i.e. pod crash before onClose ran).
+            'expiresAt' => DateTime::format((new \DateTime())->modify('+30 days')),
             'hostname' => \gethostname() ?: null,
         ];
         if ($metadata !== null) {

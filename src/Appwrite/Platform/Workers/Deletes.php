@@ -220,6 +220,7 @@ class Deletes extends Action
                 $this->deleteExpiredSessions($project, $getProjectDB);
                 $this->deleteExpiredTransactions($project, $getProjectDB);
                 $this->deleteExpiredPresences($project, $getProjectDB, $publisherForUsage);
+                $this->deleteStalePresences($project, $getProjectDB, $publisherForUsage);
                 $this->deleteOldDeployments($queueForDeletes, $project, $getProjectDB);
                 break;
             case DELETE_TYPE_REPORT:
@@ -1750,23 +1751,31 @@ class Deletes extends Action
     {
         $dbForProject = $getProjectDB($project);
 
-        // Drop a presence if either:
-        //   - its expiresAt has passed (HTTP-upserted rows always set this), or
-        //   - it was created more than 30 days ago. The upsert validator caps expiresAt at
-        //     +30 days, so nothing legitimate should outlive that. This branch catches rows
-        //     the expiresAt branch can't — chiefly realtime presences (expiresAt is null,
-        //     lifetime tied to the websocket) whose disconnect-time cleanup never ran.
         $now = DateTime::format(new \DateTime());
+
+        $deleted = $dbForProject->deleteDocuments('presenceLogs', [
+            Query::lessThan('expiresAt', $now),
+        ], onError: function (Throwable $th) {
+            // Swallow errors to avoid breaking the cleanup process
+        });
+
+        if ($deleted > 0) {
+            $usage = (new UsageContext())->addMetric(METRIC_USERS_PRESENCE, -$deleted);
+            $publisherForUsage->enqueue(new Usage(
+                project: $project,
+                metrics: $usage->getMetrics(),
+            ));
+        }
+    }
+
+    private function deleteStalePresences(Document $project, callable $getProjectDB, UsagePublisher $publisherForUsage): void
+    {
+        $dbForProject = $getProjectDB($project);
+
         $oldestAllowed = DateTime::format((new \DateTime())->sub(\DateInterval::createFromDateString('30 days')));
 
         $deleted = $dbForProject->deleteDocuments('presenceLogs', [
-            Query::or([
-                Query::and([
-                    Query::isNotNull('expiresAt'),
-                    Query::lessThan('expiresAt', $now),
-                ]),
-                Query::lessThan('$createdAt', $oldestAllowed),
-            ]),
+            Query::lessThan('$createdAt', $oldestAllowed),
         ], onError: function (Throwable $th) {
             // Swallow errors to avoid breaking the cleanup process
         });

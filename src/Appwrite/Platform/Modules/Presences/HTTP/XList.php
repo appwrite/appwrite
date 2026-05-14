@@ -95,10 +95,7 @@ class XList extends PlatformAction
 
         // should be excluded from the user provided query as user query would be used for caching only
         // otherwise cache will always miss due to the datetime now
-        $expiryFilter = Query::or([
-            Query::isNull('expiresAt'),
-            Query::greaterThan('expiresAt', DateTime::now()),
-        ]);
+        $expiryFilter = Query::greaterThan('expiresAt', DateTime::now());
 
         try {
             if ((int)$ttl > 0) {
