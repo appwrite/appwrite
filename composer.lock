@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "70b7a6b3803660b7a8aa1a542f630b02",
+    "content-hash": "5bf93473859f86fbf9438b17cb660331",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4606,16 +4606,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "dev-add-api-key-migration",
+            "version": "dev-add-project-variable-migration",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "93715c256bf57cd93a1ef92e366c19f9a53ff21a"
+                "reference": "c040472abd3c9874017f18cb1589c3c26677451c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/93715c256bf57cd93a1ef92e366c19f9a53ff21a",
-                "reference": "93715c256bf57cd93a1ef92e366c19f9a53ff21a",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/c040472abd3c9874017f18cb1589c3c26677451c",
+                "reference": "c040472abd3c9874017f18cb1589c3c26677451c",
                 "shasum": ""
             },
             "require": {
@@ -4641,7 +4641,25 @@
                     "Utopia\\Migration\\": "src/Migration"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\Tests\\": "tests/Migration"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "./vendor/bin/phpunit"
+                ],
+                "lint": [
+                    "./vendor/bin/pint --test"
+                ],
+                "format": [
+                    "./vendor/bin/pint"
+                ],
+                "check": [
+                    "./vendor/bin/phpstan analyse --level 3 src tests --memory-limit 2G"
+                ]
+            },
             "license": [
                 "MIT"
             ],
@@ -4654,10 +4672,10 @@
                 "utopia"
             ],
             "support": {
-                "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/add-api-key-migration"
+                "source": "https://github.com/utopia-php/migration/tree/add-project-variable-migration",
+                "issues": "https://github.com/utopia-php/migration/issues"
             },
-            "time": "2026-05-14T14:53:20+00:00"
+            "time": "2026-05-14T16:18:34+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -8567,7 +8585,7 @@
     "aliases": [
         {
             "package": "utopia-php/migration",
-            "version": "dev-add-api-key-migration",
+            "version": "dev-add-project-variable-migration",
             "alias": "1.12.0",
             "alias_normalized": "1.12.0.0"
         }

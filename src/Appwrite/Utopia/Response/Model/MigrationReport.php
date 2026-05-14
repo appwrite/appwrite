@@ -65,6 +65,12 @@ class MigrationReport extends Model
                 'default' => 0,
                 'example' => 5,
             ])
+            ->addRule(Resource::TYPE_PROJECT_VARIABLE, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of project variables to be migrated.',
+                'default' => 0,
+                'example' => 5,
+            ])
             ->addRule(Resource::TYPE_SITE, [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Number of sites to be migrated.',
