@@ -435,6 +435,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
+            'x-appwrite-organization' => $team['body']['$id'],
         ], $this->getHeaders()), [
             'queries' => [
                 Query::equal('teamId', [$team['body']['$id']])->toString(),
@@ -450,6 +451,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
+            'x-appwrite-organization' => $team['body']['$id'],
         ], $this->getHeaders()), [
             'queries' => [
                 Query::limit(1)->toString(),
@@ -464,6 +466,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
+            'x-appwrite-organization' => $team['body']['$id'],
         ], $this->getHeaders()), [
             'queries' => [
                 Query::offset(1)->toString(),
@@ -477,6 +480,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
+            'x-appwrite-organization' => $team['body']['$id'],
         ], $this->getHeaders()), [
             'queries' => [
                 Query::equal('name', ['Project Test 2'])->toString(),
@@ -492,6 +496,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
+            'x-appwrite-organization' => $team['body']['$id'],
         ], $this->getHeaders()), [
             'queries' => [
                 Query::orderDesc()->toString(),
@@ -506,6 +511,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
+            'x-appwrite-organization' => $team['body']['$id'],
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -516,6 +522,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
+            'x-appwrite-organization' => $team['body']['$id'],
         ], $this->getHeaders()), [
             'queries' => [
                 Query::cursorAfter(new Document(['$id' => $response['body']['projects'][0]['$id']]))->toString(),
@@ -532,6 +539,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
+            'x-appwrite-organization' => $team['body']['$id'],
         ], $this->getHeaders()), [
             'queries' => [
                 Query::cursorAfter(new Document(['$id' => 'unknown']))->toString(),
@@ -607,7 +615,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
-            'x-appwrite-organization' => $data['teamId'],
+            'x-appwrite-organization' => $teamId,
         ], $this->getHeaders()), [
             'queries' => [
                 Query::select(['$id', 'name', 'teamId', 'description', '$createdAt', '$updatedAt'])->toString(),
@@ -640,6 +648,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
+            'x-appwrite-organization' => $teamId,
         ], $this->getHeaders()), [
             'queries' => [
                 Query::select(['$id', 'name', 'teamId'])->toString(),
@@ -672,6 +681,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
+            'x-appwrite-organization' => $teamId,
         ], $this->getHeaders()), [
             'queries' => [
                 Query::select(['$id', 'name'])->toString(),
@@ -703,6 +713,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
+            'x-appwrite-organization' => $teamId,
         ], $this->getHeaders()), [
             'queries' => [
                 Query::select(['$id', 'name', 'platforms'])->toString(),
@@ -733,6 +744,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
+            'x-appwrite-organization' => $teamId,
         ], $this->getHeaders()), [
             'queries' => [
                 Query::select(['$id', 'name', 'webhooks', 'keys'])->toString(),
@@ -763,6 +775,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
+            'x-appwrite-organization' => $teamId,
         ], $this->getHeaders()), [
             'queries' => [
                 Query::select(['*'])->toString(),
@@ -794,6 +807,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
+            'x-appwrite-organization' => $teamId,
         ], $this->getHeaders()), [
             'queries' => [
                 Query::select(['$id', 'invalidAttribute'])->toString(),
@@ -1816,7 +1830,13 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals('en-us', $response['body']['locale']);
 
         /** Update Email template, fail due to SMTP disabled */
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/templates/email/verification/en-us', array_merge([
+        $projectWithoutSmtp = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'Project Without SMTP',
+            'region' => System::getEnv('_APP_REGION', 'default')
+        ]);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectWithoutSmtp . '/templates/email/verification/en-us', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.1',
