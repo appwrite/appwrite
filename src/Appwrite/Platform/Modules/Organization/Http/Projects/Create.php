@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Organization\Http\Projects;
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
 use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\ProjectId;
@@ -60,7 +61,8 @@ class Create extends Action
                         code: Response::STATUS_CODE_CREATED,
                         model: Response::MODEL_PROJECT,
                     )
-                ]
+                ],
+                contentType: ContentType::JSON
             ))
             ->param('projectId', '', new ProjectId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, and hyphen. Can\'t start with a special char. Max length is 36 chars.')
             ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')

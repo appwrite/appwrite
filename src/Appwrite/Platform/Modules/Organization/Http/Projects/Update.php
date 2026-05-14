@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Organization\Http\Projects;
 
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
@@ -32,7 +33,7 @@ class Update extends Action
             ->groups(['api', 'organization'])
             ->label('scope', 'organization.projects.write')
             ->label('audits.event', 'projects.update')
-            ->label('audits.resource', 'project/{request.projectId}')
+            ->label('audits.resource', 'project/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'organization',
                 group: 'projects',
@@ -46,7 +47,8 @@ class Update extends Action
                         code: Response::STATUS_CODE_OK,
                         model: Response::MODEL_PROJECT,
                     )
-                ]
+                ],
+                contentType: ContentType::JSON
             ))
             ->param('projectId', '', new UID(), 'Project unique ID.')
             ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
@@ -73,6 +75,8 @@ class Update extends Action
             'search' => implode(' ', [$projectId, $name]),
         ]));
 
-        $response->dynamic($project, Response::MODEL_PROJECT);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_OK)
+            ->dynamic($project, Response::MODEL_PROJECT);
     }
 }

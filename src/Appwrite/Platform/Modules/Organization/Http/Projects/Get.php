@@ -69,6 +69,8 @@ class Get extends Action
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $response->dynamic($project, Response::MODEL_PROJECT);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_OK)
+            ->dynamic($project, Response::MODEL_PROJECT);
     }
 }

@@ -118,10 +118,12 @@ class XList extends Action
 
         $response->addFilter(new ListSelection($selectQueries, 'projects'));
 
-        $response->dynamic(new Document([
-            'projects' => $projects,
-            'total' => $total,
-        ]), Response::MODEL_PROJECT_LIST);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_OK)
+            ->dynamic(new Document([
+                'projects' => $projects,
+                'total' => $total,
+            ]), Response::MODEL_PROJECT_LIST);
     }
 
     // Build mapping of columns to their subQuery filters
