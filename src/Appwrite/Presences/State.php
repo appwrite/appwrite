@@ -92,6 +92,21 @@ class State
             if ($dbForProject->getAdapter()->getSupportForUpsertOnUniqueIndex()) {
                 $existingPresence = $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userInternalId', [$userInternalId])]);
                 if ($existingPresence->isEmpty()) {
+                    // Guard against cross-user overwrite: upsertDocument matches on primary key,
+                    // so a caller-supplied $presenceId that collides with another user's record
+                    $existingById = $dbForProject->getDocument(
+                        self::COLLECTION_ID,
+                        $presenceDocument->getId(),
+                    );
+                    if (
+                        !$existingById->isEmpty()
+                        && $existingById->getAttribute('userInternalId') !== $userInternalId
+                    ) {
+                        throw new Exception(
+                            Exception::PRESENCE_ALREADY_EXISTS,
+                            params: [$presenceDocument->getId()],
+                        );
+                    }
                     $presenceCreated = true;
                 } else {
                     $presenceDocument->setAttribute('$id', $existingPresence->getId());

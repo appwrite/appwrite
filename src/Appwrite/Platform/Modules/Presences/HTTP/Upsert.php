@@ -166,7 +166,16 @@ class Upsert extends PlatformAction
 
         $presenceState = new PresenceState();
         $presenceDocument = new Document($presenceData);
-        $presenceState->setPermissions($presenceDocument, $permissions, $user, $authorization);
+        $ownerOverride = $permissions === null && ($isAPIKey || $isPrivilegedUser)
+            ? $resolvedUserId
+            : null;
+        $presenceState->setPermissions(
+            $presenceDocument,
+            $permissions,
+            $user,
+            $authorization,
+            ownerOverride: $ownerOverride,
+        );
         $presence = $presenceState->upsertForUser(
             $dbForProject,
             $presenceDocument,

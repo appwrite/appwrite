@@ -1016,4 +1016,93 @@ trait PresenceBase
         $this->assertEquals($userId, $list['body']['presences'][0]['userId']);
         $this->assertEquals('away', $list['body']['presences'][0]['status']);
     }
+
+    /**
+     * Regression test for cross-user overwrite on the native-upsert path.
+     *
+     * Scenario:
+     *   - User A has a presence row with $id = $sharedPresenceId.
+     *   - User B (different userInternalId, no existing presence) issues an upsert that
+     *     re-uses $sharedPresenceId.
+     *
+     * Without the ownership guard in State::upsertForUser, the second call would silently
+     * UPDATE A's row (because upsertDocument matches on the primary key) leaving B's data
+     * under A's $id. With the guard, the second call must fail with PRESENCE_ALREADY_EXISTS
+     * and A's row must be untouched.
+     */
+    public function testCrossUserUpsertDoesNotOverwriteForeignPresence(): void
+    {
+        if ($this->getSide() !== 'server') {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $projectId = $this->getProject()['$id'];
+        $adminHeaders = \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+        $presenceHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getPresenceApiKey(),
+        ];
+
+        $suffix = \uniqid();
+
+        $userA = $this->client->call(Client::METHOD_POST, '/users', $adminHeaders, [
+            'userId' => ID::unique(),
+            'email' => 'cross-upsert-a-' . $suffix . '@test.io',
+            'password' => 'password-a-' . $suffix,
+        ]);
+        $this->assertEquals(201, $userA['headers']['status-code']);
+        $userAId = $userA['body']['$id'];
+
+        $userB = $this->client->call(Client::METHOD_POST, '/users', $adminHeaders, [
+            'userId' => ID::unique(),
+            'email' => 'cross-upsert-b-' . $suffix . '@test.io',
+            'password' => 'password-b-' . $suffix,
+        ]);
+        $this->assertEquals(201, $userB['headers']['status-code']);
+        $userBId = $userB['body']['$id'];
+        $this->assertNotSame($userAId, $userBId);
+
+        $sharedPresenceId = ID::unique();
+
+        $victim = $this->client->call(
+            Client::METHOD_PUT,
+            '/presences/' . $sharedPresenceId,
+            $presenceHeaders,
+            [
+                'userId' => $userAId,
+                'status' => 'online',
+                'metadata' => ['owner' => 'A'],
+            ]
+        );
+        $this->assertEquals(200, $victim['headers']['status-code']);
+        $this->assertEquals($sharedPresenceId, $victim['body']['$id']);
+        $this->assertEquals($userAId, $victim['body']['userId']);
+
+        $attack = $this->client->call(
+            Client::METHOD_PUT,
+            '/presences/' . $sharedPresenceId,
+            $presenceHeaders,
+            [
+                'userId' => $userBId,
+                'status' => 'online',
+                'metadata' => ['owner' => 'B'],
+            ]
+        );
+        $this->assertEquals(409, $attack['headers']['status-code']);
+        $this->assertSame('presence_already_exists', $attack['body']['type'] ?? null);
+
+        $check = $this->client->call(
+            Client::METHOD_GET,
+            '/presences/' . $sharedPresenceId,
+            $presenceHeaders
+        );
+        $this->assertEquals(200, $check['headers']['status-code']);
+        $this->assertEquals($userAId, $check['body']['userId']);
+        $this->assertEquals(['owner' => 'A'], $check['body']['metadata']);
+    }   
 }
