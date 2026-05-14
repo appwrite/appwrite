@@ -29,7 +29,7 @@ class Get extends Action
             ->setHttpPath('/v1/organization/projects/:projectId')
             ->desc('Get organization project')
             ->groups(['api', 'organization'])
-            ->label('scope', 'organization.projects.read')
+            ->label('scope', 'projects.read')
             ->label('sdk', new Method(
                 namespace: 'organization',
                 group: 'projects',

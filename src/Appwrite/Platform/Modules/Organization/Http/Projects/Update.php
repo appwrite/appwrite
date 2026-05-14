@@ -31,7 +31,7 @@ class Update extends Action
             ->httpAlias('/v1/projects/:projectId')
             ->desc('Update organization project')
             ->groups(['api', 'organization'])
-            ->label('scope', 'organization.projects.write')
+            ->label('scope', 'projects.write')
             ->label('audits.event', 'projects.update')
             ->label('audits.resource', 'project/{response.$id}')
             ->label('sdk', new Method(

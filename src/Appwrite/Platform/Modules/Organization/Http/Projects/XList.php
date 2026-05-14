@@ -47,7 +47,7 @@ class XList extends Action
             ->httpAlias('/v1/projects')
             ->desc('List organization projects')
             ->groups(['api', 'organization'])
-            ->label('scope', 'organization.projects.read')
+            ->label('scope', 'projects.read')
             ->label('sdk', new Method(
                 namespace: 'organization',
                 group: 'projects',
