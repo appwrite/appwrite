@@ -45,6 +45,7 @@ class XList extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/organizations/:organizationId/projects')
+            ->httpAlias('/v1/projects')
             ->desc('List projects')
             ->groups(['api', 'projects'])
             ->label('scope', 'projects.read')
@@ -70,11 +71,19 @@ class XList extends Action
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('response')
             ->inject('dbForPlatform')
+            ->inject('team')
             ->callback($this->action(...));
     }
 
-    public function action(string $organizationId, array $queries, string $search, bool $includeTotal, Response $response, Database $dbForPlatform)
+    public function action(string $organizationId, array $queries, string $search, bool $includeTotal, Response $response, Database $dbForPlatform, Document $team)
     {
+        if (empty($organizationId)) {
+            if ($team->isEmpty()) {
+                throw new Exception(Exception::TEAM_NOT_FOUND);
+            }
+            $organizationId = $team->getId();
+        }
+
         $team = $dbForPlatform->getDocument('teams', $organizationId);
 
         if ($team->isEmpty()) {

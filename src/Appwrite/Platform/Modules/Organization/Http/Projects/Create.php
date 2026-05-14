@@ -42,6 +42,7 @@ class Create extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/organizations/:organizationId/projects')
+            ->httpAlias('/v1/projects')
             ->desc('Create project')
             ->groups(['api', 'projects'])
             ->label('audits.event', 'projects.create')
@@ -70,11 +71,19 @@ class Create extends Action
             ->inject('cache')
             ->inject('pools')
             ->inject('hooks')
+            ->inject('team')
             ->callback($this->action(...));
     }
 
-    public function action(string $organizationId, string $projectId, string $name, string $region, Request $request, Response $response, Database $dbForPlatform, Cache $cache, Group $pools, Hooks $hooks)
+    public function action(string $organizationId, string $projectId, string $name, string $region, Request $request, Response $response, Database $dbForPlatform, Cache $cache, Group $pools, Hooks $hooks, Document $team)
     {
+        if (empty($organizationId)) {
+            if ($team->isEmpty()) {
+                throw new Exception(Exception::TEAM_NOT_FOUND);
+            }
+            $organizationId = $team->getId();
+        }
+
         $team = $dbForPlatform->getDocument('teams', $organizationId);
 
         if ($team->isEmpty()) {

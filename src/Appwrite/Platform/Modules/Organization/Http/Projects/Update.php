@@ -28,6 +28,7 @@ class Update extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
             ->setHttpPath('/v1/organizations/:organizationId/projects/:projectId')
+            ->httpAlias('/v1/projects/:projectId')
             ->desc('Update project')
             ->groups(['api', 'projects'])
             ->label('scope', 'projects.write')
@@ -60,11 +61,19 @@ class Update extends Action
             ->param('legalTaxId', '', new Text(256), 'Project legal tax ID. Max length: 256 chars.', true)
             ->inject('response')
             ->inject('dbForPlatform')
+            ->inject('team')
             ->callback($this->action(...));
     }
 
-    public function action(string $organizationId, string $projectId, string $name, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForPlatform)
+    public function action(string $organizationId, string $projectId, string $name, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForPlatform, Document $team)
     {
+        if (empty($organizationId)) {
+            if ($team->isEmpty()) {
+                throw new Exception(Exception::TEAM_NOT_FOUND);
+            }
+            $organizationId = $team->getId();
+        }
+
         $team = $dbForPlatform->getDocument('teams', $organizationId);
 
         if ($team->isEmpty()) {
