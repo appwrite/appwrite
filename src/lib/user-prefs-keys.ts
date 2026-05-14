@@ -204,6 +204,125 @@ export function buildDatabasesSidebarWidthPrefs(percent: number): UserPrefs {
 }
 
 // ---------------------------------------------------------------------------
+// Storage: files list column widths (account — same widths for every bucket)
+// ---------------------------------------------------------------------------
+
+/** Full key: `console.storageFiles.listColumnWidths` — JSON Record<columnKey, number> (px). */
+export const USER_PREFS_KEY_STORAGE_FILES_LIST_COLUMN_WIDTHS =
+  'console.storageFiles.listColumnWidths'
+
+export const STORAGE_FILES_LIST_DATA_COLUMN_MIN_WIDTH_PX = 72
+export const STORAGE_FILES_LIST_DATA_COLUMN_MAX_WIDTH_PX = 640
+
+export const STORAGE_FILES_LIST_COLUMN_WIDTH_KEYS = [
+  '$id',
+  'name',
+  'mimeType',
+  'sizeOriginal',
+  '$createdAt',
+  '$updatedAt',
+] as const
+
+export type StorageFilesListColumnWidthKey =
+  (typeof STORAGE_FILES_LIST_COLUMN_WIDTH_KEYS)[number]
+
+export const STORAGE_FILES_LIST_COLUMN_DEFAULT_WIDTHS: Record<
+  StorageFilesListColumnWidthKey,
+  number
+> = {
+  $id: 180,
+  name: 160,
+  mimeType: 140,
+  sizeOriginal: 120,
+  $createdAt: 180,
+  $updatedAt: 180,
+}
+
+const STORAGE_FILES_LIST_COLUMN_WIDTH_KEY_SET = new Set<string>(
+  STORAGE_FILES_LIST_COLUMN_WIDTH_KEYS,
+)
+
+export function clampStorageFilesListDataColumnWidthPx(px: number): number {
+  return Math.min(
+    STORAGE_FILES_LIST_DATA_COLUMN_MAX_WIDTH_PX,
+    Math.max(
+      STORAGE_FILES_LIST_DATA_COLUMN_MIN_WIDTH_PX,
+      Math.round(px),
+    ),
+  )
+}
+
+export function mergeStorageFilesListColumnWidthsWithDefaults(
+  stored: Record<string, number> | undefined,
+): Record<StorageFilesListColumnWidthKey, number> {
+  const out = { ...STORAGE_FILES_LIST_COLUMN_DEFAULT_WIDTHS }
+  if (!stored) return out
+  for (const k of STORAGE_FILES_LIST_COLUMN_WIDTH_KEYS) {
+    const v = stored[k]
+    if (typeof v === 'number' && Number.isFinite(v)) {
+      out[k] = clampStorageFilesListDataColumnWidthPx(v)
+    }
+  }
+  return out
+}
+
+export function getStorageFilesListColumnWidthsFromPrefs(
+  prefs: UserPrefs | null | undefined,
+): Record<string, number> {
+  const raw = prefs?.[USER_PREFS_KEY_STORAGE_FILES_LIST_COLUMN_WIDTHS]
+  if (raw == null) return {}
+
+  let parsed: unknown
+  if (typeof raw === 'string') {
+    const s = raw.trim()
+    if (s.length === 0) return {}
+    try {
+      parsed = JSON.parse(s) as unknown
+    } catch {
+      return {}
+    }
+  } else if (typeof raw === 'object' && !Array.isArray(raw)) {
+    parsed = raw
+  } else {
+    return {}
+  }
+
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+    return {}
+  }
+
+  const out: Record<string, number> = {}
+  for (const [k, v] of Object.entries(parsed as Record<string, unknown>)) {
+    if (!STORAGE_FILES_LIST_COLUMN_WIDTH_KEY_SET.has(k)) continue
+    const n = typeof v === 'number' ? v : Number(v)
+    if (!Number.isFinite(n)) continue
+    out[k] = clampStorageFilesListDataColumnWidthPx(n)
+  }
+  return out
+}
+
+export function mergeStorageFilesListColumnWidthsIntoPrefs(
+  prefs: UserPrefs,
+  widths: Record<string, number>,
+): UserPrefs {
+  const next = { ...prefs }
+  const payload: Record<string, number> = {}
+  for (const k of STORAGE_FILES_LIST_COLUMN_WIDTH_KEYS) {
+    const w = widths[k]
+    if (typeof w === 'number' && Number.isFinite(w)) {
+      payload[k] = clampStorageFilesListDataColumnWidthPx(w)
+    }
+  }
+  if (Object.keys(payload).length === 0) {
+    delete next[USER_PREFS_KEY_STORAGE_FILES_LIST_COLUMN_WIDTHS]
+    return next
+  }
+  next[USER_PREFS_KEY_STORAGE_FILES_LIST_COLUMN_WIDTHS] =
+    JSON.stringify(payload)
+  return next
+}
+
+// ---------------------------------------------------------------------------
 // Databases: tables DB row grid column widths (per database + table, account)
 // ---------------------------------------------------------------------------
 

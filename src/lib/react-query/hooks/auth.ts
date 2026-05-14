@@ -40,13 +40,13 @@ import type {
 import { DEFAULT_STALE_TIME } from './constants'
 import { useConsoleTeam, useUpdateConsoleTeamPrefs } from './teams'
 
-type ConsoleAccountCache = { prefs?: Record<string, unknown> }
+export type ConsoleAccountCache = { prefs?: Record<string, unknown> }
 
 /**
  * Account is cached under `['account', 'console', consoleImpersonationRevision]`.
  * `getQueryData(['account', 'console'])` never matches — use prefix query (see useSidebarCollapsed).
  */
-function getConsoleAccountFromCache(
+export function getConsoleAccountFromCache(
   queryClient: QueryClient,
 ): ConsoleAccountCache | undefined {
   const rows = queryClient.getQueriesData<ConsoleAccountCache>({

@@ -103,6 +103,34 @@ export function getCachedBucketListsFromQueryClient(
 }
 
 /**
+ * Resolve a bucket for UI (header, etc.) from the single-bucket query or any
+ * cached buckets list for the project — avoids a brief empty state while the
+ * detail query refetches during the same navigation (e.g. file selection).
+ */
+export function getBucketFromProjectCaches(
+  queryClient: QueryClient,
+  projectId: string | undefined,
+  bucketId: string | undefined,
+): Models.Bucket | undefined {
+  if (!projectId || !bucketId) return undefined
+  const detail = queryClient.getQueryData<Models.Bucket>([
+    'bucket',
+    'project',
+    projectId,
+    bucketId,
+  ])
+  if (detail) return detail
+  for (const list of getCachedBucketListsFromQueryClient(
+    queryClient,
+    projectId,
+  )) {
+    const b = list.find((x) => x.$id === bucketId)
+    if (b) return b
+  }
+  return undefined
+}
+
+/**
  * Query function to fetch a single bucket by ID
  *
  * This is extracted so it can be reused in both hooks and route loaders.

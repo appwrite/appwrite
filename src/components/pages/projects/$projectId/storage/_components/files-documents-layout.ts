@@ -3,6 +3,8 @@
  * `Spreadsheet` (inline table + right preview split).
  */
 
+import { cn } from '@/lib/utils'
+
 export const STORAGE_FILES_TABLE_PANE_WIDTH_STORAGE_KEY =
   'console.storageFilesTablePaneWidthPx'
 
@@ -85,3 +87,13 @@ export const STORAGE_SPREADSHEET_BODY_CELL_BORDER =
 /** Last body cell: no right border at the table edge. */
 export const STORAGE_SPREADSHEET_BODY_CELL_BORDER_LAST =
   'border-b border-border'
+
+/**
+ * Column resize rail (matches Tables DB `Spreadsheet` `DATA_COLUMN_RESIZE_RAIL_HANDLE_CLASS`).
+ */
+export const STORAGE_FILES_LIST_DATA_COLUMN_RESIZE_RAIL_HANDLE_CLASS = cn(
+  'group absolute top-0 bottom-0 z-[41] w-2 -translate-x-1/2 cursor-col-resize touch-none border-0 bg-transparent p-0 outline-none',
+  'after:pointer-events-none after:absolute after:inset-y-0 after:left-1/2 after:w-[0.5px] after:-translate-x-1/2 after:bg-border',
+  'before:pointer-events-none before:absolute before:inset-y-0 before:left-1/2 before:z-10 before:w-2 before:-translate-x-1/2 before:bg-border before:opacity-0 before:transition-opacity',
+  'hover:before:opacity-100',
+)

@@ -5,9 +5,11 @@ import {
   useLayoutEffect,
   useCallback,
   useRef,
+  type CSSProperties,
   type DragEvent,
   type PointerEvent as ReactPointerEvent,
 } from 'react'
+import { flushSync } from 'react-dom'
 import { useLocation, Link, useSearch } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import {
@@ -29,6 +31,8 @@ import {
   FILES_DEFAULT_SORT_BY,
   FILES_DEFAULT_SORT_ORDER,
   fileQueryOptions,
+  getBucketFromProjectCaches,
+  getConsoleAccountFromCache,
 } from '@/lib/react-query/hooks'
 import { ServiceHeader, type Tab } from '../../shared/ServiceHeader'
 import { CopyableId } from '@/components/global/shared/CopyableId'
@@ -93,8 +97,35 @@ import {
   STORAGE_SPREADSHEET_HEADER_CELL_BORDER_SPLIT_TOP_LAST,
   STORAGE_SPREADSHEET_HEADER_STICKY_CHECKBOX_SPLIT_TOP,
   STORAGE_SPREADSHEET_STICKY_THEAD_CLASS,
+  STORAGE_FILES_LIST_DATA_COLUMN_RESIZE_RAIL_HANDLE_CLASS,
 } from '../_components/files-documents-layout'
 import { useMediaMinWidth } from '@/hooks/use-media-min-width'
+import { useAuth } from '@/components/global/auth/RequireAuth'
+import type { UserPrefs } from '@/lib/user-prefs-keys'
+import {
+  STORAGE_FILES_LIST_COLUMN_WIDTH_KEYS,
+  STORAGE_FILES_LIST_DATA_COLUMN_MIN_WIDTH_PX,
+  clampStorageFilesListDataColumnWidthPx,
+  getStorageFilesListColumnWidthsFromPrefs,
+  mergeStorageFilesListColumnWidthsIntoPrefs,
+  mergeStorageFilesListColumnWidthsWithDefaults,
+  type StorageFilesListColumnWidthKey,
+} from '@/lib/user-prefs-keys'
+
+const STORAGE_FILES_STACKED_COL_STYLES: Record<
+  StorageFilesListColumnWidthKey,
+  CSSProperties
+> = {
+  $id: { width: '180px' },
+  name: { minWidth: '160px' },
+  mimeType: { minWidth: '140px' },
+  sizeOriginal: { width: '120px' },
+  $createdAt: { width: '180px' },
+  $updatedAt: { width: '180px' },
+}
+
+const STORAGE_FILES_LIST_COLUMN_RESIZE_LAYOUT_KEY =
+  STORAGE_FILES_LIST_COLUMN_WIDTH_KEYS.join('\u0001')
 
 function dataTransferHasFileList(dataTransfer: DataTransfer | null): boolean {
   if (!dataTransfer?.types?.length) return false
@@ -287,6 +318,31 @@ export function View() {
 
   // Fetch bucket data
   const { data: bucket } = useBucket(projectId, bucketId)
+
+  const lastDisplayBucketRef = useRef<Models.Bucket | null>(null)
+  useLayoutEffect(() => {
+    if (
+      lastDisplayBucketRef.current &&
+      bucketId &&
+      lastDisplayBucketRef.current.$id !== bucketId
+    ) {
+      lastDisplayBucketRef.current = null
+    }
+  }, [bucketId])
+
+  useEffect(() => {
+    if (bucket && bucketId && bucket.$id === bucketId) {
+      lastDisplayBucketRef.current = bucket
+    }
+  }, [bucket, bucketId])
+
+  const displayBucket =
+    bucket ??
+    (lastDisplayBucketRef.current?.$id === bucketId
+      ? lastDisplayBucketRef.current
+      : null) ??
+    getBucketFromProjectCaches(queryClient, projectId, bucketId) ??
+    undefined
 
   useEffect(() => {
     setSearchInput(urlSearch ?? '')
@@ -810,6 +866,8 @@ export function View() {
   const useInlineFilePreviewPane = true
   const isFilesStackedLayout =
     useInlineFilePreviewPane && !wideEnoughForTablePreviewSplit
+  const splitFilesTable =
+    useInlineFilePreviewPane && !isFilesStackedLayout
   const [fileTablePaneWidthPx, setFileTablePaneWidthPx] = useState(
     readStoredStorageFilesTablePaneWidthPx,
   )
@@ -890,14 +948,238 @@ export function View() {
     return () => ro.disconnect()
   }, [isFilesStackedLayout])
 
+  const { account } = useAuth()
+  const [fileListColumnWidths, setFileListColumnWidths] = useState<
+    Record<StorageFilesListColumnWidthKey, number>
+  >(() => {
+    const cached = getConsoleAccountFromCache(queryClient)
+    const raw = getStorageFilesListColumnWidthsFromPrefs(
+      cached?.prefs as UserPrefs | undefined,
+    )
+    return mergeStorageFilesListColumnWidthsWithDefaults(raw)
+  })
+
+  const [resizingFileColumnKey, setResizingFileColumnKey] =
+    useState<StorageFilesListColumnWidthKey | null>(null)
+
+  const fileListColumnWidthsRef = useRef(fileListColumnWidths)
+  if (resizingFileColumnKey == null) {
+    fileListColumnWidthsRef.current = fileListColumnWidths
+  }
+
+  const fileListColumnColRefs = useRef(
+    new Map<StorageFilesListColumnWidthKey, HTMLTableColElement>(),
+  )
+
+  const setFileColumnColRef = useCallback(
+    (key: StorageFilesListColumnWidthKey) =>
+      (el: HTMLTableColElement | null) => {
+        if (el) fileListColumnColRefs.current.set(key, el)
+        else fileListColumnColRefs.current.delete(key)
+      },
+    [],
+  )
+
+  const filesTableScrollRef = useRef<HTMLDivElement>(null)
+  const filesTableLayerRef = useRef<HTMLDivElement>(null)
+  const fileColumnHeaderThRefs = useRef(
+    new Map<StorageFilesListColumnWidthKey, HTMLTableCellElement>(),
+  )
+  const fileColumnRailRefs = useRef(
+    new Map<StorageFilesListColumnWidthKey, HTMLButtonElement>(),
+  )
+
+  const setFileColumnHeaderThRef = useCallback(
+    (key: StorageFilesListColumnWidthKey) =>
+      (node: HTMLTableCellElement | null) => {
+        if (node) fileColumnHeaderThRefs.current.set(key, node)
+        else fileColumnHeaderThRefs.current.delete(key)
+      },
+    [],
+  )
+
+  const repositionFileColumnRailsOnly = useCallback(() => {
+    const layer = filesTableLayerRef.current
+    if (!layer) return
+    const layerRect = layer.getBoundingClientRect()
+    for (const col of STORAGE_FILES_LIST_COLUMN_WIDTH_KEYS) {
+      const th = fileColumnHeaderThRefs.current.get(col)
+      const rail = fileColumnRailRefs.current.get(col)
+      if (!th || !rail) continue
+      rail.style.left = `${th.getBoundingClientRect().right - layerRect.left}px`
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      try {
+        const acct = await sdk.forConsole.account.get()
+        if (cancelled) return
+        const raw = getStorageFilesListColumnWidthsFromPrefs(
+          acct.prefs as UserPrefs | undefined,
+        )
+        const next = mergeStorageFilesListColumnWidthsWithDefaults(raw)
+        setFileListColumnWidths((prev) => {
+          let same = true
+          for (const k of STORAGE_FILES_LIST_COLUMN_WIDTH_KEYS) {
+            if (prev[k] !== next[k]) {
+              same = false
+              break
+            }
+          }
+          return same ? prev : next
+        })
+      } catch {
+        if (!cancelled) {
+          setFileListColumnWidths(
+            mergeStorageFilesListColumnWidthsWithDefaults(undefined),
+          )
+        }
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [account])
+
+  const getFileColumnWidthPx = useCallback(
+    (key: StorageFilesListColumnWidthKey) => fileListColumnWidths[key],
+    [fileListColumnWidths],
+  )
+
+  const applyDraggedFileColumnWidthPx = useCallback(
+    (columnKey: StorageFilesListColumnWidthKey, widthPx: number) => {
+      const next = clampStorageFilesListDataColumnWidthPx(widthPx)
+      fileListColumnWidthsRef.current = {
+        ...fileListColumnWidthsRef.current,
+        [columnKey]: next,
+      }
+      const colEl = fileListColumnColRefs.current.get(columnKey)
+      if (colEl) {
+        colEl.style.width = `${next}px`
+        colEl.style.minWidth = `${next}px`
+      }
+      const thEl = fileColumnHeaderThRefs.current.get(columnKey)
+      if (thEl) {
+        thEl.style.width = `${next}px`
+        thEl.style.minWidth = `${STORAGE_FILES_LIST_DATA_COLUMN_MIN_WIDTH_PX}px`
+      }
+      repositionFileColumnRailsOnly()
+    },
+    [repositionFileColumnRailsOnly],
+  )
+
+  const persistFileListColumnWidths = useCallback(
+    async (widths: Record<StorageFilesListColumnWidthKey, number>) => {
+      try {
+        const acct = await sdk.forConsole.account.get()
+        const prefs = mergeStorageFilesListColumnWidthsIntoPrefs(
+          (acct.prefs || {}) as UserPrefs,
+          widths as Record<string, number>,
+        )
+        await sdk.forConsole.account.updatePrefs({ prefs })
+        queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+      } catch {
+        /* preference save is best-effort */
+      }
+    },
+    [queryClient],
+  )
+
+  useLayoutEffect(() => {
+    if (!splitFilesTable) return
+    const scroll = filesTableScrollRef.current
+    const layer = filesTableLayerRef.current
+    if (!scroll || !layer) return
+
+    const measure = () => {
+      repositionFileColumnRailsOnly()
+    }
+
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(scroll)
+    ro.observe(layer)
+    scroll.addEventListener('scroll', measure, { passive: true })
+    window.addEventListener('resize', measure)
+    return () => {
+      ro.disconnect()
+      scroll.removeEventListener('scroll', measure)
+      window.removeEventListener('resize', measure)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable layout key; widths/scroll/resize drive rail positions
+  }, [
+    STORAGE_FILES_LIST_COLUMN_RESIZE_LAYOUT_KEY,
+    splitFilesTable,
+    fileListColumnWidths,
+    files.length,
+    repositionFileColumnRailsOnly,
+  ])
+
+  const handleFileColumnResizePointerDown = useCallback(
+    (columnKey: StorageFilesListColumnWidthKey) =>
+      (e: ReactPointerEvent<HTMLButtonElement>) => {
+        if (!splitFilesTable) return
+        e.preventDefault()
+        e.stopPropagation()
+        const btn = e.currentTarget
+        btn.setPointerCapture(e.pointerId)
+        const startX = e.clientX
+        const initialWidth = getFileColumnWidthPx(columnKey)
+        flushSync(() => {
+          setResizingFileColumnKey(columnKey)
+        })
+        applyDraggedFileColumnWidthPx(columnKey, initialWidth)
+        const onMove = (ev: globalThis.PointerEvent) => {
+          const delta = ev.clientX - startX
+          applyDraggedFileColumnWidthPx(columnKey, initialWidth + delta)
+        }
+        const onUp = () => {
+          try {
+            btn.releasePointerCapture(e.pointerId)
+          } catch {
+            /* already released */
+          }
+          window.removeEventListener('pointermove', onMove)
+          window.removeEventListener('pointerup', onUp)
+          window.removeEventListener('pointercancel', onUp)
+          flushSync(() => {
+            setResizingFileColumnKey(null)
+            setFileListColumnWidths({ ...fileListColumnWidthsRef.current })
+          })
+          void persistFileListColumnWidths(fileListColumnWidthsRef.current)
+        }
+        window.addEventListener('pointermove', onMove)
+        window.addEventListener('pointerup', onUp)
+        window.addEventListener('pointercancel', onUp)
+      },
+    [
+      splitFilesTable,
+      applyDraggedFileColumnWidthPx,
+      getFileColumnWidthPx,
+      persistFileListColumnWidths,
+    ],
+  )
+
+  useEffect(() => {
+    if (!resizingFileColumnKey) return
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+    return () => {
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+    }
+  }, [resizingFileColumnKey])
+
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
       <ServiceHeader
         title={
-          bucket ? (
+          displayBucket ? (
             <div className="flex min-w-0 items-center gap-2">
-              <span className="truncate">{bucket.name}</span>
-              <CopyableId id={bucket.$id} size="xs" className="shrink-0" />
+              <span className="truncate">{displayBucket.name}</span>
+              <CopyableId id={displayBucket.$id} size="xs" className="shrink-0" />
             </div>
           ) : (
             'Bucket'
@@ -971,7 +1253,7 @@ export function View() {
         fullWidthBorder
         fullWidth
         contentAfterBorder={
-          bucket && !bucket.enabled ? (
+          displayBucket && !displayBucket.enabled ? (
             <div className="border-b border-border bg-amber-500/5">
               <div className="w-full px-4 py-3 sm:px-6">
                 <Alert
@@ -1078,7 +1360,7 @@ export function View() {
                 >
                   <div
                     style={
-                      useInlineFilePreviewPane && !isFilesStackedLayout
+                      splitFilesTable
                         ? { width: fileTablePaneWidthPx }
                         : undefined
                     }
@@ -1094,19 +1376,27 @@ export function View() {
                         : 'min-w-0 flex-1',
                     )}
                   >
-                    <div className="min-h-0 flex-1 overflow-auto overscroll-contain">
+                    <div
+                      ref={filesTableScrollRef}
+                      className="min-h-0 flex-1 overflow-auto overscroll-contain"
+                    >
+                      <div
+                        ref={splitFilesTable ? filesTableLayerRef : undefined}
+                        className={cn(
+                          splitFilesTable &&
+                            'relative inline-block min-w-full align-top',
+                        )}
+                      >
                     <table
                       className={cn(
                         'w-full border-collapse',
-                        useInlineFilePreviewPane &&
-                          !isFilesStackedLayout &&
-                          'table-fixed',
+                        splitFilesTable && 'table-fixed',
                       )}
                     >
                       <colgroup>
                         <col
                           style={
-                            useInlineFilePreviewPane && !isFilesStackedLayout
+                            splitFilesTable
                               ? {
                                   width: STORAGE_FILES_TABLE_EDGE_COL_PX,
                                   minWidth: STORAGE_FILES_TABLE_EDGE_COL_PX,
@@ -1115,48 +1405,30 @@ export function View() {
                               : { width: 40 }
                           }
                         />
-                        <col
-                          style={
-                            useInlineFilePreviewPane && !isFilesStackedLayout
-                              ? { minWidth: 180 }
-                              : { width: '180px' }
-                          }
-                        />
-                        <col
-                          style={
-                            useInlineFilePreviewPane && !isFilesStackedLayout
-                              ? { minWidth: 160 }
-                              : { minWidth: '160px' }
-                          }
-                        />
-                        <col
-                          style={
-                            useInlineFilePreviewPane && !isFilesStackedLayout
-                              ? { minWidth: 140 }
-                              : { minWidth: '140px' }
-                          }
-                        />
-                        <col
-                          style={
-                            useInlineFilePreviewPane && !isFilesStackedLayout
-                              ? { width: 120, minWidth: 120 }
-                              : { width: '120px' }
-                          }
-                        />
-                        <col
-                          style={
-                            useInlineFilePreviewPane && !isFilesStackedLayout
-                              ? { width: 180, minWidth: 180 }
-                              : { width: '180px' }
-                          }
-                        />
-                        <col
-                          style={
-                            useInlineFilePreviewPane && !isFilesStackedLayout
-                              ? { width: 180, minWidth: 180 }
-                              : { width: '180px' }
-                          }
-                        />
+                        {STORAGE_FILES_LIST_COLUMN_WIDTH_KEYS.map((key) => {
+                          const isDragResize =
+                            splitFilesTable && resizingFileColumnKey === key
+                          return (
+                            <col
+                              key={key}
+                              ref={
+                                splitFilesTable
+                                  ? setFileColumnColRef(key)
+                                  : undefined
+                              }
+                              style={
+                                splitFilesTable
+                                  ? isDragResize
+                                    ? undefined
+                                    : {
+                                        width: fileListColumnWidths[key],
+                                        minWidth: fileListColumnWidths[key],
+                                      }
+                                  : STORAGE_FILES_STACKED_COL_STYLES[key]
+                              }
+                            />
+                          )
+                        })}
                       </colgroup>
                       <thead className={STORAGE_SPREADSHEET_STICKY_THEAD_CLASS}>
                         <tr className={STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS}>
@@ -1164,13 +1436,12 @@ export function View() {
                             className={cn(
                               'sticky left-0 z-40 bg-background px-2 py-0 align-middle text-center',
                               STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS,
-                              useInlineFilePreviewPane &&
-                                !isFilesStackedLayout &&
+                              splitFilesTable &&
                                 'min-w-[40px] max-w-[40px] shrink-0 box-border',
                               STORAGE_SPREADSHEET_HEADER_STICKY_CHECKBOX_SPLIT_TOP,
                             )}
                             style={
-                              useInlineFilePreviewPane && !isFilesStackedLayout
+                              splitFilesTable
                                 ? {
                                     width: STORAGE_FILES_TABLE_EDGE_COL_PX,
                                     minWidth: STORAGE_FILES_TABLE_EDGE_COL_PX,
@@ -1193,13 +1464,31 @@ export function View() {
                             </div>
                           </th>
                           <th
+                            ref={
+                              splitFilesTable
+                                ? setFileColumnHeaderThRef('$id')
+                                : undefined
+                            }
                             className={cn(
-                              'w-[180px] px-3 py-0 align-middle',
+                              splitFilesTable
+                                ? 'min-w-0 px-3 py-0 align-middle'
+                                : 'w-[180px] px-3 py-0 align-middle',
                               STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS,
                               STORAGE_SPREADSHEET_HEADER_CELL_BORDER_SPLIT_TOP,
                             )}
+                            style={
+                              splitFilesTable
+                                ? resizingFileColumnKey === '$id'
+                                  ? undefined
+                                  : {
+                                      width: fileListColumnWidths.$id,
+                                      minWidth:
+                                        STORAGE_FILES_LIST_DATA_COLUMN_MIN_WIDTH_PX,
+                                    }
+                                : undefined
+                            }
                           >
-                            <div className="flex h-full items-center gap-2">
+                            <div className="flex h-full min-w-0 items-center gap-2 pr-1.5">
                               <Fingerprint className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                               <span className="text-[12px] font-medium text-foreground">
                                 $id
@@ -1207,7 +1496,7 @@ export function View() {
                               <button
                                 type="button"
                                 onClick={() => handleFileColumnSort('$id')}
-                                className="ml-auto cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                className="ml-auto shrink-0 cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                               >
                                 {urlSortBy === '$id' ? (
                                   urlSortOrder === 'asc' ? (
@@ -1222,13 +1511,31 @@ export function View() {
                             </div>
                           </th>
                           <th
+                            ref={
+                              splitFilesTable
+                                ? setFileColumnHeaderThRef('name')
+                                : undefined
+                            }
                             className={cn(
-                              'min-w-[160px] px-3 py-0 align-middle',
+                              splitFilesTable
+                                ? 'min-w-0 px-3 py-0 align-middle'
+                                : 'min-w-[160px] px-3 py-0 align-middle',
                               STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS,
                               STORAGE_SPREADSHEET_HEADER_CELL_BORDER_SPLIT_TOP,
                             )}
+                            style={
+                              splitFilesTable
+                                ? resizingFileColumnKey === 'name'
+                                  ? undefined
+                                  : {
+                                      width: fileListColumnWidths.name,
+                                      minWidth:
+                                        STORAGE_FILES_LIST_DATA_COLUMN_MIN_WIDTH_PX,
+                                    }
+                                : undefined
+                            }
                           >
-                            <div className="flex h-full items-center gap-2">
+                            <div className="flex h-full min-w-0 items-center gap-2 pr-1.5">
                               <FileIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                               <span className="text-[12px] font-medium text-foreground">
                                 name
@@ -1236,7 +1543,7 @@ export function View() {
                               <button
                                 type="button"
                                 onClick={() => handleFileColumnSort('name')}
-                                className="ml-auto cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                className="ml-auto shrink-0 cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                               >
                                 {urlSortBy === 'name' ? (
                                   urlSortOrder === 'asc' ? (
@@ -1251,22 +1558,60 @@ export function View() {
                             </div>
                           </th>
                           <th
+                            ref={
+                              splitFilesTable
+                                ? setFileColumnHeaderThRef('mimeType')
+                                : undefined
+                            }
                             className={cn(
-                              'min-w-[140px] px-3 py-0 align-middle text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground',
+                              splitFilesTable
+                                ? 'min-w-0 px-3 py-0 align-middle text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground'
+                                : 'min-w-[140px] px-3 py-0 align-middle text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground',
                               STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS,
                               STORAGE_SPREADSHEET_HEADER_CELL_BORDER_SPLIT_TOP,
                             )}
+                            style={
+                              splitFilesTable
+                                ? resizingFileColumnKey === 'mimeType'
+                                  ? undefined
+                                  : {
+                                      width: fileListColumnWidths.mimeType,
+                                      minWidth:
+                                        STORAGE_FILES_LIST_DATA_COLUMN_MIN_WIDTH_PX,
+                                    }
+                                : undefined
+                            }
                           >
-                            MIME type
+                            <div className="flex h-full min-w-0 items-center pr-1.5">
+                              <span className="truncate">MIME type</span>
+                            </div>
                           </th>
                           <th
+                            ref={
+                              splitFilesTable
+                                ? setFileColumnHeaderThRef('sizeOriginal')
+                                : undefined
+                            }
                             className={cn(
-                              'w-[120px] min-w-[120px] shrink-0 px-3 py-0 align-middle',
+                              splitFilesTable
+                                ? 'min-w-0 shrink-0 px-3 py-0 align-middle'
+                                : 'w-[120px] min-w-[120px] shrink-0 px-3 py-0 align-middle',
                               STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS,
                               STORAGE_SPREADSHEET_HEADER_CELL_BORDER_SPLIT_TOP,
                             )}
+                            style={
+                              splitFilesTable
+                                ? resizingFileColumnKey === 'sizeOriginal'
+                                  ? undefined
+                                  : {
+                                      width: fileListColumnWidths.sizeOriginal,
+                                      minWidth:
+                                        STORAGE_FILES_LIST_DATA_COLUMN_MIN_WIDTH_PX,
+                                    }
+                                : undefined
+                            }
                           >
-                            <div className="flex h-full items-center gap-2 whitespace-nowrap">
+                            <div className="flex h-full min-w-0 items-center gap-2 whitespace-nowrap pr-1.5">
                               <span className="text-[12px] font-medium text-foreground">
                                 size
                               </span>
@@ -1275,7 +1620,7 @@ export function View() {
                                 onClick={() =>
                                   handleFileColumnSort('sizeOriginal')
                                 }
-                                className="ml-auto cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                className="ml-auto shrink-0 cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                               >
                                 {urlSortBy === 'sizeOriginal' ? (
                                   urlSortOrder === 'asc' ? (
@@ -1290,13 +1635,31 @@ export function View() {
                             </div>
                           </th>
                           <th
+                            ref={
+                              splitFilesTable
+                                ? setFileColumnHeaderThRef('$createdAt')
+                                : undefined
+                            }
                             className={cn(
-                              'w-[180px] px-3 py-0 align-middle',
+                              splitFilesTable
+                                ? 'min-w-0 px-3 py-0 align-middle'
+                                : 'w-[180px] px-3 py-0 align-middle',
                               STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS,
                               STORAGE_SPREADSHEET_HEADER_CELL_BORDER_SPLIT_TOP,
                             )}
+                            style={
+                              splitFilesTable
+                                ? resizingFileColumnKey === '$createdAt'
+                                  ? undefined
+                                  : {
+                                      width: fileListColumnWidths.$createdAt,
+                                      minWidth:
+                                        STORAGE_FILES_LIST_DATA_COLUMN_MIN_WIDTH_PX,
+                                    }
+                                : undefined
+                            }
                           >
-                            <div className="flex h-full items-center gap-2">
+                            <div className="flex h-full min-w-0 items-center gap-2 pr-1.5">
                               <Calendar className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                               <span className="text-[12px] font-medium text-foreground">
                                 $createdAt
@@ -1304,7 +1667,7 @@ export function View() {
                               <button
                                 type="button"
                                 onClick={() => handleFileColumnSort('$createdAt')}
-                                className="ml-auto cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                className="ml-auto shrink-0 cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                               >
                                 {urlSortBy === '$createdAt' ? (
                                   urlSortOrder === 'asc' ? (
@@ -1319,13 +1682,31 @@ export function View() {
                             </div>
                           </th>
                           <th
+                            ref={
+                              splitFilesTable
+                                ? setFileColumnHeaderThRef('$updatedAt')
+                                : undefined
+                            }
                             className={cn(
-                              'w-[180px] px-3 py-0 align-middle',
+                              splitFilesTable
+                                ? 'min-w-0 px-3 py-0 align-middle'
+                                : 'w-[180px] px-3 py-0 align-middle',
                               STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS,
                               STORAGE_SPREADSHEET_HEADER_CELL_BORDER_SPLIT_TOP_LAST,
                             )}
+                            style={
+                              splitFilesTable
+                                ? resizingFileColumnKey === '$updatedAt'
+                                  ? undefined
+                                  : {
+                                      width: fileListColumnWidths.$updatedAt,
+                                      minWidth:
+                                        STORAGE_FILES_LIST_DATA_COLUMN_MIN_WIDTH_PX,
+                                    }
+                                : undefined
+                            }
                           >
-                            <div className="flex h-full items-center gap-2">
+                            <div className="flex h-full min-w-0 items-center gap-2 pr-1.5">
                               <Calendar className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                               <span className="text-[12px] font-medium text-foreground">
                                 $updatedAt
@@ -1333,7 +1714,7 @@ export function View() {
                               <button
                                 type="button"
                                 onClick={() => handleFileColumnSort('$updatedAt')}
-                                className="ml-auto cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                className="ml-auto shrink-0 cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                               >
                                 {urlSortBy === '$updatedAt' ? (
                                   urlSortOrder === 'asc' ? (
@@ -1417,8 +1798,7 @@ export function View() {
                                 <td
                                   className={cn(
                                     'sticky left-0 w-10 border-b border-border px-2 py-1.5 text-center',
-                                    useInlineFilePreviewPane &&
-                                      !isFilesStackedLayout &&
+                                    splitFilesTable &&
                                       'min-w-[40px] max-w-[40px] shrink-0 box-border',
                                     'shadow-[inset_-1px_0_0_0_var(--border)]',
                                     !isPreviewRow
@@ -1429,8 +1809,7 @@ export function View() {
                                       'bg-muted',
                                   )}
                                   style={
-                                    useInlineFilePreviewPane &&
-                                    !isFilesStackedLayout
+                                    splitFilesTable
                                       ? {
                                           width: STORAGE_FILES_TABLE_EDGE_COL_PX,
                                           minWidth:
@@ -1456,9 +1835,20 @@ export function View() {
                                 </td>
                                 <td
                                   className={cn(
-                                    'w-[180px] px-3 py-1.5',
+                                    splitFilesTable
+                                      ? 'min-w-0 px-3 py-1.5'
+                                      : 'w-[180px] px-3 py-1.5',
                                     STORAGE_SPREADSHEET_BODY_CELL_BORDER,
                                   )}
+                                  style={
+                                    splitFilesTable
+                                      ? {
+                                          width: fileListColumnWidths.$id,
+                                          minWidth:
+                                            STORAGE_FILES_LIST_DATA_COLUMN_MIN_WIDTH_PX,
+                                        }
+                                      : undefined
+                                  }
                                 >
                                   {!pending ? (
                                     <CopyableId id={file.$id} size="xs" />
@@ -1471,8 +1861,18 @@ export function View() {
                                 <td
                                   className={cn(
                                     'max-w-0 px-3 py-1.5',
+                                    splitFilesTable && 'min-w-0',
                                     STORAGE_SPREADSHEET_BODY_CELL_BORDER,
                                   )}
+                                  style={
+                                    splitFilesTable
+                                      ? {
+                                          width: fileListColumnWidths.name,
+                                          minWidth:
+                                            STORAGE_FILES_LIST_DATA_COLUMN_MIN_WIDTH_PX,
+                                        }
+                                      : undefined
+                                  }
                                 >
                                   <div className="flex min-w-0 items-center gap-2">
                                     <span className="min-w-0 flex-1 truncate text-[12px] font-medium text-foreground">
@@ -1491,8 +1891,18 @@ export function View() {
                                 <td
                                   className={cn(
                                     'px-3 py-1.5',
+                                    splitFilesTable && 'min-w-0',
                                     STORAGE_SPREADSHEET_BODY_CELL_BORDER,
                                   )}
+                                  style={
+                                    splitFilesTable
+                                      ? {
+                                          width: fileListColumnWidths.mimeType,
+                                          minWidth:
+                                            STORAGE_FILES_LIST_DATA_COLUMN_MIN_WIDTH_PX,
+                                        }
+                                      : undefined
+                                  }
                                 >
                                   <span className="block truncate font-mono text-[12px] text-muted-foreground">
                                     {file.mimeType || '—'}
@@ -1500,9 +1910,20 @@ export function View() {
                                 </td>
                                 <td
                                   className={cn(
-                                    'w-[120px] min-w-[120px] shrink-0 whitespace-nowrap px-3 py-1.5 text-right tabular-nums',
+                                    splitFilesTable
+                                      ? 'min-w-0 shrink-0 whitespace-nowrap px-3 py-1.5 text-right tabular-nums'
+                                      : 'w-[120px] min-w-[120px] shrink-0 whitespace-nowrap px-3 py-1.5 text-right tabular-nums',
                                     STORAGE_SPREADSHEET_BODY_CELL_BORDER,
                                   )}
+                                  style={
+                                    splitFilesTable
+                                      ? {
+                                          width: fileListColumnWidths.sizeOriginal,
+                                          minWidth:
+                                            STORAGE_FILES_LIST_DATA_COLUMN_MIN_WIDTH_PX,
+                                        }
+                                      : undefined
+                                  }
                                 >
                                   <span className="inline-block font-mono text-[12px] text-muted-foreground">
                                     {formatBytes(file.sizeOriginal)}
@@ -1510,9 +1931,20 @@ export function View() {
                                 </td>
                                 <td
                                   className={cn(
-                                    'w-[180px] px-3 py-1.5',
+                                    splitFilesTable
+                                      ? 'min-w-0 px-3 py-1.5'
+                                      : 'w-[180px] px-3 py-1.5',
                                     STORAGE_SPREADSHEET_BODY_CELL_BORDER,
                                   )}
+                                  style={
+                                    splitFilesTable
+                                      ? {
+                                          width: fileListColumnWidths.$createdAt,
+                                          minWidth:
+                                            STORAGE_FILES_LIST_DATA_COLUMN_MIN_WIDTH_PX,
+                                        }
+                                      : undefined
+                                  }
                                 >
                                   {file.$createdAt ? (
                                     <DateTooltip
@@ -1527,9 +1959,20 @@ export function View() {
                                 </td>
                                 <td
                                   className={cn(
-                                    'w-[180px] px-3 py-1.5',
+                                    splitFilesTable
+                                      ? 'min-w-0 px-3 py-1.5'
+                                      : 'w-[180px] px-3 py-1.5',
                                     STORAGE_SPREADSHEET_BODY_CELL_BORDER_LAST,
                                   )}
+                                  style={
+                                    splitFilesTable
+                                      ? {
+                                          width: fileListColumnWidths.$updatedAt,
+                                          minWidth:
+                                            STORAGE_FILES_LIST_DATA_COLUMN_MIN_WIDTH_PX,
+                                        }
+                                      : undefined
+                                  }
                                 >
                                   {file.$updatedAt ? (
                                     <DateTooltip
@@ -1548,6 +1991,35 @@ export function View() {
                         })}
                       </tbody>
                     </table>
+                    {splitFilesTable
+                      ? STORAGE_FILES_LIST_COLUMN_WIDTH_KEYS.map((col) => (
+                          <button
+                            key={`col-resize-rail-${col}`}
+                            ref={(node) => {
+                              if (node) {
+                                fileColumnRailRefs.current.set(col, node)
+                              } else {
+                                fileColumnRailRefs.current.delete(col)
+                              }
+                            }}
+                            type="button"
+                            aria-label={`Resize ${col} column width`}
+                            aria-orientation="vertical"
+                            role="separator"
+                            tabIndex={0}
+                            onPointerDown={handleFileColumnResizePointerDown(
+                              col,
+                            )}
+                            className={cn(
+                              STORAGE_FILES_LIST_DATA_COLUMN_RESIZE_RAIL_HANDLE_CLASS,
+                              resizingFileColumnKey === col &&
+                                'before:opacity-100',
+                              'focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
+                            )}
+                          />
+                        ))
+                      : null}
+                      </div>
                     </div>
                     <div className="shrink-0 border-t border-border bg-background px-3 py-2">
                       <Pagination
@@ -1592,7 +2064,7 @@ export function View() {
                       }
                     />
                   </div>
-                  {useInlineFilePreviewPane && !isFilesStackedLayout ? (
+                  {splitFilesTable ? (
                     <button
                       type="button"
                       aria-label="Resize file table and preview"
@@ -1726,7 +2198,7 @@ export function View() {
         open={uploadFileDialogOpen}
         onOpenChange={setUploadFileDialogOpen}
         onUpload={handleFileUpload}
-        bucket={bucket}
+        bucket={displayBucket}
         isLoading={false}
         prefillFiles={uploadPrefillFiles}
         onPrefillConsumed={clearUploadPrefill}

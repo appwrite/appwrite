@@ -42,6 +42,22 @@ import { useNavigate } from '@tanstack/react-router'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { openCreateOrganizationFlow } from '@/lib/open-create-organization-flow'
 
+const TEAM_PROJECTS_PREFETCH_STALE_MS = 5 * 60 * 1000
+
+function getProjectsInfiniteNextPageParam(
+  lastPage: { total?: number; projects?: unknown[] | null },
+  allPages: Array<{ projects?: unknown[] | null }>,
+) {
+  const loadedCount = allPages.reduce(
+    (sum, page) => sum + (page.projects?.length || 0),
+    0,
+  )
+  if (lastPage.total && loadedCount < lastPage.total) {
+    return allPages.length
+  }
+  return undefined
+}
+
 interface ProjectSelectorProps {
   className?: string
   collapsed?: boolean
@@ -171,6 +187,65 @@ export function ProjectSelector({
 
   const queryClient = useQueryClient()
 
+  const prefetchTeamProjects = useCallback(
+    (teamId: string) => {
+      if (!teamId || teamId === resolvedTeam?.$id) return
+
+      void (async () => {
+        let excludeIds: string[] = []
+        try {
+          const teamData = await queryClient.ensureQueryData({
+            ...consoleTeamQueryOptions(teamId),
+            staleTime: TEAM_PROJECTS_PREFETCH_STALE_MS,
+          })
+          excludeIds = parsePinnedProjectIds(
+            (teamData as { prefs?: Record<string, unknown> })?.prefs,
+          )
+        } catch {
+          return
+        }
+        const excludeKey =
+          excludeIds.length > 0 ? excludeIds.slice().sort().join(',') : ''
+        const infiniteQueryKey = [
+          'projects',
+          'team',
+          'infinite',
+          teamId,
+          projectsPageSize,
+          '',
+          excludeKey,
+        ]
+        const pinnedOptions = pinnedProjectsQueryOptions(teamId, excludeIds)
+
+        try {
+          await Promise.all([
+            queryClient.prefetchQuery({
+              ...pinnedOptions,
+              staleTime: TEAM_PROJECTS_PREFETCH_STALE_MS,
+            }),
+            queryClient.prefetchInfiniteQuery({
+              queryKey: infiniteQueryKey,
+              queryFn: ({ pageParam = 0 }) =>
+                fetchActiveProjects(
+                  teamId,
+                  pageParam,
+                  projectsPageSize,
+                  '',
+                  excludeIds,
+                ),
+              initialPageParam: 0,
+              staleTime: TEAM_PROJECTS_PREFETCH_STALE_MS,
+              getNextPageParam: getProjectsInfiniteNextPageParam,
+            }),
+          ])
+        } catch {
+          // ignore prefetch failures
+        }
+      })()
+    },
+    [queryClient, projectsPageSize, resolvedTeam?.$id],
+  )
+
   // Handle team selection - ensure data is ready before switching (loads team once, then pinned + unpinned in parallel)
   const handleSelectTeam = useCallback(
     async (team: Team) => {
@@ -180,7 +255,7 @@ export function ProjectSelector({
       try {
         const teamData = await queryClient.ensureQueryData({
           ...consoleTeamQueryOptions(team.$id),
-          staleTime: 5 * 60 * 1000,
+          staleTime: TEAM_PROJECTS_PREFETCH_STALE_MS,
         })
         excludeIds = parsePinnedProjectIds(
           (teamData as { prefs?: Record<string, unknown> })?.prefs,
@@ -211,7 +286,7 @@ export function ProjectSelector({
             ? Promise.resolve()
             : queryClient.fetchQuery({
                 ...pinnedOptions,
-                staleTime: 5 * 60 * 1000,
+                staleTime: TEAM_PROJECTS_PREFETCH_STALE_MS,
               }),
           hasInfiniteCache
             ? Promise.resolve()
@@ -226,7 +301,8 @@ export function ProjectSelector({
                     excludeIds,
                   ),
                 initialPageParam: 0,
-                staleTime: 5 * 60 * 1000,
+                staleTime: TEAM_PROJECTS_PREFETCH_STALE_MS,
+                getNextPageParam: getProjectsInfiniteNextPageParam,
               }),
         ])
         setSelectedTeam(team)
@@ -422,6 +498,7 @@ export function ProjectSelector({
               billingOrgReadonly={billingOrgReadonly}
               onCreateProject={() => setCreateProjectDialogOpen(true)}
               onCreateOrganization={handleCreateOrganization}
+              prefetchTeamProjects={prefetchTeamProjects}
             />
           </PopoverContent>
         </Popover>
@@ -519,6 +596,7 @@ export function ProjectSelector({
               billingOrgReadonly={billingOrgReadonly}
               onCreateProject={() => setCreateProjectDialogOpen(true)}
               onCreateOrganization={handleCreateOrganization}
+              prefetchTeamProjects={prefetchTeamProjects}
             />
           </DialogContent>
         </Dialog>
@@ -593,6 +671,7 @@ export function ProjectSelector({
             billingOrgReadonly={billingOrgReadonly}
             onCreateProject={() => setCreateProjectDialogOpen(true)}
             onCreateOrganization={handleCreateOrganization}
+            prefetchTeamProjects={prefetchTeamProjects}
           />
         </PopoverContent>
       </Popover>
@@ -632,6 +711,8 @@ interface ProjectSelectorContentProps {
   billingOrgReadonly: boolean
   onCreateProject: () => void
   onCreateOrganization: () => void
+  /** Preload pinned + paginated projects when the user hovers an organization row */
+  prefetchTeamProjects: (teamId: string) => void
 }
 
 function ProjectSelectorContent({
@@ -656,6 +737,7 @@ function ProjectSelectorContent({
   billingOrgReadonly,
   onCreateProject,
   onCreateOrganization,
+  prefetchTeamProjects,
 }: ProjectSelectorContentProps) {
   const pinnedSet = useMemo(() => new Set(pinnedProjectIds), [pinnedProjectIds])
   // Ref for the scrollable container
@@ -732,7 +814,9 @@ function ProjectSelectorContent({
                 return (
                   <button
                     key={team.$id}
+                    type="button"
                     onClick={() => onSelectTeam(team)}
+                    onMouseEnter={() => prefetchTeamProjects(team.$id)}
                     className={cn(
                       'flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition-colors',
                       selectedTeam.$id === team.$id
@@ -917,6 +1001,7 @@ function MobileProjectSelectorContent({
   billingOrgReadonly,
   onCreateProject,
   onCreateOrganization,
+  prefetchTeamProjects,
 }: ProjectSelectorContentProps) {
   const [activeTab, setActiveTab] = useState<'teams' | 'projects'>('projects')
   const pinnedSet = useMemo(() => new Set(pinnedProjectIds), [pinnedProjectIds])
@@ -1025,10 +1110,12 @@ function MobileProjectSelectorContent({
                   return (
                     <button
                       key={team.$id}
+                      type="button"
                       onClick={async () => {
                         await onSelectTeam(team)
                         setActiveTab('projects')
                       }}
+                      onMouseEnter={() => prefetchTeamProjects(team.$id)}
                       className={cn(
                         'flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors',
                         selectedTeam.$id === team.$id
