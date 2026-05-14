@@ -76,6 +76,38 @@ set_exception_handler(function (\Throwable $e) {
     ));
 });
 
+global $container;
+
+if (!$container->has('pools')) {
+    $container->set('pools', function ($register) {
+        return $register->get('pools');
+    }, ['register']);
+}
+
+if (!$container->has('publisherForUsage')) {
+    $container->set('publisherForUsage', function (Group $pools): UsagePublisher {
+        $statsUsageConnection = System::getEnv('_APP_CONNECTIONS_QUEUE_STATS_USAGE', '');
+        $publisherPoolName = 'publisher';
+
+        if (!empty($statsUsageConnection)) {
+            try {
+                $pools->get('publisher_' . $statsUsageConnection);
+                $publisherPoolName = 'publisher_' . $statsUsageConnection;
+            } catch (Throwable) {
+                // Fallback to default publisher pool when custom one is unavailable.
+            }
+        }
+
+        return new UsagePublisher(
+            new BrokerPool(publisher: $pools->get($publisherPoolName)),
+            new Queue(System::getEnv(
+                '_APP_STATS_USAGE_QUEUE_NAME',
+                QueueEvent::STATS_USAGE_QUEUE_NAME
+            ))
+        );
+    }, ['pools']);
+}
+
 // Allows overriding
 if (!function_exists('getConsoleDB')) {
     function getConsoleDB(): Database
@@ -292,38 +324,6 @@ if (!function_exists('triggerStats')) {
     function triggerStats(array $event, string $projectId): void
     {
     }
-}
-
-global $container;
-
-if (!$container->has('pools')) {
-    $container->set('pools', function ($register) {
-        return $register->get('pools');
-    }, ['register']);
-}
-
-if (!$container->has('publisherForUsage')) {
-    $container->set('publisherForUsage', function (Group $pools): UsagePublisher {
-        $statsUsageConnection = System::getEnv('_APP_CONNECTIONS_QUEUE_STATS_USAGE', '');
-        $publisherPoolName = 'publisher';
-
-        if (!empty($statsUsageConnection)) {
-            try {
-                $pools->get('publisher_' . $statsUsageConnection);
-                $publisherPoolName = 'publisher_' . $statsUsageConnection;
-            } catch (Throwable) {
-                // Fallback to default publisher pool when custom one is unavailable.
-            }
-        }
-
-        return new UsagePublisher(
-            new BrokerPool(publisher: $pools->get($publisherPoolName)),
-            new Queue(System::getEnv(
-                '_APP_STATS_USAGE_QUEUE_NAME',
-                QueueEvent::STATS_USAGE_QUEUE_NAME
-            ))
-        );
-    }, ['pools']);
 }
 
 $realtime = getRealtime();
