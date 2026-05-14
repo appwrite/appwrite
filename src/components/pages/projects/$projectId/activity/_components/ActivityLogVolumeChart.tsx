@@ -1,0 +1,691 @@
+'use client'
+
+import { useId, useMemo, useRef, useState, type SyntheticEvent } from 'react'
+import { format } from 'date-fns'
+import { ChevronDown } from 'lucide-react'
+import {
+  Bar,
+  BarChart,
+  Cell,
+  Customized,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts'
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
+
+/**
+ * Brand secondary palette — 100% baselines (style guide). Each hue uses
+ * {@link OPACITY_STEPS.length} opacity steps on that hex before the next baseline
+ * (Mint → Purple → Orange). Guide 50% swatches: #E7F8F7, #E5E1FF, #FFEAE1.
+ */
+const BRAND_SECONDARY_100 = {
+  mint: '#85DBD8',
+  purple: '#7C67FE',
+  orange: '#FE9567',
+} as const
+
+/** Mock stacked series — resource-type buckets (aligned with activity `resourceType` filter). */
+const RESOURCE_SERIES = [
+  { key: 'user', label: 'User' },
+  { key: 'database', label: 'Database' },
+  { key: 'function', label: 'Function' },
+  { key: 'file', label: 'File' },
+  { key: 'bucket', label: 'Bucket' },
+  { key: 'document', label: 'Document' },
+  { key: 'collection', label: 'Collection' },
+  { key: 'team', label: 'Team' },
+  { key: 'project', label: 'Project' },
+] as const
+
+/** Opacity ramp on each 100% baseline (7 steps per hue before the next baseline). */
+const OPACITY_STEPS = [1, 0.91, 0.82, 0.71, 0.6, 0.48, 0.34] as const
+
+const SHADES_PER_BASE = OPACITY_STEPS.length
+
+/** Baseline order: Mint → Purple → Orange (secondary palette 100% only). */
+const SERIES_BASE_COLORS = [
+  BRAND_SECONDARY_100.mint,
+  BRAND_SECONDARY_100.purple,
+  BRAND_SECONDARY_100.orange,
+] as const
+
+/** Multiplies every segment’s alpha so stacks read slightly softer on the page. */
+const BAR_GLOBAL_ALPHA = 0.86
+
+function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+  const n = hex.replace('#', '').trim()
+  if (n.length !== 6 || !/^[0-9a-fA-F]{6}$/.test(n)) return null
+  return {
+    r: Number.parseInt(n.slice(0, 2), 16),
+    g: Number.parseInt(n.slice(2, 4), 16),
+    b: Number.parseInt(n.slice(4, 6), 16),
+  }
+}
+
+function rgba(hex: string, alpha: number): string {
+  const rgb = hexToRgb(hex)
+  if (!rgb) return hex
+  const a = Math.min(1, Math.max(0, alpha))
+  return `rgba(${rgb.r},${rgb.g},${rgb.b},${a})`
+}
+
+function seriesShade(seriesIndex: number): { baseHex: string; opacity: number } {
+  const baseIdx = Math.floor(seriesIndex / SHADES_PER_BASE)
+  const stepIdx = seriesIndex % SHADES_PER_BASE
+  const baseHex = SERIES_BASE_COLORS[baseIdx % SERIES_BASE_COLORS.length]
+  const opacity = OPACITY_STEPS[stepIdx] ?? OPACITY_STEPS[OPACITY_STEPS.length - 1]
+  return { baseHex, opacity }
+}
+
+function effectiveBarAlpha(seriesIndex: number): number {
+  const { opacity } = seriesShade(seriesIndex)
+  return Math.min(1, opacity * BAR_GLOBAL_ALPHA)
+}
+
+function seriesFill(seriesIndex: number): string {
+  const { baseHex, opacity } = seriesShade(seriesIndex)
+  return rgba(baseHex, Math.min(1, opacity * BAR_GLOBAL_ALPHA))
+}
+
+function seriesFillHover(seriesIndex: number): string {
+  const { baseHex, opacity } = seriesShade(seriesIndex)
+  return rgba(baseHex, Math.min(1, (opacity + 0.22) * BAR_GLOBAL_ALPHA))
+}
+
+/** Brighter than `seriesFillHover` — active stacked segment under the pointer. */
+function seriesFillEmphasis(seriesIndex: number): string {
+  const { baseHex, opacity } = seriesShade(seriesIndex)
+  return rgba(baseHex, Math.min(1, (opacity + 0.38) * BAR_GLOBAL_ALPHA))
+}
+
+/** Deterministic PRNG for stable shuffle (same seed → same order). */
+function mulberry32(seed: number): () => number {
+  let a = seed >>> 0
+  return () => {
+    a += 0x6d2b79f5
+    let t = a
+    t = Math.imul(t ^ (t >>> 15), t | 1)
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
+
+/** Fisher–Yates shuffle of [0..length-1] using `rng` in [0,1). */
+function shuffledIndices(length: number, rng: () => number): number[] {
+  const arr = Array.from({ length }, (_, i) => i)
+  for (let i = length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1))
+    const tmp = arr[i]!
+    arr[i] = arr[j]!
+    arr[j] = tmp
+  }
+  return arr
+}
+
+function colorSlotPermutationSeed(rangeFrom: Date, rangeTo: Date): number {
+  return (rangeFrom.getTime() ^ Math.imul(rangeTo.getTime(), 0x9e37_79b9)) >>> 0
+}
+
+/** One vertical fade over the whole plot (all stacks) — slightly veils the bottom of every column together. */
+function ChartPlotBottomFade({
+  offset,
+  gradientId,
+}: {
+  offset?: { top: number; left: number; width: number; height: number }
+  gradientId: string
+}) {
+  if (!offset?.width || !offset.height) return null
+  const { left, top, width, height } = offset
+  return (
+    <g pointerEvents="none" aria-hidden>
+      <defs>
+        <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="var(--background)" stopOpacity="0" />
+          <stop offset="62%" stopColor="var(--background)" stopOpacity="0" />
+          <stop offset="100%" stopColor="var(--background)" stopOpacity="0.2" />
+        </linearGradient>
+      </defs>
+      <rect
+        x={left}
+        y={top}
+        width={width}
+        height={height}
+        fill={`url(#${gradientId})`}
+      />
+    </g>
+  )
+}
+
+type ChartRow = {
+  t: string
+  label: string
+} & Record<(typeof RESOURCE_SERIES)[number]['key'], number>
+
+function parseActiveBarIndex(activeTooltipIndex: unknown): number | null {
+  if (activeTooltipIndex === undefined || activeTooltipIndex === null) return null
+  const n =
+    typeof activeTooltipIndex === 'number'
+      ? activeTooltipIndex
+      : Number.parseInt(String(activeTooltipIndex), 10)
+  return Number.isNaN(n) ? null : n
+}
+
+/** Pointer inside `.recharts-wrapper` — matches Recharts scaling (ResponsiveContainer / CSS scale). */
+function pointerInChartWrapper(e: SyntheticEvent<Element>): { x: number; y: number } {
+  const ne = e.nativeEvent
+  if (!(ne instanceof MouseEvent)) return { x: 0, y: 0 }
+  const el = e.currentTarget
+  if (!(el instanceof HTMLElement)) return { x: 0, y: 0 }
+  const rect = el.getBoundingClientRect()
+  const scaleX = rect.width / el.offsetWidth || 1
+  const scaleY = rect.height / el.offsetHeight || 1
+  return {
+    x: Math.round((ne.clientX - rect.left) / scaleX),
+    y: Math.round((ne.clientY - rect.top) / scaleY),
+  }
+}
+
+function buildMockVolumeByResource(from: Date, to: Date): ChartRow[] {
+  const spanMs = Math.max(to.getTime() - from.getTime(), 60_000)
+  const hours = spanMs / (60 * 60 * 1000)
+  const targetPoints =
+    hours <= 36 ? 18 : hours <= 7 * 24 ? 14 : Math.min(20, Math.max(10, Math.ceil(hours / 24)))
+  const step = spanMs / targetPoints
+
+  return Array.from({ length: targetPoints + 1 }, (_, i) => {
+    const t = new Date(from.getTime() + i * step)
+    const label =
+      spanMs < 48 * 60 * 60 * 1000
+        ? format(t, 'MMM d, HH:mm')
+        : spanMs < 14 * 24 * 60 * 60 * 1000
+          ? format(t, 'EEE d')
+          : format(t, 'MMM d')
+
+    const base = 12 + (i % 4) * 6
+    const row = {
+      t: t.toISOString(),
+      label,
+      ...Object.fromEntries(RESOURCE_SERIES.map(({ key }) => [key, 0])),
+    } as ChartRow
+
+    RESOURCE_SERIES.forEach(({ key }, s) => {
+      const wave =
+        Math.sin(i / 2.2 + s * 0.4) * 14 +
+        Math.cos(i / 3.5 + s * 0.6) * 9 +
+        (i / targetPoints) * 18
+      row[key] = Math.max(0, Math.round(base + wave + s * 5))
+    })
+
+    return row
+  })
+}
+
+type ResourceKey = (typeof RESOURCE_SERIES)[number]['key']
+
+const RESOURCE_ORDER_RANK = new Map<ResourceKey, number>(
+  RESOURCE_SERIES.map(({ key }, i) => [key, i]),
+)
+
+/** Selected resource first; remaining rows follow `RESOURCE_SERIES` order. */
+function orderTooltipPayloadByHighlight<
+  T extends { dataKey?: string | number; name?: string },
+>(payload: T[], highlightedKey: string | null): T[] {
+  if (highlightedKey == null) return [...payload]
+  const copy = [...payload]
+  copy.sort((a, b) => {
+    const ak = String(a.dataKey ?? '')
+    const bk = String(b.dataKey ?? '')
+    const aFirst = ak === highlightedKey ? 0 : 1
+    const bFirst = bk === highlightedKey ? 0 : 1
+    if (aFirst !== bFirst) return aFirst - bFirst
+    return (
+      (RESOURCE_ORDER_RANK.get(ak as ResourceKey) ?? 99) -
+      (RESOURCE_ORDER_RANK.get(bk as ResourceKey) ?? 99)
+    )
+  })
+  return copy
+}
+
+function VolumeTooltip({
+  active,
+  payload,
+  label,
+  highlightedDataKey,
+  activeResourceTypeFilter,
+}: {
+  active?: boolean
+  payload?: Array<{
+    name?: string
+    value?: number
+    color?: string
+    dataKey?: string | number
+  }>
+  label?: string
+  /** Stacked segment under the pointer (`dataKey`); axis tooltip still lists the full bar. */
+  highlightedDataKey?: ResourceKey | null
+  /** When set, this resource is listed first whenever nothing is hovered. */
+  activeResourceTypeFilter?: string | null
+}) {
+  if (!active || !payload?.length) return null
+  const heading =
+    typeof label === 'string' || typeof label === 'number'
+      ? String(label)
+      : ''
+  const total = payload.reduce((sum, p) => sum + (Number(p.value) || 0), 0)
+  const hi =
+    highlightedDataKey != null ? String(highlightedDataKey) : null
+  const filterKey =
+    activeResourceTypeFilter != null &&
+    RESOURCE_SERIES.some((r) => r.key === activeResourceTypeFilter)
+      ? activeResourceTypeFilter
+      : null
+  const orderKey = hi ?? filterKey
+  const rows = orderTooltipPayloadByHighlight(payload, orderKey)
+
+  return (
+    <div className="min-w-[280px] max-w-[min(calc(100vw-2rem),22rem)] rounded-lg border border-border bg-popover px-3 py-2.5">
+      <p className="mb-2 text-[12px] font-medium text-foreground">{heading}</p>
+      <div className="space-y-1.5">
+        {rows.map((p) => {
+          const rowKey = String(p.dataKey ?? '')
+          const isHighlighted =
+            (hi !== null && rowKey === hi) ||
+            (hi === null && filterKey != null && rowKey === filterKey)
+          return (
+            <div
+              key={rowKey || String(p.name)}
+              className="flex items-center justify-between gap-8"
+            >
+              <span
+                className={cn(
+                  'min-w-0 truncate text-[11px]',
+                  isHighlighted
+                    ? 'font-semibold text-foreground'
+                    : 'font-normal text-muted-foreground',
+                )}
+              >
+                {p.name}
+              </span>
+              <span
+                className={cn(
+                  'shrink-0 text-[12px] tabular-nums',
+                  isHighlighted
+                    ? 'font-semibold text-foreground'
+                    : 'font-medium text-muted-foreground',
+                )}
+              >
+                {(p.value ?? 0).toLocaleString()}
+              </span>
+            </div>
+          )
+        })}
+        <div className="flex items-center justify-between gap-8 border-t border-border pt-1.5">
+          <span className="text-[11px] text-muted-foreground">Total</span>
+          <span className="text-[12px] font-medium text-foreground tabular-nums">
+            {total.toLocaleString()}
+          </span>
+        </div>
+      </div>
+      <p className="mt-2 text-[10px] text-muted-foreground/50">Mock data</p>
+    </div>
+  )
+}
+
+export interface ActivityLogVolumeChartProps {
+  rangeFrom: Date
+  rangeTo: Date
+  className?: string
+  /** When set, highlights the matching legend chip (URL `resourceType` equal filter). */
+  activeResourceTypeFilter?: string | null
+  /** Applies or clears `resourceType` equal filter when a legend chip is clicked. */
+  onLegendResourceTypeClick?: (
+    resourceKey: ResourceKey,
+  ) => void
+}
+
+export function ActivityLogVolumeChart({
+  rangeFrom,
+  rangeTo,
+  className,
+  activeResourceTypeFilter,
+  onLegendResourceTypeClick,
+}: ActivityLogVolumeChartProps) {
+  const plotBottomFadeId = useId().replace(/:/g, '')
+  const [open, setOpen] = useState(true)
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
+  const [hoveredResourceKey, setHoveredResourceKey] = useState<ResourceKey | null>(
+    null,
+  )
+  const [tooltipPointer, setTooltipPointer] = useState<{ x: number; y: number } | null>(
+    null,
+  )
+  const lastTooltipColumnRef = useRef<number | null>(null)
+
+  const chartData = useMemo(
+    () => buildMockVolumeByResource(rangeFrom, rangeTo),
+    [rangeFrom, rangeTo],
+  )
+
+  /** `colorSlots[i]` = shade index for `RESOURCE_SERIES[i]` (randomized order, stable for this range). */
+  const colorSlots = useMemo(() => {
+    const rng = mulberry32(colorSlotPermutationSeed(rangeFrom, rangeTo))
+    return shuffledIndices(RESOURCE_SERIES.length, rng)
+  }, [rangeFrom, rangeTo])
+
+  const legendDotLight = useMemo(
+    () =>
+      new Set(
+        RESOURCE_SERIES.map((_, i) => i).filter(
+          (i) => effectiveBarAlpha(colorSlots[i]!) < 0.75,
+        ),
+      ),
+    [colorSlots],
+  )
+
+  /** URL / filter-driven resource highlight (same keys as `RESOURCE_SERIES`). */
+  const filteredResourceKey = useMemo((): ResourceKey | null => {
+    if (
+      activeResourceTypeFilter == null ||
+      !RESOURCE_SERIES.some((r) => r.key === activeResourceTypeFilter)
+    ) {
+      return null
+    }
+    return activeResourceTypeFilter as ResourceKey
+  }, [activeResourceTypeFilter])
+
+  const chartAnimationKey = useMemo(
+    () =>
+      `${rangeFrom.toISOString()}-${rangeTo.toISOString()}-${chartData.length}`,
+    [rangeFrom, rangeTo, chartData.length],
+  )
+
+  const lastSeriesIndex = RESOURCE_SERIES.length - 1
+
+  return (
+    <Collapsible
+      open={open}
+      onOpenChange={setOpen}
+      className={cn(
+        'flex w-full flex-col border-b border-border',
+        className,
+      )}
+    >
+      <div className="px-4 py-4 sm:px-6">
+        <div
+          className={cn(
+            'flex items-center justify-between gap-3',
+            open && 'mb-3',
+          )}
+        >
+          <h3 className="min-w-0 text-[13px] font-medium text-foreground">
+            Volume by resource
+          </h3>
+          <CollapsibleTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8 shrink-0 gap-1.5 px-2 text-[12px] text-muted-foreground hover:text-foreground"
+              aria-expanded={open}
+              aria-label={open ? 'Hide volume chart' : 'Show volume chart'}
+            >
+              <ChevronDown
+                className={cn(
+                  'h-4 w-4 transition-transform duration-200',
+                  open && '-rotate-180',
+                )}
+              />
+              {open ? 'Hide' : 'Show'}
+            </Button>
+          </CollapsibleTrigger>
+        </div>
+
+        <CollapsibleContent>
+          <div className="flex flex-col">
+            {/* Same outer treatment as `RequestsChart`: muted wrapper + fixed chart height */}
+            <div className="flex-1 text-muted-foreground">
+              {chartData.length === 0 ? (
+                <div className="flex h-[240px] items-center justify-center rounded-lg border border-dashed border-border bg-muted/20 text-[13px] text-muted-foreground">
+                  No data for this date range
+                </div>
+              ) : (
+                <div
+                  key={chartAnimationKey}
+                  className={cn(
+                    'h-[240px] w-full animate-in fade-in-0 slide-in-from-bottom-1 duration-500 motion-reduce:animate-none',
+                  )}
+                >
+                  <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={chartData}
+                  margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
+                  barCategoryGap="15%"
+                  onMouseMove={(state, e) => {
+                    const col = parseActiveBarIndex(state.activeTooltipIndex)
+                    if (col !== lastTooltipColumnRef.current) {
+                      lastTooltipColumnRef.current = col
+                      setHoveredResourceKey(null)
+                    }
+                    setHoveredIndex(col)
+                    setTooltipPointer(pointerInChartWrapper(e))
+                  }}
+                  onMouseLeave={() => {
+                    setHoveredIndex(null)
+                    setHoveredResourceKey(null)
+                    lastTooltipColumnRef.current = null
+                    setTooltipPointer(null)
+                  }}
+                >
+                  <XAxis
+                    dataKey="label"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{
+                      fill: 'currentColor',
+                      fontSize: 10,
+                    }}
+                    dy={10}
+                    interval="preserveStartEnd"
+                    minTickGap={12}
+                    tickFormatter={(value, index) => {
+                      if (index % 5 === 0) return value
+                      return ''
+                    }}
+                  />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{
+                      fill: 'currentColor',
+                      fontSize: 10,
+                    }}
+                    tickFormatter={(value) => {
+                      if (value >= 1000) return `${(value / 1000).toFixed(0)}k`
+                      return value.toString()
+                    }}
+                    dx={-5}
+                    width={40}
+                  />
+                  <Tooltip
+                    content={
+                      <VolumeTooltip
+                        highlightedDataKey={hoveredResourceKey}
+                        activeResourceTypeFilter={filteredResourceKey}
+                      />
+                    }
+                    cursor={false}
+                    isAnimationActive={false}
+                    allowEscapeViewBox={{ x: true, y: true }}
+                    wrapperStyle={{ zIndex: 50 }}
+                    position={
+                      tooltipPointer
+                        ? {
+                            x: tooltipPointer.x + 14,
+                            y: tooltipPointer.y + 14,
+                          }
+                        : undefined
+                    }
+                  />
+                  {RESOURCE_SERIES.map(({ key, label }, seriesIndex) => (
+                    <Bar
+                      key={key}
+                      name={label}
+                      dataKey={key}
+                      stackId="vol"
+                      isAnimationActive={false}
+                      fill={seriesFill(colorSlots[seriesIndex]!)}
+                      onMouseEnter={() => {
+                        setHoveredResourceKey(key)
+                      }}
+                      radius={
+                        lastSeriesIndex === 0
+                          ? [5, 5, 5, 5]
+                          : seriesIndex === 0
+                            ? [0, 0, 5, 5]
+                            : seriesIndex === lastSeriesIndex
+                              ? [5, 5, 0, 0]
+                              : [0, 0, 0, 0]
+                      }
+                    >
+                      {chartData.map((_, index) => {
+                        const slot = colorSlots[seriesIndex]!
+                        const colActive = hoveredIndex === index
+                        const hasSegmentHover = hoveredResourceKey !== null
+                        const isHoveredSegment =
+                          colActive &&
+                          hasSegmentHover &&
+                          key === hoveredResourceKey
+                        const isDimmedSiblingInColumn =
+                          colActive && hasSegmentHover && key !== hoveredResourceKey
+                        const isOtherColumn =
+                          hoveredIndex !== null && !colActive
+
+                        let fill: string
+                        let cellOpacity = 1
+
+                        if (isHoveredSegment) {
+                          fill = seriesFillEmphasis(slot)
+                        } else if (isDimmedSiblingInColumn) {
+                          fill = seriesFill(slot)
+                          cellOpacity = 0.32
+                        } else if (colActive) {
+                          fill = seriesFillHover(slot)
+                        } else {
+                          fill = seriesFill(slot)
+                          if (isOtherColumn) cellOpacity = 0.5
+                        }
+
+                        if (
+                          filteredResourceKey != null &&
+                          key !== filteredResourceKey &&
+                          !isHoveredSegment
+                        ) {
+                          cellOpacity *= 0.42
+                        } else if (
+                          filteredResourceKey != null &&
+                          key === filteredResourceKey &&
+                          !isHoveredSegment &&
+                          !isDimmedSiblingInColumn
+                        ) {
+                          fill = seriesFillHover(slot)
+                        }
+
+                        return (
+                          <Cell
+                            key={`${key}-${index}`}
+                            fill={fill}
+                            opacity={cellOpacity}
+                          />
+                        )
+                      })}
+                    </Bar>
+                  ))}
+                  <Customized
+                    component={(chartProps: {
+                      offset?: {
+                        top: number
+                        left: number
+                        width: number
+                        height: number
+                      }
+                    }) => (
+                      <ChartPlotBottomFade
+                        offset={chartProps.offset}
+                        gradientId={plotBottomFadeId}
+                      />
+                    )}
+                  />
+                </BarChart>
+                </ResponsiveContainer>
+                </div>
+              )}
+            </div>
+
+            {/* Legend — centered chips; clicks drive activity `resourceType` filter when wired */}
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+              {RESOURCE_SERIES.map(({ key, label }, i) => {
+                const isActive = filteredResourceKey === key
+                const interactive = !!onLegendResourceTypeClick
+                const content = (
+                  <>
+                    <div
+                      className={cn(
+                        'h-2 w-2 shrink-0 rounded-full',
+                        legendDotLight.has(i) && 'ring-1 ring-border',
+                      )}
+                      style={{ backgroundColor: seriesFill(colorSlots[i]!) }}
+                    />
+                    <span
+                      className={cn(
+                        'text-[11px]',
+                        isActive
+                          ? 'font-medium text-foreground'
+                          : 'text-muted-foreground',
+                      )}
+                    >
+                      {label}
+                    </span>
+                  </>
+                )
+                if (!interactive) {
+                  return (
+                    <div
+                      key={key}
+                      className="flex items-center gap-1.5 opacity-80"
+                    >
+                      {content}
+                    </div>
+                  )
+                }
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    aria-pressed={isActive}
+                    aria-label={`Filter activities by ${label}`}
+                    onClick={() => onLegendResourceTypeClick?.(key)}
+                    className={cn(
+                      'flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 transition-colors',
+                      'hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                      isActive && 'bg-muted/50 ring-1 ring-border',
+                    )}
+                  >
+                    {content}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </CollapsibleContent>
+      </div>
+    </Collapsible>
+  )
+}

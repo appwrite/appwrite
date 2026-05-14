@@ -64,6 +64,8 @@ interface ServiceHeaderProps {
   rightContent?: React.ReactNode
   /** Custom buttons to render in the action buttons group (right before the create button) */
   beforeCreateButtons?: React.ReactNode
+  /** Renders in the right toolbar cluster immediately before the refresh button */
+  beforeRefreshButtons?: React.ReactNode
   /** Show refresh button */
   showRefresh?: boolean
   onRefresh?: () => void
@@ -120,6 +122,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
       fullWidth = false,
       rightContent,
       beforeCreateButtons,
+      beforeRefreshButtons,
       showRefresh = false,
       onRefresh,
       isRefreshing = false,
@@ -150,7 +153,8 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
       showRefresh ||
       showImport ||
       showExport ||
-      beforeCreateButtons
+      beforeCreateButtons ||
+      beforeRefreshButtons
 
     // Show tabs if we have tabs and either:
     // 1. activeTab + onTabChange (button-based tabs), OR
@@ -425,6 +429,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
 
             {/* Action Buttons Group */}
             <div className="ml-auto flex items-center gap-2">
+              {beforeRefreshButtons}
               <TooltipProvider delayDuration={0}>
                 {/* Refresh Button */}
                 {showRefresh && (

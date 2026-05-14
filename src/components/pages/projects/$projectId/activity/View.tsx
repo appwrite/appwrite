@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import { getRouteApi } from '@tanstack/react-router'
+import { useIsFetching } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { cn, truncateMiddle } from '@/lib/utils'
 import {
@@ -18,10 +19,11 @@ import {
   Folder,
   Server,
   Clock,
-  X,
   AlertCircle,
 } from '@/lib/icons'
 import type { Models } from '@appwrite.io/console'
+import type { DateRange } from 'react-day-picker'
+import { startOfDay, endOfDay, subDays, max } from 'date-fns'
 import { ServiceHeader } from '../shared/ServiceHeader'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Pagination } from '@/components/global/shared/Pagination'
@@ -35,23 +37,27 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { ACTIVITY_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import {
   useProjectActivities,
   useProjectActivity,
-} from '@/lib/react-query/hooks/activities'
-
+  useProject,
+} from '@/lib/react-query/hooks'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+  activitiesFilterColumns,
+  buildFilterQueryString,
+  mapToQueryParam,
+  queryParamToMap,
+} from '@/lib/table-filters'
+import type { CompactFilterKey } from '@/lib/table-filters'
+import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
+import { DateRangePicker } from '@/components/pages/projects/$projectId/analytics/DateRangePicker'
+
 import type { PlanType } from '@/server/functions/activities'
 import { ActivityLogDrawer } from '@/components/pages/projects/$projectId/activity/ActivityLogDrawer'
+import { ActivityLogVolumeChart } from '@/components/pages/projects/$projectId/activity/_components/ActivityLogVolumeChart'
 import {
   hasHumanEmail,
   userTypeBadge,
@@ -77,7 +83,7 @@ function ActivityLogsTableHead() {
           Resource
         </TableHead>
         <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px] shadow-[inset_0_-1px_0_var(--border)]">
-          User
+          User / key
         </TableHead>
         <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px] shadow-[inset_0_-1px_0_var(--border)]">
           Type
@@ -335,33 +341,9 @@ function toDisplayActivity(event: Models.ActivityEvent): DisplayActivity {
 // Plan time limits
 const PLAN_TIME_LIMITS: Record<PlanType, { label: string; hours: number }> = {
   free: { label: '1 hour', hours: 1 },
-  pro: { label: '7 days', hours: 7 * 24 },
+  pro: { label: '30 days', hours: 30 * 24 },
   custom: { label: '30 days', hours: 30 * 24 },
 }
-
-// Filter options
-const actionOptions = [
-  { value: 'create', label: 'Created' },
-  { value: 'update', label: 'Updated' },
-  { value: 'delete', label: 'Deleted' },
-  { value: 'execute', label: 'Executed' },
-  { value: 'upload', label: 'Uploaded' },
-  { value: 'login', label: 'Logged in' },
-  { value: 'logout', label: 'Logged out' },
-  { value: 'view', label: 'Viewed' },
-]
-
-const resourceTypeOptions = [
-  { value: 'document', label: 'Document' },
-  { value: 'collection', label: 'Collection' },
-  { value: 'database', label: 'Database' },
-  { value: 'file', label: 'File' },
-  { value: 'bucket', label: 'Bucket' },
-  { value: 'function', label: 'Function' },
-  { value: 'user', label: 'User' },
-  { value: 'team', label: 'Team' },
-  { value: 'project', label: 'Project' },
-]
 
 interface ViewProps {
   projectId: string
@@ -370,12 +352,11 @@ interface ViewProps {
 
 export function View({ projectId, plan = 'pro' }: ViewProps) {
   const navigate = activityRouteApi.useNavigate()
-  const { event: eventIdFromUrl } = activityRouteApi.useSearch()
+  const { event: eventIdFromUrl, query: queryFromSearch } =
+    activityRouteApi.useSearch()
 
-  const [searchValue, setSearchValue] = useState('')
-  const [actionFilter, setActionFilter] = useState<string>('')
-  const [resourceTypeFilter, setResourceTypeFilter] = useState<string>('')
-  const [showFilters, setShowFilters] = useState(false)
+  const { project } = useProject(projectId)
+  const [filtersOpen, setFiltersOpen] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [selectedEvent, setSelectedEvent] =
     useState<Models.ActivityEvent | null>(null)
@@ -394,28 +375,208 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
     setListCursor({ cursorAfter: null, cursorBefore: null })
   }, [])
 
-  // Plan-based retention window. We pass this to the API as a `since`
-  // filter so the server only returns events within the plan's window.
   const planLimit = PLAN_TIME_LIMITS[plan]
-  const since = useMemo(
+  const planSinceIso = useMemo(
     () => new Date(Date.now() - planLimit.hours * 60 * 60 * 1000).toISOString(),
     [planLimit.hours],
+  )
+
+  /** Default window when no URL `time` filter: last 30 days, floored by plan retention. */
+  const defaultActivityDateRange = useMemo((): DateRange => {
+    const thirtyDaysStart = startOfDay(subDays(new Date(), 29))
+    const planFloor = new Date(planSinceIso)
+    const from = max([thirtyDaysStart, startOfDay(planFloor)])
+    return { from, to: endOfDay(new Date()) }
+  }, [planSinceIso])
+
+  const filterMap = useMemo(
+    () => queryParamToMap(queryFromSearch ?? null),
+    [queryFromSearch],
   )
 
   const {
     events,
     hasMore,
     isLoading,
-    isFetching,
     refetch,
   } = useProjectActivities({
     projectId,
     limit: pageSize,
     cursorAfter: listCursor.cursorAfter,
     cursorBefore: listCursor.cursorBefore,
-    resourceType: resourceTypeFilter || undefined,
-    since,
+    planSinceIso,
+    filterQueryKey: queryFromSearch ?? null,
   })
+
+  const activityListFetchingCount = useIsFetching({
+    queryKey: ['activities', 'project', projectId],
+  })
+
+  useEffect(() => {
+    resetListPosition()
+  }, [queryFromSearch, resetListPosition])
+
+  const dateRangeFromFilters = useMemo((): DateRange | undefined => {
+    for (const [k] of filterMap) {
+      if (k.c === 'time' && k.o === 'between' && k.v != null) {
+        const raw = Array.isArray(k.v) ? k.v.join(',') : String(k.v)
+        const parts = raw
+          .split(',')
+          .map((p) => p.trim())
+          .filter(Boolean)
+        if (parts.length >= 2) {
+          const from = new Date(parts[0])
+          const to = new Date(parts[1])
+          if (!Number.isNaN(from.getTime()) && !Number.isNaN(to.getTime())) {
+            return { from, to }
+          }
+        }
+      }
+    }
+    return undefined
+  }, [filterMap])
+
+  const dateRangeForPicker = dateRangeFromFilters ?? defaultActivityDateRange
+
+  const volumeChartRange = useMemo(() => {
+    const from = dateRangeFromFilters?.from ?? defaultActivityDateRange.from
+    const to = dateRangeFromFilters?.to ?? defaultActivityDateRange.to
+    return { from, to }
+  }, [dateRangeFromFilters, defaultActivityDateRange])
+
+  const applyFilter = useCallback(
+    (
+      compactKey: CompactFilterKey,
+      queryStr: string,
+      replaceKey?: CompactFilterKey,
+    ) => {
+      const next = new Map(filterMap)
+      if (replaceKey) next.delete(replaceKey)
+      next.set(compactKey, queryStr)
+      navigate({
+        search: (prev) => ({
+          ...prev,
+          query: mapToQueryParam(next) || undefined,
+        }),
+        replace: true,
+      })
+    },
+    [filterMap, navigate],
+  )
+
+  const removeFilter = useCallback(
+    (compactKey: CompactFilterKey) => {
+      const next = new Map(filterMap)
+      next.delete(compactKey)
+      navigate({
+        search: (prev) => ({
+          ...prev,
+          query: next.size > 0 ? mapToQueryParam(next) : undefined,
+        }),
+        replace: true,
+      })
+    },
+    [filterMap, navigate],
+  )
+
+  const clearAllFilters = useCallback(() => {
+    navigate({
+      search: (prev) => {
+        const { event: ev } = prev
+        return { ...(ev ? { event: ev } : {}) }
+      },
+      replace: true,
+    })
+    setFiltersOpen(false)
+  }, [navigate])
+
+  const handleDateRangeChange = useCallback(
+    (range: DateRange | undefined) => {
+      const next = new Map(filterMap)
+      for (const key of [...next.keys()]) {
+        if (key.c === 'time') next.delete(key)
+      }
+      if (range?.from && range?.to) {
+        const v = `${range.from.toISOString()},${range.to.toISOString()}`
+        const compactKey: CompactFilterKey = { c: 'time', o: 'between', v }
+        next.set(
+          compactKey,
+          buildFilterQueryString('between', 'time', v),
+        )
+      }
+      navigate({
+        search: (prev) => ({
+          ...prev,
+          query: next.size > 0 ? mapToQueryParam(next) : undefined,
+        }),
+        replace: true,
+      })
+    },
+    [filterMap, navigate],
+  )
+
+  const activeResourceTypeFilter = useMemo(() => {
+    for (const [k] of filterMap) {
+      if (
+        k.c === 'resourceType' &&
+        (k.o === 'equal' || k.o === 'is') &&
+        k.v != null
+      ) {
+        return String(k.v)
+      }
+    }
+    return null
+  }, [filterMap])
+
+  const handleLegendResourceTypeClick = useCallback(
+    (resourceKey: string) => {
+      const next = new Map(filterMap)
+      for (const key of [...next.keys()]) {
+        if (key.c === 'resourceType') next.delete(key)
+      }
+
+      let current: string | null = null
+      for (const [k] of filterMap) {
+        if (
+          k.c === 'resourceType' &&
+          (k.o === 'equal' || k.o === 'is') &&
+          k.v != null
+        ) {
+          current = String(k.v)
+          break
+        }
+      }
+
+      if (current === resourceKey) {
+        navigate({
+          search: (prev) => ({
+            ...prev,
+            query: next.size > 0 ? mapToQueryParam(next) : undefined,
+          }),
+          replace: true,
+        })
+        return
+      }
+
+      const compactKey: CompactFilterKey = {
+        c: 'resourceType',
+        o: 'equal',
+        v: resourceKey,
+      }
+      next.set(
+        compactKey,
+        buildFilterQueryString('equal', 'resourceType', resourceKey),
+      )
+      navigate({
+        search: (prev) => ({
+          ...prev,
+          query: mapToQueryParam(next) || undefined,
+        }),
+        replace: true,
+      })
+    },
+    [filterMap, navigate],
+  )
 
   const eventOnCurrentList = useMemo(
     () =>
@@ -489,43 +650,6 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
     [currentPage, events, resetListPosition],
   )
 
-  // Convert API events to the display shape the table expects.
-  const displayedActivities = useMemo(
-    () => events.map(toDisplayActivity),
-    [events],
-  )
-
-  // Action filter and free-text search are applied client-side to the current
-  // page (the API doesn't expose a single "action" filter — `event` strings
-  // are highly granular and don't map 1:1 to UI buckets).
-  const filteredActivities = useMemo(() => {
-    return displayedActivities.filter((activity) => {
-      if (actionFilter && activity.action !== actionFilter) return false
-
-      if (searchValue) {
-        const search = searchValue.toLowerCase()
-        return (
-          activity.resourceName.toLowerCase().includes(search) ||
-          activity.userName.toLowerCase().includes(search) ||
-          activity.userEmail.toLowerCase().includes(search) ||
-          (activity.description?.toLowerCase().includes(search) ?? false)
-        )
-      }
-
-      return true
-    })
-  }, [displayedActivities, actionFilter, searchValue])
-
-  const filteredIds = useMemo(
-    () => new Set(filteredActivities.map((a) => a.$id)),
-    [filteredActivities],
-  )
-
-  const filteredRawEvents = useMemo(
-    () => events.filter((e) => filteredIds.has(e.$id)),
-    [events, filteredIds],
-  )
-
   const openActivityDrawer = useCallback(
     (event: Models.ActivityEvent) => {
       setSelectedEvent(event)
@@ -547,171 +671,107 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
     })
   }, [navigate])
 
-  const handleSearchChange = (value: string) => {
-    setSearchValue(value)
-  }
-
-  const clearFilters = () => {
-    setActionFilter('')
-    setResourceTypeFilter('')
-    resetListPosition()
-  }
-
-  const hasActiveFilters = Boolean(actionFilter || resourceTypeFilter)
-
   return (
     <div className="flex flex-col h-full min-h-0">
       <div className="sticky top-0 z-20 bg-background shrink-0">
         <ServiceHeader
           title="Activity"
-          searchPlaceholder="Search activities..."
-          searchValue={searchValue}
-          onSearchChange={handleSearchChange}
           showFilters
-          onFilterClick={() => setShowFilters(!showFilters)}
+          filterTrigger={
+            <div className="flex shrink-0 items-center gap-2">
+              <FiltersPopover
+                open={filtersOpen}
+                onOpenChange={setFiltersOpen}
+                columns={activitiesFilterColumns}
+                filterMap={filterMap}
+                onRemoveFilter={removeFilter}
+                onClearAll={clearAllFilters}
+                onApplyFilter={applyFilter}
+                resourceLabel="activities"
+                filterScope="activity"
+                onApplyQuery={(queryParam) => {
+                  navigate({
+                    search: (prev) => ({
+                      ...prev,
+                      query: queryParam ?? undefined,
+                    }),
+                    replace: true,
+                  })
+                }}
+                teamId={project?.teamId}
+                onReset={() => {
+                  navigate({
+                    search: (prev) => {
+                      const { event: ev } = prev
+                      return { ...(ev ? { event: ev } : {}) }
+                    },
+                    replace: true,
+                  })
+                }}
+              />
+              <DateRangePicker
+                dateRange={dateRangeForPicker}
+                onDateRangeChange={handleDateRangeChange}
+                className="h-9 min-w-[200px]"
+              />
+            </div>
+          }
+          beforeRefreshButtons={
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  className={cn(
+                    'inline-flex max-w-[10.5rem] shrink-0 items-center gap-1.5 rounded-md px-1.5 py-1 text-left sm:max-w-[13rem]',
+                    'border border-transparent text-muted-foreground',
+                    'hover:border-border hover:bg-muted/50 hover:text-foreground',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                  )}
+                >
+                  <Clock className="h-3.5 w-3.5 shrink-0 text-blue-600 dark:text-blue-400" />
+                  <span className="min-w-0 truncate text-[11px] leading-tight">
+                    <span className="text-muted-foreground">Retention </span>
+                    <span className="font-medium text-foreground">
+                      {planLimit.label}
+                    </span>
+                  </span>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent
+                side="bottom"
+                align="end"
+                className="max-w-sm text-[12px] leading-snug text-balance"
+              >
+                <p className="font-medium text-background">Activity retention</p>
+                <p className="mt-1.5 text-background/85">
+                  Your{' '}
+                  <span className="font-medium capitalize text-background">
+                    {plan}
+                  </span>{' '}
+                  plan supports{' '}
+                  <span className="font-medium text-background">
+                    {planLimit.label}
+                  </span>{' '}
+                  of activity history.
+                  {plan === 'free' && (
+                    <>
+                      {' '}
+                      Upgrade or contact sales for longer retention.
+                    </>
+                  )}
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          }
           showRefresh
           onRefresh={() => {
             void refetch()
           }}
-          isRefreshing={isFetching}
-          showExport
-          onExport={() => {}}
+          isRefreshing={activityListFetchingCount > 0}
           fullWidthBorder
           fullWidth
           showToolbarBottomBorder
-          rightContent={
-            <div className="flex items-center gap-2">
-              {/* Plan indicator */}
-              <div className="flex items-center gap-1.5 rounded-md border border-border bg-muted/30 px-2.5 py-1.5">
-                <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="text-[12px] text-muted-foreground">
-                  Last {planLimit.label}
-                </span>
-              </div>
-            </div>
-          }
-          contentAfterBorder={
-            <div className="border-b border-border bg-blue-500/5">
-              <div className="px-4 py-3 sm:px-6">
-                <Alert
-                  variant="default"
-                  className="border-blue-500/30 bg-transparent"
-                >
-                  <Clock className="h-4 w-4 text-blue-500 shrink-0" />
-                  <div>
-                    <AlertTitle className="text-[13px] font-medium text-blue-600 dark:text-blue-400">
-                      Activity retention period
-                    </AlertTitle>
-                    <AlertDescription className="text-[12px] text-blue-600/80 dark:text-blue-400/80 !block mt-1">
-                      Your{' '}
-                      <span className="font-medium capitalize">{plan}</span>{' '}
-                      plan supports{' '}
-                      <span className="font-medium">{planLimit.label}</span> of
-                      activity retention.
-                      {(plan === 'free' || plan === 'pro') && (
-                        <>
-                          {' '}
-                          <a
-                            href="#"
-                            className="font-medium underline hover:no-underline"
-                            onClick={(e) => {
-                              e.preventDefault()
-                            }}
-                          >
-                            Upgrade
-                          </a>{' '}
-                          or{' '}
-                          <a
-                            href="#"
-                            className="font-medium underline hover:no-underline"
-                            onClick={(e) => {
-                              e.preventDefault()
-                            }}
-                          >
-                            contact sales
-                          </a>{' '}
-                          for higher retention.
-                        </>
-                      )}
-                    </AlertDescription>
-                  </div>
-                </Alert>
-              </div>
-            </div>
-          }
         />
-
-        {/* Filters Panel */}
-        {showFilters && (
-          <div className="border-b border-border">
-            <div className="flex flex-wrap items-center gap-3 px-4 py-3 sm:px-6">
-              <span className="text-[12px] font-medium text-muted-foreground">
-                Filter by:
-              </span>
-
-              {/* Action Filter */}
-              <Select
-                value={actionFilter}
-                onValueChange={(value) => {
-                  setActionFilter(value)
-                  resetListPosition()
-                }}
-              >
-                <SelectTrigger className="h-8 w-[140px] text-[12px]">
-                  <SelectValue placeholder="Action" />
-                </SelectTrigger>
-                <SelectContent>
-                  {actionOptions.map((option) => (
-                    <SelectItem
-                      key={option.value}
-                      value={option.value}
-                      className="text-[12px]"
-                    >
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {/* Resource Type Filter */}
-              <Select
-                value={resourceTypeFilter}
-                onValueChange={(value) => {
-                  setResourceTypeFilter(value)
-                  resetListPosition()
-                }}
-              >
-                <SelectTrigger className="h-8 w-[140px] text-[12px]">
-                  <SelectValue placeholder="Resource type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {resourceTypeOptions.map((option) => (
-                    <SelectItem
-                      key={option.value}
-                      value={option.value}
-                      className="text-[12px]"
-                    >
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {/* Clear Filters */}
-              {hasActiveFilters && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearFilters}
-                  className="h-8 gap-1.5 text-[12px] text-muted-foreground hover:text-foreground"
-                >
-                  <X className="h-3.5 w-3.5" />
-                  Clear filters
-                </Button>
-              )}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Activity table + pagination: flex column so only the table body scrolls
@@ -728,7 +788,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
               </p>
               <p className="mt-0.5 text-[12px] text-amber-700 dark:text-amber-300">
                 Free plans only show the last hour of activity. Upgrade to Pro
-                for 7 days of history, or Scale/Enterprise for 30 days.
+                for 30 days of history, or Scale/Enterprise for longer retention.
               </p>
             </div>
             <Button
@@ -741,13 +801,22 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
           </div>
         )}
 
-        {filteredActivities.length > 0 ? (
+        <div className="shrink-0 pb-4">
+          <ActivityLogVolumeChart
+            rangeFrom={volumeChartRange.from}
+            rangeTo={volumeChartRange.to}
+            activeResourceTypeFilter={activeResourceTypeFilter}
+            onLegendResourceTypeClick={handleLegendResourceTypeClick}
+          />
+        </div>
+
+        {events.length > 0 ? (
           <>
             <div className="min-h-0 flex-1 overflow-auto">
               <Table withScrollContainer={false}>
                 <ActivityLogsTableHead />
                 <TableBody>
-                  {filteredRawEvents.map((rawEvent) => {
+                  {events.map((rawEvent) => {
                     const activity = toDisplayActivity(rawEvent)
                     const resourcePrimary =
                       activity.resourceId?.trim() ||
@@ -930,15 +999,15 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
           <EmptyState
             icon={Activity}
             title={
-              hasActiveFilters || searchValue ? undefined : 'No activities yet'
+              filterMap.size > 0 ? undefined : 'No activities yet'
             }
             description={
-              hasActiveFilters || searchValue
+              filterMap.size > 0
                 ? undefined
                 : 'Activity will appear here as you use your project'
             }
-            isEmpty={!hasActiveFilters && !searchValue}
-            hasFilters={hasActiveFilters || !!searchValue}
+            isEmpty={filterMap.size === 0}
+            hasFilters={filterMap.size > 0}
             variant="centered"
           />
         )}

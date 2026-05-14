@@ -7,15 +7,18 @@ import {
   ACTIVITY_DEFAULT_PAGE_SIZE,
   activitiesQueryOptions,
 } from '@/lib/react-query/hooks'
+import { getQueryParam } from '@/lib/table-filters'
 
 const activitySearchSchema = z.object({
   /** Activity event `$id` — opens the detail drawer when valid. */
   event: z.string().optional().catch(undefined),
+  /** Encoded table filters (same contract as other list views). */
+  query: z.string().optional().catch(undefined),
 })
 
 // Mirror the Pro plan retention window (`PLAN_TIME_LIMITS.pro` in View.tsx)
 // so the route loader prefetches the same query the View renders.
-const PRO_PLAN_HOURS = 7 * 24
+const PRO_PLAN_HOURS = 30 * 24
 
 export const Route = createFileRoute('/_public/projects/$projectId/activity')({
   head: () => ({ meta: [{ title: pageTitle('Activity') }] }),
@@ -29,13 +32,15 @@ export const Route = createFileRoute('/_public/projects/$projectId/activity')({
       })
     }
   },
-  loader: async ({ params, context }) => {
+  loader: async ({ params, context, location }) => {
     if (typeof window === 'undefined') return
     const { projectId } = params
     const { queryClient } = context
     if (!projectId) return
 
-    const since = new Date(
+    const url = new URL(location.pathname + location.search, 'http://localhost')
+    const queryParam = getQueryParam(url)
+    const planSinceIso = new Date(
       Date.now() - PRO_PLAN_HOURS * 60 * 60 * 1000,
     ).toISOString()
 
@@ -44,7 +49,10 @@ export const Route = createFileRoute('/_public/projects/$projectId/activity')({
         activitiesQueryOptions({
           projectId,
           limit: ACTIVITY_DEFAULT_PAGE_SIZE,
-          since,
+          cursorAfter: null,
+          cursorBefore: null,
+          planSinceIso,
+          filterQueryKey: queryParam,
         }),
       )
       .catch(() => {

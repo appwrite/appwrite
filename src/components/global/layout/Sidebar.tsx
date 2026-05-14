@@ -438,7 +438,8 @@ export function ConsoleSidebar({
           the sidebar's right edge. */}
       <div
         className={cn(
-          'relative hidden h-full flex-shrink-0 @[1024px]:block',
+          /* z-20: main is a later flex sibling and would paint over the half-outside collapse toggle without this */
+          'relative z-20 hidden h-full flex-shrink-0 @[1024px]:block',
           'transition-[width] duration-150 ease-out',
           collapsed ? 'w-[60px]' : 'w-[220px]',
           className,

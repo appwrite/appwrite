@@ -11,6 +11,10 @@ import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { ACTIVITY_DEFAULT_PAGE_SIZE, DEFAULT_STALE_TIME } from './constants'
+import {
+  queryParamToMap,
+  getActivityFilterQueryParts,
+} from '@/lib/table-filters'
 
 // ============================================================================
 // QUERY FUNCTIONS
@@ -29,14 +33,12 @@ export interface FetchActivitiesParams {
    * Mutually exclusive with `cursorAfter`.
    */
   cursorBefore?: string | null
-  /** Optional filter by `event` value (e.g. "users.create"). Matches via Query.equal. */
-  event?: string
-  /** Optional filter by resource type (e.g. "users", "files"). */
-  resourceType?: string
-  /** Optional filter by user that triggered the event. */
-  userId?: string
-  /** Optional cutoff timestamp (ISO 8601). Only events at or after will be returned. */
-  since?: string
+  /** Lower bound for `time` (plan retention merged with user filters on `time`). */
+  mergedSince: string
+  /** Optional upper bound for `time` (ISO 8601). */
+  until?: string | null
+  /** Additional Query strings from the URL filter map (resource type, userId, event, …). */
+  extraQueries?: string[]
 }
 
 export interface ActivitiesResult {
@@ -58,10 +60,9 @@ export async function fetchProjectActivities({
   limit = ACTIVITY_DEFAULT_PAGE_SIZE,
   cursorAfter,
   cursorBefore,
-  event,
-  resourceType,
-  userId,
-  since,
+  mergedSince,
+  until,
+  extraQueries,
 }: FetchActivitiesParams): Promise<ActivitiesResult> {
   if (!projectId) {
     return { events: [], hasMore: false }
@@ -75,10 +76,14 @@ export async function fetchProjectActivities({
     queries.push(Query.cursorAfter(cursorAfter))
   }
 
-  if (event) queries.push(Query.equal('event', event))
-  if (resourceType) queries.push(Query.equal('resourceType', resourceType))
-  if (userId) queries.push(Query.equal('userId', userId))
-  if (since) queries.push(Query.greaterThanEqual('time', since))
+  queries.push(Query.greaterThanEqual('time', mergedSince))
+  if (until) {
+    queries.push(Query.lessThanEqual('time', until))
+  }
+
+  for (const q of extraQueries ?? []) {
+    queries.push(q)
+  }
 
   // The SDK type definition for `listEvents` declares `queries: string`, but
   // the runtime accepts the same `string[]` shape used by every other list
@@ -108,20 +113,18 @@ export function activitiesQueryOptions(params: {
   limit?: number
   cursorAfter?: string | null
   cursorBefore?: string | null
-  event?: string
-  resourceType?: string
-  userId?: string
-  since?: string
+  /** Plan retention floor (ISO); merged with URL `time` filters inside the queryFn. */
+  planSinceIso: string
+  /** Raw URL `query` param (encoded filter keys), or null when unset. */
+  filterQueryKey: string | null
 }) {
   const {
     projectId,
     limit = ACTIVITY_DEFAULT_PAGE_SIZE,
     cursorAfter = null,
     cursorBefore = null,
-    event,
-    resourceType,
-    userId,
-    since,
+    planSinceIso,
+    filterQueryKey,
   } = params
 
   return queryOptions({
@@ -132,22 +135,25 @@ export function activitiesQueryOptions(params: {
       limit,
       cursorAfter ?? null,
       cursorBefore ?? null,
-      event ?? null,
-      resourceType ?? null,
-      userId ?? null,
-      since ?? null,
+      planSinceIso,
+      filterQueryKey ?? null,
     ],
-    queryFn: () =>
-      fetchProjectActivities({
+    queryFn: () => {
+      const filterMap = queryParamToMap(filterQueryKey)
+      const { mergedSince, until, extraQueries } = getActivityFilterQueryParts(
+        filterMap,
+        planSinceIso,
+      )
+      return fetchProjectActivities({
         projectId: projectId!,
         limit,
         cursorAfter,
         cursorBefore,
-        event,
-        resourceType,
-        userId,
-        since,
-      }),
+        mergedSince,
+        until,
+        extraQueries,
+      })
+    },
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
     placeholderData: keepPreviousData,
@@ -171,10 +177,8 @@ export function useProjectActivities(params: {
   limit?: number
   cursorAfter?: string | null
   cursorBefore?: string | null
-  event?: string
-  resourceType?: string
-  userId?: string
-  since?: string
+  planSinceIso: string
+  filterQueryKey: string | null
 }) {
   const { data, isLoading, isFetching, error, refetch } = useQuery(
     activitiesQueryOptions(params),
