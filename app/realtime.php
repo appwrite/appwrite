@@ -1135,7 +1135,6 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
         $messageContainer->set('authorization', fn () => $authorization);
         $messageContainer->set('project', fn () => $project);
         $messageContainer->set('projectId', fn () => $projectId);
-        $messageContainer->set('publisherForUsage', fn () => $container->get('publisherForUsage'));
         $messageContainer->set('queueForEvents', fn () => getQueueForEvents());
         $messageContainer->set('queueForRealtime', fn () => getQueueForRealtime());
 
