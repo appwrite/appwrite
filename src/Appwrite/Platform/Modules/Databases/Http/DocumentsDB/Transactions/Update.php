@@ -60,7 +60,7 @@ class Update extends TransactionsUpdate
             ->inject('queueForEvents')
             ->inject('usage')
             ->inject('queueForRealtime')
-            ->inject('queueForFunctions')
+            ->inject('publisherForFunctions')
             ->inject('queueForWebhooks')
             ->inject('authorization')
             ->inject('eventProcessor')

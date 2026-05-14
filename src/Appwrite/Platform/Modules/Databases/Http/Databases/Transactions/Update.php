@@ -5,6 +5,8 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Func as FunctionMessage;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\SDK\AuthType;
@@ -77,7 +79,7 @@ class Update extends Action
             ->inject('queueForEvents')
             ->inject('usage')
             ->inject('queueForRealtime')
-            ->inject('queueForFunctions')
+            ->inject('publisherForFunctions')
             ->inject('queueForWebhooks')
             ->inject('authorization')
             ->inject('eventProcessor')
@@ -97,7 +99,7 @@ class Update extends Action
      * @param Event $queueForEvents
      * @param Context $usage
      * @param Event $queueForRealtime
-     * @param Event $queueForFunctions
+     * @param FunctionPublisher $publisherForFunctions
      * @param Event $queueForWebhooks
      * @param EventProcessor $eventProcessor
      * @return void
@@ -108,7 +110,7 @@ class Update extends Action
      * @throws StructureException
      * @throws \Utopia\Http\Exception
      */
-    public function action(string $transactionId, bool $commit, bool $rollback, Document $project, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, User $user, TransactionState $transactionState, Delete $queueForDeletes, Event $queueForEvents, Context $usage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, Authorization $authorization, EventProcessor $eventProcessor): void
+    public function action(string $transactionId, bool $commit, bool $rollback, Document $project, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, User $user, TransactionState $transactionState, Delete $queueForDeletes, Event $queueForEvents, Context $usage, Event $queueForRealtime, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, Authorization $authorization, EventProcessor $eventProcessor): void
     {
         if (!$commit && !$rollback) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Either commit or rollback must be true');
@@ -461,7 +463,15 @@ class Update extends Action
                     if (!empty($functionsEvents)) {
                         foreach ($generatedEvents as $event) {
                             if (isset($functionsEvents[$event])) {
-                                $queueForFunctions->from($queueForEvents)->trigger();
+                                $publisherForFunctions->enqueue(FunctionMessage::fromEvent(
+                                    event: $queueForEvents->getEvent(),
+                                    params: $queueForEvents->getParams(),
+                                    project: $queueForEvents->getProject(),
+                                    user: $queueForEvents->getUser(),
+                                    userId: $queueForEvents->getUserId(),
+                                    payload: $queueForEvents->getPayload(),
+                                    platform: $queueForEvents->getPlatform(),
+                                ));
                                 break;
                             }
                         }
@@ -480,7 +490,6 @@ class Update extends Action
 
                 $queueForEvents->reset();
                 $queueForRealtime->reset();
-                $queueForFunctions->reset();
                 $queueForWebhooks->reset();
             }
         }

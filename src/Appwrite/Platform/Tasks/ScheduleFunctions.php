@@ -2,7 +2,8 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Appwrite\Event\Func;
+use Appwrite\Event\Message\Func as FunctionMessage;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Cron\CronExpression;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -97,14 +98,10 @@ class ScheduleFunctions extends ScheduleBase
 
                     $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
-                    $queueForFunctions = new Func($this->publisherFunctions);
-
-                    $queueForFunctions
-                        ->setType('schedule')
-                        ->setFunction($schedule['resource'])
-                        ->setMethod('POST')
-                        ->setPath('/')
-                        ->setProject($schedule['project']);
+                    $publisherForFunctions = new FunctionPublisher(
+                        $this->publisherFunctions,
+                        new \Utopia\Queue\Queue(\Utopia\System\System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', \Appwrite\Event\Event::FUNCTIONS_QUEUE_NAME), 'utopia-queue', \Appwrite\Event\Event::FUNCTIONS_QUEUE_TTL)
+                    );
 
                     Span::init('schedule.functions.enqueue');
                     try {
@@ -112,7 +109,13 @@ class ScheduleFunctions extends ScheduleBase
                         Span::add('function.id', $schedule['resource']->getId());
                         Span::add('schedule.id', $schedule['$id'] ?? '');
 
-                        $queueForFunctions->trigger();
+                        $publisherForFunctions->enqueue(new FunctionMessage(
+                            project: $schedule['project'],
+                            function: $schedule['resource'],
+                            type: 'schedule',
+                            method: 'POST',
+                            path: '/',
+                        ));
 
                         $this->recordEnqueueDelay($delayConfig['nextDate']);
                     } finally {
