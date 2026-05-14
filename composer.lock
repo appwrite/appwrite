@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5bf93473859f86fbf9438b17cb660331",
+    "content-hash": "dbbf6239c2d7c6ddccd86d1c54f74ab4",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -69,16 +69,16 @@
         },
         {
             "name": "appwrite/appwrite",
-            "version": "23.1.0",
+            "version": "23.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-for-php.git",
-                "reference": "2f275921f10ceb7cff99f2d463f7328b296234fa"
+                "reference": "fd7c0f0bf5ddf334533534b20ed967cfb400f6ea"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/2f275921f10ceb7cff99f2d463f7328b296234fa",
-                "reference": "2f275921f10ceb7cff99f2d463f7328b296234fa",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/fd7c0f0bf5ddf334533534b20ed967cfb400f6ea",
+                "reference": "fd7c0f0bf5ddf334533534b20ed967cfb400f6ea",
                 "shasum": ""
             },
             "require": {
@@ -104,10 +104,10 @@
             "support": {
                 "email": "team@appwrite.io",
                 "issues": "https://github.com/appwrite/sdk-for-php/issues",
-                "source": "https://github.com/appwrite/sdk-for-php/tree/23.1.0",
+                "source": "https://github.com/appwrite/sdk-for-php/tree/23.1.1",
                 "url": "https://appwrite.io/support"
             },
-            "time": "2026-05-08T13:44:58+00:00"
+            "time": "2026-05-12T11:03:36+00:00"
         },
         {
             "name": "appwrite/php-clamav",
@@ -4606,16 +4606,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "dev-add-project-variable-migration",
+            "version": "dev-add-webhook-migration",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "3376bed6f797a8d48f0107e9a0d8e40745d6914b"
+                "reference": "7fca4226ae33a60ec334d0dbdc1353c2464c4306"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/3376bed6f797a8d48f0107e9a0d8e40745d6914b",
-                "reference": "3376bed6f797a8d48f0107e9a0d8e40745d6914b",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/7fca4226ae33a60ec334d0dbdc1353c2464c4306",
+                "reference": "7fca4226ae33a60ec334d0dbdc1353c2464c4306",
                 "shasum": ""
             },
             "require": {
@@ -4672,10 +4672,10 @@
                 "utopia"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/migration/tree/add-project-variable-migration",
+                "source": "https://github.com/utopia-php/migration/tree/add-webhook-migration",
                 "issues": "https://github.com/utopia-php/migration/issues"
             },
-            "time": "2026-05-14T19:00:51+00:00"
+            "time": "2026-05-14T19:27:19+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -8585,7 +8585,7 @@
     "aliases": [
         {
             "package": "utopia-php/migration",
-            "version": "dev-add-project-variable-migration",
+            "version": "dev-add-webhook-migration",
             "alias": "1.12.0",
             "alias_normalized": "1.12.0.0"
         }
