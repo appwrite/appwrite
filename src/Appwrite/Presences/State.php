@@ -2,8 +2,14 @@
 
 namespace Appwrite\Presences;
 
+use Appwrite\Event\Event as QueueEvent;
+use Appwrite\Event\Message\Usage as UsageMessage;
+use Appwrite\Event\Publisher\Usage as UsagePublisher;
+use Appwrite\Event\Realtime as QueueRealtime;
 use Appwrite\Extend\Exception;
+use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Database\Documents\User;
+use Throwable;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict as ConflictException;
@@ -150,18 +156,6 @@ class State
         }
     }
 
-    private function getListCacheKey(Database $dbForProject): string
-    {
-        return \sprintf(
-            '%s-cache:%s:%s:%s:collection:%s',
-            $dbForProject->getCacheName(),
-            $dbForProject->getAdapter()->getHostname(),
-            $dbForProject->getNamespace(),
-            $dbForProject->getTenant(),
-            self::COLLECTION_ID
-        );
-    }
-
     private function getListCacheFieldKey(array $roles, array $queries, string $type): string
     {
         $serialized = \array_map(
@@ -185,9 +179,10 @@ class State
         int $ttl
     ): mixed {
         $cacheField = $this->getListCacheFieldKey($roles, $queries, $type);
+        [$collectionKey] = $dbForProject->getCacheKeys(self::COLLECTION_ID);
 
         try {
-            return $dbForProject->getCache()->load($this->getListCacheKey($dbForProject), $ttl, $cacheField);
+            return $dbForProject->getCache()->load($collectionKey, $ttl, $cacheField);
         } catch (\Throwable) {
             return null;
         }
@@ -201,15 +196,79 @@ class State
         mixed $value
     ): void {
         $cacheField = $this->getListCacheFieldKey($roles, $queries, $type);
+        [$collectionKey] = $dbForProject->getCacheKeys(self::COLLECTION_ID);
 
         try {
-            $dbForProject->getCache()->save($this->getListCacheKey($dbForProject), $value, $cacheField);
+            $dbForProject->getCache()->save($collectionKey, $value, $cacheField);
         } catch (\Throwable) {
         }
     }
 
     public function purgeListCache(Database $dbForProject): bool
     {
-        return $dbForProject->getCache()->purge($this->getListCacheKey($dbForProject));
+        [$collectionKey] = $dbForProject->getCacheKeys(self::COLLECTION_ID);
+
+        return $dbForProject->getCache()->purge($collectionKey);
+    }
+
+    public function triggerUsage(
+        UsagePublisher $publisher,
+        Document $project,
+        int $value,
+    ): void {
+        if ($project->isEmpty()) {
+            return;
+        }
+
+        try {
+            $usage = new UsageContext();
+            $usage->addMetric(METRIC_USERS_PRESENCE, $value);
+
+            $publisher->enqueue(new UsageMessage(
+                project: $project,
+                metrics: $usage->getMetrics(),
+            ));
+        } catch (Throwable $th) {
+            if (\function_exists('logError')) {
+                \logError($th, 'realtimeStats', tags: ['projectId' => $project->getId()]);
+            }
+        }
+    }
+
+    public function triggerEvent(
+        QueueEvent $queueForEvents,
+        QueueRealtime $queueForRealtime,
+        Document $project,
+        User $user,
+        string $eventName,
+        Document $presence,
+    ): void {
+        if ($project->isEmpty() || $presence->isEmpty()) {
+            return;
+        }
+
+        try {
+            $queueForEvents
+                ->reset()
+                ->setProject($project)
+                ->setUser($user)
+                ->setEvent($eventName)
+                ->setParam('presenceId', $presence->getId())
+                ->setPayload($presence->getArrayCopy());
+
+            $queueForRealtime
+                ->reset()
+                ->setProject($project)
+                ->setUser($user)
+                ->from($queueForEvents)
+                ->trigger();
+        } catch (Throwable $th) {
+            if (\function_exists('logError')) {
+                \logError($th, 'realtimePresenceEvent', tags: [
+                    'projectId' => $project->getId(),
+                    'event' => $eventName,
+                ]);
+            }
+        }
     }
 }

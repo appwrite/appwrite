@@ -2,12 +2,14 @@
 
 namespace Appwrite\Realtime\Message\Handlers;
 
+use Appwrite\Event\Event as QueueEvent;
+use Appwrite\Event\Publisher\Usage as UsagePublisher;
+use Appwrite\Event\Realtime as QueueRealtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Presences\State as PresenceState;
 use Appwrite\Realtime\Message\Dispatcher;
 use Appwrite\Utopia\Database\Documents\User;
-use Closure;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -34,15 +36,14 @@ class Presence extends Action
             ->inject('authorization')
             ->inject('presenceState')
             ->inject('project')
-            ->inject('triggerPresenceUsage')
-            ->inject('triggerPresenceEvent')
+            ->inject('publisherForUsage')
+            ->inject('queueForEvents')
+            ->inject('queueForRealtime')
             ->callback($this->action(...));
     }
 
     /**
      * @param array<int, string>|null $permissions
-     * @param Closure(int, Document): void $triggerPresenceUsage
-     * @param Closure(?Document, User, string, Document): void $triggerPresenceEvent
      * @return array<string, mixed>
      */
     public function action(
@@ -56,8 +57,9 @@ class Presence extends Action
         Authorization $authorization,
         PresenceState $presenceState,
         ?Document $project,
-        Closure $triggerPresenceUsage,
-        Closure $triggerPresenceEvent,
+        UsagePublisher $publisherForUsage,
+        QueueEvent $queueForEvents,
+        QueueRealtime $queueForRealtime,
     ): array {
         if ($project === null || $project->isEmpty()) {
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Presence requires a project context.');
@@ -93,8 +95,8 @@ class Presence extends Action
             $presenceDocument,
             $presenceId,
             (string) $user->getSequence(),
-            function () use ($project, $triggerPresenceUsage): void {
-                $triggerPresenceUsage(1, $project);
+            function () use ($presenceState, $publisherForUsage, $project): void {
+                $presenceState->triggerUsage($publisherForUsage, $project, 1);
             },
         );
 
@@ -106,7 +108,14 @@ class Presence extends Action
 
         $realtime->connections[$connectionId]['presences'][$presence->getId()] = $presence;
 
-        $triggerPresenceEvent($project, $user, 'presences.[presenceId].upsert', $presence);
+        $presenceState->triggerEvent(
+            $queueForEvents,
+            $queueForRealtime,
+            $project,
+            $user,
+            'presences.[presenceId].upsert',
+            $presence,
+        );
 
         return [
             'type' => 'response',

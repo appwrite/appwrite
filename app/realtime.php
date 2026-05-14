@@ -1,7 +1,6 @@
 <?php
 
 use Appwrite\Event\Event as QueueEvent;
-use Appwrite\Event\Message\Usage as UsageMessage;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime as QueueRealtime;
 use Appwrite\Extend\Exception;
@@ -16,7 +15,6 @@ use Appwrite\Realtime\Message\Handlers\Ping as PingHandler;
 use Appwrite\Realtime\Message\Handlers\Presence as PresenceHandler;
 use Appwrite\Realtime\Message\Handlers\Subscribe as SubscribeHandler;
 use Appwrite\Realtime\Message\Handlers\Unsubscribe as UnsubscribeHandler;
-use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -259,8 +257,8 @@ if (!function_exists('getTelemetry')) {
     }
 }
 
-if (!function_exists('getQueueForEventsForProject')) {
-    function getQueueForEventsForProject(Document $project, User $user): QueueEvent
+if (!function_exists('getQueueForEvents')) {
+    function getQueueForEvents(): QueueEvent
     {
         $ctx = Coroutine::getContext();
 
@@ -273,10 +271,7 @@ if (!function_exists('getQueueForEventsForProject')) {
             ));
         }
 
-        return $ctx['queueForEvents']
-            ->reset()
-            ->setProject($project)
-            ->setUser($user);
+        return $ctx['queueForEvents'];
     }
 }
 
@@ -289,70 +284,13 @@ if (!function_exists('getQueueForRealtime')) {
             $ctx['queueForRealtime'] = new QueueRealtime();
         }
 
-        return $ctx['queueForRealtime']->reset();
+        return $ctx['queueForRealtime'];
     }
 }
 
 if (!function_exists('triggerStats')) {
     function triggerStats(array $event, string $projectId): void
     {
-    }
-}
-
-if (!function_exists('triggerPresenceUsage')) {
-    function triggerPresenceUsage(int $value, Document $project): void
-    {
-        if ($project->isEmpty()) {
-            return;
-        }
-
-        try {
-            global $container;
-            /** @var UsagePublisher $publisherForUsage */
-            $publisherForUsage = $container->get('publisherForUsage');
-
-            $usage = new Context();
-            $usage->addMetric(METRIC_USERS_PRESENCE, $value);
-
-            $publisherForUsage->enqueue(new UsageMessage(
-                project: $project,
-                metrics: $usage->getMetrics(),
-            ));
-        } catch (Throwable $th) {
-            logError($th, 'realtimeStats', tags: ['projectId' => $project->getId()]);
-        }
-    }
-}
-
-if (!function_exists('triggerPresenceEvent')) {
-    function triggerPresenceEvent(
-        Document $project,
-        User $user,
-        string $eventName,
-        Document $presence
-    ): void {
-        if ($project->isEmpty() || $presence->isEmpty()) {
-            return;
-        }
-
-        try {
-            $queueForEvents = getQueueForEventsForProject($project, $user);
-            $queueForEvents
-                ->setEvent($eventName)
-                ->setParam('presenceId', $presence->getId())
-                ->setPayload($presence->getArrayCopy());
-
-            getQueueForRealtime()
-                ->setProject($project)
-                ->setUser($user)
-                ->from($queueForEvents)
-                ->trigger();
-        } catch (Throwable $th) {
-            logError($th, 'realtimePresenceEvent', tags: [
-                'projectId' => $project->getId(),
-                'event' => $eventName,
-            ]);
-        }
     }
 }
 
@@ -1197,11 +1135,9 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
         $messageContainer->set('authorization', fn () => $authorization);
         $messageContainer->set('project', fn () => $project);
         $messageContainer->set('projectId', fn () => $projectId);
-        // Wrap the global helpers as first-class callables so handlers receive them via
-        // injection rather than reaching into the global namespace. Keeps PresenceHandler
-        // unit-testable without bootstrapping app/realtime.php.
-        $messageContainer->set('triggerPresenceUsage', fn () => triggerPresenceUsage(...));
-        $messageContainer->set('triggerPresenceEvent', fn () => triggerPresenceEvent(...));
+        $messageContainer->set('publisherForUsage', fn () => $container->get('publisherForUsage'));
+        $messageContainer->set('queueForEvents', fn () => getQueueForEvents());
+        $messageContainer->set('queueForRealtime', fn () => getQueueForRealtime());
 
         $responsePayload = $messageDispatcher->dispatch($messageContainer, $message);
 
@@ -1265,7 +1201,7 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
     }
 });
 
-$server->onClose(function (int $connection) use ($realtime, $stats, $register) {
+$server->onClose(function (int $connection) use ($realtime, $stats, $register, $container, $presenceState) {
     $projectId = null;
     $userId = null;
     $subscriptionsBeforeClose = 0;
@@ -1297,7 +1233,7 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register) {
                 !empty($presencesById)
                 && $projectId !== 'console'
             ) {
-                go(function () use ($presencesById, $projectId, $userId): void {
+                go(function () use ($presencesById, $projectId, $userId, $container, $presenceState): void {
                     // Fresh span: the parent realtime.close span finishes before this coroutine
                     Span::init('realtime.close.presenceCleanup');
                     Span::add('realtime.projectId', $projectId);
@@ -1329,9 +1265,12 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register) {
                             }
                         }
 
+                        /** @var UsagePublisher $publisherForUsage */
+                        $publisherForUsage = $container->get('publisherForUsage');
+
                         try {
                             $deletionCount = $dbForProject->deleteDocuments('presenceLogs', [Query::equal('$id', $presenceIds)]);
-                            triggerPresenceUsage(-$deletionCount, $project);
+                            $presenceState->triggerUsage($publisherForUsage, $project, -$deletionCount);
                         } catch (Throwable $th) {
                             Span::error($th);
                             logError($th, 'realtimeOnClosePresenceDeletion', tags: [
@@ -1340,9 +1279,19 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register) {
                             ]);
                         }
 
+                        $queueForEvents = getQueueForEvents();
+                        $queueForRealtime = getQueueForRealtime();
+
                         foreach ($presences as $presence) {
                             try {
-                                triggerPresenceEvent($project, $user, 'presences.[presenceId].delete', $presence);
+                                $presenceState->triggerEvent(
+                                    $queueForEvents,
+                                    $queueForRealtime,
+                                    $project,
+                                    $user,
+                                    'presences.[presenceId].delete',
+                                    $presence,
+                                );
                             } catch (Throwable) {
                                 // Swallow errors to avoid breaking disconnect cleanup
                             }
