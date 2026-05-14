@@ -3,10 +3,10 @@
 // List of scopes for organization (teams) API keys
 
 return [
-    "projects.read" => [
+    "organization.projects.read" => [
         "description" => 'Access to read organization\'s projects',
     ],
-    "projects.write" => [
+    "organization.projects.write" => [
         "description" =>
             "Access to create, update, and delete projects in organization",
     ],
