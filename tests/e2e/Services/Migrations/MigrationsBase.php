@@ -2605,8 +2605,9 @@ trait MigrationsBase
 
         $this->assertNotNull($foundKey);
         $this->assertEquals('Test API Key', $foundKey['name']);
-        $this->assertContains('databases.read', $foundKey['scopes']);
-        $this->assertContains('databases.write', $foundKey['scopes']);
+        $this->assertEqualsCanonicalizing(['databases.read', 'databases.write'], $foundKey['scopes']);
+        $this->assertEmpty($foundKey['expire']);
+        $this->assertNotEquals($apiKey['secret'], $foundKey['secret']);
 
         // Cleanup on destination
         $this->client->call(Client::METHOD_DELETE, '/project/keys/' . $foundKey['$id'], $destinationHeaders);
