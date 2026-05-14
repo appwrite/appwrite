@@ -1170,6 +1170,11 @@ return function (Container $context): void {
             }
         }
 
+        // API key auth bypasses membership check; key validity is verified later
+        if (!empty($request->getHeader('x-appwrite-key', ''))) {
+            return $team;
+        }
+
         // Unauthorized, do not allow the team
         return new Document([]);
     }, ['project', 'dbForPlatform', 'utopia', 'request', 'authorization', 'user']);
