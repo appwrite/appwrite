@@ -3,6 +3,7 @@
 namespace Appwrite\Platform;
 
 use Appwrite\Platform\Modules\Account;
+use Appwrite\Platform\Modules\Advisor;
 use Appwrite\Platform\Modules\Avatars;
 use Appwrite\Platform\Modules\Console;
 use Appwrite\Platform\Modules\Core;
@@ -42,5 +43,6 @@ class Appwrite extends Platform
         $this->addModule(new Webhooks\Module());
         $this->addModule(new Migrations\Module());
         $this->addModule(new Project\Module());
+        $this->addModule(new Advisor\Module());
     }
 }

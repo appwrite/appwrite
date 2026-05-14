@@ -1453,4 +1453,28 @@ return [
         'description' => 'The maximum number of mock phones for this project has been reached.',
         'code' => 400,
     ],
+
+    /** Advisor */
+    Exception::INSIGHT_NOT_FOUND => [
+        'name' => Exception::INSIGHT_NOT_FOUND,
+        'description' => 'Insight with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::INSIGHT_ALREADY_EXISTS => [
+        'name' => Exception::INSIGHT_ALREADY_EXISTS,
+        'description' => 'Insight with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
+    ],
+
+    /** Reports */
+    Exception::REPORT_NOT_FOUND => [
+        'name' => Exception::REPORT_NOT_FOUND,
+        'description' => 'Report with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::REPORT_ALREADY_EXISTS => [
+        'name' => Exception::REPORT_ALREADY_EXISTS,
+        'description' => 'Report with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
+    ],
 ];

@@ -3,12 +3,12 @@
 namespace Appwrite\Platform\Modules\Health\Http\Health\Queue\Failed;
 
 use Appwrite\Event\Database;
-use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
-use Appwrite\Event\Func;
 use Appwrite\Event\Publisher\Audit;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Publisher\Certificate;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
@@ -75,10 +75,10 @@ class Get extends Base
             ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
             ->inject('response')
             ->inject('queueForDatabase')
-            ->inject('queueForDeletes')
+            ->inject('publisherForDeletes')
             ->inject('publisherForAudits')
             ->inject('publisherForMails')
-            ->inject('queueForFunctions')
+            ->inject('publisherForFunctions')
             ->inject('publisherForStatsResources')
             ->inject('publisherForUsage')
             ->inject('queueForWebhooks')
@@ -95,10 +95,10 @@ class Get extends Base
         int|string $threshold,
         Response $response,
         Database $queueForDatabase,
-        Delete $queueForDeletes,
+        DeletePublisher $publisherForDeletes,
         Audit $publisherForAudits,
         MailPublisher $publisherForMails,
-        Func $queueForFunctions,
+        FunctionPublisher $publisherForFunctions,
         StatsResourcesPublisher $publisherForStatsResources,
         UsagePublisher $publisherForUsage,
         Webhook $queueForWebhooks,
@@ -112,10 +112,10 @@ class Get extends Base
 
         $queue = match ($name) {
             System::getEnv('_APP_DATABASE_QUEUE_NAME', Event::DATABASE_QUEUE_NAME) => $queueForDatabase,
-            System::getEnv('_APP_DELETE_QUEUE_NAME', Event::DELETE_QUEUE_NAME) => $queueForDeletes,
+            System::getEnv('_APP_DELETE_QUEUE_NAME', Event::DELETE_QUEUE_NAME) => $publisherForDeletes,
             System::getEnv('_APP_AUDITS_QUEUE_NAME', Event::AUDITS_QUEUE_NAME) => $publisherForAudits,
             System::getEnv('_APP_MAILS_QUEUE_NAME', Event::MAILS_QUEUE_NAME) => $publisherForMails,
-            System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME) => $queueForFunctions,
+            System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME) => $publisherForFunctions,
             System::getEnv('_APP_STATS_RESOURCES_QUEUE_NAME', Event::STATS_RESOURCES_QUEUE_NAME) => $publisherForStatsResources,
             System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', Event::STATS_USAGE_QUEUE_NAME) => $publisherForUsage,
             System::getEnv('_APP_WEBHOOK_QUEUE_NAME', Event::WEBHOOK_QUEUE_NAME) => $queueForWebhooks,
