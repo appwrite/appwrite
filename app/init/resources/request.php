@@ -1104,6 +1104,11 @@ return function (Container $context): void {
             $path = ! empty($route) ? $route->getPath() : $request->getURI();
             $orgHeader = $request->getHeader('x-appwrite-organization', '');
 
+            // Prioritx #1: If org ID header present, respect it
+            if (!empty($orgHeader)) {
+                return $authorization->skip(fn () => $dbForPlatform->getDocument('teams', $orgHeader));
+            }
+
             // Backwards compatibility: /v1/organitation/projects acting as /v1/projects
             if (\str_starts_with($path, '/v1/organization/projects')) {
                 // Backwards compatibility: Take from payload param
@@ -1159,8 +1164,6 @@ return function (Container $context): void {
                 $team = $authorization->skip(fn () => $dbForPlatform->getDocument('teams', $teamId));
 
                 return $team;
-            } elseif (! empty($orgHeader)) {
-                return $authorization->skip(fn () => $dbForPlatform->getDocument('teams', $orgHeader));
             }
         }
 
