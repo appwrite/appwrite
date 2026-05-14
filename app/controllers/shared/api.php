@@ -315,7 +315,7 @@ Http::init()
             }
 
             $projectId = $project->getId();
-            if ($projectId === 'console' && str_starts_with($route->getPath(), '/v1/projects/:projectId')) {
+            if ($projectId === 'console' && (str_starts_with($route->getPath(), '/v1/projects/:projectId') || str_starts_with($route->getPath(), '/v1/organization/projects'))) {
                 $uri = $request->getURI();
                 $projectId = explode('/', $uri)[3];
             }
@@ -342,7 +342,7 @@ Http::init()
              * For console projects resource, we use platform DB.
              * Enabling authorization restricts admin user to the projects they have access to.
              */
-            if ($project->getId() === 'console' && ($route->getPath() === '/v1/projects' || $route->getPath() === '/v1/projects/:projectId')) {
+            if ($project->getId() === 'console' && ($route->getPath() === '/v1/projects' || $route->getPath() === '/v1/projects/:projectId' || $route->getPath() === '/v1/organization/projects')) {
                 $authorization->setDefaultStatus(true);
             } else {
                 // Otherwise, disable authorization checks.

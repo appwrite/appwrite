@@ -1096,9 +1096,9 @@ return function (Container $context): void {
     }, ['request', 'project', 'servers', 'dbForPlatform', 'authorization']);
 
     $context->set('team', function (Document $project, Database $dbForPlatform, Http $utopia, Request $request, Authorization $authorization, Document $user) {
-        $teamInternalId = '';
+        $teamId = '';
         if ($project->getId() !== 'console') {
-            $teamInternalId = $project->getAttribute('teamInternalId', '');
+            $teamId = $project->getAttribute('teamId', '');
         } else {
             $route = $utopia->match($request);
             $path = ! empty($route) ? $route->getPath() : $request->getURI();
@@ -1106,12 +1106,12 @@ return function (Container $context): void {
 
             // Prioritx #1: If org ID header present, respect it
             if (!empty($orgHeader)) {
-                return $authorization->skip(fn () => $dbForPlatform->getDocument('teams', $orgHeader));
-            }
+                $teamId = $orgHeader;
+            } elseif (\str_starts_with($path, '/v1/organization/projects')) {
+                // Backwards compatibility: /v1/organitation/projects acting as /v1/projects
 
-            // Backwards compatibility: /v1/organitation/projects acting as /v1/projects
-            if (\str_starts_with($path, '/v1/organization/projects')) {
                 // Backwards compatibility: Take from payload param
+                // organizationId not required, but easy to use by mistake in future unknowingly
                 $teamId = $request->getParam('organizationId', $request->getParam('teamId', ''));
 
                 // Backawrds compatibility: Get from URL param project ID
@@ -1142,44 +1142,36 @@ return function (Container $context): void {
                         // Ignore, do not parse from queries
                     }
                 }
-
-                if (!empty($teamId)) {
-                    $team = $authorization->skip(function () use ($dbForPlatform, $teamId) {
-                        return $dbForPlatform->getDocument('teams', $teamId);
-                    });
-                    return $team;
-                }
             } elseif (str_starts_with($path, '/v1/projects/:projectId')) {
                 $uri = $request->getURI();
-                $pid = explode('/', $uri)[3];
-                $p = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $pid));
-                $teamInternalId = $p->getAttribute('teamInternalId', '');
+                $projectId = explode('/', $uri)[3];
+                $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
+                $teamId = $project->getAttribute('teamId', '');
             } elseif ($path === '/v1/projects') {
                 $teamId = $request->getParam('teamId', '');
+            }
+        }
 
-                if (empty($teamId)) {
-                    return new Document([]);
-                }
+        // No team scenario
+        if (empty($teamId)) {
+            return new Document([]);
+        }
 
-                $team = $authorization->skip(fn () => $dbForPlatform->getDocument('teams', $teamId));
+        $team = $authorization->skip(function () use ($dbForPlatform, $teamId) {
+            return $dbForPlatform->getDocument('teams', $teamId);
+        });
 
+        // Unauthorized team scenario
+        // Ensure $user has membership in team
+        $memberships = $user->getAttribute('memberships', []);
+        foreach ($memberships as $membership) {
+            if ($membership->getAttribute('teamId', '') === $teamId) {
                 return $team;
             }
         }
 
-        // if teamInternalId is empty, return an empty document
-
-        if (empty($teamInternalId)) {
-            return new Document([]);
-        }
-
-        $team = $authorization->skip(function () use ($dbForPlatform, $teamInternalId) {
-            return $dbForPlatform->findOne('teams', [
-                Query::equal('$sequence', [$teamInternalId]),
-            ]);
-        });
-
-        return $team;
+        // Unauthorized, do not allow the team
+        return new Document([]);
     }, ['project', 'dbForPlatform', 'utopia', 'request', 'authorization', 'user']);
 
     $context->set('previewHostname', function (Request $request, ?Key $apiKey) {
