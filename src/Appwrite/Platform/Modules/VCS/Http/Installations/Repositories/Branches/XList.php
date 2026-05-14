@@ -24,7 +24,7 @@ class XList extends Action
     use HTTP;
 
     private const GITHUB_BRANCHES_PER_PAGE = 100;
-    private const GITHUB_BRANCHES_MAX_PAGES = 10;
+    private const GITHUB_BRANCHES_MAX_RESULTS = 1000;
 
     public static function getName()
     {
@@ -152,14 +152,20 @@ class XList extends Action
     private function listBranches(GitHub $github, string $owner, string $repositoryName): array
     {
         $branches = [];
+        $maxPages = \intdiv(self::GITHUB_BRANCHES_MAX_RESULTS, self::GITHUB_BRANCHES_PER_PAGE);
 
-        for ($page = 1; $page <= self::GITHUB_BRANCHES_MAX_PAGES; $page++) {
+        for ($page = 1; $page <= $maxPages; $page++) {
             $pageBranches = $github->listBranches($owner, $repositoryName, self::GITHUB_BRANCHES_PER_PAGE, $page);
             $branches = \array_merge($branches, $pageBranches);
 
             if (\count($pageBranches) < self::GITHUB_BRANCHES_PER_PAGE) {
-                break;
+                return $branches;
             }
+        }
+
+        $remainingBranches = $github->listBranches($owner, $repositoryName, 1, $maxPages + 1);
+        if (!empty($remainingBranches)) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, 'Repository has too many branches to list. Narrow the results using the search parameter.');
         }
 
         return $branches;
