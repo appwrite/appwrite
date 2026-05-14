@@ -40,7 +40,7 @@ class Etsy extends OAuth2
     private function getPKCE(): string
     {
         if (empty($this->pkce)) {
-            $this->pkce = \bin2hex(\random_bytes(rand(43, 128)));
+            $this->pkce = \bin2hex(\random_bytes(64));
         }
 
         return $this->pkce;
@@ -188,6 +188,7 @@ class Etsy extends OAuth2
         $this->user = \json_decode($this->request(
             'GET',
             'https://api.etsy.com/v3/application/users/' . $this->getUserID($accessToken),
+            $headers
         ), true);
 
         return $this->user;

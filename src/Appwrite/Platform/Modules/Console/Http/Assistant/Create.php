@@ -54,7 +54,7 @@ class Create extends Action
         $ch = curl_init('http://appwrite-assistant:3003/v1/models/assistant/prompt');
         $responseHeaders = [];
         $query = json_encode(['prompt' => $prompt]);
-        $headers = ['accept: text/event-stream'];
+        $headers = ['accept: text/event-stream', 'Content-Type: application/json'];
         $handleEvent = function ($ch, $data) use ($response) {
             $response->chunk($data);
 
@@ -67,7 +67,7 @@ class Create extends Action
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 0);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 9000);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 300);
         curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, $header) use (&$responseHeaders) {
             $len = strlen($header);
             $header = explode(':', $header, 2);
