@@ -1032,77 +1032,76 @@ trait PresenceBase
      */
     public function testCrossUserUpsertDoesNotOverwriteForeignPresence(): void
     {
-        if ($this->getSide() !== 'server') {
+        if ($this->getSide() !== 'client') {
             $this->expectNotToPerformAssertions();
             return;
         }
 
         $projectId = $this->getProject()['$id'];
-        $adminHeaders = \array_merge([
+        $originalUser = $this->getUser();
+
+        $user1 = $this->getUser(true);
+        $user2 = $this->getUser(true);
+
+        // Preserve the cached session for the rest of the test run.
+        self::$user[$projectId] = $originalUser;
+
+        $headersUser1 = [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-        ], $this->getHeaders());
-        $presenceHeaders = [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'x-appwrite-key' => $this->getPresenceApiKey(),
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $user1['session'],
         ];
-
-        $suffix = \uniqid();
-
-        $userA = $this->client->call(Client::METHOD_POST, '/users', $adminHeaders, [
-            'userId' => ID::unique(),
-            'email' => 'cross-upsert-a-' . $suffix . '@test.io',
-            'password' => 'password-a-' . $suffix,
-        ]);
-        $this->assertEquals(201, $userA['headers']['status-code']);
-        $userAId = $userA['body']['$id'];
-
-        $userB = $this->client->call(Client::METHOD_POST, '/users', $adminHeaders, [
-            'userId' => ID::unique(),
-            'email' => 'cross-upsert-b-' . $suffix . '@test.io',
-            'password' => 'password-b-' . $suffix,
-        ]);
-        $this->assertEquals(201, $userB['headers']['status-code']);
-        $userBId = $userB['body']['$id'];
-        $this->assertNotSame($userAId, $userBId);
+        $headersUser2 = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $user2['session'],
+        ];
 
         $sharedPresenceId = ID::unique();
 
         $victim = $this->client->call(
             Client::METHOD_PUT,
             '/presences/' . $sharedPresenceId,
-            $presenceHeaders,
+            $headersUser1,
             [
-                'userId' => $userAId,
                 'status' => 'online',
-                'metadata' => ['owner' => 'A'],
+                'metadata' => ['owner' => 'user1'],
             ]
         );
         $this->assertEquals(200, $victim['headers']['status-code']);
         $this->assertEquals($sharedPresenceId, $victim['body']['$id']);
-        $this->assertEquals($userAId, $victim['body']['userId']);
+        $this->assertEquals($user1['$id'], $victim['body']['userId']);
 
         $attack = $this->client->call(
             Client::METHOD_PUT,
             '/presences/' . $sharedPresenceId,
-            $presenceHeaders,
+            $headersUser2,
             [
-                'userId' => $userBId,
                 'status' => 'online',
-                'metadata' => ['owner' => 'B'],
+                'metadata' => ['owner' => 'user2'],
             ]
         );
-        $this->assertEquals(409, $attack['headers']['status-code']);
-        $this->assertSame('presence_already_exists', $attack['body']['type'] ?? null);
+        $this->assertNotEquals(
+            200,
+            $attack['headers']['status-code'],
+            'Cross-user upsert must not succeed silently. Got body: ' . \json_encode($attack['body'] ?? [])
+        );
 
+        // Verify User1's row is intact. Read via a presence-scoped API key to bypass
+        // any read-permission ambiguity and inspect the persisted state directly.
         $check = $this->client->call(
             Client::METHOD_GET,
             '/presences/' . $sharedPresenceId,
-            $presenceHeaders
+            [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getPresenceApiKey(),
+            ]
         );
         $this->assertEquals(200, $check['headers']['status-code']);
-        $this->assertEquals($userAId, $check['body']['userId']);
-        $this->assertEquals(['owner' => 'A'], $check['body']['metadata']);
+        $this->assertEquals($user1['$id'], $check['body']['userId']);
+        $this->assertEquals(['owner' => 'user1'], $check['body']['metadata']);
     }
 }

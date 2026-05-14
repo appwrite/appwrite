@@ -1268,7 +1268,7 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                         $publisherForUsage = $container->get('publisherForUsage');
 
                         try {
-                            $deletionCount = $dbForProject->deleteDocuments('presenceLogs', [Query::equal('$id', $presenceIds)]);
+                            $deletionCount = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->deleteDocuments('presenceLogs', [Query::equal('$id', $presenceIds)]));
                             $presenceState->triggerUsage($publisherForUsage, $project, -$deletionCount);
                         } catch (Throwable $th) {
                             Span::error($th);
