@@ -2464,6 +2464,83 @@ trait MigrationsBase
     }
 
     /**
+     * Integrations
+     */
+    public function testAppwriteMigrationPlatform(): void
+    {
+        $sourceHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $destinationHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ];
+
+        // Create platform on source project
+        $response = $this->client->call(Client::METHOD_POST, '/project/platforms/web', $sourceHeaders, [
+            'platformId' => ID::unique(),
+            'name' => 'Test Platform',
+            'hostname' => 'localhost',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['$id']);
+
+        $platform = $response['body'];
+
+        $result = $this->performMigrationSync([
+            'resources' => [
+                Resource::TYPE_PLATFORM,
+            ],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals('completed', $result['status']);
+        $this->assertEquals([Resource::TYPE_PLATFORM], $result['resources']);
+        $this->assertArrayHasKey(Resource::TYPE_PLATFORM, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PLATFORM]['error']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PLATFORM]['pending']);
+        $this->assertEquals(1, $result['statusCounters'][Resource::TYPE_PLATFORM]['success']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PLATFORM]['processing']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PLATFORM]['warning']);
+
+        // Verify platform on destination project using the project's API key
+        $response = $this->client->call(Client::METHOD_GET, '/project/platforms', $destinationHeaders);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertGreaterThan(0, $response['body']['total']);
+
+        $foundPlatform = null;
+
+        foreach ($response['body']['platforms'] as $p) {
+            if ($p['name'] === 'Test Platform' && $p['type'] === 'web') {
+                $foundPlatform = $p;
+
+                break;
+            }
+        }
+
+        $this->assertNotNull($foundPlatform);
+        $this->assertEquals('web', $foundPlatform['type']);
+        $this->assertEquals('Test Platform', $foundPlatform['name']);
+        $this->assertEquals('localhost', $foundPlatform['hostname']);
+
+        // Cleanup on destination
+        $this->client->call(Client::METHOD_DELETE, '/project/platforms/' . $foundPlatform['$id'], $destinationHeaders);
+
+        // Cleanup on source
+        $this->client->call(Client::METHOD_DELETE, '/project/platforms/' . $platform['$id'], $sourceHeaders);
+    }
+
+    /**
      * Import documents from a CSV file.
      */
     public function testCreateCSVImport(): void

@@ -12,7 +12,6 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
@@ -142,11 +141,7 @@ class Create extends Action
             }
         }
 
-        try {
-            $rule = $authorization->skip(fn () => $dbForPlatform->createDocument('rules', $rule));
-        } catch (Duplicate $e) {
-            throw new Exception(Exception::RULE_ALREADY_EXISTS);
-        }
+        $rule = $this->createRule($rule, $dbForPlatform, $authorization);
 
         if ($rule->getAttribute('status', '') === RULE_STATUS_CERTIFICATE_GENERATING) {
             $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(

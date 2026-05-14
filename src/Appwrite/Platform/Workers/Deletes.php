@@ -5,7 +5,8 @@ namespace Appwrite\Platform\Workers;
 use Appwrite\Certificates\Adapter as CertificatesAdapter;
 use Appwrite\Deletes\Identities;
 use Appwrite\Deletes\Targets;
-use Appwrite\Event\Delete as DeleteEvent;
+use Appwrite\Event\Message\Delete as DeleteMessage;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Message\Usage;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Extend\Exception;
@@ -69,7 +70,7 @@ class Deletes extends Action
             ->inject('executionsRetentionCount')
             ->inject('auditRetention')
             ->inject('log')
-            ->inject('queueForDeletes')
+            ->inject('publisherForDeletes')
             ->inject('getAudit')
             ->inject('publisherForUsage')
             ->callback($this->action(...));
@@ -97,7 +98,7 @@ class Deletes extends Action
         int $executionsRetentionCount,
         string $auditRetention,
         Log $log,
-        DeleteEvent $queueForDeletes,
+        DeletePublisher $publisherForDeletes,
         callable $getAudit,
         UsagePublisher $publisherForUsage,
     ): void {
@@ -107,12 +108,13 @@ class Deletes extends Action
             throw new Exception('Missing payload');
         }
 
-        $type = $payload['type'] ?? '';
-        $datetime = $payload['datetime'] ?? null;
-        $hourlyUsageRetentionDatetime = $payload['hourlyUsageRetentionDatetime'] ?? null;
-        $resource = $payload['resource'] ?? null;
-        $resourceType = $payload['resourceType'] ?? null;
-        $document = new Document($payload['document'] ?? []);
+        $deleteMessage = DeleteMessage::fromArray($payload);
+        $type = $deleteMessage->type;
+        $datetime = $deleteMessage->datetime;
+        $hourlyUsageRetentionDatetime = $deleteMessage->hourlyUsageRetentionDatetime;
+        $resource = $deleteMessage->resource;
+        $resourceType = $deleteMessage->resourceType;
+        $document = $deleteMessage->document ?? new Document();
 
         $log->addTag('projectId', $project->getId());
         $log->addTag('type', $type);
@@ -220,7 +222,7 @@ class Deletes extends Action
                 $this->deleteExpiredSessions($project, $getProjectDB);
                 $this->deleteExpiredTransactions($project, $getProjectDB);
                 $this->deleteExpiredPresences($project, $getProjectDB, $publisherForUsage);
-                $this->deleteOldDeployments($queueForDeletes, $project, $getProjectDB);
+                $this->deleteOldDeployments($publisherForDeletes, $project, $getProjectDB);
                 break;
             case DELETE_TYPE_REPORT:
                 $this->deleteReport($dbForPlatform, $project, $document);
@@ -396,12 +398,12 @@ class Deletes extends Action
         Targets::delete($getProjectDB($project), Query::equal('sessionInternalId', [$session->getSequence()]));
     }
 
-    private function deleteOldDeployments(DeleteEvent $queueForDeletes, Document $project, callable $getProjectDB): void
+    private function deleteOldDeployments(DeletePublisher $publisherForDeletes, Document $project, callable $getProjectDB): void
     {
         /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
 
-        $removalCallback = function (Document $resource) use ($dbForProject, $queueForDeletes, $project) {
+        $removalCallback = function (Document $resource) use ($dbForProject, $publisherForDeletes, $project) {
             $retention = $resource->getAttribute('deploymentRetention', 0);
 
             // 0 means unlimited - never delete
@@ -426,12 +428,12 @@ class Deletes extends Action
                 'deployments',
                 $queries,
                 $dbForProject,
-                function (Document $deployment) use ($queueForDeletes, $project) {
-                    $queueForDeletes
-                        ->setType(DELETE_TYPE_DOCUMENT)
-                        ->setDocument($deployment)
-                        ->setProject($project)
-                        ->trigger();
+                function (Document $deployment) use ($publisherForDeletes, $project) {
+                    $publisherForDeletes->enqueue(new DeleteMessage(
+                        project: $project,
+                        type: DELETE_TYPE_DOCUMENT,
+                        document: $deployment,
+                    ));
                 }
             );
         };

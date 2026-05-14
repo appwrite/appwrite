@@ -5,7 +5,11 @@ namespace Appwrite\Platform\Modules\Proxy;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\DNS as ValidatorDNS;
 use Appwrite\Platform\Action as PlatformAction;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\DNS\Message\Record;
 use Utopia\Domains\Domain;
 use Utopia\Logger\Log;
@@ -18,6 +22,57 @@ class Action extends PlatformAction
 {
     public function __construct(protected string $dnsValidatorClass = ValidatorDNS::class)
     {
+    }
+
+    protected function createRule(Document $rule, Database $dbForPlatform, Authorization $authorization): Document
+    {
+        try {
+            return $authorization->skip(fn () => $dbForPlatform->createDocument('rules', $rule));
+        } catch (Duplicate) {
+            if (!$this->deleteOrphanedRule($rule, $dbForPlatform, $authorization)) {
+                throw new Exception(Exception::RULE_ALREADY_EXISTS);
+            }
+        }
+
+        try {
+            return $authorization->skip(fn () => $dbForPlatform->createDocument('rules', $rule));
+        } catch (Duplicate) {
+            throw new Exception(Exception::RULE_ALREADY_EXISTS);
+        }
+    }
+
+    private function deleteOrphanedRule(Document $rule, Database $dbForPlatform, Authorization $authorization): bool
+    {
+        $existingRule = $authorization->skip(function () use ($rule, $dbForPlatform) {
+            $existingRule = $dbForPlatform->findOne('rules', [
+                Query::equal('domain', [$rule->getAttribute('domain', '')]),
+            ]);
+            if (!$existingRule->isEmpty()) {
+                return $existingRule;
+            }
+
+            return $dbForPlatform->getDocument('rules', $rule->getId());
+        });
+
+        if (
+            $existingRule->isEmpty() ||
+            $existingRule->getAttribute('domain', '') !== $rule->getAttribute('domain', '')
+        ) {
+            return false;
+        }
+
+        $projectId = $existingRule->getAttribute('projectId', '');
+        if (empty($projectId)) {
+            return false;
+        }
+
+        $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
+        if (!$project->isEmpty()) {
+            return false;
+        }
+
+        $authorization->skip(fn () => $dbForPlatform->deleteDocument('rules', $existingRule->getId()));
+        return true;
     }
 
     /**

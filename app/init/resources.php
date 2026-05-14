@@ -4,6 +4,7 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Audit as AuditPublisher;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Publisher\Certificate as CertificatePublisher;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Execution as ExecutionPublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Mail as MailPublisher;
@@ -124,6 +125,10 @@ $container->set('publisherForStatsResources', fn (Publisher $publisher) => new S
 $container->set('publisherForBuilds', fn (Publisher $publisher) => new BuildPublisher(
     $publisher,
     new Queue(System::getEnv('_APP_BUILDS_QUEUE_NAME', Event::BUILDS_QUEUE_NAME))
+), ['publisher']);
+$container->set('publisherForDeletes', fn (Publisher $publisher) => new DeletePublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_DELETE_QUEUE_NAME', Event::DELETE_QUEUE_NAME))
 ), ['publisher']);
 $container->set('publisherForMails', fn (Publisher $publisher) => new MailPublisher(
     $publisher,
