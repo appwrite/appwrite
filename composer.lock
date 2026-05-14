@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9377e1b56bca8dbaf213ee3572ca15c0",
+    "content-hash": "70b7a6b3803660b7a8aa1a542f630b02",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4606,16 +4606,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.12.0",
+            "version": "dev-add-api-key-migration",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "3ee6e12af256726bddc3a0402c94535132abecc6"
+                "reference": "93715c256bf57cd93a1ef92e366c19f9a53ff21a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/3ee6e12af256726bddc3a0402c94535132abecc6",
-                "reference": "3ee6e12af256726bddc3a0402c94535132abecc6",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/93715c256bf57cd93a1ef92e366c19f9a53ff21a",
+                "reference": "93715c256bf57cd93a1ef92e366c19f9a53ff21a",
                 "shasum": ""
             },
             "require": {
@@ -4655,9 +4655,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/1.12.0"
+                "source": "https://github.com/utopia-php/migration/tree/add-api-key-migration"
             },
-            "time": "2026-05-14T07:30:09+00:00"
+            "time": "2026-05-14T14:53:20+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -8564,10 +8564,18 @@
             "time": "2024-11-07T12:36:22+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/migration",
+            "version": "dev-add-api-key-migration",
+            "alias": "1.12.0",
+            "alias_normalized": "1.12.0.0"
+        }
+    ],
     "minimum-stability": "dev",
     "stability-flags": {
         "utopia-php/http": 5,
+        "utopia-php/migration": 20,
         "utopia-php/platform": 5
     },
     "prefer-stable": true,
