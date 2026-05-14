@@ -36,6 +36,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Skeleton } from '@/components/ui/skeleton'
 import { ACTIVITY_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import {
   useProjectActivities,
@@ -59,8 +60,104 @@ import { UserTypeAvatar } from '@/components/pages/projects/$projectId/activity/
 
 const activityRouteApi = getRouteApi('/_public/projects/$projectId/activity')
 
+/** Skeleton row count caps page size so default 150 does not render hundreds of placeholders. */
+const ACTIVITY_TABLE_SKELETON_ROWS_CAP = 14
+
 /** Max characters for resource id/name in the table before middle ellipsis. */
 const ACTIVITY_RESOURCE_DISPLAY_MAX = 40
+
+function ActivityLogsTableHead() {
+  return (
+    <TableHeader>
+      <TableRow className="hover:bg-transparent border-b border-border">
+        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[200px] pl-6 sm:pl-8 shadow-[inset_0_-1px_0_var(--border)]">
+          Event
+        </TableHead>
+        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[min(22rem,32vw)] min-w-[12rem] shadow-[inset_0_-1px_0_var(--border)]">
+          Resource
+        </TableHead>
+        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px] shadow-[inset_0_-1px_0_var(--border)]">
+          User
+        </TableHead>
+        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px] shadow-[inset_0_-1px_0_var(--border)]">
+          Type
+        </TableHead>
+        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[280px] shadow-[inset_0_-1px_0_var(--border)]">
+          Description
+        </TableHead>
+        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 pr-6 sm:pr-8 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[140px] shadow-[inset_0_-1px_0_var(--border)]">
+          Time
+        </TableHead>
+      </TableRow>
+    </TableHeader>
+  )
+}
+
+function ActivityLogsSkeletonRows({ rowCount }: { rowCount: number }) {
+  return (
+    <>
+      {Array.from({ length: rowCount }, (_, i) => (
+        <TableRow
+          key={i}
+          className="pointer-events-none hover:bg-transparent"
+          aria-hidden
+        >
+          <TableCell className="pl-6 sm:pl-8 py-3">
+            <div className="flex items-center gap-2.5">
+              <Skeleton className="h-7 w-7 shrink-0 rounded-md" />
+              <Skeleton className="h-4 w-[5.5rem]" />
+            </div>
+          </TableCell>
+          <TableCell className="whitespace-normal px-4 py-3 align-top">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <Skeleton className="h-7 w-7 shrink-0 rounded-md" />
+              <div className="min-w-0 flex flex-1 flex-col gap-1">
+                <Skeleton className="h-4 w-full max-w-[12rem]" />
+                <Skeleton className="h-3 w-14" />
+              </div>
+            </div>
+          </TableCell>
+          <TableCell className="px-4 py-3">
+            <div className="flex items-center gap-2.5">
+              <Skeleton className="h-8 w-8 shrink-0 rounded-full" />
+              <div className="min-w-0 flex flex-1 flex-col gap-1">
+                <Skeleton className="h-4 w-[7.5rem] max-w-full" />
+                <Skeleton className="h-3 w-24 max-w-full" />
+              </div>
+            </div>
+          </TableCell>
+          <TableCell className="px-4 py-3">
+            <Skeleton className="h-5 w-14 rounded px-1.5" />
+          </TableCell>
+          <TableCell className="px-4 py-3">
+            <Skeleton className="h-3.5 w-full max-w-[16rem]" />
+          </TableCell>
+          <TableCell className="px-4 py-3 pr-6 sm:pr-8">
+            <Skeleton className="h-3.5 w-[6.5rem]" />
+          </TableCell>
+        </TableRow>
+      ))}
+    </>
+  )
+}
+
+function ActivityLogsPaginationSkeleton() {
+  return (
+    <div className="h-[54px] shrink-0 border-t border-border bg-background px-4 sm:px-6">
+      <div className="@container flex h-full min-h-8 w-full items-center justify-between gap-2 py-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <Skeleton className="hidden h-4 w-36 @[600px]:block" />
+          <div className="hidden items-center gap-2 @[800px]:flex">
+            <Skeleton className="h-4 w-8" />
+            <Skeleton className="h-8 w-[72px] rounded-md" />
+            <Skeleton className="h-4 w-14" />
+          </div>
+        </div>
+        <Skeleton className="h-8 w-[200px] max-w-[45%] shrink-0 rounded-md" />
+      </div>
+    </div>
+  )
+}
 
 // Action types and their visual representation
 type ActionType =
@@ -648,28 +745,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
           <>
             <div className="min-h-0 flex-1 overflow-auto">
               <Table withScrollContainer={false}>
-                <TableHeader>
-                  <TableRow className="hover:bg-transparent border-b border-border">
-                    <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[200px] pl-6 sm:pl-8 shadow-[inset_0_-1px_0_var(--border)]">
-                      Event
-                    </TableHead>
-                    <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[min(22rem,32vw)] min-w-[12rem] shadow-[inset_0_-1px_0_var(--border)]">
-                      Resource
-                    </TableHead>
-                    <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px] shadow-[inset_0_-1px_0_var(--border)]">
-                      User
-                    </TableHead>
-                    <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px] shadow-[inset_0_-1px_0_var(--border)]">
-                      Type
-                    </TableHead>
-                    <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[280px] shadow-[inset_0_-1px_0_var(--border)]">
-                      Description
-                    </TableHead>
-                    <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 pr-6 sm:pr-8 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[140px] shadow-[inset_0_-1px_0_var(--border)]">
-                      Time
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
+                <ActivityLogsTableHead />
                 <TableBody>
                   {filteredRawEvents.map((rawEvent) => {
                     const activity = toDisplayActivity(rawEvent)
@@ -829,12 +905,27 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
               />
             </div>
           </>
-        ) : isLoading ? (
-          <div className="rounded-lg border border-border bg-card py-12 text-center">
-            <p className="text-[13px] text-muted-foreground">
-              Loading activities...
-            </p>
-          </div>
+        ) : isLoading && events.length === 0 ? (
+          <>
+            <div
+              className="min-h-0 flex-1 overflow-auto"
+              role="status"
+              aria-label="Loading activities"
+            >
+              <Table withScrollContainer={false}>
+                <ActivityLogsTableHead />
+                <TableBody>
+                  <ActivityLogsSkeletonRows
+                    rowCount={Math.min(
+                      pageSize,
+                      ACTIVITY_TABLE_SKELETON_ROWS_CAP,
+                    )}
+                  />
+                </TableBody>
+              </Table>
+            </div>
+            <ActivityLogsPaginationSkeleton />
+          </>
         ) : (
           <EmptyState
             icon={Activity}

@@ -1,6 +1,5 @@
 import { useMemo, useState, useEffect, useCallback, type CSSProperties, type SyntheticEvent } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { ImageFormat } from '@appwrite.io/console'
 import {
   AlertCircle,
   Download,
@@ -41,7 +40,12 @@ import { formatBytes } from '@/lib/utils/mock-data'
 import { STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS } from './files-documents-layout'
 import { FileSecurity } from './FileSecurity'
 import { TransformImageWizard } from './TransformImageWizard'
-import { buildAdminFileViewUrl } from './transform-image-wizard-state'
+import {
+  buildAdminFileViewUrl,
+  buildAdminStorageInspectorPreviewUrl,
+  getStorageInspectorPreviewBaseWidthPx,
+  getStorageInspectorPreviewWidthFromBasePx,
+} from './transform-image-wizard-state'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Dialog,
@@ -73,12 +77,6 @@ export type FileInspectorPanelProps = {
 }
 
 type InspectorTab = 'overview' | 'permissions' | 'tokens'
-
-/** Preview width for API: ~inspector column × DPR, capped for bandwidth. */
-function getInspectorPreviewRequestWidthPx(): number {
-  if (typeof window === 'undefined') return 960
-  return Math.min(1600, Math.max(720, Math.round(540 * window.devicePixelRatio)))
-}
 
 /**
  * Right-hand inspector for Storage files workspace: overview, permissions,
@@ -113,7 +111,7 @@ export function FileInspectorPanel({
   const [transformWizardOpen, setTransformWizardOpen] = useState(false)
 
   const inspectorPreviewWidthPx = useMemo(
-    () => getInspectorPreviewRequestWidthPx(),
+    () => getStorageInspectorPreviewBaseWidthPx(),
     [],
   )
 
@@ -125,29 +123,32 @@ export function FileInspectorPanel({
   }, [showSecurityTab, panelTab])
 
   const inspectorPreviewRequestWidthPx = useMemo(() => {
-    const base = inspectorPreviewWidthPx
-    const bytes = file?.sizeOriginal ?? 0
-    // Very small files are almost never large bitmaps; avoid huge preview requests that upscale on the server.
-    if (bytes > 0 && bytes < 12 * 1024) {
-      return Math.min(base, 320)
-    }
-    if (bytes > 0 && bytes < 96 * 1024) {
-      return Math.min(base, 640)
-    }
-    return base
+    return getStorageInspectorPreviewWidthFromBasePx(
+      inspectorPreviewWidthPx,
+      file?.sizeOriginal,
+    )
   }, [inspectorPreviewWidthPx, file?.sizeOriginal])
 
   const previewUrl = useMemo(() => {
     if (!file || !projectId || !bucketId) return null
     if (!isStoragePreviewSupportedMimeType(file.mimeType)) return null
-    const raw = sdk.forProject(projectId).storage.getFilePreview({
+    return buildAdminStorageInspectorPreviewUrl(
+      projectId,
       bucketId,
-      fileId: file.$id,
-      width: inspectorPreviewRequestWidthPx,
-      output: avifSupported ? ImageFormat.Avif : undefined,
-    })
-    return raw + (raw.includes('?') ? '&' : '?') + 'mode=admin'
-  }, [file, projectId, bucketId, avifSupported, inspectorPreviewRequestWidthPx])
+      file.$id,
+      {
+        preferAvif: avifSupported,
+        initialPreviewRequestWidthPx: inspectorPreviewRequestWidthPx,
+        originalSizeBytes: file.sizeOriginal,
+      },
+    )
+  }, [
+    file,
+    projectId,
+    bucketId,
+    avifSupported,
+    inspectorPreviewRequestWidthPx,
+  ])
 
   const videoSourceUrl = useMemo(() => {
     if (!file || !projectId || !bucketId) return null
@@ -858,6 +859,7 @@ export function FileInspectorPanel({
       fileName={file.name}
       preferAvif={avifSupported}
       originalSizeBytes={file.sizeOriginal}
+      initialPreviewRequestWidthPx={inspectorPreviewRequestWidthPx}
     />
     </>
   )

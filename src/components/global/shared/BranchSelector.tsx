@@ -101,17 +101,26 @@ export function BranchSelector({
     }
   }, [sortedBranches, value, onChange])
 
+  // Same control height as SelectTrigger / Input (h-9) to avoid layout shift while branches load
   if (branchesLoading) {
     return (
       <div className={className}>
         {label && (
-          <Label className="text-[13px] mb-2 block">{labelContent}</Label>
+          <Label htmlFor="branch-selector-loading" className="text-[13px] mb-2 block">
+            {labelContent}
+          </Label>
         )}
-        <div className="flex items-center gap-2">
-          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-          <span className="text-[13px] text-muted-foreground">
-            Loading branches...
-          </span>
+        <div
+          id="branch-selector-loading"
+          className="flex h-9 w-full min-w-0 shrink-0 items-center gap-2 rounded-md border border-input bg-transparent px-3 text-[13px] text-muted-foreground dark:bg-input/30"
+          aria-busy
+          aria-live="polite"
+        >
+          <Loader2
+            className="h-4 w-4 shrink-0 animate-spin text-muted-foreground"
+            aria-hidden
+          />
+          <span className="truncate">Loading branches...</span>
         </div>
       </div>
     )
@@ -126,7 +135,7 @@ export function BranchSelector({
           </Label>
         )}
         <Select value={value} onValueChange={onChange} disabled={disabled}>
-          <SelectTrigger id="branch-selector" className="h-9 text-[13px]">
+          <SelectTrigger id="branch-selector" className="h-9 w-full min-w-0 text-[13px]">
             <SelectValue placeholder={placeholder} />
           </SelectTrigger>
           <SelectContent>

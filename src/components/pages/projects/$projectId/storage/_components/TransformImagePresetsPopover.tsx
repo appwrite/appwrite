@@ -36,6 +36,7 @@ import {
   mergeJsonIntoTransformState,
   transformStateToJsonCompact,
   type ImageTransformState,
+  type StorageInspectorPreviewDefaults,
 } from './transform-image-wizard-state'
 import type { SavedImageTransformPreset } from '@/lib/user-prefs-keys'
 
@@ -96,6 +97,7 @@ function BuiltinTransformPresetRow({
 
 export type TransformImagePresetsPopoverProps = {
   preferAvif: boolean
+  previewDefaults?: StorageInspectorPreviewDefaults
   projectId: string
   state: ImageTransformState
   setState: Dispatch<SetStateAction<ImageTransformState>>
@@ -104,6 +106,7 @@ export type TransformImagePresetsPopoverProps = {
 
 export function TransformImagePresetsPopover({
   preferAvif,
+  previewDefaults,
   projectId,
   state,
   setState,
@@ -162,12 +165,12 @@ export function TransformImagePresetsPopover({
     if (p.kind === 'builtin') {
       const preset = IMAGE_TRANSFORM_PRESETS.find((x) => x.id === p.id)
       if (!preset) return
-      setState(() => applyImageTransformPreset(preset, preferAvif))
+      setState(() => applyImageTransformPreset(preset, preferAvif, previewDefaults))
       toast.message(`Applied preset: ${preset.label}`)
       return
     }
     setState((base) => {
-      const r = mergeJsonIntoTransformState(p.json, preferAvif)
+      const r = mergeJsonIntoTransformState(p.json, preferAvif, previewDefaults)
       if (!r.ok) {
         queueMicrotask(() => toast.error(r.error))
         return base
@@ -175,11 +178,11 @@ export function TransformImagePresetsPopover({
       queueMicrotask(() => toast.message(`Applied preset: ${p.label}`))
       return r.state
     })
-  }, [pending, preferAvif, recordUndoPoint, setState])
+  }, [pending, preferAvif, previewDefaults, recordUndoPoint, setState])
 
   const handleSaveCurrent = useCallback(async () => {
     const json = transformStateToJsonCompact(state)
-    const probe = mergeJsonIntoTransformState(json, preferAvif)
+    const probe = mergeJsonIntoTransformState(json, preferAvif, previewDefaults)
     if (!probe.ok) {
       toast.error(probe.error)
       return
@@ -205,6 +208,7 @@ export function TransformImagePresetsPopover({
     addPreset,
     canTeamPresets,
     preferAvif,
+    previewDefaults,
     saveLevel,
     saveName,
     state,

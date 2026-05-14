@@ -1,5 +1,6 @@
-import { useLayoutEffect, useRef, useSyncExternalStore } from 'react'
+import { useEffect, useLayoutEffect, useRef, useSyncExternalStore } from 'react'
 import { cn } from '@/lib/utils'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 
 let suppressLogoHoverFlipUntilLeave = false
 const logoFlipSuppressListeners = new Set<() => void>()
@@ -75,10 +76,13 @@ function FilledCloudMark({ className }: { className?: string }) {
 
 /**
  * Appwrite mark + pink cloud on hover (3D flip); parent header link must use Tailwind `group`.
- * After a click (navigate home), the mark stays on Appwrite until the pointer leaves the link so
- * remounts under the cursor do not replay hover / snap-to-cloud flashes.
+ * Cloud profile only. After a click (navigate home), the mark stays on Appwrite until the pointer
+ * leaves the link, including across SPA remounts — we do not infer “not hovered” on mount, which
+ * would wrongly re-enable the flip while the cursor is still over the logo.
+ * Self-hosted shows the Appwrite mark only (no cloud flip or suppress logic).
  */
 export function ConsoleHeaderLogo({ className }: { className?: string }) {
+  const { isCloud } = useConsoleProfile()
   const rootRef = useRef<HTMLDivElement>(null)
   const flipSuppressed = useSyncExternalStore(
     subscribeLogoFlipSuppress,
@@ -86,14 +90,20 @@ export function ConsoleHeaderLogo({ className }: { className?: string }) {
     getLogoFlipSuppressServerSnapshot,
   )
 
+  useEffect(() => {
+    if (!isCloud) {
+      setSuppressLogoHoverFlipUntilLeave(false)
+    }
+  }, [isCloud])
+
   useLayoutEffect(() => {
-    if (typeof window === 'undefined') return
+    if (typeof window === 'undefined' || !isCloud) return
     const parent = rootRef.current?.parentElement
     if (!parent) return
 
-    if (suppressLogoHoverFlipUntilLeave && !parent.matches(':hover')) {
-      setSuppressLogoHoverFlipUntilLeave(false)
-    }
+    // Do not clear suppress on mount using `:hover` — after SPA navigation the
+    // new link often does not match `:hover` for a frame even while the pointer
+    // is still over the logo, which incorrectly re-enabled the cloud flip.
 
     const armSuppress = () => setSuppressLogoHoverFlipUntilLeave(true)
     const clearSuppress = () => setSuppressLogoHoverFlipUntilLeave(false)
@@ -108,7 +118,15 @@ export function ConsoleHeaderLogo({ className }: { className?: string }) {
       parent.removeEventListener('pointerleave', clearSuppress)
       parent.removeEventListener('pointercancel', clearSuppress)
     }
-  }, [])
+  }, [isCloud])
+
+  if (!isCloud) {
+    return (
+      <div className={cn('relative h-6 w-6 shrink-0', className)}>
+        <FilledAppwriteMark />
+      </div>
+    )
+  }
 
   return (
     <div ref={rootRef} className={cn('relative h-6 w-6 shrink-0 [perspective:88px]', className)}>

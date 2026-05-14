@@ -78,6 +78,7 @@ import {
   resetImageTransformStyleSection,
   TRANSFORM_IMAGE_GRAVITY_GRID_ROWS,
   type ImageTransformState,
+  type StorageInspectorPreviewDefaults,
 } from './transform-image-wizard-state'
 import {
   TRANSFORM_IMAGE_CODE_SDK_OPTIONS,
@@ -111,6 +112,11 @@ export type TransformImageWizardProps = {
   preferAvif: boolean
   /** Original file size in bytes (`Models.File.sizeOriginal`) for preview vs original comparison */
   originalSizeBytes?: number
+  /**
+   * Width the inspector used for its `getFilePreview` request (frozen base × file-size caps).
+   * Keeps the wizard default preview URL identical to the cached inspector image.
+   */
+  initialPreviewRequestWidthPx?: number
 }
 
 function NullablePxInput({
@@ -442,9 +448,18 @@ export function TransformImageWizard({
   fileName,
   preferAvif,
   originalSizeBytes = 0,
+  initialPreviewRequestWidthPx,
 }: TransformImageWizardProps) {
+  const previewDefaults: StorageInspectorPreviewDefaults = useMemo(
+    () => ({
+      originalSizeBytes,
+      initialPreviewRequestWidthPx,
+    }),
+    [originalSizeBytes, initialPreviewRequestWidthPx],
+  )
+
   const [state, setState] = useState<ImageTransformState>(() =>
-    defaultImageTransformState({ preferAvif }),
+    defaultImageTransformState({ preferAvif, ...previewDefaults }),
   )
   const stateRef = useRef(state)
   stateRef.current = state
@@ -553,7 +568,7 @@ export function TransformImageWizard({
 
   useEffect(() => {
     if (open) {
-      setState(defaultImageTransformState({ preferAvif }))
+      setState(defaultImageTransformState({ preferAvif, ...previewDefaults }))
       undoStackRef.current = []
       redoStackRef.current = []
       setCanvasMode('edit')
@@ -562,7 +577,7 @@ export function TransformImageWizard({
       setCodeTab('web')
       resetView()
     }
-  }, [open, preferAvif, fileId, resetView])
+  }, [open, preferAvif, fileId, previewDefaults, resetView])
 
   const previewUrl = useMemo(
     () => buildAdminPreviewUrl(projectId, bucketId, fileId, state),
@@ -627,28 +642,37 @@ export function TransformImageWizard({
   }, [open, debouncedPreviewUrl, originalSizeBytes])
   const resetAllToDefaults = useCallback(() => {
     recordUndoPoint()
-    const next = defaultImageTransformState({ preferAvif })
+    const next = defaultImageTransformState({ preferAvif, ...previewDefaults })
     setState(next)
     toast.message('All parameters reset to defaults')
-  }, [preferAvif, recordUndoPoint])
+  }, [preferAvif, previewDefaults, recordUndoPoint])
 
   const resetSizeSection = useCallback(() => {
     recordUndoPoint()
-    setState((s) => ({ ...s, ...resetImageTransformSizeSection(preferAvif) }))
+    setState((s) => ({
+      ...s,
+      ...resetImageTransformSizeSection(preferAvif, previewDefaults),
+    }))
     toast.message('Size & crop reset')
-  }, [preferAvif, recordUndoPoint])
+  }, [preferAvif, previewDefaults, recordUndoPoint])
 
   const resetQualitySection = useCallback(() => {
     recordUndoPoint()
-    setState((s) => ({ ...s, ...resetImageTransformQualitySection(preferAvif) }))
+    setState((s) => ({
+      ...s,
+      ...resetImageTransformQualitySection(preferAvif, previewDefaults),
+    }))
     toast.message('Quality & format reset')
-  }, [preferAvif, recordUndoPoint])
+  }, [preferAvif, previewDefaults, recordUndoPoint])
 
   const resetStyleSection = useCallback(() => {
     recordUndoPoint()
-    setState((s) => ({ ...s, ...resetImageTransformStyleSection(preferAvif) }))
+    setState((s) => ({
+      ...s,
+      ...resetImageTransformStyleSection(preferAvif, previewDefaults),
+    }))
     toast.message('Style & effects reset')
-  }, [preferAvif, recordUndoPoint])
+  }, [preferAvif, previewDefaults, recordUndoPoint])
 
   const copyPreviewUrl = useCallback(() => {
     void navigator.clipboard.writeText(shareablePreviewUrl)
@@ -725,16 +749,17 @@ export function TransformImageWizard({
     TRANSFORM_IMAGE_CODE_SDK_OPTIONS[0]
 
   const sizeSectionDirty = useMemo(
-    () => isImageTransformSizeSectionDirty(state, preferAvif),
-    [state, preferAvif],
+    () => isImageTransformSizeSectionDirty(state, preferAvif, previewDefaults),
+    [state, preferAvif, previewDefaults],
   )
   const qualitySectionDirty = useMemo(
-    () => isImageTransformQualitySectionDirty(state, preferAvif),
-    [state, preferAvif],
+    () =>
+      isImageTransformQualitySectionDirty(state, preferAvif, previewDefaults),
+    [state, preferAvif, previewDefaults],
   )
   const styleSectionDirty = useMemo(
-    () => isImageTransformStyleSectionDirty(state, preferAvif),
-    [state, preferAvif],
+    () => isImageTransformStyleSectionDirty(state, preferAvif, previewDefaults),
+    [state, preferAvif, previewDefaults],
   )
 
   const sizeComparison = useMemo(() => {
@@ -868,6 +893,7 @@ export function TransformImageWizard({
             {mainView === 'design' ? (
               <TransformImagePresetsPopover
                 preferAvif={preferAvif}
+                previewDefaults={previewDefaults}
                 projectId={projectId}
                 state={state}
                 setState={setState}

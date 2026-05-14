@@ -2,6 +2,68 @@ import { z } from 'zod'
 import { ImageFormat, ImageGravity } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 
+/** Matches storage inspector: column × DPR, capped (~720–1600). Frozen per mount in the panel. */
+export function getStorageInspectorPreviewBaseWidthPx(): number {
+  if (typeof window === 'undefined') return 960
+  return Math.min(1600, Math.max(720, Math.round(540 * window.devicePixelRatio)))
+}
+
+export function getStorageInspectorPreviewWidthFromBasePx(
+  baseWidthPx: number,
+  originalSizeBytes?: number,
+): number {
+  const bytes = originalSizeBytes ?? 0
+  if (bytes > 0 && bytes < 12 * 1024) {
+    return Math.min(baseWidthPx, 320)
+  }
+  if (bytes > 0 && bytes < 96 * 1024) {
+    return Math.min(baseWidthPx, 640)
+  }
+  return baseWidthPx
+}
+
+/**
+ * Width passed to `getFilePreview` in the file inspector and transform wizard default state
+ * so the same URL hits the browser cache when opening the wizard after viewing a file.
+ */
+export function getStorageInspectorPreviewRequestWidthPx(
+  originalSizeBytes?: number,
+): number {
+  return getStorageInspectorPreviewWidthFromBasePx(
+    getStorageInspectorPreviewBaseWidthPx(),
+    originalSizeBytes,
+  )
+}
+
+export type StorageInspectorPreviewDefaults = {
+  /** `Models.File.sizeOriginal` — caps preview width for tiny files (same as inspector). */
+  originalSizeBytes?: number
+  /**
+   * Exact width the inspector used for its preview; when opening the wizard from the panel,
+   * pass this so the default preview URL matches the cached image (base width is fixed per mount).
+   */
+  initialPreviewRequestWidthPx?: number
+}
+
+export function buildAdminStorageInspectorPreviewUrl(
+  projectId: string,
+  bucketId: string,
+  fileId: string,
+  options: StorageInspectorPreviewDefaults & { preferAvif: boolean },
+): string {
+  const width =
+    options.initialPreviewRequestWidthPx != null
+      ? Math.min(4000, Math.max(1, Math.round(options.initialPreviewRequestWidthPx)))
+      : getStorageInspectorPreviewRequestWidthPx(options.originalSizeBytes)
+  const raw = sdk.forProject(projectId).storage.getFilePreview({
+    bucketId,
+    fileId,
+    width,
+    output: options.preferAvif ? ImageFormat.Avif : undefined,
+  })
+  return raw + (raw.includes('?') ? '&' : '?') + 'mode=admin'
+}
+
 export const PREVIEW_GRAVITY_VALUES = Object.values(
   ImageGravity,
 ) as ImageGravity[]
@@ -129,11 +191,15 @@ export function computeImageTransformDisplayLayout(
   }
 }
 
-export function defaultImageTransformState(opts: {
-  preferAvif: boolean
-}): ImageTransformState {
+export function defaultImageTransformState(
+  opts: { preferAvif: boolean } & StorageInspectorPreviewDefaults,
+): ImageTransformState {
+  const width =
+    opts.initialPreviewRequestWidthPx != null
+      ? Math.min(4000, Math.max(1, Math.round(opts.initialPreviewRequestWidthPx)))
+      : getStorageInspectorPreviewRequestWidthPx(opts.originalSizeBytes)
   return {
-    width: 480,
+    width,
     height: null,
     gravity: ImageGravity.Center,
     quality: 100,
@@ -194,29 +260,33 @@ export const IMAGE_TRANSFORM_PRESETS: readonly ImageTransformPreset[] = [
 export function applyImageTransformPreset(
   preset: ImageTransformPreset,
   preferAvif: boolean,
+  previewDefaults?: StorageInspectorPreviewDefaults,
 ): ImageTransformState {
   return {
-    ...defaultImageTransformState({ preferAvif }),
+    ...defaultImageTransformState({ preferAvif, ...previewDefaults }),
     ...preset.patch,
   }
 }
 
 export function resetImageTransformSizeSection(
   preferAvif: boolean,
+  previewDefaults?: StorageInspectorPreviewDefaults,
 ): Pick<ImageTransformState, 'width' | 'height' | 'gravity'> {
-  const d = defaultImageTransformState({ preferAvif })
+  const d = defaultImageTransformState({ preferAvif, ...previewDefaults })
   return { width: d.width, height: d.height, gravity: d.gravity }
 }
 
 export function resetImageTransformQualitySection(
   preferAvif: boolean,
+  previewDefaults?: StorageInspectorPreviewDefaults,
 ): Pick<ImageTransformState, 'quality' | 'output'> {
-  const d = defaultImageTransformState({ preferAvif })
+  const d = defaultImageTransformState({ preferAvif, ...previewDefaults })
   return { quality: d.quality, output: d.output }
 }
 
 export function resetImageTransformStyleSection(
   preferAvif: boolean,
+  previewDefaults?: StorageInspectorPreviewDefaults,
 ): Pick<
   ImageTransformState,
   | 'opacity'
@@ -226,7 +296,7 @@ export function resetImageTransformStyleSection(
   | 'borderRadius'
   | 'background'
 > {
-  const d = defaultImageTransformState({ preferAvif })
+  const d = defaultImageTransformState({ preferAvif, ...previewDefaults })
   return {
     opacity: d.opacity,
     rotation: d.rotation,
@@ -240,8 +310,9 @@ export function resetImageTransformStyleSection(
 export function isImageTransformSizeSectionDirty(
   s: ImageTransformState,
   preferAvif: boolean,
+  previewDefaults?: StorageInspectorPreviewDefaults,
 ): boolean {
-  const d = resetImageTransformSizeSection(preferAvif)
+  const d = resetImageTransformSizeSection(preferAvif, previewDefaults)
   return (
     s.width !== d.width || s.height !== d.height || s.gravity !== d.gravity
   )
@@ -250,16 +321,18 @@ export function isImageTransformSizeSectionDirty(
 export function isImageTransformQualitySectionDirty(
   s: ImageTransformState,
   preferAvif: boolean,
+  previewDefaults?: StorageInspectorPreviewDefaults,
 ): boolean {
-  const d = resetImageTransformQualitySection(preferAvif)
+  const d = resetImageTransformQualitySection(preferAvif, previewDefaults)
   return s.quality !== d.quality || s.output !== d.output
 }
 
 export function isImageTransformStyleSectionDirty(
   s: ImageTransformState,
   preferAvif: boolean,
+  previewDefaults?: StorageInspectorPreviewDefaults,
 ): boolean {
-  const d = resetImageTransformStyleSection(preferAvif)
+  const d = resetImageTransformStyleSection(preferAvif, previewDefaults)
   return (
     s.opacity !== d.opacity ||
     s.rotation !== d.rotation ||
@@ -297,6 +370,7 @@ export function imageTransformStatesEqual(
 export function mergeJsonIntoTransformState(
   raw: string,
   preferAvif: boolean,
+  previewDefaults?: StorageInspectorPreviewDefaults,
 ):
   | { ok: true; state: ImageTransformState }
   | { ok: false; error: string } {
@@ -320,7 +394,7 @@ export function mergeJsonIntoTransformState(
   }
   const p = r.data
   const next: ImageTransformState = {
-    ...defaultImageTransformState({ preferAvif }),
+    ...defaultImageTransformState({ preferAvif, ...previewDefaults }),
   }
   if (p.width !== undefined) {
     next.width =
@@ -405,8 +479,12 @@ export function buildGetFilePreviewArgs(
   if (s.height !== null && s.height > 0) {
     args.height = Math.min(4000, Math.max(1, Math.round(s.height)))
   }
-  args.gravity = s.gravity
-  if (s.quality > 0 && s.quality <= 100) args.quality = Math.round(s.quality)
+  if (s.gravity !== ImageGravity.Center) {
+    args.gravity = s.gravity
+  }
+  if (s.quality > 0 && s.quality < 100) {
+    args.quality = Math.round(s.quality)
+  }
   if (s.borderWidth > 0) args.borderWidth = Math.min(100, Math.round(s.borderWidth))
   if (s.borderColor.trim().length > 0) {
     args.borderColor = s.borderColor.replace(/^#/, '').slice(0, 12)

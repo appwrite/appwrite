@@ -19,6 +19,7 @@ import {
   Check,
   Minus,
   Columns2,
+  Braces,
 } from 'lucide-react'
 import {
   Popover,
@@ -61,6 +62,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { Branch as DismissableLayerBranch } from '@radix-ui/react-dismissable-layer'
 import { cn } from '@/lib/utils'
 import type { ConsoleProfileFeatures } from '@/lib/console-profiles'
+import { DebugMenuPrefsPanel } from '@/components/global/providers/DebugMenuPrefsPanel'
 interface DebugAction {
   label: string
   onClick: () => void
@@ -84,7 +86,7 @@ interface MenuItem {
   description?: string
   submenu?: MenuItem[]
   /** Opens the profile comparison table instead of a submenu list. */
-  submenuVariant?: 'profileComparison'
+  submenuVariant?: 'profileComparison' | 'prefsDebug'
 }
 
 interface MenuSection {
@@ -503,6 +505,13 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             submenuVariant: 'profileComparison',
           },
           {
+            label: 'User & team prefs',
+            description:
+              'Account prefs and team (org) prefs: view, edit JSON, set/delete keys, reset',
+            icon: <Braces className="h-3 w-3" />,
+            submenuVariant: 'prefsDebug',
+          },
+          {
             label: 'Feature flags',
             description: 'Dedicated DBs and create wizard',
             icon: <FlaskConical className="h-3 w-3" />,
@@ -809,6 +818,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             submenuVariant: 'profileComparison' as const,
           }
         }
+        if (item.submenuVariant === 'prefsDebug') {
+          return {
+            title: item.label,
+            items: [] as MenuItem[],
+            parentSection: section.title,
+            submenuVariant: 'prefsDebug' as const,
+          }
+        }
         if (item.submenu) {
           return {
             title: item.label,
@@ -852,7 +869,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           sideOffset={8}
           className={cn(
             'z-[10060] max-h-[85dvh] overflow-hidden rounded-xl border border-[#9B87F5]/25 bg-[#1A1F2C] p-0 shadow-xl',
-            currentSubmenu?.submenuVariant === 'profileComparison'
+            currentSubmenu?.submenuVariant === 'profileComparison' ||
+            currentSubmenu?.submenuVariant === 'prefsDebug'
               ? 'w-[min(92vw,720px)]'
               : 'w-80',
           )}
@@ -885,6 +903,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                     activeProfileId={profileId}
                   />
                 </div>
+              ) : currentSubmenu.submenuVariant === 'prefsDebug' ? (
+                <DebugMenuPrefsPanel />
               ) : (
               <nav className="space-y-0.5" aria-label={currentSubmenu.title}>
                 {currentSubmenu.items.map((item, itemIndex) =>
@@ -984,7 +1004,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
 
                         const hasSubmenu =
                           Boolean(item.submenu?.length) ||
-                          item.submenuVariant === 'profileComparison'
+                          item.submenuVariant === 'profileComparison' ||
+                          item.submenuVariant === 'prefsDebug'
                         const itemKey = `${section.title}-${item.label}`
 
                         return (
