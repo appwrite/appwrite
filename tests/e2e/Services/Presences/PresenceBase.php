@@ -1104,5 +1104,5 @@ trait PresenceBase
         $this->assertEquals(200, $check['headers']['status-code']);
         $this->assertEquals($userAId, $check['body']['userId']);
         $this->assertEquals(['owner' => 'A'], $check['body']['metadata']);
-    }   
+    }
 }
