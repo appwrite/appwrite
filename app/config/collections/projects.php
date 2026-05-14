@@ -280,7 +280,9 @@ return [
             [
                 '$id' => ID::custom('_key_db_collection'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['databaseInternalId', 'collectionInternalId']
+                'attributes' => ['databaseInternalId', 'collectionInternalId'],
+                'lengths' => [Database::LENGTH_KEY, Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
             ],
         ],
     ],
