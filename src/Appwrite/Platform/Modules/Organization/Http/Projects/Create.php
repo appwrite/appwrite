@@ -20,6 +20,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Validator\UID;
 use Utopia\DSN\DSN;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Pools\Group;
@@ -66,6 +67,7 @@ class Create extends Action
             ->param('projectId', '', new ProjectId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, and hyphen. Can\'t start with a special char. Max length is 36 chars.')
             ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
             ->param('region', System::getEnv('_APP_REGION', 'default'), new WhiteList(array_keys(array_filter(Config::getParam('regions'), fn ($config) => !$config['disabled']))), 'Project Region.', true)
+            ->param('teamId', '', new UID(), 'Team unique ID.', deprecated: true) // Backwards compatibility
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('cache')
@@ -75,7 +77,8 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $projectId, string $name, string $region, Response $response, Database $dbForPlatform, Cache $cache, Group $pools, Hooks $hooks, Document $team)
+    // teamId intentionally unused; used by resource for backwards compatibility
+    public function action(string $projectId, string $name, string $region, string $teamId, Response $response, Database $dbForPlatform, Cache $cache, Group $pools, Hooks $hooks, Document $team)
     {
         $allowList = \array_filter(\explode(',', System::getEnv('_APP_PROJECT_REGIONS', '')));
 
