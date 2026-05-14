@@ -96,7 +96,7 @@ class XList extends Action
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
 
-        $branches = $github->listBranches($owner, $repositoryName);
+        $branches = $this->listBranches($github, $owner, $repositoryName);
 
         if (!empty($search)) {
             $branches = \array_values(\array_filter($branches, fn (string $branch) => \stripos($branch, $search) !== false));
@@ -141,5 +141,23 @@ class XList extends Action
             }, $branches),
             'total' => $total,
         ]), Response::MODEL_BRANCH_LIST);
+    }
+
+    /**
+     * @return array<string>
+     */
+    private function listBranches(GitHub $github, string $owner, string $repositoryName): array
+    {
+        $branches = [];
+        $page = 1;
+        $perPage = 100;
+
+        do {
+            $pageBranches = $github->listBranches($owner, $repositoryName, $perPage, $page);
+            $branches = \array_merge($branches, $pageBranches);
+            $page++;
+        } while (\count($pageBranches) === $perPage);
+
+        return $branches;
     }
 }
