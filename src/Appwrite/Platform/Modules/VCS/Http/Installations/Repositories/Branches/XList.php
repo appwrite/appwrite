@@ -23,6 +23,9 @@ class XList extends Action
 {
     use HTTP;
 
+    private const GITHUB_BRANCHES_PER_PAGE = 100;
+    private const GITHUB_BRANCHES_MAX_PAGES = 10;
+
     public static function getName()
     {
         return 'listRepositoryBranches';
@@ -149,14 +152,15 @@ class XList extends Action
     private function listBranches(GitHub $github, string $owner, string $repositoryName): array
     {
         $branches = [];
-        $page = 1;
-        $perPage = 100;
 
-        do {
-            $pageBranches = $github->listBranches($owner, $repositoryName, $perPage, $page);
+        for ($page = 1; $page <= self::GITHUB_BRANCHES_MAX_PAGES; $page++) {
+            $pageBranches = $github->listBranches($owner, $repositoryName, self::GITHUB_BRANCHES_PER_PAGE, $page);
             $branches = \array_merge($branches, $pageBranches);
-            $page++;
-        } while (\count($pageBranches) === $perPage);
+
+            if (\count($pageBranches) < self::GITHUB_BRANCHES_PER_PAGE) {
+                break;
+            }
+        }
 
         return $branches;
     }
