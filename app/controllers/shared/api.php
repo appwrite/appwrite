@@ -317,7 +317,8 @@ Http::init()
             $projectId = $project->getId();
             if ($projectId === 'console' && (str_starts_with($route->getPath(), '/v1/projects/:projectId') || str_starts_with($route->getPath(), '/v1/organization/projects'))) {
                 $uri = $request->getURI();
-                $projectId = explode('/', $uri)[3];
+                $parts = explode('/', $uri);
+                $projectId = str_starts_with($route->getPath(), '/v1/organization/projects') ? $parts[4] : $parts[3];
             }
 
             // Base scopes for admin users to allow listing teams and projects.
