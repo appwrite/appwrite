@@ -9,6 +9,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 
@@ -25,14 +26,14 @@ class Get extends Action
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/organizations/:organizationId/projects/:projectId')
-            ->desc('Get project')
-            ->groups(['api', 'project'])
+            ->setHttpPath('/v1/organization/projects/:projectId')
+            ->desc('Get organization project')
+            ->groups(['api', 'organization'])
             ->label('scope', 'organization.projects.read')
             ->label('sdk', new Method(
-                namespace: 'project',
-                group: null,
-                name: 'get',
+                namespace: 'organization',
+                group: 'projects',
+                name: 'getProject',
                 description: <<<EOT
                 Get a project.
                 EOT,
@@ -45,25 +46,19 @@ class Get extends Action
                 ],
                 contentType: ContentType::NONE
             ))
-            ->param('organizationId', '', new UID(), 'Organization unique ID.')
             ->param('projectId', '', new UID(), 'Project unique ID.')
             ->inject('response')
             ->inject('dbForPlatform')
+            ->inject('team')
             ->callback($this->action(...));
     }
 
     public function action(
-        string $organizationId,
         string $projectId,
         Response $response,
         Database $dbForPlatform,
+        Document $team,
     ) {
-        $team = $dbForPlatform->getDocument('teams', $organizationId);
-
-        if ($team->isEmpty()) {
-            throw new Exception(Exception::TEAM_NOT_FOUND);
-        }
-
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {

@@ -20,7 +20,6 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Validator\UID;
 use Utopia\DSN\DSN;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Pools\Group;
@@ -41,19 +40,21 @@ class Create extends Action
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
-            ->setHttpPath('/v1/organizations/:organizationId/projects')
+            ->setHttpPath('/v1/organization/projects')
             ->httpAlias('/v1/projects')
-            ->desc('Create project')
-            ->groups(['api', 'projects'])
+            ->desc('Create organization project')
+            ->groups(['api', 'organization'])
             ->label('audits.event', 'projects.create')
             ->label('audits.resource', 'project/{response.$id}')
             ->label('scope', 'organization.projects.write')
             ->label('sdk', new Method(
-                namespace: 'projects',
+                namespace: 'organization',
                 group: 'projects',
-                name: 'create',
-                description: '/docs/references/projects/create.md',
-                auth: [AuthType::ADMIN],
+                name: 'createProject',
+                description: <<<EOT
+                Create a new project.
+                EOT,
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,
@@ -61,11 +62,9 @@ class Create extends Action
                     )
                 ]
             ))
-            ->param('organizationId', '', new UID(), 'Organization unique ID.')
             ->param('projectId', '', new ProjectId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, and hyphen. Can\'t start with a special char. Max length is 36 chars.')
             ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
             ->param('region', System::getEnv('_APP_REGION', 'default'), new WhiteList(array_keys(array_filter(Config::getParam('regions'), fn ($config) => !$config['disabled']))), 'Project Region.', true)
-            ->inject('request')
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('cache')
@@ -75,21 +74,8 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $organizationId, string $projectId, string $name, string $region, Request $request, Response $response, Database $dbForPlatform, Cache $cache, Group $pools, Hooks $hooks, Document $team)
+    public function action(string $projectId, string $name, string $region, Response $response, Database $dbForPlatform, Cache $cache, Group $pools, Hooks $hooks, Document $team)
     {
-        if (empty($organizationId)) {
-            if ($team->isEmpty()) {
-                throw new Exception(Exception::TEAM_NOT_FOUND);
-            }
-            $organizationId = $team->getId();
-        }
-
-        $team = $dbForPlatform->getDocument('teams', $organizationId);
-
-        if ($team->isEmpty()) {
-            throw new Exception(Exception::TEAM_NOT_FOUND);
-        }
-
         $allowList = \array_filter(\explode(',', System::getEnv('_APP_PROJECT_REGIONS', '')));
 
         if (!empty($allowList) && !\in_array($region, $allowList)) {
@@ -162,7 +148,7 @@ class Create extends Action
         try {
             $project = $dbForPlatform->createDocument('projects', new Document([
                 '$id' => $projectId,
-                '$permissions' => $this->getPermissions($organizationId, $projectId),
+                '$permissions' => $this->getPermissions($team->getId(), $projectId),
                 'name' => $name,
                 'teamInternalId' => $team->getSequence(),
                 'teamId' => $team->getId(),

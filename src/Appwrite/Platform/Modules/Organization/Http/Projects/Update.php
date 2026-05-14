@@ -12,7 +12,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Text;
-use Utopia\Validator\URL;
 
 class Update extends Action
 {
@@ -27,19 +26,21 @@ class Update extends Action
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
-            ->setHttpPath('/v1/organizations/:organizationId/projects/:projectId')
+            ->setHttpPath('/v1/organization/projects/:projectId')
             ->httpAlias('/v1/projects/:projectId')
-            ->desc('Update project')
-            ->groups(['api', 'projects'])
+            ->desc('Update organization project')
+            ->groups(['api', 'organization'])
             ->label('scope', 'organization.projects.write')
             ->label('audits.event', 'projects.update')
             ->label('audits.resource', 'project/{request.projectId}')
             ->label('sdk', new Method(
-                namespace: 'projects',
+                namespace: 'organization',
                 group: 'projects',
-                name: 'update',
-                description: '/docs/references/projects/update.md',
-                auth: [AuthType::ADMIN],
+                name: 'updateProject',
+                description: <<<EOT
+                Update a project by its unique ID.
+                EOT,
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
@@ -47,39 +48,16 @@ class Update extends Action
                     )
                 ]
             ))
-            ->param('organizationId', '', new UID(), 'Organization unique ID.')
             ->param('projectId', '', new UID(), 'Project unique ID.')
             ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
-            ->param('description', '', new Text(256), 'Project description. Max length: 256 chars.', true)
-            ->param('logo', '', new Text(1024), 'Project logo.', true)
-            ->param('url', '', new URL(), 'Project URL.', true)
-            ->param('legalName', '', new Text(256), 'Project legal name. Max length: 256 chars.', true)
-            ->param('legalCountry', '', new Text(256), 'Project legal country. Max length: 256 chars.', true)
-            ->param('legalState', '', new Text(256), 'Project legal state. Max length: 256 chars.', true)
-            ->param('legalCity', '', new Text(256), 'Project legal city. Max length: 256 chars.', true)
-            ->param('legalAddress', '', new Text(256), 'Project legal address. Max length: 256 chars.', true)
-            ->param('legalTaxId', '', new Text(256), 'Project legal tax ID. Max length: 256 chars.', true)
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('team')
             ->callback($this->action(...));
     }
 
-    public function action(string $organizationId, string $projectId, string $name, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForPlatform, Document $team)
+    public function action(string $projectId, string $name, Response $response, Database $dbForPlatform, Document $team)
     {
-        if (empty($organizationId)) {
-            if ($team->isEmpty()) {
-                throw new Exception(Exception::TEAM_NOT_FOUND);
-            }
-            $organizationId = $team->getId();
-        }
-
-        $team = $dbForPlatform->getDocument('teams', $organizationId);
-
-        if ($team->isEmpty()) {
-            throw new Exception(Exception::TEAM_NOT_FOUND);
-        }
-
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -92,15 +70,6 @@ class Update extends Action
 
         $project = $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
             'name' => $name,
-            'description' => $description,
-            'logo' => $logo,
-            'url' => $url,
-            'legalName' => $legalName,
-            'legalCountry' => $legalCountry,
-            'legalState' => $legalState,
-            'legalCity' => $legalCity,
-            'legalAddress' => $legalAddress,
-            'legalTaxId' => $legalTaxId,
             'search' => implode(' ', [$projectId, $name]),
         ]));
 
