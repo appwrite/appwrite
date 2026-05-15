@@ -13,6 +13,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate;
@@ -135,6 +136,11 @@ class Update extends PlatformAction
         $presence = $dbForProject->getDocument('presenceLogs', $presenceId);
 
         if ($presence->isEmpty()) {
+            throw new Exception(Exception::PRESENCE_NOT_FOUND, params: [$presenceId]);
+        }
+
+        $presenceExpiresAt = $presence->getAttribute('expiresAt');
+        if (!empty($presenceExpiresAt) && DateTime::formatTz($presenceExpiresAt) < DateTime::formatTz(DateTime::now())) {
             throw new Exception(Exception::PRESENCE_NOT_FOUND, params: [$presenceId]);
         }
 
