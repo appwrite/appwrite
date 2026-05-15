@@ -20,7 +20,6 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Validator\UID;
 use Utopia\DSN\DSN;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Pools\Group;
