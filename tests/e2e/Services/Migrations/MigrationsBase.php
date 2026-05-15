@@ -2616,6 +2616,98 @@ trait MigrationsBase
         $this->client->call(Client::METHOD_DELETE, '/project/keys/' . $apiKey['$id'], $sourceHeaders);
     }
 
+    public function testAppwriteMigrationProjectVariable(): void
+    {
+        $sourceHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $destinationHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ];
+
+        // Source-side variable IDs and keys are uniquified so re-runs and parallel suites
+        // can't trip the source-side findOne('variables', [key=...]) skip path.
+        $plainKey = 'TEST_PLAIN_' . \strtoupper(ID::unique());
+        $secretKey = 'TEST_SECRET_' . \strtoupper(ID::unique());
+
+        // Non-secret variable: value should round-trip exactly.
+        $plainResp = $this->client->call(Client::METHOD_POST, '/project/variables', $sourceHeaders, [
+            'variableId' => ID::unique(),
+            'key' => $plainKey,
+            'value' => 'plain-value',
+            'secret' => false,
+        ]);
+        $this->assertEquals(201, $plainResp['headers']['status-code']);
+        $plainVariable = $plainResp['body'];
+
+        // Secret variable: SDK strips `value` on subsequent reads, so the migration
+        // source sees empty and the destination writes empty. Test asserts that.
+        $secretResp = $this->client->call(Client::METHOD_POST, '/project/variables', $sourceHeaders, [
+            'variableId' => ID::unique(),
+            'key' => $secretKey,
+            'value' => 'real-secret-value',
+            'secret' => true,
+        ]);
+        $this->assertEquals(201, $secretResp['headers']['status-code']);
+        $secretVariable = $secretResp['body'];
+
+        $result = $this->performMigrationSync([
+            'resources' => [
+                Resource::TYPE_PROJECT_VARIABLE,
+            ],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals('completed', $result['status']);
+        $this->assertEquals([Resource::TYPE_PROJECT_VARIABLE], $result['resources']);
+        $this->assertArrayHasKey(Resource::TYPE_PROJECT_VARIABLE, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_VARIABLE]['error']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_VARIABLE]['pending']);
+        $this->assertGreaterThanOrEqual(2, $result['statusCounters'][Resource::TYPE_PROJECT_VARIABLE]['success']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_VARIABLE]['processing']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_VARIABLE]['warning']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/project/variables', $destinationHeaders);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $foundPlain = null;
+        $foundSecret = null;
+        foreach ($response['body']['variables'] as $v) {
+            if ($v['key'] === $plainKey) {
+                $foundPlain = $v;
+            } elseif ($v['key'] === $secretKey) {
+                $foundSecret = $v;
+            }
+        }
+
+        $this->assertNotNull($foundPlain, 'Plain variable not found on destination');
+        $this->assertEquals($plainKey, $foundPlain['key']);
+        $this->assertEquals('plain-value', $foundPlain['value']);
+        $this->assertFalse($foundPlain['secret']);
+
+        $this->assertNotNull($foundSecret, 'Secret variable not found on destination');
+        $this->assertEquals($secretKey, $foundSecret['key']);
+        // Secret variables: source SDK never returned the real value, so the destination
+        // also stores empty. The original 'real-secret-value' must not have leaked.
+        $this->assertNotEquals('real-secret-value', $foundSecret['value']);
+        $this->assertTrue($foundSecret['secret']);
+
+        // Cleanup on destination
+        $this->client->call(Client::METHOD_DELETE, '/project/variables/' . $foundPlain['$id'], $destinationHeaders);
+        $this->client->call(Client::METHOD_DELETE, '/project/variables/' . $foundSecret['$id'], $destinationHeaders);
+
+        // Cleanup on source
+        $this->client->call(Client::METHOD_DELETE, '/project/variables/' . $plainVariable['$id'], $sourceHeaders);
+        $this->client->call(Client::METHOD_DELETE, '/project/variables/' . $secretVariable['$id'], $sourceHeaders);
+    }
+
     /**
      * Import documents from a CSV file.
      */
