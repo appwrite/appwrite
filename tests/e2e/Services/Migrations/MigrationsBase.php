@@ -2616,6 +2616,87 @@ trait MigrationsBase
         $this->client->call(Client::METHOD_DELETE, '/project/keys/' . $apiKey['$id'], $sourceHeaders);
     }
 
+    public function testAppwriteMigrationWebhook(): void
+    {
+        $sourceHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $destinationHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ];
+
+        // Unique name so re-runs and parallel suites can't match the wrong webhook
+        // on the destination list.
+        $webhookName = 'Test Webhook ' . ID::unique();
+
+        $createResp = $this->client->call(Client::METHOD_POST, '/webhooks', $sourceHeaders, [
+            'webhookId' => ID::unique(),
+            'url' => 'https://example.test/hook',
+            'name' => $webhookName,
+            'events' => ['users.*.create', 'users.*.delete'],
+            'enabled' => true,
+            'tls' => true,
+            'authUsername' => 'hook-user',
+            'authPassword' => 'hook-pass',
+        ]);
+        $this->assertEquals(201, $createResp['headers']['status-code']);
+        $sourceWebhook = $createResp['body'];
+
+        $result = $this->performMigrationSync([
+            'resources' => [
+                Resource::TYPE_WEBHOOK,
+            ],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals('completed', $result['status']);
+        $this->assertEquals([Resource::TYPE_WEBHOOK], $result['resources']);
+        $this->assertArrayHasKey(Resource::TYPE_WEBHOOK, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_WEBHOOK]['error']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_WEBHOOK]['pending']);
+        $this->assertGreaterThanOrEqual(1, $result['statusCounters'][Resource::TYPE_WEBHOOK]['success']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_WEBHOOK]['processing']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_WEBHOOK]['warning']);
+
+        $listResp = $this->client->call(Client::METHOD_GET, '/webhooks', $destinationHeaders);
+        $this->assertEquals(200, $listResp['headers']['status-code']);
+
+        $foundWebhook = null;
+        foreach ($listResp['body']['webhooks'] as $w) {
+            if ($w['name'] === $webhookName) {
+                $foundWebhook = $w;
+                break;
+            }
+        }
+
+        $this->assertNotNull($foundWebhook, 'Migrated webhook not found on destination');
+        $this->assertEquals($webhookName, $foundWebhook['name']);
+        $this->assertEquals('https://example.test/hook', $foundWebhook['url']);
+        $this->assertEqualsCanonicalizing(['users.*.create', 'users.*.delete'], $foundWebhook['events']);
+        $this->assertTrue($foundWebhook['enabled']);
+        $this->assertTrue($foundWebhook['security']);
+        $this->assertEquals('hook-user', $foundWebhook['httpUser']);
+        // authPassword is sensitive; destination must not blindly copy the source value.
+        $this->assertNotEquals('hook-pass', $foundWebhook['httpPass'] ?? '');
+        // signatureKey is regenerated on the destination — must not equal the source key.
+        if (!empty($sourceWebhook['signatureKey'])) {
+            $this->assertNotEquals($sourceWebhook['signatureKey'], $foundWebhook['signatureKey'] ?? '');
+        }
+
+        // Cleanup on destination
+        $this->client->call(Client::METHOD_DELETE, '/webhooks/' . $foundWebhook['$id'], $destinationHeaders);
+
+        // Cleanup on source
+        $this->client->call(Client::METHOD_DELETE, '/webhooks/' . $sourceWebhook['$id'], $sourceHeaders);
+    }
+
     /**
      * Import documents from a CSV file.
      */
