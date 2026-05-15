@@ -98,25 +98,25 @@ function ActivityLogsTableHead() {
   return (
     <TableHeader>
       <TableRow className="hover:bg-transparent border-b border-border">
-        <TableHead className="sticky top-0 z-10 w-[14%] min-w-[8rem] bg-background px-3 py-3 text-left text-[12px] font-semibold text-muted-foreground uppercase tracking-wider pl-6 sm:pl-8 shadow-[inset_0_-1px_0_var(--border)]">
+        <TableHead className="sticky top-0 z-10 min-w-[9rem] max-w-[18rem] bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider pl-6 sm:pl-8 shadow-[inset_0_-1px_0_var(--border)]">
           Event
         </TableHead>
-        <TableHead className="sticky top-0 z-10 w-[12%] min-w-[7.5rem] bg-background px-3 py-3 text-left text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]">
+        <TableHead className="sticky top-0 z-10 min-w-[9rem] w-[11rem] bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]">
           Actor
         </TableHead>
-        <TableHead className="sticky top-0 z-10 w-[11%] min-w-[6.5rem] bg-background px-3 py-3 text-left text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]">
+        <TableHead className="sticky top-0 z-10 min-w-[7.5rem] w-[7.5rem] bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]">
           Type
         </TableHead>
-        <TableHead className="sticky top-0 z-10 w-[36%] min-w-0 bg-background px-3 py-3 text-left text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]">
+        <TableHead className="sticky top-0 z-10 min-w-[10rem] bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]">
           Resource
         </TableHead>
-        <TableHead className="sticky top-0 z-10 w-[12%] min-w-[7.5rem] bg-background px-3 py-3 text-left text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]">
+        <TableHead className="sticky top-0 z-10 w-[140px] bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]">
           IP address
         </TableHead>
-        <TableHead className="sticky top-0 z-10 w-[7%] min-w-[4.5rem] bg-background px-3 py-3 text-left text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]">
+        <TableHead className="sticky top-0 z-10 min-w-[6rem] bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]">
           Country
         </TableHead>
-        <TableHead className="sticky top-0 z-10 w-[8%] min-w-[6.5rem] bg-background px-3 py-3 pr-6 text-left text-[12px] font-semibold text-muted-foreground uppercase tracking-wider sm:pr-8 shadow-[inset_0_-1px_0_var(--border)]">
+        <TableHead className="sticky top-0 z-10 w-[140px] bg-background px-4 py-3 pr-6 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider sm:pr-8 shadow-[inset_0_-1px_0_var(--border)]">
           Time
         </TableHead>
       </TableRow>
@@ -133,13 +133,13 @@ function ActivityLogsSkeletonRows({ rowCount }: { rowCount: number }) {
           className="pointer-events-none hover:bg-transparent"
           aria-hidden
         >
-          <TableCell className="min-w-0 px-3 py-3 pl-6 sm:pl-8">
+          <TableCell className="min-w-0 px-4 py-3 pl-6 sm:pl-8">
             <div className="flex min-w-0 items-center gap-2">
               <Skeleton className="h-7 w-7 shrink-0 rounded-md" />
               <Skeleton className="h-3.5 min-w-0 flex-1" />
             </div>
           </TableCell>
-          <TableCell className="min-w-0 px-3 py-3">
+          <TableCell className="min-w-0 px-4 py-3">
             <div className="flex items-center gap-2.5">
               <Skeleton className="h-8 w-8 shrink-0 rounded-full" />
               <div className="min-w-0 flex flex-1 flex-col gap-1">
@@ -148,10 +148,10 @@ function ActivityLogsSkeletonRows({ rowCount }: { rowCount: number }) {
               </div>
             </div>
           </TableCell>
-          <TableCell className="min-w-0 whitespace-normal px-3 py-3 align-top">
+          <TableCell className="min-w-0 whitespace-nowrap px-4 py-3">
             <Skeleton className="h-5 w-20 rounded px-1.5" />
           </TableCell>
-          <TableCell className="min-w-0 whitespace-normal px-3 py-3 align-top">
+          <TableCell className="min-w-0 whitespace-normal px-4 py-3 align-top">
             <div className="flex min-w-0 items-center gap-2.5">
               <Skeleton className="h-7 w-7 shrink-0 rounded-md" />
               <div className="min-w-0 flex flex-1 flex-col gap-1">
@@ -160,13 +160,13 @@ function ActivityLogsSkeletonRows({ rowCount }: { rowCount: number }) {
               </div>
             </div>
           </TableCell>
-          <TableCell className="min-w-0 px-3 py-3">
+          <TableCell className="min-w-0 px-4 py-3">
             <Skeleton className="h-3.5 w-full max-w-full" />
           </TableCell>
-          <TableCell className="min-w-0 px-3 py-3">
+          <TableCell className="min-w-0 px-4 py-3">
             <Skeleton className="h-3.5 w-20 max-w-full" />
           </TableCell>
-          <TableCell className="min-w-0 px-3 py-3 pr-6 sm:pr-8">
+          <TableCell className="min-w-0 px-4 py-3 pr-6 sm:pr-8">
             <Skeleton className="h-3.5 w-[6.5rem]" />
           </TableCell>
         </TableRow>
@@ -450,7 +450,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
     limit: pageSize,
     cursorAfter: listCursor.cursorAfter,
     cursorBefore: listCursor.cursorBefore,
-    planSinceIso,
+    planRetentionHours: planLimit.hours,
     filterQueryKey: queryFromSearch ?? null,
   })
 
@@ -875,7 +875,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
         {events.length > 0 ? (
           <>
             <div className="min-h-0 flex-1 overflow-auto">
-              <Table withScrollContainer={false} className="table-fixed">
+              <Table withScrollContainer={false}>
                 <ActivityLogsTableHead />
                 <TableBody>
                   {events.map((rawEvent) => {
@@ -929,7 +929,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
                             }
                           }}
                         >
-                      <TableCell className="min-w-0 px-3 py-3 pl-6 sm:pl-8">
+                      <TableCell className="min-w-0 px-4 py-3 pl-6 sm:pl-8">
                         <div className="flex min-w-0 items-center gap-2">
                           <div
                             className={cn(
@@ -948,7 +948,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
                           </p>
                         </div>
                       </TableCell>
-                      <TableCell className="min-w-0 px-3 py-3">
+                      <TableCell className="min-w-0 px-4 py-3">
                         <div className="flex items-center gap-2.5">
                           <UserTypeAvatar
                             userType={activity.userType}
@@ -976,13 +976,13 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="min-w-0 whitespace-normal px-3 py-3 align-top">
+                      <TableCell className="min-w-0 whitespace-nowrap px-4 py-3">
                         {(() => {
                           const badge = userTypeBadge(activity.userType)
                           return (
                             <span
                               className={cn(
-                                'inline-flex max-w-full flex-wrap items-center rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider leading-snug break-words',
+                                'inline-block rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider',
                                 badge.tone,
                               )}
                             >
@@ -991,7 +991,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
                           )
                         })()}
                       </TableCell>
-                      <TableCell className="min-w-0 whitespace-normal px-3 py-3 align-top">
+                      <TableCell className="min-w-0 whitespace-normal px-4 py-3 align-top">
                         <div className="flex min-w-0 items-center gap-2.5">
                           <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
                             {resourceIcons[activity.resourceType]}
@@ -1009,7 +1009,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="min-w-0 px-3 py-3">
+                      <TableCell className="min-w-0 px-4 py-3">
                         {activity.ipAddress ? (
                           <CopyableId
                             id={activity.ipAddress}
@@ -1028,12 +1028,12 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
                           </span>
                         )}
                       </TableCell>
-                      <TableCell className="min-w-0 px-3 py-3">
+                      <TableCell className="min-w-0 px-4 py-3">
                         <ActivityTableCountryCell
                           countryName={activity.countryName}
                         />
                       </TableCell>
-                      <TableCell className="min-w-0 px-3 py-3 pr-6 sm:pr-8">
+                      <TableCell className="min-w-0 px-4 py-3 pr-6 sm:pr-8">
                         <DateTooltip
                           date={activity.timestamp}
                           className="text-[12px] text-muted-foreground"
@@ -1079,7 +1079,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
               role="status"
               aria-label="Loading activities"
             >
-              <Table withScrollContainer={false} className="table-fixed">
+              <Table withScrollContainer={false}>
                 <ActivityLogsTableHead />
                 <TableBody>
                   <ActivityLogsSkeletonRows

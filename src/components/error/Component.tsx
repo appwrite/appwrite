@@ -1,11 +1,28 @@
-import { useLocation } from '@tanstack/react-router'
+import {
+  useCanGoBack,
+  useLocation,
+  useNavigate,
+  useRouter,
+} from '@tanstack/react-router'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { AlertTriangle, RefreshCw, Home, Copy, Check } from 'lucide-react'
+import {
+  AlertTriangle,
+  ArrowLeft,
+  RefreshCw,
+  Home,
+  Copy,
+  Check,
+  WifiOff,
+} from 'lucide-react'
 import { captureExceptionWithContext } from '@/components/global/providers/SentryContext'
 import { formatError } from '@/lib/utils/error-formatting'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
+import {
+  isLikelyConnectivityFailure,
+  isNavigatorReportedOffline,
+} from '@/lib/network-connectivity'
 
 /**
  * Extracts resource IDs from URL pathname for error context
@@ -112,6 +129,8 @@ export function ErrorComponent({
   )
   const location = useLocation()
   const navigate = useNavigate()
+  const router = useRouter()
+  const canGoBack = useCanGoBack()
 
   // Check if this is a project route and if the error is project-related
   const isProjectRoute = location.pathname.startsWith('/projects/')
@@ -143,6 +162,8 @@ export function ErrorComponent({
       lowerMessage.includes('permission denied') ||
       lowerMessage.includes('access denied'))
 
+  const isConnectivityError = isLikelyConnectivityFailure(error)
+
   // Use project-specific messages for project routes
   const formattedError = isProjectNotFound
     ? {
@@ -158,7 +179,21 @@ export function ErrorComponent({
             'You do not have permission to access this project. Please contact your administrator if you believe this is an error.',
           isUserFriendly: true,
         }
-      : formatError(error, 'An unexpected error occurred.')
+      : isConnectivityError
+        ? isNavigatorReportedOffline()
+          ? {
+              title: "You're offline",
+              message:
+                'This page needs a connection to Appwrite. Reconnect to the internet, then try again — we can reload automatically when you are back online.',
+              isUserFriendly: true,
+            }
+          : {
+              title: "Can't reach Appwrite",
+              message:
+                'Your network is on, but we could not complete the request. Check your connection or VPN, then try again.',
+              isUserFriendly: true,
+            }
+        : formatError(error, 'An unexpected error occurred.')
 
   const message = useMemo(
     () => ({
@@ -188,7 +223,7 @@ export function ErrorComponent({
   // Skip 401 Unauthorized - we redirect to login and don't want these in Sentry
   const isUnauthorized = errorCode === 401 || errorWithCode.status === 401
   useEffect(() => {
-    if (preview || isUnauthorized) return
+    if (preview || isUnauthorized || isConnectivityError) return
     captureExceptionWithContext(error, {
       // Route-based context
       ...routeContext,
@@ -205,6 +240,7 @@ export function ErrorComponent({
       // Error classification
       isProjectNotFound,
       isProjectAccessDenied,
+      isConnectivityError,
       // Browser info
       userAgent:
         typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
@@ -229,26 +265,45 @@ export function ErrorComponent({
     location.pathname,
     isProjectNotFound,
     isProjectAccessDenied,
+    isConnectivityError,
     routeContext,
   ])
 
+  useEffect(() => {
+    if (!isConnectivityError || preview) return
+    const onOnline = () => {
+      reset()
+    }
+    window.addEventListener('online', onOnline)
+    return () => window.removeEventListener('online', onOnline)
+  }, [isConnectivityError, preview, reset])
+
   // Every 2 seconds, notify parent that an error exists (skipped in preview)
   useEffect(() => {
-    if (preview) return
+    if (preview || isConnectivityError) return
     const interval = setInterval(() => {
       window.parent.postMessage(message)
     }, 2000)
 
     return () => clearInterval(interval)
-  }, [preview, message])
+  }, [preview, message, isConnectivityError])
 
   const handleGoHome = () => {
     navigate({ to: '/' })
   }
 
+  const handleGoBack = () => {
+    router.history.back()
+  }
+
   const handleRetry = () => {
     reset()
   }
+
+  const showTechnicalDetails =
+    !isProjectNotFound && !isProjectAccessDenied && !isConnectivityError
+  const showSupportBlurb =
+    !isProjectNotFound && !isProjectAccessDenied && !isConnectivityError
 
   // Copy error details
   const [copied, setCopied] = useState(false)
@@ -284,8 +339,19 @@ export function ErrorComponent({
   return (
     <div className="flex min-h-full w-full flex-col items-center justify-center gap-8 px-4 py-8">
       <div className="flex flex-col items-center max-w-md w-full gap-8">
-        <div className="rounded-full bg-destructive/10 p-3">
-          <AlertTriangle className="h-8 w-8 text-destructive" />
+        <div
+          className={cn(
+            'rounded-full p-3',
+            isConnectivityError
+              ? 'bg-amber-500/15'
+              : 'bg-destructive/10',
+          )}
+        >
+          {isConnectivityError ? (
+            <WifiOff className="h-8 w-8 text-amber-600 dark:text-amber-400" />
+          ) : (
+            <AlertTriangle className="h-8 w-8 text-destructive" />
+          )}
         </div>
 
         <div className="space-y-3 text-center">
@@ -295,7 +361,22 @@ export function ErrorComponent({
           </p>
         </div>
 
-        {!(isProjectNotFound || isProjectAccessDenied) && (
+        {isConnectivityError ? (
+          <p className="text-muted-foreground text-[13px] leading-relaxed text-center -mt-4">
+            If your connection looks fine, check our{' '}
+            <a
+              href="https://status.appwrite.online"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded"
+            >
+              status page
+            </a>{' '}
+            for service updates.
+          </p>
+        ) : null}
+
+        {showTechnicalDetails ? (
           <div className="relative w-full max-w-full rounded-lg border bg-card px-4 py-3">
             <div className="flex items-start gap-2 pr-8 min-w-0 w-full">
               <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-destructive" />
@@ -320,9 +401,9 @@ export function ErrorComponent({
               )}
             </Button>
           </div>
-        )}
+        ) : null}
 
-        {!(isProjectNotFound || isProjectAccessDenied) && (
+        {showSupportBlurb ? (
           <div className="w-full border-t border-border pt-6">
             <p className="text-muted-foreground text-[13px] leading-relaxed text-center">
               We’ve already logged it to our error system and will probably spin
@@ -339,27 +420,64 @@ export function ErrorComponent({
               . Until then - try again or head home. You’ve got this.
             </p>
           </div>
-        )}
+        ) : null}
 
-        <div className="flex flex-col sm:flex-row gap-3 w-full">
-          <Button
-            variant="outline"
-            onClick={handleGoHome}
-            className="w-full shrink-0 sm:flex-1 min-h-9"
-          >
-            <Home className="mr-1.5 h-4 w-4" />
-            Go Home
-          </Button>
-          <Button
-            variant="brandCta"
-            onClick={handleRetry}
-            size="sm"
-            className="h-9 min-h-9 w-full shrink-0 gap-2 text-[13px] font-medium sm:flex-1"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Try Again
-          </Button>
-        </div>
+        {isConnectivityError ? (
+          <div className="flex w-full flex-col gap-3">
+            <Button
+              variant="brandCta"
+              onClick={handleRetry}
+              size="sm"
+              className="h-9 min-h-9 w-full shrink-0 gap-2 text-[13px] font-medium"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Try again
+            </Button>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              {canGoBack ? (
+                <Button
+                  variant="outline"
+                  onClick={handleGoBack}
+                  className="w-full shrink-0 sm:flex-1 min-h-9"
+                >
+                  <ArrowLeft className="mr-1.5 h-4 w-4" />
+                  Go back
+                </Button>
+              ) : null}
+              <Button
+                variant="outline"
+                onClick={handleGoHome}
+                className={cn(
+                  'w-full shrink-0 min-h-9 sm:flex-1',
+                  !canGoBack && 'sm:w-full',
+                )}
+              >
+                <Home className="mr-1.5 h-4 w-4" />
+                Go home
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col sm:flex-row gap-3 w-full">
+            <Button
+              variant="outline"
+              onClick={handleGoHome}
+              className="w-full shrink-0 sm:flex-1 min-h-9"
+            >
+              <Home className="mr-1.5 h-4 w-4" />
+              Go home
+            </Button>
+            <Button
+              variant="brandCta"
+              onClick={handleRetry}
+              size="sm"
+              className="h-9 min-h-9 w-full shrink-0 gap-2 text-[13px] font-medium sm:flex-1"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Try again
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   )

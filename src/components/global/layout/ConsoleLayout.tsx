@@ -4,6 +4,7 @@ import { ConsoleSidebar } from './Sidebar'
 import { ConsoleFooter } from './Footer'
 import { CloudStatusBanner } from './CloudStatusBanner'
 import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
+import { NetworkOfflineCurtain } from '@/components/global/shared/NetworkOfflineCurtain'
 import { SkipToContent } from './SkipToContent'
 import { NativeAppBar } from './NativeAppBar'
 import { cn } from '@/lib/utils'
@@ -165,6 +166,8 @@ export function ConsoleLayout({
           {showFooter && <ConsoleFooter />}
         </main>
       </div>
+
+      <NetworkOfflineCurtain />
     </div>
   )
 }

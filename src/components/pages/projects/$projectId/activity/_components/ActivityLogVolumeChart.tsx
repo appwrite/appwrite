@@ -1,6 +1,15 @@
 'use client'
 
-import { useId, useMemo, useRef, useState, type SyntheticEvent } from 'react'
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type SyntheticEvent,
+} from 'react'
 import { format } from 'date-fns'
 import { ChevronDown } from 'lucide-react'
 import {
@@ -294,7 +303,7 @@ function orderTooltipPayloadByHighlight<
   return copy
 }
 
-function VolumeTooltip({
+const VolumeTooltip = memo(function VolumeTooltip({
   active,
   payload,
   label,
@@ -377,7 +386,7 @@ function VolumeTooltip({
       <p className="mt-2 text-[10px] text-muted-foreground/50">Mock data</p>
     </div>
   )
-}
+})
 
 export interface ActivityLogVolumeChartProps {
   rangeFrom: Date
@@ -411,6 +420,47 @@ export function ActivityLogVolumeChart({
     h: number
   } | null>(null)
   const lastTooltipColumnRef = useRef<number | null>(null)
+  const tooltipPointerRafRef = useRef<number | null>(null)
+  const pendingTooltipPointerRef = useRef<{
+    x: number
+    y: number
+    w: number
+    h: number
+  } | null>(null)
+
+  const flushTooltipPointer = useCallback(() => {
+    tooltipPointerRafRef.current = null
+    const next = pendingTooltipPointerRef.current
+    pendingTooltipPointerRef.current = null
+    if (!next) return
+    setTooltipPointer((prev) =>
+      prev != null &&
+      prev.x === next.x &&
+      prev.y === next.y &&
+      prev.w === next.w &&
+      prev.h === next.h
+        ? prev
+        : next,
+    )
+  }, [])
+
+  const scheduleTooltipPointerUpdate = useCallback(
+    (next: { x: number; y: number; w: number; h: number }) => {
+      pendingTooltipPointerRef.current = next
+      if (tooltipPointerRafRef.current !== null) return
+      tooltipPointerRafRef.current = requestAnimationFrame(flushTooltipPointer)
+    },
+    [flushTooltipPointer],
+  )
+
+  useEffect(() => {
+    return () => {
+      if (tooltipPointerRafRef.current !== null) {
+        cancelAnimationFrame(tooltipPointerRafRef.current)
+        tooltipPointerRafRef.current = null
+      }
+    }
+  }, [])
 
   const chartData = useMemo(
     () => buildMockVolumeByResource(rangeFrom, rangeTo),
@@ -448,6 +498,16 @@ export function ActivityLogVolumeChart({
     () =>
       `${rangeFrom.toISOString()}-${rangeTo.toISOString()}-${chartData.length}`,
     [rangeFrom, rangeTo, chartData.length],
+  )
+
+  const volumeTooltipContent = useMemo(
+    () => (
+      <VolumeTooltip
+        highlightedDataKey={hoveredResourceKey}
+        activeResourceTypeFilter={filteredResourceKey}
+      />
+    ),
+    [hoveredResourceKey, filteredResourceKey],
   )
 
   const lastSeriesIndex = RESOURCE_SERIES.length - 1
@@ -517,10 +577,15 @@ export function ActivityLogVolumeChart({
                       lastTooltipColumnRef.current = col
                       setHoveredResourceKey(null)
                     }
-                    setHoveredIndex(col)
-                    setTooltipPointer(pointerInChartWrapper(e))
+                    setHoveredIndex((prev) => (prev === col ? prev : col))
+                    scheduleTooltipPointerUpdate(pointerInChartWrapper(e))
                   }}
                   onMouseLeave={() => {
+                    if (tooltipPointerRafRef.current !== null) {
+                      cancelAnimationFrame(tooltipPointerRafRef.current)
+                      tooltipPointerRafRef.current = null
+                    }
+                    pendingTooltipPointerRef.current = null
                     setHoveredIndex(null)
                     setHoveredResourceKey(null)
                     lastTooltipColumnRef.current = null
@@ -558,12 +623,7 @@ export function ActivityLogVolumeChart({
                     width={40}
                   />
                   <Tooltip
-                    content={
-                      <VolumeTooltip
-                        highlightedDataKey={hoveredResourceKey}
-                        activeResourceTypeFilter={filteredResourceKey}
-                      />
-                    }
+                    content={volumeTooltipContent}
                     cursor={false}
                     isAnimationActive={false}
                     allowEscapeViewBox={{ x: true, y: true }}

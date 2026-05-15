@@ -52,8 +52,8 @@ export interface ActivitiesResult {
  *
  * Uses [cursor pagination](https://appwrite.io/docs/products/databases/pagination)
  * (`Query.cursorAfter` / `Query.cursorBefore`) with `orderDesc('time')`, not offset.
- * Reused in both the route loader (via `activitiesQueryOptions`) and the
- * `useProjectActivities` hook so cache keys match exactly.
+ * Used by `activitiesQueryOptions` / `useProjectActivities` (activity list uses a
+ * table skeleton; no route prefetch required).
  */
 export async function fetchProjectActivities({
   projectId,
@@ -113,8 +113,11 @@ export function activitiesQueryOptions(params: {
   limit?: number
   cursorAfter?: string | null
   cursorBefore?: string | null
-  /** Plan retention floor (ISO); merged with URL `time` filters inside the queryFn. */
-  planSinceIso: string
+  /**
+   * Plan retention window in hours (e.g. 720 for 30 days). Used in the query key
+   * and to compute the `time >=` lower bound inside the query (stable key vs raw ISO).
+   */
+  planRetentionHours: number
   /** Raw URL `query` param (encoded filter keys), or null when unset. */
   filterQueryKey: string | null
 }) {
@@ -123,7 +126,7 @@ export function activitiesQueryOptions(params: {
     limit = ACTIVITY_DEFAULT_PAGE_SIZE,
     cursorAfter = null,
     cursorBefore = null,
-    planSinceIso,
+    planRetentionHours,
     filterQueryKey,
   } = params
 
@@ -135,10 +138,13 @@ export function activitiesQueryOptions(params: {
       limit,
       cursorAfter ?? null,
       cursorBefore ?? null,
-      planSinceIso,
+      planRetentionHours,
       filterQueryKey ?? null,
     ],
     queryFn: () => {
+      const planSinceIso = new Date(
+        Date.now() - planRetentionHours * 60 * 60 * 1000,
+      ).toISOString()
       const filterMap = queryParamToMap(filterQueryKey)
       const { mergedSince, until, extraQueries } = getActivityFilterQueryParts(
         filterMap,
@@ -195,7 +201,7 @@ export function useProjectActivities(params: {
   limit?: number
   cursorAfter?: string | null
   cursorBefore?: string | null
-  planSinceIso: string
+  planRetentionHours: number
   filterQueryKey: string | null
 }) {
   const { data, isLoading, isFetching, error, refetch } = useQuery(

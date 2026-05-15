@@ -3,12 +3,7 @@ import { z } from 'zod'
 import { View } from '@/components/pages/projects/$projectId/activity/View'
 import { pageTitle } from '@/lib/utils/page-title'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
-import {
-  ACTIVITY_DEFAULT_PAGE_SIZE,
-  activitiesQueryOptions,
-  countriesQueryOptions,
-} from '@/lib/react-query/hooks'
-import { getQueryParam } from '@/lib/table-filters'
+import { countriesQueryOptions } from '@/lib/react-query/hooks'
 
 const activitySearchSchema = z.object({
   /** Activity event `$id` — opens the detail drawer when valid. */
@@ -16,10 +11,6 @@ const activitySearchSchema = z.object({
   /** Encoded table filters (same contract as other list views). */
   query: z.string().optional().catch(undefined),
 })
-
-// Mirror the Pro plan retention window (`PLAN_TIME_LIMITS.pro` in View.tsx)
-// so the route loader prefetches the same query the View renders.
-const PRO_PLAN_HOURS = 30 * 24
 
 export const Route = createFileRoute('/_public/projects/$projectId/activity')({
   head: () => ({ meta: [{ title: pageTitle('Activity') }] }),
@@ -33,33 +24,17 @@ export const Route = createFileRoute('/_public/projects/$projectId/activity')({
       })
     }
   },
-  loader: async ({ params, context, location }) => {
+  loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return
     const { projectId } = params
     const { queryClient } = context
     if (!projectId) return
 
-    const url = new URL(location.pathname + location.search, 'http://localhost')
-    const queryParam = getQueryParam(url)
-    const planSinceIso = new Date(
-      Date.now() - PRO_PLAN_HOURS * 60 * 60 * 1000,
-    ).toISOString()
-
-    await Promise.all([
-      queryClient.ensureQueryData(countriesQueryOptions()).catch(() => undefined),
-      queryClient
-        .ensureQueryData(
-          activitiesQueryOptions({
-            projectId,
-            limit: ACTIVITY_DEFAULT_PAGE_SIZE,
-            cursorAfter: null,
-            cursorBefore: null,
-            planSinceIso,
-            filterQueryKey: queryParam,
-          }),
-        )
-        .catch(() => undefined),
-    ])
+    // Activity list uses an in-table skeleton; fetch runs once from `useProjectActivities`.
+    // Prefetch only filter UI data (country enum for filters).
+    await queryClient
+      .ensureQueryData(countriesQueryOptions())
+      .catch(() => undefined)
   },
   component: ActivityPage,
 })

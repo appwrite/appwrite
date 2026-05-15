@@ -1,0 +1,35 @@
+import { WifiOff } from 'lucide-react'
+import { useNavigatorOnline } from '@/lib/network-connectivity'
+
+/**
+ * Full-viewport curtain when the browser reports no network connection.
+ * Blocks interaction with the console until the connection is restored.
+ */
+export function NetworkOfflineCurtain() {
+  const online = useNavigatorOnline()
+
+  if (online) return null
+
+  return (
+    <div
+      role="alert"
+      aria-live="assertive"
+      aria-relevant="additions"
+      className="fixed inset-0 z-[125] flex h-[100dvh] max-h-[100dvh] w-full items-center justify-center bg-background/95 backdrop-blur-sm"
+    >
+      <div className="mx-4 flex max-w-md flex-col items-center text-center">
+        <div className="mb-6 flex size-16 items-center justify-center rounded-full bg-muted text-muted-foreground">
+          <WifiOff className="size-9" aria-hidden />
+        </div>
+        <h1 className="text-[22px] font-semibold text-foreground">
+          You&apos;re offline
+        </h1>
+        <p className="mt-3 text-[15px] text-muted-foreground">
+          The console needs an internet connection to reach Appwrite&apos;s data
+          centers. We&apos;ll restore the page automatically when you are back
+          online.
+        </p>
+      </div>
+    </div>
+  )
+}
