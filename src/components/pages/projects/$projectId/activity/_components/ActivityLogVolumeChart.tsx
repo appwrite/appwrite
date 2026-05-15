@@ -216,7 +216,7 @@ function clampVolumeTooltipPosition(
   chartW: number,
   chartH: number,
 ): { x: number; y: number } {
-  const GAP = 14
+  const GAP = 36
   const EDGE = 6
   // Matches `VolumeTooltip` min-width + border; a bit of slack for scrollbars / font.
   const EST_W = 300
@@ -279,30 +279,6 @@ function buildMockVolumeByResource(from: Date, to: Date): ChartRow[] {
 
 type ResourceKey = (typeof RESOURCE_SERIES)[number]['key']
 
-const RESOURCE_ORDER_RANK = new Map<ResourceKey, number>(
-  RESOURCE_SERIES.map(({ key }, i) => [key, i]),
-)
-
-/** Selected resource first; remaining rows follow `RESOURCE_SERIES` order. */
-function orderTooltipPayloadByHighlight<
-  T extends { dataKey?: string | number; name?: string },
->(payload: T[], highlightedKey: string | null): T[] {
-  if (highlightedKey == null) return [...payload]
-  const copy = [...payload]
-  copy.sort((a, b) => {
-    const ak = String(a.dataKey ?? '')
-    const bk = String(b.dataKey ?? '')
-    const aFirst = ak === highlightedKey ? 0 : 1
-    const bFirst = bk === highlightedKey ? 0 : 1
-    if (aFirst !== bFirst) return aFirst - bFirst
-    return (
-      (RESOURCE_ORDER_RANK.get(ak as ResourceKey) ?? 99) -
-      (RESOURCE_ORDER_RANK.get(bk as ResourceKey) ?? 99)
-    )
-  })
-  return copy
-}
-
 function VolumeTooltip({
   active,
   payload,
@@ -320,7 +296,7 @@ function VolumeTooltip({
   label?: string
   /** Stacked segment under the pointer (`dataKey`); axis tooltip still lists the full bar. */
   highlightedDataKey?: ResourceKey | null
-  /** When set, this resource is listed first whenever nothing is hovered. */
+  /** When set, this resource is emphasized whenever no stack segment is hovered. */
   activeResourceTypeFilter?: string | null
 }) {
   if (!active || !payload?.length) return null
@@ -336,39 +312,36 @@ function VolumeTooltip({
     RESOURCE_SERIES.some((r) => r.key === activeResourceTypeFilter)
       ? activeResourceTypeFilter
       : null
-  const orderKey = hi ?? filterKey
-  const rows = orderTooltipPayloadByHighlight(payload, orderKey)
 
   return (
     <div className="min-w-[280px] max-w-[min(calc(100vw-2rem),22rem)] rounded-lg border border-border bg-popover px-3 py-2.5">
       <p className="mb-2 text-[12px] font-medium text-foreground">{heading}</p>
       <div className="space-y-1.5">
-        {rows.map((p) => {
+        {payload.map((p) => {
           const rowKey = String(p.dataKey ?? '')
-          const isHighlighted =
+          const isSelected =
             (hi !== null && rowKey === hi) ||
             (hi === null && filterKey != null && rowKey === filterKey)
           return (
             <div
               key={rowKey || String(p.name)}
-              className="flex items-center justify-between gap-8"
+              className={cn(
+                'flex min-h-[28px] items-center justify-between gap-8 rounded-md px-1.5 -mx-1 py-0.5',
+                isSelected && 'bg-muted/55',
+              )}
             >
               <span
                 className={cn(
-                  'min-w-0 truncate text-[11px]',
-                  isHighlighted
-                    ? 'font-semibold text-foreground'
-                    : 'font-normal text-muted-foreground',
+                  'min-w-0 truncate text-[11px] font-medium leading-5 tabular-nums',
+                  isSelected ? 'text-foreground' : 'text-muted-foreground',
                 )}
               >
                 {p.name}
               </span>
               <span
                 className={cn(
-                  'shrink-0 text-[12px] tabular-nums',
-                  isHighlighted
-                    ? 'font-semibold text-foreground'
-                    : 'font-medium text-muted-foreground',
+                  'shrink-0 text-[12px] font-medium tabular-nums leading-5',
+                  isSelected ? 'text-foreground' : 'text-muted-foreground',
                 )}
               >
                 {(p.value ?? 0).toLocaleString()}
@@ -395,7 +368,8 @@ type VolumeChartStackedBarsProps = {
   hoveredResourceKey: ResourceKey | null
   filteredResourceKey: ResourceKey | null
   lastSeriesIndex: number
-  onSegmentHover: (key: ResourceKey) => void
+  /** Fires on enter and on every move over a segment so highlight cannot stick when `mouseenter` is skipped. */
+  onBarSegmentPointer: (key: ResourceKey, dataIndex: number) => void
 }
 
 function volumeStackedBarsPropsEqual(
@@ -409,7 +383,7 @@ function volumeStackedBarsPropsEqual(
     prev.colorSlots === next.colorSlots &&
     prev.filteredResourceKey === next.filteredResourceKey &&
     prev.lastSeriesIndex === next.lastSeriesIndex &&
-    prev.onSegmentHover === next.onSegmentHover
+    prev.onBarSegmentPointer === next.onBarSegmentPointer
   )
 }
 
@@ -420,7 +394,7 @@ const VolumeChartStackedBars = memo(function VolumeChartStackedBars({
   hoveredResourceKey,
   filteredResourceKey,
   lastSeriesIndex,
-  onSegmentHover,
+  onBarSegmentPointer,
 }: VolumeChartStackedBarsProps) {
   return (
     <>
@@ -432,7 +406,8 @@ const VolumeChartStackedBars = memo(function VolumeChartStackedBars({
           stackId="vol"
           isAnimationActive={false}
           fill={seriesFill(colorSlots[seriesIndex]!)}
-          onMouseEnter={() => onSegmentHover(key)}
+          onMouseEnter={(_data, index) => onBarSegmentPointer(key, index)}
+          onMouseMove={(_data, index) => onBarSegmentPointer(key, index)}
           radius={
             lastSeriesIndex === 0
               ? [5, 5, 5, 5]
@@ -611,9 +586,13 @@ export function ActivityLogVolumeChart({
 
   const lastSeriesIndex = RESOURCE_SERIES.length - 1
 
-  const handleSegmentHover = useCallback((key: ResourceKey) => {
-    setHoveredResourceKey(key)
-  }, [])
+  const handleBarSegmentPointer = useCallback(
+    (key: ResourceKey, dataIndex: number) => {
+      lastTooltipColumnRef.current = dataIndex
+      setHoveredResourceKey(key)
+    },
+    [],
+  )
 
   return (
     <Collapsible
@@ -766,7 +745,7 @@ export function ActivityLogVolumeChart({
                     hoveredResourceKey={hoveredResourceKey}
                     filteredResourceKey={filteredResourceKey}
                     lastSeriesIndex={lastSeriesIndex}
-                    onSegmentHover={handleSegmentHover}
+                    onBarSegmentPointer={handleBarSegmentPointer}
                   />
                   <Customized
                     component={(chartProps: {
