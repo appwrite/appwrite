@@ -19,13 +19,14 @@ import {
 } from 'lucide-react'
 import {
   canAccessOrgSettingsMembers,
-  canAccessOrgSettingsOAuthOrApiKeys,
   canAccessOrgSettingsOverview,
   canCreateProject,
   canInviteOrgMember,
+  canShowOrgApiKeysSettings,
   canShowOrgBillingNav,
   canShowOrgComplianceNav,
   canShowOrgDomainsTab,
+  canShowOrgOAuthAppsSettings,
   canShowOrgSettingsTab,
 } from '@/lib/console-access-checks'
 import { registerCommands } from '../registry'
@@ -115,7 +116,8 @@ const ORG_SETTINGS_TABS: CommandEntry[] = [
     description: 'Third-party OAuth apps with access to this organization',
     icon: Key,
     keywords: ['oauth', 'apps', 'third party', 'integrations'],
-    available: (ctx) => canAccessOrgSettingsOAuthOrApiKeys(ctx.access),
+    available: (ctx) =>
+      canShowOrgOAuthAppsSettings(ctx.access, ctx.features),
     to: (ctx) => `/organizations/${ctx.orgId}/settings/oauth-apps`,
   },
   {
@@ -127,9 +129,7 @@ const ORG_SETTINGS_TABS: CommandEntry[] = [
     description: 'Org-level API keys for automation',
     icon: Key,
     keywords: ['api', 'keys', 'tokens', 'automation', 'org'],
-    available: (ctx) =>
-      canAccessOrgSettingsOAuthOrApiKeys(ctx.access) &&
-      Boolean(ctx.features.orgApiKeys),
+    available: (ctx) => canShowOrgApiKeysSettings(ctx.access, ctx.features),
     to: (ctx) => `/organizations/${ctx.orgId}/settings/api-keys`,
   },
   {

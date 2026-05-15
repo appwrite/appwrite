@@ -51,6 +51,7 @@ const RESOURCE_SERIES = [
   { key: 'document', label: 'Document' },
   { key: 'collection', label: 'Collection' },
   { key: 'team', label: 'Team' },
+  { key: 'site', label: 'Site' },
   { key: 'project', label: 'Project' },
 ] as const
 

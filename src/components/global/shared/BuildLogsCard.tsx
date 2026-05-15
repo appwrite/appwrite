@@ -193,7 +193,7 @@ export function BuildLogsCard({
       <div className="relative">
         <div
           ref={logsContainerRef}
-          className="h-[400px] overflow-y-auto overflow-x-auto pb-44 pr-16"
+          className="h-[400px] overflow-y-auto overflow-x-auto pr-16"
         >
           <BuildLogsView
             buildLogs={buildLogs}

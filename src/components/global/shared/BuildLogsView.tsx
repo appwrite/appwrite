@@ -519,9 +519,7 @@ export function BuildLogsView({
   }
 
   return (
-    <div
-      className={cn('min-h-full min-w-0', className)}
-    >
+    <div className={cn('min-w-0', className)}>
       <div
         className={`${fontSizeClass} font-mono text-foreground flex min-w-0 max-w-full flex-col overflow-x-auto break-all`}
       >

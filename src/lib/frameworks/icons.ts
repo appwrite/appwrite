@@ -78,6 +78,9 @@ export const FRAMEWORK_ICON_MAP: Record<string, string> = {
   ruby: 'ruby.svg',
   dotnet: 'dotnet.svg',
   go: 'go.svg',
+  rust: 'rust.svg',
+  rustc: 'rust.svg',
+
   swift: 'swift.svg',
   kotlin: 'kotlin.svg',
   node: 'node.svg',

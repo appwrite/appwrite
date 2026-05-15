@@ -19,6 +19,7 @@ import {
   FileText,
   Folder,
   Server,
+  Globe,
   Clock,
   AlertCircle,
 } from '@/lib/icons'
@@ -262,6 +263,7 @@ type ResourceType =
   | 'function'
   | 'user'
   | 'team'
+  | 'site'
   | 'project'
 
 const resourceIcons: Record<ResourceType, React.ReactNode> = {
@@ -273,6 +275,7 @@ const resourceIcons: Record<ResourceType, React.ReactNode> = {
   function: <Zap className="h-4 w-4" />,
   user: <Users className="h-4 w-4" />,
   team: <Users className="h-4 w-4" />,
+  site: <Globe className="h-4 w-4" />,
   project: <Server className="h-4 w-4" />,
 }
 
@@ -315,12 +318,25 @@ function eventToActionType(event: string): ActionType {
   return 'view'
 }
 
+/**
+ * When `resourceType` is missing or generic, the audit `resource` path often
+ * still scopes the entity (e.g. `site/arena` for sites).
+ */
+function resourcePathToResourceType(
+  resource: string | null | undefined,
+): ResourceType | null {
+  const head = resource?.trim().split('/')[0]?.toLowerCase()
+  if (head === 'site' || head === 'sites') return 'site'
+  return null
+}
+
 /** Maps the API `resourceType`/`event` to a UI resource-type bucket. */
 function eventToResourceType(
   resourceType: string,
   event: string,
+  resource?: string | null,
 ): ResourceType {
-  const normalized = resourceType.toLowerCase()
+  const normalized = (resourceType ?? '').toLowerCase()
   const eventParts = event.split('.')
   if (normalized.startsWith('document') || eventParts.includes('documents'))
     return 'document'
@@ -334,8 +350,14 @@ function eventToResourceType(
     return 'bucket'
   if (normalized.startsWith('function') || eventParts.includes('functions'))
     return 'function'
+  if (normalized.startsWith('site') || eventParts.includes('sites'))
+    return 'site'
   if (normalized.startsWith('team') || eventParts.includes('teams')) return 'team'
   if (normalized.startsWith('user') || eventParts.includes('users')) return 'user'
+
+  const fromPath = resourcePathToResourceType(resource)
+  if (fromPath) return fromPath
+
   return 'project'
 }
 
@@ -375,7 +397,11 @@ function toDisplayActivity(event: Models.ActivityEvent): DisplayActivity {
     userName: event.userName || event.userEmail || 'Unknown',
     userEmail: event.userEmail || '',
     action: eventToActionType(event.event),
-    resourceType: eventToResourceType(event.resourceType, event.event),
+    resourceType: eventToResourceType(
+      event.resourceType,
+      event.event,
+      event.resource,
+    ),
     resourceId: event.resourceId || '',
     resourceName: resourceLabelFromEvent(event),
     description: event.event,
@@ -1152,6 +1178,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
                 resourceType: eventToResourceType(
                   selectedEvent.resourceType,
                   selectedEvent.event,
+                  selectedEvent.resource,
                 ),
                 resourceName: resourceLabelFromEvent(selectedEvent),
               }

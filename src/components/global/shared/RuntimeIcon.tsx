@@ -36,6 +36,7 @@ function getRuntimeLanguage(runtime: string): string | null {
     swift: 'swift',
     kotlin: 'kotlin',
     dotnet: 'dotnet',
+    rust: 'rust',
   }
 
   return runtimeToLanguage[baseRuntime] || null

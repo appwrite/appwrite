@@ -23,8 +23,8 @@ import {
   copyToClipboard,
   openInNewTab,
   openInNewWindow,
-  toPrettyJson,
 } from '@/lib/utils/context-menu'
+import { formatActivityEventJson } from '@/components/pages/projects/$projectId/activity/activity-utils'
 
 interface ActivityLogRowContextMenuProps {
   projectId: string
@@ -85,18 +85,7 @@ export function ActivityLogRowContextMenu({
             </ContextMenuItem>
             <ContextMenuItem
               onSelect={() =>
-                copyToClipboard(
-                  'JSON',
-                  toPrettyJson({
-                    id: event.$id,
-                    event: event.event,
-                    name: event.userName ?? null,
-                    userId: event.userId,
-                    resourceType: event.resourceType,
-                    resourceId: event.resourceId ?? null,
-                    time: event.time,
-                  }),
-                )
+                copyToClipboard('JSON', formatActivityEventJson(event))
               }
             >
               <ContextMenuIcon icon={FileJson} />

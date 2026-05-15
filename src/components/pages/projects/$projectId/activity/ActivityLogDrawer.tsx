@@ -8,6 +8,7 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { cn } from '@/lib/utils'
 import { formatIpForDisplay } from '@/lib/format-ip'
 import {
+  formatActivityEventJson,
   hasHumanEmail,
   userTypeBadge,
 } from '@/components/pages/projects/$projectId/activity/activity-utils'
@@ -58,6 +59,7 @@ type ResourceType =
   | 'function'
   | 'user'
   | 'team'
+  | 'site'
   | 'project'
 
 export interface ActivityDrawerDisplay {
@@ -115,6 +117,7 @@ const resourceIcons: Record<ResourceType, React.ReactNode> = {
   function: <Zap className="h-4 w-4" />,
   user: <User className="h-4 w-4" />,
   team: <User className="h-4 w-4" />,
+  site: <Globe className="h-4 w-4" />,
   project: <Server className="h-4 w-4" />,
 }
 
@@ -275,7 +278,7 @@ export function ActivityLogDrawer({
     ? formatValue(event.userEmail)
     : formatValue(event.userId)
 
-  const rawJson = JSON.stringify(event, null, 2)
+  const rawJson = formatActivityEventJson(event)
 
   const clientSummary = [
     event.clientName,

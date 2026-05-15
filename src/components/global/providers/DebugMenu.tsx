@@ -37,6 +37,7 @@ import { Switch } from '@/components/ui/switch'
 import { useTheme } from 'next-themes'
 import {
   loadDebugOverrides,
+  resetFeatureFlagsMenuDebugOverrides,
   setDebugOverride,
   subscribeToDebugOverrides,
   type DebugOverrides,
@@ -47,6 +48,7 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   setDebugProfileOverride,
   setDebugProfileFeatureOverride,
+  resetDebugProfileFeatureOverrides,
   CONSOLE_PROFILES,
   CONSOLE_PROFILE_FEATURE_LABELS,
 } from '@/lib/console-profiles'
@@ -87,6 +89,8 @@ interface MenuItem {
   submenu?: MenuItem[]
   /** Opens the profile comparison table instead of a submenu list. */
   submenuVariant?: 'profileComparison' | 'prefsDebug'
+  /** Extra classes on submenu row buttons (e.g. separator above reset actions). */
+  rowClassName?: string
 }
 
 interface MenuSection {
@@ -513,7 +517,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           },
           {
             label: 'Feature flags',
-            description: 'Dedicated DBs and create wizard',
+            description: 'Console profile overrides (dedicated DBs, org features, and more)',
             icon: <FlaskConical className="h-3 w-3" />,
             submenu: [
               {
@@ -600,6 +604,34 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 },
               },
               {
+                label: 'Organization OAuth apps',
+                description:
+                  'Org settings OAuth apps tab and /settings/oauth-apps route.',
+                variant: 'switch' as const,
+                switchValue: features.oauthApps,
+                switchOnChange: (checked: boolean) => {
+                  setTimeout(
+                    () =>
+                      setDebugProfileFeatureOverride('oauthApps', checked),
+                    0,
+                  )
+                },
+              },
+              {
+                label: 'Organization API keys',
+                description:
+                  'Org settings API keys tab and /settings/api-keys route.',
+                variant: 'switch' as const,
+                switchValue: features.orgApiKeys,
+                switchOnChange: (checked: boolean) => {
+                  setTimeout(
+                    () =>
+                      setDebugProfileFeatureOverride('orgApiKeys', checked),
+                    0,
+                  )
+                },
+              },
+              {
                 label: 'AI assistant',
                 description:
                   'In-app AI assistant chat panel and header button.',
@@ -653,6 +685,19 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                   }))
                   setDebugOverride('showFunctionsLocalEditor', checked)
                 },
+              },
+              {
+                label: 'Reset feature flags',
+                description:
+                  'Restore profile toggles on this list to canonical defaults and clear local switches (AI assistant, native app bar, success team card, functions local editor).',
+                onClick: () => {
+                  resetDebugProfileFeatureOverrides()
+                  resetFeatureFlagsMenuDebugOverrides()
+                  setOverrides(loadDebugOverrides())
+                  setIsOpen(false)
+                },
+                icon: <RotateCcw className="h-3 w-3" />,
+                rowClassName: 'mt-2 border-t border-[#9B87F5]/20 pt-2',
               },
             ],
           },
@@ -800,6 +845,9 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.dedicatedDbsTablesDB,
     features.dedicatedDbsDocumentsDB,
     features.dedicatedDbsVectorsDB,
+    features.userVerification,
+    features.oauthApps,
+    features.orgApiKeys,
     endpointPreset,
     endpointCustomUrl,
     overrides.showNativeAppBar,
@@ -955,7 +1003,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                           : item.active
                           ? 'bg-[#9B87F5]/25 text-white'
                           : 'text-[#E5DEFF]/90 hover:bg-[#9B87F5]/15 hover:text-white'
-                      }`}
+                      } ${item.rowClassName ?? ''}`}
                     >
                       {item.icon && (
                         <span className="flex-shrink-0 text-[#9B87F5]">

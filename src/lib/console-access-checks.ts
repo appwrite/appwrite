@@ -307,6 +307,22 @@ export function canAccessOrgSettingsOAuthOrApiKeys(
   return access.isOwner || access.isDeveloper
 }
 
+/** Organization settings → OAuth apps (console profile + owners/developers). */
+export function canShowOrgOAuthAppsSettings(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+): boolean {
+  return !!features.oauthApps && canAccessOrgSettingsOAuthOrApiKeys(access)
+}
+
+/** Organization settings → Org API keys (console profile + owners/developers). */
+export function canShowOrgApiKeysSettings(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+): boolean {
+  return !!features.orgApiKeys && canAccessOrgSettingsOAuthOrApiKeys(access)
+}
+
 /** Organization Domains (route access): owners and developers when orgRoles enabled. */
 export function canAccessOrgDomains(
   access: ConsoleAccess,
@@ -372,9 +388,9 @@ export function getFirstAllowedOrgSettingsPath(
   if (canAccessOrgSettingsBilling(access)) return `${basePath}/billing`
   if (canAccessOrgSettingsCompliance(access) && features.compliance)
     return `${basePath}/compliance`
-  if (canAccessOrgSettingsOAuthOrApiKeys(access) && features.oauthApps)
+  if (canShowOrgOAuthAppsSettings(access, features))
     return `${basePath}/oauth-apps`
-  if (canAccessOrgSettingsOAuthOrApiKeys(access) && features.orgApiKeys)
+  if (canShowOrgApiKeysSettings(access, features))
     return `${basePath}/api-keys`
   return basePath
 }

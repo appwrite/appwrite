@@ -27,6 +27,7 @@ const languageIconMap: Record<string, string> = {
   kotlin: 'kotlin.svg',
   java: 'java.svg',
   dotnet: 'dotnet.svg',
+  rust: 'rust.svg',
 }
 
 export function LanguageIcon({

@@ -105,6 +105,7 @@ const LANGUAGE_RUNTIMES = [
   'php',
   'dart',
   'go',
+  'rust',
   'deno',
   'ruby',
 ] as const
@@ -341,9 +342,13 @@ export function CreateFunctionView() {
     > = {}
     for (const lang of LANGUAGE_RUNTIMES) {
       if (byLanguage[lang]) continue
-      const template = combined.find((t) =>
-        (t.runtimes ?? []).some((r) => getRuntimeBase(r) === lang),
-      )
+      const supportsLang = (t: Models.TemplateFunction) =>
+        (t.runtimes ?? []).some((r) => getRuntimeBase(r) === lang)
+      // Prefer universal `starter` template (same as legacy console quick start).
+      const starter =
+        combined.find((t) => t.id === 'starter' && supportsLang(t)) ?? null
+      const template =
+        starter ?? combined.find((t) => supportsLang(t)) ?? undefined
       if (template) byLanguage[lang] = template
     }
     const starterIds = new Set(quickStartTemplates.map((t) => t.id))

@@ -2,6 +2,13 @@
  * Shared helpers for the project Activity view and detail drawer.
  */
 
+import type { Models } from '@appwrite.io/console'
+
+/** Pretty-printed full audit row (same shape as the API / drawer raw JSON). */
+export function formatActivityEventJson(event: Models.ActivityEvent): string {
+  return JSON.stringify(event, null, 2)
+}
+
 export function isRegularUserType(userType: string): boolean {
   const normalized = userType.toLowerCase()
   /** `user` is the supported actor; `users` may appear on older audit rows. */

@@ -109,8 +109,8 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       accountMfa: true,
       accountIdentities: true,
       compliance: true,
-      oauthApps: true,
-      orgApiKeys: true,
+      oauthApps: false,
+      orgApiKeys: false,
       aiAssistant: true,
       databaseBackups: true,
       databaseInsights: true,
@@ -313,6 +313,21 @@ export function setDebugProfileFeatureOverride<
     features: nextOverrideFeatures,
   }
   localStorage.setItem(DEBUG_PROFILE_KEY, JSON.stringify(nextStored))
+  window.dispatchEvent(new CustomEvent(CONSOLE_PROFILE_CHANGE_EVENT))
+}
+
+/**
+ * Reset stored profile feature overrides to canonical defaults for the stored
+ * profile id (Cloud or self-hosted). Keeps debug profile selection; no-op if
+ * nothing is stored under the debug console profile localStorage key.
+ */
+export function resetDebugProfileFeatureOverrides() {
+  if (typeof window === 'undefined') return
+  const stored = getStoredProfile()
+  if (!stored) return
+  if (!VALID_PROFILE_IDS.includes(stored.id)) return
+  const canonical = CONSOLE_PROFILES[stored.id]
+  localStorage.setItem(DEBUG_PROFILE_KEY, JSON.stringify(canonical))
   window.dispatchEvent(new CustomEvent(CONSOLE_PROFILE_CHANGE_EVENT))
 }
 

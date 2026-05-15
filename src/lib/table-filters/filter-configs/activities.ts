@@ -13,6 +13,7 @@ const ACTIVITY_RESOURCE_TYPE_ELEMENTS = [
   { value: 'function', label: 'Function' },
   { value: 'user', label: 'User / key' },
   { value: 'team', label: 'Team' },
+  { value: 'site', label: 'Site' },
   { value: 'project', label: 'Project' },
 ]
 

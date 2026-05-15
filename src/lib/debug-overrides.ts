@@ -122,6 +122,23 @@ export function resetDebugOverrides() {
   window.dispatchEvent(new CustomEvent(DEBUG_OVERRIDE_EVENT))
 }
 
+/** Keys toggled from Debug → Settings → Feature flags (not other debug sections). */
+const FEATURE_FLAGS_MENU_DEBUG_KEYS: (keyof DebugOverrides)[] = [
+  'showAIAssistant',
+  'showNativeAppBar',
+  'showSuccessTeamCard',
+  'showFunctionsLocalEditor',
+]
+
+/** Clear persisted debug overrides used by the Feature flags submenu only. */
+export function resetFeatureFlagsMenuDebugOverrides() {
+  if (!isBrowser) return
+  FEATURE_FLAGS_MENU_DEBUG_KEYS.forEach((key) => {
+    localStorage.removeItem(DEBUG_OVERRIDE_KEYS[key])
+  })
+  window.dispatchEvent(new CustomEvent(DEBUG_OVERRIDE_EVENT))
+}
+
 export function subscribeToDebugOverrides(
   callback: (overrides: DebugOverrides) => void,
 ) {

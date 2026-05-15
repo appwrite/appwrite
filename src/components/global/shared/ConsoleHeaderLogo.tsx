@@ -2,29 +2,29 @@ import { useEffect, useLayoutEffect, useRef, useSyncExternalStore } from 'react'
 import { cn } from '@/lib/utils'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 
-let suppressLogoHoverFlipUntilLeave = false
-const logoFlipSuppressListeners = new Set<() => void>()
+let logoCloudLockedUntilPointerLeave = false
+const logoCloudLockListeners = new Set<() => void>()
 
-function emitLogoFlipSuppressChange() {
-  logoFlipSuppressListeners.forEach((listener) => listener())
+function emitLogoCloudLockChange() {
+  logoCloudLockListeners.forEach((listener) => listener())
 }
 
-function setSuppressLogoHoverFlipUntilLeave(next: boolean) {
-  if (suppressLogoHoverFlipUntilLeave === next) return
-  suppressLogoHoverFlipUntilLeave = next
-  emitLogoFlipSuppressChange()
+function setLogoCloudLockedUntilPointerLeave(next: boolean) {
+  if (logoCloudLockedUntilPointerLeave === next) return
+  logoCloudLockedUntilPointerLeave = next
+  emitLogoCloudLockChange()
 }
 
-function subscribeLogoFlipSuppress(listener: () => void) {
-  logoFlipSuppressListeners.add(listener)
-  return () => logoFlipSuppressListeners.delete(listener)
+function subscribeLogoCloudLock(listener: () => void) {
+  logoCloudLockListeners.add(listener)
+  return () => logoCloudLockListeners.delete(listener)
 }
 
-function getLogoFlipSuppressSnapshot() {
-  return suppressLogoHoverFlipUntilLeave
+function getLogoCloudLockSnapshot() {
+  return logoCloudLockedUntilPointerLeave
 }
 
-function getLogoFlipSuppressServerSnapshot() {
+function getLogoCloudLockServerSnapshot() {
   return false
 }
 
@@ -54,7 +54,7 @@ function FilledAppwriteMark({ className }: { className?: string }) {
 
 /**
  * Solid cloud silhouette (Heroicons 24/solid Cloud - MIT).
- * Rounded “weather” cloud reads clearer than stroke icons at small sizes.
+ * Rounded "weather" cloud reads clearer than stroke icons at small sizes.
  */
 function FilledCloudMark({ className }: { className?: string }) {
   return (
@@ -76,23 +76,23 @@ function FilledCloudMark({ className }: { className?: string }) {
 
 /**
  * Appwrite mark + pink cloud on hover (3D flip); parent header link must use Tailwind `group`.
- * Cloud profile only. After a click (navigate home), the mark stays on Appwrite until the pointer
- * leaves the link, including across SPA remounts - we do not infer “not hovered” on mount, which
- * would wrongly re-enable the flip while the cursor is still over the logo.
- * Self-hosted shows the Appwrite mark only (no cloud flip or suppress logic).
+ * Cloud profile only. After pointer down / click, the cloud stays visible until the pointer leaves
+ * the link (including across SPA remounts while still over the logo). Then the idle state is
+ * Appwrite again; hover still flips to cloud as usual.
+ * Self-hosted shows the Appwrite mark only (no cloud flip or lock logic).
  */
 export function ConsoleHeaderLogo({ className }: { className?: string }) {
   const { isCloud } = useConsoleProfile()
   const rootRef = useRef<HTMLDivElement>(null)
-  const flipSuppressed = useSyncExternalStore(
-    subscribeLogoFlipSuppress,
-    getLogoFlipSuppressSnapshot,
-    getLogoFlipSuppressServerSnapshot,
+  const cloudLockedUntilLeave = useSyncExternalStore(
+    subscribeLogoCloudLock,
+    getLogoCloudLockSnapshot,
+    getLogoCloudLockServerSnapshot,
   )
 
   useEffect(() => {
     if (!isCloud) {
-      setSuppressLogoHoverFlipUntilLeave(false)
+      setLogoCloudLockedUntilPointerLeave(false)
     }
   }, [isCloud])
 
@@ -101,22 +101,18 @@ export function ConsoleHeaderLogo({ className }: { className?: string }) {
     const parent = rootRef.current?.parentElement
     if (!parent) return
 
-    // Do not clear suppress on mount using `:hover` - after SPA navigation the
-    // new link often does not match `:hover` for a frame even while the pointer
-    // is still over the logo, which incorrectly re-enabled the cloud flip.
+    const lockCloud = () => setLogoCloudLockedUntilPointerLeave(true)
+    const unlockCloud = () => setLogoCloudLockedUntilPointerLeave(false)
 
-    const armSuppress = () => setSuppressLogoHoverFlipUntilLeave(true)
-    const clearSuppress = () => setSuppressLogoHoverFlipUntilLeave(false)
-
-    parent.addEventListener('pointerdown', armSuppress)
-    parent.addEventListener('click', armSuppress)
-    parent.addEventListener('pointerleave', clearSuppress)
-    parent.addEventListener('pointercancel', clearSuppress)
+    parent.addEventListener('pointerdown', lockCloud)
+    parent.addEventListener('click', lockCloud)
+    parent.addEventListener('pointerleave', unlockCloud)
+    parent.addEventListener('pointercancel', unlockCloud)
     return () => {
-      parent.removeEventListener('pointerdown', armSuppress)
-      parent.removeEventListener('click', armSuppress)
-      parent.removeEventListener('pointerleave', clearSuppress)
-      parent.removeEventListener('pointercancel', clearSuppress)
+      parent.removeEventListener('pointerdown', lockCloud)
+      parent.removeEventListener('click', lockCloud)
+      parent.removeEventListener('pointerleave', unlockCloud)
+      parent.removeEventListener('pointercancel', unlockCloud)
     }
   }, [isCloud])
 
@@ -133,8 +129,8 @@ export function ConsoleHeaderLogo({ className }: { className?: string }) {
       <div
         className={cn(
           'absolute inset-0 flex items-center justify-center [transform-style:preserve-3d]',
-          flipSuppressed
-            ? '[transform:rotateY(0deg)] transition-none'
+          cloudLockedUntilLeave
+            ? '[transform:rotateY(180deg)] transition-none'
             : cn(
                 '[transform:rotateY(0deg)] transition-transform duration-300 ease-out',
                 'group-hover:[transform:rotateY(180deg)]',

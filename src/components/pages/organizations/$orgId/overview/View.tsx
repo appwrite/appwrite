@@ -78,7 +78,8 @@ import {
   canAccessOrgSettingsMembers,
   canAccessOrgSettingsBilling,
   canAccessOrgSettingsCompliance,
-  canAccessOrgSettingsOAuthOrApiKeys,
+  canShowOrgApiKeysSettings,
+  canShowOrgOAuthAppsSettings,
   getFirstAllowedOrgSettingsPath,
   canInviteOrgMember,
   canCreateProject,
@@ -503,9 +504,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         (settingsSubTab === 'compliance' &&
           canAccessOrgSettingsCompliance(access)) ||
         (settingsSubTab === 'oauth-apps' &&
-          canAccessOrgSettingsOAuthOrApiKeys(access)) ||
+          canShowOrgOAuthAppsSettings(access, features)) ||
         (settingsSubTab === 'api-keys' &&
-          canAccessOrgSettingsOAuthOrApiKeys(access))
+          canShowOrgApiKeysSettings(access, features))
       if (!allowed) {
         const firstAllowed = getFirstAllowedOrgSettingsPath(
           access,
@@ -2438,8 +2439,16 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                               return canAccessOrgSettingsBilling(access)
                             if (item.id === 'compliance')
                               return canAccessOrgSettingsCompliance(access)
-                            if (['oauth-apps', 'api-keys'].includes(item.id))
-                              return canAccessOrgSettingsOAuthOrApiKeys(access)
+                            if (item.id === 'oauth-apps')
+                              return canShowOrgOAuthAppsSettings(
+                                access,
+                                features,
+                              )
+                            if (item.id === 'api-keys')
+                              return canShowOrgApiKeysSettings(
+                                access,
+                                features,
+                              )
                             return true
                           })
                         : allNavItems
