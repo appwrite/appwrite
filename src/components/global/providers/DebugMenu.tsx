@@ -640,6 +640,20 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                   setDebugOverride('showSuccessTeamCard', checked)
                 },
               },
+              {
+                label: 'Functions local editor',
+                description:
+                  'Functions list “Local editor” button and /functions/editor (Monaco, gzip for deploy).',
+                variant: 'switch' as const,
+                switchValue: overrides.showFunctionsLocalEditor,
+                switchOnChange: (checked: boolean) => {
+                  setOverrides((prev) => ({
+                    ...prev,
+                    showFunctionsLocalEditor: checked,
+                  }))
+                  setDebugOverride('showFunctionsLocalEditor', checked)
+                },
+              },
             ],
           },
           (() => {
@@ -792,6 +806,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     overrides.showAIAssistant,
     overrides.showSuccessTeamCard,
     overrides.showFullscreenLoader,
+    overrides.showFunctionsLocalEditor,
     overrides.mockCloudStatusAlert,
     banners.length,
     actions,

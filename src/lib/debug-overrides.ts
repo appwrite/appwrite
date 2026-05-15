@@ -8,6 +8,7 @@ export const DEBUG_OVERRIDE_KEYS = {
   showSuccessTeamCard: 'debug:showSuccessTeamCard',
   mockCloudStatusAlert: 'debug:mockCloudStatusAlert',
   showFullscreenLoader: 'debug:showFullscreenLoader',
+  showFunctionsLocalEditor: 'debug:showFunctionsLocalEditor',
 } as const
 
 /** Overrides that are not persisted to localStorage (reset on reload). */
@@ -34,6 +35,11 @@ export type DebugOverrides = {
   mockCloudStatusAlert: MockCloudStatusAlert
   /** When true, the fullscreen loader is always shown (for preview). Default false. */
   showFullscreenLoader: boolean
+  /**
+   * When true, exposes the Functions “Local editor” entry and /functions/editor route
+   * (Monaco + gzip deploy prep). Default false.
+   */
+  showFunctionsLocalEditor: boolean
 }
 
 const isBrowser = typeof window !== 'undefined'
@@ -75,6 +81,10 @@ export function loadDebugOverrides(): DebugOverrides {
       'live',
     ),
     showFullscreenLoader: ephemeralOverrides.showFullscreenLoader ?? false,
+    showFunctionsLocalEditor: readBooleanFromStorage(
+      DEBUG_OVERRIDE_KEYS.showFunctionsLocalEditor,
+      false,
+    ),
   }
 }
 

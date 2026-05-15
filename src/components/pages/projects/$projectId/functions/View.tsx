@@ -54,6 +54,7 @@ import { PlanLimitWarning } from '../shared/PlanLimitWarning'
 import { resolveOrganizationPlanDisplayLabel } from '@/lib/utils/plan-filter'
 import { formatCronExpression } from './CronScheduleEditor'
 import { FunctionContextMenu } from './_components/FunctionContextMenu'
+import { useDebugOverrides } from '@/lib/debug-overrides'
 
 type FunctionsListSearch = {
   search?: string
@@ -437,7 +438,34 @@ export function View() {
   // Get organization plan to check limits
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
   const { features } = useConsoleProfile()
+  const { showFunctionsLocalEditor } = useDebugOverrides()
   const { access } = useOrganizationScopes(project?.teamId)
+
+  const localEditorBeforeCreateButtons = showFunctionsLocalEditor ? (
+    <TooltipProvider delayDuration={0}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 gap-1.5 text-[13px]"
+            asChild
+          >
+            <Link
+              to="/projects/$projectId/functions/editor"
+              params={{ projectId: projectId as string }}
+            >
+              <FileCode className="h-4 w-4" />
+              Local editor
+            </Link>
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">
+          <p>Edit code locally and prepare gzip for deployment</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  ) : undefined
 
   // Total count of all functions (without search) - for limit checking
   const totalFunctionsCount = totalFunctionsData?.total || 0
@@ -577,22 +605,7 @@ export function View() {
               teamId={project?.teamId}
             />
           }
-          beforeCreateButtons={
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9 gap-1.5 text-[13px]"
-              asChild
-            >
-              <Link
-                to="/projects/$projectId/functions/editor"
-                params={{ projectId: projectId as string }}
-              >
-                <FileCode className="h-4 w-4" />
-                Local editor
-              </Link>
-            </Button>
-          }
+          beforeCreateButtons={localEditorBeforeCreateButtons}
         />
         <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
           <div className="rounded-lg border border-border bg-card py-12 text-center">
@@ -623,31 +636,7 @@ export function View() {
             : undefined
         }
         fullWidthBorder
-        beforeCreateButtons={
-          <TooltipProvider delayDuration={0}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-9 gap-1.5 text-[13px]"
-                  asChild
-                >
-                  <Link
-                    to="/projects/$projectId/functions/editor"
-                    params={{ projectId: projectId as string }}
-                  >
-                    <FileCode className="h-4 w-4" />
-                    Local editor
-                  </Link>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">
-                <p>Edit code locally and prepare gzip for deployment</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        }
+        beforeCreateButtons={localEditorBeforeCreateButtons}
         showFilters
         filterTrigger={
           <FiltersPopover
