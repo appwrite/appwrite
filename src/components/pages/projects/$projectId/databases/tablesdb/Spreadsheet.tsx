@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils'
 import { getColumnIcon } from '@/lib/utils/column-icons'
 import { isTextType } from '@/lib/utils/database-columns'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { copyToClipboard } from '@/lib/utils/context-menu'
 import {
   Plus,
   Key,
@@ -142,6 +143,7 @@ import {
 import type { CompactFilterKey } from '@/lib/table-filters'
 import {
   deleteDatabaseTableRowColumnWidthsFromPrefs,
+  deleteTablesDbRowsListColumnsFromPrefs,
   getDatabaseTableRowColumnWidthsFromPrefs,
   mergeDatabaseTableRowColumnWidthsTableIntoPrefs,
   type UserPrefs,
@@ -269,6 +271,8 @@ const ROWS_TABLE_EDGE_COL_PX = 40
 const ROWS_DATA_COLUMN_DEFAULT_WIDTH_PX = 150
 const ROWS_DATA_COLUMN_MIN_WIDTH_PX = 72
 const ROWS_DATA_COLUMN_MAX_WIDTH_PX = 640
+/** System date columns default after all attribute columns in the rows grid. */
+const ROW_GRID_DEFAULT_DATE_KEYS = ['$createdAt', '$updatedAt'] as const
 /**
  * Same affordance as database `TableViewResizableLayout` / functions editor
  * `ResizableHandle`: hairline (`after`) + wider `before` strip on hover/drag.
@@ -2733,6 +2737,8 @@ export interface SpreadsheetProps {
     limit?: number
     sort?: string
   }) => void
+  /** Account-persisted column order and visibility (system keys + attributes). Null = default. */
+  rowsListSelectAttrKeys?: string[] | null
   /** When provided (e.g. from table view header), used for client-side filtering instead of URL */
   filterMap?: Map<CompactFilterKey, string>
 }
@@ -2753,6 +2759,7 @@ export function RowsSpreadsheet({
   rowsSortBy = '$createdAt',
   rowsSortOrder = 'desc',
   onNavigateToRowsList,
+  rowsListSelectAttrKeys,
 }: SpreadsheetProps) {
   const params = useParams({
     strict: false,
@@ -2910,6 +2917,37 @@ export function RowsSpreadsheet({
   >(null)
   const openCreateRowFnRef = useRef<(() => void) | null>(null)
   const openCreateColumnFnRef = useRef<(() => void) | null>(null)
+  const [copiedColumnHeaderKey, setCopiedColumnHeaderKey] = useState<
+    string | null
+  >(null)
+  const copiedColumnHeaderClearRef = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null)
+
+  const copyColumnHeaderName = useCallback(async (name: string) => {
+    const ok = await copyToClipboard('Column name', name, {
+      showToast: false,
+    })
+    if (!ok) return
+    if (copiedColumnHeaderClearRef.current) {
+      clearTimeout(copiedColumnHeaderClearRef.current)
+    }
+    setCopiedColumnHeaderKey(name)
+    copiedColumnHeaderClearRef.current = setTimeout(() => {
+      setCopiedColumnHeaderKey(null)
+      copiedColumnHeaderClearRef.current = null
+    }, 2000)
+  }, [])
+
+  const SequenceHeaderIcon = getColumnIcon('integer')
+
+  useEffect(() => {
+    return () => {
+      if (copiedColumnHeaderClearRef.current) {
+        clearTimeout(copiedColumnHeaderClearRef.current)
+      }
+    }
+  }, [])
 
   const queryClient = useQueryClient()
   const { account } = useAuth()
@@ -3011,6 +3049,7 @@ export function RowsSpreadsheet({
     sortOrder,
     sortBy,
     effectiveFilterQueries,
+    rowsListSelectAttrKeys,
   )
 
   const {
@@ -3027,6 +3066,7 @@ export function RowsSpreadsheet({
     displayedSortOrder,
     displayedSortBy,
     effectiveDisplayedFilterQueries,
+    rowsListSelectAttrKeys,
   )
 
   useEffect(() => {
@@ -3179,8 +3219,14 @@ export function RowsSpreadsheet({
 
   // Check if table has relationship columns
   const hasRelationshipColumns = apiColumns.some(
-    (col: unknown) => col.type === 'relationship',
+    (col: unknown) => (col as { type?: string }).type === 'relationship',
   )
+
+  const rowDataKeysFallback = useMemo((): string[] => {
+    const first = apiRows[0] as Record<string, unknown> | undefined
+    if (!first) return []
+    return Object.keys(first).filter((k) => !k.startsWith('$'))
+  }, [apiRows])
 
   // Map API rows to RowData format (normalize array columns: comma-separated string → array)
   const rows: RowData[] = apiRows.map((row: unknown, index: number) => {
@@ -3219,14 +3265,78 @@ export function RowsSpreadsheet({
     }
   })
 
-  // Get column names from API columns or from first row (documents list: attributes only in JSON editor)
-  const columns = useInlineDocumentPane
-    ? []
-    : apiColumns.length > 0
-      ? apiColumns.map((col: unknown) => col.key || col.name || col.$id)
-      : rows[0]
-        ? Object.keys(rows[0].data)
-        : []
+  const schemaColumnKeys = useMemo((): string[] => {
+    if (useInlineDocumentPane) return []
+    if (apiColumns.length > 0) {
+      return apiColumns
+        .map((col: unknown) => {
+          const c = col as { key?: string; name?: string; $id?: string }
+          return c.key || c.name || c.$id
+        })
+        .filter(
+          (k): k is string =>
+            typeof k === 'string' && k.length > 0 && !k.startsWith('$'),
+        )
+    }
+    return rowDataKeysFallback
+  }, [useInlineDocumentPane, apiColumns, rowDataKeysFallback])
+
+  const defaultLeadingSystemKeys = useMemo((): string[] => {
+    if (hideSequenceColumn) return ['$id']
+    return ['$sequence', '$id']
+  }, [hideSequenceColumn])
+
+  const visibleRowGridKeys = useMemo((): string[] => {
+    if (useInlineDocumentPane) return []
+    const schemaSet = new Set(schemaColumnKeys)
+    const isAllowedKey = (k: string) =>
+      defaultLeadingSystemKeys.includes(k) ||
+      k === '$createdAt' ||
+      k === '$updatedAt' ||
+      schemaSet.has(k)
+
+    if (!rowsListSelectAttrKeys?.length) {
+      return [
+        ...defaultLeadingSystemKeys,
+        ...schemaColumnKeys,
+        ...ROW_GRID_DEFAULT_DATE_KEYS,
+      ]
+    }
+
+    const hasSystemInPrefs = rowsListSelectAttrKeys.some((k) =>
+      k.startsWith('$'),
+    )
+    if (!hasSystemInPrefs) {
+      return [
+        ...defaultLeadingSystemKeys,
+        ...rowsListSelectAttrKeys.filter((k) => schemaSet.has(k)),
+        ...ROW_GRID_DEFAULT_DATE_KEYS,
+      ]
+    }
+
+    const seen = new Set<string>()
+    return rowsListSelectAttrKeys.filter((k) => {
+      if (!isAllowedKey(k) || seen.has(k)) return false
+      seen.add(k)
+      return true
+    })
+  }, [
+    useInlineDocumentPane,
+    rowsListSelectAttrKeys,
+    schemaColumnKeys,
+    defaultLeadingSystemKeys,
+  ])
+
+  const columns = useMemo((): string[] => {
+    if (useInlineDocumentPane) return []
+    const schemaSet = new Set(schemaColumnKeys)
+    return visibleRowGridKeys.filter((k) => schemaSet.has(k))
+  }, [useInlineDocumentPane, visibleRowGridKeys, schemaColumnKeys])
+
+  const rowGridLayoutKey = useMemo(
+    () => visibleRowGridKeys.join('\u0001'),
+    [visibleRowGridKeys],
+  )
 
   const columnsRef = useRef(columns)
   columnsRef.current = columns
@@ -3475,8 +3585,8 @@ export function RowsSpreadsheet({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- columns array identity changes every render
   }, [
     columnResizeLayoutKey,
+    rowGridLayoutKey,
     rowColumnWidths,
-    hideSequenceColumn,
     useInlineDocumentPane,
     apiColumns.length,
     repositionDataColumnRailsOnly,
@@ -4436,7 +4546,8 @@ export function RowsSpreadsheet({
           <table
             className={cn(
               'w-full border-collapse',
-              (useInlineDocumentPane || columns.length > 0) && 'table-fixed',
+              (useInlineDocumentPane || visibleRowGridKeys.length > 0) &&
+                'table-fixed',
             )}
           >
           <colgroup>
@@ -4451,42 +4562,44 @@ export function RowsSpreadsheet({
                   : { width: '40px' }
               }
             />
-            {!hideSequenceColumn ? (
-              <col style={{ width: '64px' }} />
-            ) : null}
-            <col
-              style={
-                useInlineDocumentPane
-                  ? { minWidth: 180 }
-                  : { width: '180px' }
+            {visibleRowGridKeys.map((gridKey) => {
+              if (gridKey === '$sequence') {
+                return (
+                  <col
+                    key="col-$sequence"
+                    style={{ width: '72px', minWidth: '72px' }}
+                  />
+                )
               }
-            />
-            {columns.map((col: string, index: number) => {
-              const w =
-                typeof col === 'string' && !col.startsWith('$')
-                  ? getDataColumnWidthPx(col)
-                  : ROWS_DATA_COLUMN_DEFAULT_WIDTH_PX
-              const isDragResize =
-                typeof col === 'string' &&
-                !col.startsWith('$') &&
-                resizingDataColumnKey === col
+              if (
+                gridKey === '$id' ||
+                gridKey === '$createdAt' ||
+                gridKey === '$updatedAt'
+              ) {
+                return (
+                  <col
+                    key={`col-${gridKey}`}
+                    style={
+                      useInlineDocumentPane
+                        ? { minWidth: 180 }
+                        : { width: '180px' }
+                    }
+                  />
+                )
+              }
+              const w = getDataColumnWidthPx(gridKey)
+              const isDragResize = resizingDataColumnKey === gridKey
               return (
                 <col
-                  key={`col-${col}-${index}`}
+                  key={`col-${gridKey}`}
                   ref={(node) => {
-                    if (typeof col === 'string' && !col.startsWith('$')) {
-                      if (node) dataColumnColRefs.current.set(col, node)
-                      else dataColumnColRefs.current.delete(col)
-                    }
+                    if (node) dataColumnColRefs.current.set(gridKey, node)
+                    else dataColumnColRefs.current.delete(gridKey)
                   }}
-                  style={
-                    isDragResize ? undefined : { width: w, minWidth: w }
-                  }
+                  style={isDragResize ? undefined : { width: w, minWidth: w }}
                 />
               )
             })}
-            <col style={{ width: '180px' }} />
-            <col style={{ width: '180px' }} />
             <col
               style={
                 useInlineDocumentPane
@@ -4528,52 +4641,153 @@ export function RowsSpreadsheet({
                   />
                 </div>
               </th>
-              {!hideSequenceColumn ? (
-                <th
-                  className={cn(
-                    'w-16 px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground',
-                    headerCellBorderClass,
-                  )}
-                >
-                  #
-                </th>
-              ) : null}
-              <th className={cn('w-[180px] px-3 py-2', headerCellBorderClass)}>
-                <div className="flex items-center gap-2">
-                  <Fingerprint className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                  <span className="text-[12px] font-medium text-foreground">
-                    $id
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => handleSortColumn('$id')}
-                    className="ml-auto cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  >
-                    {sortBy === '$id' ? (
-                      sortOrder === 'asc' ? (
-                        <ArrowUp className="h-3 w-3 shrink-0 text-foreground" />
-                      ) : (
-                        <ArrowDown className="h-3 w-3 shrink-0 text-foreground" />
-                      )
-                    ) : (
-                      <ArrowUpDown className="h-3 w-3 shrink-0 text-muted-foreground" />
-                    )}
-                  </button>
-                </div>
-              </th>
-              {columns.map((col: string) => {
-                // Get column info to determine icon
+              {visibleRowGridKeys.map((gridKey) => {
+                if (gridKey === '$sequence') {
+                  return (
+                    <th
+                      key="th-$sequence"
+                      className={cn(
+                        'w-[72px] min-w-[72px] px-2 py-2 text-left',
+                        headerCellBorderClass,
+                      )}
+                    >
+                      <div className="flex min-w-0 items-center gap-1.5">
+                        <SequenceHeaderIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                        <button
+                          type="button"
+                          aria-label="Copy column name: $sequence"
+                          onClick={() => void copyColumnHeaderName('$sequence')}
+                          className="group inline-flex min-w-0 flex-1 items-center gap-0.5 rounded px-0.5 -mx-0.5 py-0 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground cursor-pointer transition-colors hover:bg-muted/80 hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        >
+                          <span className="min-w-0 truncate">#</span>
+                          {copiedColumnHeaderKey === '$sequence' ? (
+                            <Check
+                              className="h-3 w-3 shrink-0 text-green-600"
+                              aria-hidden
+                            />
+                          ) : (
+                            <Copy
+                              className="h-3 w-3 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-70 group-focus-visible:opacity-70"
+                              aria-hidden
+                            />
+                          )}
+                        </button>
+                      </div>
+                    </th>
+                  )
+                }
+
+                if (gridKey === '$id') {
+                  return (
+                    <th
+                      key="th-$id"
+                      className={cn('w-[180px] px-3 py-2', headerCellBorderClass)}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Fingerprint className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                        <button
+                          type="button"
+                          aria-label="Copy column name: $id"
+                          onClick={() => void copyColumnHeaderName('$id')}
+                          className="group inline-flex min-w-0 max-w-full items-center gap-1 truncate rounded px-0.5 -mx-0.5 py-0 text-left text-[12px] font-medium text-foreground cursor-pointer transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        >
+                          <span className="min-w-0 truncate">$id</span>
+                          {copiedColumnHeaderKey === '$id' ? (
+                            <Check
+                              className="h-3 w-3 shrink-0 text-green-600"
+                              aria-hidden
+                            />
+                          ) : (
+                            <Copy
+                              className="h-3 w-3 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-70 group-focus-visible:opacity-70"
+                              aria-hidden
+                            />
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSortColumn('$id')}
+                          className="ml-auto cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        >
+                          {sortBy === '$id' ? (
+                            sortOrder === 'asc' ? (
+                              <ArrowUp className="h-3 w-3 shrink-0 text-foreground" />
+                            ) : (
+                              <ArrowDown className="h-3 w-3 shrink-0 text-foreground" />
+                            )
+                          ) : (
+                            <ArrowUpDown className="h-3 w-3 shrink-0 text-muted-foreground" />
+                          )}
+                        </button>
+                      </div>
+                    </th>
+                  )
+                }
+
+                if (gridKey === '$createdAt' || gridKey === '$updatedAt') {
+                  return (
+                    <th
+                      key={`th-${gridKey}`}
+                      className={cn('w-[180px] px-3 py-2', headerCellBorderClass)}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                        <button
+                          type="button"
+                          aria-label={`Copy column name: ${gridKey}`}
+                          onClick={() => void copyColumnHeaderName(gridKey)}
+                          className="group inline-flex min-w-0 max-w-full items-center gap-1 truncate rounded px-0.5 -mx-0.5 py-0 text-left text-[12px] font-medium text-foreground cursor-pointer transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        >
+                          <span className="min-w-0 truncate">{gridKey}</span>
+                          {copiedColumnHeaderKey === gridKey ? (
+                            <Check
+                              className="h-3 w-3 shrink-0 text-green-600"
+                              aria-hidden
+                            />
+                          ) : (
+                            <Copy
+                              className="h-3 w-3 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-70 group-focus-visible:opacity-70"
+                              aria-hidden
+                            />
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSortColumn(gridKey)}
+                          className="ml-auto cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        >
+                          {sortBy === gridKey ? (
+                            sortOrder === 'asc' ? (
+                              <ArrowUp className="h-3 w-3 shrink-0 text-chart-brand" />
+                            ) : (
+                              <ArrowDown className="h-3 w-3 shrink-0 text-chart-brand" />
+                            )
+                          ) : (
+                            <ArrowUpDown className="h-3 w-3 shrink-0 text-muted-foreground" />
+                          )}
+                        </button>
+                      </div>
+                    </th>
+                  )
+                }
+
+                const col = gridKey
                 const columnInfo = apiColumns.find((c: unknown) => {
+                  const rec = c as Record<string, unknown>
                   const colKey =
-                    c.key || c.name || c.$id || c.attribute || c.attributeId
+                    rec.key ||
+                    rec.name ||
+                    rec.$id ||
+                    rec.attribute ||
+                    rec.attributeId
                   return colKey === col
                 })
-                const columnType = columnInfo?.type || 'string'
+                const columnType =
+                  (columnInfo as { type?: string } | undefined)?.type ||
+                  'string'
                 const ColumnIcon = getColumnIcon(columnType)
-                const isDragResize =
-                  typeof col === 'string' &&
-                  !col.startsWith('$') &&
-                  resizingDataColumnKey === col
+                const isDragResize = resizingDataColumnKey === col
+                const isCopiedHeader = copiedColumnHeaderKey === col
                 return (
                   <th
                     key={col}
@@ -4596,13 +4810,30 @@ export function RowsSpreadsheet({
                   >
                     <div className="flex min-w-0 items-center gap-2 pr-1.5">
                       <ColumnIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                      <span className="min-w-0 truncate text-[12px] font-medium text-foreground">
-                        {col}
-                      </span>
+                      <button
+                        type="button"
+                        aria-label={`Copy column name: ${col}`}
+                        onClick={() => void copyColumnHeaderName(col)}
+                        className="group inline-flex max-w-full min-w-0 shrink items-center gap-1 overflow-hidden rounded px-0.5 -mx-0.5 py-0 text-left text-[12px] font-medium text-foreground cursor-pointer transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      >
+                        <span className="min-w-0 truncate">{col}</span>
+                        {isCopiedHeader ? (
+                          <Check
+                            className="h-3 w-3 shrink-0 text-green-600"
+                            aria-hidden
+                          />
+                        ) : (
+                          <Copy
+                            className="h-3 w-3 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-70 group-focus-visible:opacity-70"
+                            aria-hidden
+                          />
+                        )}
+                      </button>
+                      <span className="min-w-0 flex-1 shrink" aria-hidden />
                       <button
                         type="button"
                         onClick={() => handleSortColumn(col)}
-                        className="ml-auto shrink-0 cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        className="shrink-0 cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                       >
                         {sortBy === col ? (
                           sortOrder === 'asc' ? (
@@ -4618,52 +4849,6 @@ export function RowsSpreadsheet({
                   </th>
                 )
               })}
-              <th className={cn('w-[180px] px-3 py-2', headerCellBorderClass)}>
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                  <span className="text-[12px] font-medium text-foreground">
-                    $createdAt
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => handleSortColumn('$createdAt')}
-                    className="ml-auto cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  >
-                    {sortBy === '$createdAt' ? (
-                      sortOrder === 'asc' ? (
-                        <ArrowUp className="h-3 w-3 shrink-0 text-chart-brand" />
-                      ) : (
-                        <ArrowDown className="h-3 w-3 shrink-0 text-chart-brand" />
-                      )
-                    ) : (
-                      <ArrowUpDown className="h-3 w-3 shrink-0 text-muted-foreground" />
-                    )}
-                  </button>
-                </div>
-              </th>
-              <th className={cn('w-[180px] px-3 py-2', headerCellBorderClass)}>
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                  <span className="text-[12px] font-medium text-foreground">
-                    $updatedAt
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => handleSortColumn('$updatedAt')}
-                    className="ml-auto cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  >
-                    {sortBy === '$updatedAt' ? (
-                      sortOrder === 'asc' ? (
-                        <ArrowUp className="h-3 w-3 shrink-0 text-chart-brand" />
-                      ) : (
-                        <ArrowDown className="h-3 w-3 shrink-0 text-chart-brand" />
-                      )
-                    ) : (
-                      <ArrowUpDown className="h-3 w-3 shrink-0 text-muted-foreground" />
-                    )}
-                  </button>
-                </div>
-              </th>
               <th
                 className={cn(
                   'relative sticky right-0 z-30 bg-background p-0',
@@ -4780,115 +4965,149 @@ export function RowsSpreadsheet({
                       />
                     </div>
                   </td>
-                  {!hideSequenceColumn ? (
-                    <td
-                      className={cn('px-3 py-1.5', bodyCellBorderClass)}
-                      data-column="$sequence"
-                    >
-                      <span className="text-[12px] text-muted-foreground">
-                        {row.$sequence ?? row.rowNumber}
-                      </span>
-                    </td>
-                  ) : null}
-                  <td
-                    className={cn(
-                      'w-[180px] px-3 py-1.5',
-                      bodyCellBorderClass,
-                    )}
-                    data-column="$id"
-                  >
-                    <CopyableId id={row.$id} size="xs" />
-                  </td>
-                  {columns.map((col: string) => (
-                    <td
-                      key={col}
-                      className={cn('px-3 py-1.5', bodyCellBorderClass)}
-                      data-column={col}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleCellClick(row, col)
-                      }}
-                    >
-                      {(() => {
-                        const { full, display, isNull } = formatCellValue(
-                          row.data[col as keyof typeof row.data] as
-                          | string
-                          | number
-                          | boolean
-                          | unknown[]
-                          | Record<string, unknown>
-                          | null
-                          | undefined,
-                        )
-                        // Only apply RTL detection to string values
-                        const cellValue = row.data[col as keyof typeof row.data]
-                        const isRTLContent =
-                          typeof cellValue === 'string'
-                            ? isRTL(cellValue)
-                            : false
-                        return (
-                          <span
-                            className={cn(
-                              'block min-w-0 max-w-full truncate whitespace-nowrap text-[12px]',
-                              isNull ? 'text-foreground/60' : 'text-foreground',
-                            )}
-                            title={full}
-                            dir={isRTLContent ? 'rtl' : 'ltr'}
-                          >
-                            {display}
+                  {visibleRowGridKeys.map((gridKey) => {
+                    if (gridKey === '$sequence') {
+                      return (
+                        <td
+                          key="td-$sequence"
+                          className={cn('px-3 py-1.5', bodyCellBorderClass)}
+                          data-column="$sequence"
+                        >
+                          <span className="text-[12px] text-muted-foreground">
+                            {row.$sequence ?? row.rowNumber}
                           </span>
-                        )
-                      })()}
-                    </td>
-                  ))}
-                  <td
-                    className={cn('w-[180px] px-3 py-1.5', bodyCellBorderClass)}
-                    data-column="$createdAt"
-                  >
-                    {row.$createdAt ? (
-                      useInlineDocumentPane ? (
-                        <span className="text-[12px] text-muted-foreground">
-                          {new Date(row.$createdAt).toLocaleString(undefined, {
-                            dateStyle: 'short',
-                            timeStyle: 'short',
-                          })}
-                        </span>
-                      ) : (
-                        <DateTooltip
-                          date={new Date(row.$createdAt)}
-                          className="text-[12px] text-muted-foreground"
-                        />
+                        </td>
                       )
-                    ) : (
-                      <span className="text-[12px] text-foreground/60">
-                        N/A
-                      </span>
-                    )}
-                  </td>
-                  <td
-                    className={cn('w-[180px] px-3 py-1.5', bodyCellBorderClass)}
-                    data-column="$updatedAt"
-                  >
-                    {row.$updatedAt ? (
-                      useInlineDocumentPane ? (
-                        <span className="text-[12px] text-muted-foreground">
-                          {new Date(row.$updatedAt).toLocaleString(undefined, {
-                            dateStyle: 'short',
-                            timeStyle: 'short',
-                          })}
-                        </span>
-                      ) : (
-                        <DateTooltip
-                          date={new Date(row.$updatedAt)}
-                          className="text-[12px] text-muted-foreground"
-                        />
+                    }
+                    if (gridKey === '$id') {
+                      return (
+                        <td
+                          key="td-$id"
+                          className={cn(
+                            'w-[180px] px-3 py-1.5',
+                            bodyCellBorderClass,
+                          )}
+                          data-column="$id"
+                        >
+                          <CopyableId id={row.$id} size="xs" />
+                        </td>
                       )
-                    ) : (
-                      <span className="text-[12px] text-foreground/60">
-                        N/A
-                      </span>
-                    )}
-                  </td>
+                    }
+                    if (gridKey === '$createdAt') {
+                      return (
+                        <td
+                          key="td-$createdAt"
+                          className={cn(
+                            'w-[180px] px-3 py-1.5',
+                            bodyCellBorderClass,
+                          )}
+                          data-column="$createdAt"
+                        >
+                          {row.$createdAt ? (
+                            useInlineDocumentPane ? (
+                              <span className="text-[12px] text-muted-foreground">
+                                {new Date(row.$createdAt).toLocaleString(
+                                  undefined,
+                                  {
+                                    dateStyle: 'short',
+                                    timeStyle: 'short',
+                                  },
+                                )}
+                              </span>
+                            ) : (
+                              <DateTooltip
+                                date={new Date(row.$createdAt)}
+                                className="text-[12px] text-muted-foreground"
+                              />
+                            )
+                          ) : (
+                            <span className="text-[12px] text-foreground/60">
+                              N/A
+                            </span>
+                          )}
+                        </td>
+                      )
+                    }
+                    if (gridKey === '$updatedAt') {
+                      return (
+                        <td
+                          key="td-$updatedAt"
+                          className={cn(
+                            'w-[180px] px-3 py-1.5',
+                            bodyCellBorderClass,
+                          )}
+                          data-column="$updatedAt"
+                        >
+                          {row.$updatedAt ? (
+                            useInlineDocumentPane ? (
+                              <span className="text-[12px] text-muted-foreground">
+                                {new Date(row.$updatedAt).toLocaleString(
+                                  undefined,
+                                  {
+                                    dateStyle: 'short',
+                                    timeStyle: 'short',
+                                  },
+                                )}
+                              </span>
+                            ) : (
+                              <DateTooltip
+                                date={new Date(row.$updatedAt)}
+                                className="text-[12px] text-muted-foreground"
+                              />
+                            )
+                          ) : (
+                            <span className="text-[12px] text-foreground/60">
+                              N/A
+                            </span>
+                          )}
+                        </td>
+                      )
+                    }
+
+                    const col = gridKey
+                    return (
+                      <td
+                        key={col}
+                        className={cn('px-3 py-1.5', bodyCellBorderClass)}
+                        data-column={col}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleCellClick(row, col)
+                        }}
+                      >
+                        {(() => {
+                          const { full, display, isNull } = formatCellValue(
+                            row.data[col as keyof typeof row.data] as
+                              | string
+                              | number
+                              | boolean
+                              | unknown[]
+                              | Record<string, unknown>
+                              | null
+                              | undefined,
+                          )
+                          const cellValue =
+                            row.data[col as keyof typeof row.data]
+                          const isRTLContent =
+                            typeof cellValue === 'string'
+                              ? isRTL(cellValue)
+                              : false
+                          return (
+                            <span
+                              className={cn(
+                                'block min-w-0 max-w-full truncate whitespace-nowrap text-[12px]',
+                                isNull ? 'text-foreground/60' : 'text-foreground',
+                              )}
+                              title={full}
+                              dir={isRTLContent ? 'rtl' : 'ltr'}
+                            >
+                              {display}
+                            </span>
+                          )
+                        })()}
+                      </td>
+                    )
+                  })}
                   <td
                     className={cn(
                       'sticky right-0 border-b border-border p-0',
@@ -8020,9 +8239,14 @@ export function TableSettings({
     onSuccess: async () => {
       try {
         const acct = await sdk.forConsole.account.get()
+        const prefsAfterWidths = deleteDatabaseTableRowColumnWidthsFromPrefs(
+          (acct.prefs || {}) as UserPrefs,
+          databaseId,
+          tableId,
+        )
         await sdk.forConsole.account.updatePrefs({
-          prefs: deleteDatabaseTableRowColumnWidthsFromPrefs(
-            (acct.prefs || {}) as UserPrefs,
+          prefs: deleteTablesDbRowsListColumnsFromPrefs(
+            prefsAfterWidths,
             databaseId,
             tableId,
           ),

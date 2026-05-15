@@ -4,7 +4,7 @@
  * Handles auth limits, sessions, passwords, and MFA.
  */
 
-import { useCallback } from 'react'
+import { useCallback, useMemo } from 'react'
 import {
   useMutation,
   useQuery,
@@ -29,7 +29,9 @@ import {
   clearRecentImpersonationSessionList,
   mergeRecentImpersonationIntoAccountPrefs,
   mergeRecentImpersonationLists,
+  mergeTablesDbRowsListColumnsIntoPrefs,
   parseRecentImpersonationUsers,
+  parseTablesDbRowsListColumnsFromPrefs,
   readRecentImpersonationSessionList,
   type UserPrefs,
 } from '@/lib/user-prefs-keys'
@@ -1045,6 +1047,55 @@ export function useSavedFilters(
     isAdding: addUserMutation.isPending || addTeamMutation.isPending,
     isDeleting: deleteUserMutation.isPending || deleteTeamMutation.isPending,
     hasTeamLevel: !!teamId,
+  }
+}
+
+/**
+ * Tables DB row grid: ordered column keys (system fields + attributes) for display;
+ * non-`$` keys are passed to `Query.select` (see `buildRowListSelectQuery`).
+ * Account prefs key `console.tablesDb.rowsListColumns.<databaseId>.<tableId>`.
+ * Use within RequireAuth (account required).
+ */
+export function useTablesDbRowsListColumns(
+  databaseId: string | null | undefined,
+  tableId: string | null | undefined,
+  account: { prefs?: Record<string, unknown> } | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  const savedAttrKeys = useMemo(() => {
+    if (!databaseId || !tableId || !account?.prefs) return null
+    return parseTablesDbRowsListColumnsFromPrefs(
+      account.prefs as UserPrefs,
+      databaseId,
+      tableId,
+    )
+  }, [account?.prefs, databaseId, tableId])
+
+  const persistMutation = useMutation({
+    mutationFn: async (keys: string[] | null) => {
+      const currentAccount = getConsoleAccountFromCache(queryClient)
+      if (!currentAccount || !databaseId || !tableId) {
+        throw new Error('Account or table context unavailable')
+      }
+      return await updateAccountPrefs(
+        mergeTablesDbRowsListColumnsIntoPrefs(
+          (currentAccount.prefs || {}) as UserPrefs,
+          databaseId,
+          tableId,
+          keys,
+        ),
+      )
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    },
+  })
+
+  return {
+    savedAttrKeys,
+    persistAttrKeys: persistMutation.mutateAsync,
+    isPersisting: persistMutation.isPending,
   }
 }
 

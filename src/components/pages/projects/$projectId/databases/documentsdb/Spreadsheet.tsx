@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils'
 import { getColumnIcon } from '@/lib/utils/column-icons'
 import { isTextType } from '@/lib/utils/database-columns'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { copyToClipboard } from '@/lib/utils/context-menu'
 import {
   Plus,
   Key,
@@ -2868,6 +2869,38 @@ export function RowsSpreadsheet({
   const [contextCellColumnKey, setContextCellColumnKey] = useState<
     string | null
   >(null)
+  const [copiedColumnHeaderKey, setCopiedColumnHeaderKey] = useState<
+    string | null
+  >(null)
+  const copiedColumnHeaderClearRef = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null)
+
+  const copyColumnHeaderName = useCallback(async (name: string) => {
+    const ok = await copyToClipboard('Column name', name, {
+      showToast: false,
+    })
+    if (!ok) return
+    if (copiedColumnHeaderClearRef.current) {
+      clearTimeout(copiedColumnHeaderClearRef.current)
+    }
+    setCopiedColumnHeaderKey(name)
+    copiedColumnHeaderClearRef.current = setTimeout(() => {
+      setCopiedColumnHeaderKey(null)
+      copiedColumnHeaderClearRef.current = null
+    }, 2000)
+  }, [])
+
+  const SequenceHeaderIcon = getColumnIcon('integer')
+
+  useEffect(() => {
+    return () => {
+      if (copiedColumnHeaderClearRef.current) {
+        clearTimeout(copiedColumnHeaderClearRef.current)
+      }
+    }
+  }, [])
+
   const openCreateRowFnRef = useRef<(() => void) | null>(null)
 
   const queryClient = useQueryClient()
@@ -4005,7 +4038,7 @@ export function RowsSpreadsheet({
               }
             />
             {!hideSequenceColumn ? (
-              <col style={{ width: '64px' }} />
+              <col style={{ width: '72px', minWidth: '72px' }} />
             ) : null}
             <col
               style={
@@ -4063,19 +4096,58 @@ export function RowsSpreadsheet({
               {!hideSequenceColumn ? (
                 <th
                   className={cn(
-                    'w-16 px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground',
+                    'w-[72px] min-w-[72px] px-2 py-2 text-left',
                     headerCellBorderClass,
                   )}
                 >
-                  #
+                  <div className="flex min-w-0 items-center gap-1.5">
+                    <SequenceHeaderIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <button
+                      type="button"
+                      aria-label="Copy column name: $sequence"
+                      onClick={() => void copyColumnHeaderName('$sequence')}
+                      className="group inline-flex min-w-0 flex-1 items-center gap-0.5 rounded px-0.5 -mx-0.5 py-0 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground cursor-pointer transition-colors hover:bg-muted/80 hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    >
+                      <span className="min-w-0 truncate">#</span>
+                      {copiedColumnHeaderKey === '$sequence' ? (
+                        <Check
+                          className="h-3 w-3 shrink-0 text-green-600"
+                          aria-hidden
+                        />
+                      ) : (
+                        <Copy
+                          className="h-3 w-3 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-70 group-focus-visible:opacity-70"
+                          aria-hidden
+                        />
+                      )}
+                    </button>
+                  </div>
                 </th>
               ) : null}
               <th className={cn('w-[180px] px-3 py-2', headerCellBorderClass)}>
                 <div className="flex items-center gap-2">
                   <Fingerprint className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                  <span className="text-[12px] font-medium text-foreground">
-                    $id
-                  </span>
+                  <button
+                    type="button"
+                    aria-label="Copy column name: $id"
+                    onClick={() => void copyColumnHeaderName('$id')}
+                    className="group inline-flex min-w-0 max-w-full items-center gap-1 truncate rounded px-0.5 -mx-0.5 py-0 text-left text-[12px] font-medium text-foreground cursor-pointer transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  >
+                    <span className="min-w-0 truncate">
+                      $id
+                    </span>
+                    {copiedColumnHeaderKey === '$id' ? (
+                      <Check
+                        className="h-3 w-3 shrink-0 text-green-600"
+                        aria-hidden
+                      />
+                    ) : (
+                      <Copy
+                        className="h-3 w-3 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-70 group-focus-visible:opacity-70"
+                        aria-hidden
+                      />
+                    )}
+                  </button>
                   <button
                     type="button"
                     onClick={() => handleSortColumn('$id')}
@@ -4102,6 +4174,7 @@ export function RowsSpreadsheet({
                 })
                 const columnType = columnInfo?.type || 'string'
                 const ColumnIcon = getColumnIcon(columnType)
+                const isCopiedHeader = copiedColumnHeaderKey === col
                 return (
                   <th
                     key={col}
@@ -4110,15 +4183,37 @@ export function RowsSpreadsheet({
                       headerCellBorderClass,
                     )}
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex min-w-0 items-center gap-2">
                       <ColumnIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                      <span className="text-[12px] font-medium text-foreground">
-                        {col}
-                      </span>
+                      <button
+                        type="button"
+                        aria-label={`Copy column name: ${col}`}
+                        onClick={() => void copyColumnHeaderName(col)}
+                        className="group inline-flex max-w-full min-w-0 shrink items-center gap-1 overflow-hidden rounded px-0.5 -mx-0.5 py-0 text-left text-[12px] font-medium text-foreground cursor-pointer transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      >
+                        <span className="min-w-0 truncate">
+                          {col}
+                        </span>
+                        {isCopiedHeader ? (
+                          <Check
+                            className="h-3 w-3 shrink-0 text-green-600"
+                            aria-hidden
+                          />
+                        ) : (
+                          <Copy
+                            className="h-3 w-3 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-70 group-focus-visible:opacity-70"
+                            aria-hidden
+                          />
+                        )}
+                      </button>
+                      <span
+                        className="min-w-0 flex-1 shrink"
+                        aria-hidden
+                      />
                       <button
                         type="button"
                         onClick={() => handleSortColumn(col)}
-                        className="ml-auto cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        className="shrink-0 cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                       >
                         {sortBy === col ? (
                           sortOrder === 'asc' ? (
@@ -4137,9 +4232,27 @@ export function RowsSpreadsheet({
               <th className={cn('w-[180px] px-3 py-2', headerCellBorderClass)}>
                 <div className="flex items-center gap-2">
                   <Calendar className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                  <span className="text-[12px] font-medium text-foreground">
-                    $createdAt
-                  </span>
+                  <button
+                    type="button"
+                    aria-label="Copy column name: $createdAt"
+                    onClick={() => void copyColumnHeaderName('$createdAt')}
+                    className="group inline-flex min-w-0 max-w-full items-center gap-1 truncate rounded px-0.5 -mx-0.5 py-0 text-left text-[12px] font-medium text-foreground cursor-pointer transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  >
+                    <span className="min-w-0 truncate">
+                      $createdAt
+                    </span>
+                    {copiedColumnHeaderKey === '$createdAt' ? (
+                      <Check
+                        className="h-3 w-3 shrink-0 text-green-600"
+                        aria-hidden
+                      />
+                    ) : (
+                      <Copy
+                        className="h-3 w-3 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-70 group-focus-visible:opacity-70"
+                        aria-hidden
+                      />
+                    )}
+                  </button>
                   <button
                     type="button"
                     onClick={() => handleSortColumn('$createdAt')}
@@ -4160,9 +4273,27 @@ export function RowsSpreadsheet({
               <th className={cn('w-[180px] px-3 py-2', headerCellBorderClass)}>
                 <div className="flex items-center gap-2">
                   <Calendar className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                  <span className="text-[12px] font-medium text-foreground">
-                    $updatedAt
-                  </span>
+                  <button
+                    type="button"
+                    aria-label="Copy column name: $updatedAt"
+                    onClick={() => void copyColumnHeaderName('$updatedAt')}
+                    className="group inline-flex min-w-0 max-w-full items-center gap-1 truncate rounded px-0.5 -mx-0.5 py-0 text-left text-[12px] font-medium text-foreground cursor-pointer transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  >
+                    <span className="min-w-0 truncate">
+                      $updatedAt
+                    </span>
+                    {copiedColumnHeaderKey === '$updatedAt' ? (
+                      <Check
+                        className="h-3 w-3 shrink-0 text-green-600"
+                        aria-hidden
+                      />
+                    ) : (
+                      <Copy
+                        className="h-3 w-3 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-70 group-focus-visible:opacity-70"
+                        aria-hidden
+                      />
+                    )}
+                  </button>
                   <button
                     type="button"
                     onClick={() => handleSortColumn('$updatedAt')}

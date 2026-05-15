@@ -1051,6 +1051,7 @@ export function View({
             >
               {messageServiceHeaderTitle.label}
             </span>
+            <CopyableId id={message.$id} size="xs" className="shrink-0" />
           </div>
         }
         tabs={messageDetailTabs}

@@ -42,6 +42,7 @@ import {
   useProject,
   useOrganizationPlan,
   useOrganizationScopes,
+  useTablesDbRowsListColumns,
   createProjectDatabase,
   createProjectTable,
   tablesQueryOptions,
@@ -94,6 +95,7 @@ import { DocumentsJsonSpreadsheet } from '../_components/DocumentsJsonSpreadshee
 import { TableViewResizableLayout } from '../_components/TableViewResizableLayout'
 import { ServiceHeader, type Tab } from '../../shared/ServiceHeader'
 import { CopyableId } from '@/components/global/shared/CopyableId'
+import { useAuth } from '@/components/global/auth/RequireAuth'
 
 
 import { Button } from '@/components/ui/button'
@@ -133,6 +135,7 @@ import {
 } from '@/lib/table-filters'
 import type { CompactFilterKey } from '@/lib/table-filters'
 import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
+import { TablesDbRowsColumnsPopover } from './_components/TablesDbRowsColumnsPopover'
 import {
   Tooltip,
   TooltipContent,
@@ -281,7 +284,15 @@ export function Workspace({
   const selectedTable =
     tableId === '-' ? undefined : dbTables.find((c) => c.$id === tableId)
 
-  // Only show loading if we don't have data yet (account for prefetched data)
+  const { account } = useAuth()
+  const accountForPrefs = account as
+    | { prefs?: Record<string, unknown> }
+    | undefined
+  const { savedAttrKeys: rowsListSelectAttrKeys } = useTablesDbRowsListColumns(
+    databaseId,
+    selectedTable?.$id,
+    accountForPrefs,
+  )
   const isActuallyLoading =
     (databaseLoading && !database) || (tablesLoading && dbTables.length === 0)
   const rowsRefetchRef = useRef<(() => Promise<unknown>) | null>(null)
@@ -1400,43 +1411,53 @@ export function Workspace({
           filterTrigger={
             !isDatabaseLevelView &&
             (activeTab === 'rows' || activeTab === 'documents') ? (
-              <FiltersPopover
-                open={rowsFiltersOpen}
-                onOpenChange={setRowsFiltersOpen}
-                columns={rowsFilterColumns}
-                filterMap={rowsFilterMap}
-                onRemoveFilter={rowsRemoveFilter}
-                onClearAll={rowsClearAllFilters}
-                onApplyFilter={rowsApplyFilter}
-                resourceLabel={dbLabels.recordPlural}
-                filterScope={`databases.rows.${databaseId}.${tableId}`}
-                onApplyQuery={(queryParam, sortParam) =>
-                  navigateToRowsList({
-                    search: rowsUrlSearch ?? undefined,
-                    query: queryParam ?? undefined,
-                    page: 1,
-                    limit: rowsUrlLimit,
-                    sort: sortParam ?? undefined,
-                  })
-                }
-                sortBy={rowsSortBy}
-                sortOrder={rowsSortOrder}
-                onSortChange={handleRowsSortChange}
-                defaultSortParam={encodeSort(
-                  ROWS_DEFAULT_SORT_BY,
-                  ROWS_DEFAULT_SORT_ORDER,
-                )}
-                onReset={() => {
-                  navigate({
-                    ...(activeTab === 'documents'
-                      ? dbNav.dataJson(tableNavParams)
-                      : dbNav.dataGrid(tableNavParams)),
-                    search: { page: 1, limit: rowsUrlLimit },
-                    replace: true,
-                  })
-                }}
-                teamId={project?.teamId}
-              />
+              <div className="flex shrink-0 items-center gap-2">
+                <FiltersPopover
+                  open={rowsFiltersOpen}
+                  onOpenChange={setRowsFiltersOpen}
+                  columns={rowsFilterColumns}
+                  filterMap={rowsFilterMap}
+                  onRemoveFilter={rowsRemoveFilter}
+                  onClearAll={rowsClearAllFilters}
+                  onApplyFilter={rowsApplyFilter}
+                  resourceLabel={dbLabels.recordPlural}
+                  filterScope={`databases.rows.${databaseId}.${tableId}`}
+                  onApplyQuery={(queryParam, sortParam) =>
+                    navigateToRowsList({
+                      search: rowsUrlSearch ?? undefined,
+                      query: queryParam ?? undefined,
+                      page: 1,
+                      limit: rowsUrlLimit,
+                      sort: sortParam ?? undefined,
+                    })
+                  }
+                  sortBy={rowsSortBy}
+                  sortOrder={rowsSortOrder}
+                  onSortChange={handleRowsSortChange}
+                  defaultSortParam={encodeSort(
+                    ROWS_DEFAULT_SORT_BY,
+                    ROWS_DEFAULT_SORT_ORDER,
+                  )}
+                  onReset={() => {
+                    navigate({
+                      ...(activeTab === 'documents'
+                        ? dbNav.dataJson(tableNavParams)
+                        : dbNav.dataGrid(tableNavParams)),
+                      search: { page: 1, limit: rowsUrlLimit },
+                      replace: true,
+                    })
+                  }}
+                  teamId={project?.teamId}
+                />
+                {activeTab === 'rows' && selectedTable && projectId ? (
+                  <TablesDbRowsColumnsPopover
+                    projectId={projectId}
+                    databaseId={databaseId}
+                    tableId={selectedTable.$id}
+                    account={accountForPrefs}
+                  />
+                ) : null}
+              </div>
             ) : !isDatabaseLevelView && activeTab === 'columns' ? (
               <FiltersPopover
                 open={columnsFiltersOpen}
@@ -1865,6 +1886,7 @@ export function Workspace({
                     rowsSortBy={rowsSortBy}
                     rowsSortOrder={rowsSortOrder}
                     onNavigateToRowsList={navigateToRowsList}
+                    rowsListSelectAttrKeys={rowsListSelectAttrKeys}
                   />
                 </div>
               ) : null}

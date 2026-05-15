@@ -305,7 +305,7 @@ export function BucketDetailView() {
     <div className="flex flex-col">
       <ServiceHeader
         title={
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 items-center gap-2">
             <Button
               variant="ghost"
               size="sm"
@@ -314,7 +314,10 @@ export function BucketDetailView() {
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <span>{bucket?.name || 'Bucket'}</span>
+            <span className="truncate">{bucket?.name || 'Bucket'}</span>
+            {bucket?.$id ? (
+              <CopyableId id={bucket.$id} size="xs" className="shrink-0" />
+            ) : null}
           </div>
         }
         tabs={tabs}

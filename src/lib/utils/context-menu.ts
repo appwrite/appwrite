@@ -1,12 +1,26 @@
 import { toast } from 'sonner'
 
-export async function copyToClipboard(label: string, value?: string | null) {
-  if (!value) return
+export type CopyToClipboardOptions = {
+  /** When false, skips the success toast (caller may show inline feedback). */
+  showToast?: boolean
+}
+
+export async function copyToClipboard(
+  label: string,
+  value?: string | null,
+  options?: CopyToClipboardOptions,
+): Promise<boolean> {
+  if (!value) return false
+  const showToast = options?.showToast !== false
   try {
     await navigator.clipboard.writeText(value)
-    toast.success(`${label} copied to clipboard`)
+    if (showToast) {
+      toast.success(`${label} copied to clipboard`)
+    }
+    return true
   } catch {
     toast.error('Failed to copy')
+    return false
   }
 }
 

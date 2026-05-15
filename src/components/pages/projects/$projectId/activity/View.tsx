@@ -20,6 +20,7 @@ import {
   Folder,
   Server,
   Globe,
+  ListChecks,
   Clock,
   AlertCircle,
 } from '@/lib/icons'
@@ -50,6 +51,11 @@ import {
   useProjectActivity,
   useProject,
 } from '@/lib/react-query/hooks'
+import {
+  inferActivityUiResourceTypeFromPath,
+  parseActivityResourcePath,
+  type ActivityUiResourceType,
+} from '@/lib/activity-resource-path'
 import {
   getActivitiesFilterColumns,
   buildFilterQueryString,
@@ -253,18 +259,8 @@ const actionLabels: Record<ActionType, string> = {
   view: 'Viewed',
 }
 
-// Resource types and their icons
-type ResourceType =
-  | 'document'
-  | 'collection'
-  | 'database'
-  | 'file'
-  | 'bucket'
-  | 'function'
-  | 'user'
-  | 'team'
-  | 'site'
-  | 'project'
+// Resource types and their icons (see {@link ActivityUiResourceType})
+type ResourceType = ActivityUiResourceType
 
 const resourceIcons: Record<ResourceType, React.ReactNode> = {
   document: <FileText className="h-4 w-4" />,
@@ -276,6 +272,7 @@ const resourceIcons: Record<ResourceType, React.ReactNode> = {
   user: <Users className="h-4 w-4" />,
   team: <Users className="h-4 w-4" />,
   site: <Globe className="h-4 w-4" />,
+  rule: <ListChecks className="h-4 w-4" />,
   project: <Server className="h-4 w-4" />,
 }
 
@@ -319,15 +316,15 @@ function eventToActionType(event: string): ActionType {
 }
 
 /**
- * When `resourceType` is missing or generic, the audit `resource` path often
- * still scopes the entity (e.g. `site/arena` for sites).
+ * When `resourceType` is missing or generic, infer the table bucket from the
+ * audit `resource` path via {@link parseActivityResourcePath}.
  */
 function resourcePathToResourceType(
   resource: string | null | undefined,
 ): ResourceType | null {
-  const head = resource?.trim().split('/')[0]?.toLowerCase()
-  if (head === 'site' || head === 'sites') return 'site'
-  return null
+  const parsed = parseActivityResourcePath(resource)
+  if (!parsed?.isRecognizedPattern) return null
+  return inferActivityUiResourceTypeFromPath(parsed)
 }
 
 /** Maps the API `resourceType`/`event` to a UI resource-type bucket. */
@@ -352,6 +349,8 @@ function eventToResourceType(
     return 'function'
   if (normalized.startsWith('site') || eventParts.includes('sites'))
     return 'site'
+  if (normalized === 'rule' || normalized === 'rules') return 'rule'
+  if (event.startsWith('rule.')) return 'rule'
   if (normalized.startsWith('team') || eventParts.includes('teams')) return 'team'
   if (normalized.startsWith('user') || eventParts.includes('users')) return 'user'
 
@@ -368,6 +367,8 @@ function eventToResourceType(
  *   → resourceType `documents`, label `[DOC_ID]`.
  */
 function resourceLabelFromEvent(activity: Models.ActivityEvent): string {
+  const pathLeaf = parseActivityResourcePath(activity.resource)?.leafId
+  if (pathLeaf) return pathLeaf
   if (activity.resourceId) return activity.resourceId
   const segments = activity.event.split('.')
   // Last id-like segment (anything that isn't a known verb) tends to be the

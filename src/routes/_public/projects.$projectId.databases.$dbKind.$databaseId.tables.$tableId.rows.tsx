@@ -10,6 +10,8 @@ import {
   projectQueryOptions,
   organizationPlanQueryOptions,
 } from '@/lib/react-query/hooks'
+import { getConsoleAccountFromCache } from '@/lib/react-query/hooks/auth'
+import { parseTablesDbRowsListColumnsFromPrefs } from '@/lib/user-prefs-keys'
 import { ROWS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import {
   listSearchSchema,
@@ -148,6 +150,16 @@ export const Route = createFileRoute(
       const filterQueries =
         filterMap.size > 0 ? Array.from(filterMap.values()) : undefined
 
+      const acct = getConsoleAccountFromCache(queryClient)
+      const listSelectAttrKeys =
+        acct?.prefs && databaseId && tableId
+          ? parseTablesDbRowsListColumnsFromPrefs(
+              acct.prefs as Record<string, unknown>,
+              databaseId,
+              tableId,
+            )
+          : null
+
       await Promise.all([
         tablesPromise,
 
@@ -162,6 +174,7 @@ export const Route = createFileRoute(
             'desc',
             '$createdAt',
             filterQueries,
+            listSelectAttrKeys,
           ),
         ),
 

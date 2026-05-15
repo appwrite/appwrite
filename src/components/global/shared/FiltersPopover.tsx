@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 import { FiltersPopoverContent } from './FiltersPopoverContent'
+import { ToolbarCountBadge } from './ToolbarCountBadge'
 
 export interface FiltersPopoverProps {
   open: boolean
@@ -79,11 +80,13 @@ export function FiltersPopover({
         >
           <Filter className="h-3.5 w-3.5 shrink-0" />
           Filters
-          {filterMap.size > 0 && (
-            <span className="flex size-5 items-center justify-center rounded-full bg-[#FD366E] text-[11px] font-semibold tabular-nums text-white">
-              {filterMap.size}
-            </span>
-          )}
+          {filterMap.size > 0 ? (
+            <ToolbarCountBadge
+              count={filterMap.size}
+              placement="inline"
+              inlineTone="emphasis"
+            />
+          ) : null}
         </Button>
       </PopoverTrigger>
       <PopoverContent

@@ -6,6 +6,7 @@ import {
   useNavigate,
 } from '@tanstack/react-router'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
+import { CopyableId } from '@/components/global/shared/CopyableId'
 import { useProjectFunction } from '@/lib/react-query/hooks'
 import { ArrowLeft, AlertCircle } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
@@ -284,7 +285,7 @@ function FunctionLayoutContent() {
     <div className="flex flex-col">
       <ServiceHeader
         title={
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 items-center gap-2">
             <Button
               variant="ghost"
               size="sm"
@@ -299,7 +300,8 @@ function FunctionLayoutContent() {
                 <ArrowLeft className="h-4 w-4" />
               </Link>
             </Button>
-            <span>{func.name || 'Unnamed Function'}</span>
+            <span className="truncate">{func.name || 'Unnamed Function'}</span>
+            <CopyableId id={func.$id} size="xs" className="shrink-0" />
           </div>
         }
         tabs={tabs}

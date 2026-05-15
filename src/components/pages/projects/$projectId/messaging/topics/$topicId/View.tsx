@@ -414,7 +414,7 @@ export function View({
     <div className="flex flex-col">
       <ServiceHeader
         title={
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 items-center gap-2">
             <Button
               variant="ghost"
               size="sm"
@@ -423,7 +423,8 @@ export function View({
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <span>{topicResolved.name}</span>
+            <span className="truncate">{topicResolved.name}</span>
+            <CopyableId id={topicResolved.$id} size="xs" className="shrink-0" />
           </div>
         }
         tabs={tabs}

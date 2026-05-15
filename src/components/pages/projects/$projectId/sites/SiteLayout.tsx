@@ -1,5 +1,6 @@
 import { Outlet, useParams, useNavigate } from '@tanstack/react-router'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
+import { CopyableId } from '@/components/global/shared/CopyableId'
 import {
   useProjectSite,
   useProject,
@@ -112,7 +113,7 @@ function SiteLayoutContent() {
     <div className="flex flex-col">
       <ServiceHeader
         title={
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 items-center gap-2">
             <Button
               variant="ghost"
               size="sm"
@@ -122,7 +123,10 @@ function SiteLayoutContent() {
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <span>{site?.name || 'Site'}</span>
+            <span className="truncate">{site?.name || 'Site'}</span>
+            {site?.$id ? (
+              <CopyableId id={site.$id} size="xs" className="shrink-0" />
+            ) : null}
           </div>
         }
         tabs={tabs}

@@ -581,6 +581,105 @@ export function deleteDatabaseTableRowColumnWidthsFromPrefs(
 }
 
 // ---------------------------------------------------------------------------
+// Databases: Tables DB — which row attributes to fetch & column order (account)
+// ---------------------------------------------------------------------------
+
+/**
+ * Per-table preference key: `console.tablesDb.rowsListColumns.<databaseId>.<tableId>`
+ *
+ * Value: JSON string `string[]` — ordered column keys: optional system fields
+ * (`$sequence`, `$id`, `$createdAt`, `$updatedAt`) plus attribute keys.
+ * Absent or invalid: fetch and show all columns (default).
+ */
+export const USER_PREFS_KEY_TABLESDB_ROWS_LIST_COLUMNS_PREFIX =
+  'console.tablesDb.rowsListColumns'
+
+export const MAX_TABLESDB_ROWS_LIST_COLUMN_KEYS = 200
+
+/** System keys allowed in Tables DB row grid column prefs (order + visibility). */
+const TABLESDB_ROWS_LIST_COLUMN_ALLOWED_SYSTEM_KEYS = new Set([
+  '$sequence',
+  '$id',
+  '$createdAt',
+  '$updatedAt',
+])
+
+export function getTablesDbRowsListColumnsPrefsKey(
+  databaseId: string,
+  tableId: string,
+): string {
+  return `${USER_PREFS_KEY_TABLESDB_ROWS_LIST_COLUMNS_PREFIX}.${databaseId}.${tableId}`
+}
+
+/**
+ * Parsed ordered column keys (system + attributes), or `null` when unset (use all columns).
+ */
+export function parseTablesDbRowsListColumnsFromPrefs(
+  prefs: UserPrefs | null | undefined,
+  databaseId: string,
+  tableId: string,
+): string[] | null {
+  if (!prefs || !databaseId || !tableId) return null
+  const key = getTablesDbRowsListColumnsPrefsKey(databaseId, tableId)
+  const raw = prefs[key]
+  if (raw == null) return null
+  let parsed: unknown
+  if (typeof raw === 'string') {
+    const s = raw.trim()
+    if (!s) return null
+    try {
+      parsed = JSON.parse(s) as unknown
+    } catch {
+      return null
+    }
+  } else if (Array.isArray(raw)) {
+    parsed = raw
+  } else {
+    return null
+  }
+  if (!Array.isArray(parsed) || parsed.length === 0) return null
+  const out: string[] = []
+  for (const item of parsed) {
+    if (typeof item !== 'string') continue
+    const k = item.trim()
+    if (!k) continue
+    if (k.startsWith('$')) {
+      if (!TABLESDB_ROWS_LIST_COLUMN_ALLOWED_SYSTEM_KEYS.has(k)) continue
+    }
+    if (out.includes(k)) continue
+    out.push(k)
+    if (out.length >= MAX_TABLESDB_ROWS_LIST_COLUMN_KEYS) break
+  }
+  return out.length > 0 ? out : null
+}
+
+export function mergeTablesDbRowsListColumnsIntoPrefs(
+  prefs: UserPrefs,
+  databaseId: string,
+  tableId: string,
+  keys: string[] | null,
+): UserPrefs {
+  const next = { ...prefs }
+  const prefKey = getTablesDbRowsListColumnsPrefsKey(databaseId, tableId)
+  if (!keys?.length) {
+    delete next[prefKey]
+    return next
+  }
+  next[prefKey] = JSON.stringify(
+    keys.slice(0, MAX_TABLESDB_ROWS_LIST_COLUMN_KEYS),
+  )
+  return next
+}
+
+export function deleteTablesDbRowsListColumnsFromPrefs(
+  prefs: UserPrefs,
+  databaseId: string,
+  tableId: string,
+): UserPrefs {
+  return mergeTablesDbRowsListColumnsIntoPrefs(prefs, databaseId, tableId, null)
+}
+
+// ---------------------------------------------------------------------------
 // Console operator impersonation - recent targets (quick access in picker)
 // ---------------------------------------------------------------------------
 

@@ -14,6 +14,7 @@ const ACTIVITY_RESOURCE_TYPE_ELEMENTS = [
   { value: 'user', label: 'User / key' },
   { value: 'team', label: 'Team' },
   { value: 'site', label: 'Site' },
+  { value: 'rule', label: 'Rule' },
   { value: 'project', label: 'Project' },
 ]
 

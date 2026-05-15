@@ -17,7 +17,7 @@ interface ApiKeyDrawerProps {
   onSubmit: (data: { name: string; scopes?: string[]; expire?: string }) => void
   isLoading?: boolean
   apiKey?: Models.Key | null
-  /** When set (e.g. after create), show the key once with copy; drawer stays open until user dismisses */
+  /** When set (e.g. after create), show the new secret with copy; drawer stays open until user dismisses */
   createdKeySecret?: string | null
   onCopy?: (text: string, field: string) => void
   copiedField?: string | null
@@ -222,14 +222,15 @@ export function ApiKeyDrawer({
         <form onSubmit={handleSubmit} className="flex flex-1 flex-col min-h-0">
           <div className="flex-1 overflow-y-auto">
             <div className="px-6 py-6">
-              {/* Show created key one-time */}
+              {/* Newly created key */}
               {showCreatedKey && secretToShow && (
                 <div className="mb-6 rounded-xl border border-primary/30 bg-primary/5 p-4">
                   <p className="text-[13px] font-medium text-foreground mb-1">
                     Your new API key
                   </p>
                   <p className="text-[12px] text-muted-foreground mb-3">
-                    Copy it now. We won&apos;t show it again.
+                    Copy and store it securely. You can view the full key anytime
+                    from the API keys list.
                   </p>
                   <div className="flex gap-2">
                     <textarea
@@ -349,9 +350,8 @@ export function ApiKeyDrawer({
                         </div>
                       ) : (
                         <p className="text-[12px] text-muted-foreground">
-                          The key secret is only shown when the key is first
-                          created. It can&apos;t be viewed or copied again from
-                          here.
+                          The full key value isn&apos;t shown here. Find this key
+                          in the API keys list to view and copy it.
                         </p>
                       )}
                     </div>

@@ -27,6 +27,7 @@ import {
   DNS_RECORDS_DEFAULT_SORT_ORDER,
 } from '@/lib/react-query/hooks'
 import { ServiceHeader } from '@/components/pages/projects/$projectId/shared/ServiceHeader'
+import { CopyableId } from '@/components/global/shared/CopyableId'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import {
   Tooltip,
@@ -928,7 +929,7 @@ export function View({ initialData }: ViewProps = {}) {
       >
         <ServiceHeader
           title={
-            <div className="flex items-center gap-2">
+            <div className="flex min-w-0 items-center gap-2">
               <Button
                 variant="ghost"
                 size="sm"
@@ -937,7 +938,10 @@ export function View({ initialData }: ViewProps = {}) {
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
-              <span>{domain?.domain}</span>
+              <span className="truncate">{domain?.domain}</span>
+              {domain?.$id ? (
+                <CopyableId id={domain.$id} size="xs" className="shrink-0" />
+              ) : null}
             </div>
           }
           tabs={tabs}

@@ -19,10 +19,7 @@ import { formatError } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
-import {
-  isLikelyConnectivityFailure,
-  isNavigatorReportedOffline,
-} from '@/lib/network-connectivity'
+import { isNavigatorReportedOffline } from '@/lib/network-connectivity'
 
 /**
  * Extracts resource IDs from URL pathname for error context
@@ -162,7 +159,10 @@ export function ErrorComponent({
       lowerMessage.includes('permission denied') ||
       lowerMessage.includes('access denied'))
 
-  const isConnectivityError = isLikelyConnectivityFailure(error)
+  // Only use the offline-specific UI when the browser reports no connection.
+  // Broader heuristics (status 0, "failed to fetch", etc.) also match CORS and
+  // other failures, which should show the regular error page with details.
+  const isConnectivityError = isNavigatorReportedOffline()
 
   // Use project-specific messages for project routes
   const formattedError = isProjectNotFound
@@ -180,19 +180,12 @@ export function ErrorComponent({
           isUserFriendly: true,
         }
       : isConnectivityError
-        ? isNavigatorReportedOffline()
-          ? {
-              title: "You're offline",
-              message:
-                'This page needs a connection to Appwrite. Reconnect to the internet, then try again - we can reload automatically when you are back online.',
-              isUserFriendly: true,
-            }
-          : {
-              title: "Can't reach Appwrite",
-              message:
-                'Your network is on, but we could not complete the request. Check your connection or VPN, then try again.',
-              isUserFriendly: true,
-            }
+        ? {
+            title: "You're offline",
+            message:
+              'This page needs a connection to Appwrite. Reconnect to the internet, then try again - we can reload automatically when you are back online.',
+            isUserFriendly: true,
+          }
         : formatError(error, 'An unexpected error occurred.')
 
   const message = useMemo(

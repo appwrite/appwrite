@@ -42,6 +42,7 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
+import { ToolbarCountBadge } from '@/components/global/shared/ToolbarCountBadge'
 import {
   Collapsible,
   CollapsibleContent,
@@ -1648,19 +1649,18 @@ export function FiltersPopoverContent({
             <TabsList className="w-full grid grid-cols-2 h-9">
               <TabsTrigger value="filters" className="text-[13px]">
                 Filters
-                {filterMap.size > 0 && (
-                  <span className="ml-1.5 flex size-4 items-center justify-center rounded-full bg-[#FD366E] text-[10px] font-medium tabular-nums text-white">
-                    {filterMap.size}
-                  </span>
-                )}
+                {filterMap.size > 0 ? (
+                  <ToolbarCountBadge count={filterMap.size} placement="inline" />
+                ) : null}
               </TabsTrigger>
               <TabsTrigger value="saved" className="text-[13px]">
                 Saved
-                {savedFilters.length > 0 && (
-                  <span className="ml-1.5 flex size-4 items-center justify-center rounded-full bg-muted text-[10px] font-medium tabular-nums text-muted-foreground">
-                    {savedFilters.length}
-                  </span>
-                )}
+                {savedFilters.length > 0 ? (
+                  <ToolbarCountBadge
+                    count={savedFilters.length}
+                    placement="inline"
+                  />
+                ) : null}
               </TabsTrigger>
             </TabsList>
           </div>

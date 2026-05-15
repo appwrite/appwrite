@@ -38,7 +38,9 @@ import {
   Upload,
   User,
   Zap,
+  ListChecks,
 } from '@/lib/icons'
+import type { ActivityUiResourceType } from '@/lib/activity-resource-path'
 
 type ActionType =
   | 'create'
@@ -50,17 +52,7 @@ type ActionType =
   | 'logout'
   | 'view'
 
-type ResourceType =
-  | 'document'
-  | 'collection'
-  | 'database'
-  | 'file'
-  | 'bucket'
-  | 'function'
-  | 'user'
-  | 'team'
-  | 'site'
-  | 'project'
+type ResourceType = ActivityUiResourceType
 
 export interface ActivityDrawerDisplay {
   action: ActionType
@@ -118,6 +110,7 @@ const resourceIcons: Record<ResourceType, React.ReactNode> = {
   user: <User className="h-4 w-4" />,
   team: <User className="h-4 w-4" />,
   site: <Globe className="h-4 w-4" />,
+  rule: <ListChecks className="h-4 w-4" />,
   project: <Server className="h-4 w-4" />,
 }
 

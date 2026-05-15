@@ -694,6 +694,31 @@ export async function fetchAllProjectTablesForVisualizer(
 /** Column to sort rows by - any column key or system field */
 export type RowsSortBy = string
 
+function buildRowListSelectQuery(
+  listSelectAttrKeys: string[] | null | undefined,
+  sortBy: RowsSortBy,
+  kind: DatabaseType,
+): string | undefined {
+  if (!listSelectAttrKeys?.length) return undefined
+  const fields = new Set<string>([
+    '$id',
+    '$createdAt',
+    '$updatedAt',
+    '$permissions',
+  ])
+  if (kind === DatabaseType.Tablesdb) {
+    fields.add('$sequence')
+  }
+  if (sortBy) fields.add(sortBy)
+  for (const k of listSelectAttrKeys) {
+    if (typeof k !== 'string') continue
+    const t = k.trim()
+    if (!t || t.startsWith('$') || t.length > 512) continue
+    fields.add(t)
+  }
+  return Query.select([...fields])
+}
+
 /**
  * Query function to fetch rows for a table
  *
@@ -707,6 +732,8 @@ export type RowsSortBy = string
  * @param search - Optional search query
  * @param order - Sort direction
  * @param sortBy - Column to sort by
+ * @param filterQueries - Optional filter query strings
+ * @param listSelectAttrKeys - When set (tables/documents/vectors), adds `Query.select` so only these attributes plus system fields are returned
  * @returns Paginated rows with total count
  */
 export async function fetchProjectTableRows(
@@ -719,21 +746,29 @@ export async function fetchProjectTableRows(
   order: 'asc' | 'desc' = 'desc',
   sortBy: RowsSortBy = '$createdAt',
   filterQueries?: string[],
+  listSelectAttrKeys?: string[] | null,
 ) {
   if (!projectId || !databaseId || !tableId) {
     return { rows: [], total: 0 }
   }
 
   const projectSdk = sdk.forProject(projectId)
+
+  const dm = await getDatabaseModel(projectId, databaseId)
+  const kind = dm?.type ?? DatabaseType.Tablesdb
+
+  const selectQuery = buildRowListSelectQuery(
+    listSelectAttrKeys,
+    sortBy,
+    kind,
+  )
   const queries = [
+    ...(selectQuery ? [selectQuery] : []),
     ...(filterQueries ?? []),
     order === 'asc' ? Query.orderAsc(sortBy) : Query.orderDesc(sortBy),
     Query.limit(limit),
     Query.offset(page * limit),
   ]
-
-  const dm = await getDatabaseModel(projectId, databaseId)
-  const kind = dm?.type ?? DatabaseType.Tablesdb
 
   if (kind === DatabaseType.Documentsdb || kind === DatabaseType.Vectorsdb) {
     const listFn =
@@ -2265,8 +2300,13 @@ export function tableRowsQueryOptions(
   order: 'asc' | 'desc' = 'desc',
   sortBy: RowsSortBy = '$createdAt',
   filterQueries?: string[],
+  listSelectAttrKeys?: string[] | null,
 ) {
   const normalizedSearch = search?.trim() || undefined
+  const listSelectKey =
+    (listSelectAttrKeys?.length ?? 0) > 0
+      ? [...listSelectAttrKeys!].sort().join('\u0001')
+      : null
 
   return queryOptions({
     queryKey: [
@@ -2281,6 +2321,7 @@ export function tableRowsQueryOptions(
       order,
       sortBy,
       filterQueries,
+      listSelectKey,
     ],
     queryFn: () =>
       fetchProjectTableRows(
@@ -2293,6 +2334,7 @@ export function tableRowsQueryOptions(
         order,
         sortBy,
         filterQueries,
+        listSelectAttrKeys,
       ),
     enabled: !!projectId && !!databaseId && !!tableId,
     staleTime: DEFAULT_STALE_TIME,
@@ -2736,6 +2778,7 @@ export function useProjectTableRows(
   order: 'asc' | 'desc' = 'desc',
   sortBy: RowsSortBy = '$createdAt',
   filterQueries?: string[],
+  listSelectAttrKeys?: string[] | null,
 ) {
   const normalizedSearch = search?.trim() || undefined
 
@@ -2756,6 +2799,7 @@ export function useProjectTableRows(
       order,
       sortBy,
       filterQueries,
+      listSelectAttrKeys,
     ),
   )
 
