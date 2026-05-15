@@ -140,10 +140,35 @@ class XList extends Action
             return $privacy || $isPrivilegedUser || $isAppUser;
         }, $membershipsPrivacy);
 
-        $memberships = array_map(function ($membership) use ($dbForProject, $team, $membershipsPrivacy) {
-            $memberUser = !empty(array_filter($membershipsPrivacy))
-                ? $dbForProject->getDocument('users', $membership->getAttribute('userId'))
-                : new Document();
+        // Batch-fetch users referenced by this page in a single query, instead of
+        // issuing one getDocument('users', ...) per membership row. Falls back to
+        // an empty Document for users that are missing or not visible to the caller.
+        $usersMap = [];
+        $needsUserLookup = !empty(array_filter($membershipsPrivacy));
+
+        if ($needsUserLookup) {
+            $userIds = [];
+            foreach ($memberships as $membership) {
+                $userId = $membership->getAttribute('userId');
+                if (!empty($userId)) {
+                    $userIds[] = $userId;
+                }
+            }
+            $userIds = \array_values(\array_unique($userIds));
+
+            if (!empty($userIds)) {
+                $fetchedUsers = $dbForProject->find('users', [
+                    Query::equal('$id', $userIds),
+                    Query::limit(\count($userIds)),
+                ]);
+                foreach ($fetchedUsers as $fetchedUser) {
+                    $usersMap[$fetchedUser->getId()] = $fetchedUser;
+                }
+            }
+        }
+
+        $memberships = array_map(function ($membership) use ($team, $membershipsPrivacy, $usersMap) {
+            $memberUser = $usersMap[$membership->getAttribute('userId')] ?? new Document();
 
             if ($membershipsPrivacy['mfa']) {
                 $mfa = $memberUser->getAttribute('mfa', false);
