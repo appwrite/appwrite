@@ -3,9 +3,10 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions;
 
 use Appwrite\Databases\TransactionState;
-use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Message\Func as FunctionMessage;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Functions\EventProcessor;
@@ -75,7 +76,7 @@ class Update extends Action
             ->inject('getDatabasesDB')
             ->inject('user')
             ->inject('transactionState')
-            ->inject('queueForDeletes')
+            ->inject('publisherForDeletes')
             ->inject('queueForEvents')
             ->inject('usage')
             ->inject('queueForRealtime')
@@ -95,7 +96,7 @@ class Update extends Action
      * @param callable $getDatabasesDB
      * @param User $user
      * @param TransactionState $transactionState
-     * @param Delete $queueForDeletes
+     * @param DeletePublisher $publisherForDeletes
      * @param Event $queueForEvents
      * @param Context $usage
      * @param Event $queueForRealtime
@@ -110,7 +111,7 @@ class Update extends Action
      * @throws StructureException
      * @throws \Utopia\Http\Exception
      */
-    public function action(string $transactionId, bool $commit, bool $rollback, Document $project, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, User $user, TransactionState $transactionState, Delete $queueForDeletes, Event $queueForEvents, Context $usage, Event $queueForRealtime, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, Authorization $authorization, EventProcessor $eventProcessor): void
+    public function action(string $transactionId, bool $commit, bool $rollback, Document $project, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, User $user, TransactionState $transactionState, DeletePublisher $publisherForDeletes, Event $queueForEvents, Context $usage, Event $queueForRealtime, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, Authorization $authorization, EventProcessor $eventProcessor): void
     {
         if (!$commit && !$rollback) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Either commit or rollback must be true');
@@ -156,9 +157,11 @@ class Update extends Action
                     new Document(['status' => 'committed'])
                 ));
 
-                $queueForDeletes
-                    ->setType(DELETE_TYPE_DOCUMENT)
-                    ->setDocument($transaction);
+                $publisherForDeletes->enqueue(new DeleteMessage(
+                    project: $project,
+                    type: DELETE_TYPE_DOCUMENT,
+                    document: $transaction,
+                ));
 
                 $response
                     ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
@@ -295,9 +298,11 @@ class Update extends Action
                     new Document(['status' => 'committed'])
                 ));
 
-                $queueForDeletes
-                    ->setType(DELETE_TYPE_DOCUMENT)
-                    ->setDocument($transaction);
+                $publisherForDeletes->enqueue(new DeleteMessage(
+                    project: $project,
+                    type: DELETE_TYPE_DOCUMENT,
+                    document: $transaction,
+                ));
             } catch (NotFoundException $e) {
                 $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'failed',
@@ -501,9 +506,11 @@ class Update extends Action
                 new Document(['status' => 'failed'])
             ));
 
-            $queueForDeletes
-                ->setType(DELETE_TYPE_DOCUMENT)
-                ->setDocument($transaction);
+            $publisherForDeletes->enqueue(new DeleteMessage(
+                project: $project,
+                type: DELETE_TYPE_DOCUMENT,
+                document: $transaction,
+            ));
         }
 
         $response

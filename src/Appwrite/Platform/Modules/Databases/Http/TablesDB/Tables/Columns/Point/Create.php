@@ -59,7 +59,7 @@ class Create extends PointCreate
             ->param('default', null, new Nullable(new Spatial(Database::VAR_POINT)), 'Default value for column when not provided, array of two numbers [longitude, latitude], representing a single coordinate. Cannot be set when column is required.', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForDatabase')
+            ->inject('publisherForDatabase')
             ->inject('queueForEvents')
             ->inject('authorization')
             ->callback($this->action(...));

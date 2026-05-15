@@ -70,6 +70,53 @@ trait ProxyBase
         $this->assertEquals(204, $rule['headers']['status-code']);
     }
 
+    public function testCreateRuleDeletesOrphanedRule(): void
+    {
+        $domain = \uniqid() . '-orphan-api.custom.localhost';
+        $orphanProject = $this->getProject(true);
+
+        $orphanRule = $this->client->call(Client::METHOD_POST, '/proxy/rules/api', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $orphanProject['$id'],
+            'x-appwrite-key' => $orphanProject['apiKey'],
+        ], [
+            'domain' => $domain,
+        ]);
+
+        $this->assertEquals(201, $orphanRule['headers']['status-code']);
+        $this->assertEquals($domain, $orphanRule['body']['domain']);
+
+        $duplicateRule = $this->createAPIRule($domain);
+        $this->assertEquals(409, $duplicateRule['headers']['status-code']);
+
+        $deleteProject = $this->client->call(Client::METHOD_DELETE, '/projects/' . $orphanProject['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $orphanProject['$id'],
+            'x-appwrite-key' => $orphanProject['apiKey'],
+        ]);
+
+        $this->assertEquals(204, $deleteProject['headers']['status-code']);
+
+        // Project deletion removes the project document synchronously, while rule cleanup is queued.
+        // Creating the same domain now should clean up that orphaned rule before retrying.
+        $rule = $this->createAPIRule($domain);
+
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertEquals($domain, $rule['body']['domain']);
+
+        $rules = $this->listRules([
+            'queries' => [
+                Query::equal('domain', [$domain])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertEquals(1, $rules['body']['total']);
+        $this->assertEquals($rule['body']['$id'], $rules['body']['rules'][0]['$id']);
+
+        $this->cleanupRule($rule['body']['$id']);
+    }
+
     public function testCreateRuleSetup(): void
     {
         $ruleId = $this->setupAPIRule(\uniqid() . '-api2.myapp.com');

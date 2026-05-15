@@ -15,7 +15,8 @@ use Appwrite\Platform\Modules\Console\Http\Redirects\Recover\Get as RedirectReco
 use Appwrite\Platform\Modules\Console\Http\Redirects\Register\Get as RedirectRegister;
 use Appwrite\Platform\Modules\Console\Http\Redirects\Root\Get as RedirectRoot;
 use Appwrite\Platform\Modules\Console\Http\Resources\Get as GetResourceAvailability;
-use Appwrite\Platform\Modules\Console\Http\Scopes\Key\XList as ListKeyScopes;
+use Appwrite\Platform\Modules\Console\Http\Scopes\Organization\XList as ListOrganizationScopes;
+use Appwrite\Platform\Modules\Console\Http\Scopes\Project\XList as ListKeyScopes;
 use Appwrite\Platform\Modules\Console\Http\Variables\Get as GetVariables;
 use Utopia\Platform\Service;
 
@@ -32,6 +33,7 @@ class Http extends Service
         $this->addAction(GetVariables::getName(), new GetVariables());
         $this->addAction(ListOAuth2Providers::getName(), new ListOAuth2Providers());
         $this->addAction(ListKeyScopes::getName(), new ListKeyScopes());
+        $this->addAction(ListOrganizationScopes::getName(), new ListOrganizationScopes());
         $this->addAction(CreateAssistantQuery::getName(), new CreateAssistantQuery());
         $this->addAction(GetResourceAvailability::getName(), new GetResourceAvailability());
 

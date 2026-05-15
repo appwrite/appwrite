@@ -11,10 +11,11 @@ use Appwrite\Auth\Validator\PersonalData;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Bus\Events\SessionCreated;
 use Appwrite\Detector\Detector;
-use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Message\Mail as MailMessage;
 use Appwrite\Event\Message\Messaging as MessagingMessage;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Extend\Exception;
@@ -472,9 +473,9 @@ Http::delete('/v1/account')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->inject('queueForDeletes')
+    ->inject('publisherForDeletes')
     ->inject('authorization')
-    ->action(function (Document $user, Document $project, Response $response, Database $dbForProject, Event $queueForEvents, Delete $queueForDeletes, Authorization $authorization) {
+    ->action(function (Document $user, Document $project, Response $response, Database $dbForProject, Event $queueForEvents, DeletePublisher $publisherForDeletes, Authorization $authorization) {
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
@@ -498,9 +499,11 @@ Http::delete('/v1/account')
 
         $dbForProject->deleteDocument('users', $user->getId());
 
-        $queueForDeletes
-            ->setType(DELETE_TYPE_DOCUMENT)
-            ->setDocument($user);
+        $publisherForDeletes->enqueue(new DeleteMessage(
+            project: $project,
+            type: DELETE_TYPE_DOCUMENT,
+            document: $user,
+        ));
 
         $queueForEvents
             ->setParam('userId', $user->getId())
@@ -582,12 +585,12 @@ Http::delete('/v1/account/sessions')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('queueForEvents')
-    ->inject('queueForDeletes')
+    ->inject('publisherForDeletes')
     ->inject('store')
     ->inject('proofForToken')
     ->inject('domainVerification')
     ->inject('cookieDomain')
-    ->action(function (Request $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Delete $queueForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain) {
+    ->action(function (Request $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, DeletePublisher $publisherForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain) {
 
         $protocol = $request->getProtocol();
         $sessions = $user->getAttribute('sessions', []);
@@ -617,10 +620,11 @@ Http::delete('/v1/account/sessions')
                 $queueForEvents
                     ->setPayload($response->output($session, Response::MODEL_SESSION));
 
-                $queueForDeletes
-                    ->setType(DELETE_TYPE_SESSION_TARGETS)
-                    ->setDocument($session)
-                    ->trigger();
+                $publisherForDeletes->enqueue(new DeleteMessage(
+                    project: $queueForEvents->getProject(),
+                    type: DELETE_TYPE_SESSION_TARGETS,
+                    document: $session,
+                ));
             }
         }
 
@@ -714,12 +718,12 @@ Http::delete('/v1/account/sessions/:sessionId')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('queueForEvents')
-    ->inject('queueForDeletes')
+    ->inject('publisherForDeletes')
     ->inject('store')
     ->inject('proofForToken')
     ->inject('domainVerification')
     ->inject('cookieDomain')
-    ->action(function (?string $sessionId, ?\DateTime $requestTimestamp, Request $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Delete $queueForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain) {
+    ->action(function (?string $sessionId, ?\DateTime $requestTimestamp, Request $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, DeletePublisher $publisherForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain) {
 
         $protocol = $request->getProtocol();
         $sessionId = ($sessionId === 'current')
@@ -761,10 +765,11 @@ Http::delete('/v1/account/sessions/:sessionId')
                 ->setParam('sessionId', $session->getId())
                 ->setPayload($response->output($session, Response::MODEL_SESSION));
 
-            $queueForDeletes
-                ->setType(DELETE_TYPE_SESSION_TARGETS)
-                ->setDocument($session)
-                ->trigger();
+            $publisherForDeletes->enqueue(new DeleteMessage(
+                project: $queueForEvents->getProject(),
+                type: DELETE_TYPE_SESSION_TARGETS,
+                document: $session,
+            ));
 
             $response->noContent();
             return;
@@ -4675,13 +4680,13 @@ Http::delete('/v1/account/targets/:targetId/push')
     ))
     ->param('targetId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Target ID.', false, ['dbForProject'])
     ->inject('queueForEvents')
-    ->inject('queueForDeletes')
+    ->inject('publisherForDeletes')
     ->inject('user')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('authorization')
-    ->action(function (string $targetId, Event $queueForEvents, Delete $queueForDeletes, Document $user, Request $request, Response $response, Database $dbForProject, Authorization $authorization) {
+    ->action(function (string $targetId, Event $queueForEvents, DeletePublisher $publisherForDeletes, Document $user, Request $request, Response $response, Database $dbForProject, Authorization $authorization) {
         $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $targetId));
 
         if ($target->isEmpty()) {
@@ -4696,9 +4701,11 @@ Http::delete('/v1/account/targets/:targetId/push')
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
-        $queueForDeletes
-            ->setType(DELETE_TYPE_TARGET)
-            ->setDocument($target);
+        $publisherForDeletes->enqueue(new DeleteMessage(
+            project: $queueForEvents->getProject(),
+            type: DELETE_TYPE_TARGET,
+            document: $target,
+        ));
 
         $queueForEvents
             ->setParam('userId', $user->getId())

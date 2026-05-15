@@ -71,7 +71,7 @@ class Create extends RelationshipCreate
             ], true), 'Constraints option', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForDatabase')
+            ->inject('publisherForDatabase')
             ->inject('queueForEvents')
             ->inject('authorization')
             ->callback($this->action(...));

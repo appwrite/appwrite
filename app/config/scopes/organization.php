@@ -4,23 +4,23 @@
 
 return [
     "projects.read" => [
-        "description" => 'Access to read organization projects.',
-        'category' => 'Projects'
+        "description" => 'Access to read organization projects',
+        "category" => "Projects",
     ],
     "projects.write" => [
         "description" =>
-            "Access to create, update, and delete organization projects.",
-        'category' => 'Projects'
+            "Access to create, update, and delete organization projects",
+        "category" => "Projects",
     ],
     "devKeys.read" => [
-        "description" => 'Access to read project\'s development keys',
-        'deprecated' => true,
-        'category' => 'Other'
+        "description" => 'Access to read organization project\'s development keys',
+        "category" => "Other",
+        "deprecated" => true,
     ],
     "devKeys.write" => [
         "description" =>
-            "Access to create, update, and delete project\'s development keys",
-        'deprecated' => true,
-        'category' => 'Other'
+            "Access to create, update, and delete organization project\'s development keys",
+        "category" => "Other",
+        "deprecated" => true,
     ],
 ];
