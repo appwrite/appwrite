@@ -112,12 +112,15 @@ interface DateRangePickerProps {
   dateRange: DateRange | undefined
   onDateRangeChange: (range: DateRange | undefined) => void
   className?: string
+  /** Radix PopoverContent `align` — default `end` for wide triggers in headers. */
+  popoverContentAlign?: 'start' | 'center' | 'end'
 }
 
 export function DateRangePicker({
   dateRange,
   onDateRangeChange,
   className,
+  popoverContentAlign = 'end',
 }: DateRangePickerProps) {
   const [isOpen, setIsOpen] = React.useState(false)
   const [selectedPreset, setSelectedPreset] = React.useState<string | null>(
@@ -173,7 +176,7 @@ export function DateRangePicker({
       </PopoverTrigger>
       <PopoverContent
         className="w-auto max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-xl p-0 shadow-lg"
-        align="end"
+        align={popoverContentAlign}
         sideOffset={4}
       >
         <div className="flex flex-col min-[820px]:flex-row min-[820px]:items-stretch">

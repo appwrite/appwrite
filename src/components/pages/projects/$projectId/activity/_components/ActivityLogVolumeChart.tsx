@@ -303,7 +303,7 @@ function orderTooltipPayloadByHighlight<
   return copy
 }
 
-const VolumeTooltip = memo(function VolumeTooltip({
+function VolumeTooltip({
   active,
   payload,
   label,
@@ -386,7 +386,116 @@ const VolumeTooltip = memo(function VolumeTooltip({
       <p className="mt-2 text-[10px] text-muted-foreground/50">Mock data</p>
     </div>
   )
-})
+}
+
+type VolumeChartStackedBarsProps = {
+  chartData: ChartRow[]
+  colorSlots: number[]
+  hoveredIndex: number | null
+  hoveredResourceKey: ResourceKey | null
+  filteredResourceKey: ResourceKey | null
+  lastSeriesIndex: number
+  onSegmentHover: (key: ResourceKey) => void
+}
+
+function volumeStackedBarsPropsEqual(
+  prev: VolumeChartStackedBarsProps,
+  next: VolumeChartStackedBarsProps,
+): boolean {
+  return (
+    prev.hoveredIndex === next.hoveredIndex &&
+    prev.hoveredResourceKey === next.hoveredResourceKey &&
+    prev.chartData === next.chartData &&
+    prev.colorSlots === next.colorSlots &&
+    prev.filteredResourceKey === next.filteredResourceKey &&
+    prev.lastSeriesIndex === next.lastSeriesIndex &&
+    prev.onSegmentHover === next.onSegmentHover
+  )
+}
+
+const VolumeChartStackedBars = memo(function VolumeChartStackedBars({
+  chartData,
+  colorSlots,
+  hoveredIndex,
+  hoveredResourceKey,
+  filteredResourceKey,
+  lastSeriesIndex,
+  onSegmentHover,
+}: VolumeChartStackedBarsProps) {
+  return (
+    <>
+      {RESOURCE_SERIES.map(({ key, label }, seriesIndex) => (
+        <Bar
+          key={key}
+          name={label}
+          dataKey={key}
+          stackId="vol"
+          isAnimationActive={false}
+          fill={seriesFill(colorSlots[seriesIndex]!)}
+          onMouseEnter={() => onSegmentHover(key)}
+          radius={
+            lastSeriesIndex === 0
+              ? [5, 5, 5, 5]
+              : seriesIndex === 0
+                ? [0, 0, 5, 5]
+                : seriesIndex === lastSeriesIndex
+                  ? [5, 5, 0, 0]
+                  : [0, 0, 0, 0]
+          }
+        >
+          {chartData.map((_, index) => {
+            const slot = colorSlots[seriesIndex]!
+            const colActive = hoveredIndex === index
+            const hasSegmentHover = hoveredResourceKey !== null
+            const isHoveredSegment =
+              colActive && hasSegmentHover && key === hoveredResourceKey
+            const isDimmedSiblingInColumn =
+              colActive && hasSegmentHover && key !== hoveredResourceKey
+            const isOtherColumn = hoveredIndex !== null && !colActive
+
+            let fill: string
+            let cellOpacity = 1
+
+            if (isHoveredSegment) {
+              fill = seriesFillEmphasis(slot)
+            } else if (isDimmedSiblingInColumn) {
+              fill = seriesFill(slot)
+              cellOpacity = 0.32
+            } else if (colActive) {
+              fill = seriesFillHover(slot)
+            } else {
+              fill = seriesFill(slot)
+              if (isOtherColumn) cellOpacity = 0.5
+            }
+
+            if (
+              filteredResourceKey != null &&
+              key !== filteredResourceKey &&
+              !isHoveredSegment
+            ) {
+              cellOpacity *= 0.42
+            } else if (
+              filteredResourceKey != null &&
+              key === filteredResourceKey &&
+              !isHoveredSegment &&
+              !isDimmedSiblingInColumn
+            ) {
+              fill = seriesFillHover(slot)
+            }
+
+            return (
+              <Cell
+                key={`${key}-${index}`}
+                fill={fill}
+                opacity={cellOpacity}
+              />
+            )
+          })}
+        </Bar>
+      ))}
+    </>
+  )
+}, volumeStackedBarsPropsEqual)
 
 export interface ActivityLogVolumeChartProps {
   rangeFrom: Date
@@ -500,17 +609,11 @@ export function ActivityLogVolumeChart({
     [rangeFrom, rangeTo, chartData.length],
   )
 
-  const volumeTooltipContent = useMemo(
-    () => (
-      <VolumeTooltip
-        highlightedDataKey={hoveredResourceKey}
-        activeResourceTypeFilter={filteredResourceKey}
-      />
-    ),
-    [hoveredResourceKey, filteredResourceKey],
-  )
-
   const lastSeriesIndex = RESOURCE_SERIES.length - 1
+
+  const handleSegmentHover = useCallback((key: ResourceKey) => {
+    setHoveredResourceKey(key)
+  }, [])
 
   return (
     <Collapsible
@@ -573,11 +676,23 @@ export function ActivityLogVolumeChart({
                   barCategoryGap="15%"
                   onMouseMove={(state, e) => {
                     const col = parseActiveBarIndex(state.activeTooltipIndex)
-                    if (col !== lastTooltipColumnRef.current) {
+                    // Recharts can briefly report `null` while still over a column — do not touch
+                    // `lastTooltipColumnRef` or `hoveredResourceKey` in that case.
+                    //
+                    // Only clear the stacked segment when moving **between two real columns**.
+                    // If we clear when `prevCol` was `null` (first hover into a column), we run
+                    // after `Bar` `onMouseEnter` in the same tick and wipe the segment highlight.
+                    if (col != null) {
+                      const prevCol = lastTooltipColumnRef.current
+                      if (prevCol != null && col !== prevCol) {
+                        setHoveredResourceKey(null)
+                      }
                       lastTooltipColumnRef.current = col
-                      setHoveredResourceKey(null)
                     }
-                    setHoveredIndex((prev) => (prev === col ? prev : col))
+                    setHoveredIndex((prev) => {
+                      if (col == null) return prev
+                      return prev === col ? prev : col
+                    })
                     scheduleTooltipPointerUpdate(pointerInChartWrapper(e))
                   }}
                   onMouseLeave={() => {
@@ -623,11 +738,16 @@ export function ActivityLogVolumeChart({
                     width={40}
                   />
                   <Tooltip
-                    content={volumeTooltipContent}
+                    content={
+                      <VolumeTooltip
+                        highlightedDataKey={hoveredResourceKey}
+                        activeResourceTypeFilter={filteredResourceKey}
+                      />
+                    }
                     cursor={false}
                     isAnimationActive={false}
                     allowEscapeViewBox={{ x: true, y: true }}
-                    wrapperStyle={{ zIndex: 50 }}
+                    wrapperStyle={{ zIndex: 50, pointerEvents: 'none' }}
                     position={
                       tooltipPointer
                         ? clampVolumeTooltipPosition(
@@ -639,80 +759,15 @@ export function ActivityLogVolumeChart({
                         : undefined
                     }
                   />
-                  {RESOURCE_SERIES.map(({ key, label }, seriesIndex) => (
-                    <Bar
-                      key={key}
-                      name={label}
-                      dataKey={key}
-                      stackId="vol"
-                      isAnimationActive={false}
-                      fill={seriesFill(colorSlots[seriesIndex]!)}
-                      onMouseEnter={() => {
-                        setHoveredResourceKey(key)
-                      }}
-                      radius={
-                        lastSeriesIndex === 0
-                          ? [5, 5, 5, 5]
-                          : seriesIndex === 0
-                            ? [0, 0, 5, 5]
-                            : seriesIndex === lastSeriesIndex
-                              ? [5, 5, 0, 0]
-                              : [0, 0, 0, 0]
-                      }
-                    >
-                      {chartData.map((_, index) => {
-                        const slot = colorSlots[seriesIndex]!
-                        const colActive = hoveredIndex === index
-                        const hasSegmentHover = hoveredResourceKey !== null
-                        const isHoveredSegment =
-                          colActive &&
-                          hasSegmentHover &&
-                          key === hoveredResourceKey
-                        const isDimmedSiblingInColumn =
-                          colActive && hasSegmentHover && key !== hoveredResourceKey
-                        const isOtherColumn =
-                          hoveredIndex !== null && !colActive
-
-                        let fill: string
-                        let cellOpacity = 1
-
-                        if (isHoveredSegment) {
-                          fill = seriesFillEmphasis(slot)
-                        } else if (isDimmedSiblingInColumn) {
-                          fill = seriesFill(slot)
-                          cellOpacity = 0.32
-                        } else if (colActive) {
-                          fill = seriesFillHover(slot)
-                        } else {
-                          fill = seriesFill(slot)
-                          if (isOtherColumn) cellOpacity = 0.5
-                        }
-
-                        if (
-                          filteredResourceKey != null &&
-                          key !== filteredResourceKey &&
-                          !isHoveredSegment
-                        ) {
-                          cellOpacity *= 0.42
-                        } else if (
-                          filteredResourceKey != null &&
-                          key === filteredResourceKey &&
-                          !isHoveredSegment &&
-                          !isDimmedSiblingInColumn
-                        ) {
-                          fill = seriesFillHover(slot)
-                        }
-
-                        return (
-                          <Cell
-                            key={`${key}-${index}`}
-                            fill={fill}
-                            opacity={cellOpacity}
-                          />
-                        )
-                      })}
-                    </Bar>
-                  ))}
+                  <VolumeChartStackedBars
+                    chartData={chartData}
+                    colorSlots={colorSlots}
+                    hoveredIndex={hoveredIndex}
+                    hoveredResourceKey={hoveredResourceKey}
+                    filteredResourceKey={filteredResourceKey}
+                    lastSeriesIndex={lastSeriesIndex}
+                    onSegmentHover={handleSegmentHover}
+                  />
                   <Customized
                     component={(chartProps: {
                       offset?: {

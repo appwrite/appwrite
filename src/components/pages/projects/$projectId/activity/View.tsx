@@ -94,29 +94,44 @@ function ActivityTableCountryCell({
   )
 }
 
+/** Column widths for activity log table — shared by `colgroup` and kept in sync with header labels. */
+function ActivityLogsTableColGroup() {
+  return (
+    <colgroup>
+      <col className="w-[14%]" />
+      <col className="w-[12%]" />
+      <col className="w-[10%]" />
+      <col className="" />
+      <col className="w-[12%]" />
+      <col className="w-[10%]" />
+      <col className="w-[10%]" />
+    </colgroup>
+  )
+}
+
 function ActivityLogsTableHead() {
   return (
     <TableHeader>
       <TableRow className="hover:bg-transparent border-b border-border">
-        <TableHead className="sticky top-0 z-10 min-w-[9rem] max-w-[18rem] bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider pl-6 sm:pl-8 shadow-[inset_0_-1px_0_var(--border)]">
+        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider pl-6 sm:pl-8 shadow-[inset_0_-1px_0_var(--border)]">
           Event
         </TableHead>
-        <TableHead className="sticky top-0 z-10 min-w-[9rem] w-[11rem] bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]">
+        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]">
           Actor
         </TableHead>
-        <TableHead className="sticky top-0 z-10 min-w-[7.5rem] w-[7.5rem] bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]">
+        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]">
           Type
         </TableHead>
-        <TableHead className="sticky top-0 z-10 min-w-[10rem] bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]">
+        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]">
           Resource
         </TableHead>
-        <TableHead className="sticky top-0 z-10 w-[140px] bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]">
+        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]">
           IP address
         </TableHead>
-        <TableHead className="sticky top-0 z-10 min-w-[6rem] bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]">
+        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]">
           Country
         </TableHead>
-        <TableHead className="sticky top-0 z-10 w-[140px] bg-background px-4 py-3 pr-6 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider sm:pr-8 shadow-[inset_0_-1px_0_var(--border)]">
+        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 pr-6 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider sm:pr-8 shadow-[inset_0_-1px_0_var(--border)]">
           Time
         </TableHead>
       </TableRow>
@@ -136,11 +151,11 @@ function ActivityLogsSkeletonRows({ rowCount }: { rowCount: number }) {
           <TableCell className="min-w-0 px-4 py-3 pl-6 sm:pl-8">
             <div className="flex min-w-0 items-center gap-2">
               <Skeleton className="h-7 w-7 shrink-0 rounded-md" />
-              <Skeleton className="h-3.5 min-w-0 flex-1" />
+              <Skeleton className="h-3.5 min-w-0 flex-1 max-w-full" />
             </div>
           </TableCell>
           <TableCell className="min-w-0 px-4 py-3">
-            <div className="flex items-center gap-2.5">
+            <div className="flex min-w-0 items-center gap-2.5">
               <Skeleton className="h-8 w-8 shrink-0 rounded-full" />
               <div className="min-w-0 flex flex-1 flex-col gap-1">
                 <Skeleton className="h-4 w-[7.5rem] max-w-full" />
@@ -155,13 +170,13 @@ function ActivityLogsSkeletonRows({ rowCount }: { rowCount: number }) {
             <div className="flex min-w-0 items-center gap-2.5">
               <Skeleton className="h-7 w-7 shrink-0 rounded-md" />
               <div className="min-w-0 flex flex-1 flex-col gap-1">
-                <Skeleton className="h-4 w-full min-w-0" />
-                <Skeleton className="h-3 w-14" />
+                <Skeleton className="h-4 w-[11rem] max-w-full" />
+                <Skeleton className="h-3 w-14 max-w-full" />
               </div>
             </div>
           </TableCell>
           <TableCell className="min-w-0 px-4 py-3">
-            <Skeleton className="h-3.5 w-full max-w-full" />
+            <Skeleton className="h-3.5 w-28 max-w-full" />
           </TableCell>
           <TableCell className="min-w-0 px-4 py-3">
             <Skeleton className="h-3.5 w-20 max-w-full" />
@@ -775,6 +790,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
                 dateRange={dateRangeForPicker}
                 onDateRangeChange={handleDateRangeChange}
                 className="h-9 min-w-[200px]"
+                popoverContentAlign="start"
               />
             </div>
           }
@@ -875,7 +891,11 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
         {events.length > 0 ? (
           <>
             <div className="min-h-0 flex-1 overflow-auto">
-              <Table withScrollContainer={false}>
+              <Table
+                withScrollContainer={false}
+                className="table-fixed w-full"
+              >
+                <ActivityLogsTableColGroup />
                 <ActivityLogsTableHead />
                 <TableBody>
                   {events.map((rawEvent) => {
@@ -1079,7 +1099,11 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
               role="status"
               aria-label="Loading activities"
             >
-              <Table withScrollContainer={false}>
+              <Table
+                withScrollContainer={false}
+                className="table-fixed w-full"
+              >
+                <ActivityLogsTableColGroup />
                 <ActivityLogsTableHead />
                 <TableBody>
                   <ActivityLogsSkeletonRows
