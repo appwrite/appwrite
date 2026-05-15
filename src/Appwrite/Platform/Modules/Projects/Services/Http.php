@@ -8,6 +8,7 @@ use Appwrite\Platform\Modules\Projects\Http\DevKeys\Get as GetDevKey;
 use Appwrite\Platform\Modules\Projects\Http\DevKeys\Update as UpdateDevKey;
 use Appwrite\Platform\Modules\Projects\Http\DevKeys\XList as ListDevKeys;
 use Appwrite\Platform\Modules\Projects\Http\Projects\Create as CreateProject;
+use Appwrite\Platform\Modules\Projects\Http\Projects\Get as GetProject;
 use Appwrite\Platform\Modules\Projects\Http\Projects\Team\Update as UpdateProjectTeam;
 use Appwrite\Platform\Modules\Projects\Http\Projects\Update as UpdateProject;
 use Appwrite\Platform\Modules\Projects\Http\Projects\XList as ListProjects;
@@ -21,19 +22,20 @@ class Http extends Service
     public function __construct()
     {
         $this->type = Service::TYPE_HTTP;
-        $this->addAction(CreateDevKey::getName(), new CreateDevKey());
-        $this->addAction(UpdateDevKey::getName(), new UpdateDevKey());
-        $this->addAction(GetDevKey::getName(), new GetDevKey());
-        $this->addAction(ListDevKeys::getName(), new ListDevKeys());
-        $this->addAction(DeleteDevKey::getName(), new DeleteDevKey());
+        $this->addAction(CreateDevKey::getName(), new CreateDevKey);
+        $this->addAction(UpdateDevKey::getName(), new UpdateDevKey);
+        $this->addAction(GetDevKey::getName(), new GetDevKey);
+        $this->addAction(ListDevKeys::getName(), new ListDevKeys);
+        $this->addAction(DeleteDevKey::getName(), new DeleteDevKey);
 
-        $this->addAction(CreateProject::getName(), new CreateProject());
-        $this->addAction(UpdateProject::getName(), new UpdateProject());
-        $this->addAction(ListProjects::getName(), new ListProjects());
-        $this->addAction(UpdateProjectTeam::getName(), new UpdateProjectTeam());
+        $this->addAction(CreateProject::getName(), new CreateProject);
+        $this->addAction(GetProject::getName(), new GetProject);
+        $this->addAction(UpdateProject::getName(), new UpdateProject);
+        $this->addAction(ListProjects::getName(), new ListProjects);
+        $this->addAction(UpdateProjectTeam::getName(), new UpdateProjectTeam);
 
-        $this->addAction(CreateSchedule::getName(), new CreateSchedule());
-        $this->addAction(GetSchedule::getName(), new GetSchedule());
-        $this->addAction(ListSchedules::getName(), new ListSchedules());
+        $this->addAction(CreateSchedule::getName(), new CreateSchedule);
+        $this->addAction(GetSchedule::getName(), new GetSchedule);
+        $this->addAction(ListSchedules::getName(), new ListSchedules);
     }
 }
