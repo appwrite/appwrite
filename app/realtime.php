@@ -1055,15 +1055,17 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
     try {
         $response = new Response(new SwooleResponse());
 
-        // Get authorization from connection (stored during onOpen)
-        $authorization = $realtime->connections[$connection]['authorization'] ?? null;
-        if ($authorization === null) {
-            $authorization = new Authorization();
+        // Build a fresh Authorization per message. The connection-scoped instance is shared
+        // across coroutines, and `Authorization::skip()` toggles instance state — concurrent
+        // messages on the same connection (e.g. `authentication` + `presence` sent back-to-back)
+        // would interleave skip/restore and leak permission checks into supposedly-skipped lookups.
+        $authorization = new Authorization();
+        $connectionAuthorization = $realtime->connections[$connection]['authorization'] ?? null;
+        if ($connectionAuthorization !== null) {
+            foreach ($connectionAuthorization->getRoles() as $role) {
+                $authorization->addRole($role);
+            }
         }
-
-        // Ensure `$authorization` contains the same roles as the realtime connection.
-        // `setPermission()` validates against `$authorization->getRoles()`, but roles are
-        // computed/stored separately in the realtime adapter connection tree.
         $connectionRoles = $realtime->connections[$connection]['roles'] ?? [];
         foreach ($connectionRoles as $role) {
             if ($authorization->hasRole($role)) {
