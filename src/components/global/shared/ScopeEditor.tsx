@@ -22,18 +22,13 @@ import {
   compareScopeRowsDeprecatedLast,
   consoleKeyScopesToEditorRows,
   getScopeCategoryIcon,
-  getScopeVariants,
   isCloudEnvironment,
-  LEGACY_SCOPE_MAP,
-  normalizeScopeForDisplay,
   scopeEditorCategory,
-  scopeEditorRowIsDeprioritized,
   scopeRowDeprecated,
-  shouldDisplayScope,
   sortScopeCategories,
   type ScopeEditorRow,
 } from '@/lib/console-project-scopes'
-import { Loader2, Minus, MoreHorizontal } from 'lucide-react'
+import { Loader2, MoreHorizontal } from 'lucide-react'
 
 interface ScopeEditorProps {
   value: string[]
@@ -58,46 +53,29 @@ export function ScopeEditor({
     const scopeById = new Map<string, ConsoleKeyScopeEntry>(
       (scopeList?.scopes ?? []).map((s: ConsoleKeyScopeEntry) => [s.$id, s]),
     )
-    const base = consoleKeyScopesToEditorRows(scopeList, { isCloud })
+    const base = consoleKeyScopesToEditorRows(scopeList, {
+      isCloud,
+      selectedScopeIds: value,
+    })
     const byId = new Map(base.map((r) => [r.scope, r]))
     for (const v of value) {
-      const n = normalizeScopeForDisplay(v)
-      if (!byId.has(n) && shouldDisplayScope(v)) {
-        const orphanEntry = scopeById.get(n)
-        const categoryLooksDeprecated =
-          (orphanEntry?.category ?? '').trim().toLowerCase() === 'deprecated'
-        const deprecatedBadge = scopeRowDeprecated(
-          orphanEntry?.deprecated,
-          categoryLooksDeprecated,
-        )
-        const accordionCategory = scopeEditorCategory(n, undefined)
-        byId.set(n, {
-          scope: n,
-          description:
-            'This scope is on the API key but was not returned in the server scope list.',
-          category: accordionCategory,
-          icon: getScopeCategoryIcon(accordionCategory, n),
-          deprecated: deprecatedBadge,
-        })
-      }
-    }
-
-    const legacyOnKeyByModern = new Map<string, string[]>()
-    for (const v of value) {
-      const modern = LEGACY_SCOPE_MAP[v as keyof typeof LEGACY_SCOPE_MAP]
-      if (modern) {
-        const list = legacyOnKeyByModern.get(modern) ?? []
-        list.push(v)
-        legacyOnKeyByModern.set(modern, list)
-      }
-    }
-    for (const [modern, aliases] of legacyOnKeyByModern) {
-      const row = byId.get(modern)
-      if (!row) continue
-      const unique = [...new Set(aliases)].sort()
-      byId.set(modern, {
-        ...row,
-        legacyAliasesOnKey: unique,
+      if (byId.has(v)) continue
+      const orphanEntry = scopeById.get(v)
+      const categoryLooksDeprecated =
+        (orphanEntry?.category ?? '').trim().toLowerCase() === 'deprecated'
+      const deprecatedBadge = scopeRowDeprecated(
+        orphanEntry?.deprecated,
+        categoryLooksDeprecated,
+      )
+      const accordionCategory = scopeEditorCategory(v, orphanEntry?.category)
+      byId.set(v, {
+        scope: v,
+        description:
+          orphanEntry?.description ??
+          'This scope is on the API key but was not returned in the server scope list.',
+        category: accordionCategory,
+        icon: getScopeCategoryIcon(accordionCategory, v),
+        deprecated: deprecatedBadge,
       })
     }
 
@@ -138,52 +116,28 @@ export function ScopeEditor({
     previousValueRef.current = value
   }, [value])
 
-  const displayScopes = useMemo(() => {
-    const normalized = new Set<string>()
-    value.forEach((scope) => {
-      const normalizedScope = normalizeScopeForDisplay(scope)
-      if (shouldDisplayScope(scope)) {
-        normalized.add(normalizedScope)
-      } else {
-        normalized.add(normalizedScope)
-      }
-    })
-    return Array.from(normalized)
-  }, [value])
+  const displayScopes = useMemo(() => Array.from(new Set(value)), [value])
 
   const handleScopeToggle = (scope: string, checked: boolean) => {
     isUserInteractionRef.current = true
-    const variants = getScopeVariants(scope)
-    let newScopes: string[]
-
     if (checked) {
-      newScopes = [...new Set([...value, ...variants])]
+      onChange([...new Set([...value, scope])])
     } else {
-      newScopes = value.filter((s) => !variants.includes(s))
+      onChange(value.filter((s) => s !== scope))
     }
-
-    onChange(newScopes)
   }
 
   const handleCategoryToggle = (category: string, checked: boolean) => {
     isUserInteractionRef.current = true
     const categoryScopes = scopesByCategory[category] || []
-    const allVariants = new Set<string>()
-
-    categoryScopes.forEach((scopeDef) => {
-      const variants = getScopeVariants(scopeDef.scope)
-      variants.forEach((v) => allVariants.add(v))
-    })
-
-    let newScopes: string[]
+    const ids = categoryScopes.map((r) => r.scope)
+    const idSet = new Set(ids)
 
     if (checked) {
-      newScopes = [...new Set([...value, ...Array.from(allVariants)])]
+      onChange([...new Set([...value, ...ids])])
     } else {
-      newScopes = value.filter((s) => !allVariants.has(s))
+      onChange(value.filter((s) => !idSet.has(s)))
     }
-
-    onChange(newScopes)
   }
 
   const isSelectingAllRef = useRef(false)
@@ -193,13 +147,12 @@ export function ScopeEditor({
     e.stopPropagation()
     isSelectingAllRef.current = true
     isUserInteractionRef.current = true
-    const allVariants = new Set<string>()
+    const allIds = new Set<string>()
     availableScopes.forEach((scopeDef) => {
       if (scopeDef.deprecated) return
-      const variants = getScopeVariants(scopeDef.scope)
-      variants.forEach((v) => allVariants.add(v))
+      allIds.add(scopeDef.scope)
     })
-    onChange(Array.from(allVariants))
+    onChange(Array.from(allIds))
     requestAnimationFrame(() => {
       isSelectingAllRef.current = false
     })
@@ -326,22 +279,19 @@ export function ScopeEditor({
             >
               <AccordionHeader className="flex w-full min-w-0 items-stretch">
                 <div className="flex shrink-0 items-center self-center py-4 pl-1 pr-2">
-                  <div className="relative">
-                    <Checkbox
-                      checked={categoryState === 'checked'}
-                      onCheckedChange={(checked) => {
-                        handleCategoryToggle(category, checked === true)
-                      }}
-                      disabled={disabled}
-                      className={cn(
-                        categoryState === 'indeterminate' &&
-                          'bg-primary border-primary',
-                      )}
-                    />
-                    {categoryState === 'indeterminate' && (
-                      <Minus className="pointer-events-none absolute left-0.5 top-0.5 h-3 w-3 text-primary-foreground" />
-                    )}
-                  </div>
+                  <Checkbox
+                    checked={
+                      categoryState === 'checked'
+                        ? true
+                        : categoryState === 'indeterminate'
+                          ? 'indeterminate'
+                          : false
+                    }
+                    onCheckedChange={(checked) => {
+                      handleCategoryToggle(category, checked === true)
+                    }}
+                    disabled={disabled}
+                  />
                 </div>
                 <AccordionRowTrigger className="hover:no-underline min-w-0 flex-1">
                   <div className="flex min-w-0 flex-1 items-center justify-between pr-4">
@@ -381,7 +331,7 @@ export function ScopeEditor({
                         <div className="flex-1 space-y-0.5">
                           <div className="flex flex-wrap items-center gap-2 text-[13px] font-mono text-foreground">
                             <span>{scopeDef.scope}</span>
-                            {scopeEditorRowIsDeprioritized(scopeDef) ? (
+                            {scopeDef.deprecated ? (
                               <Badge variant="warning" className="text-[10px] shrink-0">
                                 Deprecated
                               </Badge>
@@ -390,13 +340,6 @@ export function ScopeEditor({
                           <div className="text-[12px] text-muted-foreground">
                             {scopeDef.description}
                           </div>
-                          {scopeDef.legacyAliasesOnKey &&
-                          scopeDef.legacyAliasesOnKey.length > 0 ? (
-                            <div className="text-[11px] text-muted-foreground font-mono leading-snug">
-                              On key as legacy:{' '}
-                              {scopeDef.legacyAliasesOnKey.join(', ')}
-                            </div>
-                          ) : null}
                         </div>
                       </label>
                     )

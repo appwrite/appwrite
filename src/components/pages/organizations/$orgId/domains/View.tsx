@@ -14,6 +14,9 @@ import {
   fetchOrganizationDomains,
   DOMAINS_DEFAULT_SORT_BY,
   DOMAINS_DEFAULT_SORT_ORDER,
+  domainRecordsQueryOptions,
+  DNS_RECORDS_DEFAULT_SORT_BY,
+  DNS_RECORDS_DEFAULT_SORT_ORDER,
 } from '@/lib/react-query/hooks'
 import {
   getSearch,
@@ -64,7 +67,10 @@ import {
   useDeleteOrganizationDomain,
   useRetryDomainVerification,
 } from '@/lib/react-query/hooks'
-import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import {
+  GRID_DEFAULT_PAGE_SIZE,
+  ROWS_DEFAULT_PAGE_SIZE,
+} from '@/lib/react-query/hooks/constants'
 
 type DomainsListSearch = {
   search?: string
@@ -80,6 +86,8 @@ export function View() {
   const location = useLocation()
   const search = useSearch({ strict: false })
   const queryClient = useQueryClient()
+  const [isCreateDomainSubmitting, setIsCreateDomainSubmitting] =
+    useState(false)
 
   const isDomainsIndex =
     location.pathname.replace(/\/$/, '') === `/organizations/${orgId}/domains`
@@ -512,20 +520,33 @@ export function View() {
   // Create domain mutation
   const createDomainMutation = useCreateOrganizationDomain(orgId)
 
-  const handleCreateDomain = (domain: string) => {
-    createDomainMutation.mutate(domain, {
-      onSuccess: (createdDomain) => {
-        toast.success(`${createdDomain.domain} has been created`)
-        setCreateDialogOpen(false)
-        navigate({
-          to: '/organizations/$orgId/domains/$domainId',
-          params: { orgId: orgId!, domainId: createdDomain.$id },
-        })
-      },
-      onError: (error) => {
-        toast.error(getErrorMessage(error))
-      },
-    })
+  const handleCreateDomain = async (domain: string) => {
+    if (!orgId) return
+    setIsCreateDomainSubmitting(true)
+    try {
+      const createdDomain = await createDomainMutation.mutateAsync(domain)
+      const domainId = createdDomain.$id
+      queryClient.setQueryData(['domain', domainId], createdDomain)
+      await queryClient.ensureQueryData(
+        domainRecordsQueryOptions(
+          domainId,
+          0,
+          ROWS_DEFAULT_PAGE_SIZE,
+          undefined,
+          DNS_RECORDS_DEFAULT_SORT_BY,
+          DNS_RECORDS_DEFAULT_SORT_ORDER,
+        ),
+      )
+      toast.success(`${createdDomain.domain} has been created`)
+      await navigate({
+        to: '/organizations/$orgId/domains/$domainId',
+        params: { orgId: orgId!, domainId },
+      })
+    } catch (error) {
+      toast.error(getErrorMessage(error))
+    } finally {
+      setIsCreateDomainSubmitting(false)
+    }
   }
 
   // Retry verification mutation
@@ -677,7 +698,7 @@ export function View() {
                   >
                     <Link
                       to="/organizations/$orgId/domains/$domainId"
-                      params={{ orgId, domainId: domain.$id }}
+                      params={{ orgId: orgId!, domainId: domain.$id }}
                     >
                       <ResourceCard
                         title={domain.domain}
@@ -808,7 +829,7 @@ export function View() {
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
         onCreate={handleCreateDomain}
-        isLoading={createDomainMutation.isPending}
+        isLoading={isCreateDomainSubmitting}
       />
 
       {/* Retry Verification Dialog */}

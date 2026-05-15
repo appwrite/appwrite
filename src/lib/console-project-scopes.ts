@@ -11,6 +11,8 @@ import {
   Boxes,
   Globe2,
   MoreHorizontal,
+  Sparkles,
+  Network,
 } from 'lucide-react'
 
 export function isCloudEnvironment(): boolean {
@@ -31,62 +33,31 @@ export const CLOUD_ONLY_SCOPE_IDS = new Set([
   'restorations.write',
 ])
 
-/** Map legacy scope ids to their modern equivalents (for display / toggling). */
-export const LEGACY_SCOPE_MAP: Record<string, string> = {
-  'collections.read': 'tables.read',
-  'collections.write': 'tables.write',
-  'attributes.read': 'columns.read',
-  'attributes.write': 'columns.write',
-  'documents.read': 'rows.read',
-  'documents.write': 'rows.write',
-  /** Older API keys used singular `execution.*`; catalog uses `executions.*`. */
-  'execution.read': 'executions.read',
-  'execution.write': 'executions.write',
-}
-
-/** For a modern scope id, all API key values that should toggle together with it. */
-export const LEGACY_SCOPE_ALIASES: Record<string, string[]> = {
-  'tables.read': ['collections.read'],
-  'tables.write': ['collections.write'],
-  'columns.read': ['attributes.read'],
-  'columns.write': ['attributes.write'],
-  'rows.read': ['documents.read'],
-  'rows.write': ['documents.write'],
-  'executions.read': ['execution.read'],
-  'executions.write': ['execution.write'],
-}
-
-export function normalizeScopeForDisplay(scope: string): string {
-  return LEGACY_SCOPE_MAP[scope] || scope
-}
-
-export function shouldDisplayScope(scope: string): boolean {
-  return !Object.keys(LEGACY_SCOPE_MAP).includes(scope)
-}
-
-export function getScopeVariants(primaryScope: string): string[] {
-  return [primaryScope, ...(LEGACY_SCOPE_ALIASES[primaryScope] ?? [])]
-}
+/**
+ * Renamed legacy scope ids omitted from the catalog unless the API key already
+ * includes them. There is no mapping to modern scope ids — the key stores and
+ * toggles the exact scope string.
+ */
+export const LEGACY_CATALOG_ONLY_WHEN_ON_KEY = new Set([
+  'collections.read',
+  'collections.write',
+  'attributes.read',
+  'attributes.write',
+  'documents.read',
+  'documents.write',
+  'execution.read',
+  'execution.write',
+])
 
 /**
- * Whether to show the Deprecated badge for a catalog row. Uses the API
- * `deprecated` flag on that scope only (legacy rows like collections.* are
- * hidden from the list but stay false on tables.* / rows.*).
+ * Whether to show the Deprecated badge for a catalog row (API `deprecated` or
+ * deprecated category group from the server).
  */
 export function scopeRowDeprecated(
   selfDeprecated: boolean | undefined,
   apiCategoryIsDeprecatedGroup: boolean,
 ): boolean {
   return Boolean(selfDeprecated) || apiCategoryIsDeprecatedGroup
-}
-
-/** Sort / badge: API deprecated or key still stores legacy names for this row. */
-export function scopeEditorRowIsDeprioritized(
-  row: Pick<ScopeEditorRow, 'deprecated' | 'legacyAliasesOnKey'>,
-): boolean {
-  return (
-    Boolean(row.deprecated) || (row.legacyAliasesOnKey?.length ?? 0) > 0
-  )
 }
 
 /**
@@ -105,7 +76,7 @@ function inferAccordionCategoryFromScopeId(scopeId: string): string {
   ) {
     return 'Databases'
   }
-  if (/^(functions|executions)\./.test(id)) return 'Functions'
+  if (/^(functions|executions|execution)\./.test(id)) return 'Functions'
   if (/^(files|buckets|tokens)\./.test(id)) return 'Storage'
   if (/^(messages|topics|subscribers|targets|providers)\./.test(id)) {
     return 'Messaging'
@@ -118,6 +89,8 @@ function inferAccordionCategoryFromScopeId(scopeId: string): string {
   ) {
     return 'Project'
   }
+  if (/^advisor\./.test(id)) return 'Advisor'
+  if (/^proxy\./.test(id)) return 'Proxy'
   return 'General'
 }
 
@@ -143,6 +116,8 @@ const KNOWN_CATEGORY_ORDER = [
   'Sites',
   'Domains',
   'Project',
+  'Advisor',
+  'Proxy',
   'General',
 ]
 
@@ -211,6 +186,12 @@ export function getScopeCategoryIcon(
   if (c.includes('site') || c.includes('log')) {
     return Globe
   }
+  if (c.includes('advisor')) {
+    return Sparkles
+  }
+  if (c.includes('proxy')) {
+    return Network
+  }
   const id = scopeId?.toLowerCase() ?? ''
   if (id) {
     if (/^(users|teams|sessions)\./.test(id)) return Users
@@ -229,7 +210,7 @@ export function getScopeCategoryIcon(
     ) {
       return Database
     }
-    if (/^(functions|executions)\./.test(id)) return Zap
+    if (/^(functions|executions|execution)\./.test(id)) return Zap
     if (/^(files|buckets|tokens)\./.test(id)) return Folder
     if (
       /^(messages|topics|subscribers|targets|providers)\./.test(id)
@@ -237,6 +218,8 @@ export function getScopeCategoryIcon(
       return MessageSquare
     }
     if (/^(sites|log)\./.test(id)) return Globe
+    if (/^advisor\./.test(id)) return Sparkles
+    if (/^proxy\./.test(id)) return Network
   }
   return MoreHorizontal
 }
@@ -246,13 +229,13 @@ export function buildAllAvailableScopeIds(
   isCloud: boolean,
 ): string[] {
   if (!list?.scopes?.length) return []
-  const out = new Set<string>()
+  const out: string[] = []
   for (const s of list.scopes) {
     if (s.deprecated) continue
     if (CLOUD_ONLY_SCOPE_IDS.has(s.$id) && !isCloud) continue
-    getScopeVariants(s.$id).forEach((v) => out.add(v))
+    out.push(s.$id)
   }
-  return Array.from(out)
+  return out
 }
 
 export type ScopeEditorRow = {
@@ -260,23 +243,16 @@ export type ScopeEditorRow = {
   description: string
   category: string
   icon: LucideIcon
-  /** When true, show the Deprecated badge (from API `deprecated` on this row). */
+  /** When true, show the Deprecated badge (catalog `deprecated` only). */
   deprecated?: boolean
-  /**
-   * Legacy scope ids still present on the API key (e.g. `collections.read`) that
-   * map to this catalog row. Shown so deprecated names on the key are visible.
-   */
-  legacyAliasesOnKey?: string[]
 }
 
 /** Within a category: non-deprecated first, then alphabetical by scope id. */
 export function compareScopeRowsDeprecatedLast(
-  a: Pick<ScopeEditorRow, 'scope' | 'deprecated' | 'legacyAliasesOnKey'>,
-  b: Pick<ScopeEditorRow, 'scope' | 'deprecated' | 'legacyAliasesOnKey'>,
+  a: Pick<ScopeEditorRow, 'scope' | 'deprecated'>,
+  b: Pick<ScopeEditorRow, 'scope' | 'deprecated'>,
 ): number {
-  const dep =
-    Number(scopeEditorRowIsDeprioritized(a)) -
-    Number(scopeEditorRowIsDeprioritized(b))
+  const dep = Number(Boolean(a.deprecated)) - Number(Boolean(b.deprecated))
   if (dep !== 0) return dep
   return a.scope.localeCompare(b.scope)
 }
@@ -292,14 +268,18 @@ export function compareScopeEditorRowsForDisplay(
 
 export function consoleKeyScopesToEditorRows(
   list: Models.ConsoleKeyScopeList | undefined,
-  opts: { isCloud: boolean },
+  opts: { isCloud: boolean; selectedScopeIds?: readonly string[] },
 ): ScopeEditorRow[] {
   if (!list?.scopes?.length) return []
+  const selected = new Set(opts.selectedScopeIds ?? [])
   return list.scopes
     .filter(
       (s) => !CLOUD_ONLY_SCOPE_IDS.has(s.$id) || opts.isCloud,
     )
-    .filter((s) => shouldDisplayScope(s.$id))
+    .filter((s) => {
+      if (!LEGACY_CATALOG_ONLY_WHEN_ON_KEY.has(s.$id)) return true
+      return selected.has(s.$id)
+    })
     .map((s) => {
       const sourceCategory = s.category || 'Other'
       const categoryLooksDeprecated =
