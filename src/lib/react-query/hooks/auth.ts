@@ -14,6 +14,7 @@ import {
 } from '@tanstack/react-query'
 import { MethodId } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import { getConsoleAccountQueryRevision } from '@/lib/console-impersonation'
 import {
   buildDatabasesSidebarWidthPrefs,
   buildSavedFiltersPrefs,
@@ -58,6 +59,27 @@ export function getConsoleAccountFromCache(
     if (data) return data
   }
   return undefined
+}
+
+/** Same stale window as `RequireAuth` / `useAuth` account query. */
+export const CONSOLE_ACCOUNT_STALE_TIME_MS = 5 * 60 * 1000
+
+/**
+ * Console `account.get` — shared by route loaders (prefetch prefs before child
+ * loaders) and auth UI. Pass `revision` from `useConsoleImpersonationRevision` when
+ * overriding `queryFn` in components.
+ */
+export function consoleAccountQueryOptions(options?: {
+  revision?: number
+}) {
+  const revision = options?.revision ?? getConsoleAccountQueryRevision()
+  return queryOptions({
+    queryKey: ['account', 'console', revision],
+    queryFn: () => sdk.forConsole.account.get(),
+    staleTime: CONSOLE_ACCOUNT_STALE_TIME_MS,
+    retry: false,
+    enabled: typeof window !== 'undefined',
+  })
 }
 
 // ============================================================================

@@ -10,6 +10,10 @@ import { ReactNode, useEffect, useRef } from 'react'
 import { useConsoleImpersonationRevision } from '@/hooks/use-console-impersonation-revision'
 import { clearConsoleImpersonationSession } from '@/lib/console-impersonation'
 import { isHttpForbiddenError } from '@/lib/utils/error-formatting'
+import {
+  consoleAccountQueryOptions,
+  CONSOLE_ACCOUNT_STALE_TIME_MS,
+} from '@/lib/react-query/hooks/auth'
 import { AccountAccessBlockedScreen } from '@/components/global/auth/AccountAccessBlockedScreen'
 import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
 
@@ -211,7 +215,7 @@ export function RequireAuth({
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['account', 'console', consoleImpersonationRevision],
+    ...consoleAccountQueryOptions({ revision: consoleImpersonationRevision }),
     queryFn: async () => {
       try {
         const accountData = await sdk.forConsole.account.get()
@@ -266,9 +270,7 @@ export function RequireAuth({
         throw err
       }
     },
-    retry: false,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    enabled: typeof window !== 'undefined', // Only run on client side
+    staleTime: CONSOLE_ACCOUNT_STALE_TIME_MS,
     refetchOnMount: true, // Refetch when component mounts
   })
 
@@ -356,7 +358,7 @@ export function useAuth(): AuthData {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['account', 'console', consoleImpersonationRevision],
+    ...consoleAccountQueryOptions({ revision: consoleImpersonationRevision }),
     queryFn: async () => {
       try {
         return await sdk.forConsole.account.get()
@@ -409,9 +411,7 @@ export function useAuth(): AuthData {
         throw err
       }
     },
-    retry: false,
-    staleTime: 5 * 60 * 1000,
-    enabled: typeof window !== 'undefined',
+    staleTime: CONSOLE_ACCOUNT_STALE_TIME_MS,
     refetchOnMount: true,
   })
 

@@ -3358,7 +3358,6 @@ export function RowsSpreadsheet({
   )
   const dataColumnColRefs = useRef<Map<string, HTMLTableColElement>>(new Map())
   const dataColumnRailRefs = useRef<Map<string, HTMLButtonElement>>(new Map())
-  const rowColumnWidthsLoadKeyRef = useRef<string | null>(null)
 
   const getDataColumnWidthPx = useCallback(
     (colKey: string) => {
@@ -3414,47 +3413,31 @@ export function RowsSpreadsheet({
     [repositionDataColumnRailsOnly],
   )
 
-  useEffect(() => {
-    if (!databaseId || !tableId) {
-      rowColumnWidthsLoadKeyRef.current = null
-      setRowColumnWidths({})
-      return
+  /** From cached account prefs (same source as loaders) — avoids default-width flash + extra account.get on navigation. */
+  const rowColumnWidthsFromPrefs = useMemo((): Record<string, number> => {
+    if (!databaseId || !tableId) return {}
+    const prefs = (account as { prefs?: UserPrefs } | undefined)?.prefs
+    const raw = getDatabaseTableRowColumnWidthsFromPrefs(
+      prefs,
+      databaseId,
+      tableId,
+    )
+    const next: Record<string, number> = {}
+    for (const [k, v] of Object.entries(raw)) {
+      if (!k || k.startsWith('$')) continue
+      const n = typeof v === 'number' ? v : Number(v)
+      if (!Number.isFinite(n)) continue
+      next[k] = Math.min(
+        ROWS_DATA_COLUMN_MAX_WIDTH_PX,
+        Math.max(ROWS_DATA_COLUMN_MIN_WIDTH_PX, n),
+      )
     }
-    const loadKey = `${databaseId}:${tableId}`
-    const keyChanged = rowColumnWidthsLoadKeyRef.current !== loadKey
-    rowColumnWidthsLoadKeyRef.current = loadKey
-    let cancelled = false
-    if (keyChanged) {
-      setRowColumnWidths({})
-    }
-    void (async () => {
-      try {
-        const acct = await sdk.forConsole.account.get()
-        if (cancelled) return
-        const raw = getDatabaseTableRowColumnWidthsFromPrefs(
-          acct.prefs as UserPrefs | undefined,
-          databaseId,
-          tableId,
-        )
-        const next: Record<string, number> = {}
-        for (const [k, v] of Object.entries(raw)) {
-          if (!k || k.startsWith('$')) continue
-          const n = typeof v === 'number' ? v : Number(v)
-          if (!Number.isFinite(n)) continue
-          next[k] = Math.min(
-            ROWS_DATA_COLUMN_MAX_WIDTH_PX,
-            Math.max(ROWS_DATA_COLUMN_MIN_WIDTH_PX, n),
-          )
-        }
-        setRowColumnWidths(next)
-      } catch {
-        if (!cancelled) setRowColumnWidths({})
-      }
-    })()
-    return () => {
-      cancelled = true
-    }
-  }, [tableId, databaseId, account?.$id])
+    return next
+  }, [databaseId, tableId, account])
+
+  useLayoutEffect(() => {
+    setRowColumnWidths(rowColumnWidthsFromPrefs)
+  }, [databaseId, tableId, rowColumnWidthsFromPrefs])
 
   const persistRowColumnWidths = useCallback(
     async (

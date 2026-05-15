@@ -11,6 +11,16 @@ export const CONSOLE_IMPERSONATION_OPERATOR_KEY =
 export const CONSOLE_IMPERSONATION_CHANGED_EVENT =
   'console-impersonation-changed'
 
+/**
+ * Bumped on every impersonation session change so React Query keys for
+ * `account.get` stay aligned between route loaders and `RequireAuth` / `useAuth`.
+ */
+let consoleAccountQueryRevision = 0
+
+export function getConsoleAccountQueryRevision(): number {
+  return consoleAccountQueryRevision
+}
+
 /** Safe landing after impersonation starts or ends (avoids staying on org/project routes the new session may not access). */
 export const ACCOUNT_PATH_AFTER_IMPERSONATION = '/account'
 
@@ -92,6 +102,7 @@ export function clearConsoleImpersonationSession(
 
 export function notifyConsoleImpersonationChanged() {
   if (typeof window === 'undefined') return
+  consoleAccountQueryRevision += 1
   window.dispatchEvent(new Event(CONSOLE_IMPERSONATION_CHANGED_EVENT))
 }
 
