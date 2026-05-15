@@ -74,6 +74,10 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
@@ -1824,6 +1828,100 @@ export function View() {
                                   <RefreshCw className="mr-2 h-4 w-4" />
                                   Redeploy
                                 </DropdownMenuItem>
+                                <DropdownMenuSub>
+                                  <DropdownMenuSubTrigger
+                                    onClick={(e) => e.stopPropagation()}
+                                    onPointerDown={(e) => e.stopPropagation()}
+                                  >
+                                    <Download className="mr-2 h-4 w-4" />
+                                    Download
+                                  </DropdownMenuSubTrigger>
+                                  <DropdownMenuSubContent className="z-[200]">
+                                    <DropdownMenuItem
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        if (!projectId || !siteId) return
+                                        try {
+                                          const projectSdk =
+                                            sdk.forProject(projectId)
+                                          const url =
+                                            projectSdk.sites.getDeploymentDownload(
+                                              {
+                                                siteId,
+                                                deploymentId:
+                                                  deploymentData.$id,
+                                                type: DeploymentDownloadType.Source,
+                                              },
+                                            )
+                                          const urlWithMode =
+                                            url +
+                                            (url.includes('?') ? '&' : '?') +
+                                            'mode=admin'
+                                          window.open(urlWithMode, '_blank')
+                                          toast.success('Download started')
+                                        } catch {
+                                          toast.error(
+                                            'Failed to download source code',
+                                          )
+                                        }
+                                      }}
+                                    >
+                                      <FileCode className="mr-2 h-4 w-4" />
+                                      Source code
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      disabled={
+                                        !isDeploymentCompleted(
+                                          deploymentData.status,
+                                        )
+                                      }
+                                      title={
+                                        !isDeploymentCompleted(
+                                          deploymentData.status,
+                                        )
+                                          ? 'Build output is available after the deployment has completed.'
+                                          : undefined
+                                      }
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        if (
+                                          !isDeploymentCompleted(
+                                            deploymentData.status,
+                                          )
+                                        )
+                                          return
+                                        if (!projectId || !siteId) return
+                                        try {
+                                          const projectSdk =
+                                            sdk.forProject(projectId)
+                                          const url =
+                                            projectSdk.sites.getDeploymentDownload(
+                                              {
+                                                siteId,
+                                                deploymentId:
+                                                  deploymentData.$id,
+                                                type: DeploymentDownloadType.Output,
+                                              },
+                                            )
+                                          const urlWithMode =
+                                            url +
+                                            (url.includes('?') ? '&' : '?') +
+                                            'mode=admin'
+                                          window.open(urlWithMode, '_blank')
+                                          toast.success('Download started')
+                                        } catch {
+                                          toast.error(
+                                            'Failed to download build output',
+                                          )
+                                        }
+                                      }}
+                                    >
+                                      <Package className="mr-2 h-4 w-4" />
+                                      Build output
+                                    </DropdownMenuItem>
+                                  </DropdownMenuSubContent>
+                                </DropdownMenuSub>
+                                <DropdownMenuSeparator />
                                 {!isActive &&
                                   !isDeploymentInProgress(
                                     deploymentData.status,

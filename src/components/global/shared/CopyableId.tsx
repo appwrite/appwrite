@@ -12,6 +12,11 @@ type CopyableIdSize = 'xs' | 'sm' | 'md'
 
 interface CopyableIdProps {
   id: string
+  /**
+   * When set, shown instead of `id` while the clipboard still receives `id`
+   * (e.g. shortened IPv6 in the UI, full address on copy).
+   */
+  displayText?: string
   className?: string
   /** Size variant: 'xs' (10px), 'sm' (11px), 'md' (12px). Default: 'sm' */
   size?: CopyableIdSize
@@ -44,12 +49,15 @@ const sizeStyles: Record<
 
 export function CopyableId({
   id,
+  displayText,
   className = '',
   size = 'sm',
   maxWidth = 140,
   tooltipSide = 'top',
 }: CopyableIdProps) {
   const [copied, setCopied] = useState(false)
+  const shown = displayText ?? id
+  const showFullInTooltip = Boolean(displayText && displayText !== id)
 
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -66,7 +74,9 @@ export function CopyableId({
       <Tooltip>
         <TooltipTrigger asChild>
           <button
+            type="button"
             onClick={handleCopy}
+            title={showFullInTooltip ? id : undefined}
             className={cn(
               'inline-flex items-center gap-1.5 rounded bg-muted font-mono text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground cursor-pointer',
               styles.text,
@@ -75,7 +85,7 @@ export function CopyableId({
             )}
           >
             <span className="truncate" style={{ maxWidth: `${maxWidth}px` }}>
-              {id}
+              {shown}
             </span>
             {copied ? (
               <CheckCircle2
@@ -87,7 +97,18 @@ export function CopyableId({
           </button>
         </TooltipTrigger>
         <TooltipContent side={tooltipSide}>
-          <p>{copied ? 'Copied!' : 'Click to copy'}</p>
+          {copied ? (
+            <p>Copied!</p>
+          ) : showFullInTooltip ? (
+            <div className="max-w-xs space-y-1">
+              <p>Click to copy</p>
+              <p className="break-all font-mono text-[11px] text-muted-foreground">
+                {id}
+              </p>
+            </div>
+          ) : (
+            <p>Click to copy</p>
+          )}
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

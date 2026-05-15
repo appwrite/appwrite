@@ -33,6 +33,7 @@ import {
 } from 'lucide-react'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { formatIpForDisplay } from '@/lib/format-ip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import type { Models } from '@appwrite.io/console'
 import { Badge } from '@/components/ui/badge'
@@ -285,15 +286,6 @@ export function AccountSessions() {
     return `${getBaseEndpoint()}/avatars/flags/${countryCode.toLowerCase()}?width=20&height=20&quality=100&project=console`
   }
 
-  const formatIP = (ip?: string) => {
-    if (!ip) return null
-    // Trim IPv6 addresses if they're too long (show first 20 chars)
-    if (ip.includes(':')) {
-      return ip.length > 20 ? `${ip.substring(0, 20)}...` : ip
-    }
-    return ip
-  }
-
   if (sessionsLoading) {
     return (
       <div className="mx-auto w-full max-w-7xl px-4 pt-4 pb-4 sm:px-6 sm:pt-6 sm:pb-6">
@@ -462,7 +454,7 @@ export function AccountSessions() {
                     <TableCell className="px-4 py-3.5">
                       {session.ip ? (
                         <code className="text-[12px] text-muted-foreground font-mono bg-muted/30 px-1.5 py-0.5 rounded">
-                          {formatIP(session.ip)}
+                          {formatIpForDisplay(session.ip) ?? session.ip}
                         </code>
                       ) : (
                         <span className="text-[12px] text-muted-foreground/50">

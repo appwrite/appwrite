@@ -178,19 +178,59 @@ function parseActiveBarIndex(activeTooltipIndex: unknown): number | null {
   return Number.isNaN(n) ? null : n
 }
 
-/** Pointer inside `.recharts-wrapper` — matches Recharts scaling (ResponsiveContainer / CSS scale). */
-function pointerInChartWrapper(e: SyntheticEvent<Element>): { x: number; y: number } {
+/** Pointer inside chart surface — matches Recharts scaling (ResponsiveContainer / CSS scale). */
+function pointerInChartWrapper(e: SyntheticEvent<Element>): {
+  x: number
+  y: number
+  w: number
+  h: number
+} {
   const ne = e.nativeEvent
-  if (!(ne instanceof MouseEvent)) return { x: 0, y: 0 }
+  if (!(ne instanceof MouseEvent)) return { x: 0, y: 0, w: 0, h: 0 }
   const el = e.currentTarget
-  if (!(el instanceof HTMLElement)) return { x: 0, y: 0 }
+  if (!(el instanceof HTMLElement)) return { x: 0, y: 0, w: 0, h: 0 }
   const rect = el.getBoundingClientRect()
   const scaleX = rect.width / el.offsetWidth || 1
   const scaleY = rect.height / el.offsetHeight || 1
   return {
     x: Math.round((ne.clientX - rect.left) / scaleX),
     y: Math.round((ne.clientY - rect.top) / scaleY),
+    w: el.offsetWidth,
+    h: el.offsetHeight,
   }
+}
+
+/** Keeps the tooltip inside the chart box (right/top bars otherwise clip a wide card). */
+function clampVolumeTooltipPosition(
+  px: number,
+  py: number,
+  chartW: number,
+  chartH: number,
+): { x: number; y: number } {
+  const GAP = 14
+  const EDGE = 6
+  // Matches `VolumeTooltip` min-width + border; a bit of slack for scrollbars / font.
+  const EST_W = 300
+  const EST_H = 220
+
+  let x = px + GAP
+  let y = py + GAP
+
+  if (chartW > 0 && x + EST_W > chartW - EDGE) {
+    x = px - GAP - EST_W
+  }
+  if (chartW > 0) {
+    x = Math.min(Math.max(EDGE, x), Math.max(EDGE, chartW - EST_W - EDGE))
+  }
+
+  if (chartH > 0 && y + EST_H > chartH - EDGE) {
+    y = py - GAP - EST_H
+  }
+  if (chartH > 0) {
+    y = Math.min(Math.max(EDGE, y), Math.max(EDGE, chartH - EST_H - EDGE))
+  }
+
+  return { x, y }
 }
 
 function buildMockVolumeByResource(from: Date, to: Date): ChartRow[] {
@@ -364,9 +404,12 @@ export function ActivityLogVolumeChart({
   const [hoveredResourceKey, setHoveredResourceKey] = useState<ResourceKey | null>(
     null,
   )
-  const [tooltipPointer, setTooltipPointer] = useState<{ x: number; y: number } | null>(
-    null,
-  )
+  const [tooltipPointer, setTooltipPointer] = useState<{
+    x: number
+    y: number
+    w: number
+    h: number
+  } | null>(null)
   const lastTooltipColumnRef = useRef<number | null>(null)
 
   const chartData = useMemo(
@@ -460,7 +503,7 @@ export function ActivityLogVolumeChart({
                 <div
                   key={chartAnimationKey}
                   className={cn(
-                    'h-[240px] w-full animate-in fade-in-0 slide-in-from-bottom-1 duration-500 motion-reduce:animate-none',
+                    'h-[240px] w-full overflow-visible animate-in fade-in-0 slide-in-from-bottom-1 duration-500 motion-reduce:animate-none',
                   )}
                 >
                   <ResponsiveContainer width="100%" height="100%">
@@ -527,10 +570,12 @@ export function ActivityLogVolumeChart({
                     wrapperStyle={{ zIndex: 50 }}
                     position={
                       tooltipPointer
-                        ? {
-                            x: tooltipPointer.x + 14,
-                            y: tooltipPointer.y + 14,
-                          }
+                        ? clampVolumeTooltipPosition(
+                            tooltipPointer.x,
+                            tooltipPointer.y,
+                            tooltipPointer.w,
+                            tooltipPointer.h,
+                          )
                         : undefined
                     }
                   />

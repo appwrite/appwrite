@@ -4,6 +4,7 @@
 
 export function isRegularUserType(userType: string): boolean {
   const normalized = userType.toLowerCase()
+  /** `user` is the supported actor; `users` may appear on older audit rows. */
   return normalized === 'user' || normalized === 'users'
 }
 
@@ -34,6 +35,30 @@ export function userTypeBadge(userType: string): { label: string; tone: string }
     return {
       label: 'Admin',
       tone: 'bg-violet-500/10 text-violet-600 dark:text-violet-400',
+    }
+  }
+  if (normalized === 'guest') {
+    return {
+      label: 'Guest',
+      tone: 'bg-sky-500/10 text-sky-600 dark:text-sky-400',
+    }
+  }
+  if (normalized === 'keyproject') {
+    return {
+      label: 'Project key',
+      tone: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+    }
+  }
+  if (normalized === 'keyaccount') {
+    return {
+      label: 'Account key',
+      tone: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+    }
+  }
+  if (normalized === 'keyorganization') {
+    return {
+      label: 'Org key',
+      tone: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
     }
   }
   if (normalized.startsWith('key')) {

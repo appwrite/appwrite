@@ -4,7 +4,7 @@
  * Handles locale code, countries, and locale information fetching.
  */
 
-import { useQuery } from '@tanstack/react-query'
+import { queryOptions, useQuery } from '@tanstack/react-query'
 import { sdk } from '@/lib/appwrite/sdk'
 import { LONG_STALE_TIME } from './constants'
 
@@ -46,6 +46,22 @@ export async function fetchLocale() {
 }
 
 // ============================================================================
+// QUERY OPTIONS
+// ============================================================================
+
+/**
+ * Countries list from the console locale API — shared by `useCountries`,
+ * activity filters, and route loaders so the cache key stays identical.
+ */
+export function countriesQueryOptions() {
+  return queryOptions({
+    queryKey: ['countries', 'console'],
+    queryFn: fetchCountries,
+    staleTime: LONG_STALE_TIME,
+  })
+}
+
+// ============================================================================
 // HOOKS
 // ============================================================================
 
@@ -68,11 +84,7 @@ export function useLocaleCodes() {
  * Uses the console SDK to fetch all available countries.
  */
 export function useCountries() {
-  return useQuery({
-    queryKey: ['countries', 'console'],
-    queryFn: fetchCountries,
-    staleTime: LONG_STALE_TIME, // Countries don't change often
-  })
+  return useQuery(countriesQueryOptions())
 }
 
 /**

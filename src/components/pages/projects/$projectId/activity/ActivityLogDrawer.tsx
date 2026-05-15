@@ -6,6 +6,7 @@ import { CodeBlock } from '@/components/global/shared/CodeBlock'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { cn } from '@/lib/utils'
+import { formatIpForDisplay } from '@/lib/format-ip'
 import {
   hasHumanEmail,
   userTypeBadge,
@@ -298,7 +299,6 @@ export function ActivityLogDrawer({
     .join(' · ')
 
   const countryNameLine = event.countryName?.trim() ?? ''
-  const countryCodeLine = event.countryCode?.trim().toUpperCase() ?? ''
 
   const countryCode = event.countryCode?.trim().toLowerCase() ?? ''
   const flagUrl =
@@ -482,9 +482,21 @@ export function ActivityLogDrawer({
               <DetailSection title="Request context">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <DetailField label="IP address">
-                    <p className="font-mono text-[12px] text-foreground">
-                      {formatValue(event.ip)}
-                    </p>
+                    {event.ip?.trim() ? (
+                      <CopyableId
+                        id={event.ip.trim()}
+                        displayText={
+                          formatIpForDisplay(event.ip.trim(), 44) ??
+                          event.ip.trim()
+                        }
+                        size="md"
+                        maxWidth={360}
+                        className="max-w-full"
+                        tooltipSide="bottom"
+                      />
+                    ) : (
+                      <p className="font-mono text-[12px] text-foreground">—</p>
+                    )}
                   </DetailField>
                   <DetailField label="Hostname">
                     <div className="flex items-center gap-2">
@@ -556,18 +568,9 @@ export function ActivityLogDrawer({
                         </div>
                       )}
                       <div className="min-w-0 flex flex-col gap-0.5">
-                        {countryNameLine ? (
-                          <p className="text-[13px] text-foreground">
-                            {countryNameLine}
-                          </p>
-                        ) : !countryCodeLine ? (
-                          <p className="text-[13px] text-foreground">—</p>
-                        ) : null}
-                        {countryCodeLine ? (
-                          <p className="font-mono text-[11px] font-medium tracking-wide text-muted-foreground">
-                            {countryCodeLine}
-                          </p>
-                        ) : null}
+                        <p className="text-[13px] text-foreground">
+                          {countryNameLine || '—'}
+                        </p>
                       </div>
                     </div>
                   </DetailField>

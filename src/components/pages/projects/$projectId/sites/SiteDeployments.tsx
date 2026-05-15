@@ -26,6 +26,7 @@ import {
   ChevronDown,
   Globe,
   ExternalLink,
+  XCircle,
 } from 'lucide-react'
 import {
   getDeploymentStatusBadge,
@@ -52,6 +53,7 @@ import { CopyableId } from '@/components/global/shared/CopyableId'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { DeploymentInfo } from '@/components/global/shared/DeploymentInfo'
+import { DeploymentListRowContextMenu } from '@/components/global/shared/DeploymentListRowContextMenu'
 import {
   Table,
   TableBody,
@@ -64,6 +66,10 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
@@ -83,6 +89,7 @@ import {
   useSiteDeployment,
   useSiteDomains,
   deleteSiteDeployment,
+  cancelSiteDeployment,
   Dependencies,
 } from '@/lib/react-query/hooks'
 import { sdk, getSiteScreenshotFilePreviewUrl } from '@/lib/appwrite/sdk'
@@ -217,6 +224,10 @@ export function SiteDeploymentsView() {
   const [deleteActiveDialogOpen, setDeleteActiveDialogOpen] = useState(false)
   const [redeployDialogOpen, setRedeployDialogOpen] = useState(false)
   const [activateDialogOpen, setActivateDialogOpen] = useState(false)
+  const [cancelBuildDialogOpen, setCancelBuildDialogOpen] = useState(false)
+  const [cancelTargetDeploymentId, setCancelTargetDeploymentId] = useState<
+    string | null
+  >(null)
   const [screenshotLoaded, setScreenshotLoaded] = useState(false)
   const [screenshotThemeOverride, setScreenshotThemeOverride] = useState<
     'dark' | 'light' | null
@@ -501,6 +512,33 @@ export function SiteDeploymentsView() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to activate deployment')
+    },
+  })
+
+  const cancelBuildMutation = useMutation({
+    mutationFn: async (deploymentIdToCancel: string) => {
+      if (!projectId || !siteId) {
+        throw new Error('Project ID and Site ID are required')
+      }
+      return await cancelSiteDeployment(
+        projectId,
+        siteId,
+        deploymentIdToCancel,
+      )
+    },
+    onSuccess: async () => {
+      setCancelBuildDialogOpen(false)
+      setCancelTargetDeploymentId(null)
+      await queryClient.refetchQueries({
+        queryKey: Dependencies.DEPLOYMENTS,
+      })
+      await queryClient.refetchQueries({
+        queryKey: ['site', 'project', projectId, siteId],
+      })
+      toast.success('Build cancelled')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to cancel build')
     },
   })
 
@@ -1292,27 +1330,38 @@ export function SiteDeploymentsView() {
                       const isActive =
                         deploymentData.$id === activeDeploymentResolved?.$id
                       return (
-                        <TableRow
+                        <DeploymentListRowContextMenu
                           key={deploymentData.$id}
-                          className={cn(
-                            selectedDeployments.has(deploymentData.$id)
-                              ? 'bg-muted'
-                              : isActive
-                                ? 'bg-muted/40 dark:bg-muted/35 hover:bg-muted/55 dark:hover:bg-muted/50'
-                                : 'hover:bg-muted/50',
-                            'cursor-pointer',
-                          )}
-                          onClick={() => {
-                            navigate({
-                              to: '/projects/$projectId/sites/$siteId/deployments/$deploymentId',
-                              params: {
-                                projectId: projectId!,
-                                siteId: siteId!,
-                                deploymentId: deploymentData.$id,
-                              },
-                            })
+                          variant="site"
+                          projectId={projectId!}
+                          resourceId={siteId!}
+                          deployment={deploymentData}
+                          isActive={isActive}
+                          onRequestCancelBuild={(id) => {
+                            setCancelTargetDeploymentId(id)
+                            setCancelBuildDialogOpen(true)
                           }}
                         >
+                          <TableRow
+                            className={cn(
+                              selectedDeployments.has(deploymentData.$id)
+                                ? 'bg-muted'
+                                : isActive
+                                  ? 'bg-muted/40 dark:bg-muted/35 hover:bg-muted/55 dark:hover:bg-muted/50'
+                                  : 'hover:bg-muted/50',
+                              'cursor-pointer',
+                            )}
+                            onClick={() => {
+                              navigate({
+                                to: '/projects/$projectId/sites/$siteId/deployments/$deploymentId',
+                                params: {
+                                  projectId: projectId!,
+                                  siteId: siteId!,
+                                  deploymentId: deploymentData.$id,
+                                },
+                              })
+                            }}
+                          >
                           <TableCell
                             className="px-4 py-3"
                             onClick={(e) => e.stopPropagation()}
@@ -1632,50 +1681,163 @@ export function SiteDeploymentsView() {
                                   <RefreshCw className="mr-2 h-4 w-4" />
                                   Redeploy
                                 </DropdownMenuItem>
-                                {!isActive && (
-                                  <DropdownMenuItem
-                                    onClick={async (e) => {
-                                      e.stopPropagation()
-                                      try {
-                                        await deleteSiteDeployment(
-                                          projectId!,
-                                          siteId!,
-                                          deploymentData.$id,
-                                        )
-                                        queryClient.invalidateQueries({
-                                          queryKey: [
-                                            ...Dependencies.DEPLOYMENTS,
-                                          ],
-                                        })
-                                        queryClient.invalidateQueries({
-                                          queryKey: [
-                                            'site',
-                                            'project',
-                                            projectId,
-                                            siteId,
-                                          ],
-                                        })
-                                        toast.success(
-                                          'Deployment deleted successfully',
-                                        )
-                                      } catch (error) {
-                                        toast.error(
-                                          error instanceof Error
-                                            ? error.message
-                                            : 'Failed to delete deployment',
+                                <DropdownMenuSub>
+                                  <DropdownMenuSubTrigger
+                                    onClick={(e) => e.stopPropagation()}
+                                    onPointerDown={(e) => e.stopPropagation()}
+                                  >
+                                    <Download className="mr-2 h-4 w-4" />
+                                    Download
+                                  </DropdownMenuSubTrigger>
+                                  <DropdownMenuSubContent className="z-[200]">
+                                    <DropdownMenuItem
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        if (!projectId || !siteId) return
+                                        try {
+                                          const projectSdk =
+                                            sdk.forProject(projectId)
+                                          const url =
+                                            projectSdk.sites.getDeploymentDownload(
+                                              {
+                                                siteId,
+                                                deploymentId:
+                                                  deploymentData.$id,
+                                                type: DeploymentDownloadType.Source,
+                                              },
+                                            )
+                                          const urlWithMode =
+                                            url +
+                                            (url.includes('?') ? '&' : '?') +
+                                            'mode=admin'
+                                          window.open(urlWithMode, '_blank')
+                                          toast.success('Download started')
+                                        } catch {
+                                          toast.error(
+                                            'Failed to download source code',
+                                          )
+                                        }
+                                      }}
+                                    >
+                                      <FileCode className="mr-2 h-4 w-4" />
+                                      Source code
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      disabled={
+                                        !isDeploymentCompleted(
+                                          deploymentData.status,
                                         )
                                       }
+                                      title={
+                                        !isDeploymentCompleted(
+                                          deploymentData.status,
+                                        )
+                                          ? 'Build output is available after the deployment has completed.'
+                                          : undefined
+                                      }
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        if (
+                                          !isDeploymentCompleted(
+                                            deploymentData.status,
+                                          )
+                                        )
+                                          return
+                                        if (!projectId || !siteId) return
+                                        try {
+                                          const projectSdk =
+                                            sdk.forProject(projectId)
+                                          const url =
+                                            projectSdk.sites.getDeploymentDownload(
+                                              {
+                                                siteId,
+                                                deploymentId:
+                                                  deploymentData.$id,
+                                                type: DeploymentDownloadType.Output,
+                                              },
+                                            )
+                                          const urlWithMode =
+                                            url +
+                                            (url.includes('?') ? '&' : '?') +
+                                            'mode=admin'
+                                          window.open(urlWithMode, '_blank')
+                                          toast.success('Download started')
+                                        } catch {
+                                          toast.error(
+                                            'Failed to download build output',
+                                          )
+                                        }
+                                      }}
+                                    >
+                                      <Package className="mr-2 h-4 w-4" />
+                                      Build output
+                                    </DropdownMenuItem>
+                                  </DropdownMenuSubContent>
+                                </DropdownMenuSub>
+                                <DropdownMenuSeparator />
+                                {!isActive &&
+                                  !isDeploymentInProgress(
+                                    deploymentData.status,
+                                  ) && (
+                                    <DropdownMenuItem
+                                      onClick={async (e) => {
+                                        e.stopPropagation()
+                                        try {
+                                          await deleteSiteDeployment(
+                                            projectId!,
+                                            siteId!,
+                                            deploymentData.$id,
+                                          )
+                                          queryClient.invalidateQueries({
+                                            queryKey: [
+                                              ...Dependencies.DEPLOYMENTS,
+                                            ],
+                                          })
+                                          queryClient.invalidateQueries({
+                                            queryKey: [
+                                              'site',
+                                              'project',
+                                              projectId,
+                                              siteId,
+                                            ],
+                                          })
+                                          toast.success(
+                                            'Deployment deleted successfully',
+                                          )
+                                        } catch (error) {
+                                          toast.error(
+                                            error instanceof Error
+                                              ? error.message
+                                              : 'Failed to delete deployment',
+                                          )
+                                        }
+                                      }}
+                                    >
+                                      <Trash2 className="mr-2 h-4 w-4" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  )}
+                                {isDeploymentInProgress(
+                                  deploymentData.status,
+                                ) && (
+                                  <DropdownMenuItem
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      setCancelTargetDeploymentId(
+                                        deploymentData.$id,
+                                      )
+                                      setCancelBuildDialogOpen(true)
                                     }}
-                                    className="text-destructive focus:text-destructive"
                                   >
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    Delete
+                                    <XCircle className="mr-2 h-4 w-4" />
+                                    Cancel
                                   </DropdownMenuItem>
                                 )}
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </TableCell>
                         </TableRow>
+                        </DeploymentListRowContextMenu>
                       )
                     })}
                   </TableBody>
@@ -1704,6 +1866,67 @@ export function SiteDeploymentsView() {
           )}
         </div>
       </div>
+
+      {/* Cancel build confirmation */}
+      <Dialog
+        open={cancelBuildDialogOpen}
+        onOpenChange={(open) => {
+          setCancelBuildDialogOpen(open)
+          if (!open) setCancelTargetDeploymentId(null)
+        }}
+      >
+        <DialogContent className="sm:max-w-md p-0">
+          <DialogHeader className="px-6 pt-6 pb-4 text-left">
+            <DialogTitle>Cancel build</DialogTitle>
+            <DialogDescription className="text-[13px] mt-2">
+              Stop the current deployment? You can deploy again later.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="border-t border-border" />
+          <div className="px-6 pb-4 pt-4">
+            {(displayedDeployments?.find(
+              (d) => d.$id === cancelTargetDeploymentId,
+            ) ??
+              (cancelTargetDeploymentId === activeDeploymentResolved?.$id
+                ? activeDeploymentResolved
+                : null)) && (
+              <DeploymentInfo
+                deployment={
+                  displayedDeployments?.find(
+                    (d) => d.$id === cancelTargetDeploymentId,
+                  ) ?? activeDeploymentResolved!
+                }
+                showStatus={true}
+              />
+            )}
+          </div>
+          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setCancelBuildDialogOpen(false)
+                setCancelTargetDeploymentId(null)
+              }}
+              className="h-9 text-[13px]"
+            >
+              Keep building
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() =>
+                cancelTargetDeploymentId &&
+                cancelBuildMutation.mutate(cancelTargetDeploymentId)
+              }
+              disabled={
+                cancelBuildMutation.isPending || !cancelTargetDeploymentId
+              }
+              className="h-9 text-[13px]"
+            >
+              Cancel build
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Bulk Delete Action Bar */}
       {selectedDeployments.size > 0 && (

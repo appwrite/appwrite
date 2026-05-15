@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
-import { Key, Server, ShieldUser } from '@/lib/icons'
+import { Key, Server, ShieldUser, Ghost } from '@/lib/icons'
 import { isRegularUserType } from '@/components/pages/projects/$projectId/activity/activity-utils'
 
 const avatarFrame =
@@ -41,10 +41,22 @@ export function UserTypeAvatar({
     icon = <ShieldUser className="h-3.5 w-3.5" />
     tone = 'bg-violet-500/10 text-violet-600 dark:text-violet-400'
     label = 'Admin'
-  } else if (normalized.startsWith('key')) {
+  } else if (normalized === 'guest') {
+    icon = <Ghost className="h-3.5 w-3.5" />
+    tone = 'bg-sky-500/10 text-sky-600 dark:text-sky-400'
+    label = 'Guest'
+  } else if (
+    normalized === 'keyproject' ||
+    normalized === 'keyaccount' ||
+    normalized === 'keyorganization' ||
+    normalized.startsWith('key')
+  ) {
     icon = <Key className="h-3.5 w-3.5" />
     tone = 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-    label = 'API key'
+    if (normalized === 'keyproject') label = 'Project API key'
+    else if (normalized === 'keyaccount') label = 'Account API key'
+    else if (normalized === 'keyorganization') label = 'Organization API key'
+    else label = 'API key'
   } else {
     icon = <Server className="h-3.5 w-3.5" />
     tone = 'bg-slate-500/10 text-slate-600 dark:text-slate-400'

@@ -1,8 +1,9 @@
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import { getRouteApi } from '@tanstack/react-router'
-import { useIsFetching } from '@tanstack/react-query'
+import { useIsFetching, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { cn, truncateMiddle } from '@/lib/utils'
+import { formatIpForDisplay } from '@/lib/format-ip'
 import {
   Activity,
   Plus,
@@ -25,6 +26,7 @@ import type { Models } from '@appwrite.io/console'
 import type { DateRange } from 'react-day-picker'
 import { startOfDay, endOfDay, subDays, max } from 'date-fns'
 import { ServiceHeader } from '../shared/ServiceHeader'
+import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { EmptyState } from '@/components/global/shared/EmptyState'
@@ -41,12 +43,14 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { ACTIVITY_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import {
+  activityEventQueryOptions,
+  useCountries,
   useProjectActivities,
   useProjectActivity,
   useProject,
 } from '@/lib/react-query/hooks'
 import {
-  activitiesFilterColumns,
+  getActivitiesFilterColumns,
   buildFilterQueryString,
   mapToQueryParam,
   queryParamToMap,
@@ -58,6 +62,7 @@ import { DateRangePicker } from '@/components/pages/projects/$projectId/analytic
 import type { PlanType } from '@/server/functions/activities'
 import { ActivityLogDrawer } from '@/components/pages/projects/$projectId/activity/ActivityLogDrawer'
 import { ActivityLogVolumeChart } from '@/components/pages/projects/$projectId/activity/_components/ActivityLogVolumeChart'
+import { ActivityLogRowContextMenu } from '@/components/pages/projects/$projectId/activity/_components/ActivityLogRowContextMenu'
 import {
   hasHumanEmail,
   userTypeBadge,
@@ -70,28 +75,48 @@ const activityRouteApi = getRouteApi('/_public/projects/$projectId/activity')
 const ACTIVITY_TABLE_SKELETON_ROWS_CAP = 14
 
 /** Max characters for resource id/name in the table before middle ellipsis. */
-const ACTIVITY_RESOURCE_DISPLAY_MAX = 40
+const ACTIVITY_RESOURCE_DISPLAY_MAX = 56
+
+function ActivityTableCountryCell({
+  countryName,
+}: {
+  countryName: string | null
+}) {
+  const name = countryName?.trim() ?? ''
+
+  return (
+    <p
+      className="truncate text-[13px] text-muted-foreground"
+      title={name || undefined}
+    >
+      {name || '—'}
+    </p>
+  )
+}
 
 function ActivityLogsTableHead() {
   return (
     <TableHeader>
       <TableRow className="hover:bg-transparent border-b border-border">
-        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[200px] pl-6 sm:pl-8 shadow-[inset_0_-1px_0_var(--border)]">
+        <TableHead className="sticky top-0 z-10 w-[14%] min-w-[8rem] bg-background px-3 py-3 text-left text-[12px] font-semibold text-muted-foreground uppercase tracking-wider pl-6 sm:pl-8 shadow-[inset_0_-1px_0_var(--border)]">
           Event
         </TableHead>
-        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[min(22rem,32vw)] min-w-[12rem] shadow-[inset_0_-1px_0_var(--border)]">
-          Resource
+        <TableHead className="sticky top-0 z-10 w-[12%] min-w-[7.5rem] bg-background px-3 py-3 text-left text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]">
+          Actor
         </TableHead>
-        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px] shadow-[inset_0_-1px_0_var(--border)]">
-          User / key
-        </TableHead>
-        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px] shadow-[inset_0_-1px_0_var(--border)]">
+        <TableHead className="sticky top-0 z-10 w-[11%] min-w-[6.5rem] bg-background px-3 py-3 text-left text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]">
           Type
         </TableHead>
-        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[280px] shadow-[inset_0_-1px_0_var(--border)]">
-          Description
+        <TableHead className="sticky top-0 z-10 w-[36%] min-w-0 bg-background px-3 py-3 text-left text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]">
+          Resource
         </TableHead>
-        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 pr-6 sm:pr-8 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[140px] shadow-[inset_0_-1px_0_var(--border)]">
+        <TableHead className="sticky top-0 z-10 w-[12%] min-w-[7.5rem] bg-background px-3 py-3 text-left text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]">
+          IP address
+        </TableHead>
+        <TableHead className="sticky top-0 z-10 w-[7%] min-w-[4.5rem] bg-background px-3 py-3 text-left text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]">
+          Country
+        </TableHead>
+        <TableHead className="sticky top-0 z-10 w-[8%] min-w-[6.5rem] bg-background px-3 py-3 pr-6 text-left text-[12px] font-semibold text-muted-foreground uppercase tracking-wider sm:pr-8 shadow-[inset_0_-1px_0_var(--border)]">
           Time
         </TableHead>
       </TableRow>
@@ -108,22 +133,13 @@ function ActivityLogsSkeletonRows({ rowCount }: { rowCount: number }) {
           className="pointer-events-none hover:bg-transparent"
           aria-hidden
         >
-          <TableCell className="pl-6 sm:pl-8 py-3">
-            <div className="flex items-center gap-2.5">
+          <TableCell className="min-w-0 px-3 py-3 pl-6 sm:pl-8">
+            <div className="flex min-w-0 items-center gap-2">
               <Skeleton className="h-7 w-7 shrink-0 rounded-md" />
-              <Skeleton className="h-4 w-[5.5rem]" />
+              <Skeleton className="h-3.5 min-w-0 flex-1" />
             </div>
           </TableCell>
-          <TableCell className="whitespace-normal px-4 py-3 align-top">
-            <div className="flex min-w-0 items-center gap-2.5">
-              <Skeleton className="h-7 w-7 shrink-0 rounded-md" />
-              <div className="min-w-0 flex flex-1 flex-col gap-1">
-                <Skeleton className="h-4 w-full max-w-[12rem]" />
-                <Skeleton className="h-3 w-14" />
-              </div>
-            </div>
-          </TableCell>
-          <TableCell className="px-4 py-3">
+          <TableCell className="min-w-0 px-3 py-3">
             <div className="flex items-center gap-2.5">
               <Skeleton className="h-8 w-8 shrink-0 rounded-full" />
               <div className="min-w-0 flex flex-1 flex-col gap-1">
@@ -132,13 +148,25 @@ function ActivityLogsSkeletonRows({ rowCount }: { rowCount: number }) {
               </div>
             </div>
           </TableCell>
-          <TableCell className="px-4 py-3">
-            <Skeleton className="h-5 w-14 rounded px-1.5" />
+          <TableCell className="min-w-0 whitespace-normal px-3 py-3 align-top">
+            <Skeleton className="h-5 w-20 rounded px-1.5" />
           </TableCell>
-          <TableCell className="px-4 py-3">
-            <Skeleton className="h-3.5 w-full max-w-[16rem]" />
+          <TableCell className="min-w-0 whitespace-normal px-3 py-3 align-top">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <Skeleton className="h-7 w-7 shrink-0 rounded-md" />
+              <div className="min-w-0 flex flex-1 flex-col gap-1">
+                <Skeleton className="h-4 w-full min-w-0" />
+                <Skeleton className="h-3 w-14" />
+              </div>
+            </div>
           </TableCell>
-          <TableCell className="px-4 py-3 pr-6 sm:pr-8">
+          <TableCell className="min-w-0 px-3 py-3">
+            <Skeleton className="h-3.5 w-full max-w-full" />
+          </TableCell>
+          <TableCell className="min-w-0 px-3 py-3">
+            <Skeleton className="h-3.5 w-20 max-w-full" />
+          </TableCell>
+          <TableCell className="min-w-0 px-3 py-3 pr-6 sm:pr-8">
             <Skeleton className="h-3.5 w-[6.5rem]" />
           </TableCell>
         </TableRow>
@@ -250,6 +278,8 @@ interface DisplayActivity {
   resourceName: string
   description: string | null
   ipAddress: string | null
+  countryCode: string | null
+  countryName: string | null
   timestamp: string
   rawEvent: string
 }
@@ -265,6 +295,7 @@ function eventToActionType(event: string): ActionType {
   if (parts.includes('files') && parts.includes('create')) return 'upload'
   if (parts.includes('create')) return 'create'
   if (parts.includes('update')) return 'update'
+  if (parts.includes('upsert')) return 'update'
   if (parts.includes('delete')) return 'delete'
   return 'view'
 }
@@ -308,6 +339,7 @@ function resourceLabelFromEvent(activity: Models.ActivityEvent): string {
     'create',
     'update',
     'delete',
+    'upsert',
     'read',
     'list',
     'createSession',
@@ -332,7 +364,9 @@ function toDisplayActivity(event: Models.ActivityEvent): DisplayActivity {
     resourceId: event.resourceId || '',
     resourceName: resourceLabelFromEvent(event),
     description: event.event,
-    ipAddress: event.ip || null,
+    ipAddress: event.ip?.trim() || null,
+    countryCode: event.countryCode?.trim() || null,
+    countryName: event.countryName?.trim() || null,
     timestamp: event.time,
     rawEvent: event.event,
   }
@@ -351,11 +385,13 @@ interface ViewProps {
 }
 
 export function View({ projectId, plan = 'pro' }: ViewProps) {
+  const queryClient = useQueryClient()
   const navigate = activityRouteApi.useNavigate()
   const { event: eventIdFromUrl, query: queryFromSearch } =
     activityRouteApi.useSearch()
 
   const { project } = useProject(projectId)
+  const { data: countriesData } = useCountries()
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [selectedEvent, setSelectedEvent] =
@@ -393,6 +429,16 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
     () => queryParamToMap(queryFromSearch ?? null),
     [queryFromSearch],
   )
+
+  const activityFilterColumns = useMemo(() => {
+    const countryElements = (countriesData?.countries ?? [])
+      .map((country) => ({
+        value: country.name,
+        label: country.name,
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label))
+    return getActivitiesFilterColumns(countryElements)
+  }, [countriesData])
 
   const {
     events,
@@ -650,16 +696,32 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
     [currentPage, events, resetListPosition],
   )
 
+  const prefetchActivityEventOnHover = useCallback(
+    (eventId: string) => {
+      if (!projectId || !eventId) return
+      void queryClient
+        .prefetchQuery(activityEventQueryOptions(projectId, eventId))
+        .catch(() => {})
+    },
+    [projectId, queryClient],
+  )
+
   const openActivityDrawer = useCallback(
     (event: Models.ActivityEvent) => {
-      setSelectedEvent(event)
+      const cached = queryClient.getQueryData<Models.ActivityEvent>([
+        'activity',
+        'project',
+        projectId,
+        event.$id,
+      ])
+      setSelectedEvent(cached ?? event)
       setDrawerOpen(true)
       navigate({
         search: (prev) => ({ ...prev, event: event.$id }),
         replace: true,
       })
     },
-    [navigate],
+    [navigate, projectId, queryClient],
   )
 
   const closeActivityDrawer = useCallback(() => {
@@ -682,7 +744,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
               <FiltersPopover
                 open={filtersOpen}
                 onOpenChange={setFiltersOpen}
-                columns={activitiesFilterColumns}
+                columns={activityFilterColumns}
                 filterMap={filterMap}
                 onRemoveFilter={removeFilter}
                 onClearAll={clearAllFilters}
@@ -813,7 +875,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
         {events.length > 0 ? (
           <>
             <div className="min-h-0 flex-1 overflow-auto">
-              <Table withScrollContainer={false}>
+              <Table withScrollContainer={false} className="table-fixed">
                 <ActivityLogsTableHead />
                 <TableBody>
                   {events.map((rawEvent) => {
@@ -832,64 +894,61 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
                         ? resourcePrimary
                         : undefined
                     return (
-                    <TableRow
-                      key={activity.$id}
-                      role="button"
-                      tabIndex={0}
-                      data-state={
-                        drawerOpen && selectedEvent?.$id === activity.$id
-                          ? 'selected'
-                          : undefined
-                      }
-                      aria-label={`Open activity details: ${activity.rawEvent}`}
-                      className={cn(
-                        'cursor-pointer',
-                        drawerOpen &&
-                          selectedEvent?.$id === activity.$id &&
-                          'bg-muted/60 hover:bg-muted/60',
-                      )}
-                      onClick={() => openActivityDrawer(rawEvent)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault()
-                          openActivityDrawer(rawEvent)
-                        }
-                      }}
-                    >
-                      <TableCell className="pl-6 sm:pl-8 py-3">
-                        <div className="flex items-center gap-2.5">
+                      <ActivityLogRowContextMenu
+                        key={activity.$id}
+                        projectId={projectId}
+                        event={rawEvent}
+                        onOpenDetails={() => openActivityDrawer(rawEvent)}
+                      >
+                        <TableRow
+                          role="button"
+                          tabIndex={0}
+                          data-state={
+                            drawerOpen && selectedEvent?.$id === activity.$id
+                              ? 'selected'
+                              : undefined
+                          }
+                          aria-label={`Open activity details: ${activity.rawEvent}`}
+                          className={cn(
+                            'cursor-pointer',
+                            drawerOpen &&
+                              selectedEvent?.$id === activity.$id &&
+                              'bg-muted/60 hover:bg-muted/60',
+                          )}
+                          onClick={() => openActivityDrawer(rawEvent)}
+                          onMouseEnter={() =>
+                            prefetchActivityEventOnHover(rawEvent.$id)
+                          }
+                          onFocus={() =>
+                            prefetchActivityEventOnHover(rawEvent.$id)
+                          }
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault()
+                              openActivityDrawer(rawEvent)
+                            }
+                          }}
+                        >
+                      <TableCell className="min-w-0 px-3 py-3 pl-6 sm:pl-8">
+                        <div className="flex min-w-0 items-center gap-2">
                           <div
                             className={cn(
                               'flex h-7 w-7 shrink-0 items-center justify-center rounded-md',
                               actionColors[activity.action],
                             )}
+                            title={actionLabels[activity.action]}
                           >
                             {actionIcons[activity.action]}
                           </div>
-                          <span className="text-[13px] font-medium text-foreground">
-                            {actionLabels[activity.action]}
-                          </span>
+                          <p
+                            className="min-w-0 truncate font-mono text-[12px] text-muted-foreground"
+                            title={activity.description ?? undefined}
+                          >
+                            {activity.description || '-'}
+                          </p>
                         </div>
                       </TableCell>
-                      <TableCell className="whitespace-normal px-4 py-3 align-top">
-                        <div className="flex min-w-0 items-center gap-2.5">
-                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-                            {resourceIcons[activity.resourceType]}
-                          </div>
-                          <div className="min-w-0 flex flex-col gap-1">
-                            <p
-                              className="min-w-0 max-w-full overflow-hidden whitespace-nowrap text-[13px] font-medium leading-snug text-foreground"
-                              title={resourceTitle}
-                            >
-                              {resourceDisplay}
-                            </p>
-                            <p className="text-[11px] capitalize text-muted-foreground">
-                              {activity.resourceType}
-                            </p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="px-4 py-3">
+                      <TableCell className="min-w-0 px-3 py-3">
                         <div className="flex items-center gap-2.5">
                           <UserTypeAvatar
                             userType={activity.userType}
@@ -917,13 +976,13 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="px-4 py-3">
+                      <TableCell className="min-w-0 whitespace-normal px-3 py-3 align-top">
                         {(() => {
                           const badge = userTypeBadge(activity.userType)
                           return (
                             <span
                               className={cn(
-                                'inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider',
+                                'inline-flex max-w-full flex-wrap items-center rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider leading-snug break-words',
                                 badge.tone,
                               )}
                             >
@@ -932,19 +991,58 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
                           )
                         })()}
                       </TableCell>
-                      <TableCell className="px-4 py-3">
-                        <p className="truncate text-[12px] text-muted-foreground">
-                          {activity.description || '-'}
-                        </p>
+                      <TableCell className="min-w-0 whitespace-normal px-3 py-3 align-top">
+                        <div className="flex min-w-0 items-center gap-2.5">
+                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                            {resourceIcons[activity.resourceType]}
+                          </div>
+                          <div className="min-w-0 flex flex-col gap-1">
+                            <p
+                              className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-medium leading-snug text-foreground"
+                              title={resourceTitle}
+                            >
+                              {resourceDisplay}
+                            </p>
+                            <p className="text-[11px] capitalize text-muted-foreground">
+                              {activity.resourceType}
+                            </p>
+                          </div>
+                        </div>
                       </TableCell>
-                      <TableCell className="px-4 py-3 pr-6 sm:pr-8">
+                      <TableCell className="min-w-0 px-3 py-3">
+                        {activity.ipAddress ? (
+                          <CopyableId
+                            id={activity.ipAddress}
+                            displayText={
+                              formatIpForDisplay(activity.ipAddress, 32) ??
+                              activity.ipAddress
+                            }
+                            size="md"
+                            maxWidth={128}
+                            className="max-w-full"
+                            tooltipSide="top"
+                          />
+                        ) : (
+                          <span className="font-mono text-[12px] text-muted-foreground">
+                            —
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="min-w-0 px-3 py-3">
+                        <ActivityTableCountryCell
+                          countryName={activity.countryName}
+                        />
+                      </TableCell>
+                      <TableCell className="min-w-0 px-3 py-3 pr-6 sm:pr-8">
                         <DateTooltip
                           date={activity.timestamp}
                           className="text-[12px] text-muted-foreground"
                         />
                       </TableCell>
-                    </TableRow>
-                  )})}
+                      </TableRow>
+                    </ActivityLogRowContextMenu>
+                  )
+                  })}
                 </TableBody>
               </Table>
             </div>
@@ -981,7 +1079,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
               role="status"
               aria-label="Loading activities"
             >
-              <Table withScrollContainer={false}>
+              <Table withScrollContainer={false} className="table-fixed">
                 <ActivityLogsTableHead />
                 <TableBody>
                   <ActivityLogsSkeletonRows

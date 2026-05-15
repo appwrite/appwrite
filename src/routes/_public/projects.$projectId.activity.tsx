@@ -6,6 +6,7 @@ import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import {
   ACTIVITY_DEFAULT_PAGE_SIZE,
   activitiesQueryOptions,
+  countriesQueryOptions,
 } from '@/lib/react-query/hooks'
 import { getQueryParam } from '@/lib/table-filters'
 
@@ -44,20 +45,21 @@ export const Route = createFileRoute('/_public/projects/$projectId/activity')({
       Date.now() - PRO_PLAN_HOURS * 60 * 60 * 1000,
     ).toISOString()
 
-    await queryClient
-      .ensureQueryData(
-        activitiesQueryOptions({
-          projectId,
-          limit: ACTIVITY_DEFAULT_PAGE_SIZE,
-          cursorAfter: null,
-          cursorBefore: null,
-          planSinceIso,
-          filterQueryKey: queryParam,
-        }),
-      )
-      .catch(() => {
-        // Activity is non-critical; don't block navigation on errors.
-      })
+    await Promise.all([
+      queryClient.ensureQueryData(countriesQueryOptions()).catch(() => undefined),
+      queryClient
+        .ensureQueryData(
+          activitiesQueryOptions({
+            projectId,
+            limit: ACTIVITY_DEFAULT_PAGE_SIZE,
+            cursorAfter: null,
+            cursorBefore: null,
+            planSinceIso,
+            filterQueryKey: queryParam,
+          }),
+        )
+        .catch(() => undefined),
+    ])
   },
   component: ActivityPage,
 })

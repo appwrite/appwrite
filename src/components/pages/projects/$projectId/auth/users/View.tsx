@@ -7,6 +7,7 @@ import {
 } from '@tanstack/react-router'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
+import { formatIpForDisplay } from '@/lib/format-ip'
 import { getBaseEndpoint } from '@/lib/appwrite/sdk'
 import {
   ArrowLeft,
@@ -2944,15 +2945,6 @@ function SessionsTab({
     return `${getBaseEndpoint()}/avatars/flags/${countryCode.toLowerCase()}?width=20&height=20&quality=100&project=console`
   }
 
-  const formatIP = (ip?: string) => {
-    if (!ip) return null
-    // Trim IPv6 addresses if they're too long (show first 20 chars)
-    if (ip.includes(':')) {
-      return ip.length > 20 ? `${ip.substring(0, 20)}...` : ip
-    }
-    return ip
-  }
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -3097,7 +3089,7 @@ function SessionsTab({
                   <TableCell className="px-4 py-3.5">
                     {session.ip ? (
                       <code className="text-[12px] text-muted-foreground font-mono bg-muted/30 px-1.5 py-0.5 rounded">
-                        {formatIP(session.ip)}
+                        {formatIpForDisplay(session.ip) ?? session.ip}
                       </code>
                     ) : (
                       <span className="text-[12px] text-muted-foreground/50">

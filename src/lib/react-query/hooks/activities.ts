@@ -165,6 +165,24 @@ export function activitiesQueryOptions(params: {
   })
 }
 
+async function fetchProjectActivityEvent(projectId: string, eventId: string) {
+  return sdk.forProject(projectId).activities.getEvent({ eventId })
+}
+
+/**
+ * Query options for a single activity row (`activities.getEvent`).
+ * Shared by `useProjectActivity` and row-hover prefetch so the drawer can open
+ * with full detail when the user clicks after hovering.
+ */
+export function activityEventQueryOptions(projectId: string, eventId: string) {
+  return queryOptions({
+    queryKey: ['activity', 'project', projectId, eventId],
+    queryFn: () => fetchProjectActivityEvent(projectId, eventId),
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+  })
+}
+
 // ============================================================================
 // HOOKS
 // ============================================================================
@@ -203,14 +221,10 @@ export function useProjectActivity(
 ) {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['activity', 'project', projectId, eventId],
-    queryFn: async () => {
-      if (!projectId || !eventId) {
-        throw new Error('Project ID and Event ID are required')
-      }
-      return await sdk.forProject(projectId).activities.getEvent({ eventId })
-    },
+    queryFn: () => fetchProjectActivityEvent(projectId!, eventId!),
     enabled: !!projectId && !!eventId,
     staleTime: DEFAULT_STALE_TIME,
+    retry: false,
   })
 
   return {
