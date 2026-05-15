@@ -639,14 +639,14 @@ export function ActivityLogVolumeChart({
             {/* Same outer treatment as `RequestsChart`: muted wrapper + fixed chart height */}
             <div className="flex-1 text-muted-foreground">
               {chartData.length === 0 ? (
-                <div className="flex h-[240px] items-center justify-center rounded-lg border border-dashed border-border bg-muted/20 text-[13px] text-muted-foreground">
+                <div className="flex h-48 items-center justify-center rounded-lg border border-dashed border-border bg-muted/20 text-[13px] text-muted-foreground">
                   No data for this date range
                 </div>
               ) : (
                 <div
                   key={chartAnimationKey}
                   className={cn(
-                    'h-[240px] w-full overflow-visible animate-in fade-in-0 slide-in-from-bottom-1 duration-500 motion-reduce:animate-none',
+                    'h-48 w-full overflow-visible animate-in fade-in-0 slide-in-from-bottom-1 duration-500 motion-reduce:animate-none',
                   )}
                 >
                   <ResponsiveContainer width="100%" height="100%">
