@@ -1,6 +1,5 @@
 <?php
 
-
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Key;
@@ -38,10 +37,8 @@ use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime as DatabaseDateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\Queries;
 use Utopia\DI\Container;
 use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
@@ -1091,89 +1088,48 @@ return function (Container $context): void {
         return $key;
     }, ['request', 'project', 'servers', 'dbForPlatform', 'authorization']);
 
-    $context->set('team', function (Document $project, Database $dbForPlatform, Http $utopia, Request $request, Authorization $authorization, Document $user) {
-        $teamId = '';
+    $context->set('team', function (Document $project, Database $dbForPlatform, Http $utopia, Request $request, Authorization $authorization) {
+        $teamInternalId = '';
         if ($project->getId() !== 'console') {
-            $teamId = $project->getAttribute('teamId', '');
+            $teamInternalId = $project->getAttribute('teamInternalId', '');
         } else {
             $route = $utopia->match($request);
             $path = ! empty($route) ? $route->getPath() : $request->getURI();
             $orgHeader = $request->getHeader('x-appwrite-organization', '');
-
-            // Prioritx #1: If org ID header present, respect it
-            if (!empty($orgHeader)) {
-                $teamId = $orgHeader;
-            } elseif (\str_starts_with($path, '/v1/organization/projects')) {
-                // Backwards compatibility: /v1/organitation/projects acting as /v1/projects
-
-                // Backwards compatibility: Take from payload param
-                // organizationId not required, but easy to use by mistake in future unknowingly
-                $teamId = $request->getParam('organizationId', $request->getParam('teamId', ''));
-
-                // Backawrds compatibility: Get from URL param project ID
-                if (empty($teamId)) {
-                    $projectId = \explode('/', $request->getURI())[4] ?? '';
-                    if (!empty($projectId)) {
-                        $urlProject = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
-                        $teamId = $urlProject->getAttribute('teamId', '');
-                    }
-                }
-
-                // Backwards compatibility: Get from queries param
-                if (empty($teamId)) {
-                    $queries = $request->getParam('queries', []);
-                    $queries = \is_array($queries) ? $queries : [$queries];
-
-                    try {
-                        $queries = Query::parseQueries($queries);
-                        $queries = Query::getByType($queries, [Query::TYPE_EQUAL]);
-
-                        foreach ($queries as $query) {
-                            if ($query->getAttribute() === 'teamId') {
-                                $teamId = $query->getValues()[0] ?? '';
-                                break;
-                            }
-                        }
-                    } catch (QueryException $e) {
-                        // Ignore, do not parse from queries
-                    }
-                }
-            } elseif (str_starts_with($path, '/v1/projects/:projectId')) {
+            if (str_starts_with($path, '/v1/projects/:projectId')) {
                 $uri = $request->getURI();
-                $projectId = explode('/', $uri)[3];
-                $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
-                $teamId = $project->getAttribute('teamId', '');
+                $pid = explode('/', $uri)[3];
+                $p = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $pid));
+                $teamInternalId = $p->getAttribute('teamInternalId', '');
             } elseif ($path === '/v1/projects') {
                 $teamId = $request->getParam('teamId', '');
+
+                if (empty($teamId)) {
+                    return new Document([]);
+                }
+
+                $team = $authorization->skip(fn () => $dbForPlatform->getDocument('teams', $teamId));
+
+                return $team;
+            } elseif (! empty($orgHeader)) {
+                return $authorization->skip(fn () => $dbForPlatform->getDocument('teams', $orgHeader));
             }
         }
 
-        // No team scenario
-        if (empty($teamId)) {
+        // if teamInternalId is empty, return an empty document
+
+        if (empty($teamInternalId)) {
             return new Document([]);
         }
 
-        $team = $authorization->skip(function () use ($dbForPlatform, $teamId) {
-            return $dbForPlatform->getDocument('teams', $teamId);
+        $team = $authorization->skip(function () use ($dbForPlatform, $teamInternalId) {
+            return $dbForPlatform->findOne('teams', [
+                Query::equal('$sequence', [$teamInternalId]),
+            ]);
         });
 
-        // Unauthorized team scenario
-        // Ensure $user has membership in team
-        $memberships = $user->getAttribute('memberships', []);
-        foreach ($memberships as $membership) {
-            if ($membership->getAttribute('teamId', '') === $teamId) {
-                return $team;
-            }
-        }
-
-        // API key auth bypasses membership check; key validity is verified later
-        if (!empty($request->getHeader('x-appwrite-key', ''))) {
-            return $team;
-        }
-
-        // Unauthorized, do not allow the team
-        return new Document([]);
-    }, ['project', 'dbForPlatform', 'utopia', 'request', 'authorization', 'user']);
+        return $team;
+    }, ['project', 'dbForPlatform', 'utopia', 'request', 'authorization']);
 
     $context->set('previewHostname', function (Request $request, ?Key $apiKey) {
         $allowed = false;

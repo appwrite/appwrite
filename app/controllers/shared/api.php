@@ -313,10 +313,9 @@ Http::init()
             }
 
             $projectId = $project->getId();
-            if ($projectId === 'console' && (str_starts_with($route->getPath(), '/v1/projects/:projectId') || str_starts_with($route->getPath(), '/v1/organization/projects'))) {
+            if ($projectId === 'console' && str_starts_with($route->getPath(), '/v1/projects/:projectId')) {
                 $uri = $request->getURI();
-                $parts = explode('/', $uri);
-                $projectId = str_starts_with($route->getPath(), '/v1/organization/projects') ? $parts[4] : $parts[3];
+                $projectId = explode('/', $uri)[3];
             }
 
             // Base scopes for admin users to allow listing teams and projects.
@@ -341,7 +340,7 @@ Http::init()
              * For console projects resource, we use platform DB.
              * Enabling authorization restricts admin user to the projects they have access to.
              */
-            if ($project->getId() === 'console' && ($route->getPath() === '/v1/projects' || $route->getPath() === '/v1/projects/:projectId' || $route->getPath() === '/v1/organization/projects')) {
+            if ($project->getId() === 'console' && ($route->getPath() === '/v1/projects' || $route->getPath() === '/v1/projects/:projectId')) {
                 $authorization->setDefaultStatus(true);
             } else {
                 // Otherwise, disable authorization checks.
