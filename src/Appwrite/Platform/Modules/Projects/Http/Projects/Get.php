@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Modules\Projects\Http\Projects;
 
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -18,7 +17,7 @@ class Get extends Action
 
     public static function getName()
     {
-        return 'getProject';
+        return 'getProjectById';
     }
 
     public function __construct()
