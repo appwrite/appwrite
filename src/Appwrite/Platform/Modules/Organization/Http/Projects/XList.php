@@ -44,7 +44,6 @@ class XList extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/organization/projects')
-            ->httpAlias('/v1/projects')
             ->desc('List organization projects')
             ->groups(['api', 'organization'])
             ->label('scope', 'projects.read')

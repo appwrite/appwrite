@@ -42,7 +42,6 @@ class Create extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/organization/projects')
-            ->httpAlias('/v1/projects')
             ->desc('Create organization project')
             ->groups(['api', 'organization'])
             ->label('audits.event', 'projects.create')

@@ -28,7 +28,6 @@ class Update extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
             ->setHttpPath('/v1/organization/projects/:projectId')
-            ->httpAlias('/v1/projects/:projectId')
             ->desc('Update organization project')
             ->groups(['api', 'organization'])
             ->label('scope', 'projects.write')
