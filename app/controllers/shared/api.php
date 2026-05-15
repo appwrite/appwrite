@@ -4,7 +4,6 @@ use Appwrite\Auth\Key;
 use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Bus\Events\RequestCompleted;
 use Appwrite\Event\Context\Audit as AuditContext;
-use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Audit as AuditMessage;
 use Appwrite\Event\Message\Func as FunctionMessage;
@@ -564,7 +563,6 @@ Http::init()
     ->inject('user')
     ->inject('queueForEvents')
     ->inject('auditContext')
-    ->inject('queueForDatabase')
     ->inject('usage')
     ->inject('publisherForFunctions')
     ->inject('dbForProject')
@@ -576,7 +574,7 @@ Http::init()
     ->inject('platform')
     ->inject('authorization')
     ->inject('cacheControlForStorage')
-    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, EventDatabase $queueForDatabase, Context $usage, FunctionPublisher $publisherForFunctions, Database $dbForProject, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Telemetry $telemetry, array $platform, Authorization $authorization, callable $cacheControlForStorage) {
+    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Context $usage, FunctionPublisher $publisherForFunctions, Database $dbForProject, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Telemetry $telemetry, array $platform, Authorization $authorization, callable $cacheControlForStorage) {
 
         $response->setUser($user);
         $request->setUser($user);
@@ -621,9 +619,6 @@ Http::init()
             }
             $auditContext->user = $userClone;
         }
-
-        /* Auto-set projects */
-        $queueForDatabase->setProject($project);
 
         $useCache = $route->getLabel('cache', false);
         $storageCacheOperationsCounter = $telemetry->createCounter('storage.cache.operations.load');
@@ -815,7 +810,6 @@ Http::shutdown()
     ->inject('publisherForAudits')
     ->inject('usage')
     ->inject('publisherForUsage')
-    ->inject('queueForDatabase')
     ->inject('publisherForFunctions')
     ->inject('queueForWebhooks')
     ->inject('queueForRealtime')
@@ -826,7 +820,7 @@ Http::shutdown()
     ->inject('bus')
     ->inject('apiKey')
     ->inject('mode')
-    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Audit $publisherForAudits, Context $usage, UsagePublisher $publisherForUsage, EventDatabase $queueForDatabase, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor, Bus $bus, ?Key $apiKey, string $mode) use ($parseLabel) {
+    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Audit $publisherForAudits, Context $usage, UsagePublisher $publisherForUsage, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor, Bus $bus, ?Key $apiKey, string $mode) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
@@ -971,10 +965,6 @@ Http::shutdown()
             }
 
             $publisherForAudits->enqueue(AuditMessage::fromContext($auditContext));
-        }
-
-        if (! empty($queueForDatabase->getType())) {
-            $queueForDatabase->trigger();
         }
 
         // Cache label

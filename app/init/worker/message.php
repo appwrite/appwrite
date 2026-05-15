@@ -1,6 +1,5 @@
 <?php
 
-use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Realtime;
@@ -326,10 +325,6 @@ return function (Container $container): void {
     $container->set('executionRetention', function () {
         return DateTime::addSeconds(new \DateTime(), -1 * (int) System::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600)); // 14 days
     }, []);
-
-    $container->set('queueForDatabase', function (Publisher $publisher) {
-        return new EventDatabase($publisher);
-    }, ['publisher']);
 
     $container->set('queueForEvents', function (Publisher $publisher) {
         return new Event($publisher);

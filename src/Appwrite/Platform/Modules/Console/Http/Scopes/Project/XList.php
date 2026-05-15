@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Console\Http\Scopes\Key;
+namespace Appwrite\Platform\Modules\Console\Http\Scopes\Project;
 
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
