@@ -1,4 +1,4 @@
-// Database-level overview (tabs: tables list, visualizer, monitor, …) — per product copy.
+// Database-level overview (tabs: tables list, visualizer, monitor, …) - per product copy.
 import { cn } from '@/lib/utils'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -133,7 +133,7 @@ import {
 } from '@/components/ui/dialog'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
-// Overview — database details with tabs (tables, backups, settings, …)
+// Overview - database details with tabs (tables, backups, settings, …)
 export interface OverviewProps {
   databaseId: string
   activeTab:

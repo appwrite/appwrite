@@ -128,7 +128,7 @@ function ActivityResourcePrimary({
   resourceId: string | null | undefined
   resourceLabel: string
 }) {
-  const primary = resourceId?.trim() || resourceLabel.trim() || '—'
+  const primary = resourceId?.trim() || resourceLabel.trim() || '-'
   return (
     <div className="flex min-w-0 items-center gap-2.5">
       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
@@ -189,7 +189,7 @@ function DetailField({
 
 function formatValue(value: string | undefined | null): string {
   const v = value?.trim()
-  return v && v.length > 0 ? v : '—'
+  return v && v.length > 0 ? v : '-'
 }
 
 /** Console avatars (flags, browsers): one frame size + chrome everywhere. */
@@ -440,7 +440,7 @@ export function ActivityLogDrawer({
                       <CopyableId id={event.userId} size="xs" maxWidth={220} />
                     ) : (
                       <p className="font-mono text-[12px] text-muted-foreground">
-                        —
+                        -
                       </p>
                     )}
                   </DetailField>
@@ -495,7 +495,7 @@ export function ActivityLogDrawer({
                         tooltipSide="bottom"
                       />
                     ) : (
-                      <p className="font-mono text-[12px] text-foreground">—</p>
+                      <p className="font-mono text-[12px] text-foreground">-</p>
                     )}
                   </DetailField>
                   <DetailField label="Hostname">
@@ -521,14 +521,14 @@ export function ActivityLogDrawer({
                       <ActivityBrowserIcon code={event.clientCode} />
                       <div className="min-w-0">
                         <p className="text-[13px] text-foreground">
-                          {clientSummary || '—'}
+                          {clientSummary || '-'}
                         </p>
                         <p className="mt-0.5 font-mono text-[11px] text-muted-foreground">
                           {event.clientType || event.clientCode
                             ? [event.clientType, event.clientCode]
                                 .filter(Boolean)
                                 .join(' · ')
-                            : '—'}
+                            : '-'}
                         </p>
                       </div>
                     </div>
@@ -537,15 +537,15 @@ export function ActivityLogDrawer({
                     <p className="font-mono text-[12px] text-muted-foreground">
                       {[event.clientEngine, event.clientEngineVersion]
                         .filter((s) => s?.trim())
-                        .join(' ') || '—'}
+                        .join(' ') || '-'}
                     </p>
                   </DetailField>
                   <DetailField label="Operating system">
-                    <p className="text-[13px] text-foreground">{osSummary || '—'}</p>
+                    <p className="text-[13px] text-foreground">{osSummary || '-'}</p>
                   </DetailField>
                   <DetailField label="Device">
                     <p className="text-[13px] text-foreground">
-                      {deviceSummary || '—'}
+                      {deviceSummary || '-'}
                     </p>
                   </DetailField>
                   <DetailField label="Location" className="sm:col-span-2">
@@ -569,7 +569,7 @@ export function ActivityLogDrawer({
                       )}
                       <div className="min-w-0 flex flex-col gap-0.5">
                         <p className="text-[13px] text-foreground">
-                          {countryNameLine || '—'}
+                          {countryNameLine || '-'}
                         </p>
                       </div>
                     </div>

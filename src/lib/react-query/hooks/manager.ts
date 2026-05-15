@@ -5,10 +5,10 @@
  * flag; calls made by other accounts will fail at the API layer.
  *
  * Exposes:
- * - listBlocks(projectId)            — resource blocks for a project
- * - createBlock                       — create a resource block
- * - deleteBlock                       — remove resource block(s)
- * - updateUserStatus                  — block/unblock a console user
+ * - listBlocks(projectId)            - resource blocks for a project
+ * - createBlock                       - create a resource block
+ * - deleteBlock                       - remove resource block(s)
+ * - updateUserStatus                  - block/unblock a console user
  *
  * Resource blocks are region-scoped on the server. Because the console SDK
  * points at the base endpoint, we pass through `sdk.forConsole.manager` and

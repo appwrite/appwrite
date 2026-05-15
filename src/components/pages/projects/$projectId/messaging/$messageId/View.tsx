@@ -381,7 +381,7 @@ export function View({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messageServerListsKey])
 
-  /** Message body / options from API — only re-hydrate when id, channel, or payload changes. */
+  /** Message body / options from API - only re-hydrate when id, channel, or payload changes. */
   const messagePayloadSyncKey = useMemo(
     () =>
       message?.data != null ? JSON.stringify(message.data) : '',
@@ -440,7 +440,7 @@ export function View({
       }
     }
     setPushImage(null)
-    // Intentionally not depending on `message` — same keys as before avoid re-hydrating from every refetch.
+    // Intentionally not depending on `message` - same keys as before avoid re-hydrating from every refetch.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [message?.$id, message?.providerType, messagePayloadSyncKey])
 
@@ -2045,7 +2045,7 @@ export function View({
                                       {target?.userId ? (
                                         <CopyableId id={target.userId} size="xs" />
                                       ) : (
-                                        '—'
+                                        '-'
                                       )}
                                     </span>
                                   )}

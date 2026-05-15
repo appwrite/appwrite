@@ -14,7 +14,7 @@ import {
 } from '@/lib/console-impersonation'
 import { performExitConsoleImpersonation } from '@/lib/console-impersonation-exit'
 
-/** No `account.get` — session target + operator snapshot only (e.g. account-access-blocked). */
+/** No `account.get` - session target + operator snapshot only (e.g. account-access-blocked). */
 function ConsoleImpersonationBannerSession({ className }: { className?: string }) {
   const [, bump] = useState(0)
   useEffect(() => {
@@ -124,7 +124,7 @@ export function ConsoleImpersonationBanner({
 }: {
   className?: string
   /**
-   * No `useAuth` / `account.get` — uses session target + operator snapshot only.
+   * No `useAuth` / `account.get` - uses session target + operator snapshot only.
    * Use on account-access-blocked and similar screens where console account APIs fail.
    */
   sessionOnly?: boolean

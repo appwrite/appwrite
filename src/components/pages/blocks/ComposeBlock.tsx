@@ -50,7 +50,7 @@ export function ComposeBlock({ projectId }: { projectId: string | null }) {
   const [confirmOpen, setConfirmOpen] = useState(false)
 
   const createMutation = useCreateBlock()
-  // Reuses the cached list query populated by BlocksList — gives us the
+  // Reuses the cached list query populated by BlocksList - gives us the
   // project + org metadata for a friendlier confirm message.
   const { data: blocksData } = useBlocks(projectId)
   const meta = blocksData?.blocks?.[0]

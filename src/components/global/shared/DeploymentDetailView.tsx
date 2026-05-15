@@ -525,7 +525,7 @@ export function DeploymentDetailView({
     lineAnchorRef.current = line
   }, [deployment?.$id])
 
-  // Determine site vs function from the route only — never infer from resource IDs
+  // Determine site vs function from the route only - never infer from resource IDs
   // (e.g. a function ID like "website-api" contains "site" and would misclassify as a site).
   const isSiteDeployment = deploymentDetailRoute.includes('/sites/')
   const parentResourceParam = isSiteDeployment ? 'siteId' : 'functionId'

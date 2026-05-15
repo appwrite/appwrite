@@ -245,7 +245,7 @@ export function VariablesSettingsCard({
   const currentPage = page + 1
   const hasPagination = limit > 0 && total > limit && onPageChange
 
-  const defaultDuplicateProjectKeyTooltip = `This key is also set on the project. The value in this row overwrites the project default for this ${scopeLabel.toLowerCase()}—only the value here is used in this context.`
+  const defaultDuplicateProjectKeyTooltip = `This key is also set on the project. The value in this row overwrites the project default for this ${scopeLabel.toLowerCase()}-only the value here is used in this context.`
 
   const envToObject = (content: string) => parseEnvFile(content)
   const jsonToObject = (content: string) => {

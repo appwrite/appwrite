@@ -71,7 +71,7 @@ export const STORAGE_SPREADSHEET_HEADER_CELL_BORDER_SPLIT_TOP_LAST =
 
 /**
  * Sticky checkbox column header when split-top chrome is used.
- * Uses inset shadow for the vertical rule next to the first data column — no
+ * Uses inset shadow for the vertical rule next to the first data column - no
  * `border-r` here (that would double the line with `inset_-1px_0_0_0`).
  */
 export const STORAGE_SPREADSHEET_HEADER_STICKY_CHECKBOX_SPLIT_TOP =

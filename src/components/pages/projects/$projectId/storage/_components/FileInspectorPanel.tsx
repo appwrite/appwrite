@@ -72,7 +72,7 @@ export type FileInspectorPanelProps = {
   bucketId: string
   /** Selected file from `?file=` or row selection */
   fileId: string | undefined
-  /** URL `filePanel` — `security` is kept for older links and opens Permissions */
+  /** URL `filePanel` - `security` is kept for older links and opens Permissions */
   panelTab?: 'overview' | 'permissions' | 'tokens' | 'security'
 }
 
@@ -80,7 +80,7 @@ type InspectorTab = 'overview' | 'permissions' | 'tokens'
 
 /**
  * Right-hand inspector for Storage files workspace: overview, permissions,
- * file tokens, download/preview/delete — intended to replace the standalone file page.
+ * file tokens, download/preview/delete - intended to replace the standalone file page.
  */
 export function FileInspectorPanel({
   projectId,
@@ -104,7 +104,7 @@ export function FileInspectorPanel({
   const [previewIntrinsicPx, setPreviewIntrinsicPx] = useState<{
     w: number
     h: number
-    /** Device pixel ratio when the bitmap decoded — caps CSS px so ~1 bitmap px maps to ~1 device px on retina. */
+    /** Device pixel ratio when the bitmap decoded - caps CSS px so ~1 bitmap px maps to ~1 device px on retina. */
     dpr: number
   } | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -534,7 +534,7 @@ export function FileInspectorPanel({
             MIME type
           </Label>
           <p className="mt-1 break-all font-mono text-[12px] text-foreground/90">
-            {file.mimeType || '—'}
+            {file.mimeType || '-'}
           </p>
         </div>
         <div>

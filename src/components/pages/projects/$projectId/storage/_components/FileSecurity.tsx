@@ -322,7 +322,7 @@ export function FileSecurity({
     (t: Models.ResourceToken) => t.$id === viewingTokenId,
   )
 
-  // Build file URL with token (public REST URL — must include `project` query param)
+  // Build file URL with token (public REST URL - must include `project` query param)
   const getFileUrl = (
     mode: 'preview' | 'view' | 'download',
     tokenSecret: string,

@@ -26,11 +26,11 @@ const PROFILES_STRIP_SUBCOPY: Record<
   string
 > = {
   build:
-    'Select one profile — applies to install and build phases on the build worker.',
+    'Select one profile - applies to install and build phases on the build worker.',
   'runtime-site':
-    'Select one profile — vCPU and memory allocated per request while your site serves traffic (SSR and dynamic routes).',
+    'Select one profile - vCPU and memory allocated per request while your site serves traffic (SSR and dynamic routes).',
   'runtime-function':
-    'Select one profile — vCPU and memory allocated for each function execution.',
+    'Select one profile - vCPU and memory allocated for each function execution.',
 }
 
 type SpecificationTableCardProps = {
@@ -133,12 +133,12 @@ export function SpecificationTableCard({
                   </TableCell>
                   <TableCell className="px-4 py-3">
                     <span className="text-[13px] tabular-nums text-foreground">
-                      {spec.cpus ?? '—'}
+                      {spec.cpus ?? '-'}
                     </span>
                   </TableCell>
                   <TableCell className="px-4 py-3">
                     <span className="text-[13px] tabular-nums text-foreground">
-                      {spec.memory != null ? `${spec.memory} MB` : '—'}
+                      {spec.memory != null ? `${spec.memory} MB` : '-'}
                     </span>
                   </TableCell>
                   <TableCell className="px-4 py-3">

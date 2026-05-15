@@ -31,7 +31,7 @@ import {
 } from '@/components/ui/collapsible'
 
 /**
- * Brand secondary palette — 100% baselines (style guide). Each hue uses
+ * Brand secondary palette - 100% baselines (style guide). Each hue uses
  * {@link OPACITY_STEPS.length} opacity steps on that hex before the next baseline
  * (Mint → Purple → Orange). Guide 50% swatches: #E7F8F7, #E5E1FF, #FFEAE1.
  */
@@ -41,7 +41,7 @@ const BRAND_SECONDARY_100 = {
   orange: '#FE9567',
 } as const
 
-/** Mock stacked series — resource-type buckets (aligned with activity `resourceType` filter). */
+/** Mock stacked series - resource-type buckets (aligned with activity `resourceType` filter). */
 const RESOURCE_SERIES = [
   { key: 'user', label: 'User' },
   { key: 'database', label: 'Database' },
@@ -109,7 +109,7 @@ function seriesFillHover(seriesIndex: number): string {
   return rgba(baseHex, Math.min(1, (opacity + 0.22) * BAR_GLOBAL_ALPHA))
 }
 
-/** Brighter than `seriesFillHover` — active stacked segment under the pointer. */
+/** Brighter than `seriesFillHover` - active stacked segment under the pointer. */
 function seriesFillEmphasis(seriesIndex: number): string {
   const { baseHex, opacity } = seriesShade(seriesIndex)
   return rgba(baseHex, Math.min(1, (opacity + 0.38) * BAR_GLOBAL_ALPHA))
@@ -143,7 +143,7 @@ function colorSlotPermutationSeed(rangeFrom: Date, rangeTo: Date): number {
   return (rangeFrom.getTime() ^ Math.imul(rangeTo.getTime(), 0x9e37_79b9)) >>> 0
 }
 
-/** One vertical fade over the whole plot (all stacks) — slightly veils the bottom of every column together. */
+/** One vertical fade over the whole plot (all stacks) - slightly veils the bottom of every column together. */
 function ChartPlotBottomFade({
   offset,
   gradientId,
@@ -187,7 +187,7 @@ function parseActiveBarIndex(activeTooltipIndex: unknown): number | null {
   return Number.isNaN(n) ? null : n
 }
 
-/** Pointer inside chart surface — matches Recharts scaling (ResponsiveContainer / CSS scale). */
+/** Pointer inside chart surface - matches Recharts scaling (ResponsiveContainer / CSS scale). */
 function pointerInChartWrapper(e: SyntheticEvent<Element>): {
   x: number
   y: number
@@ -655,7 +655,7 @@ export function ActivityLogVolumeChart({
                   barCategoryGap="15%"
                   onMouseMove={(state, e) => {
                     const col = parseActiveBarIndex(state.activeTooltipIndex)
-                    // Recharts can briefly report `null` while still over a column — do not touch
+                    // Recharts can briefly report `null` while still over a column - do not touch
                     // `lastTooltipColumnRef` or `hoveredResourceKey` in that case.
                     //
                     // Only clear the stacked segment when moving **between two real columns**.
@@ -768,7 +768,7 @@ export function ActivityLogVolumeChart({
               )}
             </div>
 
-            {/* Legend — centered chips; clicks drive activity `resourceType` filter when wired */}
+            {/* Legend - centered chips; clicks drive activity `resourceType` filter when wired */}
             <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
               {RESOURCE_SERIES.map(({ key, label }, i) => {
                 const isActive = filteredResourceKey === key

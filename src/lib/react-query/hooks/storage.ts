@@ -104,7 +104,7 @@ export function getCachedBucketListsFromQueryClient(
 
 /**
  * Resolve a bucket for UI (header, etc.) from the single-bucket query or any
- * cached buckets list for the project — avoids a brief empty state while the
+ * cached buckets list for the project - avoids a brief empty state while the
  * detail query refetches during the same navigation (e.g. file selection).
  */
 export function getBucketFromProjectCaches(

@@ -121,7 +121,7 @@ export function ExecutionDetailsDrawer({
     return parseQueryParams(execution.requestPath)
   }, [execution?.requestPath])
 
-  // Determine initial response tab when switching executions (avoid [execution] —
+  // Determine initial response tab when switching executions (avoid [execution] -
   // parent often passes a new object reference each render and would retrigger this
   // effect repeatedly, contributing to nested update limits).
   useEffect(() => {

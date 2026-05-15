@@ -6,7 +6,7 @@ import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { countriesQueryOptions } from '@/lib/react-query/hooks'
 
 const activitySearchSchema = z.object({
-  /** Activity event `$id` — opens the detail drawer when valid. */
+  /** Activity event `$id` - opens the detail drawer when valid. */
   event: z.string().optional().catch(undefined),
   /** Encoded table filters (same contract as other list views). */
   query: z.string().optional().catch(undefined),

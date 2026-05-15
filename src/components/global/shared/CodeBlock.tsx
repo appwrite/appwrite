@@ -167,7 +167,7 @@ export interface CodeBlockProps {
   language: CodeBlockLanguage
   /**
    * `default`: framed block with border and rounded corners.
-   * `headless`: no outer border; full width — use flush inside a parent card.
+   * `headless`: no outer border; full width - use flush inside a parent card.
    */
   variant?: CodeBlockVariant
   /** Show copy button (default true) */

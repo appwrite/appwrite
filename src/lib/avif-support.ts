@@ -105,7 +105,7 @@ export function isAvifSupportedSync(): boolean | null {
 /**
  * Returns the preferred image output format for browser-rendered images
  * (currently AVIF when supported, otherwise undefined to let the server
- * choose its default — typically WebP/JPEG).
+ * choose its default - typically WebP/JPEG).
  */
 export function getPreferredImageFormat(): ImageFormat | undefined {
   return cachedSupport === true ? ImageFormat.Avif : undefined

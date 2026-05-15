@@ -76,8 +76,8 @@ export function SiteRuntimeLoggingCard({
             </Label>
             <p className="text-[12px] text-muted-foreground mt-1">
               {logging
-                ? 'Enabled — logs and errors from your site are recorded.'
-                : 'Disabled — lighter request records; responses may be slightly faster.'}
+                ? 'Enabled - logs and errors from your site are recorded.'
+                : 'Disabled - lighter request records; responses may be slightly faster.'}
             </p>
           </div>
           <Switch

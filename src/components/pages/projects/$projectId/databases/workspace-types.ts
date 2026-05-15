@@ -1,6 +1,6 @@
 /**
  * Route-level workspace props and database-level tab ids shared by all
- * database products. No product implementation lives here — only URL/tab
+ * database products. No product implementation lives here - only URL/tab
  * vocabulary so routes and `Workspace.tsx` stay typed.
  */
 export type OverviewContentTab =

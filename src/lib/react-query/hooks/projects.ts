@@ -137,7 +137,7 @@ export async function fetchActiveProjects(
       ? excludeProjectIds
       : []
 
-  // `projects.list` only documents filters on name/teamId/labels/search — not `$id`.
+  // `projects.list` only documents filters on name/teamId/labels/search - not `$id`.
   // Pasting a project ID never hits fulltext/labels, so resolve ID-shaped terms via get.
   if (trimmedSearch && isProbableConsoleProjectId(trimmedSearch)) {
     try {
@@ -155,7 +155,7 @@ export async function fetchActiveProjects(
         }
       }
     } catch {
-      // Not found, wrong console, or no access — fall through to list search.
+      // Not found, wrong console, or no access - fall through to list search.
     }
   }
 

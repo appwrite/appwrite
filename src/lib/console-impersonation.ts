@@ -104,7 +104,7 @@ export function isConsoleImpersonationActive(
   )
 }
 
-/** Session-only check — no `account.get` required (e.g. blocked-account UI, exit FAB). */
+/** Session-only check - no `account.get` required (e.g. blocked-account UI, exit FAB). */
 export function hasConsoleImpersonationSessionTarget(): boolean {
   return !!readConsoleImpersonationTargetUserId()
 }

@@ -15,7 +15,7 @@ import {
 export type ResourceSettingsNavItem = {
   id: string
   label: string
-  /** Path after `.../settings` — use `''` for index */
+  /** Path after `.../settings` - use `''` for index */
   pathSuffix: '' | 'git' | 'build' | 'runtime' | 'triggers'
   icon: LucideIcon
   keywords: string[]

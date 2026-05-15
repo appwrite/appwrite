@@ -914,7 +914,7 @@ function RowEditDrawer({
 
   // Focus the requested field when drawer opens, then place the caret at the
   // end of the existing value. The input's value is hydrated by a separate
-  // effect watching `row?.$id`, so the value may arrive a tick after mount —
+  // effect watching `row?.$id`, so the value may arrive a tick after mount -
   // we poll a few frames until it's there before placing the caret.
   const lastFocusedSessionRef = useRef<string | null>(null)
   useEffect(() => {

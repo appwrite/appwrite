@@ -184,7 +184,7 @@ export function ErrorComponent({
           ? {
               title: "You're offline",
               message:
-                'This page needs a connection to Appwrite. Reconnect to the internet, then try again — we can reload automatically when you are back online.',
+                'This page needs a connection to Appwrite. Reconnect to the internet, then try again - we can reload automatically when you are back online.',
               isUserFriendly: true,
             }
           : {

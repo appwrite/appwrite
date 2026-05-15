@@ -323,13 +323,13 @@ export interface ProjectOnboardingSnapshot {
  *
  * The previous implementation fired one `list` call per resource type
  * (`users`, `teams`, `databases`, `buckets`, `functions`, `topics`,
- * `providers`, `sites`) with `limit=1` purely to read the `total` field —
+ * `providers`, `sites`) with `limit=1` purely to read the `total` field -
  * which produced a burst of API calls on every project page (and again on
  * every window focus). That has been removed pending a proper aggregated
  * endpoint that returns all of these counts in a single call.
  *
  * For now we return zeros so the checklist renders in its initial state.
- * `projectId` is intentionally unused — kept on the signature so the
+ * `projectId` is intentionally unused - kept on the signature so the
  * eventual real implementation slots in without touching callers.
  */
 export async function fetchProjectOnboardingSnapshot(

@@ -1854,7 +1854,7 @@ export function View() {
                                     <CopyableId id={file.$id} size="xs" />
                                   ) : (
                                     <span className="text-[12px] text-muted-foreground">
-                                      —
+                                      -
                                     </span>
                                   )}
                                 </td>
@@ -1905,7 +1905,7 @@ export function View() {
                                   }
                                 >
                                   <span className="block truncate font-mono text-[12px] text-muted-foreground">
-                                    {file.mimeType || '—'}
+                                    {file.mimeType || '-'}
                                   </span>
                                 </td>
                                 <td

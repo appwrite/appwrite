@@ -1,5 +1,5 @@
 /**
- * Side-effect imports — register all built-in entries with the registry.
+ * Side-effect imports - register all built-in entries with the registry.
  *
  * Add a new entry file by importing it here. The Command Center component
  * imports this barrel file once.

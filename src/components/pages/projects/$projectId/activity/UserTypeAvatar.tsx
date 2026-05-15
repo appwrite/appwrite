@@ -8,7 +8,7 @@ const avatarFrame =
   'flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-border/50 shadow-sm'
 
 /**
- * Activity actor avatar: same rules as the activity table — text initials for
+ * Activity actor avatar: same rules as the activity table - text initials for
  * regular project users; glyph badges for admins, API keys, and system actors.
  * All variants share the same outer size and frame.
  */

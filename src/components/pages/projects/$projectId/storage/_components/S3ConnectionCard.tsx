@@ -27,7 +27,7 @@ export function S3ConnectionCard({ className }: S3ConnectionCardProps) {
             S3-compatible access
           </p>
           <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
-            Project endpoint and credentials for external tooling — in progress.
+            Project endpoint and credentials for external tooling - in progress.
           </p>
         </div>
       </div>

@@ -61,7 +61,7 @@ export interface CommandEntry {
   shortcut?: string
   /** Hide the entry entirely (e.g. behind a feature flag). */
   available?: (ctx: CommandContext) => boolean
-  /** Show but disabled — pair with `disabledReason`. */
+  /** Show but disabled - pair with `disabledReason`. */
   disabled?: (ctx: CommandContext) => boolean
   disabledReason?: (ctx: CommandContext) => string | undefined
   /**

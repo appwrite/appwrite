@@ -53,7 +53,7 @@ function FilledAppwriteMark({ className }: { className?: string }) {
 }
 
 /**
- * Solid cloud silhouette (Heroicons 24/solid Cloud — MIT).
+ * Solid cloud silhouette (Heroicons 24/solid Cloud - MIT).
  * Rounded “weather” cloud reads clearer than stroke icons at small sizes.
  */
 function FilledCloudMark({ className }: { className?: string }) {
@@ -77,7 +77,7 @@ function FilledCloudMark({ className }: { className?: string }) {
 /**
  * Appwrite mark + pink cloud on hover (3D flip); parent header link must use Tailwind `group`.
  * Cloud profile only. After a click (navigate home), the mark stays on Appwrite until the pointer
- * leaves the link, including across SPA remounts — we do not infer “not hovered” on mount, which
+ * leaves the link, including across SPA remounts - we do not infer “not hovered” on mount, which
  * would wrongly re-enable the flip while the cursor is still over the logo.
  * Self-hosted shows the Appwrite mark only (no cloud flip or suppress logic).
  */
@@ -101,7 +101,7 @@ export function ConsoleHeaderLogo({ className }: { className?: string }) {
     const parent = rootRef.current?.parentElement
     if (!parent) return
 
-    // Do not clear suppress on mount using `:hover` — after SPA navigation the
+    // Do not clear suppress on mount using `:hover` - after SPA navigation the
     // new link often does not match `:hover` for a frame even while the pointer
     // is still over the logo, which incorrectly re-enabled the cloud flip.
 

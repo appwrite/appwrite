@@ -497,13 +497,13 @@ export function View({
                         const target = subscriber.target
                         const TypeIcon = getTypeIcon(subscriber.providerType)
                         const nameLabel = (() => {
-                          if (!target) return '—'
+                          if (!target) return '-'
                           const fromName = target.name?.trim()
                           if (fromName) return fromName
                           const fromId = target.identifier?.trim()
                           if (fromId) return fromId
                           if (target.userId) return target.userId
-                          return '—'
+                          return '-'
                         })()
 
                         return (

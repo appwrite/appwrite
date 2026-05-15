@@ -70,7 +70,7 @@ export function GitSilentModeCard({
         <p className="text-[13px] text-muted-foreground mt-2">
           Control whether Appwrite posts automated comments on commits in your
           connected GitHub repository (for example deployment notes on pull
-          requests). Deployments, checks, and builds are unchanged—only optional
+          requests). Deployments, checks, and builds are unchanged-only optional
           commit comments are skipped when silent mode is on.
         </p>
       </div>

@@ -200,7 +200,7 @@ export function OAuth2ProvidersSection({ projectId }: { projectId: string }) {
       if (raw) {
         values[p.$id] = raw
       } else if (wasEnabled && isSecretishParameter(p.$id)) {
-        // omit — server keeps existing secret
+        // omit - server keeps existing secret
       }
     }
 

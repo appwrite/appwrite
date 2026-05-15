@@ -1,5 +1,5 @@
 /**
- * Repository card — Git connection and configuration for the site.
+ * Repository card - Git connection and configuration for the site.
  * Shows an empty state with "Connect repository" when no repo is connected.
  */
 

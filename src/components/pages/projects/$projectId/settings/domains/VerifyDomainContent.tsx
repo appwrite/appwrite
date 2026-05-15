@@ -164,7 +164,7 @@ export function VerifyDomainContent({
 
   // For Function and Site custom domains, when the active profile has the edge
   // network enabled the CNAME must target the edge network host
-  // (`appwrite.network`) — not the project endpoint host returned by
+  // (`appwrite.network`) - not the project endpoint host returned by
   // `_APP_DOMAIN_TARGET_CNAME` (which only applies to custom API domains).
   // For region-pinned routing users can use `<region>.appwrite.run`.
   const cname = useMemo(() => {

@@ -50,7 +50,7 @@ export async function fetchLocale() {
 // ============================================================================
 
 /**
- * Countries list from the console locale API — shared by `useCountries`,
+ * Countries list from the console locale API - shared by `useCountries`,
  * activity filters, and route loaders so the cache key stays identical.
  */
 export function countriesQueryOptions() {

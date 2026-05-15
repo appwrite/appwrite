@@ -4,8 +4,8 @@ import { CONSOLE_ACCOUNT_ACCESS_BLOCKED } from '@/lib/utils/error-formatting'
 
 type AccountAccessBlockedScreenProps = {
   /**
-   * `fill` — grow inside a parent that already defines full viewport height (e.g. under impersonation banner).
-   * `fullscreen` — default standalone page.
+   * `fill` - grow inside a parent that already defines full viewport height (e.g. under impersonation banner).
+   * `fullscreen` - default standalone page.
    */
   layout?: 'fullscreen' | 'fill'
 }

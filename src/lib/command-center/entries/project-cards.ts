@@ -1,12 +1,12 @@
 /**
- * Project-scope card entries — searchable cards / sections inside pages.
+ * Project-scope card entries - searchable cards / sections inside pages.
  *
  * Each entry navigates to a path with a `#card-<id>` hash. The
  * `useScrollToCard()` hook (mounted by the page that owns the card)
  * scrolls the matching `[data-card-id="<id>"]` element into view and
  * briefly highlights it.
  *
- * Cards are search-only — they don't appear in the default landing list.
+ * Cards are search-only - they don't appear in the default landing list.
  *
  * To make a new card searchable:
  *   1. Add `data-card-id="my-card"` to the wrapping element on the page.

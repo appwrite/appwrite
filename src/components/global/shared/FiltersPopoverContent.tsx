@@ -69,7 +69,7 @@ function reorderList<T>(list: T[], fromIndex: number, toIndex: number): T[] {
   return copy
 }
 
-/** Horizontal rules between popover sections — minimal */
+/** Horizontal rules between popover sections - minimal */
 const SECTION_DIVIDE =
   'border-muted-foreground/6 dark:border-muted-foreground/9'
 

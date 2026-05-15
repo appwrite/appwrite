@@ -89,12 +89,12 @@ function ActivityTableCountryCell({
       className="truncate text-[13px] text-muted-foreground"
       title={name || undefined}
     >
-      {name || '—'}
+      {name || '-'}
     </p>
   )
 }
 
-/** Column widths for activity log table — shared by `colgroup` and kept in sync with header labels. */
+/** Column widths for activity log table - shared by `colgroup` and kept in sync with header labels. */
 function ActivityLogsTableColGroup() {
   return (
     <colgroup>
@@ -903,13 +903,13 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
                     const resourcePrimary =
                       activity.resourceId?.trim() ||
                       activity.resourceName ||
-                      '—'
+                      '-'
                     const resourceDisplay = truncateMiddle(
                       resourcePrimary,
                       ACTIVITY_RESOURCE_DISPLAY_MAX,
                     )
                     const resourceTitle =
-                      resourcePrimary !== '—' &&
+                      resourcePrimary !== '-' &&
                       resourcePrimary.length > ACTIVITY_RESOURCE_DISPLAY_MAX
                         ? resourcePrimary
                         : undefined
@@ -990,8 +990,8 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
                               {hasHumanEmail(activity.userType)
                                 ? activity.userEmail ||
                                   activity.userId ||
-                                  '—'
-                                : activity.userId || '—'}
+                                  '-'
+                                : activity.userId || '-'}
                             </p>
                           </div>
                         </div>
@@ -1044,7 +1044,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
                           />
                         ) : (
                           <span className="font-mono text-[12px] text-muted-foreground">
-                            —
+                            -
                           </span>
                         )}
                       </TableCell>

@@ -112,7 +112,7 @@ interface DateRangePickerProps {
   dateRange: DateRange | undefined
   onDateRangeChange: (range: DateRange | undefined) => void
   className?: string
-  /** Radix PopoverContent `align` — default `end` for wide triggers in headers. */
+  /** Radix PopoverContent `align` - default `end` for wide triggers in headers. */
   popoverContentAlign?: 'start' | 'center' | 'end'
 }
 

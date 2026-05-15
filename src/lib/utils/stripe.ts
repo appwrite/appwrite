@@ -97,7 +97,7 @@ export function getStripeAppearanceFromTheme(theme: string | undefined) {
  * The backend may return a clientSecret with the PI in
  * `requires_payment_method` (no PM attached yet), `requires_confirmation`
  * (server didn't pre-confirm), or `requires_action` (server confirmed, needs
- * 3DS). `stripe.confirmCardPayment` handles all three — it attaches the
+ * 3DS). `stripe.confirmCardPayment` handles all three - it attaches the
  * payment method if provided, confirms the PI, and runs the 3DS challenge
  * inline. If the PI is already settled we do nothing.
  *
@@ -158,7 +158,7 @@ export async function confirmPayment(config: {
     if (error) throw new Error(error.message ?? 'Payment confirmation failed')
 
     // If the user dismissed the 3DS modal the PI reverts to
-    // requires_payment_method without surfacing an error in `error` — detect
+    // requires_payment_method without surfacing an error in `error` - detect
     // this and throw an actionable message.
     if (updatedIntent?.status === 'requires_payment_method') {
       throw new Error(

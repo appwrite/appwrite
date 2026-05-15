@@ -631,7 +631,7 @@ export function CommandCenter({
       const prefix = `/projects/${projectId}`
       if (!href.startsWith(prefix)) return cmd
       const rest = href.slice(prefix.length).replace(/^\//, '')
-      // Skip when the path has additional segments or a hash anchor — those
+      // Skip when the path has additional segments or a hash anchor - those
       // need real navigation rather than the section-only callback.
       if (rest.includes('/') || rest.includes('#')) return cmd
       const section = rest === '' ? 'overview' : rest
@@ -702,7 +702,7 @@ export function CommandCenter({
   )
 
   // Group commands shown when no search query is active (default view).
-  // Tabs and cards are intentionally excluded here — they would clutter the
+  // Tabs and cards are intentionally excluded here - they would clutter the
   // landing list with deep-link variants of pages already visible under
   // Navigation. They remain reachable via the search box.
   const defaultGroups = useMemo(() => {
@@ -923,7 +923,7 @@ export function CommandCenter({
             <div
               className={cn(
                 'overflow-y-auto p-4',
-                isMobile ? 'flex-1' : 'max-h-[400px]',
+                isMobile ? 'flex-1' : 'max-h-[min(400px,60dvh)]',
               )}
             >
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -973,7 +973,7 @@ export function CommandCenter({
             'overflow-hidden border-border bg-popover p-0 shadow-2xl',
             isMobile
               ? 'h-[100dvh] w-screen max-w-none rounded-none border-0 flex flex-col'
-              : 'max-w-lg',
+              : 'sm:max-w-2xl',
           )}
           showCloseButton={false}
           aria-describedby={undefined}
@@ -1010,7 +1010,7 @@ export function CommandCenter({
             <CommandList
               className={cn(
                 'p-2',
-                isMobile ? 'flex-1 max-h-none' : 'max-h-[300px]',
+                isMobile ? 'flex-1 max-h-none' : 'max-h-[min(320px,48dvh)]',
               )}
             >
               <CommandEmpty className="py-6 text-center text-[13px] text-muted-foreground">
@@ -1069,7 +1069,7 @@ export function CommandCenter({
       ? 'Search projects, settings, members…'
       : context === 'account'
         ? 'Search account, sessions, security…'
-        : 'Search anything — pages, tabs, settings, resources…'
+        : 'Search anything - pages, tabs, settings, resources…'
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -1078,7 +1078,7 @@ export function CommandCenter({
           'overflow-hidden border-border bg-popover p-0 shadow-2xl',
           isMobile
             ? 'h-[100dvh] w-screen max-w-none rounded-none border-0 flex flex-col'
-            : 'max-w-lg',
+            : 'sm:max-w-2xl',
         )}
         showCloseButton={false}
         aria-describedby={undefined}
@@ -1131,7 +1131,9 @@ export function CommandCenter({
           <CommandList
             className={cn(
               'p-2',
-              isMobile ? 'flex-1 min-h-0' : 'h-[min(600px,70dvh)]',
+              isMobile
+                ? 'max-h-none flex-1 min-h-0'
+                : 'max-h-[min(420px,58dvh)]',
             )}
           >
             {/* Custom empty state: only show "no results" when the user has

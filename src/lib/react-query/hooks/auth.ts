@@ -44,7 +44,7 @@ export type ConsoleAccountCache = { prefs?: Record<string, unknown> }
 
 /**
  * Account is cached under `['account', 'console', consoleImpersonationRevision]`.
- * `getQueryData(['account', 'console'])` never matches — use prefix query (see useSidebarCollapsed).
+ * `getQueryData(['account', 'console'])` never matches - use prefix query (see useSidebarCollapsed).
  */
 export function getConsoleAccountFromCache(
   queryClient: QueryClient,

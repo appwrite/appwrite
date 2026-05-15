@@ -58,7 +58,7 @@ export function MessagingLogsTable({
                 {log.event}
               </TableCell>
               <TableCell className="px-4 py-3 text-[12px] text-muted-foreground">
-                {log.userName || log.userEmail || log.userId || '—'}
+                {log.userName || log.userEmail || log.userId || '-'}
               </TableCell>
             </TableRow>
           ))}

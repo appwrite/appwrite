@@ -945,7 +945,7 @@ export function TransformImageWizard({
                   ringSize={FOOTER_PREVIEW_RING_PX}
                 >
                   <span className="text-[9px] font-normal text-muted-foreground">
-                    —
+                    -
                   </span>
                 </PreviewReductionRing>
                 <p className="min-w-0 flex-1 truncate text-[11px] text-muted-foreground">
@@ -1294,7 +1294,7 @@ export function TransformImageWizard({
                         Width (px)
                       </Label>
                       <span className="text-[12px] tabular-nums text-foreground">
-                        {state.width === null ? '—' : state.width}
+                        {state.width === null ? '-' : state.width}
                       </span>
                     </div>
                     {state.width !== null && (
@@ -1330,7 +1330,7 @@ export function TransformImageWizard({
                         Height (px)
                       </Label>
                       <span className="text-[12px] tabular-nums text-foreground">
-                        {state.height === null ? '—' : state.height}
+                        {state.height === null ? '-' : state.height}
                       </span>
                     </div>
                     {state.height !== null && (

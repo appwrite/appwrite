@@ -20,7 +20,7 @@ export function TargetBar({
 }) {
   const inputRef = useRef<HTMLInputElement | null>(null)
 
-  // Reads from the same react-query cache that BlocksList populates —
+  // Reads from the same react-query cache that BlocksList populates -
   // deduped by the shared query key so this does not trigger a separate fetch.
   const { data } = useBlocks(focusedProjectId)
   const meta = data?.blocks?.[0]

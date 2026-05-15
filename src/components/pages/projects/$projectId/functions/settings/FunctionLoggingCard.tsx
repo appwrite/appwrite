@@ -75,8 +75,8 @@ export function FunctionLoggingCard({
             </Label>
             <p className="text-[12px] text-muted-foreground mt-1">
               {logging
-                ? 'Enabled — function stdout and stderr are recorded.'
-                : 'Disabled — less log output per execution.'}
+                ? 'Enabled - function stdout and stderr are recorded.'
+                : 'Disabled - less log output per execution.'}
             </p>
           </div>
           <Switch

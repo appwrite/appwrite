@@ -36,7 +36,7 @@ export function getStorageInspectorPreviewRequestWidthPx(
 }
 
 export type StorageInspectorPreviewDefaults = {
-  /** `Models.File.sizeOriginal` — caps preview width for tiny files (same as inspector). */
+  /** `Models.File.sizeOriginal` - caps preview width for tiny files (same as inspector). */
   originalSizeBytes?: number
   /**
    * Exact width the inspector used for its preview; when opening the wizard from the panel,
@@ -561,7 +561,7 @@ export function buildAdminFileViewUrl(
 }
 
 /**
- * Preview URL with **no** resize/format/gravity args — original image bytes as served by Storage.
+ * Preview URL with **no** resize/format/gravity args - original image bytes as served by Storage.
  * Use for “Original” compare so it never matches the transformed design-canvas preview URL.
  */
 export function buildAdminUntransformedPreviewUrl(

@@ -1,5 +1,5 @@
 /**
- * Project-scope tab entries — sub-tabs inside service sections.
+ * Project-scope tab entries - sub-tabs inside service sections.
  *
  * These are intentionally search-only: they don't appear in the default
  * landing list, but typing "templates", "domains", "smtp" etc. surfaces
@@ -7,7 +7,7 @@
  *
  * Label convention: `Section · Subsection` (e.g. "Auth · Templates").
  *
- * To add a new tab, drop another object below — registration is automatic.
+ * To add a new tab, drop another object below - registration is automatic.
  */
 
 import {

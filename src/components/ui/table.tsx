@@ -6,7 +6,7 @@ type TableProps = React.ComponentProps<'table'> & {
   /**
    * When false, renders only the `<table>` (no inner `overflow-x-auto` wrapper).
    * Use when the parent is already the scroll container and you need `thead` /
-   * `th` `position: sticky` to stick vertically — an intermediate overflow-x
+   * `th` `position: sticky` to stick vertically - an intermediate overflow-x
    * wrapper breaks sticky against an outer `overflow-y-auto`.
    */
   withScrollContainer?: boolean

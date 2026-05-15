@@ -191,7 +191,7 @@ export function asOrganizationPaymentRefs(
   return organization as OrganizationPaymentRefs
 }
 
-/** Subscription failed invoices only — other types (domains, addons, etc.) must not trigger payment alerts. */
+/** Subscription failed invoices only - other types (domains, addons, etc.) must not trigger payment alerts. */
 export function isSubscriptionFailedInvoiceWithError(
   failedInvoice: OrganizationPaymentRefs['failedInvoice'],
 ): failedInvoice is NonNullable<OrganizationPaymentRefs['failedInvoice']> {

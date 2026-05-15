@@ -63,8 +63,8 @@ const TERMINAL_FAVICON_RESET_MS = 10_000
  *  - `type: 'site' | 'function', resourceId: null`  → on the section index/list
  *  - `type, resourceId: string` → on a specific site/function detail page
  *
- * Notifications still fire globally for builds we already started tracking —
- * the whole point is to alert you when you're elsewhere — but we only *start*
+ * Notifications still fire globally for builds we already started tracking -
+ * the whole point is to alert you when you're elsewhere - but we only *start*
  * tracking a build (and only swap the favicon) when its resource matches the
  * page you're currently working on.
  */

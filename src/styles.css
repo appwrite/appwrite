@@ -560,7 +560,7 @@ code {
   }
 
   /* Base document setup. We deliberately keep html/body at `height: 100%` and
-     do NOT set them to 100dvh — on iOS Safari, sizing body via dvh + overflow:
+     do NOT set them to 100dvh - on iOS Safari, sizing body via dvh + overflow:
      hidden produces a body that's slightly shorter than the visual viewport
      (a known WebKit quirk), which leaves an empty band at the bottom of the
      screen. Instead, the root container below uses `position: fixed; inset: 0`
@@ -979,7 +979,7 @@ html:is(.crazy, .stealth, .premium, .high-contrast, .barbie, .nineties) .upgrade
     transform: rotate(-11deg) translate3d(0, 4px, 0);
     opacity: 1;
   }
-  /* Straighten while dropping — shorter travel, opacity eases out smoothly */
+  /* Straighten while dropping - shorter travel, opacity eases out smoothly */
   50% {
     transform: rotate(-7deg) translate3d(0, 12px, 0);
     opacity: 1;

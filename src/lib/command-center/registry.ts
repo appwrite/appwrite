@@ -20,7 +20,7 @@ export function registerCommands(items: CommandEntry[]): void {
   }
 }
 
-/** Internal helper — exposed for tests / debugging. */
+/** Internal helper - exposed for tests / debugging. */
 export function getAllCommands(): CommandEntry[] {
   return entries
 }

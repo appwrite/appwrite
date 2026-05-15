@@ -85,10 +85,10 @@ export function buildSavedFiltersPrefs(
 }
 
 // ---------------------------------------------------------------------------
-// Storage: image transform wizard — saved presets (account + team prefs)
+// Storage: image transform wizard - saved presets (account + team prefs)
 // ---------------------------------------------------------------------------
 
-/** Full key: `console.imageTransformPresets` — JSON SavedImageTransformPreset[] */
+/** Full key: `console.imageTransformPresets` - JSON SavedImageTransformPreset[] */
 export const USER_PREFS_KEY_IMAGE_TRANSFORM_PRESETS =
   'console.imageTransformPresets'
 
@@ -204,10 +204,10 @@ export function buildDatabasesSidebarWidthPrefs(percent: number): UserPrefs {
 }
 
 // ---------------------------------------------------------------------------
-// Storage: files list column widths (account — same widths for every bucket)
+// Storage: files list column widths (account - same widths for every bucket)
 // ---------------------------------------------------------------------------
 
-/** Full key: `console.storageFiles.listColumnWidths` — JSON Record<columnKey, number> (px). */
+/** Full key: `console.storageFiles.listColumnWidths` - JSON Record<columnKey, number> (px). */
 export const USER_PREFS_KEY_STORAGE_FILES_LIST_COLUMN_WIDTHS =
   'console.storageFiles.listColumnWidths'
 

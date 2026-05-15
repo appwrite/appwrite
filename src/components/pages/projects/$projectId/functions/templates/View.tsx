@@ -132,7 +132,7 @@ function formatUseCaseLabel(useCase: string) {
   return u.charAt(0).toUpperCase() + u.slice(1)
 }
 
-/** Build filter labels from template rows (same source as catalog pages — no extra listTemplates batch). */
+/** Build filter labels from template rows (same source as catalog pages - no extra listTemplates batch). */
 function collectTemplateFacetLabels(templates: Models.TemplateFunction[] | undefined) {
   const useCaseSet = new Set<string>()
   const runtimeSet = new Set<string>()
@@ -523,7 +523,7 @@ function FunctionTemplateDetailDrawer({
                               </TableCell>
                               <TableCell className="px-3 py-2 align-top">
                                 <span className="break-all font-mono text-[11px] text-muted-foreground">
-                                  {r.entrypoint ?? '—'}
+                                  {r.entrypoint ?? '-'}
                                 </span>
                               </TableCell>
                               <TableCell className="px-3 py-2 align-top">
@@ -533,7 +533,7 @@ function FunctionTemplateDetailDrawer({
                                 >
                                   {r.commands
                                     ? truncateMiddle(r.commands, 48)
-                                    : '—'}
+                                    : '-'}
                                 </span>
                               </TableCell>
                             </TableRow>
@@ -1057,7 +1057,7 @@ export function View() {
   const isNameSearch = urlSearch.trim().length > 0
   const pageSize = Math.max(1, urlLimit)
 
-  /** First catalog page, unfiltered — drives filter chips; dedupes with `pageQuery` on default URL. */
+  /** First catalog page, unfiltered - drives filter chips; dedupes with `pageQuery` on default URL. */
   const facetSourceQuery = useQuery({
     ...functionTemplatesPageQueryOptions(
       projectId,

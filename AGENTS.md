@@ -416,7 +416,7 @@ Symptoms: clicking into a row/document/tab shows a "Loading rows…" / "Loading�
 Checklist (in this order):
 
 1. **`pendingComponent` is defined on the route.** Remove it. The route should rely on the loader + cached data for the next view's first paint. (See rule above.)
-2. **Loader and View use different default page sizes.** The loader prefetches `tableRowsQueryOptions(..., page-1, LIMIT_A, ...)` but the View calls `useProjectTableRows(..., page-1, LIMIT_B, ...)` with a different default. Different limits → different query keys → cache miss → loading spinner. **Fix:** import the **same shared constant** from `@/lib/react-query/hooks/constants` (e.g. `ROWS_DEFAULT_PAGE_SIZE`, `DEFAULT_PAGE_SIZE`) in both the route file and the View — never re-declare a local `const ROWS_PER_PAGE = 25` in the route; that's how route and View silently drift out of sync.
+2. **Loader and View use different default page sizes.** The loader prefetches `tableRowsQueryOptions(..., page-1, LIMIT_A, ...)` but the View calls `useProjectTableRows(..., page-1, LIMIT_B, ...)` with a different default. Different limits → different query keys → cache miss → loading spinner. **Fix:** import the **same shared constant** from `@/lib/react-query/hooks/constants` (e.g. `ROWS_DEFAULT_PAGE_SIZE`, `DEFAULT_PAGE_SIZE`) in both the route file and the View - never re-declare a local `const ROWS_PER_PAGE = 25` in the route; that's how route and View silently drift out of sync.
 3. **Loader and View pass different sort/filter/search defaults.** The query key includes `search`, `order`, `sortBy`, and `filterQueries`. If the loader passes `'desc' / '$createdAt' / undefined` but the View first reads URL state and passes something else (or `null` vs `undefined`, or an empty array vs `undefined`), the keys won't match. **Fix:** normalize on both sides (e.g. `search?.trim() || undefined`, `filterMap.size > 0 ? Array.from(filterMap.values()) : undefined`) and use the **same default sort constants** in both the route and the View.
 4. **Loader uses `fetchQuery` instead of `ensureQueryData`.** `fetchQuery` always re-fetches and ignores the cache, which can race with the View's hook. Use `ensureQueryData` (or `prefetchQuery`) so warm cache hits return instantly.
 5. **Confirm with React Query devtools** that the query key the **View** subscribes to is **byte-identical** to the key the loader prefetched. If they differ, fix whichever side is wrong.
@@ -432,15 +432,15 @@ Checklist (in this order):
 - **Button icon spacing**: Use `mr-1.5` or `gap-1.5`, not `mr-2` or larger
 - **Date tooltips**: Always include when showing dates for timezone clarity
 
-### Viewport units (CRITICAL — fixes mobile/iPad layout bugs)
+### Viewport units (CRITICAL - fixes mobile/iPad layout bugs)
 
 **Never use `vh`** (or `h-screen`, `min-h-screen`, `max-h-screen`). On iOS Safari, iPadOS, Chrome on Android, and any browser with a dynamic toolbar, `100vh` refers to the *layout viewport*, which is taller than the actually visible viewport when browser chrome (URL bar, toolbar) is on screen. Anything sized via `vh` extends below the visible area, hiding sticky footers, CTAs, and dialog actions.
 
 **Always use the dynamic viewport units instead:**
 
-- **`dvh` / `dvw`** — dynamic viewport (resizes when chrome appears/hides). Default choice for most layouts.
-- **`svh` / `svw`** — small viewport (smallest possible). Use for `min-h-svh` on full-page auth-style screens where you never want the layout to jump.
-- **`lvh` / `lvw`** — large viewport (largest possible). Rarely needed.
+- **`dvh` / `dvw`** - dynamic viewport (resizes when chrome appears/hides). Default choice for most layouts.
+- **`svh` / `svw`** - small viewport (smallest possible). Use for `min-h-svh` on full-page auth-style screens where you never want the layout to jump.
+- **`lvh` / `lvw`** - large viewport (largest possible). Rarely needed.
 
 **Tailwind tokens:**
 
@@ -452,7 +452,7 @@ Checklist (in this order):
 <div className="max-h-[90dvh]"> {/* tall dialog content */}
 <div className="max-h-[min(40dvh,300px)]"> {/* responsive cap */}
 
-// Wrong — will be cut off on iPad/mobile
+// Wrong - will be cut off on iPad/mobile
 <div className="h-screen">
 <div className="max-h-[90vh]">
 <div style={{ height: 'calc(100vh - 4rem)' }}>
@@ -460,7 +460,7 @@ Checklist (in this order):
 
 **Inline styles** must use the same units (`'100dvh'`, `'calc(85dvh - 52px)'`, etc.).
 
-**Reference**: `src/components/global/shared/WizardLayout.tsx` — the fullscreen wizard container uses `h-[100dvh] max-h-[100dvh] overflow-hidden` so the inner flex layout (`shrink-0` header + `flex-1 min-h-0 overflow-y-auto` content + `shrink-0` footer) always reserves space for the sticky footer.
+**Reference**: `src/components/global/shared/WizardLayout.tsx` - the fullscreen wizard container uses `h-[100dvh] max-h-[100dvh] overflow-hidden` so the inner flex layout (`shrink-0` header + `flex-1 min-h-0 overflow-y-auto` content + `shrink-0` footer) always reserves space for the sticky footer.
 
 ### Badge style
 
@@ -1021,7 +1021,7 @@ Follow the modal structure pattern above. For no-content modals, skip content se
 | Icon spacing           | `mr-1.5` or `gap-1.5`                                                                                                                                                                                                                     |
 | Date display           | Always include DateTooltip                                                                                                                                                                                                                |
 | Route prefetch         | All crucial data at route level                                                                                                                                                                                                           |
-| List/tab loading flash | Never set `pendingComponent` on list/tab/detail routes that prefetch (it shows "Loading…" instead of keeping the current page). Match query keys exactly between loader and View — same shared constant for default limit/sort/search/filter normalization. See "Loading & Navigation" → "Why 'Loading rows…' appears". |
+| List/tab loading flash | Never set `pendingComponent` on list/tab/detail routes that prefetch (it shows "Loading…" instead of keeping the current page). Match query keys exactly between loader and View - same shared constant for default limit/sort/search/filter normalization. See "Loading & Navigation" → "Why 'Loading rows…' appears". |
 | Detail page (no flash) | Loader returns data; route passes `initialData` to View; View uses `initialData` for first paint (see "Detail page: no loading flash")                                                                                                    |
 | Models types           | Always `Models.*` from `@appwrite.io/console`                                                                                                                                                                                             |
 | Table header           | `hover:bg-transparent border-b border-border` on row, `px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider` on head                                                                                        |

@@ -11,7 +11,7 @@ export function isRegularUserType(userType: string): boolean {
 /**
  * Whether this actor has a real human email worth surfacing as the secondary
  * line under their name. End-users do (their auth email); admins do (their
- * console account email). API keys and system actors don't — their `userEmail`
+ * console account email). API keys and system actors don't - their `userEmail`
  * is often a synthetic service address, so we fall back to the actor id for those.
  */
 export function hasHumanEmail(userType: string): boolean {

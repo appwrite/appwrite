@@ -135,7 +135,7 @@ export function PaymentMethodForm({
   )
   // Tracks the currently in-flight submit so we can abort it when the user
   // closes/cancels the form mid-way. Stripe.js calls don't accept signals,
-  // so aborting only prevents post-await state updates — but that's enough
+  // so aborting only prevents post-await state updates - but that's enough
   // to stop "form reset" races and stale error toasts.
   const submitAbortRef = useRef<AbortController | null>(null)
 
@@ -178,7 +178,7 @@ export function PaymentMethodForm({
         setIsStripeLoading(true)
         setError(null)
 
-        // Read the list once — depending on it in effect deps would re-init the
+        // Read the list once - depending on it in effect deps would re-init the
         // form every time the query invalidates.
         const existingIncomplete = allPaymentMethods?.find(
           (method: Models.PaymentMethod) =>
@@ -225,7 +225,7 @@ export function PaymentMethodForm({
             // stripe.retrieveSetupIntent doesn't expand payment_method, so
             // pmCard is usually null here. The Appwrite PM record also stays
             // empty until setPaymentMethodProvider lands, so in recovery
-            // flows the preview will often be missing — that's expected and
+            // flows the preview will often be missing - that's expected and
             // the view degrades to a "card was entered previously" message.
             if (pmCard?.last4) {
               setAddedCardPreview({
@@ -304,7 +304,7 @@ export function PaymentMethodForm({
         if (elementsRef.current) elementsRef.current = null
       })
     }
-    // See comment above — we intentionally exclude allPaymentMethods and the
+    // See comment above - we intentionally exclude allPaymentMethods and the
     // mutation object to keep the Stripe form from reloading when the list
     // refetches.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -331,7 +331,7 @@ export function PaymentMethodForm({
   }, [open])
 
   // Abort any pending submit on unmount too (covers components that don't
-  // flip `open` — e.g. InlinePaymentForm removed from the tree).
+  // flip `open` - e.g. InlinePaymentForm removed from the tree).
   useEffect(() => {
     return () => {
       submitAbortRef.current?.abort()
@@ -366,7 +366,7 @@ export function PaymentMethodForm({
 
       // If a previous submit already confirmed the card with Stripe (state
       // picker flow, or a post-Stripe backend failure), the setup intent is
-      // consumed — skip Stripe entirely and only send the state to our backend.
+      // consumed - skip Stripe entirely and only send the state to our backend.
       let resolvedProviderMethodId = providerMethodId
 
       if (!resolvedProviderMethodId) {
@@ -385,7 +385,7 @@ export function PaymentMethodForm({
         let finalIntent = existingIntent ?? null
         // Card object captured from the pre-action SetupIntent. handleNextAction
         // returns a bare payment_method id, so this is the only path that
-        // exposes the card's country — without it the US state-picker check
+        // exposes the card's country - without it the US state-picker check
         // would silently fail for any 3DS card.
         let initialPmCard: StripePaymentMethod.Card | null = null
 
@@ -416,7 +416,7 @@ export function PaymentMethodForm({
           // confirmSetup honours `expand: ['payment_method']`, so the initial
           // intent has the full card object. handleNextAction strips that
           // expansion and returns a bare id, which would hide the card's
-          // country from us — capture the expanded card now and use it as a
+          // country from us - capture the expanded card now and use it as a
           // fallback after the 3DS step.
           if (
             setupIntent?.payment_method &&
@@ -426,7 +426,7 @@ export function PaymentMethodForm({
           }
 
           // If Stripe couldn't complete the SCA inline it hands control back
-          // with status=requires_action — run handleNextAction explicitly.
+          // with status=requires_action - run handleNextAction explicitly.
           finalIntent = setupIntent
           if (finalIntent?.status === 'requires_action') {
             const { setupIntent: next, error: actionError } =

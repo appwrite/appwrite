@@ -346,7 +346,7 @@ export async function fetchAllFunctionTemplates(
 }
 
 /**
- * Query options for the full function template list (name search only — API has no search param).
+ * Query options for the full function template list (name search only - API has no search param).
  */
 export function allFunctionTemplatesQueryOptions(
   projectId: string | null | undefined,

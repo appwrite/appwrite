@@ -284,7 +284,7 @@ export function RequireAuth({
   }
 
   // Redirect to sign-in when we observe 401 (e.g. from shared cache when our queryFn didn't run).
-  // Do not put `location` or `navigate` in deps — TanStack Router gives a new `location` reference
+  // Do not put `location` or `navigate` in deps - TanStack Router gives a new `location` reference
   // most renders, which would re-fire this effect and call navigate in a tight loop.
   const is401 =
     error &&
