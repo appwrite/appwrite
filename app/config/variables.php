@@ -296,6 +296,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_LOGGING_CONFIG_REALTIME',
+                'description' => 'Optional separate logging DSN for the Realtime server so its errors go to a dedicated Sentry project. Same DSN format as `_APP_LOGGING_CONFIG`; falls back to `_APP_LOGGING_CONFIG` when empty. Realtime errors are exported as spans, so only the Sentry provider (`sentry://PROJECT_ID:SENTRY_API_KEY@SENTRY_HOST/`) takes effect here — other providers configured via `_APP_LOGGING_CONFIG` apply to the HTTP server and workers only.',
+                'introduction' => '1.8.1',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_USAGE_AGGREGATION_INTERVAL',
                 'description' => 'Interval value containing the number of seconds that the Appwrite usage process should wait before aggregating stats and syncing it to Database from TimeSeries data. The default value is 30 seconds. Reintroduced in 1.1.0.',
                 'introduction' => '1.1.0',

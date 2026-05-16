@@ -67,10 +67,10 @@ $register->set('logger', function () {
     } catch (Throwable $th) {
         // Fallback for older Appwrite versions up to 1.5.x that use _APP_LOGGING_PROVIDER and _APP_LOGGING_CONFIG environment variables
         Console::warning('Using deprecated logging configuration. Please update your configuration to use DSN format.' . $th->getMessage());
-        $configChunks = \explode(";", $providerConfig);
+        $configChunks = \explode(';', $providerConfig);
 
         $providerConfig = match ($providerName) {
-            'sentry' => [ 'key' => $configChunks[0], 'projectId' => $configChunks[1] ?? '', 'host' => '',],
+            'sentry' => ['key' => $configChunks[0], 'projectId' => $configChunks[1] ?? '', 'host' => ''],
             'logowl' => ['ticket' => $configChunks[0], 'host' => ''],
             default => ['key' => $providerConfig],
         };
@@ -81,7 +81,7 @@ $register->set('logger', function () {
     }
 
     if (!Logger::hasProvider($providerName)) {
-        throw new Exception(Exception::GENERAL_SERVER_ERROR, "Logging provider not supported. Logging is disabled");
+        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Logging provider not supported. Logging is disabled');
     }
 
     try {
@@ -97,7 +97,7 @@ $register->set('logger', function () {
     }
 
     if ($adapter === null) {
-        Console::error("Logging provider not supported. Logging is disabled");
+        Console::error('Logging provider not supported. Logging is disabled');
         return;
     }
 
@@ -105,9 +105,12 @@ $register->set('logger', function () {
 });
 
 $register->set('realtimeLogger', function () {
-    // Register error logger for realtime, falls back to default logging config
-    $providerConfig = System::getEnv('_APP_LOGGING_CONFIG_REALTIME', '')
-        ?: System::getEnv('_APP_LOGGING_CONFIG', '');
+    // Realtime falls back to the default logging config when _APP_LOGGING_CONFIG_REALTIME isn't
+    // set. Used by app/realtime.php logError() for ad-hoc errors (pub/sub subscriber, onStart,
+    // worker stats, the Swoole server error handler) — i.e., the call sites that have no active
+    // span. Per-action errors (inside realtime.open / realtime.message / realtime.close) attach to
+    // the active span instead and ship via the Sentry span exporter (app/init/realtime/span.php).
+    $providerConfig = System::getEnv('_APP_LOGGING_CONFIG_REALTIME', '') ?: System::getEnv('_APP_LOGGING_CONFIG', '');
 
     if (empty($providerConfig)) {
         return;
@@ -126,7 +129,7 @@ $register->set('realtimeLogger', function () {
     }
 
     if (!Logger::hasProvider($providerName)) {
-        throw new Exception(Exception::GENERAL_SERVER_ERROR, "Logging provider not supported. Logging is disabled");
+        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Logging provider not supported. Logging is disabled');
     }
 
     try {
@@ -142,7 +145,7 @@ $register->set('realtimeLogger', function () {
     }
 
     if ($adapter === null) {
-        Console::error("Logging provider not supported. Logging is disabled");
+        Console::error('Logging provider not supported. Logging is disabled');
         return;
     }
 

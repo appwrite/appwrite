@@ -50,6 +50,8 @@ if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
     require_once __DIR__ . '/init/span.php';
 }
 
+require_once __DIR__ . '/init/realtime/span.php';
+
 /** @var Registry $register */
 $register = $GLOBALS['register'] ?? throw new \RuntimeException('Registry not initialized');
 
@@ -288,45 +290,68 @@ $server = new Server($adapter);
 if (!function_exists('logError')) {
     function logError(Throwable $error, string $action, array $tags = [], ?Document $project = null, ?Document $user = null, ?Authorization $authorization = null): void
     {
-        global $register;
+        if (!$error instanceof Exception) {
+            $span = Span::current();
+            if ($span !== null) {
+                // Per-action error: attach to the active realtime.open / realtime.message / realtime.close
+                // span. The Sentry span exporter in app/init/realtime/span.php ships it with the
+                // operation's full context (attributes, duration, trace_id).
+                $span->set('realtime.action', $action);
+                $span->set('error.code', $error->getCode());
+                if ($project !== null && !$project->isEmpty()) {
+                    $span->set('realtime.projectId', $project->getId());
+                }
+                if ($user !== null && !$user->isEmpty()) {
+                    $span->set('realtime.userId', $user->getId());
+                }
+                if ($authorization !== null) {
+                    $span->set('realtime.roles', \implode(',', $authorization->getRoles()));
+                }
+                foreach ($tags as $key => $value) {
+                    if (\is_scalar($value) || $value === null) {
+                        $span->set('realtime.' . $key, $value);
+                    }
+                }
+                $span->setError($error);
+            } else {
+                // Ad-hoc error (pub/sub subscriber, onStart, the Swoole server error handler,
+                // updateWorkerDocument): not tied to a per-action span. Push to the realtimeLogger
+                // (Sentry / logOwl / Raygun / AppSignal — same dedicated Realtime project).
+                global $register;
+                $logger = $register->get('realtimeLogger');
+                if ($logger) {
+                    $log = new Log();
+                    $log->setNamespace('realtime');
+                    $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
+                    $log->setVersion(System::getEnv('_APP_VERSION', 'UNKNOWN'));
+                    $log->setType(Log::TYPE_ERROR);
+                    $log->setMessage($error->getMessage());
+                    $log->setAction($action);
 
-        $logger = $register->get('realtimeLogger');
+                    $log->addTag('code', $error->getCode());
+                    $log->addTag('verboseType', get_class($error));
+                    $log->addTag('projectId', $project?->getId() ?: 'n/a');
+                    $log->addTag('userId', $user?->getId() ?: 'n/a');
+                    foreach ($tags as $key => $value) {
+                        $log->addTag($key, $value ?: 'n/a');
+                    }
 
-        if ($logger && !$error instanceof Exception) {
-            $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
+                    $log->addExtra('file', $error->getFile());
+                    $log->addExtra('line', $error->getLine());
+                    $log->addExtra('trace', $error->getTraceAsString());
+                    $log->addExtra('detailedTrace', $error->getTrace());
+                    $log->addExtra('roles', $authorization?->getRoles() ?? []);
 
-            $log = new Log();
-            $log->setNamespace("realtime");
-            $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
-            $log->setVersion($version);
-            $log->setType(Log::TYPE_ERROR);
-            $log->setMessage($error->getMessage());
+                    $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
+                    $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
-            $log->addTag('code', $error->getCode());
-            $log->addTag('verboseType', get_class($error));
-            $log->addTag('projectId', $project?->getId() ?: 'n/a');
-            $log->addTag('userId', $user?->getId() ?: 'n/a');
-
-            foreach ($tags as $key => $value) {
-                $log->addTag($key, $value ?: 'n/a');
-            }
-
-            $log->addExtra('file', $error->getFile());
-            $log->addExtra('line', $error->getLine());
-            $log->addExtra('trace', $error->getTraceAsString());
-            $log->addExtra('detailedTrace', $error->getTrace());
-            $log->addExtra('roles', $authorization?->getRoles() ?? []);
-
-            $log->setAction($action);
-
-            $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
-            $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
-
-            try {
-                $responseCode = $logger->addLog($log);
-                Console::info('Error log pushed with status code: ' . $responseCode);
-            } catch (Throwable $th) {
-                Console::error('Error pushing log: ' . $th->getMessage());
+                    try {
+                        $responseCode = $logger->addLog($log);
+                        Console::info('Error log pushed with status code: ' . $responseCode);
+                    } catch (Throwable $th) {
+                        Console::error('Error pushing log: ' . $th->getMessage());
+                    }
+                }
             }
         }
 
