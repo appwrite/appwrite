@@ -66,6 +66,7 @@ class WebhooksTest extends TestCase
             \realpath($payload['bodyTemplate'])
         );
         $this->assertStringContainsString('Payments', $payload['body']);
+        $this->assertStringContainsString('Ada Lovelace', $payload['body']);
         $this->assertStringContainsString('/console/project-fra-project-1/settings/webhooks/webhook-1', $payload['body']);
         $this->assertStringNotContainsString('{{', $payload['body']);
         $this->assertSame(APP_NAME, $payload['variables']['platform']);
@@ -91,6 +92,69 @@ class WebhooksTest extends TestCase
             'parentResourceId' => 'project-1',
             'parentResourceInternalId' => 'project-internal-1',
         ], $payload['recipients'][1]);
+    }
+
+    public function testSendAlertPersonalizesBodyPerOwner(): void
+    {
+        $database = $this->createPlatformDatabase();
+        $this->seedOwnerUser($database);
+        $database->createDocument('memberships', new Document([
+            '$id' => 'membership-3',
+            'teamInternalId' => 'team-internal-1',
+            'userId' => 'user-3',
+            'roles' => 'owner',
+        ]));
+        $database->createDocument('users', new Document([
+            '$id' => 'user-3',
+            '$sequence' => 103,
+            'email' => 'grace@example.test',
+            'name' => 'Grace Hopper',
+        ]));
+
+        $publisher = new MockPublisher();
+        $publisherForNotifications = new NotificationPublisher($publisher, new Queue('v1-notifications'));
+        $worker = new Webhooks();
+
+        $worker->sendAlert(
+            attempts: 10,
+            statusCode: 500,
+            webhook: new Document([
+                '$id' => 'webhook-1',
+                '$updatedAt' => '2026-01-01T00:00:00.000+00:00',
+                'name' => 'Payments',
+                'url' => 'https://example.test/webhook',
+            ]),
+            project: new Document([
+                '$id' => 'project-1',
+                '$sequence' => 'project-internal-1',
+                'name' => 'Production',
+                'teamInternalId' => 'team-internal-1',
+                'region' => 'fra',
+            ]),
+            dbForPlatform: $database,
+            publisherForNotifications: $publisherForNotifications,
+            plan: []
+        );
+
+        $events = $publisher->getEvents('v1-notifications');
+
+        $this->assertCount(2, $events);
+
+        $bodies = [];
+        foreach ($events as $event) {
+            foreach ($event['recipients'] as $recipient) {
+                if ($recipient['channel'] === NOTIFICATION_TYPE_EMAIL) {
+                    $bodies[$recipient['address']] = $event['body'];
+                }
+            }
+        }
+
+        $this->assertArrayHasKey('owner@example.test', $bodies);
+        $this->assertArrayHasKey('grace@example.test', $bodies);
+        $this->assertStringContainsString('Ada Lovelace', $bodies['owner@example.test']);
+        $this->assertStringNotContainsString('Grace Hopper', $bodies['owner@example.test']);
+        $this->assertStringContainsString('Grace Hopper', $bodies['grace@example.test']);
+        $this->assertStringNotContainsString('Ada Lovelace', $bodies['grace@example.test']);
     }
 
     public function testSendAlertDeduplicationKeyChangesPerPauseCycle(): void
@@ -184,6 +248,7 @@ class WebhooksTest extends TestCase
         $database->createAttribute('memberships', 'roles', Database::VAR_STRING, 1024, true);
         $database->createCollection('users', [], [], $permissions, false);
         $database->createAttribute('users', 'email', Database::VAR_STRING, 320, false);
+        $database->createAttribute('users', 'name', Database::VAR_STRING, 256, false);
 
         return $database;
     }
@@ -206,11 +271,13 @@ class WebhooksTest extends TestCase
             '$id' => 'user-1',
             '$sequence' => 101,
             'email' => 'owner@example.test',
+            'name' => 'Ada Lovelace',
         ]));
         $database->createDocument('users', new Document([
             '$id' => 'user-2',
             '$sequence' => 102,
             'email' => 'developer@example.test',
+            'name' => 'Developer User',
         ]));
     }
 }

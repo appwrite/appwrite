@@ -248,30 +248,17 @@ class Webhooks extends Action
         $region = $project->getAttribute('region', 'default');
         $webhookId = $webhook->getId();
 
-        $template = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-webhook-failed.tpl');
-
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'disabled' ? 'http' : 'https';
         $consoleHostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', 'localhost'));
 
-        $template->setParam('{{user}}', 'there');
-        $template->setParam('{{webhook}}', $webhook->getAttribute('name'));
-        $template->setParam('{{project}}', $project->getAttribute('name'));
-        $template->setParam('{{url}}', $webhook->getAttribute('url'));
-        $template->setParam('{{error}}', 'The server returned ' . $statusCode . ' status code');
-        $template->setParam('{{host}}', $protocol . '://' . $consoleHostname);
-        $template->setParam('{{path}}', "/console/project-$region-$projectId/settings/webhooks/$webhookId");
-        $template->setParam('{{attempts}}', $attempts);
-
         $subject = 'Webhook deliveries have been paused';
         $preview = 'Webhook "' . $webhook->getAttribute('name') . '" has been paused after ' . $attempts . ' failed delivery attempts.';
-
-        $recipients = [];
 
         foreach ($users as $user) {
             $email = $user->getAttribute('email');
             $userId = $user->getId();
 
-            $recipients[] = [
+            $recipients = [[
                 'address' => $userId,
                 'channel' => NOTIFICATION_TYPE_CONSOLE,
                 'resourceType' => RESOURCE_TYPE_USERS,
@@ -280,7 +267,7 @@ class Webhooks extends Action
                 'parentResourceType' => RESOURCE_TYPE_PROJECTS,
                 'parentResourceId' => $projectId,
                 'parentResourceInternalId' => (string) $projectInternalId,
-            ];
+            ]];
 
             if (!empty($email)) {
                 $recipients[] = [
@@ -294,27 +281,38 @@ class Webhooks extends Action
                     'parentResourceInternalId' => (string) $projectInternalId,
                 ];
             }
-        }
 
-        $publisherForNotifications->enqueue(new NotificationMessage(
-            project: $project,
-            recipients: $recipients,
-            deduplicationKey: 'webhook:' . $webhook->getId() . ':paused:' . $webhook->getUpdatedAt(),
-            subject: $subject,
-            bodyTemplate: __DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl',
-            body: $template->render(),
-            preview: $preview,
-            variables: [
-                'logoUrl' => $plan['logoUrl'] ?? APP_EMAIL_LOGO_URL,
-                'accentColor' => $plan['accentColor'] ?? APP_EMAIL_ACCENT_COLOR,
-                'twitter' => $plan['twitterUrl'] ?? APP_SOCIAL_TWITTER,
-                'discord' => $plan['discordUrl'] ?? APP_SOCIAL_DISCORD,
-                'github' => $plan['githubUrl'] ?? APP_SOCIAL_GITHUB_APPWRITE,
-                'terms' => $plan['termsUrl'] ?? APP_EMAIL_TERMS_URL,
-                'privacy' => $plan['privacyUrl'] ?? APP_EMAIL_PRIVACY_URL,
-                'platform' => $plan['platformName'] ?? APP_NAME,
-            ],
-        ));
+            $template = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-webhook-failed.tpl');
+            $userName = (string) ($user->getAttribute('name', 'there') ?: 'there');
+            $template->setParam('{{user}}', $userName);
+            $template->setParam('{{webhook}}', $webhook->getAttribute('name'));
+            $template->setParam('{{project}}', $project->getAttribute('name'));
+            $template->setParam('{{url}}', $webhook->getAttribute('url'));
+            $template->setParam('{{error}}', 'The server returned ' . $statusCode . ' status code');
+            $template->setParam('{{host}}', $protocol . '://' . $consoleHostname);
+            $template->setParam('{{path}}', "/console/project-$region-$projectId/settings/webhooks/$webhookId");
+            $template->setParam('{{attempts}}', $attempts);
+
+            $publisherForNotifications->enqueue(new NotificationMessage(
+                project: $project,
+                recipients: $recipients,
+                deduplicationKey: 'webhook:' . $webhook->getId() . ':paused:' . $webhook->getUpdatedAt(),
+                subject: $subject,
+                bodyTemplate: __DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl',
+                body: $template->render(),
+                preview: $preview,
+                variables: [
+                    'logoUrl' => $plan['logoUrl'] ?? APP_EMAIL_LOGO_URL,
+                    'accentColor' => $plan['accentColor'] ?? APP_EMAIL_ACCENT_COLOR,
+                    'twitter' => $plan['twitterUrl'] ?? APP_SOCIAL_TWITTER,
+                    'discord' => $plan['discordUrl'] ?? APP_SOCIAL_DISCORD,
+                    'github' => $plan['githubUrl'] ?? APP_SOCIAL_GITHUB_APPWRITE,
+                    'terms' => $plan['termsUrl'] ?? APP_EMAIL_TERMS_URL,
+                    'privacy' => $plan['privacyUrl'] ?? APP_EMAIL_PRIVACY_URL,
+                    'platform' => $plan['platformName'] ?? APP_NAME,
+                ],
+            ));
+        }
     }
 
     private static function hasOwnerRole(Document $membership, string $projectId): bool
