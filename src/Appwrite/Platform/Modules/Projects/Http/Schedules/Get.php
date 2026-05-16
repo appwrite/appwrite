@@ -67,9 +67,11 @@ class Get extends Action
             throw new Exception(Exception::SCHEDULE_NOT_FOUND);
         }
 
+        $projectInternalId = $schedule->getAttribute('projectInternalId');
+
         if (
             $schedule->getAttribute('projectId') !== $project->getId()
-            || $schedule->getAttribute('projectInternalId') !== $project->getSequence()
+            || ($projectInternalId !== null && $projectInternalId !== '' && $projectInternalId !== $project->getSequence())
         ) {
             throw new Exception(Exception::SCHEDULE_NOT_FOUND);
         }
