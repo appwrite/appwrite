@@ -207,11 +207,12 @@ class Etsy extends OAuth2
             return $this->user;
         }
 
-        $headers = ['Authorization: Bearer ' . $accessToken];
+$headers = ['Authorization: Bearer ' . $accessToken];
 
         $this->user = \json_decode($this->request(
             'GET',
             'https://api.etsy.com/v3/application/users/' . $this->getUserID($accessToken),
+            $headers
         ), true);
 
         return $this->user;
