@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Account\Http\Alerts\Read;
+namespace Appwrite\Platform\Modules\Account\Http\Alerts;
 
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -13,6 +13,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Boolean;
 
 class Update extends Action
 {
@@ -20,22 +21,22 @@ class Update extends Action
 
     public static function getName(): string
     {
-        return 'updateAlertRead';
+        return 'updateAlert';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
-            ->setHttpPath('/v1/account/alerts/:alertId/read')
-            ->desc('Mark alert read')
+            ->setHttpPath('/v1/account/alerts/:alertId')
+            ->desc('Update alert')
             ->groups(['api', 'account'])
             ->label('scope', 'account')
             ->label('sdk', new Method(
                 namespace: 'account',
                 group: 'alerts',
-                name: 'updateAlertRead',
-                description: '/docs/references/account/update-alert-read.md',
+                name: 'updateAlert',
+                description: '/docs/references/account/update-alert.md',
                 auth: [AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(
@@ -45,6 +46,7 @@ class Update extends Action
                 ]
             ))
             ->param('alertId', '', new UID(), 'Alert ID.')
+            ->param('read', null, new Boolean(), 'Alert read status.')
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('authorization')
@@ -55,6 +57,7 @@ class Update extends Action
 
     public function action(
         string $alertId,
+        bool $read,
         Response $response,
         Database $dbForPlatform,
         Authorization $authorization,
@@ -76,7 +79,7 @@ class Update extends Action
         }
 
         $updated = $dbForPlatform->updateDocument('alerts', $alertId, new Document([
-            'read' => true,
+            'read' => $read,
         ]));
 
         $response->dynamic($updated, Response::MODEL_ALERT);

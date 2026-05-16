@@ -23,7 +23,7 @@ use Utopia\System\System;
  * The alerts portion exercises the full webhook-paused fanout end-to-end:
  *
  *   - GET /v1/account/alerts (empty + populated)
- *   - PATCH /v1/account/alerts/:alertId/read (happy + unauthorized)
+ *   - PATCH /v1/account/alerts/:alertId (happy + unauthorized)
  *   - GET /v1/account/alerts/:alertId/track (valid JWT + invalid JWT)
  *
  * Dedup, per-channel dispatch, and webhook signing are covered by:
@@ -117,9 +117,9 @@ trait NotificationsBase
 
         $patch = $this->client->call(
             Client::METHOD_PATCH,
-            '/account/alerts/' . $alertId . '/read',
+            '/account/alerts/' . $alertId,
             $this->getConsoleAlertHeaders(),
-            []
+            ['read' => true]
         );
 
         $this->assertSame(200, $patch['headers']['status-code']);
@@ -153,7 +153,7 @@ trait NotificationsBase
 
         $unauthorized = $this->client->call(
             Client::METHOD_PATCH,
-            '/account/alerts/' . $alertId . '/read',
+            '/account/alerts/' . $alertId,
             [
                 'origin' => 'http://localhost',
                 'content-type' => 'application/json',
@@ -161,7 +161,7 @@ trait NotificationsBase
                 'x-appwrite-project' => 'console',
                 'x-appwrite-mode' => 'admin',
             ],
-            []
+            ['read' => true]
         );
 
         $this->assertSame(401, $unauthorized['headers']['status-code']);
