@@ -23,6 +23,9 @@ class XList extends Action
 {
     use HTTP;
 
+    private const GITHUB_BRANCHES_PER_PAGE = 100;
+    private const GITHUB_BRANCHES_MAX_RESULTS = 1000;
+
     public static function getName()
     {
         return 'listRepositoryBranches';
@@ -96,7 +99,7 @@ class XList extends Action
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
 
-        $branches = $github->listBranches($owner, $repositoryName);
+        $branches = $this->listBranches($github, $owner, $repositoryName);
 
         if (!empty($search)) {
             $branches = \array_values(\array_filter($branches, fn (string $branch) => \stripos($branch, $search) !== false));
@@ -141,5 +144,30 @@ class XList extends Action
             }, $branches),
             'total' => $total,
         ]), Response::MODEL_BRANCH_LIST);
+    }
+
+    /**
+     * @return array<string>
+     */
+    private function listBranches(GitHub $github, string $owner, string $repositoryName): array
+    {
+        $branches = [];
+        $maxPages = \intdiv(self::GITHUB_BRANCHES_MAX_RESULTS, self::GITHUB_BRANCHES_PER_PAGE);
+
+        for ($page = 1; $page <= $maxPages; $page++) {
+            $pageBranches = $github->listBranches($owner, $repositoryName, self::GITHUB_BRANCHES_PER_PAGE, $page);
+            $branches = \array_merge($branches, $pageBranches);
+
+            if (\count($pageBranches) < self::GITHUB_BRANCHES_PER_PAGE) {
+                return $branches;
+            }
+        }
+
+        $remainingBranches = $github->listBranches($owner, $repositoryName, self::GITHUB_BRANCHES_PER_PAGE, $maxPages + 1);
+        if (!empty($remainingBranches)) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, 'Repository has too many branches to list. Narrow the results using the search parameter.');
+        }
+
+        return $branches;
     }
 }
