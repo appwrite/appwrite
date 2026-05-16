@@ -441,6 +441,7 @@ jobs:
           Webhooks,
           VCS,
           Messaging,
+          Notifications,
           Migrations,
           Project
         ]

@@ -76,6 +76,7 @@ class Notifications extends Action
             throw new Exception('No recipients in payload');
         }
 
+        $failure = null;
         foreach ($recipients as $recipient) {
             $recipient = $this->normalizeRecipient($recipient);
             $channel = $recipient['channel'];
@@ -89,13 +90,17 @@ class Notifications extends Action
             try {
                 $alertId = $this->dispatch($recipient, $messageId, $payload, $project, $register, $dbForPlatform, $log);
                 if ($messageId !== '' && $channel === NOTIFICATION_TYPE_WEBHOOK && $alertId === null) {
-                    $this->persistAlert($dbForPlatform, $messageId, $recipient, $payload);
+                    $this->persistAlert($dbForPlatform, $messageId, $recipient, $payload, $project);
                 }
             } catch (Throwable $error) {
                 $log->addTag('channel', $channel);
                 $log->addTag('error', $error->getMessage());
-                throw $error;
+                $failure ??= $error;
             }
+        }
+
+        if ($failure !== null) {
+            throw $failure;
         }
     }
 
@@ -164,7 +169,7 @@ class Notifications extends Action
 
         return match ($channel) {
             NOTIFICATION_TYPE_EMAIL => $this->dispatchEmail($recipient, $messageId, $payload, $project, $register, $dbForPlatform, $log),
-            NOTIFICATION_TYPE_CONSOLE => $this->dispatchConsole($recipient, $messageId, $payload, $dbForPlatform),
+            NOTIFICATION_TYPE_CONSOLE => $this->dispatchConsole($recipient, $messageId, $payload, $project, $dbForPlatform),
             NOTIFICATION_TYPE_WEBHOOK => $this->dispatchWebhook($recipient, $payload, $log),
             default => throw new Exception('Unsupported notification channel: ' . $channel),
         };
@@ -258,7 +263,7 @@ class Notifications extends Action
         $userId = $recipient['userId'] ?? '';
         $opensslKey = System::getEnv('_APP_OPENSSL_KEY_V1');
         if ($deterministicAlertId !== null && $userId !== '' && !empty($opensslKey)) {
-            $body = $this->injectTrackingPixel($body, $deterministicAlertId, $userId, $opensslKey);
+            $body = $this->injectTrackingPixel($body, $deterministicAlertId, $userId, $project, $opensslKey);
         }
 
         /** @var EmailAdapter $adapter */
@@ -322,7 +327,7 @@ class Notifications extends Action
         }
 
         if ($messageId !== '') {
-            return $this->persistAlert($dbForPlatform, $messageId, $recipient, $payload);
+            return $this->persistAlert($dbForPlatform, $messageId, $recipient, $payload, $project);
         }
 
         return null;
@@ -331,12 +336,9 @@ class Notifications extends Action
     /**
      * @param array{address: string, channel: string, signatureKey?: string, userId?: string, teamId?: string} $recipient
      */
-    protected function dispatchConsole(array $recipient, string $messageId, array $payload, Database $dbForPlatform): ?string
+    protected function dispatchConsole(array $recipient, string $messageId, array $payload, Document $project, Database $dbForPlatform): ?string
     {
         $this->validateConsoleRecipient($recipient);
-
-        $project = $payload['project'] ?? null;
-        $projectId = \is_array($project) ? ($project['$id'] ?? null) : null;
 
         $params = $payload['templateParams'] ?? ($payload['variables'] ?? []);
         $title = self::renderText($payload['subject'] ?? '', $params);
@@ -368,7 +370,8 @@ class Notifications extends Action
             body: $body,
             type: $payload['type'] ?? 'info',
             messageId: $messageId !== '' ? $messageId : null,
-            projectId: $projectId,
+            projectId: $project->getId(),
+            projectInternalId: $project->getSequence(),
         );
 
         $adapter = new ConsoleAdapter($dbForPlatform);
@@ -431,12 +434,9 @@ class Notifications extends Action
      *
      * @param array{address: string, channel: string, signatureKey?: string, userId?: string, teamId?: string} $recipient
      */
-    protected function persistAlert(Database $dbForPlatform, string $messageId, array $recipient, array $payload): string
+    protected function persistAlert(Database $dbForPlatform, string $messageId, array $recipient, array $payload, Document $project): string
     {
         $recipient = $this->normalizeRecipient($recipient);
-
-        $project = $payload['project'] ?? null;
-        $projectId = \is_array($project) ? ($project['$id'] ?? null) : null;
 
         $channel = $recipient['channel'];
         $userId = $recipient['userId'] ?? '';
@@ -445,7 +445,7 @@ class Notifications extends Action
         $alertId = self::buildAlertId($messageId, $recipient);
         $recipientHash = self::buildRecipientHash($recipient);
 
-        $permissions = $this->buildAlertPermissions($userId, $teamId);
+        $permissions = $this->buildAlertPermissions($userId, $teamId, $project->getId());
         if (empty($permissions)) {
             $permissions = $payload['permissions'] ?? [];
         }
@@ -465,7 +465,8 @@ class Notifications extends Action
             'channel' => $channel,
             'userId' => $userId,
             'teamId' => $teamId,
-            'projectId' => $projectId,
+            'projectId' => $project->getId(),
+            'projectInternalId' => $project->getSequence(),
             'title' => self::renderText($payload['subject'] ?? '', $params),
             'body' => $body,
             'read' => false,
@@ -509,7 +510,7 @@ class Notifications extends Action
     /**
      * @return array<string>
      */
-    private function buildAlertPermissions(string $userId, string $teamId): array
+    private function buildAlertPermissions(string $userId, string $teamId, string $projectId): array
     {
         $permissions = [];
         if ($userId !== '') {
@@ -521,6 +522,11 @@ class Notifications extends Action
             $permissions[] = Permission::read(Role::team($teamId));
             $permissions[] = Permission::update(Role::team($teamId, 'owner'));
             $permissions[] = Permission::delete(Role::team($teamId, 'owner'));
+            if ($projectId !== '') {
+                $permissions[] = Permission::read(Role::team($teamId, 'project-' . $projectId . '-owner'));
+                $permissions[] = Permission::update(Role::team($teamId, 'project-' . $projectId . '-owner'));
+                $permissions[] = Permission::delete(Role::team($teamId, 'project-' . $projectId . '-owner'));
+            }
         }
         return $permissions;
     }
@@ -586,12 +592,14 @@ class Notifications extends Action
      * `/v1/account/alerts/:alertId/track` endpoint verifies before
      * marking the alert as read.
      */
-    private function injectTrackingPixel(string $body, string $alertId, string $userId, string $opensslKey): string
+    private function injectTrackingPixel(string $body, string $alertId, string $userId, Document $project, string $opensslKey): string
     {
         $jwt = (new JWT($opensslKey, 'HS256', ALERT_TRACKING_JWT_TTL, 0))
             ->encode([
                 'alertId' => $alertId,
                 'userId' => $userId,
+                'projectId' => $project->getId(),
+                'projectInternalId' => $project->getSequence(),
                 'purpose' => 'alert_track',
             ]);
 

@@ -4,11 +4,13 @@ namespace Tests\Unit\Utopia\Messaging\Adapter;
 
 use Appwrite\Utopia\Messaging\Adapter\Console;
 use Appwrite\Utopia\Messaging\Messages\Console as ConsoleMessage;
+use Appwrite\Utopia\Messaging\Messages\Webhook as WebhookMessage;
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -38,7 +40,8 @@ class ConsoleTest extends TestCase
         $this->database->createAttribute('alerts', 'channel', Database::VAR_STRING, 64, true);
         $this->database->createAttribute('alerts', 'userId', Database::VAR_STRING, 255, false);
         $this->database->createAttribute('alerts', 'teamId', Database::VAR_STRING, 255, false);
-        $this->database->createAttribute('alerts', 'projectId', Database::VAR_STRING, 255, false);
+        $this->database->createAttribute('alerts', 'projectId', Database::VAR_STRING, 255, true);
+        $this->database->createAttribute('alerts', 'projectInternalId', Database::VAR_STRING, 255, true);
         $this->database->createAttribute('alerts', 'title', Database::VAR_STRING, 256, true);
         $this->database->createAttribute('alerts', 'body', Database::VAR_STRING, 16384, true);
     }
@@ -68,6 +71,7 @@ class ConsoleTest extends TestCase
             type: 'info',
             messageId: ID::custom('msg-aaa'),
             projectId: 'project-1',
+            projectInternalId: 'project-internal-1',
         );
 
         $adapter = new Console($this->database);
@@ -81,6 +85,7 @@ class ConsoleTest extends TestCase
         $this->assertSame('console', $stored->getAttribute('channel'));
         $this->assertSame('user-1', $stored->getAttribute('userId'));
         $this->assertSame('project-1', $stored->getAttribute('projectId'));
+        $this->assertSame('project-internal-1', $stored->getAttribute('projectInternalId'));
         $this->assertSame('Hello', $stored->getAttribute('title'));
         $this->assertSame('World', $stored->getAttribute('body'));
         $this->assertSame('info', $stored->getAttribute('type'));
@@ -93,6 +98,8 @@ class ConsoleTest extends TestCase
             title: 'Title',
             body: 'Body',
             messageId: ID::custom('msg-perms-user'),
+            projectId: 'project-1',
+            projectInternalId: 'project-internal-1',
         );
 
         (new Console($this->database))->send($message);
@@ -112,6 +119,8 @@ class ConsoleTest extends TestCase
             title: 'Heads up',
             body: '...',
             messageId: ID::custom('msg-team'),
+            projectId: 'project-1',
+            projectInternalId: 'project-internal-1',
         );
 
         (new Console($this->database))->send($message);
@@ -122,6 +131,9 @@ class ConsoleTest extends TestCase
         $this->assertContains(Permission::read(Role::team('team-9')), $permissions);
         $this->assertContains(Permission::update(Role::team('team-9', 'owner')), $permissions);
         $this->assertContains(Permission::delete(Role::team('team-9', 'owner')), $permissions);
+        $this->assertContains(Permission::read(Role::team('team-9', 'project-project-1-owner')), $permissions);
+        $this->assertContains(Permission::update(Role::team('team-9', 'project-project-1-owner')), $permissions);
+        $this->assertContains(Permission::delete(Role::team('team-9', 'project-project-1-owner')), $permissions);
     }
 
     public function testMultiRecipientWithSameMessageIdGeneratesDistinctIds(): void
@@ -134,6 +146,8 @@ class ConsoleTest extends TestCase
             title: 'Heads up',
             body: 'multi',
             messageId: ID::custom('same-msg'),
+            projectId: 'project-1',
+            projectInternalId: 'project-internal-1',
         );
 
         $adapter = new Console($this->database);
@@ -167,7 +181,7 @@ class ConsoleTest extends TestCase
         $this->expectExceptionMessage('Invalid message type.');
 
         // ConsoleMessage extends nothing; pass an unrelated Message implementation
-        $adapter->send(new \Appwrite\Utopia\Messaging\Messages\Webhook(urls: ['https://example.test'], payload: []));
+        $adapter->send(new WebhookMessage(urls: ['https://example.test'], payload: []));
     }
 
     /**
@@ -186,13 +200,15 @@ class ConsoleTest extends TestCase
         // Pre-insert an alert with the SAME id the adapter will compute. The
         // adapter's createDocument will hit the primary-key DuplicateException
         // and must treat it as a successful (idempotent) send.
-        $this->database->createDocument('alerts', new \Utopia\Database\Document([
+        $this->database->createDocument('alerts', new Document([
             '$id' => $documentId,
             '$permissions' => [Permission::read(Role::any())],
             'messageId' => $messageId,
             'recipientHash' => \substr(\md5('user:' . $userId), 0, 16),
             'channel' => 'console',
             'userId' => $userId,
+            'projectId' => 'project-x',
+            'projectInternalId' => 'project-internal-x',
             'title' => 'pre-existing',
             'body' => 'pre-existing',
         ]));
@@ -203,6 +219,7 @@ class ConsoleTest extends TestCase
             body: 'b',
             messageId: ID::custom($messageId),
             projectId: 'project-x',
+            projectInternalId: 'project-internal-x',
         );
 
         $adapter = new Console($this->database);

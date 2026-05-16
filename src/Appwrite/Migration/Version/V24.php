@@ -144,6 +144,29 @@ class V24 extends Migration
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
 
+                case 'schedules':
+                    if ($collectionType === 'console') {
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'projectInternalId');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"projectInternalId\" in collection {$id}: {$th->getMessage()}");
+                        }
+
+                        $indexes = [
+                            '_key_region_resourceType_projectInternalId_resourceId',
+                            '_key_project_internal_id_region',
+                        ];
+                        foreach ($indexes as $index) {
+                            try {
+                                $this->createIndexFromCollection($this->dbForProject, $id, $index);
+                            } catch (Throwable $th) {
+                                Console::warning("Failed to create index \"{$index}\" from {$id}: {$th->getMessage()}");
+                            }
+                        }
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
                 case 'rules':
                     if ($collectionType === 'console') {
                         try {
@@ -370,6 +393,17 @@ class V24 extends Migration
                     $document->setAttribute('resourceType', 'projects');
                     $document->setAttribute('resourceId', $projectId);
                     $document->setAttribute('resourceInternalId', $projectInternalId);
+                }
+                break;
+            case 'schedules':
+                if (empty($document->getAttribute('projectInternalId'))) {
+                    $projectId = $document->getAttribute('projectId', '');
+                    if ($projectId !== '') {
+                        $project = $this->dbForProject->getDocument('projects', $projectId);
+                        if (!$project->isEmpty()) {
+                            $document->setAttribute('projectInternalId', $project->getSequence());
+                        }
+                    }
                 }
                 break;
             default:

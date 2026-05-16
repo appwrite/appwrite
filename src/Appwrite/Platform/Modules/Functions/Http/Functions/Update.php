@@ -299,6 +299,7 @@ class Update extends Base
                     'resourceInternalId' => $function->getSequence(),
                     'resourceUpdatedAt' => DateTime::now(),
                     'projectId' => $project->getId(),
+                    'projectInternalId' => $project->getSequence(),
                     'schedule'  => $function->getAttribute('schedule'),
                     'active' => false,
                 ]))
@@ -311,6 +312,7 @@ class Update extends Base
         }
 
         $schedule
+            ->setAttribute('projectInternalId', $project->getSequence())
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deploymentId')));

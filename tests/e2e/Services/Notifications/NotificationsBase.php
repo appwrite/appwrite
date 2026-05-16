@@ -185,6 +185,54 @@ trait NotificationsBase
         self::$seededAlertId = $alertId;
     }
 
+    public function testProjectAccountCannotListPlatformAlertsWithCollidingUserId(): void
+    {
+        $alertId = $this->seedWebhookFailureAlert();
+        $this->assertNotEmpty($alertId);
+
+        $attackerProject = $this->getProject(true);
+        $projectId = $attackerProject['$id'];
+        $email = \uniqid('colliding-alert-user-', true) . '@localhost.test';
+        $password = 'password';
+
+        $created = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $attackerProject['apiKey'],
+        ], [
+            'userId' => $this->getRoot()['$id'],
+            'email' => $email,
+            'password' => $password,
+            'name' => 'Colliding Alert User',
+        ]);
+
+        $this->assertSame(201, $created['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $this->assertSame(201, $session['headers']['status-code']);
+        $this->assertNotEmpty($session['cookies']['a_session_' . $projectId] ?? '');
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/alerts', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId],
+            'x-appwrite-project' => $projectId,
+        ]);
+
+        $this->assertSame(401, $response['headers']['status-code']);
+        $this->assertSame('user_unauthorized', $response['body']['type'] ?? '');
+
+        self::$seededAlertId = $alertId;
+    }
+
     public function testTrackingPixelTogglesRead(): void
     {
         $alertId = self::$seededAlertId ?? $this->seedWebhookFailureAlert();
@@ -200,6 +248,7 @@ trait NotificationsBase
         $jwt = (new JWT($secret, 'HS256', ALERT_TRACKING_JWT_TTL, 0))->encode([
             'alertId' => $alertId,
             'userId' => $userId,
+            'projectId' => $this->getProject()['$id'],
             'purpose' => 'alert_track',
         ]);
 
@@ -255,6 +304,7 @@ trait NotificationsBase
         $jwtNoPurpose = (new JWT($secret, 'HS256', ALERT_TRACKING_JWT_TTL, 0))->encode([
             'alertId' => $alertId,
             'userId' => $userId,
+            'projectId' => $this->getProject()['$id'],
         ]);
 
         $response = $this->client->call(
@@ -282,6 +332,7 @@ trait NotificationsBase
         $jwtWrongPurpose = (new JWT($secret, 'HS256', ALERT_TRACKING_JWT_TTL, 0))->encode([
             'alertId' => $alertId,
             'userId' => $userId,
+            'projectId' => $this->getProject()['$id'],
             'purpose' => 'something_else',
         ]);
 

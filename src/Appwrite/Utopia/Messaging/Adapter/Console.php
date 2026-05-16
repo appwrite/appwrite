@@ -72,7 +72,7 @@ class Console extends Adapter
             try {
                 $document = new Document([
                     '$id' => $documentId,
-                    '$permissions' => $this->buildPermissions($userId, $teamId),
+                    '$permissions' => $this->buildPermissions($userId, $teamId, $message->getProjectId() ?? ''),
                     'messageId' => $messageId,
                     'recipientHash' => $recipientHash,
                     'type' => $message->getType(),
@@ -80,6 +80,7 @@ class Console extends Adapter
                     'userId' => $userId,
                     'teamId' => $teamId,
                     'projectId' => $message->getProjectId(),
+                    'projectInternalId' => $message->getProjectInternalId(),
                     'title' => $message->getTitle(),
                     'body' => $message->getBody(),
                 ]);
@@ -105,7 +106,7 @@ class Console extends Adapter
     /**
      * @return array<string>
      */
-    private function buildPermissions(string $userId, string $teamId): array
+    private function buildPermissions(string $userId, string $teamId, string $projectId): array
     {
         $permissions = [];
         if ($userId !== '') {
@@ -117,6 +118,11 @@ class Console extends Adapter
             $permissions[] = Permission::read(Role::team($teamId));
             $permissions[] = Permission::update(Role::team($teamId, 'owner'));
             $permissions[] = Permission::delete(Role::team($teamId, 'owner'));
+            if ($projectId !== '') {
+                $permissions[] = Permission::read(Role::team($teamId, 'project-' . $projectId . '-owner'));
+                $permissions[] = Permission::update(Role::team($teamId, 'project-' . $projectId . '-owner'));
+                $permissions[] = Permission::delete(Role::team($teamId, 'project-' . $projectId . '-owner'));
+            }
         }
         return $permissions;
     }

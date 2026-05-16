@@ -20,7 +20,7 @@ class WebhooksTest extends TestCase
             'roles' => $roles,
         ]);
 
-        $this->assertSame($expected, $method->invoke(null, $membership));
+        $this->assertSame($expected, $method->invoke(null, $membership, 'project-1'));
     }
 
     public static function ownerRoleProvider(): array
@@ -28,7 +28,11 @@ class WebhooksTest extends TestCase
         return [
             'array owner' => [['owner'], true],
             'array mixed case owner' => [['Owner'], true],
+            'project owner' => [['project-project-1-owner'], true],
+            'mixed case project owner' => [['Project-Project-1-Owner'], true],
             'comma string owner' => ['developer, owner', true],
+            'comma string project owner' => ['developer, project-project-1-owner', true],
+            'other project owner' => [['project-project-2-owner'], false],
             'non owner' => [['developer'], false],
             'invalid roles' => [null, false],
         ];

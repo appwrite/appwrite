@@ -221,7 +221,7 @@ class Webhooks extends Action
 
         $ownerMemberships = \array_filter(
             $memberships,
-            fn (Document $membership) => self::hasOwnerRole($membership)
+            fn (Document $membership) => self::hasOwnerRole($membership, $project->getId())
         );
 
         if (empty($ownerMemberships)) {
@@ -288,6 +288,14 @@ class Webhooks extends Action
             $email = $user->getAttribute('email');
             $userId = $user->getId();
 
+            $queueForNotifications->addRecipient(
+                $userId,
+                NOTIFICATION_TYPE_CONSOLE,
+                null,
+                $userId,
+                $teamId,
+            );
+
             if (!empty($email)) {
                 $queueForNotifications->addRecipient(
                     $email,
@@ -297,20 +305,12 @@ class Webhooks extends Action
                     $teamId,
                 );
             }
-
-            $queueForNotifications->addRecipient(
-                $userId,
-                NOTIFICATION_TYPE_CONSOLE,
-                null,
-                $userId,
-                $teamId,
-            );
         }
 
         $queueForNotifications->trigger();
     }
 
-    private static function hasOwnerRole(Document $membership): bool
+    private static function hasOwnerRole(Document $membership, string $projectId): bool
     {
         $roles = $membership->getAttribute('roles', []);
         if (\is_string($roles)) {
@@ -321,7 +321,12 @@ class Webhooks extends Action
         }
 
         foreach ($roles as $role) {
-            if (\is_string($role) && \strtolower($role) === 'owner') {
+            if (!\is_string($role)) {
+                continue;
+            }
+
+            $role = \strtolower($role);
+            if ($role === 'owner' || $role === 'project-' . \strtolower($projectId) . '-owner') {
                 return true;
             }
         }

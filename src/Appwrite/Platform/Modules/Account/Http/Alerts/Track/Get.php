@@ -64,13 +64,13 @@ class Get extends Action
     ): void {
         $secret = System::getEnv('_APP_OPENSSL_KEY_V1');
 
-        if ($secret !== '' && $jwt !== '') {
+        if (!empty($secret) && $jwt !== '') {
             try {
                 $decoder = new JWT($secret, 'HS256', ALERT_TRACKING_JWT_TTL, 0);
                 $decoded = $decoder->decode($jwt);
 
                 if (
-                    isset($decoded['alertId'], $decoded['userId'], $decoded['purpose'])
+                    isset($decoded['alertId'], $decoded['userId'], $decoded['projectId'], $decoded['purpose'])
                     && $decoded['purpose'] === 'alert_track'
                     && $decoded['alertId'] === $alertId
                 ) {
@@ -80,6 +80,8 @@ class Get extends Action
                         if (
                             !$alert->isEmpty()
                             && $alert->getAttribute('userId') === $decoded['userId']
+                            && $alert->getAttribute('projectId') === $decoded['projectId']
+                            && (!isset($decoded['projectInternalId']) || $alert->getAttribute('projectInternalId') === $decoded['projectInternalId'])
                             && $alert->getAttribute('read') !== true
                         ) {
                             $dbForPlatform->updateDocument('alerts', $alertId, new Document([

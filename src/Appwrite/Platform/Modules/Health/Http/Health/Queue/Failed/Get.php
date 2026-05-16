@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Health\Http\Health\Queue\Failed;
 
 use Appwrite\Event\Event;
+use Appwrite\Event\Notification;
 use Appwrite\Event\Publisher\Audit;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Publisher\Certificate;
@@ -71,6 +72,7 @@ class Get extends Base
                 System::getEnv('_APP_SCREENSHOTS_QUEUE_NAME', Event::SCREENSHOTS_QUEUE_NAME),
                 System::getEnv('_APP_MESSAGING_QUEUE_NAME', Event::MESSAGING_QUEUE_NAME),
                 System::getEnv('_APP_MIGRATIONS_QUEUE_NAME', Event::MIGRATIONS_QUEUE_NAME),
+                System::getEnv('_APP_NOTIFICATIONS_QUEUE_NAME', Event::NOTIFICATIONS_QUEUE_NAME),
             ]), 'The name of the queue')
             ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
             ->inject('response')
@@ -87,6 +89,7 @@ class Get extends Base
             ->inject('publisherForMessaging')
             ->inject('publisherForMigrations')
             ->inject('publisherForScreenshots')
+            ->inject('queueForNotifications')
             ->callback($this->action(...));
     }
 
@@ -107,6 +110,7 @@ class Get extends Base
         MessagingPublisher $publisherForMessaging,
         MigrationPublisher $publisherForMigrations,
         Screenshot $publisherForScreenshots,
+        Notification $queueForNotifications,
     ): void {
         $threshold = (int) $threshold;
 
@@ -124,6 +128,7 @@ class Get extends Base
             System::getEnv('_APP_SCREENSHOTS_QUEUE_NAME', Event::SCREENSHOTS_QUEUE_NAME) => $publisherForScreenshots,
             System::getEnv('_APP_MESSAGING_QUEUE_NAME', Event::MESSAGING_QUEUE_NAME) => $publisherForMessaging,
             System::getEnv('_APP_MIGRATIONS_QUEUE_NAME', Event::MIGRATIONS_QUEUE_NAME) => $publisherForMigrations,
+            System::getEnv('_APP_NOTIFICATIONS_QUEUE_NAME', Event::NOTIFICATIONS_QUEUE_NAME) => $queueForNotifications,
             default => throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unknown queue name: ' . $name),
         };
         $failed = $queue->getSize(failed: true);

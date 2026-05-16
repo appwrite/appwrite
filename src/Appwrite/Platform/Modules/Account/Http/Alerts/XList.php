@@ -50,6 +50,7 @@ class XList extends Action
             ->param('queries', [], new Alerts(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Alerts::ALLOWED_ATTRIBUTES), true)
             ->inject('response')
             ->inject('dbForPlatform')
+            ->inject('project')
             ->inject('user')
             ->callback($this->action(...));
     }
@@ -61,8 +62,13 @@ class XList extends Action
         array $queries,
         Response $response,
         Database $dbForPlatform,
+        Document $project,
         Document $user
     ): void {
+        if ($project->getId() !== 'console') {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
+        }
+
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -89,7 +95,7 @@ class XList extends Action
             $alertId = $cursor->getValue();
             $cursorDocument = $dbForPlatform->getDocument('alerts', $alertId);
 
-            if ($cursorDocument->isEmpty()) {
+            if ($cursorDocument->isEmpty() || $cursorDocument->getAttribute('userId') !== $user->getId()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Alert '{$alertId}' for the 'cursor' value not found.");
             }
 

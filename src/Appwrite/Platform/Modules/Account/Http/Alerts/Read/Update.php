@@ -46,6 +46,7 @@ class Update extends Action
             ->param('alertId', '', new UID(), 'Alert ID.')
             ->inject('response')
             ->inject('dbForPlatform')
+            ->inject('project')
             ->inject('user')
             ->callback($this->action(...));
     }
@@ -54,8 +55,13 @@ class Update extends Action
         string $alertId,
         Response $response,
         Database $dbForPlatform,
+        Document $project,
         Document $user,
     ): void {
+        if ($project->getId() !== 'console') {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
+        }
+
         $alert = $dbForPlatform->getDocument('alerts', $alertId);
 
         if ($alert->isEmpty()) {

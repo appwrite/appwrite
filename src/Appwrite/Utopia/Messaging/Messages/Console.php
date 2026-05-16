@@ -16,6 +16,7 @@ class Console implements Message
         protected string $type = 'info',
         protected ?string $messageId = null,
         protected ?string $projectId = null,
+        protected ?string $projectInternalId = null,
     ) {
     }
 
@@ -58,5 +59,10 @@ class Console implements Message
     public function getProjectId(): ?string
     {
         return $this->projectId;
+    }
+
+    public function getProjectInternalId(): ?string
+    {
+        return $this->projectInternalId;
     }
 }

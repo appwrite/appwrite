@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Platform\Workers;
 
+use Ahc\Jwt\JWT;
 use Appwrite\Event\Notification;
 use Appwrite\Platform\Workers\Notifications;
 use PHPUnit\Framework\TestCase;
@@ -13,6 +14,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Logger\Log;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
@@ -64,7 +66,7 @@ class SpyNotifications extends Notifications
         }
 
         if ($channel === NOTIFICATION_TYPE_CONSOLE || $channel === NOTIFICATION_TYPE_EMAIL) {
-            return $this->persistAlert($dbForPlatform, $messageId, $recipient, $payload);
+            return $this->persistAlert($dbForPlatform, $messageId, $recipient, $payload, $project);
         }
 
         return null;
@@ -84,10 +86,10 @@ class CountingPersistAlertNotifications extends Notifications
     /** @var array<int, string> */
     public array $persistedIds = [];
 
-    protected function persistAlert(Database $dbForPlatform, string $messageId, array $recipient, array $payload): string
+    protected function persistAlert(Database $dbForPlatform, string $messageId, array $recipient, array $payload, Document $project): string
     {
         $this->persistAlertCalls++;
-        $alertId = parent::persistAlert($dbForPlatform, $messageId, $recipient, $payload);
+        $alertId = parent::persistAlert($dbForPlatform, $messageId, $recipient, $payload, $project);
         $this->persistedIds[] = $alertId;
         return $alertId;
     }
@@ -100,7 +102,7 @@ class CountingPersistAlertNotifications extends Notifications
  */
 class ZeroDeliveryConsoleNotifications extends Notifications
 {
-    protected function dispatchConsole(array $recipient, string $messageId, array $payload, Database $dbForPlatform): ?string
+    protected function dispatchConsole(array $recipient, string $messageId, array $payload, Document $project, Database $dbForPlatform): ?string
     {
         // Simulate the Console adapter swallowing a per-recipient
         // exception and reporting zero deliveries.
@@ -182,7 +184,8 @@ class NotificationsTest extends TestCase
         $this->database->createAttribute('alerts', 'channel', Database::VAR_STRING, 64, true);
         $this->database->createAttribute('alerts', 'userId', Database::VAR_STRING, 255, false);
         $this->database->createAttribute('alerts', 'teamId', Database::VAR_STRING, 255, false);
-        $this->database->createAttribute('alerts', 'projectId', Database::VAR_STRING, 255, false);
+        $this->database->createAttribute('alerts', 'projectId', Database::VAR_STRING, 255, true);
+        $this->database->createAttribute('alerts', 'projectInternalId', Database::VAR_STRING, 255, true);
         $this->database->createAttribute('alerts', 'title', Database::VAR_STRING, 256, true);
         $this->database->createAttribute('alerts', 'body', Database::VAR_STRING, 16384, true);
         $this->database->createAttribute('alerts', 'read', Database::VAR_BOOLEAN, 0, false, false);
@@ -200,7 +203,7 @@ class NotificationsTest extends TestCase
         );
 
         $this->registry = new Registry();
-        $this->project = new Document(['$id' => 'project-x']);
+        $this->project = new Document(['$id' => 'project-x', '$sequence' => 'project-internal-x']);
         $this->log = new Log();
     }
 
@@ -415,7 +418,7 @@ class NotificationsTest extends TestCase
         }
 
         $rows = $this->database->find('alerts', [
-            \Utopia\Database\Query::equal('messageId', [$messageId]),
+            Query::equal('messageId', [$messageId]),
         ]);
         $this->assertCount(1, $rows, 'first attempt should persist only the successful console recipient');
         $this->assertSame(NOTIFICATION_TYPE_CONSOLE, $rows[0]->getAttribute('channel'));
@@ -427,7 +430,7 @@ class NotificationsTest extends TestCase
         $this->assertSame(NOTIFICATION_TYPE_WEBHOOK, $retry->dispatched[0]['channel']);
 
         $rows = $this->database->find('alerts', [
-            \Utopia\Database\Query::equal('messageId', [$messageId]),
+            Query::equal('messageId', [$messageId]),
         ]);
         $this->assertCount(2, $rows, 'retry must complete the missing recipient without duplicating console');
     }
@@ -452,7 +455,7 @@ class NotificationsTest extends TestCase
         // must NOT have called persistAlert (otherwise we'd see 2 rows or
         // a duplicate-key swallow plus a non-zero counter).
         $consoleRows = $this->database->find('alerts', [
-            \Utopia\Database\Query::equal('channel', ['console']),
+            Query::equal('channel', ['console']),
         ]);
         $this->assertCount(1, $consoleRows);
         $this->assertSame(0, $worker->persistAlertCalls, 'console channel must NOT trigger action-loop persistAlert');
@@ -588,6 +591,14 @@ class NotificationsTest extends TestCase
         $this->assertStringContainsString('http://api.example.test/v1/account/alerts/', \html_entity_decode($body));
         $this->assertStringNotContainsString('console.example.test/v1/account/alerts/', \html_entity_decode($body));
 
+        \preg_match('/track\?jwt=([^"&]+)/', \html_entity_decode($body), $matches);
+        $this->assertNotEmpty($matches[1] ?? '');
+
+        $claims = (new JWT('test-key-32bytes-min-aaaaaaaaaaaaaa', 'HS256', ALERT_TRACKING_JWT_TTL, 0))
+            ->decode(\urldecode($matches[1]));
+        $this->assertSame('project-x', $claims['projectId'] ?? null);
+        $this->assertSame('project-internal-x', $claims['projectInternalId'] ?? null);
+
         // The pixel must sit BEFORE the last </body>.
         $lastBodyClose = \strripos($body, '</body>');
         $pixelPosition = \strripos($body, '<img src=');
@@ -648,7 +659,7 @@ class NotificationsTest extends TestCase
             // primary key -> DuplicateException -> branch returns the
             // existing alertId without throwing.
             $reflection = new \ReflectionMethod($worker, 'persistAlert');
-            $secondAlertId = $reflection->invoke($worker, $this->database, $messageId, $recipient, $payload);
+            $secondAlertId = $reflection->invoke($worker, $this->database, $messageId, $recipient, $payload, $this->project);
 
             $this->assertSame($firstAlertId, $secondAlertId, 'duplicate persist must return the existing alertId');
 
@@ -666,6 +677,7 @@ class NotificationsTest extends TestCase
                 'userId' => 'user-7',
                 'teamId' => 'team-7',
                 'projectId' => 'project-x',
+                'projectInternalId' => 'project-internal-x',
                 'title' => 'sibling',
                 'body' => 'sibling',
                 'read' => false,
@@ -680,7 +692,7 @@ class NotificationsTest extends TestCase
             $this->assertTrue($threw, 'unique-index `_key_recipient` must reject a second row sharing the recipient tuple');
 
             $rows = $this->database->find('alerts', [
-                \Utopia\Database\Query::equal('messageId', [$messageId]),
+                Query::equal('messageId', [$messageId]),
             ]);
             $this->assertCount(1, $rows, 'unique-index must prevent a second row from being persisted');
         } finally {
@@ -779,7 +791,7 @@ class NotificationsTest extends TestCase
             // Critical: no orphan dedup row. If there is one, the retry below
             // will short-circuit and the user never gets the email.
             $orphans = $this->database->find('alerts', [
-                \Utopia\Database\Query::equal('messageId', [$messageId]),
+                Query::equal('messageId', [$messageId]),
             ]);
             $this->assertCount(0, $orphans, 'failed SMTP send must not leave a dedup row behind');
 
@@ -794,11 +806,85 @@ class NotificationsTest extends TestCase
             $this->assertSame(1, $working->sendCount, 'retry must invoke the working adapter');
 
             $rows = $this->database->find('alerts', [
-                \Utopia\Database\Query::equal('messageId', [$messageId]),
+                Query::equal('messageId', [$messageId]),
             ]);
             $this->assertCount(1, $rows, 'retry must persist exactly one alert row');
             $this->assertSame('user-9', $rows[0]->getAttribute('userId'));
             $this->assertFalse($rows[0]->getAttribute('read'));
+        } finally {
+            \putenv($previousSmtpHost === false ? '_APP_SMTP_HOST' : '_APP_SMTP_HOST=' . $previousSmtpHost);
+        }
+    }
+
+    public function testEmailFailureDoesNotBlockConsoleRecipient(): void
+    {
+        $failing = new SpyEmailAdapter();
+        $failing->throwOnSend = true;
+        $this->registry->set('smtp', static fn () => $failing);
+
+        $previousSmtpHost = \getenv('_APP_SMTP_HOST');
+        \putenv('_APP_SMTP_HOST=spy.smtp.test');
+
+        $payload = [
+            'project' => ['$id' => 'project-x', '$sequence' => 'project-internal-x'],
+            'recipients' => [
+                [
+                    'address' => 'user@example.test',
+                    'channel' => NOTIFICATION_TYPE_EMAIL,
+                    'userId' => 'user-9',
+                    'teamId' => 'team-9',
+                ],
+                [
+                    'address' => 'user-9',
+                    'channel' => NOTIFICATION_TYPE_CONSOLE,
+                    'userId' => 'user-9',
+                    'teamId' => 'team-9',
+                ],
+            ],
+            'subject' => 'Subj',
+            'body' => 'Body',
+            'deduplicationKey' => 'smtp-fail-console-key',
+        ];
+
+        $messageId = \md5('smtp-fail-console-key');
+
+        try {
+            $worker = new Notifications();
+
+            $threw = false;
+            try {
+                $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+            } catch (\Throwable $error) {
+                $threw = true;
+                $this->assertStringContainsString('SMTP unavailable', $error->getMessage());
+            }
+            $this->assertTrue($threw, 'SMTP failure must still propagate so the email recipient is retried');
+
+            $consoleRows = $this->database->find('alerts', [
+                Query::equal('messageId', [$messageId]),
+                Query::equal('channel', [NOTIFICATION_TYPE_CONSOLE]),
+            ]);
+            $this->assertCount(1, $consoleRows, 'console recipient must be persisted even when email fails first');
+            $this->assertSame('project-x', $consoleRows[0]->getAttribute('projectId'));
+            $this->assertSame('project-internal-x', $consoleRows[0]->getAttribute('projectInternalId'));
+
+            $emailRows = $this->database->find('alerts', [
+                Query::equal('messageId', [$messageId]),
+                Query::equal('channel', [NOTIFICATION_TYPE_EMAIL]),
+            ]);
+            $this->assertCount(0, $emailRows, 'failed email recipient must not leave an orphan dedup row');
+
+            $working = new SpyEmailAdapter();
+            $this->registry->set('smtp', static fn () => $working);
+
+            $retryWorker = new Notifications();
+            $retryWorker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+
+            $this->assertSame(1, $working->sendCount, 'retry must still deliver the email recipient');
+            $rows = $this->database->find('alerts', [
+                Query::equal('messageId', [$messageId]),
+            ]);
+            $this->assertCount(2, $rows, 'retry must add email without duplicating the already-delivered console alert');
         } finally {
             \putenv($previousSmtpHost === false ? '_APP_SMTP_HOST' : '_APP_SMTP_HOST=' . $previousSmtpHost);
         }
@@ -996,7 +1082,7 @@ class NotificationsTest extends TestCase
         $this->assertSame(1, $worker->persistAlertCalls, 'email channel must persist exactly once after a successful send');
         $messageId = \md5('happy-email');
         $rows = $this->database->find('alerts', [
-            \Utopia\Database\Query::equal('messageId', [$messageId]),
+            Query::equal('messageId', [$messageId]),
         ]);
         $this->assertCount(1, $rows);
         $row = $rows[0];
@@ -1039,7 +1125,7 @@ class NotificationsTest extends TestCase
         $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
 
         $rows = $this->database->find('alerts', [
-            \Utopia\Database\Query::equal('channel', ['console']),
+            Query::equal('channel', ['console']),
         ]);
         $this->assertCount(1, $rows, 'console adapter must write exactly one alert');
 
@@ -1243,7 +1329,7 @@ class NotificationsTest extends TestCase
         // Action loop must persist exactly one webhook alert row AFTER the send.
         $this->assertSame(1, $worker->persistAlertCalls);
         $rows = $this->database->find('alerts', [
-            \Utopia\Database\Query::equal('messageId', [\md5('happy-webhook')]),
+            Query::equal('messageId', [\md5('happy-webhook')]),
         ]);
         $this->assertCount(1, $rows);
         $this->assertSame(NOTIFICATION_TYPE_WEBHOOK, $rows[0]->getAttribute('channel'));
