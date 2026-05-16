@@ -64,8 +64,9 @@ class Console extends Adapter
 
             $messageId = $message->getMessageId();
             $recipientKey = $userId !== '' ? 'user:' . $userId : 'team:' . $teamId;
+            $recipientHash = $recipient['recipientHash'] ?? \substr(\md5($recipientKey), 0, 16);
             $documentId = $messageId !== null
-                ? $messageId . '_' . \substr(\md5($recipientKey), 0, 8)
+                ? ($recipient['alertId'] ?? \substr($messageId, 0, 19) . '_' . $recipientHash)
                 : ID::unique();
 
             try {
@@ -73,10 +74,11 @@ class Console extends Adapter
                     '$id' => $documentId,
                     '$permissions' => $this->buildPermissions($userId, $teamId),
                     'messageId' => $messageId,
+                    'recipientHash' => $recipientHash,
                     'type' => $message->getType(),
                     'channel' => self::TYPE,
-                    'userId' => $userId !== '' ? $userId : null,
-                    'teamId' => $teamId !== '' ? $teamId : null,
+                    'userId' => $userId,
+                    'teamId' => $teamId,
                     'projectId' => $message->getProjectId(),
                     'title' => $message->getTitle(),
                     'body' => $message->getBody(),

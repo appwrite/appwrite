@@ -20,7 +20,7 @@ class Notification extends Event
     /**
      * Recipients to deliver the notification to.
      *
-     * Each entry has an `address` (channel-specific identifier — email,
+     * Each entry has an `address` (channel-specific identifier: email,
      * userId, or webhook URL) and a `channel`. Webhook recipients may
      * additionally carry an optional `signatureKey`; when set, the
      * webhook adapter signs the request body with HMAC-SHA256 and adds
@@ -267,7 +267,13 @@ class Notification extends Event
 
     public function reset(): self
     {
+        parent::reset();
+
         $this->project = null;
+        $this->context = [];
+        $this->platform = [];
+        $this->user = null;
+        $this->userId = null;
         $this->recipient = '';
         $this->name = '';
         $this->subject = '';

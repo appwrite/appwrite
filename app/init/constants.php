@@ -263,12 +263,12 @@ const MESSAGE_TYPE_EMAIL = 'email';
 const MESSAGE_TYPE_SMS = 'sms';
 const MESSAGE_TYPE_PUSH = 'push';
 // Notification types
-const NOTIFICATION_TYPE_EMAIL = 'email';
-const NOTIFICATION_TYPE_SMS = 'sms';
-const NOTIFICATION_TYPE_PUSH = 'push';
+const NOTIFICATION_TYPE_EMAIL = MESSAGE_TYPE_EMAIL;
+const NOTIFICATION_TYPE_SMS = MESSAGE_TYPE_SMS;
+const NOTIFICATION_TYPE_PUSH = MESSAGE_TYPE_PUSH;
 const NOTIFICATION_TYPE_CONSOLE = 'console';
 const NOTIFICATION_TYPE_WEBHOOK = 'webhook';
-const RESOURCE_TYPE_ALERTS = 'alerts';
+const ALERT_TRACKING_JWT_TTL = 60 * 60 * 24 * 7;
 // API key types
 const API_KEY_STANDARD = 'standard';
 const API_KEY_EPHEMERAL = 'ephemeral';

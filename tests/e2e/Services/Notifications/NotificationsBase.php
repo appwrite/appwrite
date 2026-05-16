@@ -12,7 +12,7 @@ use Utopia\System\System;
  * account-alerts user-facing API.
  *
  * The notification worker itself is exercised in unit tests with a pinned
- * queue payload — the server side cannot deterministically inject a
+ * queue payload; the server side cannot deterministically inject a
  * Notification onto the live queue without an admin endpoint, so the health
  * portion validates the public contract that ops and KEDA scale on:
  *
@@ -70,7 +70,7 @@ trait NotificationsBase
     {
         // Always read alerts as the console-authenticated owner of the team.
         // The /v1/account/alerts endpoint is platform-scoped (dbForPlatform) and
-        // requires a session — server-mode API keys do not satisfy it.
+        // requires a session; server-mode API keys do not satisfy it.
         $response = $this->client->call(Client::METHOD_GET, '/account/alerts', $this->getConsoleAlertHeaders());
 
         $this->assertSame(200, $response['headers']['status-code']);
@@ -197,7 +197,7 @@ trait NotificationsBase
         // Track endpoint requires `purpose: 'alert_track'` — see C/M7 in
         // PR #12195 review. Other claim purposes are silently ignored (which
         // testTrackingPixelRejectsJwtWithoutPurposeClaim covers).
-        $jwt = (new JWT($secret, 'HS256', 2592000, 0))->encode([
+        $jwt = (new JWT($secret, 'HS256', ALERT_TRACKING_JWT_TTL, 0))->encode([
             'alertId' => $alertId,
             'userId' => $userId,
             'purpose' => 'alert_track',
@@ -252,7 +252,7 @@ trait NotificationsBase
         $userId = $this->getRoot()['$id'];
 
         // Mint a JWT with valid alertId/userId but NO purpose claim.
-        $jwtNoPurpose = (new JWT($secret, 'HS256', 2592000, 0))->encode([
+        $jwtNoPurpose = (new JWT($secret, 'HS256', ALERT_TRACKING_JWT_TTL, 0))->encode([
             'alertId' => $alertId,
             'userId' => $userId,
         ]);
@@ -278,8 +278,8 @@ trait NotificationsBase
         $this->assertNotNull($found);
         $this->assertFalse($found['read'], 'JWT without purpose claim must not flip the read flag');
 
-        // Mint a JWT with a wrong purpose value — same expectation: silently rejected.
-        $jwtWrongPurpose = (new JWT($secret, 'HS256', 2592000, 0))->encode([
+        // Mint a JWT with a wrong purpose value: same expectation, silently rejected.
+        $jwtWrongPurpose = (new JWT($secret, 'HS256', ALERT_TRACKING_JWT_TTL, 0))->encode([
             'alertId' => $alertId,
             'userId' => $userId,
             'purpose' => 'something_else',

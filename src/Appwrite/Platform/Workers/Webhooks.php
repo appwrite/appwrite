@@ -219,10 +219,9 @@ class Webhooks extends Action
             Query::limit(APP_LIMIT_SUBQUERY)
         ]);
 
-        // Webhook-paused alerts go only to project owners — non-owner team members do not receive them.
         $ownerMemberships = \array_filter(
             $memberships,
-            fn (Document $membership) => \in_array('owner', $membership->getAttribute('roles', []), true)
+            fn (Document $membership) => self::hasOwnerRole($membership)
         );
 
         if (empty($ownerMemberships)) {
@@ -309,5 +308,24 @@ class Webhooks extends Action
         }
 
         $queueForNotifications->trigger();
+    }
+
+    private static function hasOwnerRole(Document $membership): bool
+    {
+        $roles = $membership->getAttribute('roles', []);
+        if (\is_string($roles)) {
+            $roles = \array_map('trim', \explode(',', $roles));
+        }
+        if (!\is_array($roles)) {
+            return false;
+        }
+
+        foreach ($roles as $role) {
+            if (\is_string($role) && \strtolower($role) === 'owner') {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

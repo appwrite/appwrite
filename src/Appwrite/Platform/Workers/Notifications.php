@@ -16,7 +16,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
-use Utopia\Database\Query;
+use Utopia\Database\Validator\UID;
 use Utopia\Logger\Log;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Adapter\Email\SMTP;
@@ -31,11 +31,6 @@ class Notifications extends Action
 {
     protected int $previewMaxLen = 150;
     protected string $whitespaceCodes = '&#xa0;&#x200C;&#x200B;&#x200D;&#x200E;&#x200F;&#xFEFF;';
-
-    /**
-     * Tracking pixel JWT lifetime: 30 days.
-     */
-    private const TRACKING_JWT_TTL = 2592000;
 
     /**
      * @var array<string, string>
@@ -76,18 +71,21 @@ class Notifications extends Action
         $deduplicationKey = $payload['deduplicationKey'] ?? '';
         $messageId = $deduplicationKey !== '' ? \md5($deduplicationKey) : '';
 
-        if ($messageId !== '' && $this->alreadyDelivered($dbForPlatform, $messageId)) {
-            $log->addTag('dedup', 'hit');
-            return;
-        }
-
         $recipients = $this->resolveRecipients($payload);
         if (empty($recipients)) {
             throw new Exception('No recipients in payload');
         }
 
         foreach ($recipients as $recipient) {
+            $recipient = $this->normalizeRecipient($recipient);
             $channel = $recipient['channel'];
+
+            if ($messageId !== '' && $this->alreadyDelivered($dbForPlatform, self::buildAlertId($messageId, $recipient))) {
+                $log->addTag('dedup', 'hit');
+                $log->addTag('channel', $channel);
+                continue;
+            }
+
             try {
                 $alertId = $this->dispatch($recipient, $messageId, $payload, $project, $register, $dbForPlatform, $log);
                 if ($messageId !== '' && $channel === NOTIFICATION_TYPE_WEBHOOK && $alertId === null) {
@@ -120,23 +118,28 @@ class Notifications extends Action
     }
 
     /**
-     * Look up an existing alert by the indexed `messageId` attribute.
-     *
-     * Greptile P1 #1: persistAlert and the Console adapter both write
-     * compound `$id`s (messageId + recipient hash), so a direct
-     * `getDocument($messageId)` would always miss. Query the attribute.
+     * @param array{address: string, channel: string, signatureKey?: string, userId?: string, teamId?: string} $recipient
+     * @return array{address: string, channel: string, signatureKey?: string, userId?: string, teamId?: string}
      */
-    private function alreadyDelivered(Database $dbForPlatform, string $messageId): bool
+    private function normalizeRecipient(array $recipient): array
     {
-        try {
-            $matches = $dbForPlatform->find('alerts', [
-                Query::equal('messageId', [$messageId]),
-                Query::limit(1),
-            ]);
-            return !empty($matches);
-        } catch (Throwable) {
-            return false;
+        $recipient['userId'] = $recipient['userId'] ?? '';
+        $recipient['teamId'] = $recipient['teamId'] ?? '';
+
+        if (
+            $recipient['channel'] === NOTIFICATION_TYPE_CONSOLE
+            && $recipient['userId'] === ''
+            && $recipient['teamId'] === ''
+        ) {
+            $recipient['userId'] = $recipient['address'];
         }
+
+        return $recipient;
+    }
+
+    private function alreadyDelivered(Database $dbForPlatform, string $alertId): bool
+    {
+        return !$dbForPlatform->getDocument('alerts', $alertId)->isEmpty();
     }
 
     /**
@@ -183,7 +186,8 @@ class Notifications extends Action
         $smtp = $this->resolveSmtpConfig($project);
 
         if (empty($smtp) && empty(System::getEnv('_APP_SMTP_HOST'))) {
-            throw new Exception('Skipped email notification. No SMTP configuration has been set.');
+            $log->addTag('email_skipped', 'no_smtp');
+            return null;
         }
 
         $type = empty($smtp) ? 'cloud' : 'smtp';
@@ -247,16 +251,10 @@ class Notifications extends Action
         }
         $subject = \strip_tags($subjectTemplate->render());
 
-        // Pre-compute the alertId WITHOUT persisting so the tracking pixel
-        // URL is stable, but defer the database write until after a
-        // successful adapter send. Persisting first risks a dedup-by-attribute
-        // hit on retry if SMTP throws — the email would be permanently lost.
         $deterministicAlertId = $messageId !== ''
             ? self::buildAlertId($messageId, $recipient)
             : null;
 
-        // Tracking pixel: only injectable when we have a userId AND a
-        // deterministic alertId AND a signing key.
         $userId = $recipient['userId'] ?? '';
         $opensslKey = System::getEnv('_APP_OPENSSL_KEY_V1');
         if ($deterministicAlertId !== null && $userId !== '' && !empty($opensslKey)) {
@@ -320,16 +318,9 @@ class Notifications extends Action
         try {
             $adapter->send($emailMessage);
         } catch (Throwable $error) {
-            // Use 500 for any SMTP delivery failure: timeouts, DNS, refused
-            // connections, and authentication errors are all infrastructure
-            // problems, not HTTP-style 401s. The queue infrastructure handles
-            // retries based on the throw, not the code.
             throw new Exception('Error sending notification: ' . $error->getMessage(), 500);
         }
 
-        // Persist the alert ONLY after a successful send. The Track endpoint
-        // tolerates a missing alert row, so a tracking pixel fetched between
-        // send and persistence is harmless.
         if ($messageId !== '') {
             return $this->persistAlert($dbForPlatform, $messageId, $recipient, $payload);
         }
@@ -342,22 +333,22 @@ class Notifications extends Action
      */
     protected function dispatchConsole(array $recipient, string $messageId, array $payload, Database $dbForPlatform): ?string
     {
+        $this->validateConsoleRecipient($recipient);
+
         $project = $payload['project'] ?? null;
         $projectId = \is_array($project) ? ($project['$id'] ?? null) : null;
 
-        $title = $payload['subject'] ?? '';
-        $body = $payload['body'] ?? '';
         $params = $payload['templateParams'] ?? ($payload['variables'] ?? []);
-        if ($title !== '' && !empty($params)) {
-            $rendered = Template::fromString($title);
-            foreach ($params as $key => $value) {
-                $rendered->setParam('{{' . $key . '}}', (string) $value);
-            }
-            $title = \strip_tags($rendered->render());
+        $title = self::renderText($payload['subject'] ?? '', $params);
+        $body = self::renderText($payload['preview'] ?? '', $params);
+        if ($body === '') {
+            $body = self::renderText($payload['body'] ?? '', $params);
         }
 
         $userId = $recipient['userId'] ?? $recipient['address'];
         $teamId = $recipient['teamId'] ?? '';
+        $alertId = $messageId !== '' ? self::buildAlertId($messageId, $recipient) : null;
+        $recipientHash = $messageId !== '' ? self::buildRecipientHash($recipient) : null;
 
         $consoleRecipient = [];
         if ($userId !== '') {
@@ -365,6 +356,10 @@ class Notifications extends Action
         }
         if ($teamId !== '') {
             $consoleRecipient['teamId'] = $teamId;
+        }
+        if ($alertId !== null) {
+            $consoleRecipient['alertId'] = $alertId;
+            $consoleRecipient['recipientHash'] = $recipientHash;
         }
 
         $consoleMessage = new ConsoleMessage(
@@ -379,18 +374,12 @@ class Notifications extends Action
         $adapter = new ConsoleAdapter($dbForPlatform);
         $result = $adapter->send($consoleMessage);
 
-        // Greptile P1 #4: surface adapter failures. The Console adapter
-        // catches per-recipient exceptions and reports zero deliveries via
-        // `deliveredTo`; without this throw the worker would silently
-        // succeed on a hard write failure.
         if (($result['deliveredTo'] ?? 0) === 0) {
             $error = $result['results'][0]['error'] ?? 'unknown error';
             throw new Exception('Console alert delivery failed: ' . $error);
         }
 
-        // Adapter persisted the alert, so the action loop must NOT
-        // call persistAlert again (Greptile P1 #3).
-        return null;
+        return $alertId;
     }
 
     /**
@@ -444,39 +433,41 @@ class Notifications extends Action
      */
     protected function persistAlert(Database $dbForPlatform, string $messageId, array $recipient, array $payload): string
     {
+        $recipient = $this->normalizeRecipient($recipient);
+
         $project = $payload['project'] ?? null;
         $projectId = \is_array($project) ? ($project['$id'] ?? null) : null;
 
         $channel = $recipient['channel'];
-        $address = $recipient['address'];
         $userId = $recipient['userId'] ?? '';
         $teamId = $recipient['teamId'] ?? '';
 
-        // Console alerts derive userId from address when no explicit
-        // userId is supplied (matches Console adapter's own bookkeeping).
-        if ($channel === NOTIFICATION_TYPE_CONSOLE && $userId === '' && $teamId === '') {
-            $userId = $address;
-            $recipient['userId'] = $userId;
-        }
-
         $alertId = self::buildAlertId($messageId, $recipient);
+        $recipientHash = self::buildRecipientHash($recipient);
 
         $permissions = $this->buildAlertPermissions($userId, $teamId);
         if (empty($permissions)) {
             $permissions = $payload['permissions'] ?? [];
         }
 
+        $params = $payload['templateParams'] ?? ($payload['variables'] ?? []);
+        $body = self::renderText($payload['preview'] ?? '', $params);
+        if ($body === '') {
+            $body = self::renderText($payload['body'] ?? '', $params);
+        }
+
         $document = new Document([
             '$id' => $alertId,
             '$permissions' => $permissions,
             'messageId' => $messageId,
+            'recipientHash' => $recipientHash,
             'type' => $payload['type'] ?? 'info',
             'channel' => $channel,
-            'userId' => $userId !== '' ? $userId : null,
-            'teamId' => $teamId !== '' ? $teamId : null,
+            'userId' => $userId,
+            'teamId' => $teamId,
             'projectId' => $projectId,
-            'title' => $payload['subject'] ?? '',
-            'body' => $payload['body'] ?? '',
+            'title' => self::renderText($payload['subject'] ?? '', $params),
+            'body' => $body,
             'read' => false,
         ]);
 
@@ -490,8 +481,8 @@ class Notifications extends Action
     }
 
     /**
-     * Build the deterministic alertId composed of the messageId plus an
-     * 8-char hash over the recipient identity. Single source of truth used
+     * Build the deterministic alertId composed of the messageId plus a
+     * recipient hash. Single source of truth used
      * by both `persistAlert()` and `dispatchEmail()` so the tracking pixel
      * URL matches the eventually-persisted row exactly.
      *
@@ -499,12 +490,20 @@ class Notifications extends Action
      */
     private static function buildAlertId(string $messageId, array $recipient): string
     {
+        return \substr($messageId, 0, 19) . '_' . self::buildRecipientHash($recipient);
+    }
+
+    /**
+     * @param array{address: string, channel: string, signatureKey?: string, userId?: string, teamId?: string} $recipient
+     */
+    private static function buildRecipientHash(array $recipient): string
+    {
         $channel = $recipient['channel'];
         $address = $recipient['address'];
         $userId = $recipient['userId'] ?? '';
         $teamId = $recipient['teamId'] ?? '';
 
-        return $messageId . '_' . \substr(\md5($channel . ':' . $address . ':' . $userId . ':' . $teamId), 0, 8);
+        return \substr(\md5($channel . ':' . $address . ':' . $userId . ':' . $teamId), 0, 16);
     }
 
     /**
@@ -555,16 +554,41 @@ class Notifications extends Action
         ];
     }
 
+    private function validateConsoleRecipient(array $recipient): void
+    {
+        $validator = new UID();
+
+        foreach (['userId', 'teamId'] as $key) {
+            $value = $recipient[$key] ?? '';
+            if ($value !== '' && !$validator->isValid($value)) {
+                throw new Exception('Invalid console alert ' . $key . ': ' . $validator->getDescription());
+            }
+        }
+    }
+
+    private static function renderText(string $value, array $params): string
+    {
+        if ($value !== '' && !empty($params)) {
+            $template = Template::fromString($value);
+            foreach ($params as $key => $param) {
+                $template->setParam('{{' . $key . '}}', (string) $param);
+            }
+            $value = $template->render();
+        }
+
+        return \trim(\strip_tags($value));
+    }
+
     /**
      * Splice a 1x1 tracking pixel before the last `</body>` tag (or
      * append at the end if the body has no closing tag). The pixel
-     * carries a 30-day JWT identifying the alert and user, which the
+     * carries a signed JWT identifying the alert and user, which the
      * `/v1/account/alerts/:alertId/track` endpoint verifies before
      * marking the alert as read.
      */
     private function injectTrackingPixel(string $body, string $alertId, string $userId, string $opensslKey): string
     {
-        $jwt = (new JWT($opensslKey, 'HS256', self::TRACKING_JWT_TTL, 0))
+        $jwt = (new JWT($opensslKey, 'HS256', ALERT_TRACKING_JWT_TTL, 0))
             ->encode([
                 'alertId' => $alertId,
                 'userId' => $userId,

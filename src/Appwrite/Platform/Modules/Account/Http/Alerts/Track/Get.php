@@ -66,7 +66,7 @@ class Get extends Action
 
         if ($secret !== '' && $jwt !== '') {
             try {
-                $decoder = new JWT($secret, 'HS256', 2592000, 0);
+                $decoder = new JWT($secret, 'HS256', ALERT_TRACKING_JWT_TTL, 0);
                 $decoded = $decoder->decode($jwt);
 
                 if (

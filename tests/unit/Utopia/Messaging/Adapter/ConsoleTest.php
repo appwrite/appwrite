@@ -33,6 +33,7 @@ class ConsoleTest extends TestCase
         $this->database->create();
         $this->database->createCollection('alerts', [], [], [Permission::create(Role::any()), Permission::read(Role::any())], false);
         $this->database->createAttribute('alerts', 'messageId', Database::VAR_STRING, 255, false);
+        $this->database->createAttribute('alerts', 'recipientHash', Database::VAR_STRING, 64, true);
         $this->database->createAttribute('alerts', 'type', Database::VAR_STRING, 64, false, 'info');
         $this->database->createAttribute('alerts', 'channel', Database::VAR_STRING, 64, true);
         $this->database->createAttribute('alerts', 'userId', Database::VAR_STRING, 255, false);
@@ -55,7 +56,7 @@ class ConsoleTest extends TestCase
     private function alertId(string $messageId, string $userId = '', string $teamId = ''): string
     {
         $key = $userId !== '' ? 'user:' . $userId : 'team:' . $teamId;
-        return $messageId . '_' . \substr(\md5($key), 0, 8);
+        return \substr($messageId, 0, 19) . '_' . \substr(\md5($key), 0, 16);
     }
 
     public function testWritesAlertWithCorrectSchema(): void
@@ -155,9 +156,8 @@ class ConsoleTest extends TestCase
         $this->assertSame('a', $rowA->getAttribute('userId'));
         $this->assertSame('b', $rowB->getAttribute('userId'));
 
-        // $id values must be `messageId_<8-hex>` and the suffixes differ.
-        $this->assertMatchesRegularExpression('/^same-msg_[0-9a-f]{8}$/', $idA);
-        $this->assertMatchesRegularExpression('/^same-msg_[0-9a-f]{8}$/', $idB);
+        $this->assertMatchesRegularExpression('/^same-msg_[0-9a-f]{16}$/', $idA);
+        $this->assertMatchesRegularExpression('/^same-msg_[0-9a-f]{16}$/', $idB);
     }
 
     public function testRejectsForeignMessageType(): void
@@ -166,7 +166,7 @@ class ConsoleTest extends TestCase
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('Invalid message type.');
 
-        // ConsoleMessage extends nothing — pass an unrelated Message implementation
+        // ConsoleMessage extends nothing; pass an unrelated Message implementation
         $adapter->send(new \Appwrite\Utopia\Messaging\Messages\Webhook(urls: ['https://example.test'], payload: []));
     }
 
@@ -174,7 +174,7 @@ class ConsoleTest extends TestCase
      * Reviewer C4: a `DuplicateException` thrown by `createDocument` must be
      * treated as a SUCCESSFUL delivery, not a failure. The adapter previously
      * lumped Duplicate into the generic Throwable catch, which surfaced as a
-     * per-recipient `error` and caused the worker to throw — re-queueing the
+     * per-recipient `error` and caused the worker to throw, re-queueing the
      * notification and never marking the duplicate as delivered.
      */
     public function testConsoleAdapterTreatsDuplicateAsDelivered(): void
@@ -190,6 +190,7 @@ class ConsoleTest extends TestCase
             '$id' => $documentId,
             '$permissions' => [Permission::read(Role::any())],
             'messageId' => $messageId,
+            'recipientHash' => \substr(\md5('user:' . $userId), 0, 16),
             'channel' => 'console',
             'userId' => $userId,
             'title' => 'pre-existing',
@@ -212,7 +213,7 @@ class ConsoleTest extends TestCase
         $this->assertSame('success', $result['results'][0]['status'] ?? '', 'duplicate must report success status');
         $this->assertSame('', $result['results'][0]['error'] ?? 'unset', 'duplicate must not surface a per-recipient error');
 
-        // Still exactly ONE row — the pre-existing one. The adapter must not
+        // Still exactly ONE row: the pre-existing one. The adapter must not
         // overwrite it nor create a sibling.
         $rows = $this->database->find('alerts');
         $this->assertCount(1, $rows);
