@@ -589,6 +589,7 @@ export function deleteDatabaseTableRowColumnWidthsFromPrefs(
  *
  * Value: JSON string `string[]` — ordered column keys: optional system fields
  * (`$sequence`, `$id`, `$createdAt`, `$updatedAt`) plus attribute keys.
+ * Prefix `!` on a key means it is hidden but keeps its position in the list.
  * Absent or invalid: fetch and show all columns (default).
  */
 export const USER_PREFS_KEY_TABLESDB_ROWS_LIST_COLUMNS_PREFIX =
@@ -611,10 +612,27 @@ export function getTablesDbRowsListColumnsPrefsKey(
   return `${USER_PREFS_KEY_TABLESDB_ROWS_LIST_COLUMNS_PREFIX}.${databaseId}.${tableId}`
 }
 
-/**
- * Parsed ordered column keys (system + attributes), or `null` when unset (use all columns).
- */
-export function parseTablesDbRowsListColumnsFromPrefs(
+/** Stored prefix for a column that is in order but hidden in the grid. */
+export const TABLESDB_ROWS_LIST_COLUMN_HIDDEN_PREFIX = '!'
+
+export function parseStoredTablesDbRowsListColumnEntry(
+  item: string,
+): { key: string; hidden: boolean } | null {
+  const trimmed = item.trim()
+  if (!trimmed) return null
+  const hidden = trimmed.startsWith(TABLESDB_ROWS_LIST_COLUMN_HIDDEN_PREFIX)
+  const key = hidden
+    ? trimmed.slice(TABLESDB_ROWS_LIST_COLUMN_HIDDEN_PREFIX.length).trim()
+    : trimmed
+  if (!key) return null
+  if (key.startsWith('$')) {
+    if (!TABLESDB_ROWS_LIST_COLUMN_ALLOWED_SYSTEM_KEYS.has(key)) return null
+  }
+  return { key, hidden }
+}
+
+/** Raw stored column list (may include `!` hidden markers), or `null` when unset. */
+export function readTablesDbRowsListColumnsRawFromPrefs(
   prefs: UserPrefs | null | undefined,
   databaseId: string,
   tableId: string,
@@ -641,16 +659,123 @@ export function parseTablesDbRowsListColumnsFromPrefs(
   const out: string[] = []
   for (const item of parsed) {
     if (typeof item !== 'string') continue
-    const k = item.trim()
-    if (!k) continue
-    if (k.startsWith('$')) {
-      if (!TABLESDB_ROWS_LIST_COLUMN_ALLOWED_SYSTEM_KEYS.has(k)) continue
-    }
-    if (out.includes(k)) continue
-    out.push(k)
+    const entry = parseStoredTablesDbRowsListColumnEntry(item)
+    if (!entry) continue
+    const stored = entry.hidden
+      ? `${TABLESDB_ROWS_LIST_COLUMN_HIDDEN_PREFIX}${entry.key}`
+      : entry.key
+    if (out.includes(stored)) continue
+    out.push(stored)
     if (out.length >= MAX_TABLESDB_ROWS_LIST_COLUMN_KEYS) break
   }
   return out.length > 0 ? out : null
+}
+
+/**
+ * Visible column keys in display order (for grid + Query.select), or `null` when unset.
+ */
+export function parseTablesDbRowsListColumnsFromPrefs(
+  prefs: UserPrefs | null | undefined,
+  databaseId: string,
+  tableId: string,
+): string[] | null {
+  const stored = readTablesDbRowsListColumnsRawFromPrefs(
+    prefs,
+    databaseId,
+    tableId,
+  )
+  if (!stored) return null
+  const out: string[] = []
+  for (const item of stored) {
+    const entry = parseStoredTablesDbRowsListColumnEntry(item)
+    if (!entry || entry.hidden) continue
+    if (out.includes(entry.key)) continue
+    out.push(entry.key)
+    if (out.length >= MAX_TABLESDB_ROWS_LIST_COLUMN_KEYS) break
+  }
+  return out.length > 0 ? out : null
+}
+
+export type TablesDbRowsListColumnLayout = {
+  orderedKeys: string[]
+  hiddenKeys: Set<string>
+}
+
+/**
+ * Column order for the columns popover (visible + hidden interleaved).
+ * Legacy prefs without `!` markers treat omitted keys as hidden and append them after saved keys.
+ */
+export function parseTablesDbRowsListColumnLayout(
+  stored: string[] | null,
+  allKeys: string[],
+): TablesDbRowsListColumnLayout {
+  const allKeysSet = new Set(allKeys)
+  if (!allKeys.length) {
+    return { orderedKeys: [], hiddenKeys: new Set() }
+  }
+  if (!stored?.length) {
+    return { orderedKeys: [...allKeys], hiddenKeys: new Set() }
+  }
+
+  const hasHiddenMarkers = stored.some((item) =>
+    item.trim().startsWith(TABLESDB_ROWS_LIST_COLUMN_HIDDEN_PREFIX),
+  )
+
+  if (hasHiddenMarkers) {
+    const orderedKeys: string[] = []
+    const hiddenKeys = new Set<string>()
+    const seen = new Set<string>()
+    for (const item of stored) {
+      const entry = parseStoredTablesDbRowsListColumnEntry(item)
+      if (!entry || !allKeysSet.has(entry.key) || seen.has(entry.key)) continue
+      seen.add(entry.key)
+      orderedKeys.push(entry.key)
+      if (entry.hidden) hiddenKeys.add(entry.key)
+    }
+    for (const k of allKeys) {
+      if (!seen.has(k)) orderedKeys.push(k)
+    }
+    return { orderedKeys, hiddenKeys }
+  }
+
+  const seen = new Set<string>()
+  const visibleOrdered: string[] = []
+  for (const item of stored) {
+    const entry = parseStoredTablesDbRowsListColumnEntry(item)
+    if (!entry || entry.hidden || !allKeysSet.has(entry.key) || seen.has(entry.key))
+      continue
+    seen.add(entry.key)
+    visibleOrdered.push(entry.key)
+  }
+
+  if (visibleOrdered.length === 0) {
+    return { orderedKeys: [...allKeys], hiddenKeys: new Set() }
+  }
+
+  const hiddenKeys = new Set(allKeys.filter((k) => !seen.has(k)))
+  const orderedKeys = [...visibleOrdered, ...allKeys.filter((k) => hiddenKeys.has(k))]
+  return { orderedKeys, hiddenKeys }
+}
+
+export function serializeTablesDbRowsListColumnLayout(
+  orderedKeys: string[],
+  hiddenKeys: ReadonlySet<string>,
+): string[] {
+  return orderedKeys.map((key) =>
+    hiddenKeys.has(key)
+      ? `${TABLESDB_ROWS_LIST_COLUMN_HIDDEN_PREFIX}${key}`
+      : key,
+  )
+}
+
+export function isDefaultTablesDbRowsListColumnLayout(
+  orderedKeys: string[],
+  hiddenKeys: ReadonlySet<string>,
+  allKeys: string[],
+): boolean {
+  if (hiddenKeys.size > 0) return false
+  if (orderedKeys.length !== allKeys.length) return false
+  return orderedKeys.every((k, i) => k === allKeys[i])
 }
 
 export function mergeTablesDbRowsListColumnsIntoPrefs(

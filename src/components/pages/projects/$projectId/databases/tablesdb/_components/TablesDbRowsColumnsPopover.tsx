@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { Columns2, GripVertical } from 'lucide-react'
 import { getColumnIcon } from '@/lib/utils/column-icons'
 import {
@@ -20,12 +27,64 @@ import {
   useProjectTableColumns,
   useTablesDbRowsListColumns,
 } from '@/lib/react-query/hooks'
+import {
+  isDefaultTablesDbRowsListColumnLayout,
+  parseTablesDbRowsListColumnLayout,
+  parseTablesDbRowsListColumnsFromPrefs,
+  readTablesDbRowsListColumnsRawFromPrefs,
+  serializeTablesDbRowsListColumnLayout,
+} from '@/lib/user-prefs-keys'
 
 function reorderList<T>(list: T[], fromIndex: number, toIndex: number): T[] {
   const copy = [...list]
   const [removed] = copy.splice(fromIndex, 1)
   copy.splice(toIndex, 0, removed)
   return copy
+}
+
+type ColumnDropPosition = 'before' | 'after'
+
+type ColumnDropIndicator = {
+  index: number
+  position: ColumnDropPosition
+}
+
+const DRAG_SCROLL_EDGE_PX = 40
+const DRAG_SCROLL_MAX_STEP_PX = 14
+
+function reorderWithDropIndicator<T>(
+  list: T[],
+  dragIndex: number,
+  indicator: ColumnDropIndicator,
+): T[] {
+  let insertIndex =
+    indicator.position === 'before' ? indicator.index : indicator.index + 1
+  if (dragIndex < insertIndex) insertIndex -= 1
+  if (dragIndex === insertIndex) return list
+  return reorderList(list, dragIndex, insertIndex)
+}
+
+function resolveDropIndicatorFromPointer(
+  container: HTMLElement,
+  clientY: number,
+): ColumnDropIndicator | null {
+  const rows = container.querySelectorAll<HTMLElement>('[data-column-row]')
+  if (!rows.length) return null
+
+  const firstRect = rows[0].getBoundingClientRect()
+  if (clientY < firstRect.top) {
+    return { index: 0, position: 'before' }
+  }
+
+  for (let i = 0; i < rows.length; i++) {
+    const rect = rows[i].getBoundingClientRect()
+    if (clientY > rect.bottom) continue
+    const position: ColumnDropPosition =
+      clientY - rect.top < rect.height / 2 ? 'before' : 'after'
+    return { index: i, position }
+  }
+
+  return { index: rows.length - 1, position: 'after' }
 }
 
 function getColumnKey(col: unknown): string | null {
@@ -81,73 +140,6 @@ function buildAllKeys(
   return out
 }
 
-function initVisibleHidden(
-  saved: string[] | null,
-  schemaKeys: string[],
-  leading: string[],
-  trailing: readonly string[],
-): { visibleOrdered: string[]; hidden: string[] } {
-  const allKeys = buildAllKeys(schemaKeys, leading, trailing)
-  const allKeysSet = new Set(allKeys)
-
-  if (!allKeys.length) {
-    return { visibleOrdered: [], hidden: [] }
-  }
-
-  if (!saved?.length) {
-    return { visibleOrdered: [...allKeys], hidden: [] }
-  }
-
-  const hasSystemInSaved = saved.some((k) => k.startsWith('$'))
-
-  if (!hasSystemInSaved) {
-    const schemaSet = new Set(schemaKeys)
-    const attrVis = saved.filter((k) => schemaSet.has(k))
-    const visibleOrdered = [...leading, ...attrVis, ...trailing]
-    const visSet = new Set(visibleOrdered)
-    const hidden = allKeys.filter((k) => !visSet.has(k))
-    return {
-      visibleOrdered: visibleOrdered.length > 0 ? visibleOrdered : [...allKeys],
-      hidden,
-    }
-  }
-
-  const seen = new Set<string>()
-  const visibleOrdered = saved.filter((k) => {
-    if (!allKeysSet.has(k) || seen.has(k)) return false
-    seen.add(k)
-    return true
-  })
-
-  if (visibleOrdered.length === 0) {
-    return { visibleOrdered: [...allKeys], hidden: [] }
-  }
-
-  const visSet = new Set(visibleOrdered)
-  const hidden = allKeys.filter((k) => !visSet.has(k))
-  return { visibleOrdered, hidden }
-}
-
-function shouldClearPrefs(
-  visibleOrdered: string[],
-  schemaKeys: string[],
-  leading: string[],
-  trailing: readonly string[],
-): boolean {
-  const def = buildAllKeys(schemaKeys, leading, trailing)
-  if (visibleOrdered.length !== def.length) return false
-  return visibleOrdered.every((k, i) => k === def[i])
-}
-
-function effectiveVisibleOrderedFromSaved(
-  saved: string[] | null,
-  schemaKeys: string[],
-  leading: string[],
-  trailing: readonly string[],
-): string[] {
-  return initVisibleHidden(saved, schemaKeys, leading, trailing).visibleOrdered
-}
-
 export interface TablesDbRowsColumnsPopoverProps {
   projectId: string
   databaseId: string
@@ -165,15 +157,28 @@ export function TablesDbRowsColumnsPopover({
   includeSequenceColumn = true,
 }: TablesDbRowsColumnsPopoverProps) {
   const [open, setOpen] = useState(false)
-  const [visibleOrdered, setVisibleOrdered] = useState<string[]>([])
-  const [hidden, setHidden] = useState<string[]>([])
-  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
+  const [orderedKeys, setOrderedKeys] = useState<string[]>([])
+  const [hiddenKeys, setHiddenKeys] = useState<Set<string>>(() => new Set())
+  const [draggingIndex, setDraggingIndex] = useState<number | null>(null)
+  const [dropIndicator, setDropIndicator] = useState<ColumnDropIndicator | null>(
+    null,
+  )
+  const listScrollRef = useRef<HTMLDivElement>(null)
+  const columnsTriggerRef = useRef<HTMLButtonElement>(null)
+  const suppressTooltipTimeoutRef = useRef<number | null>(null)
+  const dragPointerYRef = useRef<number | null>(null)
+  const dragScrollRafRef = useRef<number | null>(null)
+  const [tooltipOpen, setTooltipOpen] = useState(false)
+  const [suppressTooltip, setSuppressTooltip] = useState(false)
 
   const { columns: apiColumns, isLoading: columnsLoading } =
     useProjectTableColumns(projectId, databaseId, tableId)
 
-  const { savedAttrKeys, persistAttrKeys, isPersisting } =
-    useTablesDbRowsListColumns(databaseId, tableId, account)
+  const { persistAttrKeys, isPersisting } = useTablesDbRowsListColumns(
+    databaseId,
+    tableId,
+    account,
+  )
 
   const leadingSystemKeys = useMemo(
     () => systemKeysLeading(includeSequenceColumn),
@@ -218,24 +223,116 @@ export function TablesDbRowsColumnsPopover({
     return m
   }, [apiColumns, leadingSystemKeys])
 
+  const savedRaw = useMemo(() => {
+    if (!account?.prefs || !databaseId || !tableId) return null
+    return readTablesDbRowsListColumnsRawFromPrefs(
+      account.prefs,
+      databaseId,
+      tableId,
+    )
+  }, [account?.prefs, databaseId, tableId])
+
   useEffect(() => {
     if (!open) return
-    const { visibleOrdered: v, hidden: h } = initVisibleHidden(
-      savedAttrKeys,
-      schemaKeys,
-      leadingSystemKeys,
-      TRAILING_SYSTEM_KEYS,
+    const { orderedKeys: order, hiddenKeys: hidden } = parseTablesDbRowsListColumnLayout(
+      savedRaw,
+      allKeys,
     )
-    setVisibleOrdered(v)
-    setHidden(h)
-    setDragOverIndex(null)
-  }, [open, savedAttrKeys, schemaKeys, leadingSystemKeys])
+    setOrderedKeys(order)
+    setHiddenKeys(hidden)
+    setDraggingIndex(null)
+    setDropIndicator(null)
+  }, [open, savedRaw, allKeys])
+
+  const stopDragScroll = useCallback(() => {
+    dragPointerYRef.current = null
+    if (dragScrollRafRef.current != null) {
+      cancelAnimationFrame(dragScrollRafRef.current)
+      dragScrollRafRef.current = null
+    }
+  }, [])
+
+  useEffect(() => () => stopDragScroll(), [stopDragScroll])
+
+  useEffect(
+    () => () => {
+      if (suppressTooltipTimeoutRef.current) {
+        clearTimeout(suppressTooltipTimeoutRef.current)
+      }
+    },
+    [],
+  )
+
+  const dismissTriggerFocusAndTooltip = useCallback(() => {
+    setTooltipOpen(false)
+    setSuppressTooltip(true)
+    if (suppressTooltipTimeoutRef.current) {
+      clearTimeout(suppressTooltipTimeoutRef.current)
+    }
+    suppressTooltipTimeoutRef.current = window.setTimeout(() => {
+      setSuppressTooltip(false)
+      suppressTooltipTimeoutRef.current = null
+    }, 600)
+
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur()
+    }
+    columnsTriggerRef.current?.blur()
+  }, [])
+
+  const tickDragScroll = useCallback(() => {
+    const el = listScrollRef.current
+    const y = dragPointerYRef.current
+    if (!el || y == null) {
+      dragScrollRafRef.current = null
+      return
+    }
+    const rect = el.getBoundingClientRect()
+    if (y < rect.top + DRAG_SCROLL_EDGE_PX) {
+      const intensity = 1 - (y - rect.top) / DRAG_SCROLL_EDGE_PX
+      el.scrollTop -= Math.ceil(DRAG_SCROLL_MAX_STEP_PX * intensity)
+    } else if (y > rect.bottom - DRAG_SCROLL_EDGE_PX) {
+      const intensity = 1 - (rect.bottom - y) / DRAG_SCROLL_EDGE_PX
+      el.scrollTop += Math.ceil(DRAG_SCROLL_MAX_STEP_PX * intensity)
+    }
+    dragScrollRafRef.current = requestAnimationFrame(tickDragScroll)
+  }, [])
+
+  const updateDragPointer = useCallback(
+    (clientY: number) => {
+      dragPointerYRef.current = clientY
+      if (dragScrollRafRef.current == null) {
+        dragScrollRafRef.current = requestAnimationFrame(tickDragScroll)
+      }
+    },
+    [tickDragScroll],
+  )
+
+  const updateDropIndicatorFromPointer = useCallback((clientY: number) => {
+    const container = listScrollRef.current
+    if (!container) return
+    const next = resolveDropIndicatorFromPointer(container, clientY)
+    setDropIndicator(next)
+  }, [])
+
+  const clearDragState = useCallback(() => {
+    setDraggingIndex(null)
+    setDropIndicator(null)
+    stopDragScroll()
+  }, [stopDragScroll])
+
+  const visibleCount = useMemo(
+    () => orderedKeys.filter((k) => !hiddenKeys.has(k)).length,
+    [orderedKeys, hiddenKeys],
+  )
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
     if ((e.target as HTMLElement).closest('button')) {
       e.preventDefault()
       return
     }
+    setDraggingIndex(index)
+    setDropIndicator(null)
     e.dataTransfer.setData('application/json', JSON.stringify({ index }))
     e.dataTransfer.effectAllowed = 'move'
     e.dataTransfer.dropEffect = 'move'
@@ -244,54 +341,87 @@ export function TablesDbRowsColumnsPopover({
     }
   }
 
-  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+  const handleListDragOver = (e: React.DragEvent) => {
+    if (draggingIndex == null) return
     e.preventDefault()
-    setDragOverIndex(null)
-    const raw = e.dataTransfer.getData('application/json')
-    if (!raw) return
-    try {
-      const { index: dragIndex } = JSON.parse(raw) as { index: number }
-      if (typeof dragIndex !== 'number' || dragIndex === dropIndex) return
-      setVisibleOrdered((prev) => reorderList(prev, dragIndex, dropIndex))
-    } catch {
-      /* ignore */
-    }
+    e.dataTransfer.dropEffect = 'move'
+    updateDragPointer(e.clientY)
+    updateDropIndicatorFromPointer(e.clientY)
   }
 
-  const hideColumn = useCallback((key: string) => {
-    setVisibleOrdered((v) => {
-      if (v.length <= 1) return v
-      return v.filter((k) => k !== key)
-    })
-    setHidden((h) => (h.includes(key) ? h : [...h, key]))
-  }, [])
+  const handleListDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    const dragIndex = draggingIndex
+    const indicator = dropIndicator
+    clearDragState()
+    if (dragIndex == null || !indicator) return
+    setOrderedKeys((prev) => reorderWithDropIndicator(prev, dragIndex, indicator))
+  }
+
+  const hideColumn = useCallback(
+    (key: string) => {
+      if (visibleCount <= 1) return
+      setHiddenKeys((prev) => {
+        const next = new Set(prev)
+        next.add(key)
+        return next
+      })
+    },
+    [visibleCount],
+  )
 
   const showColumn = useCallback((key: string) => {
-    setHidden((h) => h.filter((k) => k !== key))
-    setVisibleOrdered((v) => (v.includes(key) ? v : [...v, key]))
+    setHiddenKeys((prev) => {
+      const next = new Set(prev)
+      next.delete(key)
+      return next
+    })
   }, [])
 
   const handleReset = () => {
-    setVisibleOrdered([...allKeys])
-    setHidden([])
+    setOrderedKeys([...allKeys])
+    setHiddenKeys(new Set())
   }
 
-  const handleApply = async () => {
-    if (visibleOrdered.length === 0) return
-    try {
-      if (
-        shouldClearPrefs(
-          visibleOrdered,
-          schemaKeys,
-          leadingSystemKeys,
-          TRAILING_SYSTEM_KEYS,
-        )
-      ) {
-        await persistAttrKeys(null)
-      } else {
-        await persistAttrKeys([...visibleOrdered])
+  const handleOpenChange = useCallback(
+    (next: boolean) => {
+      setOpen(next)
+      if (next) {
+        setTooltipOpen(false)
+        return
       }
-      setOpen(false)
+      dismissTriggerFocusAndTooltip()
+      window.setTimeout(() => columnsTriggerRef.current?.blur(), 0)
+    },
+    [dismissTriggerFocusAndTooltip],
+  )
+
+  const handleTooltipOpenChange = useCallback(
+    (next: boolean) => {
+      if (open || suppressTooltip) {
+        if (!next) setTooltipOpen(false)
+        return
+      }
+      setTooltipOpen(next)
+    },
+    [open, suppressTooltip],
+  )
+
+  const handleApply = async () => {
+    if (visibleCount === 0) return
+    const payload = isDefaultTablesDbRowsListColumnLayout(
+      orderedKeys,
+      hiddenKeys,
+      allKeys,
+    )
+      ? null
+      : serializeTablesDbRowsListColumnLayout(orderedKeys, hiddenKeys)
+
+    handleOpenChange(false)
+
+    try {
+      await persistAttrKeys(payload)
+      dismissTriggerFocusAndTooltip()
     } catch {
       /* toast optional */
     }
@@ -301,43 +431,42 @@ export function TablesDbRowsColumnsPopover({
     columnsLoading ||
     isPersisting ||
     allKeys.length === 0 ||
-    visibleOrdered.length === 0
+    visibleCount === 0
 
   const effectiveSavedVisible = useMemo(
     () =>
-      effectiveVisibleOrderedFromSaved(
-        savedAttrKeys,
-        schemaKeys,
-        leadingSystemKeys,
-        TRAILING_SYSTEM_KEYS,
+      parseTablesDbRowsListColumnsFromPrefs(
+        account?.prefs,
+        databaseId,
+        tableId,
       ),
-    [savedAttrKeys, schemaKeys, leadingSystemKeys],
+    [account?.prefs, databaseId, tableId],
   )
 
   const hasColumnCustomization = useMemo(() => {
     if (schemaKeys.length === 0 || allKeys.length === 0) return false
-    return !shouldClearPrefs(
-      effectiveSavedVisible,
-      schemaKeys,
-      leadingSystemKeys,
-      TRAILING_SYSTEM_KEYS,
+    if (!savedRaw?.length) return false
+    const saved = parseTablesDbRowsListColumnLayout(savedRaw, allKeys)
+    return !isDefaultTablesDbRowsListColumnLayout(
+      saved.orderedKeys,
+      saved.hiddenKeys,
+      allKeys,
     )
-  }, [
-    effectiveSavedVisible,
-    schemaKeys,
-    leadingSystemKeys,
-    allKeys.length,
-  ])
+  }, [savedRaw, schemaKeys, allKeys.length])
 
-  const visibleColumnBadgeCount = effectiveSavedVisible.length
+  const visibleColumnBadgeCount = effectiveSavedVisible?.length ?? allKeys.length
 
   return (
     <TooltipProvider delayDuration={0}>
-      <Popover open={open} onOpenChange={setOpen}>
-        <Tooltip>
+      <Popover open={open} onOpenChange={handleOpenChange}>
+        <Tooltip
+          open={tooltipOpen && !open && !suppressTooltip}
+          onOpenChange={handleTooltipOpenChange}
+        >
           <TooltipTrigger asChild>
             <PopoverTrigger asChild>
               <Button
+                ref={columnsTriggerRef}
                 type="button"
                 variant="outline"
                 size="sm"
@@ -363,113 +492,118 @@ export function TablesDbRowsColumnsPopover({
         align="start"
         side="bottom"
         sideOffset={8}
+        onCloseAutoFocus={(e) => {
+          e.preventDefault()
+          dismissTriggerFocusAndTooltip()
+        }}
       >
         <div className="px-4 pt-4 pb-3">
           <h3 className="text-[15px] font-semibold text-foreground">Columns</h3>
           <p className="text-[13px] text-muted-foreground mt-2">
-            Configure which columns appear in the grid and the order in which
-            they are shown. Drag items in the visible list to reorder them.
+            Configure which columns appear in the grid and their order. Drag to
+            reorder; hidden columns stay in place so you can show them where you
+            want.
           </p>
         </div>
         <div className="border-t border-border" />
-        <div className="max-h-[min(52dvh,420px)] overflow-y-auto px-4 py-3 space-y-4">
+        <div
+          ref={listScrollRef}
+          className="max-h-[min(52dvh,420px)] overflow-y-auto px-4 py-3"
+          onDragOver={handleListDragOver}
+          onDrop={handleListDrop}
+          onDragLeave={(e) => {
+            const related = e.relatedTarget as Node | null
+            if (related && e.currentTarget.contains(related)) return
+            setDropIndicator(null)
+            stopDragScroll()
+          }}
+        >
           {columnsLoading ? (
             <p className="text-[13px] text-muted-foreground">Loading…</p>
-          ) : visibleOrdered.length === 0 ? (
+          ) : orderedKeys.length === 0 ? (
             <p className="text-[13px] text-muted-foreground">
               Select at least one column.
             </p>
           ) : (
             <div className="space-y-1.5">
-              {visibleOrdered.map((key, index) => {
+              {orderedKeys.map((key, index) => {
                 const col = colByKey.get(key)
                 const label = col ? getColumnTitle(col, key) : key
-                const isOver = dragOverIndex === index
+                const isHidden = hiddenKeys.has(key)
+                const isDragging = draggingIndex === index
+                const showInsertBefore =
+                  dropIndicator?.index === index &&
+                  dropIndicator.position === 'before'
+                const showInsertAfter =
+                  dropIndicator?.index === index &&
+                  dropIndicator.position === 'after'
                 const ColumnIcon = getAttributeColumnIcon(col)
                 return (
-                  <div
-                    key={key}
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, index)}
-                    onDragOver={(e) => {
-                      e.preventDefault()
-                      setDragOverIndex(index)
-                    }}
-                    onDragLeave={() => setDragOverIndex(null)}
-                    onDrop={(e) => handleDrop(e, index)}
-                    className={cn(
-                      'group flex items-center gap-2 rounded-lg border border-border bg-muted/20 px-2 py-1.5 transition-colors cursor-grab active:cursor-grabbing',
-                      isOver && 'border-primary bg-primary/10',
-                    )}
-                    aria-label={`${label}, drag to reorder`}
-                  >
-                    <GripVertical className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                    <ColumnIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <Fragment key={key}>
+                    {showInsertBefore ? (
+                      <div
+                        className="h-0.5 shrink-0 rounded-full bg-primary shadow-[0_0_0_1px_hsl(var(--primary)/0.35)]"
+                        role="presentation"
+                        aria-hidden
+                      />
+                    ) : null}
+                    <div
+                      data-column-row
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, index)}
+                      onDragEnd={clearDragState}
+                      className={cn(
+                        'group flex items-center gap-2 rounded-lg border border-border px-2 py-1.5 transition-[opacity,background-color] cursor-grab active:cursor-grabbing',
+                        isHidden ? 'bg-background' : 'bg-muted/20',
+                        isDragging && 'opacity-40',
+                      )}
+                      aria-label={`${label}, drag to reorder`}
+                    >
+                    <GripVertical
+                      className={cn(
+                        'h-3.5 w-3.5 shrink-0',
+                        isHidden ? 'text-muted-foreground/60' : 'text-muted-foreground',
+                      )}
+                    />
+                    <ColumnIcon
+                      className={cn(
+                        'h-3.5 w-3.5 shrink-0',
+                        isHidden ? 'text-muted-foreground/60' : 'text-muted-foreground',
+                      )}
+                    />
                     <span
                       className={cn(
-                        'min-w-0 flex-1 truncate text-[13px] text-foreground',
+                        'min-w-0 flex-1 truncate text-[13px]',
                         key.startsWith('$') && 'font-mono',
+                        isHidden ? 'text-muted-foreground' : 'text-foreground',
                       )}
                     >
                       {label}
                     </span>
                     <Checkbox
-                      checked
+                      checked={!isHidden}
                       onCheckedChange={(v) => {
-                        if (v === false) hideColumn(key)
+                        if (v === true) showColumn(key)
+                        else if (v === false) hideColumn(key)
                       }}
-                      disabled={visibleOrdered.length <= 1}
+                      disabled={!isHidden && visibleCount <= 1}
                       className="shrink-0"
-                      aria-label={`Hide ${label}`}
+                      aria-label={isHidden ? `Show ${label}` : `Hide ${label}`}
                       onClick={(ev) => ev.stopPropagation()}
                     />
-                  </div>
+                    </div>
+                    {showInsertAfter ? (
+                      <div
+                        className="h-0.5 shrink-0 rounded-full bg-primary shadow-[0_0_0_1px_hsl(var(--primary)/0.35)]"
+                        role="presentation"
+                        aria-hidden
+                      />
+                    ) : null}
+                  </Fragment>
                 )
               })}
             </div>
           )}
-          {hidden.length > 0 ? (
-            <div>
-              <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                Hidden
-              </p>
-              <div className="space-y-1.5">
-                {hidden.map((key) => {
-                  const col = colByKey.get(key)
-                  const label = col ? getColumnTitle(col, key) : key
-                  const ColumnIcon = getAttributeColumnIcon(col)
-                  return (
-                    <div
-                      key={key}
-                      className="flex items-center gap-2 rounded-lg border border-border bg-background px-2 py-1.5"
-                    >
-                      <span
-                        className="inline-flex w-3.5 shrink-0 justify-center"
-                        aria-hidden
-                      />
-                      <ColumnIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                      <span
-                        className={cn(
-                          'min-w-0 flex-1 truncate text-[13px] text-muted-foreground',
-                          key.startsWith('$') && 'font-mono',
-                        )}
-                      >
-                        {label}
-                      </span>
-                      <Checkbox
-                        checked={false}
-                        onCheckedChange={(v) => {
-                          if (v === true) showColumn(key)
-                        }}
-                        className="shrink-0"
-                        aria-label={`Show ${label}`}
-                      />
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          ) : null}
         </div>
         <div className="border-t border-border" />
         <div className="flex flex-col-reverse gap-2 px-4 py-3 sm:flex-row sm:justify-end bg-muted/30">
