@@ -299,7 +299,7 @@ class Webhooks extends Action
         $publisherForNotifications->enqueue(new NotificationMessage(
             project: $project,
             recipients: $recipients,
-            deduplicationKey: 'webhook:' . $webhook->getId() . ':paused:' . $attempts,
+            deduplicationKey: 'webhook:' . $webhook->getId() . ':paused:' . $webhook->getUpdatedAt(),
             subject: $subject,
             bodyTemplate: __DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl',
             body: $template->render(),

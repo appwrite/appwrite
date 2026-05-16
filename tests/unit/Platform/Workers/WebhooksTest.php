@@ -24,28 +24,7 @@ class WebhooksTest extends TestCase
     public function testSendAlertPublishesNotificationMessage(): void
     {
         $database = $this->createPlatformDatabase();
-        $database->createDocument('memberships', new Document([
-            '$id' => 'membership-1',
-            'teamInternalId' => 'team-internal-1',
-            'userId' => 'user-1',
-            'roles' => 'owner',
-        ]));
-        $database->createDocument('memberships', new Document([
-            '$id' => 'membership-2',
-            'teamInternalId' => 'team-internal-1',
-            'userId' => 'user-2',
-            'roles' => 'developer',
-        ]));
-        $database->createDocument('users', new Document([
-            '$id' => 'user-1',
-            '$sequence' => 101,
-            'email' => 'owner@example.test',
-        ]));
-        $database->createDocument('users', new Document([
-            '$id' => 'user-2',
-            '$sequence' => 102,
-            'email' => 'developer@example.test',
-        ]));
+        $this->seedOwnerUser($database);
 
         $publisher = new MockPublisher();
         $publisherForNotifications = new NotificationPublisher($publisher, new Queue('v1-notifications'));
@@ -56,6 +35,7 @@ class WebhooksTest extends TestCase
             statusCode: 500,
             webhook: new Document([
                 '$id' => 'webhook-1',
+                '$updatedAt' => '2026-01-01T00:00:00.000+00:00',
                 'name' => 'Payments',
                 'url' => 'https://example.test/webhook',
             ]),
@@ -80,7 +60,7 @@ class WebhooksTest extends TestCase
         $this->assertSame('project-internal-1', $payload['project']['$sequence']);
         $this->assertSame('Webhook deliveries have been paused', $payload['subject']);
         $this->assertSame('Webhook deliveries to your endpoint have been paused.', $payload['preview']);
-        $this->assertSame('webhook:webhook-1:paused:10', $payload['deduplicationKey']);
+        $this->assertSame('webhook:webhook-1:paused:2026-01-01T00:00:00.000+00:00', $payload['deduplicationKey']);
         $this->assertSame(
             \realpath(__DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl'),
             \realpath($payload['bodyTemplate'])
@@ -111,6 +91,45 @@ class WebhooksTest extends TestCase
             'parentResourceId' => 'project-1',
             'parentResourceInternalId' => 'project-internal-1',
         ], $payload['recipients'][1]);
+    }
+
+    public function testSendAlertDeduplicationKeyChangesPerPauseCycle(): void
+    {
+        $database = $this->createPlatformDatabase();
+        $this->seedOwnerUser($database);
+        $publisher = new MockPublisher();
+        $publisherForNotifications = new NotificationPublisher($publisher, new Queue('v1-notifications'));
+        $worker = new Webhooks();
+        $project = new Document([
+            '$id' => 'project-1',
+            '$sequence' => 'project-internal-1',
+            'name' => 'Production',
+            'teamInternalId' => 'team-internal-1',
+            'region' => 'fra',
+        ]);
+
+        foreach (['2026-01-01T00:00:00.000+00:00', '2026-01-02T00:00:00.000+00:00'] as $updatedAt) {
+            $worker->sendAlert(
+                attempts: 10,
+                statusCode: 500,
+                webhook: new Document([
+                    '$id' => 'webhook-1',
+                    '$updatedAt' => $updatedAt,
+                    'name' => 'Payments',
+                    'url' => 'https://example.test/webhook',
+                ]),
+                project: $project,
+                dbForPlatform: $database,
+                publisherForNotifications: $publisherForNotifications,
+                plan: []
+            );
+        }
+
+        $events = $publisher->getEvents('v1-notifications');
+
+        $this->assertCount(2, $events);
+        $this->assertSame('webhook:webhook-1:paused:2026-01-01T00:00:00.000+00:00', $events[0]['deduplicationKey']);
+        $this->assertSame('webhook:webhook-1:paused:2026-01-02T00:00:00.000+00:00', $events[1]['deduplicationKey']);
     }
 
     #[DataProvider('ownerRoleProvider')]
@@ -167,5 +186,31 @@ class WebhooksTest extends TestCase
         $database->createAttribute('users', 'email', Database::VAR_STRING, 320, false);
 
         return $database;
+    }
+
+    private function seedOwnerUser(Database $database): void
+    {
+        $database->createDocument('memberships', new Document([
+            '$id' => 'membership-1',
+            'teamInternalId' => 'team-internal-1',
+            'userId' => 'user-1',
+            'roles' => 'owner',
+        ]));
+        $database->createDocument('memberships', new Document([
+            '$id' => 'membership-2',
+            'teamInternalId' => 'team-internal-1',
+            'userId' => 'user-2',
+            'roles' => 'developer',
+        ]));
+        $database->createDocument('users', new Document([
+            '$id' => 'user-1',
+            '$sequence' => 101,
+            'email' => 'owner@example.test',
+        ]));
+        $database->createDocument('users', new Document([
+            '$id' => 'user-2',
+            '$sequence' => 102,
+            'email' => 'developer@example.test',
+        ]));
     }
 }
