@@ -764,48 +764,6 @@ services:
       - _APP_LOGGING_PROVIDER
       - _APP_DATABASE_SHARED_TABLES
 
-  appwrite-worker-mails:
-    entrypoint: worker-mails
-    <<: [*x-logging, *x-build]
-    container_name: appwrite-worker-mails
-    image: appwrite-dev
-    networks:
-      - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
-    depends_on:
-      - redis
-      - maildev
-      - ${_APP_DB_HOST:-mariadb}
-      # - smtp
-    environment:
-      - _APP_ENV
-      - _APP_WORKER_PER_CORE
-      - _APP_POOL_ADAPTER
-      - _APP_OPENSSL_KEY_V1
-      - _APP_SYSTEM_EMAIL_NAME
-      - _APP_SYSTEM_EMAIL_ADDRESS
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
-      - _APP_DB_ADAPTER
-      - _APP_SMTP_HOST
-      - _APP_SMTP_PORT
-      - _APP_SMTP_SECURE
-      - _APP_SMTP_USERNAME
-      - _APP_SMTP_PASSWORD
-      - _APP_LOGGING_CONFIG
-      - _APP_DOMAIN
-      - _APP_OPTIONS_FORCE_HTTPS
-      - _APP_DATABASE_SHARED_TABLES
-
   appwrite-worker-notifications:
     entrypoint: worker-notifications
     <<: [*x-logging, *x-build]

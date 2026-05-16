@@ -73,6 +73,9 @@ if (! isset($args[1])) {
 
 \array_shift($args);
 $workerName = $args[0];
+if ($workerName === 'mails') {
+    $workerName = 'notifications';
+}
 
 if (\str_starts_with($workerName, 'databases')) {
     $queueName = System::getEnv('_APP_QUEUE_NAME', 'database_db_main');

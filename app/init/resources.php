@@ -139,7 +139,7 @@ $container->set('publisherForDeletes', fn (Publisher $publisher) => new DeletePu
 ), ['publisher']);
 $container->set('publisherForMails', fn (Publisher $publisher) => new MailPublisher(
     $publisher,
-    new Queue(System::getEnv('_APP_MAILS_QUEUE_NAME', Event::MAILS_QUEUE_NAME))
+    new Queue(System::getEnv('_APP_NOTIFICATIONS_QUEUE_NAME', Event::NOTIFICATIONS_QUEUE_NAME))
 ), ['publisher']);
 $container->set('publisherForMessaging', fn (Publisher $publisher) => new MessagingPublisher(
     $publisher,

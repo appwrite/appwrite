@@ -7,7 +7,6 @@ use Appwrite\Platform\Workers\Certificates;
 use Appwrite\Platform\Workers\Deletes;
 use Appwrite\Platform\Workers\Executions;
 use Appwrite\Platform\Workers\Functions;
-use Appwrite\Platform\Workers\Mails;
 use Appwrite\Platform\Workers\Messaging;
 use Appwrite\Platform\Workers\Migrations;
 use Appwrite\Platform\Workers\Notifications;
@@ -27,7 +26,6 @@ class Workers extends Service
             ->addAction(Deletes::getName(), new Deletes())
             ->addAction(Executions::getName(), new Executions())
             ->addAction(Functions::getName(), new Functions())
-            ->addAction(Mails::getName(), new Mails())
             ->addAction(Messaging::getName(), new Messaging())
             ->addAction(Notifications::getName(), new Notifications())
             ->addAction(Webhooks::getName(), new Webhooks())

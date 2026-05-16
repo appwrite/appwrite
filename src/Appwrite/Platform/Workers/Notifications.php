@@ -203,9 +203,12 @@ class Notifications extends Action
         Log $log,
     ): ?string {
         $address = $recipient['address'];
-        $smtp = $this->resolveSmtpConfig($project);
+        $smtp = $this->resolveSmtpConfig($project, $payload);
 
         if (empty($smtp) && empty(System::getEnv('_APP_SMTP_HOST'))) {
+            if (empty($payload['recipients']) && !empty($payload['recipient'] ?? '')) {
+                throw new Exception('Skipped mail processing. No SMTP configuration has been set.');
+            }
             $log->addTag('email_skipped', 'no_smtp');
             return null;
         }
@@ -305,7 +308,22 @@ class Notifications extends Action
         $replyTo = $defaultFromEmail;
         $replyToName = $defaultFromName;
 
-        if (!empty($smtp)) {
+        $customMailOptions = $payload['customMailOptions'] ?? [];
+        if (!\is_array($customMailOptions)) {
+            $customMailOptions = [];
+        }
+
+        if (!empty($customMailOptions['senderEmail'])) {
+            $fromEmail = (string) $customMailOptions['senderEmail'];
+        }
+        if (!empty($customMailOptions['senderName'])) {
+            $fromName = (string) $customMailOptions['senderName'];
+        }
+
+        if (!empty($customMailOptions['replyToEmail']) || !empty($customMailOptions['replyToName'])) {
+            $replyTo = (string) ($customMailOptions['replyToEmail'] ?? $replyTo);
+            $replyToName = (string) ($customMailOptions['replyToName'] ?? $replyToName);
+        } elseif (!empty($smtp)) {
             $smtpReplyToEmail = $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? '';
             $replyTo = !empty($smtpReplyToEmail) ? $smtpReplyToEmail : ($smtp['senderEmail'] ?? $replyTo);
             $replyToName = !empty($smtp['replyToName']) ? $smtp['replyToName'] : ($smtp['senderName'] ?? $replyToName);
@@ -338,7 +356,7 @@ class Notifications extends Action
         try {
             $adapter->send($emailMessage);
         } catch (Throwable $error) {
-            throw new Exception('Error sending notification: ' . $error->getMessage(), 500);
+            throw new Exception('Error sending notification: ' . $error->getMessage(), $type === 'smtp' ? 401 : 500);
         }
 
         if ($messageId !== '') {
@@ -556,16 +574,16 @@ class Notifications extends Action
     }
 
     /**
-     * Resolve project SMTP config to the wire shape Mails.php expects.
-     * ST4 stripped `smtp` and `customMailOptions` from the Notification
-     * event payload, so the worker now reads from the project Document.
-     * Falls back to env-driven cloud SMTP when the project has not
-     * configured custom SMTP.
-     *
+     * @param array<string, mixed> $payload
      * @return array<string, mixed>
      */
-    private function resolveSmtpConfig(Document $project): array
+    private function resolveSmtpConfig(Document $project, array $payload): array
     {
+        $payloadSmtp = $payload['smtp'] ?? [];
+        if (\is_array($payloadSmtp) && !empty($payloadSmtp)) {
+            return $payloadSmtp;
+        }
+
         $smtp = $project->getAttribute('smtp', []);
         if (!\is_array($smtp) || empty($smtp['enabled'] ?? false)) {
             return [];

@@ -379,6 +379,99 @@ class NotificationsTest extends TestCase
         $this->assertSame(NOTIFICATION_TYPE_EMAIL, $worker->dispatched[0]['channel']);
     }
 
+    public function testLegacyMailPayloadOptionsAreAppliedByEmailChannel(): void
+    {
+        $spy = new SpyEmailAdapter();
+        $this->registry->set('smtp', static fn () => $spy);
+
+        $previousSmtpHost = \getenv('_APP_SMTP_HOST');
+        \putenv('_APP_SMTP_HOST=spy.smtp.test');
+
+        try {
+            $worker = new Notifications();
+            $payload = [
+                'project' => ['$id' => 'project-x'],
+                'recipient' => 'legacy@example.test',
+                'name' => 'Legacy User',
+                'subject' => 'Hello {{name}}',
+                'body' => 'Body {{name}}',
+                'variables' => ['name' => 'Legacy'],
+                'customMailOptions' => [
+                    'senderEmail' => 'sender@example.test',
+                    'senderName' => 'Custom Sender',
+                    'replyToEmail' => 'reply@example.test',
+                    'replyToName' => 'Custom Reply',
+                ],
+            ];
+
+            $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+        } finally {
+            \putenv($previousSmtpHost === false ? '_APP_SMTP_HOST' : '_APP_SMTP_HOST=' . $previousSmtpHost);
+        }
+
+        $this->assertSame(1, $spy->sendCount);
+        $this->assertNotNull($spy->captured);
+
+        $message = $spy->captured;
+        $this->assertSame('legacy@example.test', $message->getTo()[0]['email'] ?? '');
+        $this->assertSame('Legacy User', $message->getTo()[0]['name'] ?? '');
+        $this->assertSame('Hello Legacy', $message->getSubject());
+        $this->assertSame('sender@example.test', $message->getFromEmail());
+        $this->assertSame('Custom Sender', $message->getFromName());
+        $this->assertSame('reply@example.test', $message->getReplyToEmail());
+        $this->assertSame('Custom Reply', $message->getReplyToName());
+    }
+
+    public function testLegacyPayloadSmtpOverridesProjectSmtp(): void
+    {
+        $worker = new Notifications();
+        $project = new Document([
+            'smtp' => [
+                'enabled' => true,
+                'host' => 'project.smtp.test',
+                'port' => 2525,
+                'senderEmail' => 'project@example.test',
+            ],
+        ]);
+
+        $reflection = new \ReflectionMethod($worker, 'resolveSmtpConfig');
+        $reflection->setAccessible(true);
+        /** @var array<string, mixed> $smtp */
+        $smtp = $reflection->invoke($worker, $project, [
+            'smtp' => [
+                'host' => 'payload.smtp.test',
+                'port' => 587,
+                'senderEmail' => 'payload@example.test',
+            ],
+        ]);
+
+        $this->assertSame('payload.smtp.test', $smtp['host']);
+        $this->assertSame(587, $smtp['port']);
+        $this->assertSame('payload@example.test', $smtp['senderEmail']);
+    }
+
+    public function testLegacyMailPayloadThrowsWhenSmtpIsNotConfigured(): void
+    {
+        $previousSmtpHost = \getenv('_APP_SMTP_HOST');
+        \putenv('_APP_SMTP_HOST=');
+
+        try {
+            $worker = new Notifications();
+            $payload = [
+                'project' => ['$id' => 'project-x'],
+                'recipient' => 'legacy@example.test',
+                'subject' => 'No SMTP',
+                'body' => 'Body',
+            ];
+
+            $this->expectException(\Exception::class);
+            $this->expectExceptionMessage('Skipped mail processing. No SMTP configuration has been set.');
+            $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
+        } finally {
+            \putenv($previousSmtpHost === false ? '_APP_SMTP_HOST' : '_APP_SMTP_HOST=' . $previousSmtpHost);
+        }
+    }
+
     public function testWebhookRecipientForwardsSignatureKey(): void
     {
         $worker = new SpyNotifications();

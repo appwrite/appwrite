@@ -596,11 +596,11 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_DOCKER_HUB_PASSWORD
       - _APP_LOGGING_CONFIG
 
-  appwrite-worker-mails:
+  appwrite-worker-notifications:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
-    entrypoint: worker-mails
+    entrypoint: worker-notifications
     <<: *x-logging
-    container_name: appwrite-worker-mails
+    container_name: appwrite-worker-notifications
     restart: unless-stopped
     networks:
       - appwrite
