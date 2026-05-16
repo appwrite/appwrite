@@ -159,7 +159,6 @@ trait NotificationsBase
                 'content-type' => 'application/json',
                 'cookie' => 'a_session_console=' . $stranger['session'],
                 'x-appwrite-project' => 'console',
-                'x-appwrite-mode' => 'admin',
             ],
             ['read' => true]
         );
@@ -416,7 +415,6 @@ trait NotificationsBase
             'content-type' => 'application/json',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
-            'x-appwrite-mode' => 'admin',
         ];
     }
 
@@ -446,7 +444,7 @@ trait NotificationsBase
             'webhookId' => ID::unique(),
             'name' => 'Failing Webhook ' . \uniqid(),
             'events' => ['users.*.create'],
-            'url' => 'http://127.0.0.1:1/',
+            'url' => 'http://request-catcher-webhook:1/',
             'tls' => false,
         ]);
 
