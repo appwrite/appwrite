@@ -58,12 +58,12 @@ class Console extends Adapter
         $delivered = 0;
 
         foreach ($message->getRecipients() as $recipient) {
-            $userId = $recipient['userId'] ?? '';
-            $teamId = $recipient['teamId'] ?? '';
-            $key = $userId !== '' ? $userId : $teamId;
+            $resourceType = $recipient['resourceType'];
+            $resourceId = $recipient['resourceId'];
+            $key = $resourceType . ':' . $resourceId;
 
             $messageId = $message->getMessageId();
-            $recipientKey = $userId !== '' ? 'user:' . $userId : 'team:' . $teamId;
+            $recipientKey = self::buildRecipientKey($recipient);
             $recipientHash = $recipient['recipientHash'] ?? \substr(\md5($recipientKey), 0, 16);
             $documentId = $messageId !== null
                 ? ($recipient['alertId'] ?? \substr($messageId, 0, 19) . '_' . $recipientHash)
@@ -72,15 +72,19 @@ class Console extends Adapter
             try {
                 $document = new Document([
                     '$id' => $documentId,
-                    '$permissions' => $this->buildPermissions($userId, $teamId, $message->getProjectId() ?? ''),
+                    '$permissions' => $this->buildPermissions($resourceType, $resourceId, $message->getProjectId() ?? ''),
                     'messageId' => $messageId,
                     'recipientHash' => $recipientHash,
                     'type' => $message->getType(),
                     'channel' => self::TYPE,
-                    'userId' => $userId,
-                    'teamId' => $teamId,
                     'projectId' => $message->getProjectId(),
                     'projectInternalId' => $message->getProjectInternalId(),
+                    'resourceType' => $resourceType,
+                    'resourceId' => $resourceId,
+                    'resourceInternalId' => $recipient['resourceInternalId'],
+                    'parentResourceType' => $recipient['parentResourceType'],
+                    'parentResourceId' => $recipient['parentResourceId'],
+                    'parentResourceInternalId' => $recipient['parentResourceInternalId'],
                     'title' => $message->getTitle(),
                     'body' => $message->getBody(),
                 ]);
@@ -106,24 +110,38 @@ class Console extends Adapter
     /**
      * @return array<string>
      */
-    private function buildPermissions(string $userId, string $teamId, string $projectId): array
+    private function buildPermissions(string $resourceType, string $resourceId, string $projectId): array
     {
         $permissions = [];
-        if ($userId !== '') {
-            $permissions[] = Permission::read(Role::user($userId));
-            $permissions[] = Permission::update(Role::user($userId));
-            $permissions[] = Permission::delete(Role::user($userId));
+        if ($resourceType === RESOURCE_TYPE_USERS) {
+            $permissions[] = Permission::read(Role::user($resourceId));
+            $permissions[] = Permission::update(Role::user($resourceId));
+            $permissions[] = Permission::delete(Role::user($resourceId));
         }
-        if ($teamId !== '') {
-            $permissions[] = Permission::read(Role::team($teamId));
-            $permissions[] = Permission::update(Role::team($teamId, 'owner'));
-            $permissions[] = Permission::delete(Role::team($teamId, 'owner'));
+        if ($resourceType === RESOURCE_TYPE_TEAMS) {
+            $permissions[] = Permission::read(Role::team($resourceId));
+            $permissions[] = Permission::update(Role::team($resourceId, 'owner'));
+            $permissions[] = Permission::delete(Role::team($resourceId, 'owner'));
             if ($projectId !== '') {
-                $permissions[] = Permission::read(Role::team($teamId, 'project-' . $projectId . '-owner'));
-                $permissions[] = Permission::update(Role::team($teamId, 'project-' . $projectId . '-owner'));
-                $permissions[] = Permission::delete(Role::team($teamId, 'project-' . $projectId . '-owner'));
+                $permissions[] = Permission::read(Role::team($resourceId, 'project-' . $projectId . '-owner'));
+                $permissions[] = Permission::update(Role::team($resourceId, 'project-' . $projectId . '-owner'));
+                $permissions[] = Permission::delete(Role::team($resourceId, 'project-' . $projectId . '-owner'));
             }
         }
         return $permissions;
+    }
+
+    /**
+     * @param array{address?: string, resourceType: string, resourceId: string, resourceInternalId: string, parentResourceType: string, parentResourceId: string, parentResourceInternalId: string} $recipient
+     */
+    private static function buildRecipientKey(array $recipient): string
+    {
+        return ($recipient['address'] ?? '')
+            . ':' . $recipient['resourceType']
+            . ':' . $recipient['resourceId']
+            . ':' . $recipient['resourceInternalId']
+            . ':' . $recipient['parentResourceType']
+            . ':' . $recipient['parentResourceId']
+            . ':' . $recipient['parentResourceInternalId'];
     }
 }

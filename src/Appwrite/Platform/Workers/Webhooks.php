@@ -247,9 +247,9 @@ class Webhooks extends Action
         }
 
         $projectId = $project->getId();
+        $projectInternalId = $project->getSequence();
         $region = $project->getAttribute('region', 'default');
         $webhookId = $webhook->getId();
-        $teamId = $project->getAttribute('teamId');
 
         $template = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-webhook-failed.tpl');
 
@@ -292,8 +292,12 @@ class Webhooks extends Action
                 $userId,
                 NOTIFICATION_TYPE_CONSOLE,
                 null,
+                RESOURCE_TYPE_USERS,
                 $userId,
-                $teamId,
+                (string) $user->getSequence(),
+                RESOURCE_TYPE_PROJECTS,
+                $projectId,
+                (string) $projectInternalId,
             );
 
             if (!empty($email)) {
@@ -301,8 +305,12 @@ class Webhooks extends Action
                     $email,
                     NOTIFICATION_TYPE_EMAIL,
                     null,
+                    RESOURCE_TYPE_USERS,
                     $userId,
-                    $teamId,
+                    (string) $user->getSequence(),
+                    RESOURCE_TYPE_PROJECTS,
+                    $projectId,
+                    (string) $projectInternalId,
                 );
             }
         }

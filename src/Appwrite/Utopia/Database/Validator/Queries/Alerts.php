@@ -10,6 +10,10 @@ class Alerts extends Base
         'channel',
         'messageId',
         'projectId',
+        'resourceType',
+        'resourceId',
+        'parentResourceType',
+        'parentResourceId',
     ];
 
     /**

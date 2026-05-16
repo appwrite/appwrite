@@ -21,14 +21,13 @@ class Notification extends Event
      * Recipients to deliver the notification to.
      *
      * Each entry has an `address` (channel-specific identifier: email,
-     * userId, or webhook URL) and a `channel`. Webhook recipients may
+     * user ID, or webhook URL) and a `channel`. Webhook recipients may
      * additionally carry an optional `signatureKey`; when set, the
      * webhook adapter signs the request body with HMAC-SHA256 and adds
      * the `X-Appwrite-Webhook-Signature` header. Without a key the
-     * payload is sent unsigned. Optional `userId` and `teamId` identify
-     * the owner of the alert (used by C2/C3 budget/limit alerts).
+     * payload is sent unsigned. Resource fields identify the alert owner.
      *
-     * @var array<int, array{address: string, channel: string, signatureKey?: string, userId?: string, teamId?: string}>
+     * @var array<int, array{address: string, channel: string, signatureKey?: string, resourceType?: string, resourceId?: string, resourceInternalId?: string, parentResourceType?: string, parentResourceId?: string, parentResourceInternalId?: string}>
      */
     protected array $recipients = [];
 
@@ -161,7 +160,7 @@ class Notification extends Event
     }
 
     /**
-     * @param array<int, array{address: string, channel: string, signatureKey?: string, userId?: string, teamId?: string}> $recipients
+     * @param array<int, array{address: string, channel: string, signatureKey?: string, resourceType?: string, resourceId?: string, resourceInternalId?: string, parentResourceType?: string, parentResourceId?: string, parentResourceInternalId?: string}> $recipients
      */
     public function setRecipients(array $recipients): self
     {
@@ -170,7 +169,7 @@ class Notification extends Event
     }
 
     /**
-     * @return array<int, array{address: string, channel: string, signatureKey?: string, userId?: string, teamId?: string}>
+     * @return array<int, array{address: string, channel: string, signatureKey?: string, resourceType?: string, resourceId?: string, resourceInternalId?: string, parentResourceType?: string, parentResourceId?: string, parentResourceInternalId?: string}>
      */
     public function getRecipients(): array
     {
@@ -181,18 +180,34 @@ class Notification extends Event
         string $address,
         string $channel = NOTIFICATION_TYPE_EMAIL,
         ?string $signatureKey = null,
-        ?string $userId = null,
-        ?string $teamId = null,
+        ?string $resourceType = null,
+        ?string $resourceId = null,
+        ?string $resourceInternalId = null,
+        ?string $parentResourceType = null,
+        ?string $parentResourceId = null,
+        ?string $parentResourceInternalId = null,
     ): self {
         $recipient = ['address' => $address, 'channel' => $channel];
         if ($signatureKey !== null && $signatureKey !== '') {
             $recipient['signatureKey'] = $signatureKey;
         }
-        if ($userId !== null && $userId !== '') {
-            $recipient['userId'] = $userId;
+        if ($resourceType !== null && $resourceType !== '') {
+            $recipient['resourceType'] = $resourceType;
         }
-        if ($teamId !== null && $teamId !== '') {
-            $recipient['teamId'] = $teamId;
+        if ($resourceId !== null && $resourceId !== '') {
+            $recipient['resourceId'] = $resourceId;
+        }
+        if ($resourceInternalId !== null && $resourceInternalId !== '') {
+            $recipient['resourceInternalId'] = $resourceInternalId;
+        }
+        if ($parentResourceType !== null && $parentResourceType !== '') {
+            $recipient['parentResourceType'] = $parentResourceType;
+        }
+        if ($parentResourceId !== null && $parentResourceId !== '') {
+            $recipient['parentResourceId'] = $parentResourceId;
+        }
+        if ($parentResourceInternalId !== null && $parentResourceInternalId !== '') {
+            $recipient['parentResourceInternalId'] = $parentResourceInternalId;
         }
         $this->recipients[] = $recipient;
         return $this;

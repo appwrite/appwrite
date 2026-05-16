@@ -161,6 +161,18 @@ class WebhookTest extends TestCase
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('Invalid message type.');
 
-        $adapter->send(new \Appwrite\Utopia\Messaging\Messages\Console(recipients: [['userId' => 'u']], title: 't', body: 'b'));
+        $adapter->send(new \Appwrite\Utopia\Messaging\Messages\Console(
+            recipients: [[
+                'address' => 'u',
+                'resourceType' => RESOURCE_TYPE_USERS,
+                'resourceId' => 'u',
+                'resourceInternalId' => 'u-internal',
+                'parentResourceType' => RESOURCE_TYPE_PROJECTS,
+                'parentResourceId' => 'project',
+                'parentResourceInternalId' => 'project-internal',
+            ]],
+            title: 't',
+            body: 'b',
+        ));
     }
 }

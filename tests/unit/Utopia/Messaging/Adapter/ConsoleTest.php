@@ -38,10 +38,14 @@ class ConsoleTest extends TestCase
         $this->database->createAttribute('alerts', 'recipientHash', Database::VAR_STRING, 64, true);
         $this->database->createAttribute('alerts', 'type', Database::VAR_STRING, 64, false, 'info');
         $this->database->createAttribute('alerts', 'channel', Database::VAR_STRING, 64, true);
-        $this->database->createAttribute('alerts', 'userId', Database::VAR_STRING, 255, false);
-        $this->database->createAttribute('alerts', 'teamId', Database::VAR_STRING, 255, false);
         $this->database->createAttribute('alerts', 'projectId', Database::VAR_STRING, 255, true);
-        $this->database->createAttribute('alerts', 'projectInternalId', Database::VAR_STRING, 255, true);
+        $this->database->createAttribute('alerts', 'projectInternalId', Database::VAR_ID, 0, true);
+        $this->database->createAttribute('alerts', 'resourceType', Database::VAR_STRING, 64, true);
+        $this->database->createAttribute('alerts', 'resourceId', Database::VAR_STRING, 255, true);
+        $this->database->createAttribute('alerts', 'resourceInternalId', Database::VAR_ID, 0, true);
+        $this->database->createAttribute('alerts', 'parentResourceType', Database::VAR_STRING, 64, true);
+        $this->database->createAttribute('alerts', 'parentResourceId', Database::VAR_STRING, 255, true);
+        $this->database->createAttribute('alerts', 'parentResourceInternalId', Database::VAR_ID, 0, true);
         $this->database->createAttribute('alerts', 'title', Database::VAR_STRING, 256, true);
         $this->database->createAttribute('alerts', 'body', Database::VAR_STRING, 16384, true);
     }
@@ -56,16 +60,36 @@ class ConsoleTest extends TestCase
      * Mirrors the per-recipient `$id` derivation in
      * Appwrite\Utopia\Messaging\Adapter\Console::process().
      */
-    private function alertId(string $messageId, string $userId = '', string $teamId = ''): string
+    private function alertId(string $messageId, string $address, string $resourceType, string $resourceId): string
     {
-        $key = $userId !== '' ? 'user:' . $userId : 'team:' . $teamId;
+        $key = $address
+            . ':' . $resourceType
+            . ':' . $resourceId
+            . ':' . $resourceId . '-internal'
+            . ':projects:project-1:project-internal-1';
         return \substr($messageId, 0, 19) . '_' . \substr(\md5($key), 0, 16);
+    }
+
+    /**
+     * @return array{address: string, resourceType: string, resourceId: string, resourceInternalId: string, parentResourceType: string, parentResourceId: string, parentResourceInternalId: string}
+     */
+    private function recipient(string $address, string $resourceId, string $resourceType = RESOURCE_TYPE_USERS): array
+    {
+        return [
+            'address' => $address,
+            'resourceType' => $resourceType,
+            'resourceId' => $resourceId,
+            'resourceInternalId' => $resourceId . '-internal',
+            'parentResourceType' => RESOURCE_TYPE_PROJECTS,
+            'parentResourceId' => 'project-1',
+            'parentResourceInternalId' => 'project-internal-1',
+        ];
     }
 
     public function testWritesAlertWithCorrectSchema(): void
     {
         $message = new ConsoleMessage(
-            recipients: [['userId' => 'user-1']],
+            recipients: [$this->recipient('user-1', 'user-1')],
             title: 'Hello',
             body: 'World',
             type: 'info',
@@ -79,13 +103,18 @@ class ConsoleTest extends TestCase
 
         $this->assertSame(1, $result['deliveredTo']);
 
-        $stored = $this->database->getDocument('alerts', $this->alertId('msg-aaa', userId: 'user-1'));
+        $stored = $this->database->getDocument('alerts', $this->alertId('msg-aaa', 'user-1', RESOURCE_TYPE_USERS, 'user-1'));
         $this->assertFalse($stored->isEmpty());
         $this->assertSame('msg-aaa', $stored->getAttribute('messageId'));
         $this->assertSame('console', $stored->getAttribute('channel'));
-        $this->assertSame('user-1', $stored->getAttribute('userId'));
         $this->assertSame('project-1', $stored->getAttribute('projectId'));
         $this->assertSame('project-internal-1', $stored->getAttribute('projectInternalId'));
+        $this->assertSame(RESOURCE_TYPE_USERS, $stored->getAttribute('resourceType'));
+        $this->assertSame('user-1', $stored->getAttribute('resourceId'));
+        $this->assertSame('user-1-internal', $stored->getAttribute('resourceInternalId'));
+        $this->assertSame(RESOURCE_TYPE_PROJECTS, $stored->getAttribute('parentResourceType'));
+        $this->assertSame('project-1', $stored->getAttribute('parentResourceId'));
+        $this->assertSame('project-internal-1', $stored->getAttribute('parentResourceInternalId'));
         $this->assertSame('Hello', $stored->getAttribute('title'));
         $this->assertSame('World', $stored->getAttribute('body'));
         $this->assertSame('info', $stored->getAttribute('type'));
@@ -94,7 +123,7 @@ class ConsoleTest extends TestCase
     public function testUserPermissionsScopedToRecipient(): void
     {
         $message = new ConsoleMessage(
-            recipients: [['userId' => 'user-2']],
+            recipients: [$this->recipient('user-2', 'user-2')],
             title: 'Title',
             body: 'Body',
             messageId: ID::custom('msg-perms-user'),
@@ -104,7 +133,7 @@ class ConsoleTest extends TestCase
 
         (new Console($this->database))->send($message);
 
-        $stored = $this->database->getDocument('alerts', $this->alertId('msg-perms-user', userId: 'user-2'));
+        $stored = $this->database->getDocument('alerts', $this->alertId('msg-perms-user', 'user-2', RESOURCE_TYPE_USERS, 'user-2'));
         $permissions = $stored->getPermissions();
 
         $this->assertContains(Permission::read(Role::user('user-2')), $permissions);
@@ -115,7 +144,7 @@ class ConsoleTest extends TestCase
     public function testTeamRecipientGrantsTeamReadAndOwnerWrite(): void
     {
         $message = new ConsoleMessage(
-            recipients: [['teamId' => 'team-9']],
+            recipients: [$this->recipient('team-9', 'team-9', RESOURCE_TYPE_TEAMS)],
             title: 'Heads up',
             body: '...',
             messageId: ID::custom('msg-team'),
@@ -125,7 +154,7 @@ class ConsoleTest extends TestCase
 
         (new Console($this->database))->send($message);
 
-        $stored = $this->database->getDocument('alerts', $this->alertId('msg-team', teamId: 'team-9'));
+        $stored = $this->database->getDocument('alerts', $this->alertId('msg-team', 'team-9', RESOURCE_TYPE_TEAMS, 'team-9'));
         $permissions = $stored->getPermissions();
 
         $this->assertContains(Permission::read(Role::team('team-9')), $permissions);
@@ -140,8 +169,8 @@ class ConsoleTest extends TestCase
     {
         $message = new ConsoleMessage(
             recipients: [
-                ['userId' => 'a'],
-                ['userId' => 'b'],
+                $this->recipient('a', 'a'),
+                $this->recipient('b', 'b'),
             ],
             title: 'Heads up',
             body: 'multi',
@@ -155,8 +184,8 @@ class ConsoleTest extends TestCase
 
         $this->assertSame(2, $result['deliveredTo']);
 
-        $idA = $this->alertId('same-msg', userId: 'a');
-        $idB = $this->alertId('same-msg', userId: 'b');
+        $idA = $this->alertId('same-msg', 'a', RESOURCE_TYPE_USERS, 'a');
+        $idB = $this->alertId('same-msg', 'b', RESOURCE_TYPE_USERS, 'b');
 
         $this->assertNotSame($idA, $idB, 'recipient suffixes must be distinct');
 
@@ -167,8 +196,8 @@ class ConsoleTest extends TestCase
 
         $this->assertSame('same-msg', $rowA->getAttribute('messageId'));
         $this->assertSame('same-msg', $rowB->getAttribute('messageId'));
-        $this->assertSame('a', $rowA->getAttribute('userId'));
-        $this->assertSame('b', $rowB->getAttribute('userId'));
+        $this->assertSame('a', $rowA->getAttribute('resourceId'));
+        $this->assertSame('b', $rowB->getAttribute('resourceId'));
 
         $this->assertMatchesRegularExpression('/^same-msg_[0-9a-f]{16}$/', $idA);
         $this->assertMatchesRegularExpression('/^same-msg_[0-9a-f]{16}$/', $idB);
@@ -195,7 +224,7 @@ class ConsoleTest extends TestCase
     {
         $userId = 'user-dup';
         $messageId = 'msg-dup';
-        $documentId = $this->alertId($messageId, userId: $userId);
+        $documentId = $this->alertId($messageId, $userId, RESOURCE_TYPE_USERS, $userId);
 
         // Pre-insert an alert with the SAME id the adapter will compute. The
         // adapter's createDocument will hit the primary-key DuplicateException
@@ -204,17 +233,22 @@ class ConsoleTest extends TestCase
             '$id' => $documentId,
             '$permissions' => [Permission::read(Role::any())],
             'messageId' => $messageId,
-            'recipientHash' => \substr(\md5('user:' . $userId), 0, 16),
+            'recipientHash' => \substr(\md5($userId . ':' . RESOURCE_TYPE_USERS . ':' . $userId . ':' . $userId . '-internal:projects:project-1:project-internal-1'), 0, 16),
             'channel' => 'console',
-            'userId' => $userId,
             'projectId' => 'project-x',
             'projectInternalId' => 'project-internal-x',
+            'resourceType' => RESOURCE_TYPE_USERS,
+            'resourceId' => $userId,
+            'resourceInternalId' => $userId . '-internal',
+            'parentResourceType' => RESOURCE_TYPE_PROJECTS,
+            'parentResourceId' => 'project-1',
+            'parentResourceInternalId' => 'project-internal-1',
             'title' => 'pre-existing',
             'body' => 'pre-existing',
         ]));
 
         $message = new ConsoleMessage(
-            recipients: [['userId' => $userId]],
+            recipients: [$this->recipient($userId, $userId)],
             title: 'Same alert resent',
             body: 'b',
             messageId: ID::custom($messageId),

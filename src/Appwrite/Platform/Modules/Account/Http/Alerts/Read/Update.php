@@ -9,6 +9,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -46,6 +47,7 @@ class Update extends Action
             ->param('alertId', '', new UID(), 'Alert ID.')
             ->inject('response')
             ->inject('dbForPlatform')
+            ->inject('authorization')
             ->inject('project')
             ->inject('user')
             ->callback($this->action(...));
@@ -55,6 +57,7 @@ class Update extends Action
         string $alertId,
         Response $response,
         Database $dbForPlatform,
+        Authorization $authorization,
         Document $project,
         Document $user,
     ): void {
@@ -65,11 +68,11 @@ class Update extends Action
         $alert = $dbForPlatform->getDocument('alerts', $alertId);
 
         if ($alert->isEmpty()) {
+            $exists = $authorization->skip(fn () => !$dbForPlatform->getDocument('alerts', $alertId)->isEmpty());
+            if ($exists) {
+                throw new Exception(Exception::USER_UNAUTHORIZED);
+            }
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
-        }
-
-        if ($alert->getAttribute('userId') !== $user->getId()) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
         $updated = $dbForPlatform->updateDocument('alerts', $alertId, new Document([

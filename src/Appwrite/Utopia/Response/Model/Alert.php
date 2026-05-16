@@ -47,19 +47,29 @@ class Alert extends Model
                 'default' => '',
                 'example' => 'email',
             ])
-            ->addRule('userId', [
+            ->addRule('resourceType', [
                 'type' => self::TYPE_STRING,
-                'description' => 'User this alert is addressed to.',
+                'description' => 'Resource type this alert is addressed to.',
                 'default' => '',
-                'example' => '5e5bb8c16897e',
-                'required' => false,
+                'example' => 'users',
             ])
-            ->addRule('teamId', [
+            ->addRule('resourceId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Team this alert is addressed to.',
+                'description' => 'Resource ID this alert is addressed to.',
                 'default' => '',
                 'example' => '5e5bb8c16897e',
-                'required' => false,
+            ])
+            ->addRule('parentResourceType', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Parent resource type for the alert.',
+                'default' => '',
+                'example' => 'projects',
+            ])
+            ->addRule('parentResourceId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Parent resource ID for the alert.',
+                'default' => '',
+                'example' => '5e5bb8c16897e',
             ])
             ->addRule('projectId', [
                 'type' => self::TYPE_STRING,

@@ -182,10 +182,14 @@ class NotificationsTest extends TestCase
         $this->database->createAttribute('alerts', 'recipientHash', Database::VAR_STRING, 64, true);
         $this->database->createAttribute('alerts', 'type', Database::VAR_STRING, 64, false, 'info');
         $this->database->createAttribute('alerts', 'channel', Database::VAR_STRING, 64, true);
-        $this->database->createAttribute('alerts', 'userId', Database::VAR_STRING, 255, false);
-        $this->database->createAttribute('alerts', 'teamId', Database::VAR_STRING, 255, false);
         $this->database->createAttribute('alerts', 'projectId', Database::VAR_STRING, 255, true);
-        $this->database->createAttribute('alerts', 'projectInternalId', Database::VAR_STRING, 255, true);
+        $this->database->createAttribute('alerts', 'projectInternalId', Database::VAR_ID, 0, true);
+        $this->database->createAttribute('alerts', 'resourceType', Database::VAR_STRING, 64, true);
+        $this->database->createAttribute('alerts', 'resourceId', Database::VAR_STRING, 255, true);
+        $this->database->createAttribute('alerts', 'resourceInternalId', Database::VAR_ID, 0, true);
+        $this->database->createAttribute('alerts', 'parentResourceType', Database::VAR_STRING, 64, true);
+        $this->database->createAttribute('alerts', 'parentResourceId', Database::VAR_STRING, 255, true);
+        $this->database->createAttribute('alerts', 'parentResourceInternalId', Database::VAR_ID, 0, true);
         $this->database->createAttribute('alerts', 'title', Database::VAR_STRING, 256, true);
         $this->database->createAttribute('alerts', 'body', Database::VAR_STRING, 16384, true);
         $this->database->createAttribute('alerts', 'read', Database::VAR_BOOLEAN, 0, false, false);
@@ -223,14 +227,48 @@ class NotificationsTest extends TestCase
         ]);
     }
 
-    private function recipientHash(string $channel, string $address, string $userId = '', string $teamId = ''): string
-    {
-        return \substr(\md5($channel . ':' . $address . ':' . $userId . ':' . $teamId), 0, 16);
+    private function recipientHash(
+        string $channel,
+        string $address,
+        string $resourceType,
+        string $resourceId,
+        string $resourceInternalId,
+        string $parentResourceType = RESOURCE_TYPE_PROJECTS,
+        string $parentResourceId = 'project-x',
+        string $parentResourceInternalId = 'project-internal-x',
+    ): string {
+        return \substr(\md5(
+            $channel
+                . ':' . $address
+                . ':' . $resourceType
+                . ':' . $resourceId
+                . ':' . $resourceInternalId
+                . ':' . $parentResourceType
+                . ':' . $parentResourceId
+                . ':' . $parentResourceInternalId
+        ), 0, 16);
     }
 
-    private function alertId(string $messageId, string $channel, string $address, string $userId = '', string $teamId = ''): string
+    private function alertId(string $messageId, string $channel, string $address, string $resourceType, string $resourceId): string
     {
-        return \substr($messageId, 0, 19) . '_' . $this->recipientHash($channel, $address, $userId, $teamId);
+        return \substr($messageId, 0, 19) . '_' . $this->recipientHash($channel, $address, $resourceType, $resourceId, $resourceId . '-internal');
+    }
+
+    /**
+     * @return array{address: string, channel: string, resourceType: string, resourceId: string, resourceInternalId: string, parentResourceType: string, parentResourceId: string, parentResourceInternalId: string}
+     */
+    private function userRecipient(string $address, string $channel, string $resourceId): array
+    {
+        return [
+            'address' => $address,
+            'channel' => $channel,
+            'resourceType' => RESOURCE_TYPE_USERS,
+            'resourceId' => $resourceId,
+            'resourceInternalId' => $resourceId . '-internal',
+            'parentResourceType' => RESOURCE_TYPE_PROJECTS,
+            'parentResourceId' => 'project-x',
+            'parentResourceInternalId' => 'project-internal-x',
+        ];
     }
 
     public function testDispatchesPerChannelToCorrectAdapter(): void
@@ -240,9 +278,9 @@ class NotificationsTest extends TestCase
         $payload = [
             'project' => ['$id' => 'project-x'],
             'recipients' => [
-                ['address' => 'user@example.test', 'channel' => NOTIFICATION_TYPE_EMAIL],
-                ['address' => 'user-1', 'channel' => NOTIFICATION_TYPE_CONSOLE],
-                ['address' => 'https://hooks.example.test/in', 'channel' => NOTIFICATION_TYPE_WEBHOOK],
+                $this->userRecipient('user@example.test', NOTIFICATION_TYPE_EMAIL, 'user-1'),
+                $this->userRecipient('user-1', NOTIFICATION_TYPE_CONSOLE, 'user-1'),
+                $this->userRecipient('https://hooks.example.test/in', NOTIFICATION_TYPE_WEBHOOK, 'user-1'),
             ],
             'subject' => 'Hi',
             'body' => 'Body',
@@ -262,8 +300,8 @@ class NotificationsTest extends TestCase
         $payload = [
             'project' => ['$id' => 'project-x'],
             'recipients' => [
-                ['address' => 'user-1', 'channel' => NOTIFICATION_TYPE_CONSOLE],
-                ['address' => 'user-2', 'channel' => NOTIFICATION_TYPE_CONSOLE],
+                $this->userRecipient('user-1', NOTIFICATION_TYPE_CONSOLE, 'user-1'),
+                $this->userRecipient('user-2', NOTIFICATION_TYPE_CONSOLE, 'user-2'),
             ],
             'subject' => 'Heads up',
             'body' => 'Read me',
@@ -275,14 +313,19 @@ class NotificationsTest extends TestCase
 
         $rows = $this->database->find('alerts');
         $this->assertCount(2, $rows);
-        $userIds = \array_map(static fn (Document $row) => $row->getAttribute('userId'), $rows);
-        \sort($userIds);
-        $this->assertSame(['user-1', 'user-2'], $userIds);
+        $resourceIds = \array_map(static fn (Document $row) => $row->getAttribute('resourceId'), $rows);
+        \sort($resourceIds);
+        $this->assertSame(['user-1', 'user-2'], $resourceIds);
 
         foreach ($rows as $row) {
             $this->assertSame(\md5('evt-multi'), $row->getAttribute('messageId'));
             $this->assertSame('console', $row->getAttribute('channel'));
             $this->assertSame('project-x', $row->getAttribute('projectId'));
+            $this->assertSame('project-internal-x', $row->getAttribute('projectInternalId'));
+            $this->assertSame(RESOURCE_TYPE_USERS, $row->getAttribute('resourceType'));
+            $this->assertSame(RESOURCE_TYPE_PROJECTS, $row->getAttribute('parentResourceType'));
+            $this->assertSame('project-x', $row->getAttribute('parentResourceId'));
+            $this->assertSame('project-internal-x', $row->getAttribute('parentResourceInternalId'));
             $this->assertSame('Heads up', $row->getAttribute('title'));
         }
     }
@@ -292,7 +335,7 @@ class NotificationsTest extends TestCase
         $worker = new SpyNotifications();
         $payload = [
             'project' => ['$id' => 'project-x'],
-            'recipients' => [['address' => 'user-1', 'channel' => NOTIFICATION_TYPE_CONSOLE]],
+            'recipients' => [$this->userRecipient('user-1', NOTIFICATION_TYPE_CONSOLE, 'user-1')],
             'subject' => 'Sub',
             'body' => 'B',
             'deduplicationKey' => 'dup-key',
@@ -372,7 +415,7 @@ class NotificationsTest extends TestCase
 
         $payload = [
             'project' => ['$id' => 'project-x'],
-            'recipients' => [['address' => 'https://h.example.test', 'channel' => NOTIFICATION_TYPE_WEBHOOK]],
+            'recipients' => [$this->userRecipient('https://h.example.test', NOTIFICATION_TYPE_WEBHOOK, 'user-1')],
             'subject' => 's',
             'body' => 'b',
             'deduplicationKey' => 'err-1',
@@ -402,8 +445,8 @@ class NotificationsTest extends TestCase
         $payload = [
             'project' => ['$id' => 'project-x'],
             'recipients' => [
-                ['address' => 'user-1', 'channel' => NOTIFICATION_TYPE_CONSOLE, 'userId' => 'user-1'],
-                ['address' => 'https://hooks.example.test/in', 'channel' => NOTIFICATION_TYPE_WEBHOOK],
+                $this->userRecipient('user-1', NOTIFICATION_TYPE_CONSOLE, 'user-1'),
+                $this->userRecipient('https://hooks.example.test/in', NOTIFICATION_TYPE_WEBHOOK, 'user-1'),
             ],
             'subject' => 'Sub',
             'body' => 'B',
@@ -442,7 +485,7 @@ class NotificationsTest extends TestCase
         $payload = [
             'project' => ['$id' => 'project-x'],
             'recipients' => [
-                ['address' => 'user-1', 'channel' => NOTIFICATION_TYPE_CONSOLE, 'userId' => 'user-1'],
+                $this->userRecipient('user-1', NOTIFICATION_TYPE_CONSOLE, 'user-1'),
             ],
             'subject' => 'Heads up',
             'body' => 'console body',
@@ -468,7 +511,7 @@ class NotificationsTest extends TestCase
         $payload = [
             'project' => ['$id' => 'project-x'],
             'recipients' => [
-                ['address' => 'user-1', 'channel' => NOTIFICATION_TYPE_CONSOLE, 'userId' => 'user-1'],
+                $this->userRecipient('user-1', NOTIFICATION_TYPE_CONSOLE, 'user-1'),
             ],
             'subject' => 'Heads up',
             'body' => 'console body',
@@ -492,8 +535,8 @@ class NotificationsTest extends TestCase
         $payload = [
             'project' => ['$id' => 'project-x'],
             'recipients' => [
-                ['address' => 'user-1', 'channel' => NOTIFICATION_TYPE_CONSOLE, 'userId' => 'user-1'],
-                ['address' => 'user-2', 'channel' => NOTIFICATION_TYPE_CONSOLE, 'userId' => 'user-2'],
+                $this->userRecipient('user-1', NOTIFICATION_TYPE_CONSOLE, 'user-1'),
+                $this->userRecipient('user-2', NOTIFICATION_TYPE_CONSOLE, 'user-2'),
             ],
             'subject' => 'Heads up',
             'body' => 'console body',
@@ -514,7 +557,7 @@ class NotificationsTest extends TestCase
         $this->assertCount(2, \array_unique($ids), 'recipient suffixes must keep $id values distinct');
     }
 
-    public function testRecipientStructRoundtripsUserIdAndTeamId(): void
+    public function testRecipientStructRoundtripsResourceFields(): void
     {
         $worker = new CountingPersistAlertNotifications();
 
@@ -524,8 +567,12 @@ class NotificationsTest extends TestCase
                 [
                     'address' => 'console-recipient',
                     'channel' => NOTIFICATION_TYPE_CONSOLE,
-                    'userId' => 'u1',
-                    'teamId' => 't1',
+                    'resourceType' => RESOURCE_TYPE_USERS,
+                    'resourceId' => 'u1',
+                    'resourceInternalId' => 'u1-internal',
+                    'parentResourceType' => RESOURCE_TYPE_PROJECTS,
+                    'parentResourceId' => 'project-x',
+                    'parentResourceInternalId' => 'project-internal-x',
                 ],
             ],
             'subject' => 'Heads up',
@@ -537,8 +584,12 @@ class NotificationsTest extends TestCase
 
         $rows = $this->database->find('alerts');
         $this->assertCount(1, $rows);
-        $this->assertSame('u1', $rows[0]->getAttribute('userId'));
-        $this->assertSame('t1', $rows[0]->getAttribute('teamId'));
+        $this->assertSame(RESOURCE_TYPE_USERS, $rows[0]->getAttribute('resourceType'));
+        $this->assertSame('u1', $rows[0]->getAttribute('resourceId'));
+        $this->assertSame('u1-internal', $rows[0]->getAttribute('resourceInternalId'));
+        $this->assertSame(RESOURCE_TYPE_PROJECTS, $rows[0]->getAttribute('parentResourceType'));
+        $this->assertSame('project-x', $rows[0]->getAttribute('parentResourceId'));
+        $this->assertSame('project-internal-x', $rows[0]->getAttribute('parentResourceInternalId'));
     }
 
     public function testTrackingPixelInjectedIntoEmailHtml(): void
@@ -563,11 +614,7 @@ class NotificationsTest extends TestCase
             $payload = [
                 'project' => ['$id' => 'project-x'],
                 'recipients' => [
-                    [
-                        'address' => 'user@example.test',
-                        'channel' => NOTIFICATION_TYPE_EMAIL,
-                        'userId' => 'user-7',
-                    ],
+                    $this->userRecipient('user@example.test', NOTIFICATION_TYPE_EMAIL, 'user-7'),
                 ],
                 'subject' => 'Heads up',
                 'body' => 'plain body',
@@ -618,19 +665,10 @@ class NotificationsTest extends TestCase
         try {
             $worker = new CountingPersistAlertNotifications();
 
-            // All four unique-index fields populated so the
-            // `_key_recipient` UNIQUE composite (messageId, channel,
-            // userId, teamId) actually fires. SQL UNIQUE semantics treat
-            // NULL as not-equal, so any null in the tuple disables it.
             $payload = [
                 'project' => ['$id' => 'project-x'],
                 'recipients' => [
-                    [
-                        'address' => 'user@example.test',
-                        'channel' => NOTIFICATION_TYPE_EMAIL,
-                        'userId' => 'user-7',
-                        'teamId' => 'team-7',
-                    ],
+                    $this->userRecipient('user@example.test', NOTIFICATION_TYPE_EMAIL, 'user-7'),
                 ],
                 'subject' => 'Heads up',
                 'body' => 'b',
@@ -648,8 +686,12 @@ class NotificationsTest extends TestCase
             $recipient = [
                 'address' => 'user@example.test',
                 'channel' => NOTIFICATION_TYPE_EMAIL,
-                'userId' => 'user-7',
-                'teamId' => 'team-7',
+                'resourceType' => RESOURCE_TYPE_USERS,
+                'resourceId' => 'user-7',
+                'resourceInternalId' => 'user-7-internal',
+                'parentResourceType' => RESOURCE_TYPE_PROJECTS,
+                'parentResourceId' => 'project-x',
+                'parentResourceInternalId' => 'project-internal-x',
             ];
 
             // Second invocation with the SAME messageId/recipient. The
@@ -672,12 +714,16 @@ class NotificationsTest extends TestCase
                 '$id' => 'sibling-id-' . \uniqid(),
                 '$permissions' => [Permission::read(Role::any())],
                 'messageId' => $messageId,
-                'recipientHash' => $this->recipientHash(NOTIFICATION_TYPE_EMAIL, 'user@example.test', 'user-7', 'team-7'),
+                'recipientHash' => $this->recipientHash(NOTIFICATION_TYPE_EMAIL, 'user@example.test', RESOURCE_TYPE_USERS, 'user-7', 'user-7-internal'),
                 'channel' => NOTIFICATION_TYPE_EMAIL,
-                'userId' => 'user-7',
-                'teamId' => 'team-7',
                 'projectId' => 'project-x',
                 'projectInternalId' => 'project-internal-x',
+                'resourceType' => RESOURCE_TYPE_USERS,
+                'resourceId' => 'user-7',
+                'resourceInternalId' => 'user-7-internal',
+                'parentResourceType' => RESOURCE_TYPE_PROJECTS,
+                'parentResourceId' => 'project-x',
+                'parentResourceInternalId' => 'project-internal-x',
                 'title' => 'sibling',
                 'body' => 'sibling',
                 'read' => false,
@@ -700,7 +746,7 @@ class NotificationsTest extends TestCase
         }
     }
 
-    public function testPersistAlertReturnsAlertIdAndStoresUserId(): void
+    public function testPersistAlertReturnsAlertIdAndStoresResource(): void
     {
         $spy = new SpyEmailAdapter();
         $this->registry->set('smtp', static fn () => $spy);
@@ -714,11 +760,7 @@ class NotificationsTest extends TestCase
             $payload = [
                 'project' => ['$id' => 'project-x'],
                 'recipients' => [
-                    [
-                        'address' => 'user@example.test',
-                        'channel' => NOTIFICATION_TYPE_EMAIL,
-                        'userId' => 'user-7',
-                    ],
+                    $this->userRecipient('user@example.test', NOTIFICATION_TYPE_EMAIL, 'user-7'),
                 ],
                 'subject' => 'Heads up',
                 'body' => 'b',
@@ -736,7 +778,9 @@ class NotificationsTest extends TestCase
         $alertId = $worker->persistedIds[0];
         $row = $this->database->getDocument('alerts', $alertId);
         $this->assertFalse($row->isEmpty(), 'persistAlert must return an id resolvable via getDocument');
-        $this->assertSame('user-7', $row->getAttribute('userId'));
+        $this->assertSame(RESOURCE_TYPE_USERS, $row->getAttribute('resourceType'));
+        $this->assertSame('user-7', $row->getAttribute('resourceId'));
+        $this->assertSame('user-7-internal', $row->getAttribute('resourceInternalId'));
         $this->assertFalse($row->getAttribute('read'), 'new alerts default to unread');
         $this->assertSame(\md5('persist-email'), $row->getAttribute('messageId'));
     }
@@ -762,11 +806,7 @@ class NotificationsTest extends TestCase
         $payload = [
             'project' => ['$id' => 'project-x'],
             'recipients' => [
-                [
-                    'address' => 'user@example.test',
-                    'channel' => NOTIFICATION_TYPE_EMAIL,
-                    'userId' => 'user-9',
-                ],
+                $this->userRecipient('user@example.test', NOTIFICATION_TYPE_EMAIL, 'user-9'),
             ],
             'subject' => 'Subj',
             'body' => 'Body',
@@ -809,7 +849,7 @@ class NotificationsTest extends TestCase
                 Query::equal('messageId', [$messageId]),
             ]);
             $this->assertCount(1, $rows, 'retry must persist exactly one alert row');
-            $this->assertSame('user-9', $rows[0]->getAttribute('userId'));
+            $this->assertSame('user-9', $rows[0]->getAttribute('resourceId'));
             $this->assertFalse($rows[0]->getAttribute('read'));
         } finally {
             \putenv($previousSmtpHost === false ? '_APP_SMTP_HOST' : '_APP_SMTP_HOST=' . $previousSmtpHost);
@@ -828,18 +868,8 @@ class NotificationsTest extends TestCase
         $payload = [
             'project' => ['$id' => 'project-x', '$sequence' => 'project-internal-x'],
             'recipients' => [
-                [
-                    'address' => 'user@example.test',
-                    'channel' => NOTIFICATION_TYPE_EMAIL,
-                    'userId' => 'user-9',
-                    'teamId' => 'team-9',
-                ],
-                [
-                    'address' => 'user-9',
-                    'channel' => NOTIFICATION_TYPE_CONSOLE,
-                    'userId' => 'user-9',
-                    'teamId' => 'team-9',
-                ],
+                $this->userRecipient('user@example.test', NOTIFICATION_TYPE_EMAIL, 'user-9'),
+                $this->userRecipient('user-9', NOTIFICATION_TYPE_CONSOLE, 'user-9'),
             ],
             'subject' => 'Subj',
             'body' => 'Body',
@@ -971,13 +1001,13 @@ class NotificationsTest extends TestCase
 
         // First "sendAlert" pass: a single user, webhook A.
         $event
-            ->setProject(new Document(['$id' => 'project-a']))
+            ->setProject(new Document(['$id' => 'project-a', '$sequence' => 'project-a-internal']))
             ->setSubject('Webhook A paused')
             ->setPreview('Webhook A preview')
             ->setBody('Webhook A body')
             ->setDeduplicationKey('webhook:hookA:paused:10')
-            ->addRecipient('alice@example.test', NOTIFICATION_TYPE_EMAIL, null, 'user-A', 'team-1')
-            ->addRecipient('user-A', NOTIFICATION_TYPE_CONSOLE, null, 'user-A', 'team-1')
+            ->addRecipient('alice@example.test', NOTIFICATION_TYPE_EMAIL, null, RESOURCE_TYPE_USERS, 'user-A', 'user-A-internal', RESOURCE_TYPE_PROJECTS, 'project-a', 'project-a-internal')
+            ->addRecipient('user-A', NOTIFICATION_TYPE_CONSOLE, null, RESOURCE_TYPE_USERS, 'user-A', 'user-A-internal', RESOURCE_TYPE_PROJECTS, 'project-a', 'project-a-internal')
             ->trigger();
 
         // Mirror the production sendAlert: reset before configuring next alert.
@@ -985,13 +1015,13 @@ class NotificationsTest extends TestCase
 
         // Second pass: a different user/webhook entirely.
         $event
-            ->setProject(new Document(['$id' => 'project-b']))
+            ->setProject(new Document(['$id' => 'project-b', '$sequence' => 'project-b-internal']))
             ->setSubject('Webhook B paused')
             ->setPreview('Webhook B preview')
             ->setBody('Webhook B body')
             ->setDeduplicationKey('webhook:hookB:paused:10')
-            ->addRecipient('bob@example.test', NOTIFICATION_TYPE_EMAIL, null, 'user-B', 'team-2')
-            ->addRecipient('user-B', NOTIFICATION_TYPE_CONSOLE, null, 'user-B', 'team-2')
+            ->addRecipient('bob@example.test', NOTIFICATION_TYPE_EMAIL, null, RESOURCE_TYPE_USERS, 'user-B', 'user-B-internal', RESOURCE_TYPE_PROJECTS, 'project-b', 'project-b-internal')
+            ->addRecipient('user-B', NOTIFICATION_TYPE_CONSOLE, null, RESOURCE_TYPE_USERS, 'user-B', 'user-B-internal', RESOURCE_TYPE_PROJECTS, 'project-b', 'project-b-internal')
             ->trigger();
 
         $events = $publisher->getEvents('v1-notifications');
@@ -1044,11 +1074,7 @@ class NotificationsTest extends TestCase
             $payload = [
                 'project' => ['$id' => 'project-x'],
                 'recipients' => [
-                    [
-                        'address' => 'happy@example.test',
-                        'channel' => NOTIFICATION_TYPE_EMAIL,
-                        'userId' => 'user-happy',
-                    ],
+                    $this->userRecipient('happy@example.test', NOTIFICATION_TYPE_EMAIL, 'user-happy'),
                 ],
                 'subject' => 'Welcome aboard',
                 'body' => 'plain body',
@@ -1086,7 +1112,7 @@ class NotificationsTest extends TestCase
         ]);
         $this->assertCount(1, $rows);
         $row = $rows[0];
-        $this->assertSame('user-happy', $row->getAttribute('userId'));
+        $this->assertSame('user-happy', $row->getAttribute('resourceId'));
         $this->assertSame(NOTIFICATION_TYPE_EMAIL, $row->getAttribute('channel'));
         $this->assertFalse($row->getAttribute('read'));
 
@@ -1101,7 +1127,7 @@ class NotificationsTest extends TestCase
      *
      * The Console adapter writes the alert directly; the action loop must
      * NOT call `persistAlert` for console recipients. Permissions must grant
-     * the recipient user AND team owners read/update/delete.
+     * the recipient resource read/update/delete access.
      */
     public function testConsoleChannelHappyPath(): void
     {
@@ -1113,8 +1139,12 @@ class NotificationsTest extends TestCase
                 [
                     'address' => 'console-recipient',
                     'channel' => NOTIFICATION_TYPE_CONSOLE,
-                    'userId' => 'u1',
-                    'teamId' => 't1',
+                    'resourceType' => RESOURCE_TYPE_TEAMS,
+                    'resourceId' => 't1',
+                    'resourceInternalId' => 't1-internal',
+                    'parentResourceType' => RESOURCE_TYPE_PROJECTS,
+                    'parentResourceId' => 'project-x',
+                    'parentResourceInternalId' => 'project-internal-x',
                 ],
             ],
             'subject' => 'Heads up',
@@ -1130,20 +1160,18 @@ class NotificationsTest extends TestCase
         $this->assertCount(1, $rows, 'console adapter must write exactly one alert');
 
         $row = $rows[0];
-        $this->assertSame('u1', $row->getAttribute('userId'));
-        $this->assertSame('t1', $row->getAttribute('teamId'));
+        $this->assertSame(RESOURCE_TYPE_TEAMS, $row->getAttribute('resourceType'));
+        $this->assertSame('t1', $row->getAttribute('resourceId'));
+        $this->assertSame('t1-internal', $row->getAttribute('resourceInternalId'));
         $this->assertSame(NOTIFICATION_TYPE_CONSOLE, $row->getAttribute('channel'));
         $this->assertFalse($row->getAttribute('read'));
 
         $messageId = \md5('happy-console');
-        $expectedId = $this->alertId($messageId, NOTIFICATION_TYPE_CONSOLE, 'console-recipient', 'u1', 't1');
+        $expectedId = $this->alertId($messageId, NOTIFICATION_TYPE_CONSOLE, 'console-recipient', RESOURCE_TYPE_TEAMS, 't1');
         $this->assertSame($expectedId, $row->getId(), 'row $id must match adapter suffix scheme');
         $this->assertLessThanOrEqual(36, \strlen($row->getId()), 'alert ids must pass the UID route validator');
 
         $permissions = $row->getPermissions();
-        $this->assertContains(Permission::read(Role::user('u1')), $permissions);
-        $this->assertContains(Permission::update(Role::user('u1')), $permissions);
-        $this->assertContains(Permission::delete(Role::user('u1')), $permissions);
         $this->assertContains(Permission::read(Role::team('t1')), $permissions);
         $this->assertContains(Permission::update(Role::team('t1', 'owner')), $permissions);
         $this->assertContains(Permission::delete(Role::team('t1', 'owner')), $permissions);
@@ -1158,11 +1186,7 @@ class NotificationsTest extends TestCase
         $payload = [
             'project' => ['$id' => 'project-x'],
             'recipients' => [
-                [
-                    'address' => 'user-preview',
-                    'channel' => NOTIFICATION_TYPE_CONSOLE,
-                    'userId' => 'user-preview',
-                ],
+                $this->userRecipient('user-preview', NOTIFICATION_TYPE_CONSOLE, 'user-preview'),
             ],
             'subject' => 'Webhook {{name}} paused',
             'preview' => 'Plain alert for {{name}}.',
@@ -1190,11 +1214,7 @@ class NotificationsTest extends TestCase
             $payload = [
                 'project' => ['$id' => 'project-x'],
                 'recipients' => [
-                    [
-                        'address' => 'missing-smtp@example.test',
-                        'channel' => NOTIFICATION_TYPE_EMAIL,
-                        'userId' => 'user-smtp',
-                    ],
+                    $this->userRecipient('missing-smtp@example.test', NOTIFICATION_TYPE_EMAIL, 'user-smtp'),
                 ],
                 'subject' => 'No SMTP',
                 'body' => 'Body',
@@ -1226,7 +1246,7 @@ class NotificationsTest extends TestCase
         ];
 
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('Invalid console alert userId');
+        $this->expectExceptionMessage('Invalid console alert resourceId');
 
         $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->log);
     }
@@ -1287,7 +1307,12 @@ class NotificationsTest extends TestCase
                     'address' => 'https://hooks.example.test/in',
                     'channel' => NOTIFICATION_TYPE_WEBHOOK,
                     'signatureKey' => 'tenant-secret',
-                    'userId' => 'user-h',
+                    'resourceType' => RESOURCE_TYPE_USERS,
+                    'resourceId' => 'user-h',
+                    'resourceInternalId' => 'user-h-internal',
+                    'parentResourceType' => RESOURCE_TYPE_PROJECTS,
+                    'parentResourceId' => 'project-x',
+                    'parentResourceInternalId' => 'project-internal-x',
                 ],
             ],
             'subject' => 'Heads up',

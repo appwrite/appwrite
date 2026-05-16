@@ -7,7 +7,7 @@ use Utopia\Messaging\Message;
 class Console implements Message
 {
     /**
-     * @param array<int, array{userId?: string, teamId?: string, alertId?: string, recipientHash?: string}> $recipients
+     * @param array<int, array{address?: string, resourceType: string, resourceId: string, resourceInternalId: string, parentResourceType: string, parentResourceId: string, parentResourceInternalId: string, alertId?: string, recipientHash?: string}> $recipients
      */
     public function __construct(
         protected array $recipients,
@@ -21,7 +21,7 @@ class Console implements Message
     }
 
     /**
-     * @return array<int, array{userId?: string, teamId?: string, alertId?: string, recipientHash?: string}>
+     * @return array<int, array{address?: string, resourceType: string, resourceId: string, resourceInternalId: string, parentResourceType: string, parentResourceId: string, parentResourceInternalId: string, alertId?: string, recipientHash?: string}>
      */
     public function getRecipients(): array
     {
@@ -29,7 +29,7 @@ class Console implements Message
     }
 
     /**
-     * @return array<int, array{userId?: string, teamId?: string, alertId?: string, recipientHash?: string}>
+     * @return array<int, array{address?: string, resourceType: string, resourceId: string, resourceInternalId: string, parentResourceType: string, parentResourceId: string, parentResourceInternalId: string, alertId?: string, recipientHash?: string}>
      */
     public function getTo(): array
     {

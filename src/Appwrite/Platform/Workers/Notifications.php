@@ -78,8 +78,15 @@ class Notifications extends Action
 
         $failure = null;
         foreach ($recipients as $recipient) {
-            $recipient = $this->normalizeRecipient($recipient);
+            $recipient = $this->normalizeRecipient($recipient, $project);
             $channel = $recipient['channel'];
+
+            if ($messageId !== '') {
+                if ($channel === NOTIFICATION_TYPE_CONSOLE) {
+                    $this->validateConsoleRecipient($recipient);
+                }
+                $this->validateAlertResource($recipient);
+            }
 
             if ($messageId !== '' && $this->alreadyDelivered($dbForPlatform, self::buildAlertId($messageId, $recipient))) {
                 $log->addTag('dedup', 'hit');
@@ -105,7 +112,7 @@ class Notifications extends Action
     }
 
     /**
-     * @return array<int, array{address: string, channel: string, signatureKey?: string, userId?: string, teamId?: string}>
+     * @return array<int, array{address: string, channel: string, signatureKey?: string, resourceType?: string, resourceId?: string, resourceInternalId?: string, parentResourceType?: string, parentResourceId?: string, parentResourceInternalId?: string}>
      */
     private function resolveRecipients(array $payload): array
     {
@@ -123,20 +130,28 @@ class Notifications extends Action
     }
 
     /**
-     * @param array{address: string, channel: string, signatureKey?: string, userId?: string, teamId?: string} $recipient
-     * @return array{address: string, channel: string, signatureKey?: string, userId?: string, teamId?: string}
+     * @param array{address: string, channel: string, signatureKey?: string, resourceType?: string, resourceId?: string, resourceInternalId?: string, parentResourceType?: string, parentResourceId?: string, parentResourceInternalId?: string} $recipient
+     * @return array{address: string, channel: string, signatureKey?: string, resourceType: string, resourceId: string, resourceInternalId: string, parentResourceType: string, parentResourceId: string, parentResourceInternalId: string}
      */
-    private function normalizeRecipient(array $recipient): array
+    private function normalizeRecipient(array $recipient, Document $project): array
     {
-        $recipient['userId'] = $recipient['userId'] ?? '';
-        $recipient['teamId'] = $recipient['teamId'] ?? '';
+        $recipient['resourceType'] = $recipient['resourceType'] ?? '';
+        $recipient['resourceId'] = $recipient['resourceId'] ?? '';
+        $recipient['resourceInternalId'] = $recipient['resourceInternalId'] ?? '';
+        $recipient['parentResourceType'] = $recipient['parentResourceType'] ?? RESOURCE_TYPE_PROJECTS;
+        $recipient['parentResourceId'] = $recipient['parentResourceId'] ?? (string) $project->getId();
+        $recipient['parentResourceInternalId'] = $recipient['parentResourceInternalId'] ?? (string) $project->getSequence();
 
         if (
             $recipient['channel'] === NOTIFICATION_TYPE_CONSOLE
-            && $recipient['userId'] === ''
-            && $recipient['teamId'] === ''
+            && $recipient['resourceId'] === ''
         ) {
-            $recipient['userId'] = $recipient['address'];
+            $recipient['resourceType'] = RESOURCE_TYPE_USERS;
+            $recipient['resourceId'] = $recipient['address'];
+        }
+
+        foreach (['resourceType', 'resourceId', 'resourceInternalId', 'parentResourceType', 'parentResourceId', 'parentResourceInternalId'] as $key) {
+            $recipient[$key] = (string) $recipient[$key];
         }
 
         return $recipient;
@@ -154,7 +169,7 @@ class Notifications extends Action
      * persisted an alert row, so the action loop knows to skip persistence.
      * Returns null when persistence is the caller's responsibility.
      *
-     * @param array{address: string, channel: string, signatureKey?: string, userId?: string, teamId?: string} $recipient
+     * @param array{address: string, channel: string, signatureKey?: string, resourceType: string, resourceId: string, resourceInternalId: string, parentResourceType: string, parentResourceId: string, parentResourceInternalId: string} $recipient
      */
     protected function dispatch(
         array $recipient,
@@ -176,7 +191,7 @@ class Notifications extends Action
     }
 
     /**
-     * @param array{address: string, channel: string, signatureKey?: string, userId?: string, teamId?: string} $recipient
+     * @param array{address: string, channel: string, signatureKey?: string, resourceType: string, resourceId: string, resourceInternalId: string, parentResourceType: string, parentResourceId: string, parentResourceInternalId: string} $recipient
      */
     protected function dispatchEmail(
         array $recipient,
@@ -260,10 +275,10 @@ class Notifications extends Action
             ? self::buildAlertId($messageId, $recipient)
             : null;
 
-        $userId = $recipient['userId'] ?? '';
+        $recipientHash = self::buildRecipientHash($recipient);
         $opensslKey = System::getEnv('_APP_OPENSSL_KEY_V1');
-        if ($deterministicAlertId !== null && $userId !== '' && !empty($opensslKey)) {
-            $body = $this->injectTrackingPixel($body, $deterministicAlertId, $userId, $project, $opensslKey);
+        if ($deterministicAlertId !== null && !empty($opensslKey)) {
+            $body = $this->injectTrackingPixel($body, $deterministicAlertId, $recipientHash, $project, $opensslKey);
         }
 
         /** @var EmailAdapter $adapter */
@@ -334,7 +349,7 @@ class Notifications extends Action
     }
 
     /**
-     * @param array{address: string, channel: string, signatureKey?: string, userId?: string, teamId?: string} $recipient
+     * @param array{address: string, channel: string, signatureKey?: string, resourceType: string, resourceId: string, resourceInternalId: string, parentResourceType: string, parentResourceId: string, parentResourceInternalId: string} $recipient
      */
     protected function dispatchConsole(array $recipient, string $messageId, array $payload, Document $project, Database $dbForPlatform): ?string
     {
@@ -347,18 +362,18 @@ class Notifications extends Action
             $body = self::renderText($payload['body'] ?? '', $params);
         }
 
-        $userId = $recipient['userId'] ?? $recipient['address'];
-        $teamId = $recipient['teamId'] ?? '';
         $alertId = $messageId !== '' ? self::buildAlertId($messageId, $recipient) : null;
         $recipientHash = $messageId !== '' ? self::buildRecipientHash($recipient) : null;
 
-        $consoleRecipient = [];
-        if ($userId !== '') {
-            $consoleRecipient['userId'] = $userId;
-        }
-        if ($teamId !== '') {
-            $consoleRecipient['teamId'] = $teamId;
-        }
+        $consoleRecipient = [
+            'address' => $recipient['address'],
+            'resourceType' => $recipient['resourceType'],
+            'resourceId' => $recipient['resourceId'],
+            'resourceInternalId' => $recipient['resourceInternalId'],
+            'parentResourceType' => $recipient['parentResourceType'],
+            'parentResourceId' => $recipient['parentResourceId'],
+            'parentResourceInternalId' => $recipient['parentResourceInternalId'],
+        ];
         if ($alertId !== null) {
             $consoleRecipient['alertId'] = $alertId;
             $consoleRecipient['recipientHash'] = $recipientHash;
@@ -386,7 +401,7 @@ class Notifications extends Action
     }
 
     /**
-     * @param array{address: string, channel: string, signatureKey?: string, userId?: string, teamId?: string} $recipient
+     * @param array{address: string, channel: string, signatureKey?: string, resourceType: string, resourceId: string, resourceInternalId: string, parentResourceType: string, parentResourceId: string, parentResourceInternalId: string} $recipient
      */
     protected function dispatchWebhook(array $recipient, array $payload, Log $log): ?string
     {
@@ -432,20 +447,18 @@ class Notifications extends Action
      * Idempotent: on a duplicate composite-key violation the existing
      * row's id is returned.
      *
-     * @param array{address: string, channel: string, signatureKey?: string, userId?: string, teamId?: string} $recipient
+     * @param array{address: string, channel: string, signatureKey?: string, resourceType?: string, resourceId?: string, resourceInternalId?: string, parentResourceType?: string, parentResourceId?: string, parentResourceInternalId?: string} $recipient
      */
     protected function persistAlert(Database $dbForPlatform, string $messageId, array $recipient, array $payload, Document $project): string
     {
-        $recipient = $this->normalizeRecipient($recipient);
+        $recipient = $this->normalizeRecipient($recipient, $project);
 
         $channel = $recipient['channel'];
-        $userId = $recipient['userId'] ?? '';
-        $teamId = $recipient['teamId'] ?? '';
 
         $alertId = self::buildAlertId($messageId, $recipient);
         $recipientHash = self::buildRecipientHash($recipient);
 
-        $permissions = $this->buildAlertPermissions($userId, $teamId, $project->getId());
+        $permissions = $this->buildAlertPermissions($recipient['resourceType'], $recipient['resourceId'], $project->getId());
         if (empty($permissions)) {
             $permissions = $payload['permissions'] ?? [];
         }
@@ -463,10 +476,14 @@ class Notifications extends Action
             'recipientHash' => $recipientHash,
             'type' => $payload['type'] ?? 'info',
             'channel' => $channel,
-            'userId' => $userId,
-            'teamId' => $teamId,
             'projectId' => $project->getId(),
             'projectInternalId' => $project->getSequence(),
+            'resourceType' => $recipient['resourceType'],
+            'resourceId' => $recipient['resourceId'],
+            'resourceInternalId' => $recipient['resourceInternalId'],
+            'parentResourceType' => $recipient['parentResourceType'],
+            'parentResourceId' => $recipient['parentResourceId'],
+            'parentResourceInternalId' => $recipient['parentResourceInternalId'],
             'title' => self::renderText($payload['subject'] ?? '', $params),
             'body' => $body,
             'read' => false,
@@ -487,7 +504,7 @@ class Notifications extends Action
      * by both `persistAlert()` and `dispatchEmail()` so the tracking pixel
      * URL matches the eventually-persisted row exactly.
      *
-     * @param array{address: string, channel: string, signatureKey?: string, userId?: string, teamId?: string} $recipient
+     * @param array{address: string, channel: string, signatureKey?: string, resourceType: string, resourceId: string, resourceInternalId: string, parentResourceType: string, parentResourceId: string, parentResourceInternalId: string} $recipient
      */
     private static function buildAlertId(string $messageId, array $recipient): string
     {
@@ -495,37 +512,44 @@ class Notifications extends Action
     }
 
     /**
-     * @param array{address: string, channel: string, signatureKey?: string, userId?: string, teamId?: string} $recipient
+     * @param array{address: string, channel: string, signatureKey?: string, resourceType: string, resourceId: string, resourceInternalId: string, parentResourceType: string, parentResourceId: string, parentResourceInternalId: string} $recipient
      */
     private static function buildRecipientHash(array $recipient): string
     {
         $channel = $recipient['channel'];
         $address = $recipient['address'];
-        $userId = $recipient['userId'] ?? '';
-        $teamId = $recipient['teamId'] ?? '';
 
-        return \substr(\md5($channel . ':' . $address . ':' . $userId . ':' . $teamId), 0, 16);
+        return \substr(\md5(
+            $channel
+                . ':' . $address
+                . ':' . $recipient['resourceType']
+                . ':' . $recipient['resourceId']
+                . ':' . $recipient['resourceInternalId']
+                . ':' . $recipient['parentResourceType']
+                . ':' . $recipient['parentResourceId']
+                . ':' . $recipient['parentResourceInternalId']
+        ), 0, 16);
     }
 
     /**
      * @return array<string>
      */
-    private function buildAlertPermissions(string $userId, string $teamId, string $projectId): array
+    private function buildAlertPermissions(string $resourceType, string $resourceId, string $projectId): array
     {
         $permissions = [];
-        if ($userId !== '') {
-            $permissions[] = Permission::read(Role::user($userId));
-            $permissions[] = Permission::update(Role::user($userId));
-            $permissions[] = Permission::delete(Role::user($userId));
+        if ($resourceType === RESOURCE_TYPE_USERS) {
+            $permissions[] = Permission::read(Role::user($resourceId));
+            $permissions[] = Permission::update(Role::user($resourceId));
+            $permissions[] = Permission::delete(Role::user($resourceId));
         }
-        if ($teamId !== '') {
-            $permissions[] = Permission::read(Role::team($teamId));
-            $permissions[] = Permission::update(Role::team($teamId, 'owner'));
-            $permissions[] = Permission::delete(Role::team($teamId, 'owner'));
+        if ($resourceType === RESOURCE_TYPE_TEAMS) {
+            $permissions[] = Permission::read(Role::team($resourceId));
+            $permissions[] = Permission::update(Role::team($resourceId, 'owner'));
+            $permissions[] = Permission::delete(Role::team($resourceId, 'owner'));
             if ($projectId !== '') {
-                $permissions[] = Permission::read(Role::team($teamId, 'project-' . $projectId . '-owner'));
-                $permissions[] = Permission::update(Role::team($teamId, 'project-' . $projectId . '-owner'));
-                $permissions[] = Permission::delete(Role::team($teamId, 'project-' . $projectId . '-owner'));
+                $permissions[] = Permission::read(Role::team($resourceId, 'project-' . $projectId . '-owner'));
+                $permissions[] = Permission::update(Role::team($resourceId, 'project-' . $projectId . '-owner'));
+                $permissions[] = Permission::delete(Role::team($resourceId, 'project-' . $projectId . '-owner'));
             }
         }
         return $permissions;
@@ -564,10 +588,19 @@ class Notifications extends Action
     {
         $validator = new UID();
 
-        foreach (['userId', 'teamId'] as $key) {
-            $value = $recipient[$key] ?? '';
-            if ($value !== '' && !$validator->isValid($value)) {
-                throw new Exception('Invalid console alert ' . $key . ': ' . $validator->getDescription());
+        if (!$validator->isValid($recipient['resourceId'])) {
+            throw new Exception('Invalid console alert resourceId: ' . $validator->getDescription());
+        }
+    }
+
+    /**
+     * @param array{address: string, channel: string, signatureKey?: string, resourceType: string, resourceId: string, resourceInternalId: string, parentResourceType: string, parentResourceId: string, parentResourceInternalId: string} $recipient
+     */
+    private function validateAlertResource(array $recipient): void
+    {
+        foreach (['resourceType', 'resourceId', 'resourceInternalId', 'parentResourceType', 'parentResourceId', 'parentResourceInternalId'] as $key) {
+            if ($recipient[$key] === '') {
+                throw new Exception('Missing notification alert ' . $key);
             }
         }
     }
@@ -588,16 +621,16 @@ class Notifications extends Action
     /**
      * Splice a 1x1 tracking pixel before the last `</body>` tag (or
      * append at the end if the body has no closing tag). The pixel
-     * carries a signed JWT identifying the alert and user, which the
+     * carries a signed JWT identifying the alert recipient, which the
      * `/v1/account/alerts/:alertId/track` endpoint verifies before
      * marking the alert as read.
      */
-    private function injectTrackingPixel(string $body, string $alertId, string $userId, Document $project, string $opensslKey): string
+    private function injectTrackingPixel(string $body, string $alertId, string $recipientHash, Document $project, string $opensslKey): string
     {
         $jwt = (new JWT($opensslKey, 'HS256', ALERT_TRACKING_JWT_TTL, 0))
             ->encode([
                 'alertId' => $alertId,
-                'userId' => $userId,
+                'recipientHash' => $recipientHash,
                 'projectId' => $project->getId(),
                 'projectInternalId' => $project->getSequence(),
                 'purpose' => 'alert_track',

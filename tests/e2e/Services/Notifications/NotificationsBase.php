@@ -240,14 +240,14 @@ trait NotificationsBase
 
         $secret = System::getEnv('_APP_OPENSSL_KEY_V1');
         $this->assertNotEmpty($secret, '_APP_OPENSSL_KEY_V1 must be set for tracking pixel test');
-        $userId = $this->getRoot()['$id'];
+        $recipientHash = \substr($alertId, \strrpos($alertId, '_') + 1);
 
         // Track endpoint requires `purpose: 'alert_track'` — see C/M7 in
         // PR #12195 review. Other claim purposes are silently ignored (which
         // testTrackingPixelRejectsJwtWithoutPurposeClaim covers).
         $jwt = (new JWT($secret, 'HS256', ALERT_TRACKING_JWT_TTL, 0))->encode([
             'alertId' => $alertId,
-            'userId' => $userId,
+            'recipientHash' => $recipientHash,
             'projectId' => $this->getProject()['$id'],
             'purpose' => 'alert_track',
         ]);
@@ -298,12 +298,12 @@ trait NotificationsBase
 
         $secret = System::getEnv('_APP_OPENSSL_KEY_V1');
         $this->assertNotEmpty($secret, '_APP_OPENSSL_KEY_V1 must be set for the JWT purpose-claim test');
-        $userId = $this->getRoot()['$id'];
+        $recipientHash = \substr($alertId, \strrpos($alertId, '_') + 1);
 
-        // Mint a JWT with valid alertId/userId but NO purpose claim.
+        // Mint a JWT with valid alertId/recipientHash but NO purpose claim.
         $jwtNoPurpose = (new JWT($secret, 'HS256', ALERT_TRACKING_JWT_TTL, 0))->encode([
             'alertId' => $alertId,
-            'userId' => $userId,
+            'recipientHash' => $recipientHash,
             'projectId' => $this->getProject()['$id'],
         ]);
 
@@ -331,7 +331,7 @@ trait NotificationsBase
         // Mint a JWT with a wrong purpose value: same expectation, silently rejected.
         $jwtWrongPurpose = (new JWT($secret, 'HS256', ALERT_TRACKING_JWT_TTL, 0))->encode([
             'alertId' => $alertId,
-            'userId' => $userId,
+            'recipientHash' => $recipientHash,
             'projectId' => $this->getProject()['$id'],
             'purpose' => 'something_else',
         ]);

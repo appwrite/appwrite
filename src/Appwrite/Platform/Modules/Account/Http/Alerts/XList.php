@@ -75,8 +75,6 @@ class XList extends Action
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $queries[] = Query::equal('userId', [$user->getId()]);
-
         /**
          * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
          */
@@ -95,7 +93,7 @@ class XList extends Action
             $alertId = $cursor->getValue();
             $cursorDocument = $dbForPlatform->getDocument('alerts', $alertId);
 
-            if ($cursorDocument->isEmpty() || $cursorDocument->getAttribute('userId') !== $user->getId()) {
+            if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Alert '{$alertId}' for the 'cursor' value not found.");
             }
 

@@ -70,7 +70,7 @@ class Get extends Action
                 $decoded = $decoder->decode($jwt);
 
                 if (
-                    isset($decoded['alertId'], $decoded['userId'], $decoded['projectId'], $decoded['purpose'])
+                    isset($decoded['alertId'], $decoded['recipientHash'], $decoded['projectId'], $decoded['purpose'])
                     && $decoded['purpose'] === 'alert_track'
                     && $decoded['alertId'] === $alertId
                 ) {
@@ -79,7 +79,7 @@ class Get extends Action
 
                         if (
                             !$alert->isEmpty()
-                            && $alert->getAttribute('userId') === $decoded['userId']
+                            && $alert->getAttribute('recipientHash') === $decoded['recipientHash']
                             && $alert->getAttribute('projectId') === $decoded['projectId']
                             && (!isset($decoded['projectInternalId']) || $alert->getAttribute('projectInternalId') === $decoded['projectInternalId'])
                             && $alert->getAttribute('read') !== true
