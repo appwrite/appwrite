@@ -263,7 +263,7 @@ class Webhooks extends Action
         $template->setParam('{{attempts}}', $attempts);
 
         $subject = 'Webhook deliveries have been paused';
-        $preview = 'Webhook deliveries to your endpoint have been paused.';
+        $preview = 'Webhook "' . $webhook->getAttribute('name') . '" has been paused after ' . $attempts . ' failed delivery attempts.';
 
         $recipients = [];
 

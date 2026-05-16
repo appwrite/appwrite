@@ -434,6 +434,7 @@ trait NotificationsBase
         // Register a webhook pointing at an unroutable address. The Webhook
         // worker will fail every delivery and after 10 attempts pause it
         // and enqueue a console+email alert for the project owner.
+        $webhookName = 'Failing Webhook ' . \uniqid();
         $webhook = $this->client->call(Client::METHOD_POST, '/webhooks', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -442,7 +443,7 @@ trait NotificationsBase
             'x-appwrite-mode' => 'admin',
         ], [
             'webhookId' => ID::unique(),
-            'name' => 'Failing Webhook ' . \uniqid(),
+            'name' => $webhookName,
             'events' => ['users.*.create'],
             'url' => 'http://request-catcher-webhook:1/',
             'tls' => false,
@@ -477,30 +478,20 @@ trait NotificationsBase
             );
         }
 
-        // The deduplication key (and therefore the alert's messageId hash) is
-        // unique per (webhook, attempts) tuple — see Webhooks worker. Compute
-        // the expected messageId so we can deterministically match the alert
-        // for *this* test instance even when other tests in the same process
-        // have seeded their own webhook-failure alerts.
-        // Driver loops max+2 events; the worker may pause anywhere from
-        // attempts==max to attempts==max+2 depending on which delivery
-        // crossed the threshold. Record possible message ids.
-        $expectedMessageIds = [];
-        for ($attempts = $maxAttempts; $attempts <= $maxAttempts + 2; $attempts++) {
-            $expectedMessageIds[] = \md5('webhook:' . $webhookId . ':paused:' . $attempts);
-        }
-
         // Poll for the alert. Alert creation is async (notification worker)
         // and webhook deliveries also queue up — give them generous time.
         $alertId = null;
-        $this->assertEventually(function () use (&$alertId, $webhookId, $expectedMessageIds) {
+        $this->assertEventually(function () use (&$alertId, $projectId, $webhookId, $webhookName) {
             $list = $this->client->call(Client::METHOD_GET, '/account/alerts', $this->getConsoleAlertHeaders());
             $this->assertSame(200, $list['headers']['status-code']);
 
             foreach ($list['body']['alerts'] as $alert) {
                 if (
                     ($alert['channel'] ?? '') === 'console'
-                    && \in_array($alert['messageId'] ?? '', $expectedMessageIds, true)
+                    && ($alert['projectId'] ?? '') === $projectId
+                    && ($alert['parentResourceId'] ?? '') === $projectId
+                    && ($alert['title'] ?? '') === 'Webhook deliveries have been paused'
+                    && \str_contains($alert['body'] ?? '', $webhookName)
                 ) {
                     $alertId = $alert['$id'];
                     return;

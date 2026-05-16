@@ -59,7 +59,7 @@ class WebhooksTest extends TestCase
         $this->assertSame('project-1', $payload['project']['$id']);
         $this->assertSame('project-internal-1', $payload['project']['$sequence']);
         $this->assertSame('Webhook deliveries have been paused', $payload['subject']);
-        $this->assertSame('Webhook deliveries to your endpoint have been paused.', $payload['preview']);
+        $this->assertSame('Webhook "Payments" has been paused after 10 failed delivery attempts.', $payload['preview']);
         $this->assertSame('webhook:webhook-1:paused:2026-01-01T00:00:00.000+00:00', $payload['deduplicationKey']);
         $this->assertSame(
             \realpath(__DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl'),
