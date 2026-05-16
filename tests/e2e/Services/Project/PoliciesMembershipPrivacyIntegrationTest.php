@@ -22,6 +22,7 @@ class PoliciesMembershipPrivacyIntegrationTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apiKey,
+            'x-appwrite-response-format' => '1.9.4',
         ];
 
         // Step 1: Configure privacy to false

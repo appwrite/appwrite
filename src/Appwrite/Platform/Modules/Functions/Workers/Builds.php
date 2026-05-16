@@ -4,17 +4,20 @@ namespace Appwrite\Platform\Modules\Functions\Workers;
 
 use Ahc\Jwt\JWT;
 use Appwrite\Event\Event;
-use Appwrite\Event\Func;
+use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Message\Usage as UsageMessage;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Screenshot;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
+use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Comment;
 use Exception;
+use Executor\Exception\Timeout as ExecutorTimeout;
 use Executor\Executor;
 use Swoole\Coroutine as Co;
 use Utopia\Cache\Cache;
@@ -34,6 +37,7 @@ use Utopia\Detector\Detector\Rendering;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\Span\Span;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\System\System;
@@ -60,7 +64,7 @@ class Builds extends Action
             ->inject('queueForEvents')
             ->inject('publisherForScreenshots')
             ->inject('queueForWebhooks')
-            ->inject('queueForFunctions')
+            ->inject('publisherForFunctions')
             ->inject('queueForRealtime')
             ->inject('usage')
             ->inject('publisherForUsage')
@@ -86,7 +90,7 @@ class Builds extends Action
         Event $queueForEvents,
         Screenshot $publisherForScreenshots,
         Webhook $queueForWebhooks,
-        Func $queueForFunctions,
+        FunctionPublisher $publisherForFunctions,
         Realtime $queueForRealtime,
         Context $usage,
         UsagePublisher $publisherForUsage,
@@ -128,7 +132,7 @@ class Builds extends Action
                     $deviceForFiles,
                     $publisherForScreenshots,
                     $queueForWebhooks,
-                    $queueForFunctions,
+                    $publisherForFunctions,
                     $queueForRealtime,
                     $queueForEvents,
                     $usage,
@@ -164,7 +168,7 @@ class Builds extends Action
         Device $deviceForFiles,
         Screenshot $publisherForScreenshots,
         Webhook $queueForWebhooks,
-        Func $queueForFunctions,
+        FunctionPublisher $publisherForFunctions,
         Realtime $queueForRealtime,
         Event $queueForEvents,
         Context $usage,
@@ -183,6 +187,12 @@ class Builds extends Action
         array $platform,
         int $timeout
     ): void {
+        Span::add('project.id', $project->getId());
+        Span::add('resource.id', $resource->getId());
+        Span::add('resource.type', $resource->getCollection());
+        Span::add('deployment.id', $deployment->getId());
+        Span::add('build.timeout', $timeout);
+
         Console::info('Deployment action started');
 
         $startTime = DateTime::now();
@@ -223,8 +233,12 @@ class Builds extends Action
 
         $version = $this->getVersion($resource);
         $runtime = $this->getRuntime($resource, $version);
+        Span::add('build.runtime', $resource->getAttribute($resource->getCollection() === 'sites' ? 'buildRuntime' : 'runtime', ''));
+        Span::add('build.version', $version);
 
         $spec = Config::getParam('specifications')[$resource->getAttribute('buildSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
+        Span::add('build.cpus', (float) ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT));
+        Span::add('build.memory', (int) ($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT));
 
         // Realtime preparation
         $event = "{$resource->getCollection()}.[{$resourceKey}].deployments.[deploymentId].update";
@@ -557,9 +571,15 @@ class Builds extends Action
                 ->trigger();
 
             /** Trigger Functions */
-            $queueForFunctions
-                ->from($deploymentUpdate)
-                ->trigger();
+            $publisherForFunctions->enqueue(FunctionMessage::fromEvent(
+                event: $deploymentUpdate->getEvent(),
+                params: $deploymentUpdate->getParams(),
+                project: $deploymentUpdate->getProject(),
+                user: $deploymentUpdate->getUser(),
+                userId: $deploymentUpdate->getUserId(),
+                payload: $deploymentUpdate->getPayload(),
+                platform: $deploymentUpdate->getPlatform(),
+            ));
 
             /** Trigger Realtime Event */
             $queueForRealtime
@@ -720,6 +740,9 @@ class Builds extends Action
                         );
 
                         Console::log('createRuntime finished');
+                    } catch (ExecutorTimeout $error) {
+                        Console::warning('createRuntime timed out');
+                        $err = new AppwriteException(AppwriteException::BUILD_TIMEOUT, previous: $error);
                     } catch (\Throwable $error) {
                         Console::warning('createRuntime failed');
                         $err = $error;
@@ -1147,13 +1170,11 @@ class Builds extends Action
             $message = \str_replace('{APPWRITE_DETECTION_SEPARATOR_START}', '', $message);
             $message = \str_replace('{APPWRITE_DETECTION_SEPARATOR_END}', '', $message);
 
-            // Combine with previous logs if deployment got past build process
-            $previousLogs = '';
-            if (! is_null($deployment->getAttribute('buildSize', null))) {
-                $previousLogs = $deployment->getAttribute('buildLogs', '');
-                if (! empty($previousLogs)) {
-                    $message = $previousLogs . "\n" . $message;
-                }
+            // Append error to whatever build logs were already streamed
+            $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+            $previousLogs = $deployment->getAttribute('buildLogs', '');
+            if (! empty($previousLogs)) {
+                $message = $previousLogs . "\n" . $message;
             }
 
             $endTime = DateTime::now();

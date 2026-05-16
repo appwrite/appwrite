@@ -104,14 +104,17 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals('./', $site['body']['outputDirectory']);
 
         $variable = $this->createVariable($siteId, [
+            'variableId' => ID::unique(),
             'key' => 'siteKey1',
             'value' => 'siteValue1',
         ]);
         $variable2 = $this->createVariable($siteId, [
+            'variableId' => ID::unique(),
             'key' => 'siteKey2',
             'value' => 'siteValue2',
         ]);
         $variable3 = $this->createVariable($siteId, [
+            'variableId' => ID::unique(),
             'key' => 'siteKey3',
             'value' => 'siteValue3',
         ]);
@@ -211,6 +214,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals('Test Site', $site['body']['name']);
 
         $variable = $this->createVariable($siteId, [
+            'variableId' => ID::unique(),
             'key' => 'siteKey1',
             'value' => 'siteValue1',
             'secret' => false,
@@ -223,6 +227,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(false, $variable['body']['secret']);
 
         $variable2 = $this->createVariable($siteId, [
+            'variableId' => ID::unique(),
             'key' => 'siteKey2',
             'value' => 'siteValue2',
             'secret' => false,
@@ -235,6 +240,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(false, $variable2['body']['secret']);
 
         $secretVariable = $this->createVariable($siteId, [
+            'variableId' => ID::unique(),
             'key' => 'siteKey3',
             'value' => 'siteValue3',
             'secret' => true,
@@ -330,6 +336,316 @@ class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testListVariablesWithLimit(): void
+    {
+        $site = $this->createSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Test List Variables Limit',
+            'outputDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+        $siteId = $site['body']['$id'] ?? '';
+        $this->assertEquals(201, $site['headers']['status-code']);
+
+        $variable1 = $this->createVariable($siteId, [
+            'variableId' => ID::unique(),
+            'key' => 'LIMIT_KEY_1',
+            'value' => 'limit-value-1',
+        ]);
+        $this->assertEquals(201, $variable1['headers']['status-code']);
+
+        $variable2 = $this->createVariable($siteId, [
+            'variableId' => ID::unique(),
+            'key' => 'LIMIT_KEY_2',
+            'value' => 'limit-value-2',
+        ]);
+        $this->assertEquals(201, $variable2['headers']['status-code']);
+
+        // List with limit of 1
+        $response = $this->listVariables($siteId, [
+            'queries' => [
+                Query::limit(1)->toString(),
+            ],
+            'total' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(1, $response['body']['variables']);
+        $this->assertGreaterThanOrEqual(2, $response['body']['total']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testListVariablesWithoutTotal(): void
+    {
+        $site = $this->createSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Test List Variables No Total',
+            'outputDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+        $siteId = $site['body']['$id'] ?? '';
+        $this->assertEquals(201, $site['headers']['status-code']);
+
+        $variable = $this->createVariable($siteId, [
+            'variableId' => ID::unique(),
+            'key' => 'NO_TOTAL_KEY',
+            'value' => 'no-total-value',
+        ]);
+        $this->assertEquals(201, $variable['headers']['status-code']);
+
+        // List with total=false
+        $response = $this->listVariables($siteId, [
+            'total' => false,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(0, $response['body']['total']);
+        $this->assertGreaterThanOrEqual(1, \count($response['body']['variables']));
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testListVariablesCursorPagination(): void
+    {
+        $site = $this->createSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Test List Variables Cursor',
+            'outputDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+        $siteId = $site['body']['$id'] ?? '';
+        $this->assertEquals(201, $site['headers']['status-code']);
+
+        $variable1 = $this->createVariable($siteId, [
+            'variableId' => ID::unique(),
+            'key' => 'CURSOR_KEY_1',
+            'value' => 'cursor-value-1',
+        ]);
+        $this->assertEquals(201, $variable1['headers']['status-code']);
+
+        $variable2 = $this->createVariable($siteId, [
+            'variableId' => ID::unique(),
+            'key' => 'CURSOR_KEY_2',
+            'value' => 'cursor-value-2',
+        ]);
+        $this->assertEquals(201, $variable2['headers']['status-code']);
+
+        // Get first page with limit 1
+        $page1 = $this->listVariables($siteId, [
+            'queries' => [
+                Query::limit(1)->toString(),
+            ],
+            'total' => true,
+        ]);
+
+        $this->assertEquals(200, $page1['headers']['status-code']);
+        $this->assertCount(1, $page1['body']['variables']);
+        $cursorId = $page1['body']['variables'][0]['$id'];
+
+        // Get next page using cursor
+        $page2 = $this->listVariables($siteId, [
+            'queries' => [
+                Query::limit(1)->toString(),
+                Query::cursorAfter(new Document(['$id' => $cursorId]))->toString(),
+            ],
+            'total' => true,
+        ]);
+
+        $this->assertEquals(200, $page2['headers']['status-code']);
+        $this->assertCount(1, $page2['body']['variables']);
+        $this->assertNotEquals($cursorId, $page2['body']['variables'][0]['$id']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testUpdateVariableKey(): void
+    {
+        $site = $this->createSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Test Update Variable Key',
+            'outputDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+        $siteId = $site['body']['$id'] ?? '';
+        $this->assertEquals(201, $site['headers']['status-code']);
+
+        $variable = $this->createVariable($siteId, [
+            'variableId' => ID::unique(),
+            'key' => 'KEY_BEFORE',
+            'value' => 'unchanged-value',
+            'secret' => false
+        ]);
+        $this->assertEquals(201, $variable['headers']['status-code']);
+        $variableId = $variable['body']['$id'];
+
+        // Update only key
+        $response = $this->updateVariable($siteId, $variableId, [
+            'key' => 'KEY_AFTER',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('KEY_AFTER', $response['body']['key']);
+        $this->assertEquals('unchanged-value', $response['body']['value']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testUpdateVariableValueOnly(): void
+    {
+        $site = $this->createSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Test Update Variable Value',
+            'outputDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+        $siteId = $site['body']['$id'] ?? '';
+        $this->assertEquals(201, $site['headers']['status-code']);
+
+        $variable = $this->createVariable($siteId, [
+            'variableId' => ID::unique(),
+            'key' => 'UNCHANGED_KEY',
+            'value' => 'value-before',
+            'secret' => false
+        ]);
+        $this->assertEquals(201, $variable['headers']['status-code']);
+        $variableId = $variable['body']['$id'];
+
+        // Update only value
+        $response = $this->updateVariable($siteId, $variableId, [
+            'value' => 'value-after',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('UNCHANGED_KEY', $response['body']['key']);
+        $this->assertEquals('value-after', $response['body']['value']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testUpdateVariableNoOp(): void
+    {
+        $site = $this->createSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Test Update Variable NoOp',
+            'outputDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+        $siteId = $site['body']['$id'] ?? '';
+        $this->assertEquals(201, $site['headers']['status-code']);
+
+        $variable = $this->createVariable($siteId, [
+            'variableId' => ID::unique(),
+            'key' => 'NOOP_KEY',
+            'value' => 'noop-value',
+            'secret' => false
+        ]);
+        $this->assertEquals(201, $variable['headers']['status-code']);
+        $variableId = $variable['body']['$id'];
+
+        // Update with no parameters should fail with 400
+        $response = $this->updateVariable($siteId, $variableId, []);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testUpdateVariableNotFound(): void
+    {
+        $site = $this->createSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Test Update Variable Not Found',
+            'outputDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+        $siteId = $site['body']['$id'] ?? '';
+        $this->assertEquals(201, $site['headers']['status-code']);
+
+        $response = $this->updateVariable($siteId, 'non-existent-id', [
+            'key' => 'NEW_KEY',
+            'value' => 'new-value',
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('variable_not_found', $response['body']['type']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testCreateVariableInvalidId(): void
+    {
+        $site = $this->createSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Test Invalid Variable ID',
+            'outputDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+        $siteId = $site['body']['$id'] ?? '';
+        $this->assertEquals(201, $site['headers']['status-code']);
+
+        $variable = $this->createVariable($siteId, [
+            'variableId' => '!invalid-id!',
+            'key' => 'INVALID_ID_KEY',
+            'value' => 'value',
+        ]);
+
+        $this->assertEquals(400, $variable['headers']['status-code']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testCreateVariableDuplicateId(): void
+    {
+        $site = $this->createSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Test Duplicate Variable ID',
+            'outputDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+        $siteId = $site['body']['$id'] ?? '';
+        $this->assertEquals(201, $site['headers']['status-code']);
+
+        $variableId = ID::unique();
+
+        $variable = $this->createVariable($siteId, [
+            'variableId' => $variableId,
+            'key' => 'DUP_ID_KEY_1',
+            'value' => 'value1',
+        ]);
+        $this->assertEquals(201, $variable['headers']['status-code']);
+
+        // Attempt to create with same ID
+        $duplicate = $this->createVariable($siteId, [
+            'variableId' => $variableId,
+            'key' => 'DUP_ID_KEY_2',
+            'value' => 'value2',
+        ]);
+
+        $this->assertEquals(409, $duplicate['headers']['status-code']);
+        $this->assertEquals('variable_already_exists', $duplicate['body']['type']);
+
+        $this->cleanupSite($siteId);
+    }
+
     // This is first Sites test with Proxy
     // If this fails, it may not be related to variables; but Router flow failing
     public function testVariablesE2E(): void
@@ -351,6 +667,7 @@ class SitesCustomServerTest extends Scope
         $domain = $this->setupSiteDomain($siteId);
 
         $secretVariable = $this->createVariable($siteId, [
+            'variableId' => ID::unique(),
             'key' => 'name',
             'value' => 'Appwrite',
         ]);
@@ -1032,6 +1349,145 @@ class SitesCustomServerTest extends Scope
         rmdir($tempDir);
 
         $this->cleanupSite($siteId);
+    }
+
+    public function testCreateDeploymentParallelChunksLargeFile(): void
+    {
+        $siteId = $this->setupSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Test Site Parallel Chunk Deployment',
+            'outputDirectory' => './',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+
+        $deploymentId = ID::unique();
+        $tmpDirectory = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'appwrite-parallel-site-deployment-' . $deploymentId;
+
+        mkdir($tmpDirectory);
+
+        try {
+            file_put_contents($tmpDirectory . DIRECTORY_SEPARATOR . 'index.html', '<html><body>Hello World</body></html>');
+            file_put_contents($tmpDirectory . DIRECTORY_SEPARATOR . 'large.bin', random_bytes(20 * 1024 * 1024));
+
+            $source = $tmpDirectory . DIRECTORY_SEPARATOR . 'code.tar.gz';
+            Console::execute('cd ' . $tmpDirectory . ' && tar --exclude code.tar.gz -czf code.tar.gz .', '', $this->stdout, $this->stderr);
+
+            $totalSize = filesize($source);
+            $chunkSize = 5 * 1024 * 1024;
+            $chunksTotal = (int) ceil($totalSize / $chunkSize);
+
+            $this->assertGreaterThanOrEqual(4, $chunksTotal, 'Test deployment must span at least 4 chunks');
+
+            $requests = [];
+            $sourceHandle = fopen($source, 'rb');
+            $this->assertNotFalse($sourceHandle, 'Could not open deployment package');
+
+            try {
+                for ($i = 0; $i < $chunksTotal; $i++) {
+                    $start = $i * $chunkSize;
+                    $end = min($start + $chunkSize, $totalSize) - 1;
+                    $length = $end - $start + 1;
+                    $chunkPath = $tmpDirectory . DIRECTORY_SEPARATOR . 'chunk-' . $i . '.part';
+
+                    fseek($sourceHandle, $start);
+                    file_put_contents($chunkPath, fread($sourceHandle, $length));
+
+                    $requests[] = [
+                        'headers' => [
+                            'x-appwrite-project' => $this->getProject()['$id'],
+                            'x-appwrite-key' => $this->getProject()['apiKey'],
+                            'x-appwrite-id' => $deploymentId,
+                            'content-range' => 'bytes ' . $start . '-' . $end . '/' . $totalSize,
+                        ],
+                        'chunkPath' => $chunkPath,
+                    ];
+                }
+            } finally {
+                fclose($sourceHandle);
+            }
+
+            $responses = [];
+            $endpoint = parse_url($this->client->getEndpoint());
+            $scheme = $endpoint['scheme'] ?? 'http';
+            $host = $endpoint['host'] ?? 'appwrite';
+            $port = $endpoint['port'] ?? ($scheme === 'https' ? 443 : 80);
+            $basePath = rtrim($endpoint['path'] ?? '', '/');
+
+            \Swoole\Coroutine\run(function () use ($basePath, $host, $port, $requests, $scheme, $siteId, &$responses): void {
+                $wg = new \Swoole\Coroutine\WaitGroup();
+
+                foreach ($requests as $index => $request) {
+                    $wg->add();
+                    \Swoole\Coroutine::create(function () use ($basePath, $host, $index, $port, $request, &$responses, $scheme, $siteId, $wg): void {
+                        try {
+                            for ($attempt = 0; $attempt < 3; $attempt++) {
+                                $client = new \Swoole\Coroutine\Http\Client($host, (int) $port, $scheme === 'https');
+                                $client->set([
+                                    'timeout' => 300,
+                                    'ssl_verify_peer' => false,
+                                    'ssl_verify_host' => false,
+                                ]);
+                                $client->setHeaders($request['headers']);
+                                $client->setMethod(Client::METHOD_POST);
+                                $client->setData([
+                                    'activate' => true,
+                                ]);
+                                $client->addFile($request['chunkPath'], 'code', 'application/x-gzip', 'code.tar.gz');
+                                $client->execute($basePath . '/sites/' . $siteId . '/deployments');
+
+                                $responses[$index] = [
+                                    'body' => $client->body,
+                                    'error' => $client->errMsg,
+                                    'headers' => $client->headers ?? [],
+                                    'statusCode' => $client->statusCode,
+                                ];
+
+                                $client->close();
+
+                                if ($responses[$index]['statusCode'] !== 429) {
+                                    break;
+                                }
+
+                                $retryAfter = (float) ($responses[$index]['headers']['retry-after'] ?? 0.1);
+                                \Swoole\Coroutine::sleep(max($retryAfter, 0.1));
+                            }
+                        } finally {
+                            $wg->done();
+                        }
+                    });
+                }
+
+                $wg->wait();
+            });
+
+            ksort($responses);
+
+            foreach ($responses as $response) {
+                $this->assertSame('', $response['error']);
+                $this->assertContains($response['statusCode'], [202], (string) $response['body']);
+            }
+
+            $this->assertEventually(function () use ($siteId, $deploymentId) {
+                $deployment = $this->getDeployment($siteId, $deploymentId);
+
+                $this->assertEquals(200, $deployment['headers']['status-code']);
+                $this->assertEquals('ready', $deployment['body']['status']);
+                $this->assertEquals($deploymentId, $deployment['body']['$id']);
+            }, 120000, 500);
+        } finally {
+            $this->cleanupSite($siteId);
+
+            if (is_dir($tmpDirectory)) {
+                foreach (glob($tmpDirectory . DIRECTORY_SEPARATOR . '*') ?: [] as $file) {
+                    unlink($file);
+                }
+                rmdir($tmpDirectory);
+            }
+        }
     }
 
     public function testCreateDeployment()
@@ -2316,6 +2772,7 @@ class SitesCustomServerTest extends Scope
 
         // Poll for execution logs to be written (async)
         // Filter by requestPath to avoid picking up screenshot worker executions
+        // Wait for both the execution entry AND its logs field to be populated
         $logs = null;
         $timeout = 120;
         $start = \time();
@@ -2325,12 +2782,13 @@ class SitesCustomServerTest extends Scope
                 Query::equal('requestPath', ['/logs-inline'])->toString(),
                 Query::limit(1)->toString(),
             ]);
-            if (!empty($logs['body']['executions'])) {
+            if (!empty($logs['body']['executions']) && !empty($logs['body']['executions'][0]['logs'])) {
                 break;
             }
             \usleep(500000);
         }
         $this->assertNotEmpty($logs['body']['executions'], 'Execution logs were not available within timeout');
+        $this->assertNotNull($logs['body']['executions'][0]['logs'], 'Execution logs content was not populated within timeout');
         $this->assertEquals(200, $logs['headers']['status-code']);
         $this->assertStringContainsString($deploymentId, $logs['body']['executions'][0]['deploymentId']);
         $this->assertStringContainsString("GET", $logs['body']['executions'][0]['requestMethod']);
@@ -2364,11 +2822,21 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString("Action logs printed.", $response['body']);
 
-        $logs = $this->listLogs($siteId, [
-            Query::orderDesc('$createdAt')->toString(),
-            Query::equal('requestPath', ['/logs-action'])->toString(),
-            Query::limit(1)->toString(),
-        ]);
+        $logs = null;
+        $start = \time();
+        while (\time() - $start < $timeout) {
+            $logs = $this->listLogs($siteId, [
+                Query::orderDesc('$createdAt')->toString(),
+                Query::equal('requestPath', ['/logs-action'])->toString(),
+                Query::limit(1)->toString(),
+            ]);
+            if (!empty($logs['body']['executions']) && !empty($logs['body']['executions'][0]['logs'])) {
+                break;
+            }
+            \usleep(500000);
+        }
+        $this->assertNotEmpty($logs['body']['executions'], 'Action execution logs were not available within timeout');
+        $this->assertNotNull($logs['body']['executions'][0]['logs'], 'Action execution logs content was not populated within timeout');
         $this->assertEquals(200, $logs['headers']['status-code']);
         $this->assertStringContainsString($deploymentId, $logs['body']['executions'][0]['deploymentId']);
         $this->assertStringContainsString("GET", $logs['body']['executions'][0]['requestMethod']);

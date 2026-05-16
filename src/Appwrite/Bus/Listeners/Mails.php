@@ -4,14 +4,14 @@ namespace Appwrite\Bus\Listeners;
 
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Bus\Events\SessionCreated;
-use Appwrite\Event\Mail;
+use Appwrite\Event\Message\Mail as MailMessage;
+use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Template\Template;
 use Utopia\Bus\Listener;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Locale\Locale;
-use Utopia\Queue\Publisher;
 use Utopia\Storage\Validator\FileName;
 use Utopia\System\System;
 
@@ -31,14 +31,14 @@ class Mails extends Listener
     {
         $this
             ->desc('Sends session alert emails')
-            ->inject('publisher')
+            ->inject('publisherForMails')
             ->inject('locale')
             ->inject('platform')
             ->inject('dbForProject')
             ->callback($this->handle(...));
     }
 
-    public function handle(SessionCreated $event, Publisher $publisher, Locale $locale, array $platform, Database $dbForProject): void
+    public function handle(SessionCreated $event, MailPublisher $publisherForMails, Locale $locale, array $platform, Database $dbForProject): void
     {
         $project = new Document($event->project);
 
@@ -124,34 +124,32 @@ class Mails extends Listener
             ];
         }
 
-        $queueForMails = new Mail($publisher);
-
+        $smtpConfig = [];
         if ($smtp['enabled'] ?? false) {
-            $queueForMails
-                ->setSmtpHost($smtp['host'] ?? '')
-                ->setSmtpPort($smtp['port'] ?? '')
-                ->setSmtpUsername($smtp['username'] ?? '')
-                ->setSmtpPassword($smtp['password'] ?? '')
-                ->setSmtpSecure($smtp['secure'] ?? '')
-                ->setSmtpReplyToEmail($customTemplate['replyToEmail'] ?? $customTemplate['replyTo'] ?? $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? '') // Includes backwards compatibility
-                ->setSmtpReplyToName($customTemplate['replyToName'] ?? $smtp['replyToName'] ?? '')
-                ->setSmtpSenderEmail($customTemplate['senderEmail'] ?? $smtp['senderEmail'] ?? System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM))
-                ->setSmtpSenderName($customTemplate['senderName'] ?? $smtp['senderName'] ?? System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
+            $smtpConfig = [
+                'host' => $smtp['host'] ?? '',
+                'port' => $smtp['port'] ?? '',
+                'username' => $smtp['username'] ?? '',
+                'password' => $smtp['password'] ?? '',
+                'secure' => $smtp['secure'] ?? '',
+                'replyToEmail' => $customTemplate['replyToEmail'] ?? $customTemplate['replyTo'] ?? $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? '', // Includes backwards compatibility
+                'replyToName' => $customTemplate['replyToName'] ?? $smtp['replyToName'] ?? '',
+                'senderEmail' => $customTemplate['senderEmail'] ?? $smtp['senderEmail'] ?? System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM),
+                'senderName' => $customTemplate['senderName'] ?? $smtp['senderName'] ?? System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'),
+            ];
         }
 
-        $queueForMails
-            ->setProject($project)
-            ->setSubject($subject)
-            ->setPreview($preview)
-            ->setBody($body)
-            ->setBodyTemplate(__DIR__ . '/../../../../app/config/locale/templates/' . $smtpBaseTemplate . '.tpl')
-            ->appendVariables($emailVariables)
-            ->setRecipient($event->user['email']);
-
-        if ($isBranded) {
-            $queueForMails->setSenderName($platform['emailSenderName']);
-        }
-
-        $queueForMails->trigger();
+        $publisherForMails->enqueue(new MailMessage(
+            project: $project,
+            recipient: $event->user['email'],
+            subject: $subject,
+            bodyTemplate: __DIR__ . '/../../../../app/config/locale/templates/' . $smtpBaseTemplate . '.tpl',
+            body: $body,
+            preview: $preview,
+            smtp: $smtpConfig,
+            variables: $emailVariables,
+            customMailOptions: $isBranded ? ['senderName' => $platform['emailSenderName']] : [],
+            platform: $platform,
+        ));
     }
 }

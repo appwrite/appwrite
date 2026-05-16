@@ -45,10 +45,22 @@ return [
     ],
     "policies.read" => [
         "description" =>
+            "Access to read project\'s policies. Replaced by \'project.policies.read\' for more granular control",
+        "category" => "Project",
+        'deprecated' => true,
+    ],
+    "policies.write" => [
+        "description" =>
+            "Access to update project\'s policies. Replaces by \'project.policies.write\' for more granular control",
+        "category" => "Project",
+        'deprecated' => true,
+    ],
+    "project.policies.read" => [
+        "description" =>
             "Access to read project\'s policies",
         "category" => "Project",
     ],
-    "policies.write" => [
+    "project.policies.write" => [
         "description" =>
             "Access to update project\'s policies",
         "category" => "Project",
@@ -215,6 +227,16 @@ return [
         'description' => 'Access to create function executions',
         'category' => 'Functions',
     ],
+    'execution.read' => [
+        'description' => 'Access to read function executions. This scope is deprecated for consistency purposes, and replaced by `executions.read`.',
+        'category' => 'Functions',
+        'deprecated' => true,
+    ],
+    'execution.write' => [
+        'description' => 'Access to create function executions. This scope is deprecated for consistency purposes, and replaced by `executions.write`.',
+        'category' => 'Functions',
+        'deprecated' => true,
+    ],
 
     // Sites
     'sites.read' => [
@@ -276,6 +298,16 @@ return [
         'category' => 'Messaging',
     ],
 
+    // Proxy
+    'rules.read' => [
+        'description' => 'Access to read proxy rules.',
+        'category' => 'Proxy',
+    ],
+    'rules.write' => [
+        'description' => 'Access to create, update, and delete proxy rules.',
+        'category' => 'Proxy',
+    ],
+
     // Other
     "webhooks.read" => [
         "description" =>
@@ -329,12 +361,22 @@ return [
         'description' => 'Access to create, update, and delete resources under VCS service.',
         'category' => 'Other',
     ],
-    'rules.read' => [
-        'description' => 'Access to read proxy rules.',
-        'category' => 'Other',
+
+    // Advisor
+    'insights.read' => [
+        'description' => 'Access to read insights under Advisor service.',
+        'category' => 'Advisor',
     ],
-    'rules.write' => [
-        'description' => 'Access to create, update, and delete proxy rules.',
-        'category' => 'Other',
+    'insights.write' => [
+        'description' => 'Reserved for Advisor insight ingestion outside CE.',
+        'category' => 'Advisor',
+    ],
+    'reports.read' => [
+        'description' => 'Access to read reports under Advisor service.',
+        'category' => 'Advisor',
+    ],
+    'reports.write' => [
+        'description' => 'Access to delete reports under Advisor service.',
+        'category' => 'Advisor',
     ],
 ];

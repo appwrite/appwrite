@@ -2,298 +2,801 @@
 
 namespace Tests\E2E\Services\Proxy;
 
-use Appwrite\ID;
-use Appwrite\Tests\Async;
-use CURLFile;
 use Tests\E2E\Client;
-use Utopia\Console;
+use Utopia\Database\Query;
+use Utopia\System\System;
 
 trait ProxyBase
 {
-    use Async;
+    use ProxyHelpers;
 
-    protected function listRules(array $params = []): mixed
+    protected function tearDown(): void
     {
-        $rule = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), $params);
-
-        return $rule;
-    }
-
-    protected function createAPIRule(string $domain): mixed
-    {
-        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/api', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'domain' => $domain,
+        // Cleanup for testRuleVerification test
+        // Required as it uses static domain name
+        $rules = $this->listRules([
+            'queries' => [
+                Query::endsWith('domain', 'webapp.com')->toString(),
+                Query::limit(1000)->toString(),
+            ]
         ]);
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        foreach ($rules['body']['rules'] as $rule) {
+            $ruleId = $rule['$id'];
+            $response = $this->deleteRule($ruleId);
+            $this->assertEquals(204, $response['headers']['status-code']);
+        }
 
-        return $rule;
+        if ($rules['body']['total'] > 0) {
+            $rules = $this->listRules([
+                'queries' => [
+                    Query::endsWith('domain', 'webapp.com')->toString(),
+                    Query::limit(1)->toString()
+                ]
+            ]);
+            $this->assertEquals(200, $rules['headers']['status-code']);
+            $this->assertEquals(0, count($rules['body']['rules']));
+            $this->assertEquals(0, $rules['body']['total']);
+        }
     }
 
-    protected function updateRuleVerification(string $ruleId): mixed
+    public function testCreateRule(): void
     {
-        $rule = $this->client->call(Client::METHOD_PATCH, '/proxy/rules/' . $ruleId . '/verification', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
-
-        return $rule;
-    }
-
-    protected function createSiteRule(string $domain, string $siteId, string $branch = ''): mixed
-    {
-        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/site', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'domain' => $domain,
-            'siteId' => $siteId,
-            'branch' => $branch,
-        ]);
-
-        return $rule;
-    }
-
-    protected function getRule(string $ruleId): mixed
-    {
-        $rule = $this->client->call(Client::METHOD_GET, '/proxy/rules/' . $ruleId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
-
-        return $rule;
-    }
-
-    protected function createRedirectRule(string $domain, string $url, int $statusCode, string $resourceType, string $resourceId): mixed
-    {
-        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/redirect', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'domain' => $domain,
-            'url' => $url,
-            'statusCode' => $statusCode,
-            'resourceType' => $resourceType,
-            'resourceId' => $resourceId,
-        ]);
-
-        return $rule;
-    }
-
-    protected function createFunctionRule(string $domain, string $functionId, string $branch = ''): mixed
-    {
-        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/function', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'domain' => $domain,
-            'functionId' => $functionId,
-            'branch' => $branch,
-        ]);
-
-        return $rule;
-    }
-
-    protected function deleteRule(string $ruleId): mixed
-    {
-        $rule = $this->client->call(Client::METHOD_DELETE, '/proxy/rules/' . $ruleId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
-
-        return $rule;
-    }
-
-    protected function setupAPIRule(string $domain): string
-    {
+        $domain = \uniqid() . '-api.myapp.com';
         $rule = $this->createAPIRule($domain);
 
-        $this->assertEquals(201, $rule['headers']['status-code'], 'Failed to setup rule: ' . \json_encode($rule));
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertEquals($domain, $rule['body']['domain']);
+        $this->assertEquals('manual', $rule['body']['trigger']);
+        $this->assertArrayHasKey('$id', $rule['body']);
+        $this->assertArrayHasKey('domain', $rule['body']);
+        $this->assertArrayHasKey('type', $rule['body']);
+        $this->assertArrayHasKey('redirectUrl', $rule['body']);
+        $this->assertArrayHasKey('redirectStatusCode', $rule['body']);
+        $this->assertArrayHasKey('deploymentResourceType', $rule['body']);
+        $this->assertArrayHasKey('deploymentId', $rule['body']);
+        $this->assertArrayHasKey('deploymentResourceId', $rule['body']);
+        $this->assertArrayHasKey('deploymentVcsProviderBranch', $rule['body']);
+        $this->assertArrayHasKey('logs', $rule['body']);
+        $this->assertArrayHasKey('renewAt', $rule['body']);
 
-        return $rule['body']['$id'];
-    }
+        $ruleId = $rule['body']['$id'];
 
-    protected function setupRedirectRule(string $domain, string $url, int $statusCode, string $resourceType, string $resourceId): string
-    {
-        $rule = $this->createRedirectRule($domain, $url, $statusCode, $resourceType, $resourceId);
+        $rule = $this->createAPIRule($domain);
+        $this->assertEquals(409, $rule['headers']['status-code']);
 
-        $this->assertEquals(201, $rule['headers']['status-code'], 'Failed to setup rule: ' . \json_encode($rule));
-
-        return $rule['body']['$id'];
-    }
-
-    protected function setupFunctionRule(string $domain, string $functionId, string $branch = ''): string
-    {
-        $rule = $this->createFunctionRule($domain, $functionId, $branch);
-
-        $this->assertEquals(201, $rule['headers']['status-code'], 'Failed to setup rule: ' . \json_encode($rule));
-
-        return $rule['body']['$id'];
-    }
-
-    protected function setupSiteRule(string $domain, string $siteId, string $branch = ''): string
-    {
-        $rule = $this->createSiteRule($domain, $siteId, $branch);
-
-        $this->assertEquals(201, $rule['headers']['status-code'], 'Failed to setup rule: ' . \json_encode($rule));
-
-        return $rule['body']['$id'];
-    }
-
-    protected function cleanupRule(string $ruleId): void
-    {
         $rule = $this->deleteRule($ruleId);
-        $this->assertEquals(204, $rule['headers']['status-code'], 'Failed to cleanup rule: ' . \json_encode($rule));
+
+        $this->assertEquals(204, $rule['headers']['status-code']);
     }
 
-    protected function cleanupSite(string $siteId): void
+    public function testCreateRuleDeletesOrphanedRule(): void
     {
-        $site = $this->client->call(Client::METHOD_DELETE, '/sites/' . $siteId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
+        $domain = \uniqid() . '-orphan-api.custom.localhost';
+        $orphanProject = $this->getProject(true);
 
-        $this->assertEquals(204, $site['headers']['status-code'], 'Failed to cleanup site: ' . \json_encode($site));
+        $orphanRule = $this->client->call(Client::METHOD_POST, '/proxy/rules/api', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $orphanProject['$id'],
+            'x-appwrite-key' => $orphanProject['apiKey'],
+        ], [
+            'domain' => $domain,
+        ]);
+
+        $this->assertEquals(201, $orphanRule['headers']['status-code']);
+        $this->assertEquals($domain, $orphanRule['body']['domain']);
+
+        $duplicateRule = $this->createAPIRule($domain);
+        $this->assertEquals(409, $duplicateRule['headers']['status-code']);
+
+        $deleteProject = $this->client->call(Client::METHOD_DELETE, '/projects/' . $orphanProject['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $orphanProject['$id'],
+            'x-appwrite-key' => $orphanProject['apiKey'],
+        ]);
+
+        $this->assertEquals(204, $deleteProject['headers']['status-code']);
+
+        // Project deletion removes the project document synchronously, while rule cleanup is queued.
+        // Creating the same domain now should clean up that orphaned rule before retrying.
+        $rule = $this->createAPIRule($domain);
+
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertEquals($domain, $rule['body']['domain']);
+
+        $rules = $this->listRules([
+            'queries' => [
+                Query::equal('domain', [$domain])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertEquals(1, $rules['body']['total']);
+        $this->assertEquals($rule['body']['$id'], $rules['body']['rules'][0]['$id']);
+
+        $this->cleanupRule($rule['body']['$id']);
     }
 
-    protected function cleanupFunction(string $functionId): void
+    public function testCreateRuleSetup(): void
     {
-        $function = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
-
-        $this->assertEquals(204, $function['headers']['status-code'], 'Failed to cleanup function: ' . \json_encode($function));
+        $ruleId = $this->setupAPIRule(\uniqid() . '-api2.myapp.com');
+        $this->cleanupRule($ruleId);
     }
 
-    protected function setupSite(): mixed
+    public function testCreateRuleApex(): void
     {
-        // Site
-        $site = $this->client->call(Client::METHOD_POST, '/sites', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), [
-            'siteId' => ID::unique(),
-            'name' => 'Proxy site',
-            'framework' => 'other',
-            'adapter' => 'static',
-            'buildRuntime' => 'static-1',
-            'outputDirectory' => './',
-            'buildCommand' => '',
-            'installCommand' => '',
-            'fallbackFile' => '',
-        ]);
-
-        $this->assertEquals($site['headers']['status-code'], 201, 'Setup site failed with status code: ' . $site['headers']['status-code'] . ' and response: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
-
-        $siteId = $site['body']['$id'];
-
-        // Deployment
-        $deployment = $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/deployments', array_merge([
-            'content-type' => 'multipart/form-data',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), [
-            'code' => $this->packageSite('static'),
-            'activate' => 'true'
-        ]);
-
-        $this->assertEquals($deployment['headers']['status-code'], 202, 'Setup deployment failed with status code: ' . $deployment['headers']['status-code'] . ' and response: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
-        $deploymentId = $deployment['body']['$id'] ?? '';
-
-        $this->assertEventually(function () use ($siteId, $deploymentId) {
-            $site = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId, array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey'],
-            ]));
-            $this->assertEquals($deploymentId, $site['body']['deploymentId'], 'Deployment is not activated, deployment: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
-        }, 120000, 500);
-
-        return ['siteId' => $siteId, 'deploymentId' => $deploymentId];
+        $domain = \uniqid() . '.com';
+        $rule = $this->createAPIRule($domain);
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertEquals('unverified', $rule['body']['status']);
     }
 
-    protected function setupFunction(): mixed
+    public function testCreateRuleVcs(): void
     {
-        // Function
-        $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), [
-            'functionId' => ID::unique(),
-            'runtime' => 'node-22',
-            'name' => 'Proxy Function',
-            'entrypoint' => 'index.js',
-            'commands' => '',
-            'execute' => ['any']
+        $domain = \uniqid() . '-vcs.myapp.com';
+
+        $setup = $this->setupSite();
+        $siteId = $setup['siteId'];
+        $deploymentId = $setup['deploymentId'];
+
+        $this->assertNotEmpty($siteId);
+        $this->assertNotEmpty($deploymentId);
+
+        $rule = $this->createSiteRule('commit-' . $domain, $siteId);
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->cleanupRule($rule['body']['$id']);
+
+        $rule = $this->createSiteRule('branch-' . $domain, $siteId);
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->cleanupRule($rule['body']['$id']);
+
+        $rule = $this->createSiteRule('anything-' . $domain, $siteId);
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->cleanupRule($rule['body']['$id']);
+
+        $sitesDomain = \explode(',', System::getEnv('_APP_DOMAIN_SITES', ''))[0];
+        $domain =  \uniqid() . '-vcs.' . $sitesDomain;
+
+        $rule = $this->createSiteRule('commit-' . $domain, $siteId);
+        $this->assertEquals(400, $rule['headers']['status-code']);
+
+        $rule = $this->createSiteRule('branch-' . $domain, $siteId);
+        $this->assertEquals(400, $rule['headers']['status-code']);
+
+        $rule = $this->createSiteRule('subdomain.anything-' . $domain, $siteId);
+        $this->assertEquals(400, $rule['headers']['status-code']);
+
+        $rule = $this->createSiteRule('anything-' . $domain, $siteId);
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->cleanupRule($rule['body']['$id']);
+    }
+
+    public function testCreateAPIRule(): void
+    {
+        $domain = \uniqid() . '-api.custom.localhost';
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://appwrite.test');
+        $proxyClient->addHeader('x-appwrite-hostname', $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/versions');
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        $ruleId = $this->setupAPIRule($domain);
+
+        $this->assertNotEmpty($ruleId);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/versions');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(APP_VERSION_STABLE, $response['body']['server']);
+
+        $this->cleanupRule($ruleId);
+
+        $rule = $this->createAPIRule('http://' . $domain);
+        $this->assertEquals(400, $rule['headers']['status-code']);
+
+        $rule = $this->createAPIRule('https://' . $domain);
+        $this->assertEquals(400, $rule['headers']['status-code']);
+
+        $rule = $this->createAPIRule('wss://' . $domain);
+        $this->assertEquals(400, $rule['headers']['status-code']);
+
+        $rule = $this->createAPIRule($domain . '/some-path');
+        $this->assertEquals(400, $rule['headers']['status-code']);
+    }
+
+    public function testCreateRedirectRule(): void
+    {
+        $domain = \uniqid() . '-redirect.custom.localhost';
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://appwrite.test');
+        $proxyClient->addHeader('x-appwrite-hostname', $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/todos/1');
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        $siteId = $this->setupSite()['siteId'];
+
+        $ruleId301 = $this->setupRedirectRule($domain, 'https://jsonplaceholder.typicode.com/todos/1', 301, 'site', $siteId);
+        $this->assertNotEmpty($ruleId301);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/todos/1');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, $response['body']['id']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, $response['body']['id']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertEquals('https://jsonplaceholder.typicode.com/todos/1', $response['headers']['location']);
+
+        $domain = \uniqid() . '-redirect-307.custom.localhost';
+        $ruleId307 = $this->setupRedirectRule($domain, 'https://jsonplaceholder.typicode.com/todos/1', 307, 'site', $siteId);
+        $this->assertNotEmpty($ruleId307);
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://appwrite.test');
+        $proxyClient->addHeader('x-appwrite-hostname', $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false);
+        $this->assertEquals(307, $response['headers']['status-code']);
+        $this->assertEquals('https://jsonplaceholder.typicode.com/todos/1', $response['headers']['location']);
+
+        $rules = $this->listRules([
+            'queries' => [
+                Query::equal('type', ['redirect'])->toString(),
+                Query::equal('trigger', ['manual'])->toString(),
+                Query::equal('deploymentResourceType', ['site'])->toString(),
+                Query::equal('deploymentResourceId', [$siteId])->toString(),
+            ],
         ]);
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertEquals(2, $rules['body']['total']);
 
-        $this->assertEquals($function['headers']['status-code'], 201, 'Setup function failed with status code: ' . $function['headers']['status-code'] . ' and response: ' . json_encode($function['body'], JSON_PRETTY_PRINT));
+        $this->cleanupRule($ruleId301);
+        $this->cleanupRule($ruleId307);
+        $this->cleanupSite($siteId);
+    }
 
-        $functionId = $function['body']['$id'];
+    public function testCreateFunctionRule(): void
+    {
+        $domain = \uniqid() . '-function.custom.localhost';
 
-        // Deployment
-        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
-            'content-type' => 'multipart/form-data',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), [
-            'code' => $this->packageFunction('basic'),
-            'activate' => 'true'
-        ]);
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://appwrite.test');
+        $proxyClient->addHeader('x-appwrite-hostname', $domain);
 
-        $this->assertEquals($deployment['headers']['status-code'], 202, 'Setup deployment failed with status code: ' . $deployment['headers']['status-code'] . ' and response: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
-        $deploymentId = $deployment['body']['$id'] ?? '';
+        $response = $proxyClient->call(Client::METHOD_GET, '/ping');
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        $setup = $this->setupFunction();
+        $functionId = $setup['functionId'];
+        $deploymentId = $setup['deploymentId'];
+
+        $this->assertNotEmpty($functionId);
+        $this->assertNotEmpty($deploymentId);
+
+        $ruleId = $this->setupFunctionRule($domain, $functionId);
+        $this->assertNotEmpty($ruleId);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/ping');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($functionId, $response['body']['APPWRITE_FUNCTION_ID']);
+
+        $this->cleanupRule($ruleId);
+
+        $this->cleanupFunction($functionId);
 
         $this->assertEventually(function () use ($functionId, $deploymentId) {
-            $function = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId, array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey'],
-            ]));
-            $this->assertEquals($deploymentId, $function['body']['deploymentId'], 'Deployment is not activated, deployment: ' . json_encode($function['body'], JSON_PRETTY_PRINT));
-        }, 100000, 500);
+            $rules = $this->listRules([
+                'queries' => [
+                    Query::limit(1)->toString(),
+                    Query::equal('type', ['deployment'])->toString(),
+                    Query::equal('deploymentResourceType', ['function'])->toString(),
+                    Query::equal('deploymentResourceId', [$functionId])->toString(),
+                ]
+            ]);
+            $this->assertEquals(200, $rules['headers']['status-code']);
+            $this->assertEquals(0, $rules['body']['total']);
+            $this->assertCount(0, $rules['body']['rules']);
 
-        return ['functionId' => $functionId, 'deploymentId' => $deploymentId];
+            $rules = $this->listRules([
+                'queries' => [
+                    Query::limit(1)->toString(),
+                    Query::equal('type', ['deployment'])->toString(),
+                    Query::equal('deploymentId', [$deploymentId])->toString()
+                ]
+            ]);
+            $this->assertEquals(200, $rules['headers']['status-code']);
+            $this->assertEquals(0, $rules['body']['total']);
+            $this->assertCount(0, $rules['body']['rules']);
+        });
     }
 
-    private function packageSite(string $site): CURLFile
+    public function testCreateSiteRule(): void
     {
-        $stdout = '';
-        $stderr = '';
+        $domain = \uniqid() . '-site.custom.localhost';
 
-        $folderPath = realpath(__DIR__ . '/../../../resources/sites') . "/$site";
-        $tarPath = "$folderPath/code.tar.gz";
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://appwrite.test');
+        $proxyClient->addHeader('x-appwrite-hostname', $domain);
 
-        Console::execute("cd $folderPath && tar --exclude code.tar.gz --exclude node_modules -czf code.tar.gz .", '', $stdout, $stderr);
+        $response = $proxyClient->call(Client::METHOD_GET, '/contact');
+        $this->assertEquals(401, $response['headers']['status-code']);
 
-        if (filesize($tarPath) > 1024 * 1024 * 5) {
-            throw new \Exception('Code package is too large. Use the chunked upload method instead.');
+        $setup = $this->setupSite();
+        $siteId = $setup['siteId'];
+        $deploymentId = $setup['deploymentId'];
+
+        $this->assertNotEmpty($siteId);
+        $this->assertNotEmpty($deploymentId);
+
+        $ruleId = $this->setupSiteRule($domain, $siteId);
+        $this->assertNotEmpty($ruleId);
+        $rule = $this->getRule($ruleId);
+        $this->assertSame(200, $rule['headers']['status-code']);
+        $this->assertSame('unverified', $rule['body']['status']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/contact');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString('Contact page', $response['body']);
+
+        // Wildcard domains automatically get verified status
+        $domains = [
+            \uniqid() . '.sites.localhost',
+            \uniqid() . '.rebranded.localhost',
+        ];
+        foreach ($domains as $domain) {
+            $wildcardRuleId = $this->setupSiteRule($domain, $siteId);
+            $this->assertNotEmpty($wildcardRuleId);
+            $rule = $this->getRule($wildcardRuleId);
+            $this->assertSame(200, $rule['headers']['status-code']);
+            $this->assertSame('verified', $rule['body']['status']);
+            $this->cleanupRule($wildcardRuleId);
         }
 
-        return new CURLFile($tarPath, 'application/x-gzip', \basename($tarPath));
+        $rules = $this->listRules([
+            'queries' => [
+                Query::limit(1)->toString(),
+                Query::equal('trigger', ['deployment'])->toString(),
+                Query::equal('type', ['deployment'])->toString(),
+                Query::equal('deploymentResourceType', ['site'])->toString(),
+                Query::equal('deploymentResourceId', [$siteId])->toString(),
+            ]
+        ]);
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertGreaterThan(0, $rules['body']['total']);
+
+        $this->cleanupRule($ruleId);
+
+        $this->cleanupSite($siteId);
+
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $rules = $this->listRules([
+                'queries' => [
+                    Query::limit(1)->toString(),
+                    Query::equal('type', ['deployment'])->toString(),
+                    Query::equal('deploymentResourceType', ['site'])->toString(),
+                    Query::equal('deploymentResourceId', [$siteId])->toString(),
+                ]
+            ]);
+            $this->assertEquals(200, $rules['headers']['status-code']);
+            $this->assertEquals(0, $rules['body']['total']);
+            $this->assertCount(0, $rules['body']['rules']);
+
+            $rules = $this->listRules([
+                'queries' => [
+                    Query::limit(1)->toString(),
+                    Query::equal('type', ['deployment'])->toString(),
+                    Query::equal('deploymentId', [$deploymentId])->toString()
+                ]
+            ]);
+            $this->assertEquals(200, $rules['headers']['status-code']);
+            $this->assertEquals(0, $rules['body']['total']);
+            $this->assertCount(0, $rules['body']['rules']);
+        });
     }
 
-    private function packageFunction(string $function): CURLFile
+    public function testCreateSiteBranchRule(): void
     {
-        $stdout = '';
-        $stderr = '';
+        $domain = \uniqid() . '-site-branch.custom.localhost';
 
-        $folderPath = realpath(__DIR__ . '/../../../resources/functions') . "/$function";
-        $tarPath = "$folderPath/code.tar.gz";
+        $setup = $this->setupSite();
+        $siteId = $setup['siteId'];
+        $deploymentId = $setup['deploymentId'];
 
-        Console::execute("cd $folderPath && tar --exclude code.tar.gz --exclude node_modules -czf code.tar.gz .", '', $stdout, $stderr);
+        $this->assertNotEmpty($siteId);
+        $this->assertNotEmpty($deploymentId);
 
-        if (filesize($tarPath) > 1024 * 1024 * 5) {
-            throw new \Exception('Code package is too large. Use the chunked upload method instead.');
+        $ruleId = $this->setupSiteRule($domain, $siteId, 'dev');
+        $this->assertNotEmpty($ruleId);
+
+        $rule = $this->getRule($ruleId);
+        $this->assertEquals(200, $rule['headers']['status-code']);
+
+        $this->cleanupRule($ruleId);
+    }
+
+    public function testCreateFunctionBranchRule(): void
+    {
+        $domain = \uniqid() . '-function-branch.custom.localhost';
+
+        $setup = $this->setupFunction();
+        $functionId = $setup['functionId'];
+        $deploymentId = $setup['deploymentId'];
+
+        $this->assertNotEmpty($functionId);
+        $this->assertNotEmpty($deploymentId);
+
+        $ruleId = $this->setupFunctionRule($domain, $functionId, 'dev');
+        $this->assertNotEmpty($ruleId);
+
+        $rule = $this->getRule($ruleId);
+        $this->assertEquals(200, $rule['headers']['status-code']);
+
+        $this->cleanupRule($ruleId);
+
+        $this->cleanupFunction($functionId);
+    }
+
+    public function testUpdateRule(): void
+    {
+        // Create function appwrite-network domain
+        $functionsDomain = \explode(',', System::getEnv('_APP_DOMAIN_FUNCTIONS', ''))[0];
+        $domain = \uniqid() . '-cname-api.' . $functionsDomain;
+
+        $rule = $this->createAPIRule($domain);
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertEquals('verified', $rule['body']['status']);
+
+        $this->cleanupRule($rule['body']['$id']);
+
+        // Create site appwrite-network domain
+        $sitesDomain = \explode(',', System::getEnv('_APP_DOMAIN_SITES', ''))[0];
+        $domain = \uniqid() . '-cname-api.' . $sitesDomain;
+
+        $rule = $this->createAPIRule($domain);
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertEquals('verified', $rule['body']['status']);
+
+        $this->cleanupRule($rule['body']['$id']);
+
+        // Create + update
+        $domain = \uniqid() . '-cname-api.custom.com';
+
+        $rule = $this->createAPIRule($domain);
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertEquals('unverified', $rule['body']['status']);
+
+        $ruleId = $rule['body']['$id'];
+
+        $rule = $this->updateRuleStatus($ruleId);
+        $this->assertEquals(400, $rule['headers']['status-code']);
+
+        $this->cleanupRule($ruleId);
+    }
+
+    public function testGetRule()
+    {
+        $domain = \uniqid() . '-get.custom.localhost';
+        $ruleId = $this->setupAPIRule($domain);
+
+        $this->assertNotEmpty($ruleId);
+
+        $rule = $this->getRule($ruleId);
+        $this->assertEquals(200, $rule['headers']['status-code']);
+        $this->assertEquals($domain, $rule['body']['domain']);
+        $this->assertEquals('manual', $rule['body']['trigger']);
+        $this->assertArrayHasKey('$id', $rule['body']);
+        $this->assertArrayHasKey('domain', $rule['body']);
+        $this->assertArrayHasKey('type', $rule['body']);
+        $this->assertArrayHasKey('redirectUrl', $rule['body']);
+        $this->assertArrayHasKey('redirectStatusCode', $rule['body']);
+        $this->assertArrayHasKey('deploymentResourceType', $rule['body']);
+        $this->assertArrayHasKey('deploymentId', $rule['body']);
+        $this->assertArrayHasKey('deploymentResourceId', $rule['body']);
+        $this->assertArrayHasKey('deploymentVcsProviderBranch', $rule['body']);
+        $this->assertArrayHasKey('logs', $rule['body']);
+        $this->assertArrayHasKey('renewAt', $rule['body']);
+
+        $this->cleanupRule($ruleId);
+    }
+
+    public function testListRules()
+    {
+        $rules = $this->listRules();
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        foreach ($rules['body']['rules'] as $rule) {
+            $rule = $this->deleteRule($rule['$id']);
+            $this->assertEquals(204, $rule['headers']['status-code']);
         }
 
-        return new CURLFile($tarPath, 'application/x-gzip', \basename($tarPath));
+        $rules = $this->listRules();
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertEquals(0, $rules['body']['total']);
+        $this->assertCount(0, $rules['body']['rules']);
+
+        $rule1Domain = \uniqid() . '-list1.custom.localhost';
+        $rule1Id = $this->setupAPIRule($rule1Domain);
+        $this->assertNotEmpty($rule1Id);
+
+        $rules = $this->listRules();
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertEquals(1, $rules['body']['total']);
+        $this->assertCount(1, $rules['body']['rules']);
+        $this->assertEquals($rule1Domain, $rules['body']['rules'][0]['domain']);
+
+        $this->assertEquals('manual', $rules['body']['rules'][0]['trigger']);
+        $this->assertArrayHasKey('$id', $rules['body']['rules'][0]);
+        $this->assertArrayHasKey('domain', $rules['body']['rules'][0]);
+        $this->assertArrayHasKey('type', $rules['body']['rules'][0]);
+        $this->assertArrayHasKey('redirectUrl', $rules['body']['rules'][0]);
+        $this->assertArrayHasKey('redirectStatusCode', $rules['body']['rules'][0]);
+        $this->assertArrayHasKey('deploymentResourceType', $rules['body']['rules'][0]);
+        $this->assertArrayHasKey('deploymentId', $rules['body']['rules'][0]);
+        $this->assertArrayHasKey('deploymentResourceId', $rules['body']['rules'][0]);
+        $this->assertArrayHasKey('deploymentVcsProviderBranch', $rules['body']['rules'][0]);
+        $this->assertArrayHasKey('logs', $rules['body']['rules'][0]);
+        $this->assertArrayHasKey('renewAt', $rules['body']['rules'][0]);
+
+        $rule2Domain = \uniqid() . '-list1.custom.localhost';
+        $rule2Id = $this->setupAPIRule($rule2Domain);
+        $this->assertNotEmpty($rule2Id);
+
+        $rules = $this->listRules();
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertEquals(2, $rules['body']['total']);
+        $this->assertCount(2, $rules['body']['rules']);
+
+        $rules = $this->listRules([
+            'queries' => [
+                Query::limit(1)->toString()
+            ]
+        ]);
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertEquals(2, $rules['body']['total']);
+        $this->assertCount(1, $rules['body']['rules']);
+
+        $rules = $this->listRules([
+            'queries' => [
+                Query::equal('$id', [$rule1Id])->toString()
+            ]
+        ]);
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertCount(1, $rules['body']['rules']);
+        $this->assertEquals($rule1Domain, $rules['body']['rules'][0]['domain']);
+
+        $rules = $this->listRules([
+            'queries' => [
+                Query::orderDesc('$id')->toString()
+            ]
+        ]);
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertCount(2, $rules['body']['rules']);
+        $this->assertEquals($rule2Id, $rules['body']['rules'][0]['$id']);
+
+        $rules = $this->listRules([
+            'queries' => [
+                Query::equal('domain', [$rule2Domain])->toString()
+            ]
+        ]);
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertCount(1, $rules['body']['rules']);
+        $this->assertEquals($rule2Id, $rules['body']['rules'][0]['$id']);
+
+        $rules = $this->listRules([
+            'search' => $rule1Domain,
+            'queries' => [ Query::orderDesc('$createdAt')->toString() ]
+        ]);
+
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $ruleIds = \array_column($rules['body']['rules'], '$id');
+        $this->assertContains($rule1Id, $ruleIds);
+
+        $rules = $this->listRules([
+            'search' => $rule2Domain,
+            'queries' => [ Query::orderDesc('$createdAt')->toString() ]
+        ]);
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $ruleIds = \array_column($rules['body']['rules'], '$id');
+        $this->assertContains($rule2Id, $ruleIds);
+
+        $rules = $this->listRules([
+            'search' => $rule1Id,
+            'queries' => [ Query::orderDesc('$createdAt')->toString() ]
+        ]);
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $ruleDomains = \array_column($rules['body']['rules'], 'domain');
+        $this->assertContains($rule1Domain, $ruleDomains);
+
+        $rules = $this->listRules([
+            'search' => $rule2Id,
+            'queries' => [ Query::orderDesc('$createdAt')->toString() ]
+        ]);
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $ruleDomains = \array_column($rules['body']['rules'], 'domain');
+        $this->assertContains($rule2Domain, $ruleDomains);
+
+        $rules = $this->listRules();
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        foreach ($rules['body']['rules'] as $rule) {
+            $rule = $this->deleteRule($rule['$id']);
+            $this->assertEquals(204, $rule['headers']['status-code']);
+        }
+
+        $rules = $this->listRules();
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertEquals(0, $rules['body']['total']);
+        $this->assertCount(0, $rules['body']['rules']);
+    }
+
+    public function testRuleVerification(): void
+    {
+
+        // 1. Site rule can verify
+        $site = $this->setupSite();
+        $siteId = $site['siteId'];
+
+        $rule = $this->createSiteRule('stage-site.webapp.com', $siteId);
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertEquals('verifying', $rule['body']['status']);
+        $this->assertEmpty($rule['body']['logs']);
+        $this->assertNotEmpty($rule['body']['$id']);
+        $ruleId = $rule['body']['$id'];
+
+        $rule = $this->updateRuleStatus($ruleId);
+        $this->assertEquals(200, $rule['headers']['status-code']);
+        $this->assertEquals($ruleId, $rule['body']['$id']);
+        $this->assertEquals('verifying', $rule['body']['status']);
+        $this->assertEmpty($rule['body']['logs']);
+
+        $this->cleanupRule($rule['body']['$id']);
+        $this->cleanupSite($siteId);
+
+        // 2. Function rule can verify
+        $function = $this->setupFunction();
+        $functionId = $function['functionId'];
+
+        $rule = $this->createFunctionRule('stage-function.webapp.com', $functionId);
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertEquals('verifying', $rule['body']['status']);
+        $this->assertEmpty($rule['body']['logs']);
+        $this->cleanupRule($rule['body']['$id']);
+
+        $rule = $this->createAPIRule('stage-site.webapp.com');
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertEquals('unverified', $rule['body']['status']);
+        $this->assertStringContainsString('has incorrect CNAME value', $rule['body']['logs']);
+        $this->cleanupRule($rule['body']['$id']);
+
+        $this->cleanupFunction($functionId);
+
+        // 3. Wrong A record fails to verify
+        $rule = $this->createAPIRule('wrong-a-webapp.com');
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertEquals('unverified', $rule['body']['status']);
+        $this->assertStringContainsString('is missing CNAME record', $rule['body']['logs']);
+
+        $ruleId = $rule['body']['$id'];
+        $rule = $this->updateRuleStatus($ruleId);
+        $this->assertEquals(400, $rule['headers']['status-code']);
+        $this->assertStringContainsString('is missing CNAME record', $rule['body']['message']);
+
+        $rule = $this->getRule($ruleId);
+        $this->assertEquals(200, $rule['headers']['status-code']);
+        $this->assertEquals('unverified', $rule['body']['status']);
+
+        $this->cleanupRule($ruleId);
+
+        // 4. Correct A record can verify
+        $rule = $this->createAPIRule('webapp.com');
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertEquals('verifying', $rule['body']['status']);
+        $this->assertEmpty($rule['body']['logs']);
+
+        $this->cleanupRule($rule['body']['$id']);
+
+        // 5. Correct CNAME record can verify (no CAA record)
+        $rule = $this->createAPIRule('stage.webapp.com');
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertEquals('verifying', $rule['body']['status']);
+        $this->assertEmpty($rule['body']['logs']);
+
+        $this->cleanupRule($rule['body']['$id']);
+
+        // 6. Missing CNAME record fails to verify
+        $rule = $this->createAPIRule('stage-missing-cname.webapp.com');
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertEquals('unverified', $rule['body']['status']);
+        $this->assertStringContainsString('is missing CNAME record', $rule['body']['logs']);
+
+        $ruleId = $rule['body']['$id'];
+        $rule = $this->updateRuleStatus($ruleId);
+        $this->assertEquals(400, $rule['headers']['status-code']);
+        $this->assertStringContainsString('is missing CNAME record', $rule['body']['message']);
+
+        $rule = $this->getRule($ruleId);
+        $this->assertEquals(200, $rule['headers']['status-code']);
+        $this->assertEquals('unverified', $rule['body']['status']);
+
+        $this->cleanupRule($ruleId);
+
+        // 7. Wrong CNAME record fails to verify
+        $rule = $this->createAPIRule('stage-wrong-cname.webapp.com');
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertEquals('unverified', $rule['body']['status']);
+        $this->assertStringContainsString('has incorrect CNAME value', $rule['body']['logs']);
+
+        $ruleId = $rule['body']['$id'];
+        $rule = $this->updateRuleStatus($ruleId);
+        $this->assertEquals(400, $rule['headers']['status-code']);
+        $this->assertStringContainsString('has incorrect CNAME value', $rule['body']['message']);
+
+        $rule = $this->getRule($ruleId);
+        $this->assertEquals(200, $rule['headers']['status-code']);
+        $this->assertEquals('unverified', $rule['body']['status']);
+
+        $this->cleanupRule($ruleId);
+
+        // 8. Wrong CAA record fails to verify
+        $rule = $this->createAPIRule('stage-wrong-caa.webapp.com');
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertEquals('unverified', $rule['body']['status']);
+        $this->assertStringContainsString('has incorrect CAA value', $rule['body']['logs']);
+
+        $ruleId = $rule['body']['$id'];
+        $rule = $this->updateRuleStatus($ruleId);
+        $this->assertEquals(400, $rule['headers']['status-code']);
+        $this->assertStringContainsString('has incorrect CAA value', $rule['body']['message']);
+
+        $rule = $this->getRule($ruleId);
+        $this->assertEquals(200, $rule['headers']['status-code']);
+        $this->assertEquals('unverified', $rule['body']['status']);
+
+        $this->cleanupRule($ruleId);
+
+        // 9. Correct CAA record can verify
+        $rule = $this->createAPIRule('stage-correct-caa.webapp.com');
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertEquals('verifying', $rule['body']['status']);
+        $this->assertEmpty($rule['body']['logs']);
+
+        $this->cleanupRule($rule['body']['$id']);
+    }
+
+    public function testUpdateRuleVerificationWithSameDataUpdatesTimestamp(): void
+    {
+        $domain = \uniqid() . '-timestamp-test.webapp.com';
+        $rule = $this->createAPIRule($domain);
+
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertEquals('unverified', $rule['body']['status']);
+        $this->assertNotEmpty($rule['body']['logs']);
+
+        $ruleId = $rule['body']['$id'];
+        $initialUpdatedAt = $rule['body']['$updatedAt'];
+        $initiallogs = $rule['body']['logs'];
+
+        sleep(1);
+
+        $updatedRule = $this->updateRuleStatus($ruleId);
+
+        $this->assertEquals(400, $updatedRule['headers']['status-code']);
+        $this->assertStringContainsString($initiallogs, $updatedRule['body']['message']);
+
+        $ruleAfterUpdate = $this->getRule($ruleId);
+        $this->assertEquals(200, $ruleAfterUpdate['headers']['status-code']);
+        $this->assertEquals('unverified', $ruleAfterUpdate['body']['status']);
+        $this->assertEquals($initiallogs, $ruleAfterUpdate['body']['logs']);
+        $this->assertNotEquals($initialUpdatedAt, $ruleAfterUpdate['body']['$updatedAt']);
+
+        $initialTime = new \DateTime($initialUpdatedAt);
+        $updatedTime = new \DateTime($ruleAfterUpdate['body']['$updatedAt']);
+        $this->assertGreaterThan($initialTime, $updatedTime);
+
+        $this->cleanupRule($ruleId);
     }
 }

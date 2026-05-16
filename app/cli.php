@@ -2,10 +2,11 @@
 
 require_once __DIR__ . '/init.php';
 
-use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
-use Appwrite\Event\Func;
 use Appwrite\Event\Publisher\Certificate as CertificatePublisher;
+use Appwrite\Event\Publisher\Database as DatabasePublisher;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Platform\Appwrite;
@@ -281,12 +282,18 @@ $container->set('publisherForStatsResources', fn (Publisher $publisher) => new S
     $publisher,
     new Queue(System::getEnv('_APP_STATS_RESOURCES_QUEUE_NAME', Event::STATS_RESOURCES_QUEUE_NAME))
 ), ['publisher']);
-$container->set('queueForFunctions', function (Publisher $publisher) {
-    return new Func($publisher);
-}, ['publisher']);
-$container->set('queueForDeletes', function (Publisher $publisher) {
-    return new Delete($publisher);
-}, ['publisher']);
+$container->set('publisherForFunctions', fn (Publisher $publisher) => new FunctionPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME), 'utopia-queue', Event::FUNCTIONS_QUEUE_TTL)
+), ['publisher']);
+$container->set('publisherForDatabase', fn (Publisher $publisherDatabases) => new DatabasePublisher(
+    $publisherDatabases,
+    new Queue(System::getEnv('_APP_DATABASE_QUEUE_NAME', Event::DATABASE_QUEUE_NAME))
+), ['publisherDatabases']);
+$container->set('publisherForDeletes', fn (Publisher $publisher) => new DeletePublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_DELETE_QUEUE_NAME', Event::DELETE_QUEUE_NAME))
+), ['publisher']);
 $container->set('logError', function (Registry $register) {
     return function (Throwable $error, string $namespace, string $action) use ($register) {
         Console::error('[Error] Timestamp: ' . date('c', time()));

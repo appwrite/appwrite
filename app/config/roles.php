@@ -59,8 +59,8 @@ $admins = [
     'oauth2.write',
     'mocks.read',
     'mocks.write',
-    'policies.read',
-    'policies.write',
+    'project.policies.read',
+    'project.policies.write',
     'templates.read',
     'templates.write',
     'projects.write',
@@ -103,6 +103,10 @@ $admins = [
     'tokens.write',
     'schedules.read',
     'schedules.write',
+    'insights.read',
+    'insights.write',
+    'reports.read',
+    'reports.write',
 ];
 
 return [

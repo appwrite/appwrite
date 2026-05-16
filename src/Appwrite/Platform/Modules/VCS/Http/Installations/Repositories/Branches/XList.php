@@ -7,9 +7,12 @@ use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Validator\Queries\Branches;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Query as QueryException;
+use Utopia\Database\Query;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\Text;
@@ -49,6 +52,8 @@ class XList extends Action
             ))
             ->param('installationId', '', new Text(256), 'Installation Id')
             ->param('providerRepositoryId', '', new Text(256), 'Repository Id')
+            ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+            ->param('queries', [], new Branches(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit, offset, cursorAfter, and cursorBefore', true)
             ->inject('gitHub')
             ->inject('response')
             ->inject('dbForPlatform')
@@ -58,10 +63,18 @@ class XList extends Action
     public function action(
         string $installationId,
         string $providerRepositoryId,
+        string $search,
+        array $queries,
         GitHub $github,
         Response $response,
         Database $dbForPlatform
     ) {
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
         $installation = $dbForPlatform->getDocument('installations', $installationId);
 
         if ($installation->isEmpty()) {
@@ -85,11 +98,48 @@ class XList extends Action
 
         $branches = $github->listBranches($owner, $repositoryName);
 
+        if (!empty($search)) {
+            $branches = \array_values(\array_filter($branches, fn (string $branch) => \stripos($branch, $search) !== false));
+        }
+
+        $total = \count($branches);
+        [
+            'limit' => $limit,
+            'offset' => $offset,
+        ] = Query::groupByType($queries);
+        $cursorQuery = \current(Query::getCursorQueries($queries, false));
+
+        $limit ??= APP_LIMIT_LIST_DEFAULT;
+        $offset ??= 0;
+
+        if ($cursorQuery instanceof Query) {
+            $cursor = $cursorQuery->getValue();
+            $cursorDirection = $cursorQuery->getMethod() === Query::TYPE_CURSOR_AFTER
+                ? Database::CURSOR_AFTER
+                : Database::CURSOR_BEFORE;
+
+            $cursorIndex = \array_search($cursor, $branches, true);
+            if ($cursorIndex === false) {
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Branch '{$cursor}' for the 'cursor' value not found.");
+            }
+
+            $offset += $cursorDirection === Database::CURSOR_AFTER ? $cursorIndex + 1 : 0;
+
+            if ($cursorDirection === Database::CURSOR_BEFORE) {
+                $start = \max(0, $cursorIndex - $limit);
+                $branches = \array_slice($branches, $start, $cursorIndex - $start);
+            } else {
+                $branches = \array_slice($branches, $offset, $limit);
+            }
+        } else {
+            $branches = \array_slice($branches, $offset, $limit);
+        }
+
         $response->dynamic(new Document([
             'branches' => \array_map(function ($branch) {
                 return new Document(['name' => $branch]);
             }, $branches),
-            'total' => \count($branches),
+            'total' => $total,
         ]), Response::MODEL_BRANCH_LIST);
     }
 }

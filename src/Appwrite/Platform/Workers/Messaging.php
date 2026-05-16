@@ -106,27 +106,20 @@ class Messaging extends Action
 
         Span::add('message.type', $type);
 
-        try {
-            switch ($type) {
-                case MESSAGE_SEND_TYPE_INTERNAL:
-                    $message = new Document($payload['message'] ?? []);
-                    $recipients = $payload['recipients'] ?? [];
+        switch ($type) {
+            case MESSAGE_SEND_TYPE_INTERNAL:
+                $message = new Document($payload['message'] ?? []);
+                $recipients = $payload['recipients'] ?? [];
 
-                    $this->sendInternalSMSMessage($message, $project, $recipients, $log);
-                    break;
-                case MESSAGE_SEND_TYPE_EXTERNAL:
-                    $message = $dbForProject->getDocument('messages', $payload['messageId']);
+                $this->sendInternalSMSMessage($message, $project, $recipients, $log);
+                break;
+            case MESSAGE_SEND_TYPE_EXTERNAL:
+                $message = $dbForProject->getDocument('messages', $payload['messageId']);
 
-                    $this->sendExternalMessage($dbForProject, $message, $deviceForFiles, $project, $publisherForUsage);
-                    break;
-                default:
-                    throw new \Exception('Unknown message type: ' . $type);
-            }
-        } catch (\Throwable $e) {
-            Span::error($e);
-            throw $e;
-        } finally {
-            Span::current()?->finish();
+                $this->sendExternalMessage($dbForProject, $message, $deviceForFiles, $project, $publisherForUsage);
+                break;
+            default:
+                throw new \Exception('Unknown message type: ' . $type);
         }
     }
 
@@ -162,21 +155,26 @@ class Messaging extends Action
         }
 
         if (\count($userIds) > 0) {
-            $users = $dbForProject->find('users', [
-                Query::equal('$id', $userIds),
-                Query::limit(\count($userIds)),
-            ]);
-            foreach ($users as $user) {
-                $targets = \array_filter($user->getAttribute('targets'), function (Document $target) use ($providerType) {
-                    return $target->getAttribute('providerType') === $providerType;
-                });
+            $limit = 1000;
+            $offset = 0;
+
+            do {
+                $targets = $dbForProject->find('targets', [
+                    Query::equal('userId', $userIds),
+                    Query::select(['providerId', 'identifier']),
+                    Query::equal('providerType', [$providerType]),
+                    Query::limit($limit),
+                    Query::offset($offset),
+                ]);
 
                 \array_push($allTargets, ...$targets);
-            }
+                $offset += \count($targets);
+            } while (\count($targets) === $limit);
         }
 
         if (\count($targetIds) > 0) {
             $targets = $dbForProject->find('targets', [
+                Query::select(['providerId', 'identifier']),
                 Query::equal('$id', $targetIds),
                 Query::equal('providerType', [$providerType]),
                 Query::limit(\count($targetIds)),

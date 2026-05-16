@@ -31,7 +31,7 @@ class Update extends Action
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
             ->setHttpPath('/v1/project/auth-methods/:methodId')
             ->httpAlias('/v1/projects/:projectId/auth/:methodId')
-            ->desc('Update project auth method status. Use this endpoint to enable or disable a given auth method for this project.')
+            ->desc('Update project auth method status')
             ->groups(['api', 'project'])
             ->label('scope', 'project.write')
             ->label('event', 'authMethod.[methodId].update')
