@@ -30,6 +30,6 @@ class MockPublisher implements Publisher
 
     public function getQueueSize(Queue $queue, bool $failedJobs = false): int
     {
-        return count($this->events[$queue->name]);
+        return count($this->events[$queue->name] ?? []);
     }
 }

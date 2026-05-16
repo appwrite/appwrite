@@ -1,8 +1,8 @@
 <?php
 
 use Appwrite\Event\Event;
-use Appwrite\Event\Notification;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
+use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Usage\Context;
@@ -335,9 +335,10 @@ return function (Container $container): void {
         return new Webhook($publisher);
     }, ['publisher']);
 
-    $container->set('queueForNotifications', function (Publisher $publisher) {
-        return new Notification($publisher);
-    }, ['publisher']);
+    $container->set('publisherForNotifications', fn (Publisher $publisher) => new NotificationPublisher(
+        $publisher,
+        new Queue(System::getEnv('_APP_NOTIFICATIONS_QUEUE_NAME', Event::NOTIFICATIONS_QUEUE_NAME))
+    ), ['publisher']);
 
     $container->set('publisherForFunctions', fn (Publisher $publisher) => new FunctionPublisher(
         $publisher,

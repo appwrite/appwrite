@@ -3,10 +3,8 @@
 namespace Tests\Unit\Platform\Workers;
 
 use Ahc\Jwt\JWT;
-use Appwrite\Event\Notification;
 use Appwrite\Platform\Workers\Notifications;
 use PHPUnit\Framework\TestCase;
-use Tests\Unit\Event\MockPublisher;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Memory;
@@ -918,136 +916,6 @@ class NotificationsTest extends TestCase
         } finally {
             \putenv($previousSmtpHost === false ? '_APP_SMTP_HOST' : '_APP_SMTP_HOST=' . $previousSmtpHost);
         }
-    }
-
-    /**
-     * Reviewer C2: `Notification::reset()` must clear EVERY state-bearing
-     * field — `$preview` was missing from the original reset() body and
-     * leaked across DI-shared event reuses (alarming when a webhook-paused
-     * preview line bleeds into an unrelated alert).
-     */
-    public function testNotificationEventResetClearsAllState(): void
-    {
-        $event = new Notification(new MockPublisher());
-
-        $event
-            ->setProject(new Document(['$id' => 'project-x']))
-            ->setRecipient('legacy@example.test')
-            ->setName('Some Name')
-            ->setSubject('Subject Line')
-            ->setBody('Body content')
-            ->setPreview('Preview snippet')
-            ->setVariables(['key' => 'value'])
-            ->setBodyTemplate('/tmp/template.tpl')
-            ->setAttachment('content', 'file.txt')
-            ->setRecipients([
-                ['address' => 'a@example.test', 'channel' => NOTIFICATION_TYPE_EMAIL],
-            ])
-            ->setChannels([NOTIFICATION_TYPE_EMAIL])
-            ->setTemplate('template-id')
-            ->setTemplateParams(['x' => 1])
-            ->setDeduplicationKey('dedup')
-            ->setPermissions([Permission::read(Role::any())])
-            ->setEvent('databases.*.documents.*.create')
-            ->setParam('databaseId', 'database-1')
-            ->setPayload(['before' => 'reset'], ['before'])
-            ->setUser(new Document(['$id' => 'user-before']))
-            ->setUserId('user-before')
-            ->setPlatform(['name' => 'platform-before'])
-            ->setContext('actor', new Document(['$id' => 'actor-before']));
-
-        $event->reset();
-
-        $this->assertSame('', $event->getRecipient(), 'recipient must reset to empty string');
-        $this->assertSame('', $event->getName(), 'name must reset to empty string');
-        $this->assertSame('', $event->getSubject(), 'subject must reset to empty string');
-        $this->assertSame('', $event->getBody(), 'body must reset to empty string');
-        $this->assertSame('', $event->getPreview(), 'preview must reset to empty string (C2 regression)');
-        $this->assertSame([], $event->getVariables(), 'variables must reset to empty array');
-        $this->assertSame('', $event->getBodyTemplate(), 'bodyTemplate must reset to empty string');
-        $this->assertSame([], $event->getAttachment(), 'attachment must reset to empty array');
-        $this->assertSame([], $event->getRecipients(), 'recipients must reset to empty array');
-        $this->assertSame([], $event->getChannels(), 'channels must reset to empty array');
-        $this->assertSame('', $event->getTemplate(), 'template must reset to empty string');
-        $this->assertSame([], $event->getTemplateParams(), 'templateParams must reset to empty array');
-        $this->assertSame('', $event->getDeduplicationKey(), 'deduplicationKey must reset to empty string');
-        $this->assertSame([], $event->getPermissions(), 'permissions must reset to empty array');
-        $this->assertNull($event->getProject(), 'project must reset to null');
-        $this->assertSame('', $event->getEvent(), 'inherited event must reset to empty string');
-        $this->assertSame([], $event->getParams(), 'inherited params must reset to empty array');
-        $this->assertSame([], $event->getPayload(), 'inherited payload must reset to empty array');
-        $this->assertNull($event->getUser(), 'inherited user must reset to null');
-        $this->assertNull($event->getUserId(), 'inherited userId must reset to null');
-        $this->assertSame([], $event->getPlatform(), 'inherited platform must reset to empty array');
-        $this->assertNull($event->getContext('actor'), 'inherited context must reset');
-    }
-
-    /**
-     * Reviewer C3: `Webhooks::sendAlert` resets the DI-shared Notification
-     * event before configuring the alert, so a second invocation in the same
-     * worker pass cannot bleed recipients, subject, body, preview, or dedup
-     * key from the first.
-     *
-     * We exercise this at the event level (rather than standing up the full
-     * Webhooks worker fixture, which needs `dbForPlatform.memberships` and
-     * full project shape) by replicating sendAlert's add → trigger → reset →
-     * add → trigger flow on a single Notification instance and asserting
-     * each enqueued payload is fully isolated.
-     */
-    public function testWebhookSendAlertResetsBetweenCalls(): void
-    {
-        $publisher = new MockPublisher();
-        $event = new Notification($publisher);
-
-        // First "sendAlert" pass: a single user, webhook A.
-        $event
-            ->setProject(new Document(['$id' => 'project-a', '$sequence' => 'project-a-internal']))
-            ->setSubject('Webhook A paused')
-            ->setPreview('Webhook A preview')
-            ->setBody('Webhook A body')
-            ->setDeduplicationKey('webhook:hookA:paused:10')
-            ->addRecipient('alice@example.test', NOTIFICATION_TYPE_EMAIL, null, RESOURCE_TYPE_USERS, 'user-A', 'user-A-internal', RESOURCE_TYPE_PROJECTS, 'project-a', 'project-a-internal')
-            ->addRecipient('user-A', NOTIFICATION_TYPE_CONSOLE, null, RESOURCE_TYPE_USERS, 'user-A', 'user-A-internal', RESOURCE_TYPE_PROJECTS, 'project-a', 'project-a-internal')
-            ->trigger();
-
-        // Mirror the production sendAlert: reset before configuring next alert.
-        $event->reset();
-
-        // Second pass: a different user/webhook entirely.
-        $event
-            ->setProject(new Document(['$id' => 'project-b', '$sequence' => 'project-b-internal']))
-            ->setSubject('Webhook B paused')
-            ->setPreview('Webhook B preview')
-            ->setBody('Webhook B body')
-            ->setDeduplicationKey('webhook:hookB:paused:10')
-            ->addRecipient('bob@example.test', NOTIFICATION_TYPE_EMAIL, null, RESOURCE_TYPE_USERS, 'user-B', 'user-B-internal', RESOURCE_TYPE_PROJECTS, 'project-b', 'project-b-internal')
-            ->addRecipient('user-B', NOTIFICATION_TYPE_CONSOLE, null, RESOURCE_TYPE_USERS, 'user-B', 'user-B-internal', RESOURCE_TYPE_PROJECTS, 'project-b', 'project-b-internal')
-            ->trigger();
-
-        $events = $publisher->getEvents('v1-notifications');
-        $this->assertNotNull($events, 'two trigger() calls must enqueue at least one batch');
-        $this->assertCount(2, $events, 'each sendAlert pass must produce its own enqueued event');
-
-        $first = $events[0];
-        $second = $events[1];
-
-        $this->assertSame('Webhook A paused', $first['subject']);
-        $this->assertSame('Webhook A preview', $first['preview']);
-        $this->assertSame('Webhook A body', $first['body']);
-        $this->assertSame('webhook:hookA:paused:10', $first['deduplicationKey']);
-        $this->assertCount(2, $first['recipients']);
-
-        $this->assertSame('Webhook B paused', $second['subject']);
-        $this->assertSame('Webhook B preview', $second['preview']);
-        $this->assertSame('Webhook B body', $second['body']);
-        $this->assertSame('webhook:hookB:paused:10', $second['deduplicationKey']);
-        $this->assertCount(2, $second['recipients'], 'second event must hold ONLY its own recipients');
-
-        $secondAddresses = \array_map(static fn ($r) => $r['address'], $second['recipients']);
-        $this->assertNotContains('alice@example.test', $secondAddresses, 'reset() must drop prior email recipient');
-        $this->assertNotContains('user-A', $secondAddresses, 'reset() must drop prior console recipient');
-        $this->assertContains('bob@example.test', $secondAddresses);
-        $this->assertContains('user-B', $secondAddresses);
     }
 
     /**

@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Health\Http\Health\Queue\Notifications;
 
-use Appwrite\Event\Notification;
+use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -42,16 +42,16 @@ class Get extends Base
                 contentType: ContentType::JSON
             ))
             ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
-            ->inject('queueForNotifications')
+            ->inject('publisherForNotifications')
             ->inject('response')
             ->callback($this->action(...));
     }
 
-    public function action(int|string $threshold, Notification $queueForNotifications, Response $response): void
+    public function action(int|string $threshold, NotificationPublisher $publisherForNotifications, Response $response): void
     {
         $threshold = (int) $threshold;
 
-        $size = $queueForNotifications->getSize();
+        $size = $publisherForNotifications->getSize();
 
         $this->assertQueueThreshold($size, $threshold);
 

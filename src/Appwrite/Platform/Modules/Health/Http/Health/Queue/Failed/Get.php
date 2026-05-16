@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Modules\Health\Http\Health\Queue\Failed;
 
 use Appwrite\Event\Event;
-use Appwrite\Event\Notification;
 use Appwrite\Event\Publisher\Audit;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Publisher\Certificate;
@@ -13,6 +12,7 @@ use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
+use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Publisher\Screenshot;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
@@ -89,7 +89,7 @@ class Get extends Base
             ->inject('publisherForMessaging')
             ->inject('publisherForMigrations')
             ->inject('publisherForScreenshots')
-            ->inject('queueForNotifications')
+            ->inject('publisherForNotifications')
             ->callback($this->action(...));
     }
 
@@ -110,7 +110,7 @@ class Get extends Base
         MessagingPublisher $publisherForMessaging,
         MigrationPublisher $publisherForMigrations,
         Screenshot $publisherForScreenshots,
-        Notification $queueForNotifications,
+        NotificationPublisher $publisherForNotifications,
     ): void {
         $threshold = (int) $threshold;
 
@@ -128,7 +128,7 @@ class Get extends Base
             System::getEnv('_APP_SCREENSHOTS_QUEUE_NAME', Event::SCREENSHOTS_QUEUE_NAME) => $publisherForScreenshots,
             System::getEnv('_APP_MESSAGING_QUEUE_NAME', Event::MESSAGING_QUEUE_NAME) => $publisherForMessaging,
             System::getEnv('_APP_MIGRATIONS_QUEUE_NAME', Event::MIGRATIONS_QUEUE_NAME) => $publisherForMigrations,
-            System::getEnv('_APP_NOTIFICATIONS_QUEUE_NAME', Event::NOTIFICATIONS_QUEUE_NAME) => $queueForNotifications,
+            System::getEnv('_APP_NOTIFICATIONS_QUEUE_NAME', Event::NOTIFICATIONS_QUEUE_NAME) => $publisherForNotifications,
             default => throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unknown queue name: ' . $name),
         };
         $failed = $queue->getSize(failed: true);

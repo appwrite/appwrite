@@ -2,8 +2,9 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\Event\Message\Notification as NotificationMessage;
 use Appwrite\Event\Message\Usage as UsageMessage;
-use Appwrite\Event\Notification;
+use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context as UsageContext;
@@ -36,7 +37,7 @@ class Webhooks extends Action
             ->inject('message')
             ->inject('project')
             ->inject('dbForPlatform')
-            ->inject('queueForNotifications')
+            ->inject('publisherForNotifications')
             ->inject('publisherForUsage')
             ->inject('log')
             ->inject('plan')
@@ -47,14 +48,14 @@ class Webhooks extends Action
      * @param Message $message
      * @param Document $project
      * @param Database $dbForPlatform
-     * @param Notification $queueForNotifications
+     * @param NotificationPublisher $publisherForNotifications
      * @param UsagePublisher $publisherForUsage
      * @param Log $log
      * @param array $plan
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Document $project, Database $dbForPlatform, Notification $queueForNotifications, UsagePublisher $publisherForUsage, Log $log, array $plan): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, Log $log, array $plan): void
     {
         $this->errors = [];
         $payload = $message->getPayload();
@@ -73,7 +74,7 @@ class Webhooks extends Action
 
         foreach ($project->getAttribute('webhooks', []) as $webhook) {
             if (array_intersect($webhook->getAttribute('events', []), $events)) {
-                $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForPlatform, $queueForNotifications, $publisherForUsage, $plan);
+                $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForPlatform, $publisherForNotifications, $publisherForUsage, $plan);
             }
         }
 
@@ -89,11 +90,12 @@ class Webhooks extends Action
      * @param Document $user
      * @param Document $project
      * @param Database $dbForPlatform
-     * @param Notification $queueForNotifications
+     * @param NotificationPublisher $publisherForNotifications
+     * @param UsagePublisher $publisherForUsage
      * @param array $plan
      * @return void
      */
-    private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForPlatform, Notification $queueForNotifications, UsagePublisher $publisherForUsage, array $plan): void
+    private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, array $plan): void
     {
         if ($webhook->getAttribute('enabled') !== true) {
             return;
@@ -171,7 +173,7 @@ class Webhooks extends Action
             if ($attempts >= \intval(System::getEnv('_APP_WEBHOOK_MAX_FAILED_ATTEMPTS', '10'))) {
                 $webhook->setAttribute('enabled', false);
                 $updatePayload['enabled'] = false;
-                $this->sendAlert($attempts, $statusCode, $webhook, $project, $dbForPlatform, $queueForNotifications, $plan);
+                $this->sendAlert($attempts, $statusCode, $webhook, $project, $dbForPlatform, $publisherForNotifications, $plan);
             }
 
             $dbForPlatform->updateDocument('webhooks', $webhook->getId(), new Document($updatePayload));
@@ -203,17 +205,12 @@ class Webhooks extends Action
      * @param Document $webhook
      * @param Document $project
      * @param Database $dbForPlatform
-     * @param Notification $queueForNotifications
+     * @param NotificationPublisher $publisherForNotifications
      * @param array $plan
      * @return void
      */
-    public function sendAlert(int $attempts, mixed $statusCode, Document $webhook, Document $project, Database $dbForPlatform, Notification $queueForNotifications, array $plan): void
+    public function sendAlert(int $attempts, mixed $statusCode, Document $webhook, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, array $plan): void
     {
-        // The DI-shared Notification event accumulates state across calls. Reset
-        // before configuring this alert so multiple webhook failures in a single
-        // worker invocation do not bleed recipients/subject/body between alerts.
-        $queueForNotifications->reset();
-
         $memberships = $dbForPlatform->find('memberships', [
             Query::equal('teamInternalId', [$project->getAttribute('teamInternalId')]),
             Query::limit(APP_LIMIT_SUBQUERY)
@@ -253,69 +250,71 @@ class Webhooks extends Action
 
         $template = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-webhook-failed.tpl');
 
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'disabled' ? 'http' : 'https';
+        $consoleHostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', 'localhost'));
+
+        $template->setParam('{{user}}', 'there');
         $template->setParam('{{webhook}}', $webhook->getAttribute('name'));
         $template->setParam('{{project}}', $project->getAttribute('name'));
         $template->setParam('{{url}}', $webhook->getAttribute('url'));
         $template->setParam('{{error}}', 'The server returned ' . $statusCode . ' status code');
+        $template->setParam('{{host}}', $protocol . '://' . $consoleHostname);
         $template->setParam('{{path}}', "/console/project-$region-$projectId/settings/webhooks/$webhookId");
         $template->setParam('{{attempts}}', $attempts);
 
-        $template->setParam('{{logoUrl}}', $plan['logoUrl'] ?? APP_EMAIL_LOGO_URL);
-        $template->setParam('{{accentColor}}', $plan['accentColor'] ?? APP_EMAIL_ACCENT_COLOR);
-        $template->setParam('{{twitterUrl}}', $plan['twitterUrl'] ?? APP_SOCIAL_TWITTER);
-        $template->setParam('{{discordUrl}}', $plan['discordUrl'] ?? APP_SOCIAL_DISCORD);
-        $template->setParam('{{githubUrl}}', $plan['githubUrl'] ?? APP_SOCIAL_GITHUB_APPWRITE);
-        $template->setParam('{{termsUrl}}', $plan['termsUrl'] ?? APP_EMAIL_TERMS_URL);
-        $template->setParam('{{privacyUrl}}', $plan['privacyUrl'] ?? APP_EMAIL_PRIVACY_URL);
-
         $subject = 'Webhook deliveries have been paused';
         $preview = 'Webhook deliveries to your endpoint have been paused.';
-        $body = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl');
 
-        $body
-            ->setParam('{{subject}}', $subject)
-            ->setParam('{{message}}', $template->render())
-            ->setParam('{{year}}', date('Y'));
-
-        $queueForNotifications
-            ->setProject($project)
-            ->setSubject($subject)
-            ->setPreview($preview)
-            ->setBody($body->render())
-            ->setDeduplicationKey('webhook:' . $webhook->getId() . ':paused:' . $attempts);
+        $recipients = [];
 
         foreach ($users as $user) {
             $email = $user->getAttribute('email');
             $userId = $user->getId();
 
-            $queueForNotifications->addRecipient(
-                $userId,
-                NOTIFICATION_TYPE_CONSOLE,
-                null,
-                RESOURCE_TYPE_USERS,
-                $userId,
-                (string) $user->getSequence(),
-                RESOURCE_TYPE_PROJECTS,
-                $projectId,
-                (string) $projectInternalId,
-            );
+            $recipients[] = [
+                'address' => $userId,
+                'channel' => NOTIFICATION_TYPE_CONSOLE,
+                'resourceType' => RESOURCE_TYPE_USERS,
+                'resourceId' => $userId,
+                'resourceInternalId' => (string) $user->getSequence(),
+                'parentResourceType' => RESOURCE_TYPE_PROJECTS,
+                'parentResourceId' => $projectId,
+                'parentResourceInternalId' => (string) $projectInternalId,
+            ];
 
             if (!empty($email)) {
-                $queueForNotifications->addRecipient(
-                    $email,
-                    NOTIFICATION_TYPE_EMAIL,
-                    null,
-                    RESOURCE_TYPE_USERS,
-                    $userId,
-                    (string) $user->getSequence(),
-                    RESOURCE_TYPE_PROJECTS,
-                    $projectId,
-                    (string) $projectInternalId,
-                );
+                $recipients[] = [
+                    'address' => $email,
+                    'channel' => NOTIFICATION_TYPE_EMAIL,
+                    'resourceType' => RESOURCE_TYPE_USERS,
+                    'resourceId' => $userId,
+                    'resourceInternalId' => (string) $user->getSequence(),
+                    'parentResourceType' => RESOURCE_TYPE_PROJECTS,
+                    'parentResourceId' => $projectId,
+                    'parentResourceInternalId' => (string) $projectInternalId,
+                ];
             }
         }
 
-        $queueForNotifications->trigger();
+        $publisherForNotifications->enqueue(new NotificationMessage(
+            project: $project,
+            recipients: $recipients,
+            deduplicationKey: 'webhook:' . $webhook->getId() . ':paused:' . $attempts,
+            subject: $subject,
+            bodyTemplate: __DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl',
+            body: $template->render(),
+            preview: $preview,
+            variables: [
+                'logoUrl' => $plan['logoUrl'] ?? APP_EMAIL_LOGO_URL,
+                'accentColor' => $plan['accentColor'] ?? APP_EMAIL_ACCENT_COLOR,
+                'twitter' => $plan['twitterUrl'] ?? APP_SOCIAL_TWITTER,
+                'discord' => $plan['discordUrl'] ?? APP_SOCIAL_DISCORD,
+                'github' => $plan['githubUrl'] ?? APP_SOCIAL_GITHUB_APPWRITE,
+                'terms' => $plan['termsUrl'] ?? APP_EMAIL_TERMS_URL,
+                'privacy' => $plan['privacyUrl'] ?? APP_EMAIL_PRIVACY_URL,
+                'platform' => $plan['platformName'] ?? APP_NAME,
+            ],
+        ));
     }
 
     private static function hasOwnerRole(Document $membership, string $projectId): bool
