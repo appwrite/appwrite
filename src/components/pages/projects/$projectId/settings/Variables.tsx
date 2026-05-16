@@ -14,7 +14,7 @@ export function Variables() {
   const params = useParams({ strict: false })
   const projectId = params.projectId as string
   const [page, setPage] = useState(0)
-  const limit = SMALL_PAGE_SIZE
+  const [limit, setLimit] = useState(SMALL_PAGE_SIZE)
 
   const { project } = useProject(projectId)
   const { variables, total, isLoading } = useProjectVariables(
@@ -42,6 +42,10 @@ export function Variables() {
           page={page}
           limit={limit}
           onPageChange={setPage}
+          onPageSizeChange={(newLimit) => {
+            setLimit(newLimit)
+            setPage(0)
+          }}
           itemLabel="variables"
         />
       </div>

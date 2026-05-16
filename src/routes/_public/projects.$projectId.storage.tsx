@@ -11,7 +11,7 @@ const SIDEBAR_BUCKETS_PREFETCH = 100
 
 export const Route = createFileRoute('/_public/projects/$projectId/storage')({
   head: () => ({ meta: [{ title: pageTitle('Storage') }] }),
-  loader: async ({ params, context, location }) => {
+  loader: async ({ params, context, location, cause, preload }) => {
     if (typeof window === 'undefined') return
 
     const { projectId } = params
@@ -52,7 +52,14 @@ export const Route = createFileRoute('/_public/projects/$projectId/storage')({
       pathParts[1] === projectId &&
       pathParts[2] === 'storage'
 
-    if (onStorageIndex && !new URLSearchParams(location.search).get('create')) {
+    // Link hover uses preload intent (`defaultPreload: 'intent'`). Throwing redirect
+    // here would commit navigation without a click — only redirect on real visits.
+    if (
+      onStorageIndex &&
+      !new URLSearchParams(location.search).get('create') &&
+      cause !== 'preload' &&
+      !preload
+    ) {
       const bucketsData = queryClient.getQueryData(bucketsOpts.queryKey) as
         | { buckets?: { $id?: string }[] }
         | undefined

@@ -39,6 +39,7 @@ import {
   useRef,
   useCallback,
   useMemo,
+  type MouseEvent,
   type ReactNode,
 } from 'react'
 import {
@@ -2736,6 +2737,9 @@ export function RowsSpreadsheet({
   const urlDriven = onNavigateToRowsList != null
 
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
+  const rowSelectionAnchorRef = useRef<string | null>(null)
+  const [rowMultiSelectModifierActive, setRowMultiSelectModifierActive] =
+    useState(false)
   const [requestedPage, setRequestedPage] = useState(
     urlDriven ? rowsUrlPage : 1,
   )
@@ -3173,8 +3177,70 @@ export function RowsSpreadsheet({
     } else {
       newSelected.add(id)
     }
+    rowSelectionAnchorRef.current = id
     setSelectedRows(newSelected)
   }
+
+  useEffect(() => {
+    const syncModifierActive = (event: KeyboardEvent) => {
+      setRowMultiSelectModifierActive(
+        event.shiftKey || event.ctrlKey || event.metaKey,
+      )
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.key === 'Shift' ||
+        event.key === 'Control' ||
+        event.key === 'Meta'
+      ) {
+        setRowMultiSelectModifierActive(true)
+      }
+    }
+    const onBlur = () => setRowMultiSelectModifierActive(false)
+    window.addEventListener('keydown', onKeyDown)
+    window.addEventListener('keyup', syncModifierActive)
+    window.addEventListener('blur', onBlur)
+    return () => {
+      window.removeEventListener('keydown', onKeyDown)
+      window.removeEventListener('keyup', syncModifierActive)
+      window.removeEventListener('blur', onBlur)
+    }
+  }, [])
+
+  const isRowMultiSelectModifierClick = (event: MouseEvent) =>
+    event.shiftKey || event.ctrlKey || event.metaKey
+
+  const preventRowTextSelectionOnPointer = (event: MouseEvent) => {
+    if (isRowMultiSelectModifierClick(event)) {
+      event.preventDefault()
+    }
+  }
+
+  const selectRowsWithShift = useCallback(
+    (rowId: string) => {
+      const anchorId =
+        rowSelectionAnchorRef.current ??
+        (selectedRows.size > 0 ? Array.from(selectedRows)[0] : rowId)
+      const anchorIndex = rows.findIndex((r) => r.$id === anchorId)
+      const clickIndex = rows.findIndex((r) => r.$id === rowId)
+      if (anchorIndex === -1 || clickIndex === -1) {
+        const next = new Set(selectedRows)
+        if (next.has(rowId)) next.delete(rowId)
+        else next.add(rowId)
+        rowSelectionAnchorRef.current = rowId
+        setSelectedRows(next)
+        return
+      }
+      const start = Math.min(anchorIndex, clickIndex)
+      const end = Math.max(anchorIndex, clickIndex)
+      const next = new Set(selectedRows)
+      for (let i = start; i <= end; i++) {
+        next.add(rows[i].$id)
+      }
+      setSelectedRows(next)
+    },
+    [rows, selectedRows],
+  )
 
   const toggleAll = () => {
     // Rows are already paginated by the API
@@ -3240,25 +3306,43 @@ export function RowsSpreadsheet({
     }
   }
 
-  const handleRowClick = (row: RowData) => {
+  const openRowInDrawer = (
+    row: RowData,
+    options?: {
+      focusedField?: string | null
+      initialTab?: 'data' | 'permissions' | null
+    },
+  ) => {
+    rowSelectionAnchorRef.current = row.$id
     setSelectedRowForEdit(row)
-    setFocusedField(null)
-    setDrawerInitialTab('data')
+    setFocusedField(options?.focusedField ?? null)
+    setDrawerInitialTab(options?.initialTab ?? 'data')
     setEditDrawerOpen(true)
+  }
+
+  const handleRowMultiSelectPointer = (rowId: string, event: MouseEvent) => {
+    if (!isRowMultiSelectModifierClick(event)) return false
+    event.preventDefault()
+    if (event.shiftKey) {
+      selectRowsWithShift(rowId)
+    } else {
+      toggleRow(rowId)
+    }
+    return true
+  }
+
+  const handleRowClick = (row: RowData, event: MouseEvent) => {
+    if (handleRowMultiSelectPointer(row.$id, event)) return
+    openRowInDrawer(row, { focusedField: null, initialTab: 'data' })
   }
 
   const handleOpenPermissionsRow = (row: RowData) => {
-    setSelectedRowForEdit(row)
-    setFocusedField(null)
-    setDrawerInitialTab('permissions')
-    setEditDrawerOpen(true)
+    openRowInDrawer(row, { focusedField: null, initialTab: 'permissions' })
   }
 
-  const handleCellClick = (row: RowData, key: string) => {
-    setSelectedRowForEdit(row)
-    setFocusedField(key)
-    setDrawerInitialTab(null)
-    setEditDrawerOpen(true)
+  const handleCellClick = (row: RowData, key: string, event: MouseEvent) => {
+    if (handleRowMultiSelectPointer(row.$id, event)) return
+    openRowInDrawer(row, { focusedField: key, initialTab: null })
   }
 
   // Open row drawer when URL has #row-<id> or #row-<id>-permissions (e.g. from copied link).
@@ -3988,6 +4072,7 @@ export function RowsSpreadsheet({
           }
           className={cn(
             'min-h-0 min-w-0 overflow-auto overscroll-contain',
+            rowMultiSelectModifierActive && 'select-none',
             useInlineDocumentPane
               ? cn(
                   'shrink-0 border-border',
@@ -4382,7 +4467,8 @@ export function RowsSpreadsheet({
                         ? 'bg-muted'
                         : 'hover:bg-muted/50',
                   )}
-                  onClick={() => handleRowClick(row)}
+                  onMouseDown={preventRowTextSelectionOnPointer}
+                  onClick={(e) => handleRowClick(row, e)}
                   onContextMenu={(e) => {
                     const td = (e.target as HTMLElement).closest('td')
                     const key = td?.getAttribute('data-column') ?? null
@@ -4442,9 +4528,13 @@ export function RowsSpreadsheet({
                       key={col}
                       className={cn('px-3 py-1.5', bodyCellBorderClass)}
                       data-column={col}
+                      onMouseDown={(e) => {
+                        e.stopPropagation()
+                        preventRowTextSelectionOnPointer(e)
+                      }}
                       onClick={(e) => {
                         e.stopPropagation()
-                        handleCellClick(row, col)
+                        handleCellClick(row, col, e)
                       }}
                     >
                       {(() => {
@@ -4564,7 +4654,10 @@ export function RowsSpreadsheet({
                           <DropdownMenuItem
                             onClick={(e) => {
                               e.stopPropagation()
-                              handleRowClick(row)
+                              openRowInDrawer(row, {
+                                focusedField: null,
+                                initialTab: 'data',
+                              })
                             }}
                           >
                             Update {dbLabels.recordSingular}

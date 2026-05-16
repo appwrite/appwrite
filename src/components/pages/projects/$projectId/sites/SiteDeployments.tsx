@@ -33,6 +33,7 @@ import {
   isDeploymentCompleted,
   isDeploymentInProgress,
   isDeploymentTimeout,
+  DEPLOYMENT_TABLE_STATUS_COLUMN_CLASS,
 } from '@/lib/utils/deployment-status'
 import { getDeploymentRepositoryWebUrl } from '@/lib/utils/deployment-repository-url'
 import {
@@ -1299,7 +1300,12 @@ export function SiteDeploymentsView() {
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
                         Deployment ID
                       </TableHead>
-                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[120px]">
+                      <TableHead
+                        className={cn(
+                          'px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider',
+                          DEPLOYMENT_TABLE_STATUS_COLUMN_CLASS,
+                        )}
+                      >
                         Status
                       </TableHead>
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[150px]">
@@ -1383,7 +1389,12 @@ export function SiteDeploymentsView() {
                               maxWidth={180}
                             />
                           </TableCell>
-                          <TableCell className="px-4 py-3">
+                          <TableCell
+                            className={cn(
+                              'px-4 py-3',
+                              DEPLOYMENT_TABLE_STATUS_COLUMN_CLASS,
+                            )}
+                          >
                             {isActive ? (
                               <Badge
                                 variant="active"

@@ -5,19 +5,30 @@ import {
   Outlet,
   useNavigate,
 } from '@tanstack/react-router'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
 import { CopyableId } from '@/components/global/shared/CopyableId'
+import { DeploymentInfo } from '@/components/global/shared/DeploymentInfo'
 import {
   useProjectFunction,
+  useFunctionDeployment,
   useProject,
   useOrganizationScopes,
 } from '@/lib/react-query/hooks'
+import { sdk } from '@/lib/appwrite/sdk'
 import { canShowFunctionSecuritySettings } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { ArrowLeft, AlertCircle } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { toast } from 'sonner'
 import {
   RefreshProvider,
@@ -56,9 +67,15 @@ function FunctionLayoutContent() {
   const { projectId, functionId } = useParams({ strict: false })
   const location = useLocation()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { isRefreshing, triggerRefresh, hasRefreshHandler } = useRefresh()
 
   const { data: func, isLoading } = useProjectFunction(projectId, functionId)
+  const { data: activeDeployment } = useFunctionDeployment(
+    projectId,
+    functionId,
+    func?.deploymentId || undefined,
+  )
   const { project } = useProject(projectId)
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
@@ -271,6 +288,35 @@ function FunctionLayoutContent() {
   const [cliDeployOpen, setCliDeployOpen] = useState(false)
   const [manualDeployOpen, setManualDeployOpen] = useState(false)
   const [executeDrawerOpen, setExecuteDrawerOpen] = useState(false)
+  const [redeployDialogOpen, setRedeployDialogOpen] = useState(false)
+
+  const redeployMutation = useMutation({
+    mutationFn: async () => {
+      if (!projectId || !functionId || !activeDeployment) {
+        throw new Error(
+          'Project ID, Function ID, and Deployment ID are required',
+        )
+      }
+      const projectSdk = sdk.forProject(projectId)
+      return await projectSdk.functions.createDuplicateDeployment({
+        functionId,
+        deploymentId: activeDeployment.$id,
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['deployments', 'project', projectId, functionId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['function', 'project', projectId, functionId],
+      })
+      toast.success('Deployment rebuild started')
+      setRedeployDialogOpen(false)
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to redeploy')
+    },
+  })
 
   const handleCreateExecution = () => {
     if (!func?.deploymentId) {
@@ -387,9 +433,12 @@ function FunctionLayoutContent() {
               <Button
                 size="sm"
                 className="h-8 shrink-0 bg-amber-500 px-3 text-[12px] font-medium text-amber-950 hover:bg-amber-400 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400"
-                onClick={() => {
-                  toast.info('Redeploy functionality coming soon')
-                }}
+                onClick={() => setRedeployDialogOpen(true)}
+                disabled={
+                  !func.deploymentId ||
+                  !activeDeployment ||
+                  redeployMutation.isPending
+                }
               >
                 Redeploy
               </Button>
@@ -574,6 +623,42 @@ function FunctionLayoutContent() {
               resourceId={functionId}
             />
           </>
+        )}
+        {activeDeployment && (
+          <Dialog open={redeployDialogOpen} onOpenChange={setRedeployDialogOpen}>
+            <DialogContent className="sm:max-w-md p-0">
+              <DialogHeader className="px-6 pt-6 pb-4 text-left">
+                <DialogTitle>Redeploy deployment</DialogTitle>
+              </DialogHeader>
+              <div className="border-t border-border" />
+              <div className="px-6 pb-4 pt-4">
+                <DialogDescription className="text-[13px] mb-4">
+                  This will create a new build for this deployment using the
+                  current function configuration. The original deployment's code
+                  will be preserved and used for the new build.
+                </DialogDescription>
+                <DeploymentInfo deployment={activeDeployment} showStatus={true} />
+              </div>
+              <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => setRedeployDialogOpen(false)}
+                  disabled={redeployMutation.isPending}
+                  className="h-9 text-[13px]"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="default"
+                  onClick={() => redeployMutation.mutate()}
+                  disabled={redeployMutation.isPending}
+                  className="h-9 text-[13px]"
+                >
+                  Redeploy
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         )}
       </div>
     </CreateDeploymentProvider>

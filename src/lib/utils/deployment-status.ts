@@ -14,6 +14,13 @@ import {
 } from 'lucide-react'
 
 /**
+ * Fixed width for deployment table Status column (longest label: "Processing").
+ * Prevents layout shift when status text changes during polling.
+ */
+export const DEPLOYMENT_TABLE_STATUS_COLUMN_CLASS =
+  'w-[7.75rem] min-w-[7.75rem] max-w-[7.75rem]'
+
+/**
  * Deployment status badge configuration
  */
 export interface DeploymentStatusBadge {

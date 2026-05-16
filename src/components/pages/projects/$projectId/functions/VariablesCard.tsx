@@ -19,7 +19,7 @@ export function FunctionVariablesCard({
   functionId,
 }: FunctionVariablesCardProps) {
   const [page, setPage] = useState(0)
-  const limit = SMALL_PAGE_SIZE
+  const [limit, setLimit] = useState(SMALL_PAGE_SIZE)
 
   const { variables, total, isLoading } = useFunctionVariables(
     projectId,
@@ -52,6 +52,10 @@ export function FunctionVariablesCard({
       page={page}
       limit={limit}
       onPageChange={setPage}
+      onPageSizeChange={(newLimit) => {
+        setLimit(newLimit)
+        setPage(0)
+      }}
       itemLabel="variables"
       projectVariableKeysForWarning={projectVariableKeysForWarning}
     />

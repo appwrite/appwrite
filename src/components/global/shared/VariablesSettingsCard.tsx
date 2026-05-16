@@ -188,6 +188,8 @@ export interface VariablesSettingsCardProps {
   page?: number
   limit?: number
   onPageChange?: (page: number) => void
+  /** When set with pagination, enables per-page size options (10 / 25 / 50 / 100). */
+  onPageSizeChange?: (limit: number) => void
   itemLabel?: string
   isVariableEditable?: (v: VariableRecord) => boolean
   getVariableBadge?: (v: VariableRecord) => string | undefined
@@ -212,6 +214,7 @@ export function VariablesSettingsCard({
   page = 0,
   limit = 10,
   onPageChange,
+  onPageSizeChange,
   itemLabel = 'variables',
   isVariableEditable = () => true,
   getVariableBadge,
@@ -243,7 +246,7 @@ export function VariablesSettingsCard({
   const [deleteError, setDeleteError] = useState('')
 
   const currentPage = page + 1
-  const hasPagination = limit > 0 && total > limit && onPageChange
+  const hasPagination = limit > 0 && !!onPageChange
 
   const defaultDuplicateProjectKeyTooltip = `This key is also set on the project. The value in this row overwrites the project default for this ${scopeLabel.toLowerCase()}-only the value here is used in this context.`
 
@@ -769,9 +772,10 @@ export function VariablesSettingsCard({
                         currentPage={currentPage}
                         totalItems={total}
                         pageSize={limit}
-                        pageSizeOptions={[limit]}
+                        pageSizeOptions={[10, 25, 50, 100]}
                         onPageChange={(newPage) => onPageChange!(newPage - 1)}
-                        onPageSizeChange={() => {}}
+                        onPageSizeChange={onPageSizeChange ?? (() => {})}
+                        showPageSizeSelector={!!onPageSizeChange}
                         itemLabel={itemLabel}
                       />
                     </div>

@@ -27,6 +27,7 @@ import {
 import type { Models } from '@appwrite.io/console'
 import type { DateRange } from 'react-day-picker'
 import { startOfDay, endOfDay, subDays, max } from 'date-fns'
+import { RefreshCw } from 'lucide-react'
 import { ServiceHeader } from '../shared/ServiceHeader'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -212,6 +213,45 @@ function ActivityLogsPaginationSkeleton() {
         <Skeleton className="h-8 w-[200px] max-w-[45%] shrink-0 rounded-md" />
       </div>
     </div>
+  )
+}
+
+/** Table skeleton while the activity list query is fetching — matches ServiceHeader refresh spin. */
+function ActivityLogsLoadingTable({ rowCount }: { rowCount: number }) {
+  const rows = Math.min(rowCount, ACTIVITY_TABLE_SKELETON_ROWS_CAP)
+  return (
+    <>
+      <div
+        className="relative min-h-0 flex-1 overflow-auto"
+        role="status"
+        aria-live="polite"
+        aria-busy="true"
+        aria-label="Loading activities"
+      >
+        <div
+          className="pointer-events-none absolute right-4 top-2.5 z-20 sm:right-6"
+          aria-hidden
+        >
+          <RefreshCw
+            className={cn(
+              'h-4 w-4 text-muted-foreground transition-transform duration-500',
+              'animate-spin',
+            )}
+          />
+        </div>
+        <Table
+          withScrollContainer={false}
+          className="table-fixed w-full"
+        >
+          <ActivityLogsTableColGroup />
+          <ActivityLogsTableHead />
+          <TableBody>
+            <ActivityLogsSkeletonRows rowCount={rows} />
+          </TableBody>
+        </Table>
+      </div>
+      <ActivityLogsPaginationSkeleton />
+    </>
   )
 }
 
@@ -482,12 +522,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
     return getActivitiesFilterColumns(countryElements)
   }, [countriesData])
 
-  const {
-    events,
-    hasMore,
-    isLoading,
-    refetch,
-  } = useProjectActivities({
+  const { events, hasMore, refetch } = useProjectActivities({
     projectId,
     limit: pageSize,
     cursorAfter: listCursor.cursorAfter,
@@ -499,6 +534,8 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
   const activityListFetchingCount = useIsFetching({
     queryKey: ['activities', 'project', projectId],
   })
+  /** Same scope as ServiceHeader `isRefreshing` — drives list skeleton in sync with the refresh control. */
+  const activityListRefreshing = activityListFetchingCount > 0
 
   useEffect(() => {
     resetListPosition()
@@ -872,7 +909,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
           onRefresh={() => {
             void refetch()
           }}
-          isRefreshing={activityListFetchingCount > 0}
+          isRefreshing={activityListRefreshing}
           fullWidthBorder
           fullWidth
           showToolbarBottomBorder
@@ -915,7 +952,9 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
           />
         </div>
 
-        {events.length > 0 ? (
+        {activityListRefreshing ? (
+          <ActivityLogsLoadingTable rowCount={pageSize} />
+        ) : events.length > 0 ? (
           <>
             <div className="min-h-0 flex-1 overflow-auto">
               <Table
@@ -1118,31 +1157,6 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
                 className="h-full min-h-0 border-0 mt-0 py-0"
               />
             </div>
-          </>
-        ) : isLoading && events.length === 0 ? (
-          <>
-            <div
-              className="min-h-0 flex-1 overflow-auto"
-              role="status"
-              aria-label="Loading activities"
-            >
-              <Table
-                withScrollContainer={false}
-                className="table-fixed w-full"
-              >
-                <ActivityLogsTableColGroup />
-                <ActivityLogsTableHead />
-                <TableBody>
-                  <ActivityLogsSkeletonRows
-                    rowCount={Math.min(
-                      pageSize,
-                      ACTIVITY_TABLE_SKELETON_ROWS_CAP,
-                    )}
-                  />
-                </TableBody>
-              </Table>
-            </div>
-            <ActivityLogsPaginationSkeleton />
           </>
         ) : (
           <EmptyState
