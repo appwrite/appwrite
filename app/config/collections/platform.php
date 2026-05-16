@@ -1141,9 +1141,9 @@ $platformCollections = [
             ],
             [
                 '$id' => ID::custom('projectInternalId'),
-                'type' => Database::VAR_STRING,
+                'type' => Database::VAR_ID,
                 'format' => '',
-                'size' => Database::LENGTH_KEY,
+                'size' => 0,
                 'signed' => true,
                 'required' => true,
                 'default' => null,
