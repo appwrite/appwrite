@@ -88,6 +88,10 @@ class V24 extends Migration
 
         $collections = $this->collections[$collectionType];
 
+        if ($collectionType === 'console') {
+            $this->createCollection('alerts');
+        }
+
         foreach ($collections as $collection) {
             $id = $collection['$id'];
 

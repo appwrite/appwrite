@@ -1261,8 +1261,15 @@ $platformCollections = [
                 '$id' => ID::custom('_key_projectInternalId'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['projectInternalId'],
-                'lengths' => [Database::LENGTH_KEY],
+                'lengths' => [0],
                 'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => ID::custom('_key_project'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['projectId', 'projectInternalId'],
+                'lengths' => [Database::LENGTH_KEY, 0],
+                'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
             ],
             [
                 '$id' => ID::custom('_key_project_resource'),
