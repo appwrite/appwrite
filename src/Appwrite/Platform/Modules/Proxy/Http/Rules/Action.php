@@ -140,9 +140,16 @@ class Action extends PlatformAction
         $validators = [];
         $mainValidator = null; // Validator to use for error description
 
+        // CNAME Flattening: For apex domains, we allow A/AAAA records to point to our servers
+        // even if the rule type suggests a CNAME. This is common for "Appwrite Sites" on apex domains.
+        $isApex = empty($domain->getRegisterable()) || $domain->get() === $domain->getRegisterable();
+
         if (!is_null($targetCNAME)) {
             $validator = new $dnsValidatorClass($targetCNAME->get(), Record::TYPE_CNAME, $dnsServers);
-            $validators[] = $validator;
+            
+            if (!$isApex) {
+                $validators[] = $validator;
+            }
 
             if (\is_null($mainValidator)) {
                 $mainValidator = $validator;

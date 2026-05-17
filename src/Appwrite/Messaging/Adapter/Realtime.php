@@ -8,6 +8,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 
 class Realtime extends MessagingAdapter
 {
@@ -64,8 +65,8 @@ class Realtime extends MessagingAdapter
                 $this->subscriptions[$projectId][$role] = [];
             }
 
-            foreach ($channels as $channel => $list) {
-                $this->subscriptions[$projectId][$role][$channel][$identifier] = true;
+            foreach ($channels as $channel => $data) {
+                $this->subscriptions[$projectId][$role][$channel][$identifier] = $data['filters'] ?? [];
             }
         }
 
@@ -202,7 +203,24 @@ class Realtime extends MessagingAdapter
                         /**
                          * Saving all connections that are allowed to receive this event.
                          */
-                        foreach (array_keys($this->subscriptions[$event['project']][$role][$channel]) as $id) {
+                        foreach ($this->subscriptions[$event['project']][$role][$channel] as $id => $filters) {
+                            /**
+                             * Apply filters if present
+                             */
+                            if (!empty($filters) && isset($event['data']['payload'])) {
+                                $payload = new Document($event['data']['payload']);
+                                $match = true;
+                                foreach ($filters as $query) {
+                                    if (!$payload->isSatisfiedBy([$query])) {
+                                        $match = false;
+                                        break;
+                                    }
+                                }
+                                if (!$match) {
+                                    continue;
+                                }
+                            }
+
                             /**
                              * To prevent duplicates, we save the connections as array keys.
                              */
@@ -226,23 +244,44 @@ class Realtime extends MessagingAdapter
      */
     public static function convertChannels(array $channels, string $userId): array
     {
-        $channels = array_flip($channels);
+        $results = [];
 
-        foreach ($channels as $key => $value) {
+        foreach ($channels as $channel) {
+            $parts = explode(';', $channel);
+            $name = $parts[0];
+            $filters = [];
+
+            foreach ($parts as $part) {
+                if (str_starts_with($part, 'filter=')) {
+                    $filterString = substr($part, 7);
+                    // Standard Appwrite query parsing
+                    try {
+                        $filters = Query::parseQueries([$filterString]);
+                    } catch (\Throwable) {
+                        // Ignore malformed filters
+                    }
+                }
+            }
+
             switch (true) {
-                case str_starts_with($key, 'account.'):
-                    unset($channels[$key]);
-                    break;
+                case str_starts_with($name, 'account.'):
+                    continue 2;
 
-                case $key === 'account':
+                case $name === 'account':
                     if (!empty($userId)) {
-                        $channels['account.' . $userId] = $value;
+                        $name = 'account.' . $userId;
+                    } else {
+                        continue 2;
                     }
                     break;
             }
+
+            $results[$name] = [
+                'filters' => $filters
+            ];
         }
 
-        return $channels;
+        return $results;
     }
 
     /**

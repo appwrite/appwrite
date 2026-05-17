@@ -98,8 +98,22 @@ class Executor
             'runtimeEntrypoint' => $runtimeEntrypoint
         ];
 
+        $maxAttempts = 3;
+        $attempt = 0;
+        $response = null;
 
-        $response = $this->call($this->endpoint, self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout);
+        do {
+            try {
+                $attempt++;
+                $response = $this->call($this->endpoint, self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout);
+                break;
+            } catch (\Exception $e) {
+                if ($attempt >= $maxAttempts) {
+                    throw $e;
+                }
+                \usleep(500000); // Wait 500ms
+            }
+        } while ($attempt < $maxAttempts);
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
@@ -108,6 +122,28 @@ class Executor
         }
 
         return $response['body'];
+    }
+
+    /**
+     * Ping Runtime
+     *
+     * Check if a runtime is alive and ready
+     *
+     * @param string $projectId
+     * @param string $deploymentId
+     * @return bool
+     */
+    public function pingRuntime(string $projectId, string $deploymentId): bool
+    {
+        $runtimeId = "$projectId-$deploymentId";
+        $route = "/runtimes/$runtimeId/ping";
+
+        try {
+            $response = $this->call($this->endpoint, self::METHOD_GET, $route, [ 'x-opr-runtime-id' => $runtimeId ], [], true, 5);
+            return $response['headers']['status-code'] === 200;
+        } catch (\Exception) {
+            return false;
+        }
     }
 
     /**
@@ -232,11 +268,27 @@ class Executor
 
         // Safety timeout. Executor has timeout, and open runtime has soft timeout.
         // This one shouldn't really happen, but prevents from unexpected networking behaviours.
-        if ($requestTimeout == null) {
-            $requestTimeout = $timeout + 15;
-        }
+        $requestTimeout = $requestTimeout ?? ($timeout + 15);
 
-        $response = $this->call($this->endpoint, self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId, 'content-type' => 'multipart/form-data', 'accept' => 'multipart/form-data', 'x-executor-response-format' => $responseFormat ], $params, true, $requestTimeout);
+        $maxAttempts = 3;
+        $attempt = 0;
+        $response = null;
+
+        do {
+            try {
+                $attempt++;
+                $response = $this->call($this->endpoint, self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId, 'content-type' => 'multipart/form-data', 'accept' => 'multipart/form-data', 'x-executor-response-format' => $responseFormat ], $params, true, $requestTimeout);
+                break;
+            } catch (AppwriteException $e) {
+                // Don't retry on Appwrite exceptions (timeouts etc)
+                throw $e;
+            } catch (\Exception $e) {
+                if ($attempt >= $maxAttempts) {
+                    throw $e;
+                }
+                \usleep(500000); // Wait 500ms
+            }
+        } while ($attempt < $maxAttempts);
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
