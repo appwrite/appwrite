@@ -5,7 +5,6 @@ use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Key;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Context\Audit as AuditContext;
-use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
@@ -107,7 +106,6 @@ return function (Container $context): void {
     });
 
     // Per-request queue resources (stateful, accumulate event data during request)
-    $context->set('queueForDatabase', fn (Publisher $publisher) => new EventDatabase($publisher), ['publisher']);
     $context->set('queueForEvents', fn (Publisher $publisher) => new Event($publisher), ['publisher']);
     $context->set('queueForWebhooks', fn (Publisher $publisher) => new Webhook($publisher), ['publisher']);
     $context->set('queueForRealtime', fn () => new Realtime(), []);

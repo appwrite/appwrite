@@ -2,11 +2,11 @@
 
 namespace Appwrite\Platform\Modules\Health\Http\Health\Queue\Failed;
 
-use Appwrite\Event\Database;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Audit;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Publisher\Certificate;
+use Appwrite\Event\Publisher\Database as DatabasePublisher;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Mail as MailPublisher;
@@ -74,7 +74,7 @@ class Get extends Base
             ]), 'The name of the queue')
             ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
             ->inject('response')
-            ->inject('queueForDatabase')
+            ->inject('publisherForDatabase')
             ->inject('publisherForDeletes')
             ->inject('publisherForAudits')
             ->inject('publisherForMails')
@@ -94,7 +94,7 @@ class Get extends Base
         string $name,
         int|string $threshold,
         Response $response,
-        Database $queueForDatabase,
+        DatabasePublisher $publisherForDatabase,
         DeletePublisher $publisherForDeletes,
         Audit $publisherForAudits,
         MailPublisher $publisherForMails,
@@ -111,7 +111,7 @@ class Get extends Base
         $threshold = (int) $threshold;
 
         $queue = match ($name) {
-            System::getEnv('_APP_DATABASE_QUEUE_NAME', Event::DATABASE_QUEUE_NAME) => $queueForDatabase,
+            System::getEnv('_APP_DATABASE_QUEUE_NAME', Event::DATABASE_QUEUE_NAME) => $publisherForDatabase,
             System::getEnv('_APP_DELETE_QUEUE_NAME', Event::DELETE_QUEUE_NAME) => $publisherForDeletes,
             System::getEnv('_APP_AUDITS_QUEUE_NAME', Event::AUDITS_QUEUE_NAME) => $publisherForAudits,
             System::getEnv('_APP_MAILS_QUEUE_NAME', Event::MAILS_QUEUE_NAME) => $publisherForMails,

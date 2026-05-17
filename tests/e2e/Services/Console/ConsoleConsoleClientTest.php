@@ -175,4 +175,49 @@ class ConsoleConsoleClientTest extends Scope
         $this->assertNotNull($usersRead);
         $this->assertEquals('Access to read users', $usersRead['description']);
     }
+
+    public function testListOrganizationScopes(): void
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/console/scopes/organization', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsInt($response['body']['total']);
+        $this->assertIsArray($response['body']['scopes']);
+        $this->assertGreaterThan(0, $response['body']['total']);
+        $this->assertEquals($response['body']['total'], \count($response['body']['scopes']));
+
+        $scopeIds = \array_column($response['body']['scopes'], '$id');
+
+        // Well-known scopes must be present
+        $this->assertContains('projects.read', $scopeIds);
+        $this->assertContains('projects.write', $scopeIds);
+
+        // Every scope has the expected shape
+        foreach ($response['body']['scopes'] as $scope) {
+            $this->assertArrayHasKey('$id', $scope);
+            $this->assertIsString($scope['$id']);
+            $this->assertNotEmpty($scope['$id']);
+            $this->assertArrayHasKey('description', $scope);
+            $this->assertIsString($scope['description']);
+            $this->assertNotEmpty($scope['description']);
+            $this->assertArrayHasKey('deprecated', $scope);
+            $this->assertIsBool($scope['deprecated']);
+            $this->assertArrayHasKey('category', $scope);
+            $this->assertIsString($scope['category']);
+        }
+
+        // A specific scope has the expected description
+        $projectsRead = null;
+        foreach ($response['body']['scopes'] as $scope) {
+            if ($scope['$id'] === 'projects.read') {
+                $projectsRead = $scope;
+                break;
+            }
+        }
+        $this->assertNotNull($projectsRead);
+        $this->assertEquals('Access to read organization projects', $projectsRead['description']);
+    }
 }

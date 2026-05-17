@@ -240,6 +240,12 @@ $register->set('pools', function () {
             'multiple' => true,
             'schemes' => ['redis'],
         ],
+        'lock' => [
+            'type' => 'lock',
+            'dsns' => $fallbackForRedis,
+            'multiple' => false,
+            'schemes' => ['redis'],
+        ],
     ];
 
     $maxConnections = (int) System::getEnv('_APP_CONNECTIONS_MAX', 151);
@@ -369,6 +375,8 @@ $register->set('pools', function () {
                         }
 
                         return $adapter;
+                    case 'lock':
+                        return $resource();
                     default:
                         throw new Exception(Exception::GENERAL_SERVER_ERROR, "Server error: Missing adapter implementation.");
                 }

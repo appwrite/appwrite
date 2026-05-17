@@ -4,6 +4,7 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Audit as AuditPublisher;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Publisher\Certificate as CertificatePublisher;
+use Appwrite\Event\Publisher\Database as DatabasePublisher;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Execution as ExecutionPublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
@@ -28,6 +29,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\DSN\DSN;
+use Utopia\Lock\Distributed;
 use Utopia\Pools\Group;
 use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Publisher;
@@ -126,6 +128,10 @@ $container->set('publisherForBuilds', fn (Publisher $publisher) => new BuildPubl
     $publisher,
     new Queue(System::getEnv('_APP_BUILDS_QUEUE_NAME', Event::BUILDS_QUEUE_NAME))
 ), ['publisher']);
+$container->set('publisherForDatabase', fn (Publisher $publisherDatabases) => new DatabasePublisher(
+    $publisherDatabases,
+    new Queue(System::getEnv('_APP_DATABASE_QUEUE_NAME', Event::DATABASE_QUEUE_NAME))
+), ['publisherDatabases']);
 $container->set('publisherForDeletes', fn (Publisher $publisher) => new DeletePublisher(
     $publisher,
     new Queue(System::getEnv('_APP_DELETE_QUEUE_NAME', Event::DELETE_QUEUE_NAME))
@@ -242,6 +248,16 @@ $container->set('redis', function () {
 
     return $redis;
 });
+
+$container->set('locks', function (Group $pools) {
+    return function (string $key, int $ttl, callable $callback, float $timeout = 0.0) use ($pools): mixed {
+        return $pools->get('lock')->use(function (\Redis $redis) use ($key, $ttl, $callback, $timeout) {
+            $lock = new Distributed($redis, $key, ttl: $ttl);
+
+            return $lock->withLock($callback, timeout: $timeout);
+        });
+    };
+}, ['pools']);
 
 $container->set('timelimit', function (\Redis $redis) {
     return function (string $key, int $limit, int $time) use ($redis) {
