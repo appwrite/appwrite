@@ -73,9 +73,7 @@ if (! isset($args[1])) {
 
 \array_shift($args);
 $workerName = $args[0];
-if ($workerName === 'mails') {
-    $workerName = 'notifications';
-}
+$actionName = $workerName === 'mails' ? 'notifications' : $workerName;
 
 if (\str_starts_with($workerName, 'databases')) {
     $queueName = System::getEnv('_APP_QUEUE_NAME', 'database_db_main');
@@ -112,7 +110,7 @@ try {
 
     $platform->setWorker($worker);
     $platform->init(Service::TYPE_WORKER, [
-        'workerName' => strtolower($workerName),
+        'workerName' => strtolower($actionName),
     ]);
 } catch (\Throwable $e) {
     Console::error($e->getMessage() . ', File: ' . $e->getFile() . ', Line: ' . $e->getLine());
