@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments\Status;
 
+use Appwrite\Builds\OrchestratorClient;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -105,9 +106,13 @@ class Update extends Action
         }
 
         try {
-            $executor->deleteRuntime($project->getId(), $deploymentId . "-build");
+            if (\Utopia\System\System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator') {
+                (new OrchestratorClient())->deleteJob($project->getId() . '-' . $deploymentId . '-build');
+            } else {
+                $executor->deleteRuntime($project->getId(), $deploymentId . "-build");
+            }
         } catch (\Throwable) {
-            // Best-effort cleanup — deployment status is already 'canceled'
+            // Best-effort cleanup — deployment status is already 'canceled'.
         }
 
         $queueForEvents

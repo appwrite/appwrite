@@ -192,6 +192,7 @@ const DATABASE_TYPE_DELETE_DATABASE = 'deleteDatabase';
 // Build Worker Types
 const BUILD_TYPE_DEPLOYMENT = 'deployment';
 const BUILD_TYPE_RETRY = 'retry';
+const BUILD_TYPE_ORCHESTRATOR_EVENT = 'orchestratorEvent';
 
 // Deletion Types
 

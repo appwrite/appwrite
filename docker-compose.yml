@@ -211,6 +211,12 @@ services:
       - _APP_DOMAIN_SITES
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
+      - _APP_BUILDS_BACKEND
+      - _APP_ORCHESTRATOR_HOST
+      - _APP_ORCHESTRATOR_API_KEY
+      - _APP_ORCHESTRATOR_CALLBACK_SECRET
+      - _APP_ORCHESTRATOR_APPWRITE_ENDPOINT
+      - _APP_ORCHESTRATOR_APPWRITE_CALLBACK_ENDPOINT
       - _APP_LOGGING_CONFIG
       - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_RETENTION_EXECUTION
@@ -532,6 +538,12 @@ services:
       - _APP_OPENSSL_KEY_V1
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
+      - _APP_BUILDS_BACKEND
+      - _APP_ORCHESTRATOR_HOST
+      - _APP_ORCHESTRATOR_API_KEY
+      - _APP_ORCHESTRATOR_CALLBACK_SECRET
+      - _APP_ORCHESTRATOR_APPWRITE_ENDPOINT
+      - _APP_ORCHESTRATOR_APPWRITE_CALLBACK_ENDPOINT
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -1215,6 +1227,30 @@ services:
     image: appwrite/browser:0.3.2
     networks:
       - appwrite
+
+  appwrite-orchestrator:
+    container_name: appwrite-orchestrator
+    image: ko.local/jobs-service:latest
+    user: root
+    restart: unless-stopped
+    networks:
+      - appwrite
+    ports:
+      - "9080:8080"
+      - "9090:9090"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - ORCHESTRATOR_BACKEND=docker
+      - PORT=8080
+      - METRICS_PORT=9090
+      - SIDECAR_IMAGE=ko.local/job-sidecar:latest
+      - ARTIFACT_ENDPOINT=http://host.docker.internal:9080
+      - EXTRA_HOSTS=appwrite.test:host-gateway
+      - ORCHESTRATOR_NETWORK=appwrite
+      - DISPATCHER_WORKERS=1
+      - JOB_RETENTION=1m
+      - MAINTENANCE_INTERVAL=30s
 
   openruntimes-executor:
     container_name: openruntimes-executor

@@ -3,6 +3,8 @@
 namespace Appwrite\Platform\Modules\Functions\Workers;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Builds\OrchestratorClient;
+use Appwrite\Builds\OrchestratorToken;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Message\Usage as UsageMessage;
@@ -122,6 +124,19 @@ class Builds extends Action
         $log->addTag('type', $type);
 
         switch ($type) {
+            case BUILD_TYPE_ORCHESTRATOR_EVENT:
+                $this->applyOrchestratorEvent(
+                    queueForRealtime: $queueForRealtime,
+                    usage: $usage,
+                    publisherForUsage: $publisherForUsage,
+                    dbForProject: $dbForProject,
+                    project: $project,
+                    resource: $resource,
+                    deployment: $deployment,
+                    event: $payload['event'] ?? [],
+                );
+                break;
+
             case BUILD_TYPE_DEPLOYMENT:
             case BUILD_TYPE_RETRY:
                 Console::info('Creating build for deployment: ' . $deployment->getId());
@@ -688,6 +703,25 @@ class Builds extends Action
 
             $isCanceled = false;
 
+            if (System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator') {
+                $this->createOrchestratorBuild(
+                    project: $project,
+                    resource: $resource,
+                    deployment: $deployment,
+                    runtime: $runtime,
+                    vars: $vars,
+                    command: $command,
+                    cpus: $cpus,
+                    memory: $memory,
+                    timeout: $timeout,
+                    version: $version,
+                    outputDirectory: $outputDirectory ?? ''
+                );
+
+                Console::log('Orchestrator build submitted');
+                return;
+            }
+
             Console::log('Runtime creation started');
 
             Co::join([
@@ -1207,13 +1241,15 @@ class Builds extends Action
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();
 
-            $this->sendUsage(
-                resource: $resource,
-                deployment: $deployment,
-                project: $project,
-                usage: $usage,
-                publisherForUsage: $publisherForUsage
-            );
+            if (\in_array($deployment->getAttribute('status'), ['ready', 'failed'])) {
+                $this->sendUsage(
+                    resource: $resource,
+                    deployment: $deployment,
+                    project: $project,
+                    usage: $usage,
+                    publisherForUsage: $publisherForUsage
+                );
+            }
         }
     }
 
@@ -1268,6 +1304,280 @@ class Builds extends Action
             $publisherForUsage->enqueue($message);
             $usage->reset();
         }
+    }
+
+    protected function createOrchestratorBuild(
+        Document $project,
+        Document $resource,
+        Document $deployment,
+        array $runtime,
+        array $vars,
+        string $command,
+        float $cpus,
+        int $memory,
+        int $timeout,
+        string $version,
+        string $outputDirectory
+    ): void {
+        $resourceId = $resource->getId();
+        $deploymentId = $deployment->getId();
+        $jobId = "{$project->getId()}-{$deploymentId}-build";
+        $base = \rtrim(System::getEnv('_APP_ORCHESTRATOR_APPWRITE_ENDPOINT', 'http://appwrite/v1'), '/');
+        $callbackBase = \rtrim(System::getEnv('_APP_ORCHESTRATOR_APPWRITE_CALLBACK_ENDPOINT', $base), '/');
+
+        $sourceToken = OrchestratorToken::create($project->getId(), $resourceId, $deploymentId, 'source', $timeout + 300);
+        $buildToken = OrchestratorToken::create($project->getId(), $resourceId, $deploymentId, 'build', $timeout + 300);
+        $projectQuery = 'project=' . \rawurlencode($project->getId());
+        $appwriteProjectHeader = ['X-Appwrite-Project' => $project->getId()];
+
+        if ($version === 'v2') {
+            $buildCommand = 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh';
+        } else {
+            $buildCommand = 'tar -zxf /tmp/code.tar.gz -C /mnt/code && /usr/local/server/helpers/build.sh ' . \trim(\escapeshellarg($command));
+        }
+
+        $outputPath = '/usr/local/build' . (empty($outputDirectory) ? '' : '/' . \trim($outputDirectory, '/'));
+        $escapedOutputPath = \escapeshellarg($outputPath);
+
+        $buildCommand .= ' && mkdir -p /tmp/build-output'
+            . " && if [ -d {$escapedOutputPath} ]; then cp -R {$escapedOutputPath}/. /tmp/build-output/;"
+            . ' elif [ -d /usr/code ]; then cp -R /usr/code/. /tmp/build-output/; fi';
+
+        $environment = [];
+        foreach ($vars as $key => $value) {
+            $environment[$key] = \is_scalar($value) || $value === null
+                ? (string) $value
+                : \json_encode($value, JSON_THROW_ON_ERROR);
+        }
+
+        $client = new OrchestratorClient();
+        $client->createJob([
+            'id' => $jobId,
+            'meta' => [
+                'projectId' => $project->getId(),
+                'resourceId' => $resourceId,
+                'resourceType' => $resource->getCollection(),
+                'deploymentId' => $deploymentId,
+            ],
+            'image' => $runtime['image'],
+            'command' => $buildCommand,
+            'cpu' => $cpus,
+            'memory' => $memory,
+            'timeoutSeconds' => $timeout,
+            'workspace' => '/tmp',
+            'environment' => $environment,
+            'artifacts' => [
+                [
+                    'id' => 'source',
+                    'type' => 'download',
+                    'in' => "{$base}/functions/{$resourceId}/deployments/{$deploymentId}/artifacts/source?{$projectQuery}&token=" . \rawurlencode($sourceToken),
+                    'out' => 'code.tar.gz',
+                    'headers' => $appwriteProjectHeader,
+                ],
+                [
+                    'id' => 'build',
+                    'type' => 'archive',
+                    'in' => 'build-output',
+                    'out' => 'build.tar.gz',
+                    'format' => 'tar.gz',
+                    'depends' => 'job',
+                ],
+                [
+                    'id' => 'upload',
+                    'type' => 'upload',
+                    'in' => 'build.tar.gz',
+                    'out' => "{$base}/functions/{$resourceId}/deployments/{$deploymentId}/artifacts/build?{$projectQuery}&token=" . \rawurlencode($buildToken),
+                    'depends' => 'build',
+                    'headers' => $appwriteProjectHeader,
+                ],
+            ],
+            'callback' => [
+                'url' => "{$callbackBase}/functions/{$resourceId}/deployments/{$deploymentId}/events?{$projectQuery}",
+                'key' => System::getEnv('_APP_ORCHESTRATOR_CALLBACK_SECRET', System::getEnv('_APP_OPENSSL_KEY_V1', '')),
+                'headers' => $appwriteProjectHeader,
+                'events' => [
+                    'orchestrator.job.log',
+                    'orchestrator.job.artifact',
+                    'orchestrator.job.exit',
+                ],
+            ],
+        ], $timeout);
+    }
+
+    protected function applyOrchestratorEvent(
+        Realtime $queueForRealtime,
+        Context $usage,
+        UsagePublisher $publisherForUsage,
+        Database $dbForProject,
+        Document $project,
+        Document $resource,
+        Document $deployment,
+        array $event
+    ): void {
+        if (empty($event)) {
+            throw new \Exception('Missing orchestrator event payload');
+        }
+
+        $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
+        if ($deployment->isEmpty()) {
+            throw new \Exception('Deployment not found');
+        }
+
+        $resource = $dbForProject->getDocument($resource->getCollection(), $resource->getId());
+        if ($resource->isEmpty()) {
+            throw new \Exception('Resource not found');
+        }
+
+        $resourceKey = match ($resource->getCollection()) {
+            'functions' => 'functionId',
+            'sites' => 'siteId',
+            default => throw new \Exception('Invalid resource type')
+        };
+
+        $queueForRealtime
+            ->setSubscribers(['console'])
+            ->setProject($project)
+            ->setEvent("{$resource->getCollection()}.[{$resourceKey}].deployments.[deploymentId].update")
+            ->setParam($resourceKey, $resource->getId())
+            ->setParam('deploymentId', $deployment->getId());
+
+        $type = $event['type'] ?? '';
+        $data = $event['data'] ?? [];
+
+        if ($type === 'orchestrator.job.log') {
+            $logs = $deployment->getAttribute('buildLogs', '');
+            foreach (($data['lines'] ?? []) as $line) {
+                $logs .= $line;
+                if (!\str_ends_with($line, "\n")) {
+                    $logs .= "\n";
+                }
+            }
+
+            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                'buildLogs' => $logs,
+            ]));
+
+            $queueForRealtime
+                ->setPayload($deployment->getArrayCopy())
+                ->trigger();
+            return;
+        }
+
+        if (
+            $type === 'orchestrator.job.artifact'
+            && ($data['artifactId'] ?? '') === 'upload'
+            && ($data['status'] ?? '') === 'success'
+        ) {
+            if (\in_array($deployment->getAttribute('status'), ['ready', 'canceled'])) {
+                return;
+            }
+
+            $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
+            if ($deployment->isEmpty() || empty($deployment->getAttribute('buildPath', ''))) {
+                return;
+            }
+
+            $logs = $deployment->getAttribute('buildLogs', '');
+            $date = \date('H:i:s');
+            if (!\str_contains($logs, 'Deployment finished.')) {
+                $logs .= "\033[90m[$date] \033[90m[\033[0mappwrite\033[90m]\033[32m Deployment finished. \033[0m\n";
+            }
+
+            $endTime = DateTime::now();
+            $startedAt = \strtotime($deployment->getAttribute('buildStartedAt', $deployment->getCreatedAt())) ?: \time();
+            $duration = \max(0, \time() - $startedAt);
+
+            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                'status' => 'ready',
+                'buildLogs' => $logs,
+                'buildEndedAt' => $endTime,
+                'buildDuration' => $duration,
+            ]));
+
+            if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
+                $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
+            }
+
+            if ($deployment->getAttribute('activate') === true && $resource->getCollection() === 'functions') {
+                $resource = $dbForProject->updateDocument('functions', $resource->getId(), new Document([
+                    'live' => true,
+                    'deploymentId' => $deployment->getId(),
+                    'deploymentInternalId' => $deployment->getSequence(),
+                    'deploymentCreatedAt' => $deployment->getCreatedAt(),
+                ]));
+            }
+
+            $queueForRealtime
+                ->setPayload($deployment->getArrayCopy())
+                ->trigger();
+
+            $this->sendUsage(
+                resource: $resource,
+                deployment: $deployment,
+                project: $project,
+                usage: $usage,
+                publisherForUsage: $publisherForUsage
+            );
+
+            return;
+        }
+
+        if ($type !== 'orchestrator.job.exit') {
+            return;
+        }
+
+        if (\in_array($deployment->getAttribute('status'), ['ready', 'failed', 'canceled'])) {
+            return;
+        }
+
+        $exitCode = (int) ($data['exitCode'] ?? -1);
+        if ($exitCode === 0 && empty($deployment->getAttribute('buildPath', ''))) {
+            return;
+        }
+
+        $status = $exitCode === 0 && !empty($deployment->getAttribute('buildPath', '')) ? 'ready' : 'failed';
+        $logs = $deployment->getAttribute('buildLogs', '');
+        $date = \date('H:i:s');
+
+        if ($status === 'ready') {
+            $logs .= "\033[90m[$date] \033[90m[\033[0mappwrite\033[90m]\033[32m Deployment finished. \033[0m\n";
+        } else {
+            $error = $data['error'] ?? 'Build failed.';
+            $logs .= "\033[31m{$error}\033[0m\n";
+        }
+
+        $duration = (int) \ceil((float) ($data['durationSeconds'] ?? 0));
+        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+            'buildEndedAt' => DateTime::now(),
+            'buildDuration' => $duration,
+            'status' => $status,
+            'buildLogs' => $logs,
+        ]));
+
+        if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
+            $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
+        }
+
+        if ($status === 'ready' && $deployment->getAttribute('activate') === true && $resource->getCollection() === 'functions') {
+            $resource = $dbForProject->updateDocument('functions', $resource->getId(), new Document([
+                'live' => true,
+                'deploymentId' => $deployment->getId(),
+                'deploymentInternalId' => $deployment->getSequence(),
+                'deploymentCreatedAt' => $deployment->getCreatedAt(),
+            ]));
+        }
+
+        $queueForRealtime
+            ->setPayload($deployment->getArrayCopy())
+            ->trigger();
+
+        $this->sendUsage(
+            resource: $resource,
+            deployment: $deployment,
+            project: $project,
+            usage: $usage,
+            publisherForUsage: $publisherForUsage
+        );
     }
 
     /**
