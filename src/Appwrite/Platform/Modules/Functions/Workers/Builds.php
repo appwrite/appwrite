@@ -129,10 +129,12 @@ class Builds extends Action
                     queueForRealtime: $queueForRealtime,
                     usage: $usage,
                     publisherForUsage: $publisherForUsage,
+                    dbForPlatform: $dbForPlatform,
                     dbForProject: $dbForProject,
                     project: $project,
                     resource: $resource,
                     deployment: $deployment,
+                    platform: $platform,
                     event: $payload['event'] ?? [],
                 );
                 break;
@@ -1408,10 +1410,12 @@ class Builds extends Action
         Realtime $queueForRealtime,
         Context $usage,
         UsagePublisher $publisherForUsage,
+        Database $dbForPlatform,
         Database $dbForProject,
         Document $project,
         Document $resource,
         Document $deployment,
+        array $platform,
         array $event
     ): void {
         if (empty($event)) {
@@ -1477,46 +1481,22 @@ class Builds extends Action
                 return;
             }
 
-            $logs = $deployment->getAttribute('buildLogs', '');
-            $date = \date('H:i:s');
-            if (!\str_contains($logs, 'Deployment finished.')) {
-                $logs .= "\033[90m[$date] \033[90m[\033[0mappwrite\033[90m]\033[32m Deployment finished. \033[0m\n";
-            }
-
             $endTime = DateTime::now();
             $startedAt = \strtotime($deployment->getAttribute('buildStartedAt', $deployment->getCreatedAt())) ?: \time();
             $duration = \max(0, \time() - $startedAt);
 
-            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
-                'status' => 'ready',
-                'buildLogs' => $logs,
-                'buildEndedAt' => $endTime,
-                'buildDuration' => $duration,
-            ]));
-
-            if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
-                $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
-            }
-
-            if ($deployment->getAttribute('activate') === true && $resource->getCollection() === 'functions') {
-                $resource = $dbForProject->updateDocument('functions', $resource->getId(), new Document([
-                    'live' => true,
-                    'deploymentId' => $deployment->getId(),
-                    'deploymentInternalId' => $deployment->getSequence(),
-                    'deploymentCreatedAt' => $deployment->getCreatedAt(),
-                ]));
-            }
-
-            $queueForRealtime
-                ->setPayload($deployment->getArrayCopy())
-                ->trigger();
-
-            $this->sendUsage(
+            $this->completeOrchestratorDeployment(
+                queueForRealtime: $queueForRealtime,
+                usage: $usage,
+                publisherForUsage: $publisherForUsage,
+                dbForPlatform: $dbForPlatform,
+                dbForProject: $dbForProject,
+                project: $project,
                 resource: $resource,
                 deployment: $deployment,
-                project: $project,
-                usage: $usage,
-                publisherForUsage: $publisherForUsage
+                platform: $platform,
+                buildEndedAt: $endTime,
+                buildDuration: $duration
             );
 
             return;
@@ -1537,16 +1517,29 @@ class Builds extends Action
 
         $status = $exitCode === 0 && !empty($deployment->getAttribute('buildPath', '')) ? 'ready' : 'failed';
         $logs = $deployment->getAttribute('buildLogs', '');
-        $date = \date('H:i:s');
+        $duration = (int) \ceil((float) ($data['durationSeconds'] ?? 0));
 
         if ($status === 'ready') {
-            $logs .= "\033[90m[$date] \033[90m[\033[0mappwrite\033[90m]\033[32m Deployment finished. \033[0m\n";
+            $this->completeOrchestratorDeployment(
+                queueForRealtime: $queueForRealtime,
+                usage: $usage,
+                publisherForUsage: $publisherForUsage,
+                dbForPlatform: $dbForPlatform,
+                dbForProject: $dbForProject,
+                project: $project,
+                resource: $resource,
+                deployment: $deployment,
+                platform: $platform,
+                buildEndedAt: DateTime::now(),
+                buildDuration: $duration
+            );
+
+            return;
         } else {
             $error = $data['error'] ?? 'Build failed.';
             $logs .= "\033[31m{$error}\033[0m\n";
         }
 
-        $duration = (int) \ceil((float) ($data['durationSeconds'] ?? 0));
         $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
             'buildEndedAt' => DateTime::now(),
             'buildDuration' => $duration,
@@ -1565,6 +1558,156 @@ class Builds extends Action
                 'deploymentInternalId' => $deployment->getSequence(),
                 'deploymentCreatedAt' => $deployment->getCreatedAt(),
             ]));
+        }
+
+        $queueForRealtime
+            ->setPayload($deployment->getArrayCopy())
+            ->trigger();
+
+        $this->sendUsage(
+            resource: $resource,
+            deployment: $deployment,
+            project: $project,
+            usage: $usage,
+            publisherForUsage: $publisherForUsage
+        );
+    }
+
+    protected function completeOrchestratorDeployment(
+        Realtime $queueForRealtime,
+        Context $usage,
+        UsagePublisher $publisherForUsage,
+        Database $dbForPlatform,
+        Database $dbForProject,
+        Document $project,
+        Document $resource,
+        Document $deployment,
+        array $platform,
+        string $buildEndedAt,
+        int $buildDuration
+    ): void {
+        $runtime = $this->getRuntime($resource, $this->getVersion($resource));
+        $adapter = $deployment->getAttribute('adapter', $resource->getAttribute('adapter', '')) ?: null;
+
+        $this->afterBuildSuccess($queueForRealtime, $dbForProject, $deployment, $runtime, $adapter);
+
+        $logs = $deployment->getAttribute('buildLogs', '');
+        $date = \date('H:i:s');
+        if (!\str_contains($logs, 'Deployment finished.')) {
+            $logs .= "\033[90m[$date] \033[90m[\033[0mappwrite\033[90m]\033[32m Deployment finished. \033[0m\n";
+        }
+
+        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+            'buildEndedAt' => $buildEndedAt,
+            'buildDuration' => $buildDuration,
+            'status' => 'ready',
+            'buildLogs' => $logs,
+        ]));
+
+        if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
+            $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
+        }
+
+        $activateBuild = false;
+        if ($deployment->getAttribute('activate') === true) {
+            $resource = $dbForProject->getDocument($resource->getCollection(), $resource->getId());
+            $currentActiveDeploymentId = $resource->getAttribute('deploymentId', '');
+            if (!empty($currentActiveDeploymentId)) {
+                $currentActiveDeployment = $dbForProject->getDocument('deployments', $currentActiveDeploymentId);
+                if (!$currentActiveDeployment->isEmpty()) {
+                    $activateBuild = $currentActiveDeployment->getCreatedAt() < $deployment->getCreatedAt();
+                }
+            } else {
+                $activateBuild = true;
+            }
+        }
+
+        if ($activateBuild) {
+            $collection = $resource->getCollection();
+            $resource = $dbForProject->updateDocument($collection, $resource->getId(), new Document([
+                'live' => true,
+                'deploymentId' => $deployment->getId(),
+                'deploymentInternalId' => $deployment->getSequence(),
+                'deploymentCreatedAt' => $deployment->getCreatedAt(),
+            ]));
+
+            $queries = [
+                Query::equal('projectInternalId', [$project->getSequence()]),
+                Query::equal('type', ['deployment']),
+                Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
+                Query::equal('deploymentResourceType', [$collection === 'functions' ? 'function' : 'site']),
+                Query::equal('trigger', ['manual']),
+                Query::equal('deploymentVcsProviderBranch', ['']),
+            ];
+
+            $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment) {
+                $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                    'deploymentId' => $deployment->getId(),
+                    'deploymentInternalId' => $deployment->getSequence(),
+                ]));
+            }, $queries);
+
+            Console::log('Deployment activated');
+        }
+
+        $this->afterDeploymentSuccess($project, $deployment);
+
+        if ($resource->getCollection() === 'sites') {
+            $branchName = $deployment->getAttribute('providerBranch');
+            if (!empty($branchName)) {
+                $domain = (new BranchDomainFilter())->apply([
+                    'branch' => $branchName,
+                    'resourceId' => $resource->getId(),
+                    'projectId' => $project->getId(),
+                    'sitesDomain' => $platform['sitesDomain'],
+                ]);
+                $ruleId = md5($domain);
+
+                try {
+                    $dbForPlatform->createDocument('rules', new Document([
+                        '$id' => $ruleId,
+                        'projectId' => $project->getId(),
+                        'projectInternalId' => $project->getSequence(),
+                        'domain' => $domain,
+                        'type' => 'deployment',
+                        'trigger' => 'deployment',
+                        'deploymentId' => $deployment->getId(),
+                        'deploymentInternalId' => $deployment->getSequence(),
+                        'deploymentResourceType' => 'site',
+                        'deploymentResourceId' => $resource->getId(),
+                        'deploymentResourceInternalId' => $resource->getSequence(),
+                        'deploymentVcsProviderBranch' => $branchName,
+                        'status' => 'verified',
+                        'certificateId' => '',
+                        'search' => implode(' ', [$ruleId, $domain]),
+                        'owner' => 'Appwrite',
+                        'region' => $project->getAttribute('region'),
+                    ]));
+                } catch (Duplicate $err) {
+                    $dbForPlatform->updateDocument('rules', $ruleId, new Document([
+                        'deploymentId' => $deployment->getId(),
+                        'deploymentInternalId' => $deployment->getSequence(),
+                    ]));
+                }
+
+                $queries = [
+                    Query::equal('projectInternalId', [$project->getSequence()]),
+                    Query::equal('type', ['deployment']),
+                    Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
+                    Query::equal('deploymentResourceType', ['site']),
+                    Query::equal('deploymentVcsProviderBranch', [$branchName]),
+                    Query::equal('trigger', ['manual']),
+                ];
+
+                $dbForPlatform->foreach('rules', function (Document $rule) use ($dbForPlatform, $deployment) {
+                    $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                        'deploymentId' => $deployment->getId(),
+                        'deploymentInternalId' => $deployment->getSequence(),
+                    ]));
+                }, $queries);
+
+                Console::log('Preview rule created');
+            }
         }
 
         $queueForRealtime
