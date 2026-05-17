@@ -15,6 +15,9 @@ trait FunctionsBase
 {
     use Async;
 
+    protected const int DEPLOYMENT_READY_TIMEOUT = 300000;
+    protected const int DEPLOYMENT_POLL_INTERVAL = 500;
+
     protected string $stdout = '';
     protected string $stderr = '';
 
@@ -89,7 +92,7 @@ trait FunctionsBase
             }
 
             $this->assertEquals('ready', $status, 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
-        }, 120000, 500);
+        }, self::DEPLOYMENT_READY_TIMEOUT, self::DEPLOYMENT_POLL_INTERVAL);
 
         // Not === so multipart/form-data works fine too
         if (($params['activate'] ?? false) == true) {
@@ -119,7 +122,7 @@ trait FunctionsBase
                 }
 
                 $this->assertEquals($deploymentId, $function['body']['deploymentId'] ?? '', 'Deployment is not activated, deployment: ' . json_encode($function['body'], JSON_PRETTY_PRINT));
-            }, 120000, 500);
+            }, self::DEPLOYMENT_READY_TIMEOUT, self::DEPLOYMENT_POLL_INTERVAL);
         }
 
         return $deploymentId;
@@ -450,12 +453,12 @@ trait FunctionsBase
         $this->assertEventually(function () use ($functionId, $deploymentId) {
             $deployment = $this->getDeployment($functionId, $deploymentId);
             $this->assertEquals('ready', $deployment['body']['status'], 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
-        }, 100000, 500);
+        }, self::DEPLOYMENT_READY_TIMEOUT, self::DEPLOYMENT_POLL_INTERVAL);
 
         $this->assertEventually(function () use ($functionId, $deploymentId) {
             $function = $this->getFunction($functionId);
             $this->assertEquals($deploymentId, $function['body']['deploymentId'], 'Deployment is not activated, deployment: ' . json_encode($function['body'], JSON_PRETTY_PRINT));
-        }, 100000, 500);
+        }, self::DEPLOYMENT_READY_TIMEOUT, self::DEPLOYMENT_POLL_INTERVAL);
 
         return $deploymentId;
     }

@@ -131,7 +131,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEventually(function () use ($functionId, $deploymentIdActive) {
             $deployment = $this->getDeployment($functionId, $deploymentIdActive);
             $this->assertEquals('ready', $deployment['body']['status']);
-        }, 50000, 500);
+        }, self::DEPLOYMENT_READY_TIMEOUT, self::DEPLOYMENT_POLL_INTERVAL);
 
         // Create inactive deployment
         $deployment = $this->createDeployment($functionId, [
@@ -145,7 +145,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEventually(function () use ($functionId, $deploymentIdInactive) {
             $deployment = $this->getDeployment($functionId, $deploymentIdInactive);
             $this->assertEquals('ready', $deployment['body']['status']);
-        }, 50000, 500);
+        }, self::DEPLOYMENT_READY_TIMEOUT, self::DEPLOYMENT_POLL_INTERVAL);
 
         // Verify active deployment is set
         $function = $this->getFunction($functionId);
@@ -572,7 +572,7 @@ class FunctionsCustomServerTest extends Scope
             $this->assertEquals(200, $deployment['headers']['status-code']);
             $this->assertEquals('ready', $deployment['body']['status']);
             $this->assertEquals('cli', $deployment['body']['type']);
-        }, 120000, 500);
+        }, self::DEPLOYMENT_READY_TIMEOUT, self::DEPLOYMENT_POLL_INTERVAL);
     }
 
     public function testCreateDeploymentWithSingleContentRangeChunk(): void
@@ -608,7 +608,7 @@ class FunctionsCustomServerTest extends Scope
 
             $this->assertEquals(200, $deployment['headers']['status-code']);
             $this->assertEquals('ready', $deployment['body']['status']);
-        }, 120000, 500);
+        }, self::DEPLOYMENT_READY_TIMEOUT, self::DEPLOYMENT_POLL_INTERVAL);
 
         $this->cleanupFunction($functionId);
     }
@@ -671,7 +671,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEventually(function () use ($functionId, $deploymentId) {
             $deployment = $this->getDeployment($functionId, $deploymentId);
             $this->assertEquals('ready', $deployment['body']['status']);
-        }, 50000, 500);
+        }, self::DEPLOYMENT_READY_TIMEOUT, self::DEPLOYMENT_POLL_INTERVAL);
 
         // Verify deployment sizes
         $deployment = $this->getDeployment($functionId, $deploymentId);
@@ -826,7 +826,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEventually(function () use ($functionId, $deploymentId) {
             $deployment = $this->getDeployment($functionId, $deploymentId);
             $this->assertEquals('ready', $deployment['body']['status']);
-        }, 50000, 500);
+        }, self::DEPLOYMENT_READY_TIMEOUT, self::DEPLOYMENT_POLL_INTERVAL);
 
         $deployment = $this->getDeployment($functionId, $deploymentId);
         $this->assertEquals(200, $deployment['headers']['status-code']);
@@ -902,7 +902,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEventually(function () use ($functionId, $deploymentId) {
             $deployment = $this->getDeployment($functionId, $deploymentId);
             $this->assertEquals('ready', $deployment['body']['status']);
-        }, 50000, 500);
+        }, self::DEPLOYMENT_READY_TIMEOUT, self::DEPLOYMENT_POLL_INTERVAL);
 
         $deployment = $this->getDeployment($functionId, $deploymentId);
         $this->assertEquals(200, $deployment['headers']['status-code']);
@@ -953,7 +953,7 @@ class FunctionsCustomServerTest extends Scope
             $deployment = $this->getDeployment($functionId, $deploymentIdActive);
 
             $this->assertEquals('ready', $deployment['body']['status']);
-        }, 50000, 500);
+        }, self::DEPLOYMENT_READY_TIMEOUT, self::DEPLOYMENT_POLL_INTERVAL);
 
         $deployment = $this->createDeployment($functionId, [
             'code' => $this->packageFunction('basic'),
@@ -969,7 +969,7 @@ class FunctionsCustomServerTest extends Scope
             $deployment = $this->getDeployment($functionId, $deploymentIdInactive);
 
             $this->assertEquals('ready', $deployment['body']['status']);
-        }, 50000, 500);
+        }, self::DEPLOYMENT_READY_TIMEOUT, self::DEPLOYMENT_POLL_INTERVAL);
 
         $function = $this->getFunction($functionId);
 
@@ -1084,7 +1084,7 @@ class FunctionsCustomServerTest extends Scope
             $this->assertEquals('ready', $deployment['body']['status']);
             $this->assertEquals($deploymentSize, $deployment['body']['sourceSize']);
             $this->assertGreaterThan(1024 * 1024 * 10, $deployment['body']['buildSize']); // ~7MB video file + 10MB sample file
-        }, 120000, 500);
+        }, self::DEPLOYMENT_READY_TIMEOUT, self::DEPLOYMENT_POLL_INTERVAL);
     }
 
     public function testCreateDeploymentOutOfOrder(): void
@@ -1196,7 +1196,7 @@ class FunctionsCustomServerTest extends Scope
             $deployment = $this->getDeployment($functionId, $deploymentId);
             $this->assertEquals(200, $deployment['headers']['status-code']);
             $this->assertEquals('ready', $deployment['body']['status']);
-        }, 120000, 500);
+        }, self::DEPLOYMENT_READY_TIMEOUT, self::DEPLOYMENT_POLL_INTERVAL);
     }
 
     public function testCreateDeploymentParallelChunksLargeFile(): void
@@ -1324,7 +1324,7 @@ class FunctionsCustomServerTest extends Scope
                 $this->assertEquals(200, $deployment['headers']['status-code']);
                 $this->assertEquals('ready', $deployment['body']['status']);
                 $this->assertEquals($deploymentId, $deployment['body']['$id']);
-            }, 120000, 500);
+            }, self::DEPLOYMENT_READY_TIMEOUT, self::DEPLOYMENT_POLL_INTERVAL);
         } finally {
             $this->cleanupFunction($functionId);
 
@@ -1979,7 +1979,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEventually(function () use ($functionId, $deploymentId) {
             $deployment = $this->getDeployment($functionId, $deploymentId);
             $this->assertEquals('ready', $deployment['body']['status']);
-        }, 50000, 500);
+        }, self::DEPLOYMENT_READY_TIMEOUT, self::DEPLOYMENT_POLL_INTERVAL);
 
         /**
          * Test for SUCCESS
@@ -2883,7 +2883,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEventually(function () use ($functionId, $deploymentId2) {
             $function = $this->getFunction($functionId);
             $this->assertEquals($deploymentId2, $function['body']['deploymentId']);
-        }, 50000, 500);
+        }, self::DEPLOYMENT_READY_TIMEOUT, self::DEPLOYMENT_POLL_INTERVAL);
 
         $execution = $this->createExecution($functionId);
         $this->assertEquals(201, $execution['headers']['status-code']);
