@@ -293,6 +293,8 @@ class Migrations extends Action
                 $this->dbForProject,
                 $this->getDatabasesDB,
                 Config::getParam('collections', [])['databases']['collections'],
+                $this->dbForPlatform,
+                $this->project->getSequence(),
                 OnDuplicate::tryFrom($options['onDuplicate'] ?? '') ?? OnDuplicate::Fail,
                 $this->resolveDestinationDatabaseDsn(...),
             ),

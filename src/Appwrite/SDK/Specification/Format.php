@@ -466,6 +466,14 @@ abstract class Format
                                 return 'ConsoleResourceValue';
                         }
                         break;
+                    case 'getEmailTemplate':
+                        switch ($param) {
+                            case 'templateId':
+                                return 'ProjectEmailTemplateId';
+                            case 'locale':
+                                return 'ProjectEmailTemplateLocale';
+                        }
+                        break;
                 }
                 break;
             case 'account':

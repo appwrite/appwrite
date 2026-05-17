@@ -92,6 +92,8 @@ use Appwrite\Utopia\Response\Model\HealthTime;
 use Appwrite\Utopia\Response\Model\HealthVersion;
 use Appwrite\Utopia\Response\Model\Identity;
 use Appwrite\Utopia\Response\Model\Index;
+use Appwrite\Utopia\Response\Model\Insight;
+use Appwrite\Utopia\Response\Model\InsightCTA;
 use Appwrite\Utopia\Response\Model\Installation;
 use Appwrite\Utopia\Response\Model\JWT;
 use Appwrite\Utopia\Response\Model\Key;
@@ -182,6 +184,7 @@ use Appwrite\Utopia\Response\Model\ProviderRepositoryFramework;
 use Appwrite\Utopia\Response\Model\ProviderRepositoryFrameworkList;
 use Appwrite\Utopia\Response\Model\ProviderRepositoryRuntime;
 use Appwrite\Utopia\Response\Model\ProviderRepositoryRuntimeList;
+use Appwrite\Utopia\Response\Model\Report;
 use Appwrite\Utopia\Response\Model\ResourceToken;
 use Appwrite\Utopia\Response\Model\Row;
 use Appwrite\Utopia\Response\Model\Rule;
@@ -291,6 +294,8 @@ Response::setModel(new BaseList('Specifications List', Response::MODEL_SPECIFICA
 Response::setModel(new BaseList('VCS Content List', Response::MODEL_VCS_CONTENT_LIST, 'contents', Response::MODEL_VCS_CONTENT));
 Response::setModel(new BaseList('VectorsDB Collections List', Response::MODEL_VECTORSDB_COLLECTION_LIST, 'collections', Response::MODEL_VECTORSDB_COLLECTION));
 Response::setModel(new BaseList('Embedding list', Response::MODEL_EMBEDDING_LIST, 'embeddings', Response::MODEL_EMBEDDING));
+Response::setModel(new BaseList('Insights List', Response::MODEL_INSIGHT_LIST, 'insights', Response::MODEL_INSIGHT));
+Response::setModel(new BaseList('Reports List', Response::MODEL_REPORT_LIST, 'reports', Response::MODEL_REPORT));
 
 // Entities
 Response::setModel(new Database());
@@ -515,6 +520,9 @@ Response::setModel(new Target());
 Response::setModel(new Migration());
 Response::setModel(new MigrationReport());
 Response::setModel(new MigrationFirebaseProject());
+Response::setModel(new Insight());
+Response::setModel(new InsightCTA());
+Response::setModel(new Report());
 
 // Tests (keep last)
 Response::setModel(new Mock());

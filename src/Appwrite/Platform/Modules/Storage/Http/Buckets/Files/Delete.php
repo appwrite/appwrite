@@ -2,8 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Storage\Http\Buckets\Files;
 
-use Appwrite\Event\Delete as DeleteEvent;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Delete as DeleteMessage;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -64,7 +65,7 @@ class Delete extends Action
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('deviceForFiles')
-            ->inject('queueForDeletes')
+            ->inject('publisherForDeletes')
             ->inject('authorization')
             ->inject('user')
             ->callback($this->action(...));
@@ -77,7 +78,7 @@ class Delete extends Action
         Database $dbForProject,
         Event $queueForEvents,
         Device $deviceForFiles,
-        DeleteEvent $queueForDeletes,
+        DeletePublisher $publisherForDeletes,
         Authorization $authorization,
         User $user,
     ) {
@@ -126,11 +127,12 @@ class Delete extends Action
         }
 
         if ($deviceDeleted) {
-            $queueForDeletes
-                ->setType(DELETE_TYPE_CACHE_BY_RESOURCE)
-                ->setResourceType('bucket/' . $bucket->getId())
-                ->setResource('file/' . $fileId)
-            ;
+            $publisherForDeletes->enqueue(new DeleteMessage(
+                project: $queueForEvents->getProject(),
+                type: DELETE_TYPE_CACHE_BY_RESOURCE,
+                resource: 'file/' . $fileId,
+                resourceType: 'bucket/' . $bucket->getId(),
+            ));
 
             try {
                 if ($fileSecurity && !$valid) {

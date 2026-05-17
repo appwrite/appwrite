@@ -21,6 +21,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
 use Utopia\Span\Span;
 use Utopia\System\System;
+use Utopia\Validator\Contains;
 use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
@@ -59,9 +60,9 @@ trait Deployment
                 $resourceType = $repository->getAttribute('resourceType');
 
                 $logBase = "vcs.github.event.repo.{$repositoryId}";
-                Span::add("{$logBase}.projectId", $projectId);
-                Span::add("{$logBase}.resourceId", $resourceId);
-                Span::add("{$logBase}.resourceType", $resourceType);
+                Span::add('project.id', $projectId);
+                Span::add("{$logBase}.resource.id", $resourceId);
+                Span::add("{$logBase}.resource.type", $resourceType);
 
                 if ($resourceType !== "function" && $resourceType !== "site") {
                     continue;
@@ -94,6 +95,13 @@ trait Deployment
                 $resourceCollection = $resourceType === "function" ? 'functions' : 'sites';
                 $resource = $authorization->skip(fn () => $dbForProject->getDocument($resourceCollection, $resourceId));
                 $resourceInternalId = $resource->getSequence();
+
+                $validator = new Contains(VCS_DEPLOYMENT_SKIP_PATTERNS);
+                if ($validator->isValid($providerCommitMessage)) {
+                    Span::add("{$logBase}.build.skipped.reason", $validator->getDescription());
+                    Span::add("{$logBase}.build.skipped", 'true');
+                    continue;
+                }
 
                 $deploymentId = ID::unique();
                 $repositoryId = $repository->getId();
@@ -561,4 +569,5 @@ trait Deployment
     {
         return System::getEnv('_APP_BUILDS_QUEUE_NAME', Event::BUILDS_QUEUE_NAME);
     }
+
 }
