@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6404f075ed03ef6651ce9cea63518fa0",
+    "content-hash": "035685d1335039f13e16d0532c874b21",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4499,6 +4499,57 @@
             "time": "2025-08-12T12:58:26+00:00"
         },
         {
+            "name": "utopia-php/lock",
+            "version": "0.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/lock.git",
+                "reference": "49317c9493d8f747e4299aa24c22862aa5f6e106"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/lock/zipball/49317c9493d8f747e4299aa24c22862aa5f6e106",
+                "reference": "49317c9493d8f747e4299aa24c22862aa5f6e106",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.3"
+            },
+            "require-dev": {
+                "laravel/pint": "1.*",
+                "phpstan/phpstan": "2.*",
+                "phpunit/phpunit": "11.*",
+                "swoole/ide-helper": "*"
+            },
+            "suggest": {
+                "ext-pcntl": "Required to run the File lock tests",
+                "ext-redis": "Required for the Distributed lock",
+                "ext-swoole": "Required for the Mutex and Semaphore locks (>=6.0)"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Lock\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Appwrite Team",
+                    "email": "team@appwrite.io"
+                }
+            ],
+            "description": "Mutex, semaphore, file and distributed locks for PHP — one interface, four backends.",
+            "support": {
+                "issues": "https://github.com/utopia-php/lock/issues",
+                "source": "https://github.com/utopia-php/lock/tree/0.2.0"
+            },
+            "time": "2026-04-24T10:47:56+00:00"
+        },
+        {
             "name": "utopia-php/logger",
             "version": "0.8.0",
             "source": {
@@ -5141,16 +5192,16 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "2.0.2",
+            "version": "2.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "64e132a3768e22243eda36fe4262da22fd204f3c"
+                "reference": "37129cf0bfcc03210172000e4388d4d3495ae013"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/64e132a3768e22243eda36fe4262da22fd204f3c",
-                "reference": "64e132a3768e22243eda36fe4262da22fd204f3c",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/37129cf0bfcc03210172000e4388d4d3495ae013",
+                "reference": "37129cf0bfcc03210172000e4388d4d3495ae013",
                 "shasum": ""
             },
             "require": {
@@ -5187,9 +5238,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/2.0.2"
+                "source": "https://github.com/utopia-php/storage/tree/2.0.3"
             },
-            "time": "2026-05-01T15:06:16+00:00"
+            "time": "2026-05-15T09:42:32+00:00"
         },
         {
             "name": "utopia-php/system",
