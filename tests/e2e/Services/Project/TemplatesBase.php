@@ -1242,6 +1242,274 @@ trait TemplatesBase
         $this->assertSame(400, $response['headers']['status-code']);
     }
 
+    // Reset email template tests
+
+    public function testResetEmailTemplateRestoresDefaults(): void
+    {
+        $this->ensureSMTPEnabled();
+
+        // Capture Appwrite's built-in defaults before touching the project template.
+        $defaults = $this->getConsoleEmailTemplate('verification', 'en');
+        $this->assertSame(200, $defaults['headers']['status-code']);
+        $defaultSubject = $defaults['body']['subject'];
+
+        // Seed a fully custom template.
+        $seed = $this->updateEmailTemplate(
+            templateId: 'verification',
+            locale: 'en',
+            subject: 'Custom subject ' . \uniqid(),
+            message: 'Custom message ' . \uniqid(),
+            senderName: 'Custom Sender',
+            senderEmail: 'custom@appwrite.io',
+            replyToEmail: 'custom-reply@appwrite.io',
+            replyToName: 'Custom Reply',
+        );
+        $this->assertSame(200, $seed['headers']['status-code']);
+
+        // Reset to default.
+        $reset = $this->resetEmailTemplate('verification', 'en');
+
+        $this->assertSame(200, $reset['headers']['status-code']);
+        $this->assertSame('verification', $reset['body']['templateId']);
+        $this->assertSame('en', $reset['body']['locale']);
+        $this->assertSame($defaultSubject, $reset['body']['subject']);
+        $this->assertNotEmpty($reset['body']['message']);
+        $this->assertSame('', $reset['body']['senderName']);
+        $this->assertSame('', $reset['body']['senderEmail']);
+        $this->assertSame('', $reset['body']['replyToEmail']);
+        $this->assertSame('', $reset['body']['replyToName']);
+    }
+
+    public function testResetEmailTemplatePersists(): void
+    {
+        $this->ensureSMTPEnabled();
+
+        // Seed a custom template.
+        $this->updateEmailTemplate(
+            templateId: 'recovery',
+            locale: 'en',
+            subject: 'Should be wiped',
+            message: 'Should also be wiped',
+            senderEmail: 'wiped@appwrite.io',
+        );
+
+        // Reset it.
+        $reset = $this->resetEmailTemplate('recovery', 'en');
+        $this->assertSame(200, $reset['headers']['status-code']);
+
+        // A subsequent GET must reflect the reset — confirming the unset was
+        // actually persisted to the project document, not just returned transiently.
+        $get = $this->getEmailTemplate('recovery', 'en');
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertNotSame('Should be wiped', $get['body']['subject']);
+        $this->assertSame('', $get['body']['senderEmail']);
+    }
+
+    public function testResetEmailTemplateDoesNotRequireSMTP(): void
+    {
+        $this->ensureSMTPEnabled();
+
+        // Seed so there is something to reset.
+        $this->updateEmailTemplate(
+            templateId: 'invitation',
+            locale: 'en',
+            subject: 'To be reset',
+            message: 'To be reset body',
+        );
+
+        // Disable SMTP.
+        $disable = $this->client->call(
+            Client::METHOD_PATCH,
+            '/project/smtp',
+            \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            ['enabled' => false],
+        );
+        $this->assertSame(200, $disable['headers']['status-code']);
+
+        try {
+            // Reset must succeed even without SMTP enabled.
+            $reset = $this->resetEmailTemplate('invitation', 'en');
+            $this->assertSame(200, $reset['headers']['status-code']);
+            $this->assertSame('invitation', $reset['body']['templateId']);
+            $this->assertSame('', $reset['body']['senderEmail']);
+        } finally {
+            $this->ensureSMTPEnabled();
+        }
+    }
+
+    public function testResetEmailTemplateDefaultLocale(): void
+    {
+        $this->ensureSMTPEnabled();
+
+        // Seed with an explicit locale then reset without one — server falls back to 'en'.
+        $this->updateEmailTemplate(
+            templateId: 'otpSession',
+            locale: 'en',
+            subject: 'OTP seed subject',
+            message: 'OTP seed body',
+        );
+
+        $reset = $this->resetEmailTemplate('otpSession');
+
+        $this->assertSame(200, $reset['headers']['status-code']);
+        $this->assertSame('en', $reset['body']['locale']);
+        $this->assertNotEmpty($reset['body']['subject']);
+    }
+
+    public function testResetEmailTemplateIsLocaleScoped(): void
+    {
+        $this->ensureSMTPEnabled();
+
+        $enSubject = 'EN before reset ' . \uniqid();
+        $frSubject = 'FR before reset ' . \uniqid();
+
+        $this->assertSame(200, $this->updateEmailTemplate(
+            templateId: 'mfaChallenge',
+            locale: 'en',
+            subject: $enSubject,
+            message: 'EN body',
+        )['headers']['status-code']);
+
+        $this->assertSame(200, $this->updateEmailTemplate(
+            templateId: 'mfaChallenge',
+            locale: 'fr',
+            subject: $frSubject,
+            message: 'FR body',
+        )['headers']['status-code']);
+
+        // Reset only the 'en' locale.
+        $reset = $this->resetEmailTemplate('mfaChallenge', 'en');
+        $this->assertSame(200, $reset['headers']['status-code']);
+
+        // 'en' is back to Appwrite defaults.
+        $en = $this->getEmailTemplate('mfaChallenge', 'en');
+        $this->assertNotSame($enSubject, $en['body']['subject']);
+
+        // 'fr' must remain untouched.
+        $fr = $this->getEmailTemplate('mfaChallenge', 'fr');
+        $this->assertSame($frSubject, $fr['body']['subject']);
+    }
+
+    public function testResetEmailTemplateRemovedFromList(): void
+    {
+        $this->ensureSMTPEnabled();
+
+        $marker = 'Reset-from-list ' . \uniqid();
+        $this->updateEmailTemplate(
+            templateId: 'sessionAlert',
+            locale: 'en',
+            subject: $marker,
+            message: 'Body',
+        );
+
+        // Confirm it is in the list before reset.
+        $before = $this->listEmailTemplates();
+        $this->assertSame(200, $before['headers']['status-code']);
+        $found = \array_filter(
+            $before['body']['templates'],
+            fn ($t) => $t['templateId'] === 'sessionAlert' && $t['locale'] === 'en' && $t['subject'] === $marker,
+        );
+        $this->assertNotEmpty($found, 'seeded template must appear in list before reset');
+
+        // Reset it.
+        $this->resetEmailTemplate('sessionAlert', 'en');
+
+        // Must no longer appear in the list — the entire entry was unset.
+        $after = $this->listEmailTemplates();
+        $this->assertSame(200, $after['headers']['status-code']);
+        $stillThere = \array_filter(
+            $after['body']['templates'],
+            fn ($t) => $t['templateId'] === 'sessionAlert' && $t['locale'] === 'en' && $t['subject'] === $marker,
+        );
+        $this->assertEmpty($stillThere, 'reset template must not appear in list after reset');
+    }
+
+    public function testResetEmailTemplateOtherParamsIgnored(): void
+    {
+        $this->ensureSMTPEnabled();
+
+        $this->updateEmailTemplate(
+            templateId: 'magicSession',
+            locale: 'en',
+            subject: 'Custom subject',
+            message: 'Custom body',
+            senderEmail: 'custom@appwrite.io',
+        );
+
+        // Pass reset=true alongside other fields — those fields must be ignored.
+        $reset = $this->client->call(
+            Client::METHOD_PATCH,
+            '/project/templates/email',
+            \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'templateId' => 'magicSession',
+                'locale'     => 'en',
+                'subject'    => 'Should be ignored',
+                'message'    => 'Should also be ignored',
+                'reset'      => true,
+            ],
+        );
+
+        $this->assertSame(200, $reset['headers']['status-code']);
+        $this->assertNotSame('Should be ignored', $reset['body']['subject']);
+        $this->assertSame('', $reset['body']['senderEmail']);
+    }
+
+    public function testResetEmailTemplateResponseModel(): void
+    {
+        $this->ensureSMTPEnabled();
+
+        $this->updateEmailTemplate(
+            templateId: 'verification',
+            locale: 'en',
+            subject: 'Before reset',
+            message: 'Before reset body',
+            senderName: 'Sender',
+            senderEmail: 'sender@appwrite.io',
+            replyToEmail: 'reply@appwrite.io',
+            replyToName: 'Reply',
+        );
+
+        $reset = $this->resetEmailTemplate('verification', 'en');
+
+        $this->assertSame(200, $reset['headers']['status-code']);
+        $this->assertArrayHasKey('templateId', $reset['body']);
+        $this->assertArrayHasKey('locale', $reset['body']);
+        $this->assertArrayHasKey('subject', $reset['body']);
+        $this->assertArrayHasKey('message', $reset['body']);
+        $this->assertArrayHasKey('senderName', $reset['body']);
+        $this->assertArrayHasKey('senderEmail', $reset['body']);
+        $this->assertArrayHasKey('replyToEmail', $reset['body']);
+        $this->assertArrayHasKey('replyToName', $reset['body']);
+    }
+
+    public function testResetEmailTemplateInvalidType(): void
+    {
+        $reset = $this->resetEmailTemplate('notATemplate', 'en');
+
+        $this->assertSame(400, $reset['headers']['status-code']);
+    }
+
+    public function testResetEmailTemplateInvalidLocale(): void
+    {
+        $reset = $this->resetEmailTemplate('verification', 'not-a-locale');
+
+        $this->assertSame(400, $reset['headers']['status-code']);
+    }
+
+    public function testResetEmailTemplateWithoutAuthentication(): void
+    {
+        $reset = $this->resetEmailTemplate('verification', 'en', authenticated: false);
+
+        $this->assertSame(401, $reset['headers']['status-code']);
+    }
+
     protected function getConsoleEmailTemplate(string $templateId, ?string $locale = null): mixed
     {
         $params = [];
@@ -1254,6 +1522,29 @@ trait TemplatesBase
             'x-appwrite-project' => 'console',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ], $params);
+    }
+
+    protected function resetEmailTemplate(string $templateId, ?string $locale = null, bool $authenticated = true): mixed
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ];
+
+        if ($authenticated) {
+            $headers = \array_merge($headers, $this->getHeaders());
+        }
+
+        $params = [
+            'templateId' => $templateId,
+            'reset'      => true,
+        ];
+
+        if ($locale !== null) {
+            $params['locale'] = $locale;
+        }
+
+        return $this->client->call(Client::METHOD_PATCH, '/project/templates/email', $headers, $params);
     }
 
     protected function ensureSMTPEnabled(): void

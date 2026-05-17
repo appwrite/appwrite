@@ -7,15 +7,18 @@ use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Template\Template;
 use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Emails\Validator\Email;
+use Utopia\Locale\Locale;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -46,7 +49,7 @@ class Update extends Action
                 group: 'templates',
                 name: 'updateEmailTemplate',
                 description: <<<EOT
-                Update a custom email template for the specified locale and type. Use this endpoint to modify the content of your email templates.
+                Update a custom email template for the specified locale and type. Use this endpoint to modify the content of your email templates. Pass `reset=true` to remove all customisations and restore Appwrite defaults.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
@@ -64,6 +67,7 @@ class Update extends Action
             ->param('senderEmail', null, new Nullable(new Email()), 'Email of the sender.', optional: true)
             ->param('replyToEmail', null, new Nullable(new Email()), 'Reply to email.', optional: true)
             ->param('replyToName', null, new Nullable(new Text(255, 0)), 'Reply to name.', optional: true)
+            ->param('reset', false, new Boolean(), 'Reset template to Appwrite defaults. Removes all customisations for the given template and locale. When set to true, all other parameters are ignored.', optional: true)
             ->inject('response')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
@@ -81,6 +85,7 @@ class Update extends Action
         ?string $senderEmail,
         ?string $replyToEmail,
         ?string $replyToName,
+        bool $reset,
         Response $response,
         QueueEvent $queueForEvents,
         Database $dbForPlatform,
@@ -89,6 +94,34 @@ class Update extends Action
     ) {
         $locale = $locale ?: System::getEnv('_APP_LOCALE', 'en');
 
+        $templates = $project->getAttribute('templates', []);
+
+        if ($reset) {
+            // Remove custom override — no SMTP check needed to restore defaults
+            unset($templates['email.' . $templateId . '-' . $locale]);
+
+            $updates = new Document(['templates' => $templates]);
+            $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
+
+            $queueForEvents->setParam('templateId', $templateId);
+
+            $localeObj = new Locale($locale);
+            $localeObj->setFallback(System::getEnv('_APP_LOCALE', 'en'));
+
+            $response->dynamic(new Document([
+                'templateId'   => $templateId,
+                'locale'       => $locale,
+                'subject'      => $localeObj->getText('emails.' . $templateId . '.subject'),
+                'message'      => $this->getDefaultMessage($templateId, $localeObj),
+                'senderName'   => '',
+                'senderEmail'  => '',
+                'replyToEmail' => '',
+                'replyToName'  => '',
+            ]), Response::MODEL_EMAIL_TEMPLATE);
+
+            return;
+        }
+
         // Prevent template update if custom SMTP is not configured
         $smtp = $project->getAttribute('smtp', []);
         if (($smtp['enabled'] ?? false) !== true) {
@@ -96,7 +129,6 @@ class Update extends Action
         }
 
         // Fetch current configuration
-        $templates = $project->getAttribute('templates', []);
         $template = $templates['email.' . $templateId . '-' . $locale] ?? [];
 
         // Apply changes
@@ -140,5 +172,52 @@ class Update extends Action
             'replyToEmail' => $template['replyToEmail'] ?? '',
             'replyToName' => $template['replyToName'] ?? '',
         ]), Response::MODEL_EMAIL_TEMPLATE);
+    }
+
+    private function getDefaultMessage(string $templateId, Locale $localeObj): string
+    {
+        $templateConfigs = [
+            'magicSession' => [
+                'file' => 'email-magic-url.tpl',
+                'placeholders' => ['optionButton', 'buttonText', 'optionUrl', 'clientInfo', 'securityPhrase']
+            ],
+            'mfaChallenge' => [
+                'file' => 'email-mfa-challenge.tpl',
+                'placeholders' => ['description', 'clientInfo']
+            ],
+            'otpSession' => [
+                'file' => 'email-otp.tpl',
+                'placeholders' => ['description', 'clientInfo', 'securityPhrase']
+            ],
+            'sessionAlert' => [
+                'file' => 'email-session-alert.tpl',
+                'placeholders' => ['body', 'listDevice', 'listIpAddress', 'listCountry', 'footer']
+            ],
+        ];
+
+        $config = $templateConfigs[$templateId] ?? [
+            'file' => 'email-inner-base.tpl',
+            'placeholders' => ['buttonText', 'body', 'footer']
+        ];
+
+        $templateString = file_get_contents(APP_CE_CONFIG_DIR . '/locale/templates/' . $config['file']);
+        $message = Template::fromString($templateString);
+
+        foreach ($config['placeholders'] as $param) {
+            $escapeHtml = !in_array($param, ['clientInfo', 'body', 'footer', 'description']);
+            if ($templateId === 'magicSession' && $param === 'securityPhrase') {
+                $message->setParam('{{securityPhrase}}', '');
+                continue;
+            }
+
+            $message->setParam("{{{$param}}}", $localeObj->getText("emails.{$templateId}.{$param}"), escapeHtml: $escapeHtml);
+        }
+
+        $message
+            ->setParam('{{hello}}', $localeObj->getText("emails.{$templateId}.hello"))
+            ->setParam('{{thanks}}', $localeObj->getText("emails.{$templateId}.thanks"))
+            ->setParam('{{signature}}', $localeObj->getText("emails.{$templateId}.signature"));
+
+        return $message->render(useContent: true);
     }
 }
