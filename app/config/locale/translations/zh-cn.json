@@ -244,6 +244,6 @@
     "emails.otpSession.description": "在提示时输入以下验证码以安全登录您的{{project}}账户。该验证码将在15分钟后过期。",
     "emails.otpSession.clientInfo": "此次登录是通过{{agentClient}}在{{agentDevice}} {{agentOs}}上请求的。如果您没有请求登录，可以放心忽略此电子邮件。",
     "emails.otpSession.securityPhrase": "此电子邮件的安全短语是{{phrase}}。如果此短语与登录时显示的短语一致，您可以信任此邮件。",
-    "emails.otpSession.thanks": "谢谢，、",
+    "emails.otpSession.thanks": "谢谢，",
     "emails.otpSession.signature": "{{project}} 团队"
 }
