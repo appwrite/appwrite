@@ -37,6 +37,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Roles;
 use Utopia\Http\Http;
+use Utopia\Http\Route;
 use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -800,7 +801,7 @@ Http::shutdown()
 
 Http::shutdown()
     ->groups(['api'])
-    ->inject('utopia')
+    ->inject('route')
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -820,7 +821,7 @@ Http::shutdown()
     ->inject('bus')
     ->inject('apiKey')
     ->inject('mode')
-    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Audit $publisherForAudits, Context $usage, UsagePublisher $publisherForUsage, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor, Bus $bus, ?Key $apiKey, string $mode) use ($parseLabel) {
+    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Audit $publisherForAudits, Context $usage, UsagePublisher $publisherForUsage, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor, Bus $bus, ?Key $apiKey, string $mode) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
@@ -876,7 +877,6 @@ Http::shutdown()
             }
         }
 
-        $route = $utopia->match($request)?->route;
         $requestParams = $route->getParamsValues();
 
         /**
