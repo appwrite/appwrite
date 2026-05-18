@@ -22,7 +22,11 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
-import { useProject, useOrganizations } from '@/lib/react-query/hooks'
+import {
+  deleteProject,
+  useProject,
+  useOrganizations,
+} from '@/lib/react-query/hooks'
 import { MCPSection } from '@/components/pages/projects/$projectId/shared/MCPSection'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { Button } from '@/components/ui/button'
@@ -687,15 +691,7 @@ export function ProjectSettingsOverview({
   // Mutation to delete project
   const deleteProjectMutation = useMutation({
     mutationFn: async () => {
-      // Match Console behavior: delete through console client in the project's region.
-      const region =
-        typeof project?.region === 'string' &&
-        project.region.trim() &&
-        project.region.toLowerCase() !== 'unknown'
-          ? project.region
-          : null
-      const consoleSdk = region ? sdk.forConsoleIn(region) : sdk.forConsole
-      await consoleSdk.projects.delete({ projectId })
+      await deleteProject(projectId, project?.region)
     },
     onSuccess: async () => {
       toast.success(`${project?.name || 'Project'} has been deleted`)

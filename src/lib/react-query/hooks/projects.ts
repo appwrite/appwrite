@@ -594,6 +594,30 @@ export function useProject(projectId: string | undefined) {
 
 const CONSOLE_FINGERPRINT_HEADER = 'X-Appwrite-Console-Fingerprint'
 
+function normalizeProjectRegion(region?: string | null): string | undefined {
+  if (
+    typeof region !== 'string' ||
+    !region.trim() ||
+    region.toLowerCase() === 'unknown'
+  ) {
+    return undefined
+  }
+  return region
+}
+
+/**
+ * Delete a project via the project-scoped API (`Project.delete`).
+ * Uses the regional endpoint when the project region is known.
+ */
+export async function deleteProject(
+  projectId: string,
+  region?: string | null,
+): Promise<void> {
+  await sdk
+    .forProject(projectId, normalizeProjectRegion(region))
+    .project.delete()
+}
+
 /**
  * Hook to resume a paused project (set status to active).
  * Used when the user explicitly chooses to restore the project from the paused curtain.

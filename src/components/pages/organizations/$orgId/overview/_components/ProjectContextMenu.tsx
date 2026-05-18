@@ -36,7 +36,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
-import { sdk } from '@/lib/appwrite/sdk'
+import { deleteProject } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   buildConsoleUrl,
@@ -95,14 +95,7 @@ export function ProjectContextMenu({
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
-      const region =
-        typeof project.region === 'string' &&
-        project.region.trim() &&
-        project.region.toLowerCase() !== 'unknown'
-          ? project.region
-          : null
-      const consoleSdk = region ? sdk.forConsoleIn(region) : sdk.forConsole
-      await consoleSdk.projects.delete({ projectId: project.$id })
+      await deleteProject(project.$id, project.region)
     },
     onSuccess: async () => {
       // Keep cards in sync across pinned and regular project queries.
