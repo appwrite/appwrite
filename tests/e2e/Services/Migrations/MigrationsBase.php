@@ -2800,6 +2800,59 @@ trait MigrationsBase
         $this->client->call(Client::METHOD_PATCH, '/projects/' . $destinationProjectId . '/api/websocket', $consoleHeaders, ['status' => true]);
     }
 
+    public function testAppwriteMigrationLabels(): void
+    {
+        $consoleHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ];
+
+        $sourceProjectId = $this->getProject()['$id'];
+        $destinationProjectId = $this->getDestinationProject()['$id'];
+
+        $labels = ['vip-' . \substr(ID::unique(), 0, 8), 'beta-' . \substr(ID::unique(), 0, 8)];
+
+        // Set labels on source.
+        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId, $consoleHeaders, [
+            'name' => $this->getProject()['name'] ?? 'Test',
+            'labels' => $labels,
+        ]);
+
+        $result = $this->performMigrationSync([
+            'resources' => [
+                Resource::TYPE_LABELS,
+            ],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $sourceProjectId,
+            'apiKey' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals('completed', $result['status']);
+        $this->assertEquals([Resource::TYPE_LABELS], $result['resources']);
+        $this->assertArrayHasKey(Resource::TYPE_LABELS, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_LABELS]['error']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_LABELS]['pending']);
+        $this->assertEquals(1, $result['statusCounters'][Resource::TYPE_LABELS]['success']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_LABELS]['processing']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_LABELS]['warning']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $destinationProjectId, $consoleHeaders);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEqualsCanonicalizing($labels, $response['body']['labels']);
+
+        // Restore both projects.
+        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId, $consoleHeaders, [
+            'name' => $this->getProject()['name'] ?? 'Test',
+            'labels' => [],
+        ]);
+        $this->client->call(Client::METHOD_PATCH, '/projects/' . $destinationProjectId, $consoleHeaders, [
+            'name' => $this->getDestinationProject()['name'] ?? 'Test',
+            'labels' => [],
+        ]);
+    }
+
     /**
      * Import documents from a CSV file.
      */

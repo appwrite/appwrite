@@ -89,6 +89,12 @@ class MigrationReport extends Model
                 'default' => 0,
                 'example' => 1,
             ])
+            ->addRule(Resource::TYPE_LABELS, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of label sets to be migrated (always 0 or 1 — the project-level RBAC label array).',
+                'default' => 0,
+                'example' => 1,
+            ])
             ->addRule(Resource::TYPE_SITE, [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Number of sites to be migrated.',
