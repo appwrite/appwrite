@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9623d2109a32041ca4e395ab55266038",
+    "content-hash": "13f0750846460bcf452f4c678ba570f8",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4606,16 +4606,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "dev-add-auth-methods-migration",
+            "version": "dev-add-protocols-migration",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "5224e3ce9a96373dfd83648b5e8e4e4d20b85020"
+                "reference": "d74e8cbd195f341810ec75adaf620447214fc110"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/5224e3ce9a96373dfd83648b5e8e4e4d20b85020",
-                "reference": "5224e3ce9a96373dfd83648b5e8e4e4d20b85020",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/d74e8cbd195f341810ec75adaf620447214fc110",
+                "reference": "d74e8cbd195f341810ec75adaf620447214fc110",
                 "shasum": ""
             },
             "require": {
@@ -4672,10 +4672,10 @@
                 "utopia"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/migration/tree/add-auth-methods-migration",
+                "source": "https://github.com/utopia-php/migration/tree/add-protocols-migration",
                 "issues": "https://github.com/utopia-php/migration/issues"
             },
-            "time": "2026-05-18T12:08:47+00:00"
+            "time": "2026-05-18T13:09:23+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -8585,7 +8585,7 @@
     "aliases": [
         {
             "package": "utopia-php/migration",
-            "version": "dev-add-auth-methods-migration",
+            "version": "dev-add-protocols-migration",
             "alias": "1.12.0",
             "alias_normalized": "1.12.0.0"
         }

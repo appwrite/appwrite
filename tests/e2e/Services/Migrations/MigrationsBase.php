@@ -2750,6 +2750,56 @@ trait MigrationsBase
         $this->client->call(Client::METHOD_PATCH, '/projects/' . $destinationProjectId . '/auth/jwt', $consoleHeaders, ['status' => true]);
     }
 
+    public function testAppwriteMigrationProtocols(): void
+    {
+        $consoleHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ];
+
+        $sourceProjectId = $this->getProject()['$id'];
+        // Flip graphql + websocket off on source to make the round-trip observable.
+        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/api/graphql', $consoleHeaders, [
+            'status' => false,
+        ]);
+        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/api/websocket', $consoleHeaders, [
+            'status' => false,
+        ]);
+
+        $result = $this->performMigrationSync([
+            'resources' => [
+                Resource::TYPE_PROTOCOLS,
+            ],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $sourceProjectId,
+            'apiKey' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals('completed', $result['status']);
+        $this->assertEquals([Resource::TYPE_PROTOCOLS], $result['resources']);
+        $this->assertArrayHasKey(Resource::TYPE_PROTOCOLS, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROTOCOLS]['error']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROTOCOLS]['pending']);
+        $this->assertEquals(1, $result['statusCounters'][Resource::TYPE_PROTOCOLS]['success']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROTOCOLS]['processing']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROTOCOLS]['warning']);
+
+        $destinationProjectId = $this->getDestinationProject()['$id'];
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $destinationProjectId, $consoleHeaders);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertFalse($response['body']['protocolStatusForGraphql'], 'GraphQL protocol should be migrated as disabled');
+        $this->assertFalse($response['body']['protocolStatusForWebsocket'], 'WebSocket protocol should be migrated as disabled');
+
+        // Restore both projects so the test is idempotent.
+        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/api/graphql', $consoleHeaders, ['status' => true]);
+        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/api/websocket', $consoleHeaders, ['status' => true]);
+        $this->client->call(Client::METHOD_PATCH, '/projects/' . $destinationProjectId . '/api/graphql', $consoleHeaders, ['status' => true]);
+        $this->client->call(Client::METHOD_PATCH, '/projects/' . $destinationProjectId . '/api/websocket', $consoleHeaders, ['status' => true]);
+    }
+
     /**
      * Import documents from a CSV file.
      */
