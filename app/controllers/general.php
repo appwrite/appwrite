@@ -184,31 +184,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
 
-        if (!empty($rule->getAttribute('deploymentId', ''))) {
-            $deployment = $authorization->skip(fn () => $dbForProject->getDocument('deployments', $rule->getAttribute('deploymentId')));
-        } else {
-            // 1.6.x DB schema compatibility
-            // TODO: Make sure deploymentId is never empty, and remove this code
-
-            // Check if site or function; should never be site, but better safe than sorry
-            // Attempts to use attribute from both schemas (1.6 and 1.7)
-            $resourceType = $rule->getAttribute('deploymentResourceType', $rule->getAttribute('resourceType', ''));
-
-            // ID of site or function
-            $resourceId = $rule->getAttribute('deploymentResourceId', '');
-
-            // Document of site or function
-            $resource = $resourceType === 'function' ?
-                $authorization->skip(fn () => $dbForProject->getDocument('functions', $resourceId)) :
-                $authorization->skip(fn () => $dbForProject->getDocument('sites', $resourceId));
-
-            // ID of active deployments
-            // Attempts to use attribute from both schemas (1.6 and 1.7)
-            $activeDeploymentId = $resource->getAttribute('deploymentId', $resource->getAttribute('deployment', ''));
-
-            // Get deployment document, as intended originally
-            $deployment = $authorization->skip(fn () => $dbForProject->getDocument('deployments', $activeDeploymentId));
-        }
+        $deployment = $authorization->skip(fn () => $dbForProject->getDocument('deployments', $rule->getAttribute('deploymentId')));
 
         if ($deployment->isEmpty()) {
             $resourceType = $rule->getAttribute('deploymentResourceType', '');
