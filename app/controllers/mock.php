@@ -289,7 +289,7 @@ Http::shutdown()
     ->action(function (Http $utopia, Response $response, Request $request) {
 
         $result = [];
-        $route  = $utopia->getRoute();
+        $route  = $utopia->match($request)?->route;
         $path   = APP_STORAGE_CACHE . '/tests.json';
         $tests  = (\file_exists($path)) ? \json_decode(\file_get_contents($path), true) : [];
 

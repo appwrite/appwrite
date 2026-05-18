@@ -99,7 +99,7 @@ Http::init()
     ->inject('apiKey')
     ->inject('authorization')
     ->action(function (Http $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization) {
-        $route = $utopia->getRoute();
+        $route = $utopia->match($request)?->route;
         if ($route === null) {
             throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
         }
@@ -495,7 +495,7 @@ Http::init()
             && ! $user->isPrivileged($roles)
             && $devKey->isEmpty();
 
-        $route = $utopia->getRoute();
+        $route = $utopia->match($request)?->route;
         if ($route === null) {
             throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
         }
@@ -579,12 +579,12 @@ Http::init()
         $response->setUser($user);
         $request->setUser($user);
 
-        $route = $utopia->getRoute();
+        $route = $utopia->match($request)?->route;
         if ($route === null) {
             throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
         }
 
-        $path = $route->getMatchedPath();
+        $path = $request->getURI();
         $databaseType = match (true) {
             str_contains($path, '/documentsdb') => DATABASE_TYPE_DOCUMENTSDB,
             str_contains($path, '/vectorsdb') => DATABASE_TYPE_VECTORSDB,
@@ -623,7 +623,7 @@ Http::init()
         $useCache = $route->getLabel('cache', false);
         $storageCacheOperationsCounter = $telemetry->createCounter('storage.cache.operations.load');
         if ($useCache) {
-            $route = $utopia->match($request);
+            $route = $utopia->match($request)->route;
             $roles = $authorization->getRoles();
             $isAppUser = $user->isApp($roles);
             $isImageTransformation = $route->getPath() === '/v1/storage/buckets/:bucketId/files/:fileId/preview';
@@ -876,7 +876,7 @@ Http::shutdown()
             }
         }
 
-        $route = $utopia->getRoute();
+        $route = $utopia->match($request)?->route;
         $requestParams = $route->getParamsValues();
 
         /**
