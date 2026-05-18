@@ -1279,8 +1279,15 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                         /** @var UsagePublisher $publisherForUsage */
                         $publisherForUsage = $container->get('publisherForUsage');
 
+                        $deletedIds = [];
                         try {
-                            $deletionCount = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->deleteDocuments('presenceLogs', [Query::equal('$id', $presenceIds)]));
+                            $deletionCount = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->deleteDocuments(
+                                'presenceLogs',
+                                [Query::equal('$id', $presenceIds)],
+                                onNext: function (Document $deleted) use (&$deletedIds): void {
+                                    $deletedIds[$deleted->getId()] = true;
+                                },
+                            ));
                             $presenceState->triggerUsage($publisherForUsage, $project, -$deletionCount);
                         } catch (Throwable $th) {
                             Span::error($th);
@@ -1294,6 +1301,9 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                         $queueForRealtime = getQueueForRealtime();
 
                         foreach ($presences as $presence) {
+                            if (!isset($deletedIds[$presence->getId()])) {
+                                continue;
+                            }
                             try {
                                 $presenceState->triggerEvent(
                                     $queueForEvents,
