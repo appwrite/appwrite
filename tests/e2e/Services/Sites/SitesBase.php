@@ -75,6 +75,24 @@ trait SitesBase
                     'x-appwrite-project' => $this->getProject()['$id'],
                     'x-appwrite-key' => $this->getProject()['apiKey'],
                 ]));
+
+                if (
+                    ($site['body']['deploymentId'] ?? '') !== $deploymentId
+                    && ($site['body']['latestDeploymentId'] ?? '') === $deploymentId
+                    && ($site['body']['latestDeploymentStatus'] ?? '') === 'ready'
+                ) {
+                    $activation = $this->updateSiteDeployment($siteId, $deploymentId);
+                    $this->assertContains(
+                        $activation['headers']['status-code'],
+                        [200, 409],
+                        'Deployment activation request failed: ' . json_encode($activation['body'], JSON_PRETTY_PRINT)
+                    );
+
+                    if ($activation['headers']['status-code'] === 200) {
+                        $site = $activation;
+                    }
+                }
+
                 $this->assertEquals($deploymentId, $site['body']['deploymentId'], 'Deployment is not activated, deployment: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
             }, 120000, 500);
         }
@@ -285,6 +303,24 @@ trait SitesBase
 
         $this->assertEventually(function () use ($siteId, $deploymentId) {
             $site = $this->getSite($siteId);
+
+            if (
+                ($site['body']['deploymentId'] ?? '') !== $deploymentId
+                && ($site['body']['latestDeploymentId'] ?? '') === $deploymentId
+                && ($site['body']['latestDeploymentStatus'] ?? '') === 'ready'
+            ) {
+                $activation = $this->updateSiteDeployment($siteId, $deploymentId);
+                $this->assertContains(
+                    $activation['headers']['status-code'],
+                    [200, 409],
+                    'Deployment activation request failed: ' . json_encode($activation['body'], JSON_PRETTY_PRINT)
+                );
+
+                if ($activation['headers']['status-code'] === 200) {
+                    $site = $activation;
+                }
+            }
+
             $this->assertEquals($deploymentId, $site['body']['deploymentId'], 'Deployment is not activated, deployment: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
         }, 60000, 500);
 
