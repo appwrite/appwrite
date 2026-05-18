@@ -2,18 +2,10 @@
 
 require_once __DIR__ . '/init.php';
 
-use Appwrite\Event\Event;
-use Appwrite\Event\Publisher\Certificate as CertificatePublisher;
-use Appwrite\Event\Publisher\Database as DatabasePublisher;
-use Appwrite\Event\Publisher\Delete as DeletePublisher;
-use Appwrite\Event\Publisher\Func as FunctionPublisher;
-use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
-use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Platform\Appwrite;
 use Appwrite\Runtimes\Runtimes;
 use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Database\Documents\User;
-use Executor\Executor;
 use Swoole\Runtime;
 use Swoole\Timer;
 use Utopia\Cache\Adapter\Pool as CachePool;
@@ -27,17 +19,12 @@ use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\DI\Container;
 use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Platform\Service;
 use Utopia\Pools\Group;
-use Utopia\Queue\Broker\Pool as BrokerPool;
-use Utopia\Queue\Publisher;
-use Utopia\Queue\Queue;
 use Utopia\Registry\Registry;
 use Utopia\System\System;
-use Utopia\Telemetry\Adapter\None as NoTelemetry;
 
 use function Swoole\Coroutine\run;
 
@@ -48,6 +35,7 @@ Config::setParam('runtimes', (new Runtimes('v5'))->getAll(supported: false));
 require_once __DIR__ . '/controllers/general.php';
 
 global $register;
+global $container;
 
 $platform = new Appwrite();
 $args = $_SERVER['argv'] ?? [];
@@ -59,7 +47,6 @@ if (! isset($args[0])) {
 }
 
 $taskName = $args[0];
-$container = new Container();
 $cli = new CLI(new Generic(), $_SERVER['argv'] ?? [], $container);
 
 $platform->setCli($cli);
@@ -131,10 +118,6 @@ $container->set('dbForPlatform', function ($pools, $cache, $authorization) {
 
     return $dbForPlatform;
 }, ['pools', 'cache', 'authorization']);
-
-$container->set('console', function () {
-    return new Document(Config::getParam('console'));
-}, []);
 
 $container->set(
     'isResourceBlocked',
@@ -252,48 +235,10 @@ $container->set('getLogsDB', function (Group $pools, Cache $cache, Authorization
         return $database;
     };
 }, ['pools', 'cache', 'authorization']);
-$container->set('publisher', function (Group $pools) {
-    return new BrokerPool(publisher: $pools->get('publisher'));
-}, ['pools']);
-$container->set('publisherDatabases', function (BrokerPool $publisher) {
-    return $publisher;
-}, ['publisher']);
-$container->set('publisherFunctions', function (BrokerPool $publisher) {
-    return $publisher;
-}, ['publisher']);
-$container->set('publisherMigrations', function (BrokerPool $publisher) {
-    return $publisher;
-}, ['publisher']);
-$container->set('publisherMessaging', function (BrokerPool $publisher) {
-    return $publisher;
-}, ['publisher']);
+
 $container->set('usage', function () {
     return new UsageContext();
 }, []);
-$container->set('publisherForUsage', fn (Publisher $publisher) => new UsagePublisher(
-    $publisher,
-    new Queue(System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', Event::STATS_USAGE_QUEUE_NAME))
-), ['publisher']);
-$container->set('publisherForCertificates', fn (Publisher $publisher) => new CertificatePublisher(
-    $publisher,
-    new Queue(System::getEnv('_APP_CERTIFICATES_QUEUE_NAME', Event::CERTIFICATES_QUEUE_NAME))
-), ['publisher']);
-$container->set('publisherForStatsResources', fn (Publisher $publisher) => new StatsResourcesPublisher(
-    $publisher,
-    new Queue(System::getEnv('_APP_STATS_RESOURCES_QUEUE_NAME', Event::STATS_RESOURCES_QUEUE_NAME))
-), ['publisher']);
-$container->set('publisherForFunctions', fn (Publisher $publisher) => new FunctionPublisher(
-    $publisher,
-    new Queue(System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME), 'utopia-queue', Event::FUNCTIONS_QUEUE_TTL)
-), ['publisher']);
-$container->set('publisherForDatabase', fn (Publisher $publisherDatabases) => new DatabasePublisher(
-    $publisherDatabases,
-    new Queue(System::getEnv('_APP_DATABASE_QUEUE_NAME', Event::DATABASE_QUEUE_NAME))
-), ['publisherDatabases']);
-$container->set('publisherForDeletes', fn (Publisher $publisher) => new DeletePublisher(
-    $publisher,
-    new Queue(System::getEnv('_APP_DELETE_QUEUE_NAME', Event::DELETE_QUEUE_NAME))
-), ['publisher']);
 $container->set('logError', function (Registry $register) {
     return function (Throwable $error, string $namespace, string $action) use ($register) {
         Console::error('[Error] Timestamp: ' . date('c', time()));
@@ -346,13 +291,9 @@ $container->set('logError', function (Registry $register) {
     };
 }, ['register']);
 
-$container->set('executor', fn () => new Executor(), []);
-
 $container->set('bus', function (Registry $register) use ($container) {
     return $register->get('bus')->setResolver(fn (string $name) => $container->get($name));
 }, ['register']);
-
-$container->set('telemetry', fn () => new NoTelemetry(), []);
 
 $exitCode = 0;
 
