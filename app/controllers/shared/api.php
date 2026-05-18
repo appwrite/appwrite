@@ -584,7 +584,7 @@ Http::init()
             throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
         }
 
-        $path = $request->getURI();
+        $path = $route->getPath();
         $databaseType = match (true) {
             str_contains($path, '/documentsdb') => DATABASE_TYPE_DOCUMENTSDB,
             str_contains($path, '/vectorsdb') => DATABASE_TYPE_VECTORSDB,
