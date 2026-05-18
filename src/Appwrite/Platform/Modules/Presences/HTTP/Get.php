@@ -35,7 +35,8 @@ class Get extends PlatformAction
                 namespace: 'presences',
                 group: 'presences',
                 name: 'get',
-                description: 'Get a presence log by its unique ID.',
+                desc: 'Get presence',
+                description: '/docs/references/presences/get.md',
                 auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(

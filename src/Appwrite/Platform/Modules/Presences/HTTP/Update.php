@@ -51,7 +51,8 @@ class Update extends PlatformAction
                     namespace: 'presences',
                     group: 'presences',
                     name: 'update',
-                    description: 'Update a presence log by its unique ID.',
+                    desc: 'Update presence',
+                    description: '/docs/references/presences/update.md',
                     auth: [AuthType::SESSION],
                     responses: [
                         new SDKResponse(
@@ -73,7 +74,8 @@ class Update extends PlatformAction
                     namespace: 'presences',
                     group: 'presences',
                     name: 'updatePresence',
-                    description: 'Update a presence log by its unique ID.',
+                    desc: 'Update presence',
+                    description: '/docs/references/presences/update.md',
                     auth: [AuthType::KEY, AuthType::JWT, AuthType::ADMIN],
                     responses: [
                         new SDKResponse(

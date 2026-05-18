@@ -35,7 +35,8 @@ class Get extends PlatformAction
                 namespace: 'presences',
                 group: null,
                 name: 'getUsage',
-                description: 'Get presence usage metrics and statistics, including the current total of online users and historical online user counts for the selected time range.',
+                desc: 'Get presence usage',
+                description: '/docs/references/presences/get-usage.md',
                 auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(

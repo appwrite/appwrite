@@ -52,7 +52,8 @@ class Upsert extends PlatformAction
                     namespace: 'presences',
                     group: 'presences',
                     name: 'upsert',
-                    description: 'Create or update a presence log by its unique ID.',
+                    desc: 'Upsert presence',
+                    description: '/docs/references/presences/upsert.md',
                     auth: [AuthType::SESSION],
                     responses: [
                         new SDKResponse(
@@ -73,7 +74,8 @@ class Upsert extends PlatformAction
                     namespace: 'presences',
                     group: 'presences',
                     name: 'upsert',
-                    description: 'Create or update a presence log by its unique ID.',
+                    desc: 'Upsert presence',
+                    description: '/docs/references/presences/upsert.md',
                     auth: [AuthType::KEY, AuthType::JWT, AuthType::ADMIN],
                     responses: [
                         new SDKResponse(

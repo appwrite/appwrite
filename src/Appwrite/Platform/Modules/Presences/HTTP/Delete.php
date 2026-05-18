@@ -40,7 +40,8 @@ class Delete extends PlatformAction
                 namespace: 'presences',
                 group: 'presences',
                 name: 'delete',
-                description: 'Delete a presence log by its unique ID.',
+                desc: 'Delete presence',
+                description: '/docs/references/presences/delete.md',
                 auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(

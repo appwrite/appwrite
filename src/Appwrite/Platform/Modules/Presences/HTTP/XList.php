@@ -45,7 +45,8 @@ class XList extends PlatformAction
                 namespace: 'presences',
                 group: 'presences',
                 name: 'list',
-                description: 'List presence logs.',
+                desc: 'List presences',
+                description: '/docs/references/presences/list.md',
                 auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(
