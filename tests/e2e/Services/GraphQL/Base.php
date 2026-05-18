@@ -303,7 +303,7 @@ trait Base
     public const string CREATE_VONAGE_PROVIDER = 'create_vonage_provider';
     public const string CREATE_VONAGE_MESSAGES_PROVIDER = 'create_vonage_messages_provider';
     // Alias used by dynamic setupProviders() loop (strtolower('VonageMessages') = 'vonagemessages')
-    public const string CREATE_VONAGEMESSAGES_PROVIDER = 'create_vonage_messages_provider';
+    public const string CREATE_VONAGEMESSAGES_PROVIDER = 'create_vonagemessages_provider';
     public const string CREATE_FCM_PROVIDER = 'create_fcm_provider';
     public const string CREATE_APNS_PROVIDER = 'create_apns_provider';
     public const string LIST_PROVIDERS = 'list_providers';
@@ -319,7 +319,7 @@ trait Base
     public const string UPDATE_VONAGE_PROVIDER = 'update_vonage_provider';
     public const string UPDATE_VONAGE_MESSAGES_PROVIDER = 'update_vonage_messages_provider';
     // Alias used by dynamic setupUpdatedProviders() loop
-    public const string UPDATE_VONAGEMESSAGES_PROVIDER = 'update_vonage_messages_provider';
+    public const string UPDATE_VONAGEMESSAGES_PROVIDER = 'update_vonagemessages_provider';
     public const string UPDATE_FCM_PROVIDER = 'update_fcm_provider';
     public const string UPDATE_APNS_PROVIDER = 'update_apns_provider';
     public const string DELETE_PROVIDER = 'delete_provider';
@@ -2604,6 +2604,7 @@ trait Base
                     }
                 }';
             case self::CREATE_VONAGE_MESSAGES_PROVIDER:
+            case self::CREATE_VONAGEMESSAGES_PROVIDER:
                 return 'mutation createVonageMessagesProvider($providerId: String!, $name: String!, $from: String!, $apiKey: String!, $apiSecret: String!) {
                     messagingCreateVonageMessagesProvider(providerId: $providerId, name: $name, from: $from, apiKey: $apiKey, apiSecret: $apiSecret) {
                         _id
@@ -2748,6 +2749,7 @@ trait Base
                     }
                 }';
             case self::UPDATE_VONAGE_MESSAGES_PROVIDER:
+            case self::UPDATE_VONAGEMESSAGES_PROVIDER:
                 return 'mutation updateVonageMessagesProvider($providerId: String!, $name: String!, $apiKey: String!, $apiSecret: String!) {
                     messagingUpdateVonageMessagesProvider(providerId: $providerId, name: $name, apiKey: $apiKey, apiSecret: $apiSecret) {
                         _id
