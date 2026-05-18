@@ -29,6 +29,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\DSN\DSN;
+use Utopia\Lock\Distributed;
 use Utopia\Pools\Group;
 use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Publisher;
@@ -247,6 +248,16 @@ $container->set('redis', function () {
 
     return $redis;
 });
+
+$container->set('locks', function (Group $pools) {
+    return function (string $key, int $ttl, callable $callback, float $timeout = 0.0) use ($pools): mixed {
+        return $pools->get('lock')->use(function (\Redis $redis) use ($key, $ttl, $callback, $timeout) {
+            $lock = new Distributed($redis, $key, ttl: $ttl);
+
+            return $lock->withLock($callback, timeout: $timeout);
+        });
+    };
+}, ['pools']);
 
 $container->set('timelimit', function (\Redis $redis) {
     return function (string $key, int $limit, int $time) use ($redis) {
