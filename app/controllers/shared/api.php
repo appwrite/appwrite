@@ -86,7 +86,7 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
 
 Http::init()
     ->groups(['api'])
-    ->inject('utopia')
+    ->inject('route')
     ->inject('request')
     ->inject('dbForPlatform')
     ->inject('dbForProject')
@@ -99,11 +99,7 @@ Http::init()
     ->inject('team')
     ->inject('apiKey')
     ->inject('authorization')
-    ->action(function (Http $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization) {
-        $route = $utopia->match($request)?->route;
-        if ($route === null) {
-            throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
-        }
+    ->action(function (Route $route, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization) {
 
         /**
          * Handle user authentication and session validation.
@@ -478,7 +474,7 @@ Http::init()
 
 Http::init()
     ->groups(['api'])
-    ->inject('utopia')
+    ->inject('route')
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -486,7 +482,7 @@ Http::init()
     ->inject('timelimit')
     ->inject('devKey')
     ->inject('authorization')
-    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, callable $timelimit, Document $devKey, Authorization $authorization) {
+    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, callable $timelimit, Document $devKey, Authorization $authorization) {
         $response->setUser($user);
         $request->setUser($user);
 
@@ -495,11 +491,6 @@ Http::init()
             && ! $user->isApp($roles)
             && ! $user->isPrivileged($roles)
             && $devKey->isEmpty();
-
-        $route = $utopia->match($request)?->route;
-        if ($route === null) {
-            throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
-        }
 
         $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
         $abuseKeyLabel = (! is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
@@ -557,7 +548,7 @@ Http::init()
 
 Http::init()
     ->groups(['api'])
-    ->inject('utopia')
+    ->inject('route')
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -575,15 +566,10 @@ Http::init()
     ->inject('platform')
     ->inject('authorization')
     ->inject('cacheControlForStorage')
-    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Context $usage, FunctionPublisher $publisherForFunctions, Database $dbForProject, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Telemetry $telemetry, array $platform, Authorization $authorization, callable $cacheControlForStorage) {
+    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Context $usage, FunctionPublisher $publisherForFunctions, Database $dbForProject, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Telemetry $telemetry, array $platform, Authorization $authorization, callable $cacheControlForStorage) {
 
         $response->setUser($user);
         $request->setUser($user);
-
-        $route = $utopia->match($request)?->route;
-        if ($route === null) {
-            throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
-        }
 
         $path = $route->getPath();
         $databaseType = match (true) {
@@ -624,7 +610,6 @@ Http::init()
         $useCache = $route->getLabel('cache', false);
         $storageCacheOperationsCounter = $telemetry->createCounter('storage.cache.operations.load');
         if ($useCache) {
-            $route = $utopia->match($request)->route;
             $roles = $authorization->getRoles();
             $isAppUser = $user->isApp($roles);
             $isImageTransformation = $route->getPath() === '/v1/storage/buckets/:bucketId/files/:fileId/preview';
@@ -762,12 +747,11 @@ Http::init()
  */
 Http::shutdown()
     ->groups(['session'])
-    ->inject('utopia')
     ->inject('request')
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
-    ->action(function (Http $utopia, Request $request, Response $response, Document $project, Database $dbForProject) {
+    ->action(function (Request $request, Response $response, Document $project, Database $dbForProject) {
         $sessionLimit = $project->getAttribute('auths', [])['maxSessions'] ?? 0;
 
         if ($sessionLimit === 0) {
