@@ -1061,7 +1061,9 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                 $store->decode($message['data']['session']);
 
                 /** @var User $user */
-                $user = $database->getDocument('users', $store->getProperty('id', ''));
+                $user = $database->getAuthorization()->skip(
+                    fn () => $database->getDocument('users', $store->getProperty('id', ''))
+                );
 
                 /**
                  * TODO:
