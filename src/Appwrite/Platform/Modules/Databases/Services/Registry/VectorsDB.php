@@ -9,6 +9,7 @@ use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Bul
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Bulk\Upsert as UpsertDocuments;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Create as CreateDocument;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Delete as DeleteDocument;
+use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Explain\Get as ExplainDocuments;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Get as GetDocument;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Update as UpdateDocument;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Upsert as UpsertDocument;
@@ -51,58 +52,59 @@ class VectorsDB extends Base
 
     private function registerDatabaseActions(Service $service): void
     {
-        $service->addAction(CreateVectorDatabase::getName(), new CreateVectorDatabase());
-        $service->addAction(GetVectorDatabase::getName(), new GetVectorDatabase());
-        $service->addAction(UpdateVectorDatabase::getName(), new UpdateVectorDatabase());
-        $service->addAction(DeleteVectorDatabase::getName(), new DeleteVectorDatabase());
-        $service->addAction(ListVectorDatabases::getName(), new ListVectorDatabases());
-        $service->addAction(GetVectorDatabaseUsage::getName(), new GetVectorDatabaseUsage());
-        $service->addAction(ListVectorDatabaseUsage::getName(), new ListVectorDatabaseUsage());
+        $service->addAction(CreateVectorDatabase::getName(), new CreateVectorDatabase);
+        $service->addAction(GetVectorDatabase::getName(), new GetVectorDatabase);
+        $service->addAction(UpdateVectorDatabase::getName(), new UpdateVectorDatabase);
+        $service->addAction(DeleteVectorDatabase::getName(), new DeleteVectorDatabase);
+        $service->addAction(ListVectorDatabases::getName(), new ListVectorDatabases);
+        $service->addAction(GetVectorDatabaseUsage::getName(), new GetVectorDatabaseUsage);
+        $service->addAction(ListVectorDatabaseUsage::getName(), new ListVectorDatabaseUsage);
     }
 
     private function registerCollectionActions(Service $service): void
     {
-        $service->addAction(CreateCollection::getName(), new CreateCollection());
-        $service->addAction(GetCollection::getName(), new GetCollection());
-        $service->addAction(UpdateCollection::getName(), new UpdateCollection());
-        $service->addAction(DeleteCollection::getName(), new DeleteCollection());
-        $service->addAction(ListCollections::getName(), new ListCollections());
-        $service->addAction(GetCollectionUsage::getName(), new GetCollectionUsage());
+        $service->addAction(CreateCollection::getName(), new CreateCollection);
+        $service->addAction(GetCollection::getName(), new GetCollection);
+        $service->addAction(UpdateCollection::getName(), new UpdateCollection);
+        $service->addAction(DeleteCollection::getName(), new DeleteCollection);
+        $service->addAction(ListCollections::getName(), new ListCollections);
+        $service->addAction(GetCollectionUsage::getName(), new GetCollectionUsage);
     }
 
     private function registerIndexActions(Service $service): void
     {
-        $service->addAction(CreateIndex::getName(), new CreateIndex());
-        $service->addAction(GetIndex::getName(), new GetIndex());
-        $service->addAction(DeleteIndex::getName(), new DeleteIndex());
-        $service->addAction(ListIndexes::getName(), new ListIndexes());
+        $service->addAction(CreateIndex::getName(), new CreateIndex);
+        $service->addAction(GetIndex::getName(), new GetIndex);
+        $service->addAction(DeleteIndex::getName(), new DeleteIndex);
+        $service->addAction(ListIndexes::getName(), new ListIndexes);
     }
 
     private function registerDocumentActions(Service $service): void
     {
-        $service->addAction(CreateDocument::getName(), new CreateDocument());
-        $service->addAction(UpdateDocument::getName(), new UpdateDocument());
-        $service->addAction(UpsertDocument::getName(), new UpsertDocument());
-        $service->addAction(GetDocument::getName(), new GetDocument());
-        $service->addAction(ListDocuments::getName(), new ListDocuments());
-        $service->addAction(DeleteDocument::getName(), new DeleteDocument());
-        $service->addAction(UpdateDocuments::getName(), new UpdateDocuments());
-        $service->addAction(UpsertDocuments::getName(), new UpsertDocuments());
-        $service->addAction(DeleteDocuments::getName(), new DeleteDocuments());
+        $service->addAction(CreateDocument::getName(), new CreateDocument);
+        $service->addAction(UpdateDocument::getName(), new UpdateDocument);
+        $service->addAction(UpsertDocument::getName(), new UpsertDocument);
+        $service->addAction(GetDocument::getName(), new GetDocument);
+        $service->addAction(ListDocuments::getName(), new ListDocuments);
+        $service->addAction(ExplainDocuments::getName(), new ExplainDocuments);
+        $service->addAction(DeleteDocument::getName(), new DeleteDocument);
+        $service->addAction(UpdateDocuments::getName(), new UpdateDocuments);
+        $service->addAction(UpsertDocuments::getName(), new UpsertDocuments);
+        $service->addAction(DeleteDocuments::getName(), new DeleteDocuments);
     }
 
     private function registerTransactionActions(Service $service): void
     {
-        $service->addAction(CreateTransaction::getName(), new CreateTransaction());
-        $service->addAction(GetTransaction::getName(), new GetTransaction());
-        $service->addAction(UpdateTransaction::getName(), new UpdateTransaction());
-        $service->addAction(DeleteTransaction::getName(), new DeleteTransaction());
-        $service->addAction(ListTransactions::getName(), new ListTransactions());
-        $service->addAction(CreateOperations::getName(), new CreateOperations());
+        $service->addAction(CreateTransaction::getName(), new CreateTransaction);
+        $service->addAction(GetTransaction::getName(), new GetTransaction);
+        $service->addAction(UpdateTransaction::getName(), new UpdateTransaction);
+        $service->addAction(DeleteTransaction::getName(), new DeleteTransaction);
+        $service->addAction(ListTransactions::getName(), new ListTransactions);
+        $service->addAction(CreateOperations::getName(), new CreateOperations);
     }
 
     private function registerEmbeddingActions(Service $service): void
     {
-        $service->addAction(CreateTextEmbeddings::getName(), new CreateTextEmbeddings());
+        $service->addAction(CreateTextEmbeddings::getName(), new CreateTextEmbeddings);
     }
 }

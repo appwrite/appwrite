@@ -4,11 +4,6 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 
-/**
- * One captured query plan from a single physical read issued during the
- * explained operation. A listRows that resolves relationships produces
- * multiple entries (one per underlying find()), in execution order.
- */
 class QueryPlanEntry extends Any
 {
     public function getName(): string
@@ -26,24 +21,24 @@ class QueryPlanEntry extends Any
         $this
             ->addRule('purpose', [
                 'type' => self::TYPE_STRING,
-                'description' => 'What this read was issued for. Currently always "find"; future values may include "count" or "sum".',
+                'description' => 'Reason this read was issued (e.g. "find" for each underlying find call).',
                 'default' => 'find',
                 'example' => 'find',
             ])
             ->addRule('context', [
                 'type' => self::TYPE_JSON,
-                'description' => 'Metadata about which user-facing collection this plan refers to (e.g. {"collection": "movies"} or {"collection": "reviews"} for a relationship fetch).',
-                'default' => new \stdClass(),
+                'description' => 'User-facing identifiers this plan refers to (e.g. {"collection": "movies"}).',
+                'default' => new \stdClass,
                 'example' => ['collection' => 'movies'],
             ])
             ->addRule('plan', [
                 'type' => self::TYPE_JSON,
-                'description' => 'Vendor-native query plan. Always carries `engine`, `rowsScanned`, `indexUsed`, `estimatedCost`; may also carry a `tree` field with the raw plan for debugging. Internal storage details (the `_perms` companion table, the `_metadata` system table, internal column names) are stripped before returning.',
-                'default' => new \stdClass(),
+                'description' => 'Vendor-native query plan. Carries `engine`, `rowsScanned`, `indexUsed`, `estimatedCost`, and a `tree` with the raw plan. Internal storage details are stripped.',
+                'default' => new \stdClass,
                 'example' => [
                     'engine' => 'sql',
                     'rowsScanned' => 25,
-                    'indexUsed' => 'idx_status_createdAt',
+                    'indexUsed' => 'idx_status',
                     'estimatedCost' => 4.5,
                 ],
             ]);

@@ -23,19 +23,6 @@ use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Text;
 
-/**
- * Base implementation for the explain-rows / explain-documents endpoint.
- *
- * Mirrors the shape of `XList` (listDocuments / listRows) but instead of
- * executing the underlying read, captures the vendor-native query plan for
- * each read Appwrite would have issued. Customer-facing output is sanitized
- * so internal storage details (the `_perms` companion table, `_metadata`
- * system table, internal column names) never leak.
- *
- * Not registered directly — TablesDB (and any future namespace) subclasses
- * this and overrides the constructor with the namespace-specific URL + SDK
- * metadata. See TablesDB\Tables\Rows\Explain\Get.
- */
 abstract class Get extends Action
 {
     public static function getName(): string
@@ -67,7 +54,7 @@ abstract class Get extends Action
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
                         model: $this->getResponseModel(),
-                    )
+                    ),
                 ],
                 contentType: ContentType::JSON,
             ))
@@ -83,9 +70,7 @@ abstract class Get extends Action
     }
 
     /**
-     * @param string $databaseId
-     * @param string $collectionId
-     * @param array<string> $queries
+     * @param  array<string>  $queries
      */
     public function action(
         string $databaseId,
@@ -101,12 +86,12 @@ abstract class Get extends Action
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-        if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
+        if ($database->isEmpty() || (! $database->getAttribute('enabled', false) && ! $isAPIKey && ! $isPrivilegedUser)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
-        $collection = $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
-        if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
+        $collection = $authorization->skip(fn () => $dbForProject->getDocument('database_'.$database->getSequence(), $collectionId));
+        if ($collection->isEmpty() || (! $collection->getAttribute('enabled', false) && ! $isAPIKey && ! $isPrivilegedUser)) {
             throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         }
 
@@ -122,14 +107,14 @@ abstract class Get extends Action
         $cursor = \reset($cursor);
 
         if ($cursor !== false) {
-            $validator = new Cursor();
-            if (!$validator->isValid($cursor)) {
+            $validator = new Cursor;
+            if (! $validator->isValid($cursor)) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
             }
 
             $documentId = $cursor->getValue();
 
-            $cursorDocument = $authorization->skip(fn () => $dbForDatabases->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
+            $cursorDocument = $authorization->skip(fn () => $dbForDatabases->getDocument('database_'.$database->getSequence().'_collection_'.$collection->getSequence(), $documentId));
 
             if ($cursorDocument->isEmpty()) {
                 $type = ucfirst($this->getContext());
@@ -139,12 +124,9 @@ abstract class Get extends Action
             $cursor->setValue($cursorDocument);
         }
 
-        $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
-        $hasSelects = !empty(Query::groupByType($queries)['selections']);
+        $collectionTableId = 'database_'.$database->getSequence().'_collection_'.$collection->getSequence();
+        $hasSelects = ! empty(Query::groupByType($queries)['selections']);
 
-        // Mirror listRows: skip relationship resolution when the caller didn't
-        // ask for related selects, to avoid capturing plans for reads the real
-        // endpoint would not have issued either.
         $find = $hasSelects
             ? fn () => $dbForDatabases->find($collectionTableId, $queries)
             : fn () => $dbForDatabases->skipRelationships(fn () => $dbForDatabases->find($collectionTableId, $queries));
@@ -176,13 +158,7 @@ abstract class Get extends Action
     }
 
     /**
-     * Walk the captured plans and rewrite internal `database_<seq>_collection_<seq>`
-     * references to the user-facing collection ID. Each captured entry came from
-     * a real find() invocation, so the `context.collection` field always carries
-     * the physical table id; this maps it back to the customer's vocabulary
-     * (and resolves related collections by sequence for relationship fetches).
-     *
-     * @param array<int, array<string, mixed>> $entries
+     * @param  array<int, array<string, mixed>>  $entries
      * @return array<int, Document>
      */
     protected function translatePlanCollections(
@@ -193,7 +169,7 @@ abstract class Get extends Action
         Authorization $authorization,
     ): array {
         $databaseSequence = $database->getSequence();
-        $databaseCollectionsTable = 'database_' . $databaseSequence;
+        $databaseCollectionsTable = 'database_'.$databaseSequence;
         $collectionResolver = $this->buildCollectionResolver($database, $collection, $dbForProject, $authorization);
 
         $output = [];
@@ -201,25 +177,21 @@ abstract class Get extends Action
             $context = $entry['context'] ?? [];
             $physicalCollection = $context['collection'] ?? null;
 
-            if (\is_string($physicalCollection) && \str_starts_with($physicalCollection, $databaseCollectionsTable . '_collection_')) {
-                $relatedSequence = \substr($physicalCollection, \strlen($databaseCollectionsTable . '_collection_'));
+            if (\is_string($physicalCollection) && \str_starts_with($physicalCollection, $databaseCollectionsTable.'_collection_')) {
+                $relatedSequence = \substr($physicalCollection, \strlen($databaseCollectionsTable.'_collection_'));
                 $context['collection'] = $collectionResolver($relatedSequence) ?? $physicalCollection;
             }
 
             $output[] = new Document([
                 'purpose' => $entry['purpose'] ?? 'find',
                 'context' => $context,
-                'plan'    => $entry['plan'] ?? [],
+                'plan' => $entry['plan'] ?? [],
             ]);
         }
 
         return $output;
     }
 
-    /**
-     * Returns a closure that maps a collection $sequence to its user-facing id,
-     * memoizing lookups for repeat hits during relationship resolution.
-     */
     protected function buildCollectionResolver(
         Document $database,
         Document $primary,
@@ -229,7 +201,7 @@ abstract class Get extends Action
         $cache = [
             (string) $primary->getSequence() => $primary->getId(),
         ];
-        $databaseCollectionsTable = 'database_' . $database->getSequence();
+        $databaseCollectionsTable = 'database_'.$database->getSequence();
 
         return function (string $sequence) use (&$cache, $databaseCollectionsTable, $dbForProject, $authorization): ?string {
             if (\array_key_exists($sequence, $cache)) {
@@ -240,6 +212,7 @@ abstract class Get extends Action
             ]));
             $resolved = $related->isEmpty() ? null : $related->getId();
             $cache[$sequence] = $resolved;
+
             return $resolved;
         };
     }
