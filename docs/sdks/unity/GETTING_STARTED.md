@@ -36,13 +36,17 @@ private async UniTask ExampleWithManager()
     var pingResult = await client.Ping();
     Debug.Log($"Ping result: {pingResult}");
 
-    var account = _manager.GetService<Account>();
-    var databases = _manager.GetService<Databases>();
-
     var realtime = _manager.Realtime;
     var subscription = realtime.Subscribe(
         new[] { "databases.*.collections.*.documents" },
-        response => Debug.Log($"Realtime event: {response.Events[0]}")
+        response =>
+        {
+            var eventName = response.Events != null && response.Events.Length > 0
+                ? response.Events[0]
+                : "unknown";
+
+            Debug.Log($"Realtime event: {eventName}");
+        }
     );
 }
 ```
@@ -70,9 +74,6 @@ private async UniTask ExampleWithDirectClient()
 
     var pingResult = await client.Ping();
     Debug.Log($"Direct client ping: {pingResult}");
-
-    var account = new Account(client);
-    var databases = new Databases(client);
 }
 ```
 
@@ -93,7 +94,7 @@ catch (AppwriteException ex)
 
 ## Preparing Models for Databases API
 
-When working with the Databases API in Unity, models should be prepared for serialization using the System.Text.Json library. By default, System.Text.Json converts property names from PascalCase to camelCase when serializing to JSON. If your Appwrite collection attributes are not in camelCase, this can cause errors due to mismatches between serialized property names and actual attribute names in your collection.
+When working with the Databases API in Unity, models should be prepared for serialization using the System.Text.Json library. System.Text.Json uses CLR property names by default unless a naming policy is configured. If your project or SDK configuration serializes property names differently from your Appwrite collection attributes, this can cause errors due to mismatches between serialized property names and actual attribute names in your collection.
 
 To avoid this, add the `JsonPropertyName` attribute to each property in your model class to match the attribute name in Appwrite:
 
@@ -111,3 +112,10 @@ public class TestModel
 ```
 
 The `JsonPropertyName` attribute ensures your data object is serialized with the correct attribute names for Appwrite databases.
+
+### Learn more
+You can use the following resources to learn more and get help:
+
+- 🚀 [Getting Started Tutorial](https://appwrite.io/docs/getting-started-for-client)
+- 📜 [Appwrite Docs](https://appwrite.io/docs)
+- 💬 [Discord Community](https://appwrite.io/discord)
