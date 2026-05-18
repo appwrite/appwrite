@@ -923,6 +923,16 @@ abstract class Format
                         break;
                 }
                 break;
+            case 'presences':
+                switch ($method) {
+                    case 'getUsage':
+                        switch ($param) {
+                            case 'range':
+                                return 'UsageRange';
+                        }
+                        break;
+                }
+                break;
         }
         return null;
     }
