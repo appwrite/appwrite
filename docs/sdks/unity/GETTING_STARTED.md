@@ -25,7 +25,7 @@ private async UniTask ExampleWithManager()
     _manager = AppwriteManager.Instance ?? new GameObject("AppwriteManager").AddComponent<AppwriteManager>();
     _manager.SetConfig(config);
 
-    var success = await _manager.Initialize();
+    var success = await _manager.Initialize(needRealtime: true);
     if (!success)
     {
         Debug.LogError("Failed to initialize AppwriteManager");
@@ -48,34 +48,28 @@ private async UniTask ExampleWithManager()
             Debug.Log($"Realtime event: {eventName}");
         }
     );
+
+    // Keep a reference to close the subscription when your MonoBehaviour is destroyed.
+    // subscription.Close();
 }
 ```
 
 ### Using Client directly
 
 ```csharp
-[SerializeField] private AppwriteConfig config;
-
 private async UniTask ExampleWithDirectClient()
 {
-    var client = new Client()
-        .SetEndpoint(config.Endpoint)
-        .SetProject(config.ProjectId);
-
-    if (!string.IsNullOrEmpty(config.DevKey))
-    {
-        client.SetDevKey(config.DevKey);
-    }
-
-    if (!string.IsNullOrEmpty(config.RealtimeEndpoint))
-    {
-        client.SetEndPointRealtime(config.RealtimeEndpoint);
-    }
+    var client = Client.From(
+        projectId: "<PROJECT_ID>",
+        endpoint: "https://<REGION>.cloud.appwrite.io/v1",
+        endpointRealtime: "wss://<REGION>.cloud.appwrite.io/v1");
 
     var pingResult = await client.Ping();
     Debug.Log($"Direct client ping: {pingResult}");
 }
 ```
+
+You can also create authenticated clients with `Client.FromSession`, `Client.FromDevKey`, or `Client.FromImpersonation` when those authentication flows are needed.
 
 ### Error handling
 
@@ -119,3 +113,4 @@ You can use the following resources to learn more and get help:
 - 🚀 [Getting Started Tutorial](https://appwrite.io/docs/getting-started-for-client)
 - 📜 [Appwrite Docs](https://appwrite.io/docs)
 - 💬 [Discord Community](https://appwrite.io/discord)
+- 🧰 [Appwrite SDK Generator](https://github.com/appwrite/sdk-generator)
