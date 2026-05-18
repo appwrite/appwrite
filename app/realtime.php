@@ -327,9 +327,8 @@ if (!function_exists('triggerStats')) {
 }
 
 if (!function_exists('checkForProjectUsage')) {
-    function checkForProjectUsage(Document $project): Document
+    function checkForProjectUsage(Document $project): void
     {
-        return $project;
     }
 }
 
@@ -1280,6 +1279,7 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                         /** @var UsagePublisher $publisherForUsage */
                         $publisherForUsage = $container->get('publisherForUsage');
 
+                        /** @var array<string, true> $deletedIds */
                         $deletedIds = [];
                         try {
                             $deletionCount = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->deleteDocuments(
