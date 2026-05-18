@@ -391,7 +391,7 @@ trait StorageBase
             'bucketId' => ID::unique(),
             'name' => 'Test Bucket 2',
             'fileSecurity' => true,
-            'maximumFileSize' => 6000000000, //6GB
+            'maximumFileSize' => 6000000001,
             'allowedFileExtensions' => ["jpg", "png"],
             'permissions' => [
                 Permission::read(Role::any()),
@@ -1434,6 +1434,184 @@ trait StorageBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
+    }
+
+    public function testCreateBucketFileParallelChunksLargeFile(): void
+    {
+        $totalSize = 20 * 1024 * 1024;
+        $chunkSize = 5 * 1024 * 1024;
+        $chunksTotal = (int) ceil($totalSize / $chunkSize);
+
+        $this->assertGreaterThanOrEqual(4, $chunksTotal, 'Test file must span at least 4 chunks');
+
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'Test Bucket Parallel Chunk Upload',
+            'fileSecurity' => true,
+            'maximumFileSize' => $totalSize,
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+
+        $bucketId = $bucket['body']['$id'];
+        $fileId = ID::unique();
+        $tmpDirectory = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'appwrite-parallel-upload-' . $fileId;
+        $source = $tmpDirectory . DIRECTORY_SEPARATOR . 'large-parallel-upload.bin';
+
+        mkdir($tmpDirectory);
+
+        try {
+            $handle = fopen($source, 'wb');
+            $this->assertNotFalse($handle, 'Could not create test file');
+
+            $remaining = $totalSize;
+            $block = str_repeat(hash('sha256', $fileId, binary: true), 1024);
+            while ($remaining > 0) {
+                $bytes = substr($block, 0, min(strlen($block), $remaining));
+                fwrite($handle, $bytes);
+                $remaining -= strlen($bytes);
+            }
+            fclose($handle);
+
+            $requests = [];
+
+            $sourceHandle = fopen($source, 'rb');
+            $this->assertNotFalse($sourceHandle, 'Could not open test file');
+
+            for ($i = 0; $i < $chunksTotal; $i++) {
+                $start = $i * $chunkSize;
+                $end = min($start + $chunkSize, $totalSize) - 1;
+                $length = $end - $start + 1;
+                $chunkPath = $tmpDirectory . DIRECTORY_SEPARATOR . 'chunk-' . $i . '.part';
+
+                fseek($sourceHandle, $start);
+                file_put_contents($chunkPath, fread($sourceHandle, $length));
+
+                $requests[] = [
+                    'headers' => [
+                        'x-appwrite-project' => $this->getProject()['$id'],
+                        'x-appwrite-key' => $this->getProject()['apiKey'],
+                        'content-range' => 'bytes ' . $start . '-' . $end . '/' . $totalSize,
+                    ],
+                    'chunkPath' => $chunkPath,
+                ];
+            }
+            fclose($sourceHandle);
+
+            $responses = [];
+            $endpoint = parse_url($this->client->getEndpoint());
+            $scheme = $endpoint['scheme'] ?? 'http';
+            $host = $endpoint['host'] ?? 'appwrite';
+            $port = $endpoint['port'] ?? ($scheme === 'https' ? 443 : 80);
+            $basePath = rtrim($endpoint['path'] ?? '', '/');
+
+            \Swoole\Coroutine\run(function () use ($basePath, $bucketId, $fileId, $host, $port, $requests, $scheme, &$responses): void {
+                $wg = new \Swoole\Coroutine\WaitGroup();
+
+                foreach ($requests as $index => $request) {
+                    $wg->add();
+                    \Swoole\Coroutine::create(function () use ($basePath, $bucketId, $fileId, $host, $index, $port, $request, &$responses, $scheme, $wg): void {
+                        try {
+                            for ($attempt = 0; $attempt < 3; $attempt++) {
+                                $client = new \Swoole\Coroutine\Http\Client($host, (int) $port, $scheme === 'https');
+                                $client->set([
+                                    'timeout' => 300,
+                                    'ssl_verify_peer' => false,
+                                    'ssl_verify_host' => false,
+                                ]);
+                                $client->setHeaders($request['headers']);
+                                $client->setMethod(Client::METHOD_POST);
+                                $client->setData([
+                                    'fileId' => $fileId,
+                                    'permissions[0]' => Permission::read(Role::any()),
+                                    'permissions[1]' => Permission::delete(Role::any()),
+                                ]);
+                                $client->addFile($request['chunkPath'], 'file', 'application/octet-stream', 'large-parallel-upload.bin');
+                                $client->execute($basePath . '/storage/buckets/' . $bucketId . '/files');
+
+                                $responses[$index] = [
+                                    'body' => $client->body,
+                                    'error' => $client->errMsg,
+                                    'headers' => $client->headers ?? [],
+                                    'statusCode' => $client->statusCode,
+                                ];
+
+                                $client->close();
+
+                                if ($responses[$index]['statusCode'] !== 429) {
+                                    break;
+                                }
+
+                                $retryAfter = (float) ($responses[$index]['headers']['retry-after'] ?? 0.1);
+                                \Swoole\Coroutine::sleep(max($retryAfter, 0.1));
+                            }
+                        } finally {
+                            $wg->done();
+                        }
+                    });
+                }
+
+                $wg->wait();
+            });
+
+            ksort($responses);
+
+            foreach ($responses as $response) {
+                $this->assertSame('', $response['error']);
+                $this->assertContains($response['statusCode'], [200, 201], (string) $response['body']);
+            }
+
+            $uploadedFile = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+
+            $this->assertEquals(200, $uploadedFile['headers']['status-code']);
+            $this->assertEquals($chunksTotal, $uploadedFile['body']['chunksTotal']);
+            $this->assertEquals($chunksTotal, $uploadedFile['body']['chunksUploaded']);
+
+            $download = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/download', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+
+            $this->assertEquals(200, $download['headers']['status-code']);
+            $this->assertEquals($totalSize, strlen($download['body']));
+            $this->assertEquals(hash_file('sha256', $source), hash('sha256', $download['body']));
+        } finally {
+            if (isset($bucketId)) {
+                $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId . '/files/' . $fileId, array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ]));
+
+                $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId, [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ]);
+            }
+
+            foreach (glob($tmpDirectory . DIRECTORY_SEPARATOR . '*') ?: [] as $file) {
+                unlink($file);
+            }
+
+            if (is_dir($tmpDirectory)) {
+                rmdir($tmpDirectory);
+            }
+        }
     }
 
     public function testDeleteBucketFile(): void
