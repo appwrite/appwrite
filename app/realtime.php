@@ -1282,13 +1282,17 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                         /** @var array<string, true> $deletedIds */
                         $deletedIds = [];
                         try {
-                            $deletionCount = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->deleteDocuments(
-                                'presenceLogs',
-                                [Query::equal('$id', $presenceIds)],
-                                onNext: function (Document $deleted) use (&$deletedIds): void {
-                                    $deletedIds[$deleted->getId()] = true;
-                                },
-                            ));
+                            $deletionCount = $dbForProject->getAuthorization()->skip(
+                                function () use ($dbForProject, $presenceIds, &$deletedIds): int {
+                                    return $dbForProject->deleteDocuments(
+                                        'presenceLogs',
+                                        [Query::equal('$id', $presenceIds)],
+                                        onNext: function (Document $deleted) use (&$deletedIds): void {
+                                            $deletedIds[$deleted->getId()] = true;
+                                        },
+                                    );
+                                }
+                            );
                             $presenceState->triggerUsage($publisherForUsage, $project, -$deletionCount);
                         } catch (Throwable $th) {
                             Span::error($th);
@@ -1300,7 +1304,6 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
 
                         $queueForEvents = getQueueForEvents();
                         $queueForRealtime = getQueueForRealtime();
-
                         foreach ($presences as $presence) {
                             if (!isset($deletedIds[$presence->getId()])) {
                                 continue;
