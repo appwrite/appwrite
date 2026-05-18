@@ -326,6 +326,12 @@ if (!function_exists('triggerStats')) {
     }
 }
 
+if (!function_exists('checkForProjectUsage')) {
+    function checkForProjectUsage(Document $project): void
+    {
+    }
+}
+
 $realtime = getRealtime();
 $presenceState = new PresenceState();
 
@@ -1084,6 +1090,10 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
             $database->setAuthorization($authorization);
         } else {
             $project = null;
+        }
+
+        if ($project !== null) {
+            checkForProjectUsage($project);
         }
 
         /*
