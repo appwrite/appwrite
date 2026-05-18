@@ -327,8 +327,9 @@ if (!function_exists('triggerStats')) {
 }
 
 if (!function_exists('checkForProjectUsage')) {
-    function checkForProjectUsage(Document $project): void
+    function checkForProjectUsage(Document $project): Document
     {
+        return $project;
     }
 }
 
