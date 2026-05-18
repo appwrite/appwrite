@@ -567,6 +567,8 @@ class DatabaseServerTest extends Scope
         if (isset($index['body']['errors'])) {
             $errorMessage = $index['body']['errors'][0]['message'] ?? '';
             if (strpos($errorMessage, 'already exists') !== false || strpos($errorMessage, 'Document with the requested ID already exists') !== false) {
+                $this->assertIndexAvailable($data, 'index');
+
                 self::$indexCache[$cacheKey] = [
                     'database' => $data['database'],
                     'collection' => $data['collection'],
@@ -580,6 +582,8 @@ class DatabaseServerTest extends Scope
         $this->assertIsArray($index['body']['data']);
         $this->assertIsArray($index['body']['data']['databasesCreateIndex']);
 
+        $this->assertIndexAvailable($data, $index['body']['data']['databasesCreateIndex']['key']);
+
         self::$indexCache[$cacheKey] = [
             'database' => $data['database'],
             'collection' => $data['collection'],
@@ -587,6 +591,20 @@ class DatabaseServerTest extends Scope
         ];
 
         return self::$indexCache[$cacheKey];
+    }
+
+    private function assertIndexAvailable(array $data, string $key): void
+    {
+        $this->assertEventually(function () use ($data, $key) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['database']['_id'] . '/collections/' . $data['collection']['_id'] . '/indexes/' . $key, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            $this->assertSame(200, $response['headers']['status-code']);
+            $this->assertSame('available', $response['body']['status']);
+        }, 240000, 500);
     }
 
     /**
@@ -1358,13 +1376,14 @@ class DatabaseServerTest extends Scope
         $data = $this->setupCollections();
 
         $projectId = $this->getProject()['$id'];
+        $key = 'dob' . ID::unique();
         $query = $this->getQuery(self::CREATE_DATETIME_ATTRIBUTE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
                 'databaseId' => $data['database']['_id'],
                 'collectionId' => $data['collection']['_id'],
-                'key' => 'dob',
+                'key' => $key,
                 'required' => true,
             ]
         ];
@@ -1377,6 +1396,7 @@ class DatabaseServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $attribute['body']);
         $this->assertIsArray($attribute['body']['data']);
         $this->assertIsArray($attribute['body']['data']['databasesCreateDatetimeAttribute']);
+        $this->assertSame($key, $attribute['body']['data']['databasesCreateDatetimeAttribute']['key']);
     }
 
     /**
@@ -1687,13 +1707,14 @@ class DatabaseServerTest extends Scope
         $data = $this->setupAllAttributes();
 
         $projectId = $this->getProject()['$id'];
+        $key = 'index' . ID::unique();
         $query = $this->getQuery(self::CREATE_INDEX);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
                 'databaseId' => $data['database']['_id'],
                 'collectionId' => $data['collection']['_id'],
-                'key' => 'index',
+                'key' => $key,
                 'type' => 'key',
                 'attributes' => [
                     'name',
@@ -1710,6 +1731,9 @@ class DatabaseServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $index['body']);
         $this->assertIsArray($index['body']['data']);
         $this->assertIsArray($index['body']['data']['databasesCreateIndex']);
+        $this->assertSame($key, $index['body']['data']['databasesCreateIndex']['key']);
+
+        $this->assertIndexAvailable($data, $key);
 
         // Store for caching so setupIndex() doesn't try to recreate
         $cacheKey = $this->getProject()['$id'] ?? 'default';
