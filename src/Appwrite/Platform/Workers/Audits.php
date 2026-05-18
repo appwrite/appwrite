@@ -91,7 +91,7 @@ class Audits extends Action
         $actorUserEmail = $impersonatorUserId
             ? $user->getAttribute('impersonatorUserEmail', '')
             : $user->getAttribute('email', '');
-        $userType = $user->getAttribute('type', ACTIVITY_TYPE_USER);
+        $userType = $user->getAttribute('type', ACTOR_TYPE_USER);
 
         // Create event data
         $eventData = [
