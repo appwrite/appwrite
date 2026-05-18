@@ -100,7 +100,6 @@ class Audits extends Action
             'resource' => $resource,
             'userAgent' => $userAgent,
             'ip' => $ip,
-            'location' => '',
             'data' => [
                 'userId' => $actorUserId,
                 'userName' => $actorUserName,
