@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e553f40900362e52e8cf7ab59f3628bc",
+    "content-hash": "55e6e4d5d59d83661dea4b04e913c986",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4606,16 +4606,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "dev-add-labels-migration",
+            "version": "dev-add-services-migration",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "b7b64ac3ed6359d9c9f7ccaa6a53b2f6dca89edc"
+                "reference": "2f7270734300d4f5ac450a9bb3d0e11b32986a53"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/b7b64ac3ed6359d9c9f7ccaa6a53b2f6dca89edc",
-                "reference": "b7b64ac3ed6359d9c9f7ccaa6a53b2f6dca89edc",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/2f7270734300d4f5ac450a9bb3d0e11b32986a53",
+                "reference": "2f7270734300d4f5ac450a9bb3d0e11b32986a53",
                 "shasum": ""
             },
             "require": {
@@ -4672,10 +4672,10 @@
                 "utopia"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/migration/tree/add-labels-migration",
+                "source": "https://github.com/utopia-php/migration/tree/add-services-migration",
                 "issues": "https://github.com/utopia-php/migration/issues"
             },
-            "time": "2026-05-18T14:18:57+00:00"
+            "time": "2026-05-18T15:10:10+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -8585,7 +8585,7 @@
     "aliases": [
         {
             "package": "utopia-php/migration",
-            "version": "dev-add-labels-migration",
+            "version": "dev-add-services-migration",
             "alias": "1.12.0",
             "alias_normalized": "1.12.0.0"
         }

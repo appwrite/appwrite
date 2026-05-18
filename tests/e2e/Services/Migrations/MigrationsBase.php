@@ -2853,6 +2853,52 @@ trait MigrationsBase
         ]);
     }
 
+    public function testAppwriteMigrationServices(): void
+    {
+        $consoleHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ];
+
+        $sourceProjectId = $this->getProject()['$id'];
+        $destinationProjectId = $this->getDestinationProject()['$id'];
+
+        // Disable functions + graphql on source as observable changes.
+        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/service/functions', $consoleHeaders, ['status' => false]);
+        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/service/graphql', $consoleHeaders, ['status' => false]);
+
+        $result = $this->performMigrationSync([
+            'resources' => [
+                Resource::TYPE_SERVICES,
+            ],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $sourceProjectId,
+            'apiKey' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals('completed', $result['status']);
+        $this->assertEquals([Resource::TYPE_SERVICES], $result['resources']);
+        $this->assertArrayHasKey(Resource::TYPE_SERVICES, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_SERVICES]['error']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_SERVICES]['pending']);
+        $this->assertEquals(1, $result['statusCounters'][Resource::TYPE_SERVICES]['success']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_SERVICES]['processing']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_SERVICES]['warning']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $destinationProjectId, $consoleHeaders);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertFalse($response['body']['serviceStatusForFunctions'], 'Functions service should be migrated as disabled');
+        $this->assertFalse($response['body']['serviceStatusForGraphql'], 'GraphQL service should be migrated as disabled');
+
+        // Restore both projects.
+        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/service/functions', $consoleHeaders, ['status' => true]);
+        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/service/graphql', $consoleHeaders, ['status' => true]);
+        $this->client->call(Client::METHOD_PATCH, '/projects/' . $destinationProjectId . '/service/functions', $consoleHeaders, ['status' => true]);
+        $this->client->call(Client::METHOD_PATCH, '/projects/' . $destinationProjectId . '/service/graphql', $consoleHeaders, ['status' => true]);
+    }
+
     /**
      * Import documents from a CSV file.
      */

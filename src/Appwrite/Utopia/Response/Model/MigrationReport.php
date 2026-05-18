@@ -95,6 +95,12 @@ class MigrationReport extends Model
                 'default' => 0,
                 'example' => 1,
             ])
+            ->addRule(Resource::TYPE_SERVICES, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of service configs to be migrated (always 0 or 1 — the project-level enable/disable flags for all 17 services).',
+                'default' => 0,
+                'example' => 1,
+            ])
             ->addRule(Resource::TYPE_SITE, [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Number of sites to be migrated.',
