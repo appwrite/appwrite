@@ -394,6 +394,7 @@ const METRIC_NETWORK_OUTBOUND  = 'network.outbound';
 const METRIC_MAU = 'users.mau';
 const METRIC_DAU = 'users.dau';
 const METRIC_WAU = 'users.wau';
+const METRIC_USERS_PRESENCE = 'users.presence';
 const METRIC_WEBHOOKS = 'webhooks';
 const METRIC_PLATFORMS = 'platforms';
 const METRIC_PROVIDERS = 'providers';
