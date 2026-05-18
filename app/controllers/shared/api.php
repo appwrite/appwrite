@@ -175,8 +175,8 @@ Http::init()
             $role = $apiKey->getRole();
             $scopes = $apiKey->getScopes();
 
-            // Handle special app role case
-            if ($apiKey->getRole() === User::ROLE_APPS) {
+            // Handle special key role case
+            if ($apiKey->getRole() === User::ROLE_KEYS) {
                 // Disable authorization checks for project API keys
                 // Dynamic supported for backwards compatibility
                 if (($apiKey->getType() === API_KEY_STANDARD || $apiKey->getType() === API_KEY_EPHEMERAL || $apiKey->getType() === 'dynamic') && $apiKey->getProjectId() === $project->getId()) {
@@ -425,7 +425,7 @@ Http::init()
             if (
                 array_key_exists($namespace, $project->getAttribute('services', []))
                 && ! $project->getAttribute('services', [])[$namespace]
-                && ! ($user->isPrivileged($authorization->getRoles()) || $user->isApp($authorization->getRoles()))
+                && ! ($user->isPrivileged($authorization->getRoles()) || $user->isKey($authorization->getRoles()))
             ) {
                 throw new Exception(Exception::GENERAL_SERVICE_DISABLED);
             }
@@ -435,7 +435,7 @@ Http::init()
         if (
             array_key_exists('rest', $project->getAttribute('apis', []))
             && ! $project->getAttribute('apis', [])['rest']
-            && ! ($user->isPrivileged($authorization->getRoles()) || $user->isApp($authorization->getRoles()))
+            && ! ($user->isPrivileged($authorization->getRoles()) || $user->isKey($authorization->getRoles()))
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }
@@ -488,7 +488,7 @@ Http::init()
 
         $roles = $authorization->getRoles();
         $shouldCheckAbuse = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled'
-            && ! $user->isApp($roles)
+            && ! $user->isKey($roles)
             && ! $user->isPrivileged($roles)
             && $devKey->isEmpty();
 
@@ -611,7 +611,7 @@ Http::init()
         $storageCacheOperationsCounter = $telemetry->createCounter('storage.cache.operations.load');
         if ($useCache) {
             $roles = $authorization->getRoles();
-            $isAppUser = $user->isApp($roles);
+            $isAppUser = $user->isKey($roles);
             $isImageTransformation = $route->getPath() === '/v1/storage/buckets/:bucketId/files/:fileId/preview';
             $isDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && ! $user->isPrivileged($roles);
 
