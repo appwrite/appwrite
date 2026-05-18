@@ -74,7 +74,7 @@
         "utopia-php/locale": "0.8.*",
         "utopia-php/logger": "0.8.*",
         "utopia-php/messaging": "0.22.*",
-        "utopia-php/migration": "dev-add-services-migration as 1.12.0",
+        "utopia-php/migration": "dev-add-policies-migration as 1.12.0",
         "utopia-php/platform": "^1.0@RC",
         "utopia-php/pools": "1.*",
         "utopia-php/span": "1.1.*",

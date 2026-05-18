@@ -101,6 +101,12 @@ class MigrationReport extends Model
                 'default' => 0,
                 'example' => 1,
             ])
+            ->addRule(Resource::TYPE_POLICIES, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of policy bundles to be migrated (always 0 or 1 — the project-level security policies covering password rules, session behavior, user limits, and membership privacy).',
+                'default' => 0,
+                'example' => 1,
+            ])
             ->addRule(Resource::TYPE_SITE, [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Number of sites to be migrated.',

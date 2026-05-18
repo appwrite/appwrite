@@ -2899,6 +2899,75 @@ trait MigrationsBase
         $this->client->call(Client::METHOD_PATCH, '/projects/' . $destinationProjectId . '/service/graphql', $consoleHeaders, ['status' => true]);
     }
 
+    public function testAppwriteMigrationPolicies(): void
+    {
+        $sourceProjectId = $this->getProject()['$id'];
+        $destinationProjectId = $this->getDestinationProject()['$id'];
+
+        // Policies have no /projects/:projectId admin route — they're only
+        // reachable via project-scoped /v1/project/policies/* with an API key.
+        $sourceProjectHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $sourceProjectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $destinationProjectHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $destinationProjectId,
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ];
+
+        // Pick three policies that span the field types: int, bool, and
+        // bundled membership-privacy.
+        $this->client->call(Client::METHOD_PATCH, '/project/policies/password-history', $sourceProjectHeaders, [
+            'total' => 5,
+        ]);
+        $this->client->call(Client::METHOD_PATCH, '/project/policies/session-alert', $sourceProjectHeaders, [
+            'enabled' => true,
+        ]);
+        $this->client->call(Client::METHOD_PATCH, '/project/policies/membership-privacy', $sourceProjectHeaders, [
+            'userEmail' => false,
+        ]);
+
+        $result = $this->performMigrationSync([
+            'resources' => [
+                Resource::TYPE_POLICIES,
+            ],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $sourceProjectId,
+            'apiKey' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals('completed', $result['status']);
+        $this->assertEquals([Resource::TYPE_POLICIES], $result['resources']);
+        $this->assertArrayHasKey(Resource::TYPE_POLICIES, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_POLICIES]['error']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_POLICIES]['pending']);
+        $this->assertEquals(1, $result['statusCounters'][Resource::TYPE_POLICIES]['success']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_POLICIES]['processing']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_POLICIES]['warning']);
+
+        $passwordHistory = $this->client->call(Client::METHOD_GET, '/project/policies/password-history', $destinationProjectHeaders);
+        $this->assertSame(200, $passwordHistory['headers']['status-code']);
+        $this->assertSame(5, $passwordHistory['body']['total'], 'passwordHistory should be migrated as 5');
+
+        $sessionAlert = $this->client->call(Client::METHOD_GET, '/project/policies/session-alert', $destinationProjectHeaders);
+        $this->assertSame(200, $sessionAlert['headers']['status-code']);
+        $this->assertTrue($sessionAlert['body']['enabled'], 'session-alert policy should be migrated as enabled');
+
+        $membershipPrivacy = $this->client->call(Client::METHOD_GET, '/project/policies/membership-privacy', $destinationProjectHeaders);
+        $this->assertSame(200, $membershipPrivacy['headers']['status-code']);
+        $this->assertFalse($membershipPrivacy['body']['userEmail'], 'membership-privacy userEmail should be migrated as false');
+
+        // Restore both projects to defaults.
+        $this->client->call(Client::METHOD_PATCH, '/project/policies/password-history', $sourceProjectHeaders, ['total' => 0]);
+        $this->client->call(Client::METHOD_PATCH, '/project/policies/session-alert', $sourceProjectHeaders, ['enabled' => false]);
+        $this->client->call(Client::METHOD_PATCH, '/project/policies/membership-privacy', $sourceProjectHeaders, ['userEmail' => true]);
+        $this->client->call(Client::METHOD_PATCH, '/project/policies/password-history', $destinationProjectHeaders, ['total' => 0]);
+        $this->client->call(Client::METHOD_PATCH, '/project/policies/session-alert', $destinationProjectHeaders, ['enabled' => false]);
+        $this->client->call(Client::METHOD_PATCH, '/project/policies/membership-privacy', $destinationProjectHeaders, ['userEmail' => true]);
+    }
+
     /**
      * Import documents from a CSV file.
      */
