@@ -379,7 +379,7 @@ if (!function_exists('logError')) {
         // Match HTTP semantics (app/controllers/general.php): AppwriteException uses its
         // configured publish flag; everything else publishes only for code 0 or >= 500.
         // Without this, expected client errors (e.g. Utopia DB Authorization) hit Sentry.
-        if ($error instanceof Exception) {
+        if ($error instanceof AppwriteException) {
             $publish = $error->isPublishable();
         } else {
             $publish = $error->getCode() === 0 || $error->getCode() >= 500;
