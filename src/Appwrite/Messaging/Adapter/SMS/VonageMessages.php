@@ -66,7 +66,7 @@ class VonageMessages extends SMSAdapter
                 'message_type' => 'text',
                 'channel'      => 'sms',
                 'to'           => $to[0],
-                'from'         => $message->getFrom(),
+                'from'         => \ltrim($message->getFrom(), '+'),
                 'text'         => $message->getContent(),
             ]),
         );
