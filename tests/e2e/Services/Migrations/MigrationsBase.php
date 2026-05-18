@@ -2697,6 +2697,59 @@ trait MigrationsBase
         $this->client->call(Client::METHOD_DELETE, '/webhooks/' . $sourceWebhook['$id'], $sourceHeaders);
     }
 
+    public function testAppwriteMigrationAuthMethods(): void
+    {
+        $consoleHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ];
+
+        // Flip a couple of auth methods on the source so the round-trip is
+        // observable. Settling on email-password OFF and JWT OFF — the
+        // remaining flags stay on their server defaults.
+        $sourceProjectId = $this->getProject()['$id'];
+        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/auth/email-password', $consoleHeaders, [
+            'status' => false,
+        ]);
+        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/auth/jwt', $consoleHeaders, [
+            'status' => false,
+        ]);
+
+        $result = $this->performMigrationSync([
+            'resources' => [
+                Resource::TYPE_AUTH_METHODS,
+            ],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $sourceProjectId,
+            'apiKey' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals('completed', $result['status']);
+        $this->assertEquals([Resource::TYPE_AUTH_METHODS], $result['resources']);
+        $this->assertArrayHasKey(Resource::TYPE_AUTH_METHODS, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_AUTH_METHODS]['error']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_AUTH_METHODS]['pending']);
+        $this->assertEquals(1, $result['statusCounters'][Resource::TYPE_AUTH_METHODS]['success']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_AUTH_METHODS]['processing']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_AUTH_METHODS]['warning']);
+
+        $destinationProjectId = $this->getDestinationProject()['$id'];
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $destinationProjectId, $consoleHeaders);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertFalse($response['body']['authEmailPassword'], 'authEmailPassword should be migrated as false');
+        $this->assertFalse($response['body']['authJWT'], 'authJWT should be migrated as false');
+
+        // Restore source so the test is idempotent.
+        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/auth/email-password', $consoleHeaders, ['status' => true]);
+        $this->client->call(Client::METHOD_PATCH, '/projects/' . $sourceProjectId . '/auth/jwt', $consoleHeaders, ['status' => true]);
+        // Restore destination too.
+        $this->client->call(Client::METHOD_PATCH, '/projects/' . $destinationProjectId . '/auth/email-password', $consoleHeaders, ['status' => true]);
+        $this->client->call(Client::METHOD_PATCH, '/projects/' . $destinationProjectId . '/auth/jwt', $consoleHeaders, ['status' => true]);
+    }
+
     /**
      * Import documents from a CSV file.
      */

@@ -77,6 +77,12 @@ class MigrationReport extends Model
                 'default' => 0,
                 'example' => 5,
             ])
+            ->addRule(Resource::TYPE_AUTH_METHODS, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of auth-method configs to be migrated (always 0 or 1 — the project-level flag bundle).',
+                'default' => 0,
+                'example' => 1,
+            ])
             ->addRule(Resource::TYPE_SITE, [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Number of sites to be migrated.',
