@@ -256,6 +256,7 @@ trait ProxyBase
         $this->assertEquals(200, $rules['headers']['status-code']);
         $this->assertEquals(2, $rules['body']['total']);
 
+        // Delete rules before the site to avoid cascade-delete races.
         $this->cleanupRule($ruleId301);
         $this->cleanupRule($ruleId307);
         $this->cleanupSite($siteId);

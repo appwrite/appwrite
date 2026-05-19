@@ -466,6 +466,14 @@ abstract class Format
                                 return 'ConsoleResourceValue';
                         }
                         break;
+                    case 'getEmailTemplate':
+                        switch ($param) {
+                            case 'templateId':
+                                return 'ProjectEmailTemplateId';
+                            case 'locale':
+                                return 'ProjectEmailTemplateLocale';
+                        }
+                        break;
                 }
                 break;
             case 'account':
@@ -911,6 +919,16 @@ abstract class Format
                         switch ($param) {
                             case 'passwordVersion':
                                 return 'PasswordHash';
+                        }
+                        break;
+                }
+                break;
+            case 'presences':
+                switch ($method) {
+                    case 'getUsage':
+                        switch ($param) {
+                            case 'range':
+                                return 'UsageRange';
                         }
                         break;
                 }
