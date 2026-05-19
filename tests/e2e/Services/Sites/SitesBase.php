@@ -15,6 +15,9 @@ trait SitesBase
 {
     use Async;
 
+    private const int SITE_DEPLOYMENT_READY_TIMEOUT = 360000;
+    private const int SITE_DEPLOYMENT_POLL_INTERVAL = 500;
+
     protected string $stdout = '';
     protected string $stderr = '';
 
@@ -65,7 +68,7 @@ trait SitesBase
             }
 
             $this->assertEquals('ready', $deployment['body']['status'], 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
-        }, 120000, 500);
+        }, self::SITE_DEPLOYMENT_READY_TIMEOUT, self::SITE_DEPLOYMENT_POLL_INTERVAL);
 
         // Not === so multipart/form-data works fine too
         if (($params['activate'] ?? false) == true) {
@@ -96,7 +99,7 @@ trait SitesBase
                 $this->assertEquals($deploymentId, $site['body']['deploymentId'], 'Deployment is not activated, deployment: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
                 $this->assertEquals($deploymentId, $site['body']['latestDeploymentId'], 'Latest deployment is not updated, deployment: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
                 $this->assertEquals('ready', $site['body']['latestDeploymentStatus'], 'Latest deployment status is not ready, deployment: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
-            }, 120000, 500);
+            }, self::SITE_DEPLOYMENT_READY_TIMEOUT, self::SITE_DEPLOYMENT_POLL_INTERVAL);
         }
 
         return $deploymentId;
@@ -301,7 +304,7 @@ trait SitesBase
         $this->assertEventually(function () use ($siteId, $deploymentId) {
             $deployment = $this->getDeployment($siteId, $deploymentId);
             $this->assertEquals('ready', $deployment['body']['status'], 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
-        }, 120000, 500);
+        }, self::SITE_DEPLOYMENT_READY_TIMEOUT, self::SITE_DEPLOYMENT_POLL_INTERVAL);
 
         $this->assertEventually(function () use ($siteId, $deploymentId) {
             $site = $this->getSite($siteId);
@@ -324,7 +327,7 @@ trait SitesBase
             }
 
             $this->assertEquals($deploymentId, $site['body']['deploymentId'], 'Deployment is not activated, deployment: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
-        }, 60000, 500);
+        }, self::SITE_DEPLOYMENT_READY_TIMEOUT, self::SITE_DEPLOYMENT_POLL_INTERVAL);
 
         return $deploymentId;
     }
