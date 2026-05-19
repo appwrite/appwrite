@@ -93,7 +93,7 @@ const PROJECT_NAV: CommandEntry[] = [
     icon: Folder,
     shortcut: 'G S',
     keywords: ['files', 'buckets', 'uploads', 'images', 'assets', 'storage'],
-    to: (ctx) => `/projects/${ctx.projectId}/storage`,
+    to: (ctx) => `/projects/${ctx.projectId}/storage/-`,
   },
   {
     id: 'project.nav.functions',

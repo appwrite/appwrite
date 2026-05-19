@@ -108,7 +108,7 @@ export function KeyboardShortcutsProvider({
         })
       } else if (type === 'bucket') {
         navigate({
-          to: '/projects/$projectId/storage',
+          to: '/projects/$projectId/storage/',
           params: { projectId },
           search: { create: 'bucket' },
         })

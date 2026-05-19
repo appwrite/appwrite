@@ -81,7 +81,7 @@ export function ProjectContextMenu({
       | '/projects/$projectId'
       | '/projects/$projectId/auth'
       | '/projects/$projectId/databases'
-      | '/projects/$projectId/storage'
+      | '/projects/$projectId/storage/$bucketId'
       | '/projects/$projectId/functions'
       | '/projects/$projectId/messaging'
       | '/projects/$projectId/sites'
@@ -151,7 +151,10 @@ export function ProjectContextMenu({
           </ContextMenuItem>
           <ContextMenuItem
             onSelect={() => {
-              navigateToTab('/projects/$projectId/storage')
+              navigate({
+                to: '/projects/$projectId/storage/$bucketId',
+                params: { projectId: project.$id, bucketId: '-' },
+              })
             }}
           >
             <ContextMenuIcon icon={Folder} />

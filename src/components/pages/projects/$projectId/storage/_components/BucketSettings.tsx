@@ -308,8 +308,8 @@ export function BucketSettings() {
         })
       } else {
         navigate({
-          to: '/projects/$projectId/storage',
-          params: { projectId: projectId! },
+          to: '/projects/$projectId/storage/$bucketId',
+          params: { projectId: projectId!, bucketId: '-' },
         })
       }
     },

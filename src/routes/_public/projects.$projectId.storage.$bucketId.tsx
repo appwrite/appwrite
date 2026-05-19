@@ -1,6 +1,12 @@
 import { createFileRoute, Outlet } from '@tanstack/react-router'
 import { fetchBucket } from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
+import {
+  isRealStorageNavigation,
+  redirectStorageFirstBucketOrPlaceholder,
+  STORAGE_PLACEHOLDER_BUCKET_ID,
+  storageSidebarBucketsQueryOptions,
+} from '@/lib/storage-routes'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/storage/$bucketId',
@@ -12,11 +18,22 @@ export const Route = createFileRoute(
       },
     ],
   }),
-  loader: async ({ params, context }) => {
+  loader: async ({ params, context, cause, preload }) => {
     if (typeof window === 'undefined') return
     const { projectId, bucketId } = params
     const { queryClient } = context
     if (!projectId || !bucketId) return
+
+    if (bucketId === STORAGE_PLACEHOLDER_BUCKET_ID) {
+      const bucketsData = await queryClient.ensureQueryData(
+        storageSidebarBucketsQueryOptions(projectId),
+      )
+      if (isRealStorageNavigation(cause, preload)) {
+        redirectStorageFirstBucketOrPlaceholder(projectId, bucketsData)
+      }
+      return
+    }
+
     await queryClient.fetchQuery({
       queryKey: ['bucket', 'project', projectId, bucketId],
       queryFn: () => fetchBucket(projectId, bucketId),

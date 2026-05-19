@@ -87,8 +87,8 @@ export function BucketContextMenu({
         })
       } else {
         navigate({
-          to: '/projects/$projectId/storage',
-          params: { projectId },
+          to: '/projects/$projectId/storage/$bucketId',
+          params: { projectId, bucketId: '-' },
         })
       }
     },

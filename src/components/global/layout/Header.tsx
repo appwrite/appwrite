@@ -477,7 +477,7 @@ export function ConsoleHeader({
                             <DropdownMenuItem
                               onClick={() => {
                                 navigate({
-                                  to: '/projects/$projectId/storage',
+                                  to: '/projects/$projectId/storage/',
                                   params: { projectId },
                                   search: { create: 'bucket' } as Record<
                                     string,

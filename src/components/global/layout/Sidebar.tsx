@@ -109,7 +109,7 @@ const getNavItems = (projectId: string) => {
           id: 'storage',
           label: 'Storage',
           icon: Folder,
-          path: `/projects/${projectId}/storage`,
+          path: `/projects/${projectId}/storage/-`,
         },
         {
           id: 'functions',

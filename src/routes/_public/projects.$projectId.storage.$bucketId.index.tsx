@@ -1,6 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
-import { View } from '@/components/pages/projects/$projectId/storage/$bucketId/View'
+import { View as BucketFilesView } from '@/components/pages/projects/$projectId/storage/$bucketId/View'
+import { View as StorageIndexView } from '@/components/pages/projects/$projectId/storage/View'
+import { STORAGE_PLACEHOLDER_BUCKET_ID } from '@/lib/storage-routes'
 import {
   fetchBucket,
   bucketFilesQueryOptions,
@@ -48,6 +50,10 @@ export const Route = createFileRoute(
     const { projectId, bucketId } = params
     const { queryClient } = context
     if (!projectId || !bucketId) return
+
+    if (bucketId === STORAGE_PLACEHOLDER_BUCKET_ID) {
+      return
+    }
 
     const url = new URL(location.pathname + location.search, 'http://localhost')
     const fileRaw = url.searchParams.get('file')
@@ -101,5 +107,9 @@ export const Route = createFileRoute(
 })
 
 function BucketFilesPage() {
-  return <View />
+  const { bucketId } = Route.useParams()
+  if (bucketId === STORAGE_PLACEHOLDER_BUCKET_ID) {
+    return <StorageIndexView />
+  }
+  return <BucketFilesView />
 }

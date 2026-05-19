@@ -269,8 +269,8 @@ export function BucketDetailView() {
 
   const handleBack = () => {
     navigate({
-      to: '/projects/$projectId/storage',
-      params: { projectId: projectId as string },
+      to: '/projects/$projectId/storage/$bucketId',
+      params: { projectId: projectId as string, bucketId: '-' },
     })
   }
 

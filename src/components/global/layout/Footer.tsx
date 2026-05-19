@@ -125,6 +125,23 @@ export function ConsoleFooter() {
           {/* Separator */}
           <div className="mx-1 hidden h-4 w-px flex-shrink-0 bg-border @[680px]:block" />
 
+          {/* Store */}
+          <a
+            href={storeLink.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground whitespace-nowrap @[680px]:flex"
+          >
+            <ShoppingCart
+              className="h-3.5 w-3.5 shrink-0 opacity-70"
+              aria-hidden
+            />
+            {storeLink.label}
+          </a>
+
+          {/* Separator */}
+          <div className="hidden h-4 w-px flex-shrink-0 bg-border @[680px]:block" />
+
           {/* Social Icons */}
           <div className="hidden flex-shrink-0 items-center gap-1 @[680px]:flex">
             {socialLinks.map((social) => (
@@ -143,23 +160,6 @@ export function ConsoleFooter() {
               </a>
             ))}
           </div>
-
-          {/* Separator */}
-          <div className="hidden h-4 w-px flex-shrink-0 bg-border @[680px]:block" />
-
-          {/* Store */}
-          <a
-            href={storeLink.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground whitespace-nowrap @[680px]:flex"
-          >
-            <ShoppingCart
-              className="h-3.5 w-3.5 shrink-0 opacity-70"
-              aria-hidden
-            />
-            {storeLink.label}
-          </a>
         </div>
 
         {/* Right section: Trust badge, Legal Links, and Copyright */}
