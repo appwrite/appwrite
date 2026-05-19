@@ -427,7 +427,7 @@ class Deletes extends Action
                         )
                     );
                 } catch (Throwable $th) {
-                    Console::error("Failed to update processing migrations for project {$project->getId()}: " . $th->getMessage());
+                    Console::error("Failed to update processing migration {$migration->getId()} for project {$project->getId()}: " . $th->getMessage());
                 }
             }
         );
