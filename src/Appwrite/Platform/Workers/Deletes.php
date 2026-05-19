@@ -400,7 +400,7 @@ class Deletes extends Action
         Targets::delete($getProjectDB($project), Query::equal('sessionInternalId', [$session->getSequence()]));
     }
 
-    private function updateProcessingMigrations(Document $project, callable $getProjectDB){
+    private function updateProcessingMigrations(Document $project, callable $getProjectDB): void {
         /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
 
@@ -427,7 +427,7 @@ class Deletes extends Action
                         )
                     );
                 } catch (Throwable $th) {
-                    Console::error("Failed to update processing migrations for project {$project->getId()}: " . $th->getMessage());
+                    Console::error("Failed to update processing migration {$migration->getId()} for project {$project->getId()}: " . $th->getMessage());
                 }
             }
         );
