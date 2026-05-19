@@ -19,6 +19,20 @@ class DatabaseServerTest extends Scope
     use SideServer;
     use Base;
 
+    private const int SCHEMA_READY_TIMEOUT = 240000;
+    private const int SCHEMA_POLL_INTERVAL = 500;
+    private const array DOCUMENT_ATTRIBUTE_KEYS = [
+        'name',
+        'age',
+        'alive',
+        'salary',
+        'email',
+        'role',
+        'dob',
+        'ip',
+        'url',
+    ];
+
     /**
      * Static cache for database data
      */
@@ -516,18 +530,41 @@ class DatabaseServerTest extends Scope
         ];
         $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
 
-        // Poll for the last attribute to confirm all are available
-        $this->assertEventually(function () use ($data) {
-            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['database']['_id'] . '/collections/' . $data['collection']['_id'] . '/attributes/url', [
+        // Confirm the full document schema settled before creating documents through GraphQL.
+        $this->assertAttributesAvailable($data, self::DOCUMENT_ATTRIBUTE_KEYS);
+
+        self::$allAttributesCache[$cacheKey] = $data;
+        return self::$allAttributesCache[$cacheKey];
+    }
+
+    private function assertAttributesAvailable(array $data, array $keys): void
+    {
+        $this->assertEventually(function () use ($data, $keys) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['database']['_id'] . '/collections/' . $data['collection']['_id'], [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]);
-            $this->assertEquals('available', $response['body']['status']);
-        }, 240000, 500);
 
-        self::$allAttributesCache[$cacheKey] = $data;
-        return self::$allAttributesCache[$cacheKey];
+            $this->assertSame(200, $response['headers']['status-code']);
+            $this->assertArrayHasKey('attributes', $response['body']);
+
+            $available = [];
+            foreach ($response['body']['attributes'] as $attribute) {
+                if (!\in_array($attribute['key'], $keys, true)) {
+                    continue;
+                }
+
+                $this->assertNotSame('failed', $attribute['status'], "Attribute '{$attribute['key']}' failed: " . ($attribute['error'] ?? 'unknown error'));
+                if ($attribute['status'] === 'available') {
+                    $available[] = $attribute['key'];
+                }
+            }
+
+            foreach ($keys as $key) {
+                $this->assertContains($key, $available, "Attribute '{$key}' is not available yet");
+            }
+        }, self::SCHEMA_READY_TIMEOUT, self::SCHEMA_POLL_INTERVAL);
     }
 
     /**
@@ -604,7 +641,7 @@ class DatabaseServerTest extends Scope
 
             $this->assertSame(200, $response['headers']['status-code']);
             $this->assertSame('available', $response['body']['status']);
-        }, 240000, 500);
+        }, self::SCHEMA_READY_TIMEOUT, self::SCHEMA_POLL_INTERVAL);
     }
 
     /**
@@ -618,41 +655,7 @@ class DatabaseServerTest extends Scope
         }
 
         $data = $this->setupIndex();
-        $projectId = $this->getProject()['$id'];
-
-        $query = $this->getQuery(self::CREATE_DOCUMENT);
-        $gqlPayload = [
-            'query' => $query,
-            'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'collectionId' => $data['collection']['_id'],
-                'documentId' => ID::unique(),
-                'data' => [
-                    'name' => 'John Doe',
-                    'email' => 'example@appwrite.io',
-                    'age' => 30,
-                    'alive' => true,
-                    'salary' => 9999.9,
-                    'role' => 'crew',
-                    'dob' => '2000-01-01T00:00:00Z',
-                ],
-                'permissions' => [
-                    Permission::read(Role::any()),
-                    Permission::update(Role::any()),
-                    Permission::delete(Role::any()),
-                ],
-            ]
-        ];
-
-        $document = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
-
-        $this->assertArrayNotHasKey('errors', $document['body']);
-        $this->assertIsArray($document['body']['data']);
-
-        $document = $document['body']['data']['databasesCreateDocument'];
+        $document = $this->createDocument($data);
 
         self::$documentCache[$cacheKey] = [
             'database' => $data['database'],
@@ -661,6 +664,56 @@ class DatabaseServerTest extends Scope
         ];
 
         return self::$documentCache[$cacheKey];
+    }
+
+    private function createDocument(array $data): array
+    {
+        $document = [];
+
+        $this->assertEventually(function () use ($data, &$document) {
+            $projectId = $this->getProject()['$id'];
+
+            $query = $this->getQuery(self::CREATE_DOCUMENT);
+            $gqlPayload = [
+                'query' => $query,
+                'variables' => [
+                    'databaseId' => $data['database']['_id'],
+                    'collectionId' => $data['collection']['_id'],
+                    'documentId' => ID::unique(),
+                    'data' => [
+                        'name' => 'John Doe',
+                        'email' => 'example@appwrite.io',
+                        'age' => 30,
+                        'alive' => true,
+                        'salary' => 9999.9,
+                        'role' => 'crew',
+                        'dob' => '2000-01-01T00:00:00Z',
+                    ],
+                    'permissions' => [
+                        Permission::read(Role::any()),
+                        Permission::update(Role::any()),
+                        Permission::delete(Role::any()),
+                    ],
+                ]
+            ];
+
+            $response = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ], $this->getHeaders()), $gqlPayload);
+
+            $this->assertArrayNotHasKey(
+                'errors',
+                $response['body'],
+                \json_encode($response['body']['errors'] ?? $response['body'], JSON_PRETTY_PRINT) ?: 'GraphQL response contained errors'
+            );
+            $this->assertIsArray($response['body']['data']);
+
+            $document = $response['body']['data']['databasesCreateDocument'];
+            $this->assertIsArray($document);
+        }, self::SCHEMA_READY_TIMEOUT, self::SCHEMA_POLL_INTERVAL);
+
+        return $document;
     }
 
     /**
@@ -1751,41 +1804,7 @@ class DatabaseServerTest extends Scope
     {
         $data = $this->setupIndex();
 
-        $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::CREATE_DOCUMENT);
-        $gqlPayload = [
-            'query' => $query,
-            'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'collectionId' => $data['collection']['_id'],
-                'documentId' => ID::unique(),
-                'data' => [
-                    'name' => 'John Doe',
-                    'email' => 'example@appwrite.io',
-                    'age' => 30,
-                    'alive' => true,
-                    'salary' => 9999.9,
-                    'role' => 'crew',
-                    'dob' => '2000-01-01T00:00:00Z',
-                ],
-                'permissions' => [
-                    Permission::read(Role::any()),
-                    Permission::update(Role::any()),
-                    Permission::delete(Role::any()),
-                ],
-            ]
-        ];
-
-        $document = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
-
-        $this->assertArrayNotHasKey('errors', $document['body']);
-        $this->assertIsArray($document['body']['data']);
-
-        $document = $document['body']['data']['databasesCreateDocument'];
-        $this->assertIsArray($document);
+        $document = $this->createDocument($data);
 
         // Store for caching so setupDocument() doesn't try to recreate
         $cacheKey = $this->getProject()['$id'] ?? 'default';
