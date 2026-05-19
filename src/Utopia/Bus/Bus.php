@@ -39,7 +39,7 @@ class Bus
             $deps = array_map($resolver, $listener->getInjections());
 
             Span::current()?->add('listener.' . $listener::getName() . '.event', $event::class);
-            
+
             try {
                 ($listener->getCallback())($event, ...$deps);
                 Span::current()?->add('listener.' . $listener::getName() . '.success', true);
