@@ -133,7 +133,7 @@ class Update extends Action
         $prFiles = $github->getPullRequestFiles($owner, $providerRepositoryName, $providerPullRequestId);
         $providerAffectedFiles = [
             ...array_column($prFiles, 'filename'),
-            ...array_filter(array_column($prFiles, 'previous_filename')) // Filter out null values
+            ...array_filter(array_column($prFiles, 'previous_filename'))
         ];
 
         $this->createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $providerAffectedFiles, true, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform);

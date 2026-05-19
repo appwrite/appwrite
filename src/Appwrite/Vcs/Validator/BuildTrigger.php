@@ -24,7 +24,6 @@ class BuildTrigger extends Validator
         $exclude = array_filter($this->patterns, fn ($p) => str_starts_with($p, '!'));
 
         if (empty($include)) {
-            // Only exclusions: pass everything unless excluded.
             foreach ($exclude as $pattern) {
                 if ($this->matchGlob($value, substr($pattern, 1))) {
                     return false;
@@ -33,31 +32,26 @@ class BuildTrigger extends Validator
             return true;
         }
 
-        // A pattern is "specific" when it contains no wildcard characters.
         $isSpecific = fn ($pattern) => !str_contains($pattern, '*') && !str_contains($pattern, '?');
 
-        // 1. Specific inclusion always wins — an explicit exact match is never blocked.
         foreach ($include as $pattern) {
             if ($isSpecific($pattern) && $this->matchGlob($value, $pattern)) {
                 return true;
             }
         }
 
-        // 2. Any exclusion (specific or wildcard) overrides a wildcard inclusion — refines broad patterns.
         foreach ($exclude as $pattern) {
             if ($this->matchGlob($value, substr($pattern, 1))) {
                 return false;
             }
         }
 
-        // 3. Wildcard inclusion — no exclusion blocked it.
         foreach ($include as $pattern) {
             if (!$isSpecific($pattern) && $this->matchGlob($value, $pattern)) {
                 return true;
             }
         }
 
-        // No inclusion matched.
         return false;
     }
 
